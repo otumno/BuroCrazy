@@ -17,45 +17,33 @@ public class ClientPathfinding : MonoBehaviour
 
     public void Initialize(GameObject rZ, GameObject wZ, GameObject tZ, GameObject d1, GameObject d2, Waypoint eW) { totalClients++; stateMachine = gameObject.GetComponent<ClientStateMachine>(); movement = gameObject.GetComponent<ClientMovement>(); notification = gameObject.GetComponent<ClientNotification>(); queueManager = gameObject.GetComponent<ClientQueueManager>(); if (stateMachine == null || movement == null || notification == null || queueManager == null) { Debug.LogError("Ошибка инициализации компонентов клиента " + gameObject.name); return; } stateMachine.Initialize(this); movement.Initialize(this); TextMeshPro tmp = GetComponentInChildren<TextMeshPro>(); if (tmp != null) notification.Initialize(this, tmp); queueManager.Initialize(this, rZ, wZ, tZ, d1, d2, eW); totalPatienceTime = Random.Range(60f, 120f); if (spawnSound != null) AudioSource.PlayClipAtPoint(spawnSound, transform.position); }
     
-    public void OnClientExit()
+    public void OnClientExit() { if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.CalmedDown) { clientsExitedAngry++; } else if(isLeavingSuccessfully) { clientsExitedProcessed++; } clientsExited++; totalClients--; if (exitSound != null) AudioSource.PlayClipAtPoint(exitSound, transform.position); Destroy(gameObject); }
+    
+    // --- МЕТОДЫ УСПОКОЕНИЯ ИЗМЕНЕНЫ ---
+    public void UnfreezeAndRestartAI()
     {
-        if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.CalmedDown) {
-            clientsExitedAngry++;
-        } else if(isLeavingSuccessfully) {
-            clientsExitedProcessed++;
+        if(stateMachine != null) stateMachine.StartCoroutine(stateMachine.MainLogicLoop());
+    }
+
+    public void CalmDownAndLeave()
+    {
+        if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged)
+        {
+            reasonForLeaving = LeaveReason.CalmedDown;
+            stateMachine.SetState(ClientState.Leaving);
         }
-        clientsExited++;
-        totalClients--;
-        if (exitSound != null) AudioSource.PlayClipAtPoint(exitSound, transform.position);
-        Destroy(gameObject);
     }
     
-    public void CalmDownAndLeave() { if (stateMachine.GetCurrentState() == ClientState.Enraged) { reasonForLeaving = LeaveReason.CalmedDown; stateMachine.SetState(ClientState.Leaving); stateMachine.StartCoroutine(stateMachine.MainLogicLoop()); } }
-    
-    public void CalmDownAndReturnToQueue() { if (stateMachine.GetCurrentState() == ClientState.Enraged) { stateMachine.SetGoal(queueManager.GetWaitingWaypoint()); stateMachine.SetState(ClientState.ReturningToWait); stateMachine.StartCoroutine(stateMachine.MainLogicLoop()); } }
+    public void CalmDownAndReturnToQueue()
+    {
+        if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged)
+        {
+            stateMachine.SetGoal(queueManager.GetWaitingWaypoint());
+            stateMachine.SetState(ClientState.ReturningToWait);
+        }
+    }
 
     public void Freeze() { if(stateMachine != null) stateMachine.StopAllCoroutines(); if(movement != null) movement.SetVelocity(Vector2.zero); }
     
-    public void ForceLeave()
-    {
-        // Проверяем, чтобы не вызывать логику ухода для тех, кто уже уходит
-        if (stateMachine.GetCurrentState() == ClientState.Leaving) return;
-        
-        // Останавливаем все текущие действия
-        stateMachine.StopAllCoroutines();
-        
-        // Убираем клиента из всех очередей и списков
-        queueManager.RemoveClientFromQueue(this);
-        if(ClientQueueManager.dissatisfiedClients.Contains(this))
-        {
-            ClientQueueManager.dissatisfiedClients.Remove(this);
-        }
-        
-        // ИЗМЕНЕНО ЗДЕСЬ: Устанавливаем причину, которая соответствует символу ":("
-        reasonForLeaving = LeaveReason.CalmedDown; 
-        
-        // Запускаем процесс ухода
-        stateMachine.SetState(ClientState.Leaving);
-        stateMachine.StartCoroutine(stateMachine.MainLogicLoop());
-    }
+    public void ForceLeave() { if (stateMachine.GetCurrentState() == ClientState.Leaving) return; stateMachine.StopAllCoroutines(); queueManager.RemoveClientFromQueue(this); if(ClientQueueManager.dissatisfiedClients.Contains(this)) { ClientQueueManager.dissatisfiedClients.Remove(this); } reasonForLeaving = LeaveReason.CalmedDown; stateMachine.SetState(ClientState.Leaving); stateMachine.StartCoroutine(stateMachine.MainLogicLoop()); }
 }

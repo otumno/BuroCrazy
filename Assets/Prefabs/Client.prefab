@@ -551,6 +551,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 1
   stoppingDistance: 0.5
+  normalDrag: 1
+  congestedDrag: 20
   stuckVelocityThreshold: 0.1
   stuckTimeThreshold: 3
   minMoveSpeed: 1.5
@@ -574,6 +576,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   confusionWaitTime: 5
   forgetfulnessChancePerWaypoint: 0.1
+  personalSpaceRadius: 0.8
+  repositionSpeedMultiplier: 0.4
 --- !u!114 &1436117481442990244
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -588,8 +592,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minWaitTime: 2
   maxWaitTime: 5
-  patienceMinTime: 30
-  patienceMaxTime: 60
+  patienceMinTime: 5
+  patienceMaxTime: 15
   crowdThreshold: 10
   crowdTimeout: 5
   crowdDissatisfactionChance: 0.1

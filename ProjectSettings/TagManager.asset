@@ -16,6 +16,7 @@ TagManager:
   - RegistrationZone
   - Desk1
   - Desk2
+  - Guard
   layers:
   - Default
   - TransparentFX
@@ -26,7 +27,7 @@ TagManager:
   - Client
   - Furniture
   - Walls
-  - 
+  - Guard
   - 
   - 
   - 
