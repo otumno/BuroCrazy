@@ -17,6 +17,8 @@ TagManager:
   - Desk1
   - Desk2
   - Guard
+  - Seat
+  - Intern
   layers:
   - Default
   - TransparentFX

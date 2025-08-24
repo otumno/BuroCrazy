@@ -1,75 +1,75 @@
 using UnityEngine;
 
-// Требуем, чтобы на объекте со скриптом обязательно был компонент AudioSource
 [RequireComponent(typeof(AudioSource))]
 public class MusicPlayer : MonoBehaviour
 {
-    // Массив, в который вы перетащите все ваши музыкальные треки в инспекторе
-    public AudioClip[] musicTracks;
+    [Header("Плейлисты")]
+    [Tooltip("Музыка, которая играет в течение дня")]
+    public AudioClip[] dayTracks;
+    [Tooltip("Один трек, который будет играть всю ночь (в цикле)")]
+    public AudioClip nightTrack;
 
     private AudioSource audioSource;
-    private int lastTrackIndex = -1; // Индекс последнего проигранного трека
+    private int lastTrackIndex = -1;
+    private bool isNightMusic = false;
 
     void Awake()
     {
-        // Получаем доступ к компоненту AudioSource
         audioSource = GetComponent<AudioSource>();
-    }
-
-    void Start()
-    {
-        // Выключаем зацикливание для отдельных треков,
-        // так как мы будем управлять этим сами
-        audioSource.loop = false;
     }
 
     void Update()
     {
-        // Проверяем каждый кадр: если музыка сейчас не играет,
-        // значит, предыдущий трек закончился или это первый запуск
-        if (!audioSource.isPlaying)
+        string period = ClientSpawner.CurrentPeriodName?.ToLower().Trim();
+
+        // Логика для ночи
+        if (period == "ночь")
         {
-            PlayRandomTrack();
+            if (!isNightMusic)
+            {
+                isNightMusic = true;
+                audioSource.Stop();
+                audioSource.clip = nightTrack;
+                audioSource.loop = true;
+                if(nightTrack != null) audioSource.Play();
+            }
+        }
+        // Логика для дня
+        else
+        {
+            if (isNightMusic)
+            {
+                isNightMusic = false;
+                audioSource.Stop();
+                audioSource.loop = false;
+            }
+
+            if (!audioSource.isPlaying)
+            {
+                PlayRandomDayTrack();
+            }
         }
     }
 
-    void PlayRandomTrack()
+    void PlayRandomDayTrack()
     {
-        // Если в массиве нет треков, ничего не делаем
-        if (musicTracks.Length == 0)
+        if (dayTracks.Length == 0) return;
+        if (dayTracks.Length == 1)
         {
-            Debug.LogWarning("В MusicPlayer не добавлено ни одного трека.");
-            return;
-        }
-
-        // Если в плейлисте всего один трек, просто проигрываем его
-        if (musicTracks.Length == 1)
-        {
-            // Проверяем, не назначен ли он уже, чтобы не вызывать Play() лишний раз
-            if (audioSource.clip != musicTracks[0])
+            if (audioSource.clip != dayTracks[0])
             {
-                audioSource.clip = musicTracks[0];
+                audioSource.clip = dayTracks[0];
                 audioSource.Play();
             }
-            // Включаем зацикливание, если трек один
             audioSource.loop = true;
             return;
         }
 
-        // Выбираем новый случайный индекс до тех пор,
-        // пока он не будет отличаться от индекса последнего трека
         int newIndex;
-        do
-        {
-            newIndex = Random.Range(0, musicTracks.Length);
-        } 
-        while (newIndex == lastTrackIndex);
-
-        // Сохраняем новый индекс как "последний"
+        do { newIndex = Random.Range(0, dayTracks.Length); } while (newIndex == lastTrackIndex);
+        
         lastTrackIndex = newIndex;
-
-        // Назначаем выбранный трек и проигрываем его
-        audioSource.clip = musicTracks[lastTrackIndex];
+        audioSource.clip = dayTracks[lastTrackIndex];
         audioSource.Play();
     }
 }

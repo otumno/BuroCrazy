@@ -188,11 +188,11 @@ GameObject:
   - component: {fileID: 2633991379055616326}
   - component: {fileID: 3293450245768256502}
   - component: {fileID: 6502912803223564717}
-  - component: {fileID: -885530198562832492}
-  - component: {fileID: -6969218027224662082}
+  - component: {fileID: -5448461106382789012}
+  - component: {fileID: 2626675050234470189}
   - component: {fileID: -8398573153687907481}
   m_Layer: 0
-  m_Name: Clerk
+  m_Name: Intern
   m_TagString: Clerk
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -208,8 +208,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0.57, y: 5.75, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.88, y: 0.88, z: 0.88}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 5543205137788260788}
   m_Father: {fileID: 0}
@@ -258,7 +258,7 @@ SpriteRenderer:
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 2
-  m_Sprite: {fileID: -1275117128306786066, guid: 12d3642d8ced9fc46a712f77a32976f5, type: 3}
+  m_Sprite: {fileID: 363198020419796238, guid: 7bed21e5d0610f14b8249880227cb951, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -331,8 +331,8 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.23
---- !u!114 &-885530198562832492
+  m_Radius: 0.17
+--- !u!114 &-5448461106382789012
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -341,16 +341,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 2985711966202016409}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 21c29ad6a4ef133449330545c73edce0, type: 3}
+  m_Script: {fileID: 11500000, guid: 2fefbc3763bc1b740bd6d35573b0bd3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  workPoint: {fileID: 0}
+  moveSpeed: 2.5
+  patrolPoints: []
   kitchenPoint: {fileID: 0}
   staffToiletPoint: {fileID: 0}
-  assignedServicePoint: 0
-  moveSpeed: 1.8
-  chanceToGoToToilet: 0.005
---- !u!114 &-6969218027224662082
+  helpCheckInterval: 2
+  chanceToServeFromQueue: 0.1
+  chanceToCoverDesk: 0.5
+  chanceToGoToToilet: 0.008
+  timeInToilet: 4
+--- !u!114 &2626675050234470189
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -359,7 +362,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 2985711966202016409}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 29bc2c6d1a095674a8484f4b083b601d, type: 3}
+  m_Script: {fileID: 11500000, guid: b8f1460a7d4078347afc0d328e5517d8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!114 &-8398573153687907481

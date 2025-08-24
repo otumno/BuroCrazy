@@ -11,17 +11,17 @@ public class ClientMovement : MonoBehaviour
     [Header("Базовые параметры")]
     [SerializeField] public float moveSpeed = 2f;
     [SerializeField] public float stoppingDistance = 0.8f;
-
-    [Header("Физика и Трение")] // <-- НОВЫЙ РАЗДЕЛ
+    [Header("Физика и Трение")]
     [SerializeField] public float normalDrag = 1f;
-    [SerializeField] public float congestedDrag = 20f; // Высокое трение в толпе
-
+    [SerializeField] public float congestedDrag = 20f;
+    [SerializeField] public float stumbleDrag = 50f; // <-- Новое поле
+    [SerializeField] public float stumbleSpeedThreshold = 4f; // <-- Новое поле
     [Header("Детектор застревания")]
     [SerializeField] private float stuckVelocityThreshold = 0.1f;
     [SerializeField] private float stuckTimeThreshold = 3f;
     [Header("Случайные параметры (Разброс)")]
-    [SerializeField] private float minMoveSpeed = 1.5f;
-    [SerializeField] private float maxMoveSpeed = 2.5f;
+    [SerializeField] private float minMoveSpeed = 1.2f;
+    [SerializeField] private float maxMoveSpeed = 3.0f;
     [SerializeField] private float minMass = 0.8f;
     [SerializeField] private float maxMass = 1.2f;
     [SerializeField] private float minScale = 0.9f;
@@ -42,8 +42,11 @@ public class ClientMovement : MonoBehaviour
     {
         if (rb != null)
         {
-            // --- НОВАЯ ЛОГИКА ДИНАМИЧЕСКОГО ТРЕНИЯ ---
-            if (rb.linearVelocity.magnitude < stuckVelocityThreshold)
+            if (rb.linearVelocity.magnitude > stumbleSpeedThreshold)
+            {
+                rb.linearDamping = stumbleDrag;
+            }
+            else if (rb.linearVelocity.magnitude < stuckVelocityThreshold)
             {
                 rb.linearDamping = congestedDrag;
             }
@@ -52,13 +55,11 @@ public class ClientMovement : MonoBehaviour
                 rb.linearDamping = normalDrag;
             }
 
-            // Ограничение максимальной скорости
             if (rb.linearVelocity.magnitude > maxVelocity)
             {
                 rb.linearVelocity = rb.linearVelocity.normalized * maxVelocity;
             }
             
-            // Логика поворота спрайта
             if (spriteRenderer != null)
             {
                 if (rb.linearVelocity.x > 0.1f) { spriteRenderer.flipX = false; }
