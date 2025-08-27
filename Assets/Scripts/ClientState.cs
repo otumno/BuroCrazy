@@ -1,10 +1,12 @@
 public enum ClientState
 {
-    Spawning, MovingToGoal, MovingToSeat, MovingToRegistrarImpolite, // <-- ДОБАВЛЕНО НОВОЕ СОСТОЯНИЕ
+    Spawning, MovingToGoal, MovingToSeat, MovingToRegistrarImpolite,
     AtRegistration, AtWaitingArea, SittingInWaitingArea,
     AtToilet, Leaving, Confused,
-    PassedRegistration, Positioning, ReturningToWait, AtDesk1, AtDesk2,
+    PassedRegistration,
+    GoingToCashier, AtCashier,
+    Positioning, ReturningToWait, AtDesk1, AtDesk2,
     AtLimitedZoneEntrance, InsideLimitedZone,
-    
-    Enraged
+    Enraged,
+    LeavingUpset // <-- НОВОЕ СОСТОЯНИЕ
 }

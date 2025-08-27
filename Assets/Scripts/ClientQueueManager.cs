@@ -38,28 +38,11 @@ public class ClientQueueManager : MonoBehaviour
     private bool isCrowdActive = false;
     private Coroutine patienceCoroutine;
     private static Waypoint _registrationWaypoint, _desk1Waypoint, _desk2Waypoint, _exitWaypoint;
-    private Waypoint registrationWaitingWaypoint, toiletWaypoint;
+    private Waypoint registrationWaitingWaypoint, toiletWaypoint, cashierWaypoint;
     private GameObject waitingZoneObject, toiletZoneObject, registrationZoneObject, desk1Object, desk2Object;
     private static Waypoint[] allWaypointsCache;
 
-    public void Initialize(ClientPathfinding p, GameObject rZ, GameObject wZ, GameObject tZ, GameObject d1, GameObject d2, Waypoint eW)
-    {
-        parent = p;
-        registrationZoneObject = rZ;
-        waitingZoneObject = wZ;
-        toiletZoneObject = tZ;
-        desk1Object = d1;
-        desk2Object = d2;
-        _registrationWaypoint = rZ.GetComponent<Waypoint>();
-        _desk1Waypoint = d1.GetComponent<Waypoint>();
-        _desk2Waypoint = d2.GetComponent<Waypoint>();
-        _exitWaypoint = eW;
-        registrationWaitingWaypoint = wZ.GetComponent<Waypoint>();
-        toiletWaypoint = tZ.GetComponent<Waypoint>();
-        if (allWaypointsCache == null) { allWaypointsCache = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); }
-        if (seats == null) { seats = new List<Transform>(); GameObject[] seatObjects = GameObject.FindGameObjectsWithTag("Seat"); foreach (GameObject seatObj in seatObjects) { seats.Add(seatObj.transform); } }
-    }
-
+    public void Initialize(ClientPathfinding p, GameObject rZ, GameObject wZ, GameObject tZ, GameObject d1, GameObject d2, GameObject cO, Waypoint eW) { parent = p; registrationZoneObject = rZ; waitingZoneObject = wZ; toiletZoneObject = tZ; desk1Object = d1; desk2Object = d2; if(cO != null) cashierWaypoint = cO.GetComponent<Waypoint>(); _registrationWaypoint = rZ.GetComponent<Waypoint>(); _desk1Waypoint = d1.GetComponent<Waypoint>(); _desk2Waypoint = d2.GetComponent<Waypoint>(); _exitWaypoint = eW; registrationWaitingWaypoint = wZ.GetComponent<Waypoint>(); if (allWaypointsCache == null) { allWaypointsCache = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); } if (seats == null) { seats = new List<Transform>(); GameObject[] seatObjects = GameObject.FindGameObjectsWithTag("Seat"); foreach (GameObject seatObj in seatObjects) { seats.Add(seatObj.transform); } } }
     void Update() { CheckCrowd(); }
     public static void ResetQueueNumber() { nextQueueNumber = 1; }
     private IEnumerator PatienceCheck() { yield return new WaitForSeconds(Random.Range(patienceMinTime, patienceMaxTime)); if (parent == null || (parent.stateMachine.GetCurrentState() != ClientState.AtWaitingArea && parent.stateMachine.GetCurrentState() != ClientState.SittingInWaitingArea)) yield break; float choice = Random.value; if (choice < 0.25f) { parent.stateMachine.DecideToVisitToilet(); } else if (choice < 0.65f) { RemoveClientFromQueue(parent); parent.stateMachine.SetState(ClientState.Confused); } else { StartPatienceTimer(); } }
@@ -80,6 +63,7 @@ public class ClientQueueManager : MonoBehaviour
     public static bool IsDesk1Available() => isDesk1Available;
     public static bool IsDesk2Available() => isDesk2Available;
     public static bool IsDeskAvailable(int deskNum) => deskNum == 1 ? IsDesk1Available() : IsDesk2Available();
+    public static bool IsCashierAvailable() { ClerkController cashier = ClientSpawner.GetClerkAtDesk(3); return cashier != null && !cashier.IsOnBreak(); }
     public bool HasQueueNumber() => queue.ContainsKey(parent);
     public static bool IsRegistrarBusy() => isRegistrationBusy;
     public static bool IsRegistrarBusyWithAnother(ClientPathfinding client) => isRegistrationBusy && clientBeingServed != client;
@@ -90,17 +74,44 @@ public class ClientQueueManager : MonoBehaviour
     public Waypoint GetWaitingWaypoint() => registrationWaitingWaypoint;
     public Waypoint GetDesk1Waypoint() => _desk1Waypoint;
     public Waypoint GetDesk2Waypoint() => _desk2Waypoint;
-    public Waypoint GetToiletWaypoint() => toiletWaypoint;
+    public Waypoint GetToiletWaypoint() { return ClientSpawner.GetToiletZone().waitingWaypoint; }
+    public Waypoint GetCashierWaypoint() => cashierWaypoint;
     public Waypoint GetExitWaypoint() => _exitWaypoint;
     public GameObject GetDesk1Zone() => desk1Object;
     public GameObject GetDesk2Zone() => desk2Object;
     public GameObject GetWaitingZone() => waitingZoneObject;
     public GameObject GetToiletZone() => toiletZoneObject;
     public GameObject GetRegistrationZone() => registrationZoneObject;
-    public void AssignInitialGoal() { float choice = Random.value; Waypoint goal; ClientState initialState = ClientState.MovingToGoal; if (choice < 0.6f) { goal = registrationWaitingWaypoint; } else if (choice < 0.9f) { goal = _registrationWaypoint; initialState = ClientState.MovingToRegistrarImpolite; } else { goal = toiletWaypoint; } parent.stateMachine.SetGoal(goal); parent.stateMachine.SetState(initialState); parent.stateMachine.RecalculatePath(); }
+    
+    public void AssignInitialGoal() 
+    {
+        float choice = Random.value;
+        Waypoint goal;
+        ClientState initialState = ClientState.MovingToGoal;
+        if (choice < 0.6f) 
+        {
+            goal = registrationWaitingWaypoint;
+        } 
+        else if (choice < 0.9f) 
+        {
+            initialState = ClientState.MovingToRegistrarImpolite;
+            float impoliteChoice = Random.value;
+            if (impoliteChoice < 0.33f) { goal = _registrationWaypoint; }
+            else if (impoliteChoice < 0.66f) { goal = _desk1Waypoint; }
+            else { goal = _desk2Waypoint; }
+        } 
+        else 
+        {
+            goal = GetToiletWaypoint();
+        }
+        parent.stateMachine.SetGoal(goal);
+        parent.stateMachine.SetState(initialState);
+        parent.stateMachine.RecalculatePath();
+    }
+    
     public void JoinQueue(ClientPathfinding c) { if (queue.ContainsKey(c)) queue.Remove(c); queue.Add(c, nextQueueNumber++); if (c.notification != null) c.notification.SetQueueNumber(queue[c]); }
-    public Waypoint GetToiletReturnGoal(Waypoint prevGoal) { if (prevGoal != null && prevGoal != toiletWaypoint) return prevGoal; if (queue.ContainsKey(parent)) return registrationWaitingWaypoint; return _exitWaypoint; }
+    public Waypoint GetToiletReturnGoal(Waypoint prevGoal) { if (prevGoal != null && prevGoal.GetComponentInParent<LimitedCapacityZone>() == null) return prevGoal; if (queue.ContainsKey(parent)) return registrationWaitingWaypoint; return _exitWaypoint; }
     public Waypoint GetRandomWaypoint_NoExit() { if (allWaypointsCache == null || allWaypointsCache.Length == 0) return null; Waypoint randomWp; do { randomWp = allWaypointsCache[Random.Range(0, allWaypointsCache.Length)]; } while (randomWp == _exitWaypoint); return randomWp; }
-    public Waypoint ChooseNewGoal(ClientState lastState) { float choice = Random.value; if (lastState == ClientState.AtToilet) { if (choice < 0.6f && queue.ContainsKey(parent)) return registrationWaitingWaypoint; else if (choice < 0.8f) return _registrationWaypoint; return _exitWaypoint; } else { if (choice < 0.5f && queue.ContainsKey(parent)) return registrationWaitingWaypoint; else if (choice < 0.58f) return _registrationWaypoint; else if (choice < 0.6f) return toiletWaypoint; return _exitWaypoint; } }
+    public Waypoint ChooseNewGoal(ClientState lastState) { if (!queue.ContainsKey(parent)) { float choice = Random.value; if(choice < 0.7f) return registrationWaitingWaypoint; return _registrationWaypoint; } else { float choice = Random.value; if (lastState == ClientState.AtToilet) { if (choice < 0.6f && queue.ContainsKey(parent)) return registrationWaitingWaypoint; else if (choice < 0.8f) return _registrationWaypoint; return _exitWaypoint; } else { if (choice < 0.5f && queue.ContainsKey(parent)) return registrationWaitingWaypoint; else if (choice < 0.58f) return _registrationWaypoint; else if (choice < 0.6f) return GetToiletWaypoint(); return _exitWaypoint; } } }
     public void StartPatienceTimer() { if (patienceCoroutine != null) StopCoroutine(patienceCoroutine); patienceCoroutine = StartCoroutine(PatienceCheck()); }
 }

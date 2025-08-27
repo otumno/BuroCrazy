@@ -47,6 +47,7 @@ GameObject:
   - component: {fileID: -5108643353032148814}
   - component: {fileID: 7243027972721051166}
   - component: {fileID: -9054825702953758724}
+  - component: {fileID: 2906592000333219946}
   m_Layer: 6
   m_Name: Guard
   m_TagString: Client
@@ -303,11 +304,16 @@ MonoBehaviour:
   stoppingDistance: 0.2
   minWaitTime: 1
   maxWaitTime: 3
-  postWaypoint: {fileID: 0}
+  staffToiletPoint: {fileID: 0}
+  homePointWaypoint: {fileID: 0}
+  chanceToGoToToilet: 0.01
+  timeInToilet: 5
   chaseSpeedMultiplier: 2
   chaseShoutClip: {fileID: 0}
   catchDistance: 1
   talkTime: 3
+  startShiftSound: {fileID: 8300000, guid: 7df9251a62a0ec148b130536dba1b021, type: 3}
+  endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
 --- !u!114 &7243027972721051166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -332,6 +338,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a17ffb2fdfe805d449a17b17f0362d8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &2906592000333219946
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7041728646939229016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d289a7c96ccc4464983b41546414db0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHistory: 15
 --- !u!1 &8061844731964319759
 GameObject:
   m_ObjectHideFlags: 0
@@ -364,11 +383,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 7483543044468799591}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 20, y: 5}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0.002, y: 0.201}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0, y: 0}
 --- !u!23 &1616906219735102322
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -434,7 +453,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: "\U0001F92A"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -461,14 +480,14 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 5.6
-  m_fontSizeBase: 5.6
+  m_fontSize: 5
+  m_fontSizeBase: 5
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
-  m_HorizontalAlignment: 2
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -499,7 +518,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_margin: {x: 0, y: -0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   _SortingLayer: 0

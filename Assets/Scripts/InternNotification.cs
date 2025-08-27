@@ -11,16 +11,12 @@ public class InternNotification : MonoBehaviour
     {
         parent = GetComponent<InternController>();
         notificationText = GetComponentInChildren<TextMeshPro>();
-        if (parent == null || notificationText == null)
-        {
-            enabled = false;
-        }
+        if (parent == null || notificationText == null) { enabled = false; }
     }
 
     void Update()
     {
         if (notificationText == null || parent == null) return;
-        
         var state = parent.GetCurrentState();
         notificationText.text = GetStateText(state);
         notificationText.color = GetStateColor(state);
@@ -28,19 +24,24 @@ public class InternNotification : MonoBehaviour
 
     private string GetStateText(InternController.InternState state)
     {
+        bool useEmoji = NotificationStyleManager.useEmojiStyle;
         switch (state)
         {
-            case InternController.InternState.Patrolling: return "P";
-            case InternController.InternState.HelpingConfused:
-            case InternController.InternState.TalkingToConfused:
-                return "?";
-            case InternController.InternState.ServingFromQueue: return "!";
-            case InternController.InternState.CoveringDesk:
-            case InternController.InternState.Working:
-                return "§";
-            case InternController.InternState.OnBreak: return "L";
-            case InternController.InternState.AtToilet: return "!";
-            case InternController.InternState.Inactive: return "*";
+            case InternController.InternState.Patrolling: return useEmoji ? "🚶" : "P";
+            case InternController.InternState.HelpingConfused: return useEmoji ? "🧐" : "?";
+            case InternController.InternState.TalkingToConfused: return useEmoji ? "💡" : "?";
+            case InternController.InternState.ServingFromQueue: return useEmoji ? "📋" : "!";
+            case InternController.InternState.CoveringDesk: case InternController.InternState.Working: return useEmoji ? "😑" : "§";
+            case InternController.InternState.OnBreak: return useEmoji ? "🍔" : "L";
+            case InternController.InternState.AtToilet: return useEmoji ? "🥺" : "!";
+            case InternController.InternState.Inactive: return useEmoji ? "😔" : "*";
+            
+            // --- ДОБАВЛЕННЫЕ СОСТОЯНИЯ ---
+            case InternController.InternState.GoingToBreak:
+            case InternController.InternState.GoingToToilet:
+            case InternController.InternState.ReturningToPatrol:
+                return useEmoji ? "🚶" : "...";
+
             default: return "...";
         }
     }
@@ -50,24 +51,13 @@ public class InternNotification : MonoBehaviour
         switch (state)
         {
             case InternController.InternState.Patrolling: return Color.white;
-            
-            case InternController.InternState.HelpingConfused:
-                return Color.yellow; // Желтый, когда идет к потеряшке
-            case InternController.InternState.TalkingToConfused:
-                return Color.magenta; // Фиолетовый, когда "разговаривает"
-
-            case InternController.InternState.ServingFromQueue:
-                return Color.yellow;
-            case InternController.InternState.CoveringDesk:
-            case InternController.InternState.Working:
-                return Color.green;
-            case InternController.InternState.OnBreak:
-            case InternController.InternState.Inactive:
-                return Color.cyan;
-            case InternController.InternState.AtToilet:
-                return Color.yellow;
-            default:
-                return Color.grey;
+            case InternController.InternState.HelpingConfused: return Color.yellow;
+            case InternController.InternState.TalkingToConfused: return Color.magenta;
+            case InternController.InternState.ServingFromQueue: return Color.yellow;
+            case InternController.InternState.CoveringDesk: case InternController.InternState.Working: return Color.green;
+            case InternController.InternState.OnBreak: case InternController.InternState.Inactive: return Color.cyan;
+            case InternController.InternState.AtToilet: return Color.yellow;
+            default: return Color.grey;
         }
     }
 }

@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 
+[RequireComponent(typeof(ClerkController))]
 public class ClerkNotification : MonoBehaviour
 {
     private ClerkController parent;
@@ -10,45 +11,42 @@ public class ClerkNotification : MonoBehaviour
     {
         parent = GetComponent<ClerkController>();
         notificationText = GetComponentInChildren<TextMeshPro>();
-        if (parent == null || notificationText == null)
-        {
-            Debug.LogWarning("ClerkNotification не нашел компоненты ClerkController или TextMeshPro", gameObject);
-            enabled = false;
-        }
+        if (parent == null || notificationText == null) { enabled = false; }
     }
-    
+
     void Update()
     {
         if (notificationText == null || parent == null) return;
-        notificationText.text = GetStateText();
-        notificationText.color = GetStateColor();
+        var state = parent.GetCurrentState();
+        notificationText.text = GetStateText(state);
+        notificationText.color = GetStateColor(state);
     }
 
-    private string GetStateText()
+    private string GetStateText(ClerkController.ClerkState state)
     {
-        var state = parent.GetCurrentState();
+        bool useEmoji = NotificationStyleManager.useEmojiStyle;
+        
         switch (state)
         {
             case ClerkController.ClerkState.Working:
             case ClerkController.ClerkState.ReturningToWork:
-                return "§";
+                if (parent.role == ClerkController.ClerkRole.Cashier) return useEmoji ? "😑" : "$";
+                return useEmoji ? "😑" : "§";
             case ClerkController.ClerkState.GoingToToilet:
             case ClerkController.ClerkState.AtToilet:
-                return "!";
+                return useEmoji ? "😓" : "!";
             case ClerkController.ClerkState.GoingToBreak:
             case ClerkController.ClerkState.OnBreak:
-                string period = ClientSpawner.CurrentPeriodName?.ToLower().Trim();
-                if (period == "ночь") return "*";
-                if (period == "обед") return "L";
-                return ""; // На всякий случай
+                return useEmoji ? "😖" : "L";
+            case ClerkController.ClerkState.Inactive:
+                return useEmoji ? "😔" : "*";
             default:
-                return "";
+                return "...";
         }
     }
     
-    private Color GetStateColor()
+    private Color GetStateColor(ClerkController.ClerkState state)
     {
-        var state = parent.GetCurrentState();
         switch (state)
         {
             case ClerkController.ClerkState.Working:
@@ -61,7 +59,7 @@ public class ClerkNotification : MonoBehaviour
             case ClerkController.ClerkState.OnBreak:
                 return Color.cyan;
             default:
-                return Color.white;
+                return Color.grey;
         }
     }
 }

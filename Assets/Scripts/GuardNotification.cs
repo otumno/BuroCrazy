@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 
+[RequireComponent(typeof(GuardMovement))]
 public class GuardNotification : MonoBehaviour
 {
     private GuardMovement parent;
@@ -10,43 +11,42 @@ public class GuardNotification : MonoBehaviour
     {
         parent = GetComponent<GuardMovement>();
         notificationText = GetComponentInChildren<TextMeshPro>();
-        if (parent == null || notificationText == null)
-        {
-            Debug.LogWarning("GuardNotification не нашел компоненты GuardMovement или TextMeshPro", gameObject);
-            enabled = false;
-        }
+        if (parent == null || notificationText == null) { enabled = false; }
     }
     
     void Update()
     {
         if (notificationText == null || parent == null) return;
-        notificationText.text = GetStateText();
-        notificationText.color = GetStateColor();
+        var state = parent.GetCurrentState();
+        notificationText.text = GetStateText(state);
+        notificationText.color = GetStateColor(state);
     }
 
-    private string GetStateText()
+    private string GetStateText(GuardMovement.GuardState state)
     {
-        var state = parent.GetCurrentState();
+        bool useEmoji = NotificationStyleManager.useEmojiStyle;
         switch (state)
         {
-            case GuardMovement.GuardState.Patrolling: return "P";
+            case GuardMovement.GuardState.Patrolling: return useEmoji ? "👀" : "P";
             case GuardMovement.GuardState.Chasing:
             case GuardMovement.GuardState.Talking:
-                return "#";
-            case GuardMovement.GuardState.OnPost:
-                string period = ClientSpawner.CurrentPeriodName?.ToLower().Trim();
-                if (period == "ночь") return "*";
-                if (period == "обед") return "L";
-                return "S"; // Стандартный символ для поста, если период не определен
+                return useEmoji ? "🚨" : "#";
+            case GuardMovement.GuardState.OnPost: return useEmoji ? "🥪" : "S";
+            case GuardMovement.GuardState.GoingToToilet:
+            case GuardMovement.GuardState.AtToilet:
+                return useEmoji ? "😖" : "!";
+            case GuardMovement.GuardState.OffDuty: return useEmoji ? "😔" : "*";
+            
+            // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
             case GuardMovement.GuardState.WaitingAtWaypoint:
-                return "...";
-            default: return "";
+                return useEmoji ? "😐" : "...";
+
+            default: return "...";
         }
     }
     
-    private Color GetStateColor()
+    private Color GetStateColor(GuardMovement.GuardState state)
     {
-        var state = parent.GetCurrentState();
         switch (state)
         {
             case GuardMovement.GuardState.Patrolling: return Color.white;
@@ -54,8 +54,11 @@ public class GuardNotification : MonoBehaviour
             case GuardMovement.GuardState.Chasing:
             case GuardMovement.GuardState.Talking:
                 return Color.blue;
-            case GuardMovement.GuardState.WaitingAtWaypoint: return Color.grey;
-            default: return Color.white;
+            case GuardMovement.GuardState.GoingToToilet:
+            case GuardMovement.GuardState.AtToilet:
+                return Color.yellow;
+            default:
+                return Color.grey;
         }
     }
 }

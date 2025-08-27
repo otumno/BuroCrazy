@@ -5,6 +5,8 @@ public class GraphBuilder : MonoBehaviour
 {
     public LayerMask obstacleMask;
     public float maxDistance = 100f;
+    [Tooltip("Радиус 'толщины' пути. Чем больше, тем дальше от стен будут строиться маршруты.")]
+    public float pathRadius = 0.3f;
 
     [ContextMenu("Build Graph Now")]
     public void BuildGraph()
@@ -23,8 +25,8 @@ public class GraphBuilder : MonoBehaviour
                 Vector2 direction = (wp2.transform.position - wp1.transform.position).normalized;
                 float distance = Vector2.Distance(wp1.transform.position, wp2.transform.position);
 
-                RaycastHit2D hit = Physics2D.Raycast(wp1.transform.position, direction, distance, obstacleMask);
-
+                RaycastHit2D hit = Physics2D.CircleCast(wp1.transform.position, pathRadius, direction, distance, obstacleMask);
+                
                 if (hit.collider == null)
                 {
                     wp1.neighbors.Add(wp2);
@@ -35,8 +37,6 @@ public class GraphBuilder : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        BuildGraph(); 
-
         Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
         foreach (var wp in allWaypoints)
         {

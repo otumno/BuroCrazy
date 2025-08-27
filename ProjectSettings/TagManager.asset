@@ -19,6 +19,7 @@ TagManager:
   - Guard
   - Seat
   - Intern
+  - Cashier
   layers:
   - Default
   - TransparentFX
