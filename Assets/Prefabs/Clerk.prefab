@@ -16,6 +16,8 @@ GameObject:
   - component: {fileID: -6969218027224662082}
   - component: {fileID: -8398573153687907481}
   - component: {fileID: -5355575680228437556}
+  - component: {fileID: 2013173742581785441}
+  - component: {fileID: 8134405870419592947}
   m_Layer: 0
   m_Name: Clerk
   m_TagString: Clerk
@@ -174,10 +176,8 @@ MonoBehaviour:
   kitchenPoint: {fileID: 0}
   staffToiletPoint: {fileID: 0}
   assignedServicePoint: 0
-  moveSpeed: 1.8
   timeInToilet: 10
   chanceToGoToToilet: 0.005
-  stoppingDistance: 0.2
   startShiftSound: {fileID: 8300000, guid: 7df9251a62a0ec148b130536dba1b021, type: 3}
   endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
 --- !u!114 &-6969218027224662082
@@ -217,6 +217,38 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHistory: 15
+--- !u!114 &2013173742581785441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2985711966202016409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f459ff02702cb794b8af16738c08b48c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 2
+  stoppingDistance: 0.2
+  rubberBandStrength: 5
+  priority: 1
+--- !u!114 &8134405870419592947
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2985711966202016409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f459ff02702cb794b8af16738c08b48c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 2
+  stoppingDistance: 0.2
+  rubberBandStrength: 5
+  priority: 3
 --- !u!1 &7120533572356830109
 GameObject:
   m_ObjectHideFlags: 0

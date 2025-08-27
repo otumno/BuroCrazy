@@ -4,8 +4,8 @@ public class Registrar : MonoBehaviour
 {
     void Update()
     {
-        // Эти два метода теперь полностью контролируют очередь и предотвращают зависания
-        ClientQueueManager.CheckForStalledRegistrar();
-        ClientQueueManager.CallNextClient();
+        // Обращаемся к методам через синглтон
+        ClientQueueManager.Instance.CheckForStalledRegistrar();
+        ClientQueueManager.Instance.CallNextClient();
     }
 }

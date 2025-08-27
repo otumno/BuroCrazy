@@ -1,21 +1,21 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class MoneyMover : MonoBehaviour
 {
-    public Transform target;
-    public float minSpeed = 8f;   // Минимальная скорость
-    public float maxSpeed = 12f;  // Максимальная скорость
-    public float arrivalThreshold = 0.1f;
+    public float minSpeed = 8f;
+    public float maxSpeed = 12f;
+    
+    private Transform target;
+    private float currentSpeed;
 
-    private float currentSpeed; // Скорость конкретно этой купюры
-
-    void Start()
+    public void StartMove(Transform newTarget)
     {
-        // Выбираем случайную скорость из диапазона
-        currentSpeed = Random.Range(minSpeed, maxSpeed);
+        this.target = newTarget;
+        this.currentSpeed = UnityEngine.Random.Range(minSpeed, maxSpeed);
 
-        if (target != null)
+        if (this.target != null)
         {
             StartCoroutine(MoveToTarget());
         }
@@ -24,16 +24,19 @@ public class MoneyMover : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    
+    // Start() теперь пустой.
+    void Start()
+    {
+    }
 
     private IEnumerator MoveToTarget()
     {
-        while (Vector3.Distance(transform.position, target.position) > arrivalThreshold)
+        while (Vector3.Distance(transform.position, target.position) > 0.1f)
         {
-            // Используем выбранную случайную скорость
             transform.position = Vector3.MoveTowards(transform.position, target.position, currentSpeed * Time.deltaTime);
             yield return null;
         }
-
         Destroy(gameObject);
     }
 }

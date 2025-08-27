@@ -367,11 +367,12 @@ GameObject:
   - component: {fileID: 9090951974394061303}
   - component: {fileID: 2801172396659410360}
   - component: {fileID: 7789449862241196400}
-  - component: {fileID: 1436117481442990244}
   - component: {fileID: 6966612502974266264}
   - component: {fileID: 6796169321003199953}
   - component: {fileID: -5893773558095405194}
   - component: {fileID: -6735851664960550826}
+  - component: {fileID: -7718757593624086678}
+  - component: {fileID: 1297463190667798324}
   m_Layer: 6
   m_Name: Client
   m_TagString: Client
@@ -394,6 +395,7 @@ Transform:
   m_Children:
   - {fileID: 7359109024837263680}
   - {fileID: 5227028088659573090}
+  - {fileID: 6274580034038847641}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &8254600904554153275
@@ -529,7 +531,7 @@ MonoBehaviour:
   stateMachine: {fileID: 0}
   movement: {fileID: 0}
   notification: {fileID: 0}
-  queueManager: {fileID: 0}
+  docHolder: {fileID: 0}
   isLeavingSuccessfully: 0
   reasonForLeaving: 0
   billToPay: 0
@@ -555,13 +557,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b49ff8bb57c71d43852443f630c3e67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 1
   stoppingDistance: 0.5
-  normalDrag: 1
-  congestedDrag: 20
-  stumbleDrag: 50
-  stumbleSpeedThreshold: 4
-  stuckVelocityThreshold: 0.1
   stuckTimeThreshold: 3
   minMoveSpeed: 1.5
   maxMoveSpeed: 2.5
@@ -569,7 +565,6 @@ MonoBehaviour:
   maxMass: 1.2
   minScale: 0.9
   maxScale: 1.1
-  maxVelocity: 10
 --- !u!114 &7789449862241196400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -583,30 +578,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   confusionWaitTime: 5
-  forgetfulnessChancePerWaypoint: 0.1
-  personalSpaceRadius: 0.8
-  repositionSpeedMultiplier: 0.4
   maxPaymentDistance: 3
   zonePatienceTime: 15
---- !u!114 &1436117481442990244
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7041728646939229016}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b655980df47690f4f98579257db1cf4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  minWaitTime: 2
-  maxWaitTime: 5
-  patienceMinTime: 5
-  patienceMaxTime: 15
-  crowdThreshold: 10
-  crowdTimeout: 5
-  crowdDissatisfactionChance: 0.1
 --- !u!114 &6966612502974266264
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -742,3 +715,67 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHistory: 15
+--- !u!114 &-7718757593624086678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7041728646939229016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f459ff02702cb794b8af16738c08b48c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 2.5
+  stoppingDistance: 0.2
+  rubberBandStrength: 3
+  priority: 1
+--- !u!114 &1297463190667798324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7041728646939229016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f48d8d7d4ad622e4bb0ba7b6dbd80a95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  handPoint: {fileID: 6274580034038847641}
+  form1Prefab: {fileID: 798599227355505824, guid: 8641538397a01fe43af7274ec4931f4d, type: 3}
+  form2Prefab: {fileID: 3550377790086235711, guid: b4a4385cb142e0941add6cd29c29e654, type: 3}
+  certificate1Prefab: {fileID: 6963206784104080445, guid: edf11bd38fec4c84e9745075eb5f910b, type: 3}
+  certificate2Prefab: {fileID: 874320401446602386, guid: 3b9e93cf316ee2d4ab8c02695b069d07, type: 3}
+--- !u!1 &7317995827948736849
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6274580034038847641}
+  m_Layer: 6
+  m_Name: Hand
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6274580034038847641
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7317995827948736849}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.188, y: -0.216, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7483543044468799591}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

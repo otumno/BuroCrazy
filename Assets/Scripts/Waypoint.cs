@@ -9,6 +9,9 @@ public class Waypoint : MonoBehaviour
     public WaypointType type = WaypointType.General;
 
     // --- НОВОЕ ПОЛЕ ---
+    [Tooltip("Отметьте, если эта точка является конкретным местом обслуживания (у стойки клерка)")]
+    public bool isServicePoint = false;
+
     [Tooltip("Список тегов, которым ЗАПРЕЩЕНО использовать этот вейпоинт")]
     public List<string> forbiddenTags;
 

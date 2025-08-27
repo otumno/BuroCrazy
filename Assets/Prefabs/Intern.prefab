@@ -192,6 +192,8 @@ GameObject:
   - component: {fileID: 2626675050234470189}
   - component: {fileID: -8398573153687907481}
   - component: {fileID: -1675132356660474718}
+  - component: {fileID: 2013173742581785441}
+  - component: {fileID: -2601671322580053748}
   m_Layer: 6
   m_Name: Intern
   m_TagString: Clerk
@@ -345,7 +347,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2fefbc3763bc1b740bd6d35573b0bd3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2.5
   patrolPoints: []
   kitchenPoint: {fileID: 0}
   staffToiletPoint: {fileID: 0}
@@ -354,7 +355,6 @@ MonoBehaviour:
   chanceToCoverDesk: 0.5
   chanceToGoToToilet: 0.008
   timeInToilet: 4
-  stoppingDistance: 0.2
 --- !u!114 &2626675050234470189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -392,3 +392,35 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHistory: 15
+--- !u!114 &2013173742581785441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2985711966202016409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f459ff02702cb794b8af16738c08b48c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 2
+  stoppingDistance: 0.2
+  rubberBandStrength: 5
+  priority: 1
+--- !u!114 &-2601671322580053748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2985711966202016409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f459ff02702cb794b8af16738c08b48c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 2
+  stoppingDistance: 0.2
+  rubberBandStrength: 5
+  priority: 2

@@ -83,19 +83,14 @@ public class GuardManager : MonoBehaviour
             bool isDayGuard = guard.assignedShift == GuardMovement.Shift.Day || guard.assignedShift == GuardMovement.Shift.Universal;
             bool isNightGuard = guard.assignedShift == GuardMovement.Shift.Night;
 
-            // --- ОБНОВЛЕННАЯ ЛОГИКА УПРАВЛЕНИЯ СМЕНАМИ И ПЕРЕРЫВАМИ ---
-            
-            // Если сейчас день и дневной охранник не на смене (и не на обеде) -> Начать смену
             if (isDayTime && isDayGuard && !guard.IsAvailableAndOnDuty() && guard.GetCurrentState() == GuardMovement.GuardState.OffDuty)
             {
                 guard.StartShift();
             }
-            // Если сейчас ночь и дневной охранник на смене -> Закончить смену
             else if (!isDayTime && isDayGuard && guard.IsAvailableAndOnDuty())
             {
                 guard.EndShift();
             }
-            // Аналогично для ночного охранника
             else if (!isDayTime && isNightGuard && guard.GetCurrentState() == GuardMovement.GuardState.OffDuty)
             {
                 guard.StartShift();
@@ -105,7 +100,6 @@ public class GuardManager : MonoBehaviour
                 guard.EndShift();
             }
             
-            // Логика для обеда
             if (p == "обед" && guard.IsAvailableAndOnDuty())
             {
                  if (guardPosts != null && guardPosts.Count > 0)
@@ -113,7 +107,6 @@ public class GuardManager : MonoBehaviour
                      guard.GoOnBreak(guardPosts[0]);
                  }
             }
-            // Логика возвращения с обеда
             else if (p != "обед" && guard.GetCurrentState() == GuardMovement.GuardState.OnBreak)
             {
                 guard.ReturnToPatrol();
@@ -123,7 +116,9 @@ public class GuardManager : MonoBehaviour
 
     private void ManageChasing()
     {
-        var unassignedViolators = ClientQueueManager.dissatisfiedClients.Where(v => v != null && !assignedViolators.Contains(v)).ToList();
+        if (ClientQueueManager.Instance == null) return;
+        
+        var unassignedViolators = ClientQueueManager.Instance.dissatisfiedClients.Where(v => v != null && !assignedViolators.Contains(v)).ToList();
         if (unassignedViolators.Count == 0) return;
         var availableGuards = allGuards.Where(g => g != null && g.IsAvailableAndOnDuty()).ToList();
         foreach (var violator in unassignedViolators)
