@@ -20,6 +20,7 @@ public class ClientPathfinding : MonoBehaviour
     [Header("Звуки")] 
     public AudioClip spawnSound, exitSound, confusedSound, toiletSound;
     public AudioClip successfulExitSound, dissatisfiedExitSound, helpedByInternSound, paymentSound;
+    public AudioClip stampSound; // <--- ДОБАВЛЕНО
 
     [Header("Терпение")] public float totalPatienceTime;
     public static int totalClients, clientsExited, clientsInWaiting, clientsToToilet, clientsToRegistration, clientsConfused;
@@ -49,20 +50,10 @@ public class ClientPathfinding : MonoBehaviour
         totalPatienceTime = Random.Range(60f, 120f); 
         if (spawnSound != null) AudioSource.PlayClipAtPoint(spawnSound, transform.position);
 
-        // --- НОВАЯ ЛОГИКА: Выдаём случайный документ при спавне ---
         float choice = Random.value;
-        if (choice < 0.4f) // 40% шанс появиться без всего
-        {
-            docHolder.SetDocument(DocumentType.None);
-        }
-        else if (choice < 0.7f) // 30% шанс на Бланк 1
-        {
-            docHolder.SetDocument(DocumentType.Form1);
-        }
-        else // 30% шанс на Бланк 2
-        {
-            docHolder.SetDocument(DocumentType.Form2);
-        }
+        if (choice < 0.4f) { docHolder.SetDocument(DocumentType.None); }
+        else if (choice < 0.7f) { docHolder.SetDocument(DocumentType.Form1); }
+        else { docHolder.SetDocument(DocumentType.Form2); }
     }
 
     public void OnClientExit() { if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.CalmedDown || reasonForLeaving == LeaveReason.Upset) { clientsExitedAngry++; } else if(isLeavingSuccessfully) { clientsExitedProcessed++; } clientsExited++; totalClients--; if (exitSound != null) AudioSource.PlayClipAtPoint(exitSound, transform.position); Destroy(gameObject); }

@@ -8,7 +8,6 @@ public class DocumentMover : MonoBehaviour
     private Transform target;
     private Action onArrival;
 
-    // Публичный метод, который теперь будет запускать движение
     public void StartMove(Transform newTarget, Action onDone = null)
     {
         this.target = newTarget;
@@ -23,8 +22,7 @@ public class DocumentMover : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
-    // Start() теперь пустой. Скрипт ждёт команду.
+    
     void Start()
     {
     }
@@ -38,6 +36,6 @@ public class DocumentMover : MonoBehaviour
             yield return null;
         }
         onArrival?.Invoke();
-        Destroy(gameObject);
+        // Destroy(gameObject); // --- СТРОКА УДАЛЕНА ---
     }
 }

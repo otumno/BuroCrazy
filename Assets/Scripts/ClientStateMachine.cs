@@ -10,15 +10,17 @@ public class ClientStateMachine : MonoBehaviour
     private CharacterStateLogger logger;
 
     [Header("Настройки")]
-    [SerializeField] private float confusionWaitTime = 9f;
+    // [SerializeField] private float confusionWaitTime = 9f; // --- ПЕРЕМЕННАЯ УДАЛЕНА ---
     [SerializeField] private float maxPaymentDistance = 3f;
     [SerializeField] private float zonePatienceTime = 15f;
+    [SerializeField] private float rageDuration = 10f;
 
     private ClientState currentState = ClientState.Spawning;
     private Waypoint currentGoal, previousGoal;
     private Coroutine mainActionCoroutine, zonePatienceCoroutine, millingCoroutine;
 
     private Transform seatTarget;
+    private bool isBeingHelped = false;
 
     public void Initialize(ClientPathfinding p) { parent = p; agentMover = GetComponent<AgentMover>(); logger = GetComponent<CharacterStateLogger>(); if (parent.movement == null || agentMover == null) { enabled = false; return; } StartCoroutine(MainLogicLoop()); }
 
@@ -79,6 +81,7 @@ public class ClientStateMachine : MonoBehaviour
 
             case ClientState.AtRegistration: yield return StartCoroutine(RegistrationServiceRoutine()); break;
             case ClientState.Confused: yield return StartCoroutine(ConfusedRoutine()); break;
+            case ClientState.Enraged: yield return StartCoroutine(EnragedRoutine()); break;
             case ClientState.PassedRegistration: yield return StartCoroutine(PassedRegistrationRoutine()); break;
             default: yield return null; break;
         }
@@ -115,49 +118,41 @@ public class ClientStateMachine : MonoBehaviour
             int deskId = (currentZone == ClientSpawner.GetDesk1Zone()) ? 1 : 2;
             ClerkController clerk = ClientSpawner.GetClerkAtDesk(deskId);
             
-            // --- ПОЛЁТ К КЛЕРКУ ---
+            while (clerk == null || clerk.IsOnBreak()) { yield return new WaitForSeconds(1f); clerk = ClientSpawner.GetClerkAtDesk(deskId); }
+
             DocumentType docTypeInHand = parent.docHolder.GetCurrentDocumentType();
             GameObject prefabToFly = parent.docHolder.GetPrefabForType(docTypeInHand);
             parent.docHolder.SetDocument(DocumentType.None);
             
             bool transferToClerkComplete = false;
-            if (prefabToFly != null && clerk != null && clerk.assignedServicePoint != null)
+            GameObject flyingDoc = null; 
+
+            if (prefabToFly != null && clerk.assignedServicePoint != null)
             {
-                GameObject flyingDoc = Instantiate(prefabToFly, parent.docHolder.handPoint.position, Quaternion.identity);
+                flyingDoc = Instantiate(prefabToFly, parent.docHolder.handPoint.position, Quaternion.identity);
                 DocumentMover mover = flyingDoc.GetComponent<DocumentMover>();
-                if (mover != null)
-                {
-                    mover.StartMove(clerk.assignedServicePoint.documentPointOnDesk, () => { transferToClerkComplete = true; });
-                    yield return new WaitUntil(() => transferToClerkComplete);
-                }
+                if (mover != null) { mover.StartMove(clerk.assignedServicePoint.documentPointOnDesk, () => { transferToClerkComplete = true; }); yield return new WaitUntil(() => transferToClerkComplete); }
             }
 
-            // Клерк "работает"
-            if(parent.helpedByInternSound != null) AudioSource.PlayClipAtPoint(parent.helpedByInternSound, transform.position);
-            yield return new WaitForSeconds(Random.Range(4f, 7f));
+            yield return new WaitForSeconds(Random.Range(2f, 3f));
             
-            // Решаем, какой документ выдать
+            if (flyingDoc != null) { Destroy(flyingDoc); }
+            
             float choice = Random.value;
             DocumentType newDocType;
             if (choice < 0.8f) { newDocType = (deskId == 1) ? DocumentType.Certificate1 : DocumentType.Certificate2; parent.billToPay += 100; }
             else { newDocType = (deskId == 1) ? DocumentType.Form2 : DocumentType.Form1; }
 
-            // --- ПОЛЁТ ОБРАТНО К КЛИЕНТУ ---
             GameObject newDocPrefab = parent.docHolder.GetPrefabForType(newDocType);
             bool transferToClientComplete = false;
-            if (newDocPrefab != null && clerk != null && clerk.assignedServicePoint != null)
+            if (newDocPrefab != null && clerk.assignedServicePoint != null)
             {
-                GameObject flyingDocBack = Instantiate(newDocPrefab, clerk.assignedServicePoint.documentPointOnDesk.position, Quaternion.identity);
-                DocumentMover mover = flyingDocBack.GetComponent<DocumentMover>();
-                if (mover != null)
-                {
-                    mover.StartMove(parent.docHolder.handPoint, () => 
-                    {
-                        parent.docHolder.ReceiveTransferredDocument(newDocType, flyingDocBack);
-                        transferToClientComplete = true; 
-                    });
-                    yield return new WaitUntil(() => transferToClientComplete);
-                }
+                GameObject newDocOnDesk = Instantiate(newDocPrefab, clerk.assignedServicePoint.documentPointOnDesk.position, Quaternion.identity);
+                if (parent.stampSound != null) { AudioSource.PlayClipAtPoint(parent.stampSound, clerk.assignedServicePoint.documentPointOnDesk.position); }
+                yield return new WaitForSeconds(2.5f);
+                
+                DocumentMover mover = newDocOnDesk.GetComponent<DocumentMover>();
+                if (mover != null) { mover.StartMove(parent.docHolder.handPoint, () => { parent.docHolder.ReceiveTransferredDocument(newDocType, newDocOnDesk); transferToClientComplete = true; }); yield return new WaitUntil(() => transferToClientComplete); }
             }
             
             currentZone.ReleaseWaypoint(GetCurrentGoal());
@@ -169,11 +164,56 @@ public class ClientStateMachine : MonoBehaviour
 
     private IEnumerator HandleImpoliteArrival() { agentMover.Stop(); LimitedCapacityZone zone = GetCurrentGoal()?.GetComponentInParent<LimitedCapacityZone>(); if (zone == null) { SetState(ClientState.Confused); yield break; } float choice = Random.value; if (choice < 0.05f) { parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset; SetState(ClientState.LeavingUpset); } else if (choice < 0.40f) { zone.JumpQueue(parent.gameObject); SetGoal(zone.waitingWaypoint); SetState(ClientState.AtLimitedZoneEntrance); } else { ClientQueueManager.Instance.JoinQueue(parent); SetGoal(ClientQueueManager.Instance.ChooseNewGoal(parent)); SetState(ClientState.MovingToGoal); } }
     private IEnumerator EnterZoneRoutine(LimitedCapacityZone zone) { agentMover.Stop(); zone.JoinQueue(parent.gameObject); zonePatienceCoroutine = StartCoroutine(PatienceMonitorForZone(zone)); yield return new WaitUntil(() => zone.IsFirstInQueue(parent.gameObject)); Waypoint freeSpot = null; while (freeSpot == null) { if (currentState != ClientState.AtLimitedZoneEntrance) yield break; if(zone == null) { SetState(ClientState.Confused); yield break; } freeSpot = zone.RequestAndOccupyWaypoint(); if (freeSpot == null) { yield return new WaitForSeconds(0.5f); } } if (zonePatienceCoroutine != null) StopCoroutine(zonePatienceCoroutine); zonePatienceCoroutine = null; SetGoal(freeSpot); SetState(ClientState.InsideLimitedZone); }
-    private IEnumerator PatienceMonitorForZone(LimitedCapacityZone zone) { yield return new WaitForSeconds(zonePatienceTime); if (currentState == ClientState.AtLimitedZoneEntrance) { zone.LeaveQueue(parent.gameObject); parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset; SetState(ClientState.LeavingUpset); } }
+    
+    private IEnumerator PatienceMonitorForZone(LimitedCapacityZone zone) 
+    { 
+        yield return new WaitForSeconds(zonePatienceTime); 
+        if (currentState == ClientState.AtLimitedZoneEntrance) 
+        { 
+            zone.LeaveQueue(parent.gameObject);
+            if (Random.value < 0.5f) { SetState(ClientState.Enraged); }
+            else { parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset; SetState(ClientState.LeavingUpset); }
+        } 
+    }
+    
     private IEnumerator PayBillRoutine() { agentMover.Stop(); ClerkController cashier = null; while(cashier == null || cashier.IsOnBreak() || Vector2.Distance(transform.position, cashier.transform.position) > maxPaymentDistance) { cashier = ClientSpawner.GetClerkAtDesk(3); if (cashier == null || cashier.IsOnBreak() || Vector2.Distance(transform.position, cashier.transform.position) > maxPaymentDistance) { yield return new WaitForSeconds(1f); } } if (parent.moneyPrefab != null) { int numberOfBanknotes = 5; float delayBetweenSpawns = 0.15f; for (int i = 0; i < numberOfBanknotes; i++) { Vector2 spawnPosition = (Vector2)transform.position + (Random.insideUnitCircle * 0.2f); GameObject moneyInstance = Instantiate(parent.moneyPrefab, spawnPosition, Quaternion.identity); MoneyMover mover = moneyInstance.GetComponent<MoneyMover>(); Transform moneyTarget = (cashier.assignedServicePoint != null) ? cashier.assignedServicePoint.documentPointOnDesk : cashier.transform; if (mover != null) { mover.StartMove(moneyTarget); } yield return new WaitForSeconds(delayBetweenSpawns); } } if (PlayerWallet.Instance != null && parent != null) { PlayerWallet.Instance.AddMoney(parent.billToPay, transform.position); if (parent.paymentSound != null) AudioSource.PlayClipAtPoint(parent.paymentSound, transform.position); parent.billToPay = 0; } parent.isLeavingSuccessfully = true; parent.reasonForLeaving = ClientPathfinding.LeaveReason.Processed; GetCurrentGoal()?.GetComponentInParent<LimitedCapacityZone>().ReleaseWaypoint(GetCurrentGoal()); SetGoal(ClientSpawner.Instance.exitWaypoint); SetState(ClientState.Leaving); }
-    private IEnumerator ConfusedRoutine() { agentMover.Stop(); yield return new WaitForSeconds(confusionWaitTime); SetGoal(ClientQueueManager.Instance.ChooseNewGoal(parent)); previousGoal = null; SetState(ClientState.MovingToGoal); }
+    
+    private IEnumerator ConfusedRoutine() { agentMover.Stop(); isBeingHelped = false; yield return new WaitUntil(() => isBeingHelped); }
+
+    private IEnumerator EnragedRoutine()
+    {
+        ClientQueueManager.Instance.AddAngryClient(parent);
+        float rageTimer = Time.time + rageDuration;
+        while (Time.time < rageTimer)
+        {
+            Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
+            if(allWaypoints.Length > 0)
+            {
+                Waypoint randomTarget = allWaypoints[Random.Range(0, allWaypoints.Length)];
+                agentMover.SetPath(BuildPathTo(randomTarget.transform.position));
+                yield return new WaitUntil(() => !agentMover.IsMoving() || Vector2.Distance(transform.position, randomTarget.transform.position) < 2f);
+            }
+            else { yield return new WaitForSeconds(1f); }
+        }
+        parent.reasonForLeaving = ClientPathfinding.LeaveReason.Angry;
+        SetGoal(ClientSpawner.Instance.exitWaypoint);
+        SetState(ClientState.Leaving);
+    }
+
     private IEnumerator MillAroundAndWaitForSeat() { ClientQueueManager.Instance.StartPatienceTimer(parent); while (currentState == ClientState.AtWaitingArea) { Transform freeSeat = ClientQueueManager.Instance.FindSeatForClient(parent); if (freeSeat != null) { GoToSeat(freeSeat); yield break; } Waypoint randomStandingPoint = ClientQueueManager.Instance.ChooseNewGoal(parent); if(randomStandingPoint != null) { SetGoal(randomStandingPoint); yield return StartCoroutine(MoveToGoalRoutine()); } yield return new WaitForSeconds(Random.Range(2f, 4f)); } }
-    public void GetHelpFromIntern(Waypoint newGoal = null) { if (parent.helpedByInternSound != null) { AudioSource.PlayClipAtPoint(parent.helpedByInternSound, transform.position); } if(currentState == ClientState.Confused) { } else { StopAllActionCoroutines(); if(newGoal != null) { if (newGoal == ClientSpawner.Instance.exitWaypoint) { parent.reasonForLeaving = ClientPathfinding.LeaveReason.Normal; SetState(ClientState.Leaving); } else { SetState(ClientState.MovingToGoal); } ClientQueueManager.Instance.RemoveClientFromQueue(parent); SetGoal(newGoal); } } }
+    
+    public void GetHelpFromIntern(Waypoint newGoal = null) 
+    { 
+        if (parent.helpedByInternSound != null) AudioSource.PlayClipAtPoint(parent.helpedByInternSound, transform.position); 
+        if(currentState == ClientState.Confused) 
+        { 
+            isBeingHelped = true;
+            SetGoal(newGoal ?? ClientQueueManager.Instance.ChooseNewGoal(parent));
+            SetState(ClientState.MovingToGoal);
+        } 
+        else { StopAllActionCoroutines(); if(newGoal != null) { if (newGoal == ClientSpawner.Instance.exitWaypoint) { parent.reasonForLeaving = ClientPathfinding.LeaveReason.Normal; SetState(ClientState.Leaving); } else { SetState(ClientState.MovingToGoal); } ClientQueueManager.Instance.RemoveClientFromQueue(parent); SetGoal(newGoal); } } 
+    }
+    
     public void SetState(ClientState state) { if (state == currentState) return; if (state == ClientState.Confused && currentState == ClientState.Enraged) return; if (currentState == ClientState.AtLimitedZoneEntrance && GetCurrentGoal() != null) { LimitedCapacityZone zone = GetCurrentGoal().GetComponentInParent<LimitedCapacityZone>(); if (zone != null) { zone.LeaveQueue(parent.gameObject); } } StopAllActionCoroutines(); agentMover?.Stop(); if (state == ClientState.Confused) { previousGoal = currentGoal; if (parent.confusedSound != null) AudioSource.PlayClipAtPoint(parent.confusedSound, transform.position); } currentState = state; logger?.LogState(GetStatusInfo()); }
     public Queue<Waypoint> BuildPathTo(Vector2 targetPos) { var newPath = new Queue<Waypoint>(); Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); if (allWaypoints.Length == 0) return newPath; Waypoint start = FindNearestVisibleWaypoint(transform.position, allWaypoints); Waypoint goal = FindNearestVisibleWaypoint(targetPos, allWaypoints); if (start == null) { start = FindNearestWaypoint(transform.position, allWaypoints); } if (goal == null) { goal = FindNearestWaypoint(targetPos, allWaypoints); } if (start == null || goal == null) { SetState(ClientState.Confused); return newPath; } Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>(); Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>(); PriorityQueue<Waypoint, float> queue = new PriorityQueue<Waypoint, float>(); foreach (var wp in allWaypoints) { distances[wp] = float.MaxValue; previous[wp] = null; } distances[start] = 0; queue.Enqueue(start, 0); while (queue.Count > 0) { Waypoint current = queue.Dequeue(); if (current == goal) { ReconstructPath(previous, goal, newPath); return newPath; } if (current.neighbors == null || current.neighbors.Count == 0) continue; foreach (var neighbor in current.neighbors) { if (neighbor == null) continue; if (neighbor.type == Waypoint.WaypointType.StaffOnly && neighbor != ClientSpawner.Instance.exitWaypoint) continue; float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position); if (distances.ContainsKey(neighbor) && newDist < distances[neighbor]) { distances[neighbor] = newDist; previous[neighbor] = current; queue.Enqueue(neighbor, newDist); } } } SetState(ClientState.Confused); return newPath; }
     private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) { List<Waypoint> pathList = new List<Waypoint>(); for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } pathList.Reverse(); path.Clear(); foreach (var wp in pathList) { path.Enqueue(wp); } }

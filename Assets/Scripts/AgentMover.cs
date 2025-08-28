@@ -37,35 +37,33 @@ public class AgentMover : MonoBehaviour
 
         Waypoint targetWaypoint = path.Peek();
 
-        // Двигаем "якорь" по прямой к следующей точке маршрута
         pathAnchor = Vector2.MoveTowards(pathAnchor, targetWaypoint.transform.position, moveSpeed * Time.fixedDeltaTime);
 
-        // Сила "резиночки", которая тянет персонажа к его "якорю"
         float currentStrength = isYielding ? rubberBandStrength / 4f : rubberBandStrength;
         Vector2 desiredVelocity = (pathAnchor - (Vector2)transform.position) * currentStrength;
         
-        // Применяем рассчитанную скорость
+        // --- НОВАЯ СТРОКА: Ограничиваем максимальную скорость ---
+        // Это не даёт "резиночке" растягиваться до бесконечности и вызывать взрыв.
+        desiredVelocity = Vector2.ClampMagnitude(desiredVelocity, moveSpeed * 2f);
+
         rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, desiredVelocity, Time.fixedDeltaTime * 10f);
         
-        // Поворот спрайта
         UpdateSpriteDirection(rb.linearVelocity);
 
-        // Проверяем, не достигли ли мы очередной точки
         if (Vector2.Distance(transform.position, targetWaypoint.transform.position) < stoppingDistance)
         {
-            pathAnchor = targetWaypoint.transform.position; // Принудительно ставим якорь на точку
+            pathAnchor = targetWaypoint.transform.position;
             path.Dequeue();
         }
     }
 
-    // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ КОНТРОЛЛЕРОВ ---
+    // --- (Остальной код скрипта без изменений) ---
 
     public void SetPath(Queue<Waypoint> newPath)
     {
         this.path = newPath;
         if (this.path != null && this.path.Count > 0)
         {
-            // Устанавливаем якорь на текущую позицию, чтобы не было рывка
             pathAnchor = transform.position;
         }
     }
@@ -81,25 +79,19 @@ public class AgentMover : MonoBehaviour
         pathAnchor = transform.position;
     }
 
-    // --- ЛОГИКА СТОЛКНОВЕНИЙ ---
-
     void OnCollisionStay2D(Collision2D collision)
     {
-        // Если мы уже уступаем, ничего не делаем
         if (isYielding) return;
 
         AgentMover otherMover = collision.gameObject.GetComponent<AgentMover>();
         if (otherMover != null)
         {
-            // Если у другого приоритет выше, мы уступаем
             if (otherMover.priority > this.priority)
             {
                 StartYielding();
             }
-            // Если приоритеты равны - бросаем монетку
             else if (otherMover.priority == this.priority)
             {
-                // Чтобы избежать одновременного "проигрыша", уступает тот, у кого ID объекта больше
                 if(this.gameObject.GetInstanceID() > collision.gameObject.GetInstanceID())
                 {
                     StartYielding();
@@ -117,7 +109,7 @@ public class AgentMover : MonoBehaviour
     private IEnumerator YieldRoutine()
     {
         isYielding = true;
-        yield return new WaitForSeconds(0.5f); // Уступаем полсекунды
+        yield return new WaitForSeconds(0.5f);
         isYielding = false;
         yieldingCoroutine = null;
     }
