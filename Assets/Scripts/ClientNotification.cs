@@ -1,6 +1,6 @@
 using UnityEngine;
 using TMPro;
-using System.Linq; // Убедитесь, что эта строка есть
+using System.Linq;
 
 public class ClientNotification : MonoBehaviour
 {
@@ -9,17 +9,15 @@ public class ClientNotification : MonoBehaviour
     public TextMeshPro queueNumberText;
     private int queueNumber = -1;
     private Color swampGreen = new Color(0.3f, 0.4f, 0.2f);
-
+    
     public void Initialize(ClientPathfinding p, TextMeshPro t) { parent = p; notificationText = t; }
     
     public void UpdateNotification()
     {
         if (notificationText == null || parent == null || parent.stateMachine == null) return;
-        
         string stateText = GetStateText();
         notificationText.text = stateText;
         notificationText.color = GetStateColor();
-        
         if (queueNumberText != null)
         {
             ClientState cs = parent.stateMachine.GetCurrentState();
@@ -40,8 +38,13 @@ public class ClientNotification : MonoBehaviour
             Waypoint goal = parent.stateMachine.GetCurrentGoal();
             if (goal != null)
             {
-                // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
                 if (ClientQueueManager.Instance.IsWaypointInWaitingZone(goal)) return useEmoji ? "🙄" : "W";
+                
+                // --- НОВАЯ ПРОВЕРКА: Иконка для идущих к столу с бланками ---
+                if (ClientSpawner.Instance.formTable != null && goal == ClientSpawner.Instance.formTable.tableWaypoint)
+                {
+                    return useEmoji ? "📋" : "F";
+                }
                 
                 var goalZone = goal.GetComponentInParent<LimitedCapacityZone>();
                 if (goalZone == ClientSpawner.GetRegistrationZone()) return useEmoji ? "🙂" : "R";
@@ -79,7 +82,8 @@ public class ClientNotification : MonoBehaviour
     {
         ClientState state = parent.stateMachine.GetCurrentState();
         if (state == ClientState.MovingToRegistrarImpolite) return swampGreen;
-        if (state == ClientState.MovingToGoal) { Waypoint goal = parent.stateMachine.GetCurrentGoal(); if (goal != null && goal.GetComponentInParent<LimitedCapacityZone>() == ClientSpawner.GetRegistrationZone()) return new Color(0.5f, 0.7f, 1f); }
+   
+         if (state == ClientState.MovingToGoal) { Waypoint goal = parent.stateMachine.GetCurrentGoal(); if (goal != null && goal.GetComponentInParent<LimitedCapacityZone>() == ClientSpawner.GetRegistrationZone()) return new Color(0.5f, 0.7f, 1f); }
         switch (state)
         {
             case ClientState.AtWaitingArea: case ClientState.SittingInWaitingArea: case ClientState.MovingToSeat: case ClientState.AtLimitedZoneEntrance: return Color.grey;

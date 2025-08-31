@@ -1,3 +1,4 @@
+// Файл: ClerkNotification.cs
 using UnityEngine;
 using TMPro;
 
@@ -6,7 +7,7 @@ public class ClerkNotification : MonoBehaviour
 {
     private ClerkController parent;
     private TextMeshPro notificationText;
-
+    
     void Start()
     {
         parent = GetComponent<ClerkController>();
@@ -25,7 +26,6 @@ public class ClerkNotification : MonoBehaviour
     private string GetStateText(ClerkController.ClerkState state)
     {
         bool useEmoji = NotificationStyleManager.useEmojiStyle;
-        
         switch (state)
         {
             case ClerkController.ClerkState.Working:
@@ -34,7 +34,8 @@ public class ClerkNotification : MonoBehaviour
                 return useEmoji ? "😑" : "§";
             case ClerkController.ClerkState.GoingToToilet:
             case ClerkController.ClerkState.AtToilet:
-                return useEmoji ? "😓" : "!";
+                // --- ИЗМЕНЕНИЕ: Установлен эмодзи 😖 ---
+                return useEmoji ? "😖" : "!";
             case ClerkController.ClerkState.GoingToBreak:
             case ClerkController.ClerkState.OnBreak:
                 return useEmoji ? "😖" : "L";

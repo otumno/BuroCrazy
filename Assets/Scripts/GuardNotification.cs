@@ -1,3 +1,4 @@
+// Файл: GuardNotification.cs
 using UnityEngine;
 using TMPro;
 
@@ -30,17 +31,21 @@ public class GuardNotification : MonoBehaviour
             case GuardMovement.GuardState.Patrolling: return useEmoji ? "👀" : "P";
             case GuardMovement.GuardState.Chasing:
             case GuardMovement.GuardState.Talking:
+            case GuardMovement.GuardState.ChasingThief:
+            case GuardMovement.GuardState.EscortingThief:
                 return useEmoji ? "🚨" : "#";
-            case GuardMovement.GuardState.OnPost: return useEmoji ? "🥪" : "S";
+            case GuardMovement.GuardState.OnPost:
+            case GuardMovement.GuardState.OnBreak:
+            // --- ИЗМЕНЕНИЕ: Добавлено состояние движения на обед ---
+            case GuardMovement.GuardState.GoingToBreak:
+                return useEmoji ? "🥪" : "S";
             case GuardMovement.GuardState.GoingToToilet:
             case GuardMovement.GuardState.AtToilet:
+                // --- ИЗМЕНЕНИЕ: Установлен эмодзи 😖 в соответствии с запросом ---
                 return useEmoji ? "😖" : "!";
             case GuardMovement.GuardState.OffDuty: return useEmoji ? "😔" : "*";
-            
-            // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
             case GuardMovement.GuardState.WaitingAtWaypoint:
                 return useEmoji ? "😐" : "...";
-
             default: return "...";
         }
     }
@@ -53,6 +58,8 @@ public class GuardNotification : MonoBehaviour
             case GuardMovement.GuardState.OnPost: return Color.cyan;
             case GuardMovement.GuardState.Chasing:
             case GuardMovement.GuardState.Talking:
+            case GuardMovement.GuardState.ChasingThief:
+            case GuardMovement.GuardState.EscortingThief:
                 return Color.blue;
             case GuardMovement.GuardState.GoingToToilet:
             case GuardMovement.GuardState.AtToilet:

@@ -1,3 +1,4 @@
+// Файл: InternController.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -18,7 +19,8 @@ public class InternController : MonoBehaviour
     public float chanceToCoverDesk = 0.5f;
     public float chanceToGoToToilet = 0.008f;
     public float timeInToilet = 4f;
-
+    [Tooltip("Через сколько секунд принудительно сбросить задачу, если стажер завис")]
+    public float taskTimeout = 30f;
     private static List<ClerkController> clerksBeingCovered = new List<ClerkController>();
 
     private Waypoint[] allWaypoints;
@@ -28,65 +30,213 @@ public class InternController : MonoBehaviour
     private bool isWorking = false;
     private ClientPathfinding helpTarget = null;
     private ClerkController clerkToCover = null;
+    private float timeInCurrentTask = 0f;
     
     private AgentMover agentMover;
     private CharacterStateLogger logger;
-
     void Awake() { allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); agentMover = GetComponent<AgentMover>(); logger = GetComponent<CharacterStateLogger>(); }
     void Start() { LogCurrentState(currentState); }
-    void Update() { if (!isWorking || Time.timeScale == 0f) { if(agentMover != null) agentMover.Stop(); return; } helpTimer += Time.deltaTime; if (helpTimer >= helpCheckInterval) { helpTimer = 0f; LookForSomeoneToHelp(); } }
     
-    private void SetState(InternState newState) { if(currentState == newState) return; currentState = newState; LogCurrentState(newState); }
+    void Update() 
+    { 
+        if (!isWorking || Time.timeScale == 0f) { if(agentMover != null) agentMover.Stop(); return; } 
+
+        helpTimer += Time.deltaTime;
+        if (helpTimer >= helpCheckInterval) 
+        { 
+            helpTimer = 0f;
+            LookForSomeoneToHelp();
+        } 
+
+        bool isInteractiveTask = currentState == InternState.HelpingConfused ||
+                                 currentState == InternState.ServingFromQueue || 
+                                 currentState == InternState.CoveringDesk || 
+                                 currentState == InternState.Working ||
+                                 currentState == InternState.TalkingToConfused;
+        if (isInteractiveTask)
+        {
+            timeInCurrentTask += Time.deltaTime;
+            if (timeInCurrentTask > taskTimeout)
+            {
+                ForceReset("Таймаут интерактивной задачи");
+            }
+        }
+    }
+    
+    private void SetState(InternState newState) 
+    { 
+        if(currentState == newState) return;
+        currentState = newState; 
+        LogCurrentState(newState); 
+        timeInCurrentTask = 0f;
+    }
+
     private void LogCurrentState(InternState state) { logger?.LogState(state.ToString()); }
     public InternState GetCurrentState() => currentState;
+
+    private void ForceReset(string reason)
+    {
+        Debug.LogWarning($"Стажер {gameObject.name} принудительно сброшен. Причина: {reason}");
+        if (currentAction != null)
+        {
+            StopCoroutine(currentAction);
+        }
+        
+        string period = ClientSpawner.CurrentPeriodName.ToLower().Trim();
+        if (period == "конец дня" || period == "ночь" || period == "вечер")
+        {
+            currentAction = StartCoroutine(EndShiftRoutine());
+        }
+        else
+        {
+            currentAction = StartCoroutine(ReturnToPatrolRoutine());
+        }
+    }
 
     private void LookForSomeoneToHelp()
     {
         if (currentState != InternState.Patrolling) return;
+        
+        // --- ИЗМЕНЕНИЕ: Логика подмены клерка стала более надежной ---
         ClerkController absentClerk = ClientSpawner.GetAbsentClerk();
-        if (absentClerk != null && !clerksBeingCovered.Contains(absentClerk) && Random.value < chanceToCoverDesk) { clerksBeingCovered.Add(absentClerk); if(currentAction != null) StopCoroutine(currentAction); clerkToCover = absentClerk; currentAction = StartCoroutine(CoverDeskRoutine(absentClerk)); return; }
+        // Сначала проверяем, есть ли отсутствующий клерк и не занят ли он уже другим стажером
+        if (absentClerk != null && absentClerk.role != ClerkController.ClerkRole.Cashier && !clerksBeingCovered.Contains(absentClerk) && Random.value < chanceToCoverDesk) 
+        { 
+            // Не добавляем в список здесь, а сразу запускаем корутину, которая проведет финальную проверку
+            if(currentAction != null) StopCoroutine(currentAction); 
+            currentAction = StartCoroutine(CoverDeskRoutine(absentClerk)); 
+            return;
+        }
+
         ClientPathfinding confusedClient = ClientPathfinding.FindClosestConfusedClient(transform.position);
         if (confusedClient != null && confusedClient.stateMachine.GetCurrentState() == ClientState.Confused) { if(currentAction != null) StopCoroutine(currentAction); helpTarget = confusedClient; currentAction = StartCoroutine(HelpConfusedClientRoutine(confusedClient)); return; }
+        
         if (Random.value < chanceToServeFromQueue) { if (ClientQueueManager.Instance != null && ClientQueueManager.Instance.GetRandomClientFromQueue() is ClientPathfinding queueClient && queueClient != null) { if(currentAction != null) StopCoroutine(currentAction); helpTarget = queueClient; currentAction = StartCoroutine(ServeFromQueueRoutine(queueClient)); } }
     }
 
     private IEnumerator MoveToTarget(Vector2 targetPosition, InternState stateOnArrival) { agentMover.SetPath(BuildPathTo(targetPosition)); yield return new WaitUntil(() => !agentMover.IsMoving()); SetState(stateOnArrival); }
     
+    // --- ИЗМЕНЕНИЕ: Корутина теперь сама проверяет и "резервирует" клерка ---
     private IEnumerator CoverDeskRoutine(ClerkController clerk) 
     { 
-        SetState(InternState.CoveringDesk); 
+        // ФИНАЛЬНАЯ ПРОВЕРКА: перед тем как идти, убедимся, что клерка не "перехватил" другой стажер
+        if (clerksBeingCovered.Contains(clerk))
+        {
+            // Другой стажер оказался быстрее, просто отменяем задачу и возвращаемся к патрулированию
+            currentAction = StartCoroutine(ReturnToPatrolRoutine());
+            yield break;
+        }
+        
+        // Теперь мы уверены, что задача наша. "Резервируем" клерка.
+        clerksBeingCovered.Add(clerk);
+        clerkToCover = clerk;
+
+        SetState(InternState.CoveringDesk);
         yield return StartCoroutine(MoveToTarget(clerk.assignedServicePoint.clerkStandPoint.position, InternState.Working)); 
-        if (clerksBeingCovered.Contains(clerk)) { clerksBeingCovered.Remove(clerk); } 
-        clerkToCover = null; 
-        yield return StartCoroutine(ReturnToPatrolRoutine()); 
+        
+        while (clerkToCover != null && clerkToCover.IsOnBreak() && Vector2.Distance(clerkToCover.transform.position, clerkToCover.assignedServicePoint.clerkStandPoint.position) > 1.5f)
+        {
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        if (clerksBeingCovered.Contains(clerk)) 
+        { 
+            clerksBeingCovered.Remove(clerk);
+        } 
+        clerkToCover = null;
+        yield return StartCoroutine(ReturnToPatrolRoutine());
     }
     
-    private IEnumerator HelpConfusedClientRoutine(ClientPathfinding client) { SetState(InternState.HelpingConfused); yield return StartCoroutine(MoveToTarget(client.transform.position, InternState.TalkingToConfused)); if (client == null || client.stateMachine.GetCurrentState() != ClientState.Confused) { helpTarget = null; yield return StartCoroutine(ReturnToPatrolRoutine()); yield break; } yield return new WaitForSeconds(1f); if (client != null) { client.stateMachine.GetHelpFromIntern(); } helpTarget = null; yield return StartCoroutine(ReturnToPatrolRoutine()); }
+    private IEnumerator HelpConfusedClientRoutine(ClientPathfinding client) 
+    { 
+        SetState(InternState.HelpingConfused);
+        if (client == null)
+        {
+            ForceReset("Цель (клиент) исчезла до начала движения.");
+            yield break;
+        }
+        yield return StartCoroutine(MoveToTarget(client.transform.position, InternState.TalkingToConfused));
+        if (client == null || client.stateMachine.GetCurrentState() != ClientState.Confused) 
+        { 
+            helpTarget = null;
+            yield return StartCoroutine(ReturnToPatrolRoutine());
+            yield break; 
+        } 
+        
+        yield return new WaitForSeconds(1f);
+        if (client != null) 
+        { 
+            Waypoint correctGoal = DetermineCorrectGoalFor(client);
+            client.stateMachine.GetHelpFromIntern(correctGoal); 
+        } 
+        
+        helpTarget = null;
+        yield return StartCoroutine(ReturnToPatrolRoutine());
+    }
+
+    private Waypoint DetermineCorrectGoalFor(ClientPathfinding client)
+    {
+        if (client == null) return ClientQueueManager.Instance.ChooseNewGoal(client);
+        DocumentType doc = client.docHolder.GetCurrentDocumentType();
+        ClientGoal goal = client.mainGoal;
+
+        if (client.billToPay > 0) return ClientSpawner.GetCashierZone().waitingWaypoint;
+        switch (goal)
+        {
+            case ClientGoal.GetCertificate1:
+                if (doc == DocumentType.None || doc == DocumentType.Form2) return ClientSpawner.Instance.formTable.tableWaypoint;
+                if (doc == DocumentType.Form1) return ClientSpawner.GetDesk1Zone().waitingWaypoint;
+                if (doc == DocumentType.Certificate1) return ClientSpawner.GetCashierZone().waitingWaypoint;
+                break;
+            case ClientGoal.GetCertificate2:
+                if (doc == DocumentType.None || doc == DocumentType.Form1) return ClientSpawner.Instance.formTable.tableWaypoint;
+                if (doc == DocumentType.Form2) return ClientSpawner.GetDesk2Zone().waitingWaypoint;
+                if (doc == DocumentType.Certificate2) return ClientSpawner.GetCashierZone().waitingWaypoint;
+                break;
+            case ClientGoal.PayTax:
+                return ClientSpawner.GetCashierZone().waitingWaypoint;
+            case ClientGoal.VisitToilet:
+                return ClientSpawner.GetToiletZone().waitingWaypoint;
+        }
+        
+        return ClientQueueManager.Instance.ChooseNewGoal(client);
+    }
     
     private IEnumerator ServeFromQueueRoutine(ClientPathfinding client) 
     { 
-        SetState(InternState.ServingFromQueue); 
-        yield return StartCoroutine(MoveToTarget(client.transform.position, InternState.Patrolling)); 
+        SetState(InternState.ServingFromQueue);
+        if (client == null)
+        {
+            ForceReset("Цель (клиент) исчезла до начала движения.");
+            yield break;
+        }
+        yield return StartCoroutine(MoveToTarget(client.transform.position, InternState.Patrolling));
         if (client != null) 
         { 
-            float choice = Random.value; 
+            float choice = Random.value;
             if (choice < 0.5f) client.stateMachine.GetHelpFromIntern(ClientSpawner.GetDesk1Zone().waitingWaypoint); 
             else if (choice < 0.8f) client.stateMachine.GetHelpFromIntern(ClientSpawner.GetDesk2Zone().waitingWaypoint); 
-            else client.stateMachine.GetHelpFromIntern(ClientSpawner.Instance.exitWaypoint); 
+            else client.stateMachine.GetHelpFromIntern(ClientSpawner.Instance.exitWaypoint);
         } 
         helpTarget = null; 
-        yield return StartCoroutine(ReturnToPatrolRoutine()); 
+        yield return StartCoroutine(ReturnToPatrolRoutine());
     }
     
     public void StartShift() { if(currentAction != null) StopCoroutine(currentAction); currentAction = StartCoroutine(StartShiftRoutine()); }
     public void EndShift() { if(currentAction != null) StopCoroutine(currentAction); currentAction = StartCoroutine(EndShiftRoutine()); }
     public void GoOnBreak(float duration) { if(currentAction != null) StopCoroutine(currentAction); currentAction = StartCoroutine(BreakRoutine(duration)); }
     
-    private IEnumerator StartShiftRoutine() { yield return new WaitForSeconds(10f + Random.Range(-10f, 10f)); isWorking = true; yield return StartCoroutine(ReturnToPatrolRoutine()); }
-    private IEnumerator EndShiftRoutine() { yield return new WaitForSeconds(10f + Random.Range(-10f, 10f)); isWorking = false; if (clerkToCover != null && clerksBeingCovered.Contains(clerkToCover)) { clerksBeingCovered.Remove(clerkToCover); } SetState(InternState.Inactive); yield return StartCoroutine(MoveToTarget(kitchenPoint.position, InternState.Inactive)); currentAction = null; }
+    private IEnumerator StartShiftRoutine() 
+    { 
+        yield return new WaitForSeconds(Random.Range(1f, 5f));
+        isWorking = true; 
+        yield return StartCoroutine(ReturnToPatrolRoutine()); 
+    }
+
+    private IEnumerator EndShiftRoutine() { isWorking = false; if (clerkToCover != null && clerksBeingCovered.Contains(clerkToCover)) { clerksBeingCovered.Remove(clerkToCover); } SetState(InternState.Inactive); if (kitchenPoint != null) { yield return StartCoroutine(MoveToTarget(kitchenPoint.position, InternState.Inactive)); } currentAction = null; }
     private IEnumerator BreakRoutine(float duration) { isWorking = false; SetState(InternState.GoingToBreak); yield return StartCoroutine(MoveToTarget(kitchenPoint.position, InternState.OnBreak)); yield return new WaitForSeconds(duration); isWorking = true; yield return StartCoroutine(ReturnToPatrolRoutine()); }
     private IEnumerator ToiletBreakRoutine() { SetState(InternState.GoingToToilet); yield return StartCoroutine(MoveToTarget(staffToiletPoint.position, InternState.AtToilet)); yield return new WaitForSeconds(timeInToilet); yield return StartCoroutine(ReturnToPatrolRoutine()); }
-    private IEnumerator ReturnToPatrolRoutine() { SetState(InternState.ReturningToPatrol); SelectNewPatrolPoint(); if(currentPatrolTarget != null) { yield return StartCoroutine(MoveToTarget(currentPatrolTarget.position, InternState.Patrolling)); } SetState(InternState.Patrolling); currentAction = null; }
+    private IEnumerator ReturnToPatrolRoutine() { SetState(InternState.ReturningToPatrol); SelectNewPatrolPoint(); if(currentPatrolTarget != null) { yield return StartCoroutine(MoveToTarget(currentPatrolTarget.position, InternState.Patrolling)); } else { SetState(InternState.Patrolling); } currentAction = null; }
     
     private void SelectNewPatrolPoint() { if (patrolPoints == null || patrolPoints.Count == 0) return; currentPatrolTarget = patrolPoints[Random.Range(0, patrolPoints.Count)]; }
     

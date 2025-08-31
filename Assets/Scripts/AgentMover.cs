@@ -1,3 +1,4 @@
+// Файл: AgentMover.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,12 +15,16 @@ public class AgentMover : MonoBehaviour
     public float rubberBandStrength = 5f;
     [Tooltip("Приоритет персонажа. Охранник > Клерк > Клиент. Решает, кто кого продавливает.")]
     public int priority = 1;
-
+    
     private Rigidbody2D rb;
     private Queue<Waypoint> path;
-    private Vector2 pathAnchor; // "Желаемая" позиция на пути
+    private Vector2 pathAnchor; 
     private bool isYielding = false;
     private Coroutine yieldingCoroutine;
+    
+    // --- НОВЫЕ ПОЛЯ для системы грязи ---
+    private float dirtTimer = 0f;
+    private float dirtInterval = 0.25f; // Как часто персонаж "оставляет след" (4 раза в секунду)
 
     void Awake()
     {
@@ -38,26 +43,33 @@ public class AgentMover : MonoBehaviour
         Waypoint targetWaypoint = path.Peek();
 
         pathAnchor = Vector2.MoveTowards(pathAnchor, targetWaypoint.transform.position, moveSpeed * Time.fixedDeltaTime);
-
         float currentStrength = isYielding ? rubberBandStrength / 4f : rubberBandStrength;
         Vector2 desiredVelocity = (pathAnchor - (Vector2)transform.position) * currentStrength;
-        
-        // --- НОВАЯ СТРОКА: Ограничиваем максимальную скорость ---
-        // Это не даёт "резиночке" растягиваться до бесконечности и вызывать взрыв.
         desiredVelocity = Vector2.ClampMagnitude(desiredVelocity, moveSpeed * 2f);
 
         rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, desiredVelocity, Time.fixedDeltaTime * 10f);
         
         UpdateSpriteDirection(rb.linearVelocity);
-
+        
         if (Vector2.Distance(transform.position, targetWaypoint.transform.position) < stoppingDistance)
         {
             pathAnchor = targetWaypoint.transform.position;
             path.Dequeue();
         }
-    }
 
-    // --- (Остальной код скрипта без изменений) ---
+        // --- НОВЫЙ БЛОК: Логика оставления следов грязи ---
+        // Оставляем след, только если движемся
+        if (rb.linearVelocity.magnitude > 0.1f)
+        {
+            dirtTimer += Time.fixedDeltaTime;
+            if (dirtTimer >= dirtInterval)
+            {
+                dirtTimer = 0f;
+                // Безопасно вызываем менеджер, если он существует
+                DirtGridManager.Instance?.AddTraffic(transform.position);
+            }
+        }
+    }
 
     public void SetPath(Queue<Waypoint> newPath)
     {
@@ -82,7 +94,6 @@ public class AgentMover : MonoBehaviour
     void OnCollisionStay2D(Collision2D collision)
     {
         if (isYielding) return;
-
         AgentMover otherMover = collision.gameObject.GetComponent<AgentMover>();
         if (otherMover != null)
         {

@@ -1,3 +1,4 @@
+// Файл: InternNotification.cs
 using UnityEngine;
 using TMPro;
 
@@ -6,12 +7,15 @@ public class InternNotification : MonoBehaviour
 {
     private InternController parent;
     private TextMeshPro notificationText;
-
+    
     void Start()
     {
         parent = GetComponent<InternController>();
         notificationText = GetComponentInChildren<TextMeshPro>();
-        if (parent == null || notificationText == null) { enabled = false; }
+        if (parent == null || notificationText == null) 
+        { 
+            enabled = false; 
+        }
     }
 
     void Update()
@@ -33,15 +37,12 @@ public class InternNotification : MonoBehaviour
             case InternController.InternState.ServingFromQueue: return useEmoji ? "📋" : "!";
             case InternController.InternState.CoveringDesk: case InternController.InternState.Working: return useEmoji ? "😑" : "§";
             case InternController.InternState.OnBreak: return useEmoji ? "🍔" : "L";
-            case InternController.InternState.AtToilet: return useEmoji ? "🥺" : "!";
+            case InternController.InternState.AtToilet: return useEmoji ? "😖" : "!";
             case InternController.InternState.Inactive: return useEmoji ? "😔" : "*";
-            
-            // --- ДОБАВЛЕННЫЕ СОСТОЯНИЯ ---
             case InternController.InternState.GoingToBreak:
             case InternController.InternState.GoingToToilet:
             case InternController.InternState.ReturningToPatrol:
                 return useEmoji ? "🚶" : "...";
-
             default: return "...";
         }
     }

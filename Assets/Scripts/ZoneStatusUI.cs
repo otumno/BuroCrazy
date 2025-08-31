@@ -1,3 +1,4 @@
+// Файл: ZoneStatusUI.cs
 using UnityEngine;
 using TMPro;
 
@@ -6,7 +7,6 @@ public class ZoneStatusUI : MonoBehaviour
     [Header("Ссылки")]
     [Tooltip("Зона, состояние которой мы отслеживаем")]
     public LimitedCapacityZone monitoredZone;
-    
     [Tooltip("Текстовый элемент для вывода статуса")]
     public TextMeshProUGUI statusText;
 
@@ -17,14 +17,20 @@ public class ZoneStatusUI : MonoBehaviour
             return;
         }
 
-        if (monitoredZone.GetCurrentOccupancy() >= monitoredZone.capacity)
+        // --- ИЗМЕНЕНИЕ: Получаем текущие и максимальные значения ---
+        int currentOccupancy = monitoredZone.GetCurrentOccupancy();
+        int capacity = monitoredZone.capacity;
+
+        if (currentOccupancy >= capacity)
         {
-            statusText.text = "ЗАНЯТО";
+            // Формируем строку для занятого состояния
+            statusText.text = $"{currentOccupancy}/{capacity} ЗАНЯТО";
             statusText.color = Color.red;
         }
         else
         {
-            statusText.text = "СВОБОДНО";
+            // Формируем строку для свободного состояния
+            statusText.text = $"{currentOccupancy}/{capacity} СВОБОДНО";
             statusText.color = Color.green;
         }
     }

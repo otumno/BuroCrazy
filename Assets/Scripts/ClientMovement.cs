@@ -1,17 +1,15 @@
+// Файл: ClientMovement.cs
 using UnityEngine;
 using System.Collections;
 
 public class ClientMovement : MonoBehaviour
 {
     private ClientPathfinding parent;
-    
     [Header("Базовые параметры")]
     [SerializeField] public float stoppingDistance = 0.8f;
-    
     [Header("Детектор застревания")]
     [SerializeField] private float stuckTimeThreshold = 3f;
-
-    [Header("Случайные параметры (Разброс)")]
+    [Header("Параметры для расчета на основе характера")]
     [SerializeField] private float minMoveSpeed = 1.2f;
     [SerializeField] private float maxMoveSpeed = 3.0f;
     [SerializeField] private float minMass = 0.8f;
@@ -22,32 +20,31 @@ public class ClientMovement : MonoBehaviour
     private float baseColliderRadius = 0.2f;
     private Coroutine stuckCheckCoroutine;
     private AgentMover agentMover;
-
     public void Initialize(ClientPathfinding parent) 
     { 
-        this.parent = parent; 
+        this.parent = parent;
         var rb = GetComponent<Rigidbody2D>();
         var _collider2D = GetComponent<CircleCollider2D>();
         agentMover = GetComponent<AgentMover>();
-
         if (rb == null || agentMover == null) 
         { 
-            enabled = false; 
+            enabled = false;
             return; 
         } 
         
-        RandomizeParameters(); 
+        // --- МЕТОД ЗАМЕНЕН ---
+        CalculateParametersFromTraits();
     }
 
     public void StartStuckCheck() 
     { 
-        if (stuckCheckCoroutine != null) StopCoroutine(stuckCheckCoroutine); 
+        if (stuckCheckCoroutine != null) StopCoroutine(stuckCheckCoroutine);
         stuckCheckCoroutine = StartCoroutine(CheckIfStuck()); 
     }
 
     public void StopStuckCheck() 
     { 
-        if (stuckCheckCoroutine != null) StopCoroutine(stuckCheckCoroutine); 
+        if (stuckCheckCoroutine != null) StopCoroutine(stuckCheckCoroutine);
         stuckCheckCoroutine = null; 
     }
     
@@ -80,27 +77,36 @@ public class ClientMovement : MonoBehaviour
         }
     }
 
-    public void RandomizeParameters() 
+    // --- СТАРЫЙ МЕТОД RandomizeParameters() УДАЛЕН ---
+    // --- НОВЫЙ МЕТОД ---
+    public void CalculateParametersFromTraits() 
     { 
         var rb = GetComponent<Rigidbody2D>();
         var _collider2D = GetComponent<CircleCollider2D>();
 
+        // Скорость зависит от фактора "Суетуна" (быстрее) и "Бабушки" (медленнее)
+        float baseSpeed = Mathf.Lerp(minMoveSpeed, maxMoveSpeed, parent.suetunFactor);
+        float finalSpeed = baseSpeed * (1f - parent.babushkaFactor * 0.4f); // Бабушка на 40% медленнее при факторе 1.0
+
+        // Масса и размер зависят от "Суетуна" (более легкие и мелкие)
+        float finalMass = Mathf.Lerp(maxMass, minMass, parent.suetunFactor);
+        float finalScale = Mathf.Lerp(maxScale, minScale, parent.suetunFactor);
+
         if (agentMover != null)
         {
-            agentMover.moveSpeed = Random.Range(minMoveSpeed, maxMoveSpeed);
+            agentMover.moveSpeed = finalSpeed;
         }
         if (rb != null) 
         { 
-            rb.mass = Random.Range(minMass, maxMass); 
+            rb.mass = finalMass;
         } 
-        float scale = Random.Range(minScale, maxScale); 
-        transform.localScale = new Vector3(scale, scale, 1); 
+
+        transform.localScale = new Vector3(finalScale, finalScale, 1);
         if (_collider2D != null) 
         { 
-            _collider2D.radius = baseColliderRadius * scale; 
+            _collider2D.radius = baseColliderRadius * finalScale;
         } 
     }
     
-    // Старые методы управления скоростью и трением больше не нужны
     public float GetBaseColliderRadius() { return baseColliderRadius; }
 }
