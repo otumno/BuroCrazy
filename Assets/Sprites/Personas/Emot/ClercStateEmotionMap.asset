@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41dc21de252d38941a82679ec53c72f8, type: 3}
+  m_Name: ClercStateEmotionMap
+  m_EditorClassIdentifier: 
+  targetCharacterType: 1
+  mappings:
+  - stateName: Working
+    emotion: 11
+  - stateName: GoingToBreak
+    emotion: 12
+  - stateName: OnBreak
+    emotion: 1
+  - stateName: ReturningToWork
+    emotion: 12
+  - stateName: GoingToToilet
+    emotion: 3
+  - stateName: AtToilet
+    emotion: 1
+  - stateName: Inactive
+    emotion: 0
+  - stateName: StressedOut
+    emotion: 13
+  - stateName: GoingToArchive
+    emotion: 4
+  - stateName: AtArchive
+    emotion: 4

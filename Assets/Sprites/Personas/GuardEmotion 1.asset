@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18ff03ae229417b478bc87d5d7529885, type: 3}
+  m_Name: GuardEmotion 1
+  m_EditorClassIdentifier: 
+  maleBaseBodies:
+  - {fileID: 8206839613880520507, guid: a225f84ffd0cb014a94a0859578e7a57, type: 3}
+  femaleBaseBodies:
+  - {fileID: -6738984049010218245, guid: 341117130318a24428ab5bb97145ed1d, type: 3}
+  emotionFaces:
+  - emotion: 0
+    maleFace: {fileID: -4423278522076559584, guid: b0b69cc47f42f984ab3ba2793b0b0ba4, type: 3}
+    femaleFace: {fileID: -4423278522076559584, guid: b0b69cc47f42f984ab3ba2793b0b0ba4, type: 3}
+  - emotion: 6
+    maleFace: {fileID: -9082789242079819192, guid: 4eda5eb83980290448f56f7b3b09660f, type: 3}
+    femaleFace: {fileID: -9082789242079819192, guid: 4eda5eb83980290448f56f7b3b09660f, type: 3}
+  - emotion: 1
+    maleFace: {fileID: -6712656766815208701, guid: c7c50a7e887e8184b9e8872d8d6a406f, type: 3}
+    femaleFace: {fileID: -6712656766815208701, guid: c7c50a7e887e8184b9e8872d8d6a406f, type: 3}
+  - emotion: 2
+    maleFace: {fileID: -9082789242079819192, guid: 4eda5eb83980290448f56f7b3b09660f, type: 3}
+    femaleFace: {fileID: -9082789242079819192, guid: 4eda5eb83980290448f56f7b3b09660f, type: 3}
+  - emotion: 3
+    maleFace: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
+    femaleFace: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
+  - emotion: 5
+    maleFace: {fileID: 2752683193943673117, guid: 31fac4f8171e5524c9a136a8c9a27fa8, type: 3}
+    femaleFace: {fileID: 2752683193943673117, guid: 31fac4f8171e5524c9a136a8c9a27fa8, type: 3}
+  - emotion: 7
+    maleFace: {fileID: 4180539920274104740, guid: c6598ed532b1f844891721de7bc7e8c6, type: 3}
+    femaleFace: {fileID: 4180539920274104740, guid: c6598ed532b1f844891721de7bc7e8c6, type: 3}
+  - emotion: 8
+    maleFace: {fileID: -4597080309948013805, guid: 2e997e24b4c4ba046a5efc071cce498c, type: 3}
+    femaleFace: {fileID: -4597080309948013805, guid: 2e997e24b4c4ba046a5efc071cce498c, type: 3}
+  - emotion: 9
+    maleFace: {fileID: -7178639468268425536, guid: cfd9bcda40bf2ab4da83999dca416276, type: 3}
+    femaleFace: {fileID: -7178639468268425536, guid: cfd9bcda40bf2ab4da83999dca416276, type: 3}
+  - emotion: 10
+    maleFace: {fileID: -8623618576006095033, guid: 49b2921f359d51a45aad2eeca09a442e, type: 3}
+    femaleFace: {fileID: -8623618576006095033, guid: 49b2921f359d51a45aad2eeca09a442e, type: 3}
+  - emotion: 11
+    maleFace: {fileID: 5671611723068056500, guid: d55ac2f04ad5df24b97d3ef7ff9659c8, type: 3}
+    femaleFace: {fileID: 5671611723068056500, guid: d55ac2f04ad5df24b97d3ef7ff9659c8, type: 3}
+  - emotion: 12
+    maleFace: {fileID: 710079454146712807, guid: 4f0d990744c1f96429bd689cc6cd565f, type: 3}
+    femaleFace: {fileID: 710079454146712807, guid: 4f0d990744c1f96429bd689cc6cd565f, type: 3}
+  - emotion: 13
+    maleFace: {fileID: -5131661576662064557, guid: 933c724d2f75c2443aea3f0142b89a95, type: 3}
+    femaleFace: {fileID: -5131661576662064557, guid: 933c724d2f75c2443aea3f0142b89a95, type: 3}
+  - emotion: 4
+    maleFace: {fileID: -7193727404592709849, guid: 64db6a4f5b6ad5640b7eebf1e295eab1, type: 3}
+    femaleFace: {fileID: -7193727404592709849, guid: 64db6a4f5b6ad5640b7eebf1e295eab1, type: 3}

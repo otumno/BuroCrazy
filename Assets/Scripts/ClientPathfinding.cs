@@ -2,11 +2,11 @@
 using UnityEngine;
 using TMPro;
 using System.Linq;
-using System.Collections.Generic; // <--- ДОБАВЛЕНА ЭТА СТРОКА
+using System.Collections.Generic;
 
 public class ClientPathfinding : MonoBehaviour
 {
-    public enum LeaveReason { Normal, Processed, Angry, CalmedDown, Upset }
+    public enum LeaveReason { Normal, Processed, Angry, CalmedDown, Upset, Theft } // <-- Добавлено Theft
     public ClientStateMachine stateMachine;
     public ClientMovement movement;
     public ClientNotification notification;
@@ -14,12 +14,14 @@ public class ClientPathfinding : MonoBehaviour
 
     [Header("Цели и Характер")]
     public ClientGoal mainGoal;
-    [Range(0f, 1f)]
-    public float babushkaFactor;
-    [Range(0f, 1f)]
-    public float suetunFactor;
-    [Range(0f, 1f)]
-    public float prolazaFactor;
+    [Range(0f, 1f)] public float babushkaFactor;
+    [Range(0f, 1f)] public float suetunFactor;
+    [Range(0f, 1f)] public float prolazaFactor;
+
+    // --- НОВОЕ: Визуальная часть ---
+    [Header("Внешний вид")]
+    public Gender gender;
+    private CharacterVisuals visuals;
 
     [Header("Настройки Терпения")]
     public float totalPatienceTime;
@@ -31,7 +33,6 @@ public class ClientPathfinding : MonoBehaviour
     [Header("Касса")]
     public int billToPay = 0;
     public GameObject moneyPrefab;
-
     [Header("Создание беспорядка")]
     [Tooltip("Список префабов мусора, из которых будет выбираться случайный.")]
     public List<GameObject> trashPrefabs;
@@ -46,24 +47,31 @@ public class ClientPathfinding : MonoBehaviour
     public AudioClip impoliteSound;
     [Tooltip("Звук, когда клиент решает уйти, не заплатив")]
     public AudioClip theftAttemptSound;
-    
     public static int totalClients, clientsExited, clientsInWaiting, clientsToToilet, clientsToRegistration, clientsConfused;
     public static int clientsExitedAngry = 0, clientsExitedProcessed = 0;
-    
+
+    public CharacterVisuals GetVisuals() => visuals;
+
     public void Initialize(GameObject wZ, Waypoint eW) 
     { 
-		Debug.Log($"<color=green>Клиент {gameObject.name} успешно создан и инициализируется.</color>");	
+        Debug.Log($"<color=green>Клиент {gameObject.name} успешно создан и инициализируется.</color>");	
         totalClients++;
         stateMachine = gameObject.GetComponent<ClientStateMachine>(); 
         movement = gameObject.GetComponent<ClientMovement>(); 
         notification = gameObject.GetComponent<ClientNotification>(); 
         docHolder = gameObject.GetComponent<DocumentHolder>();
-        if (stateMachine == null || movement == null || notification == null || docHolder == null) 
+        visuals = gameObject.GetComponent<CharacterVisuals>();
+
+        if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null) 
         {
             Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!");
             enabled = false;
             return; 
         }
+
+        // --- НОВЫЙ БЛОК: Настройка визуала при спавне ---
+        gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
+        visuals.Setup(gender);
         
         babushkaFactor = (float)Mathf.RoundToInt(Random.Range(0, 4)) * 0.25f;
         suetunFactor = (float)Mathf.RoundToInt(Random.Range(0, 4)) * 0.25f;

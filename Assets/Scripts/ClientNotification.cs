@@ -13,20 +13,29 @@ public class ClientNotification : MonoBehaviour
     public void Initialize(ClientPathfinding p, TextMeshPro t) { parent = p; notificationText = t; }
     
     public void UpdateNotification()
+{
+    if (notificationText == null || parent == null || parent.stateMachine == null) return;
+    
+    string stateText = GetStateText();
+    notificationText.text = stateText;
+    notificationText.color = GetStateColor();
+    
+    if (queueNumberText != null)
     {
-        if (notificationText == null || parent == null || parent.stateMachine == null) return;
-        string stateText = GetStateText();
-        notificationText.text = stateText;
-        notificationText.color = GetStateColor();
-        if (queueNumberText != null)
-        {
-            ClientState cs = parent.stateMachine.GetCurrentState();
-            var goalZone = parent.stateMachine.GetCurrentGoal()?.GetComponentInParent<LimitedCapacityZone>();
-            bool isGoingToReg = (cs == ClientState.MovingToGoal && goalZone == ClientSpawner.GetRegistrationZone());
-            bool showQueue = (cs == ClientState.AtWaitingArea || cs == ClientState.SittingInWaitingArea || cs == ClientState.MovingToSeat || cs == ClientState.AtRegistration || isGoingToReg) && queueNumber >= 0;
-            queueNumberText.text = showQueue ? queueNumber.ToString() : "";
-        }
+        ClientState cs = parent.stateMachine.GetCurrentState();
+        ClientPathfinding.LeaveReason lr = parent.reasonForLeaving;
+        
+        // --- НОВАЯ ЛОГИКА ОТОБРАЖЕНИЯ НОМЕРА ---
+        bool isLeavingBadly = (cs == ClientState.Leaving && (lr == ClientPathfinding.LeaveReason.Angry || lr == ClientPathfinding.LeaveReason.Upset));
+        bool isConfusedOrEnraged = (cs == ClientState.Confused || cs == ClientState.Enraged);
+        
+        // Показываем номер, если мы в очереди ИЛИ идем на вызов,
+        // И при этом мы не уходим в ярости, не потеряны и т.д.
+        bool showQueue = queueNumber >= 0 && !isLeavingBadly && !isConfusedOrEnraged;
+
+        queueNumberText.text = showQueue ? queueNumber.ToString() : "";
     }
+}
 
     private string GetStateText()
     {

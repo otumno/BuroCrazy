@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 41dc21de252d38941a82679ec53c72f8, type: 3}
+  m_Name: GuardStateEmotionMap
+  m_EditorClassIdentifier: 
+  targetCharacterType: 2
+  mappings:
+  - stateName: Patrolling
+    emotion: 11
+  - stateName: WaitingAtWaypoint
+    emotion: 11
+  - stateName: Chasing
+    emotion: 7
+  - stateName: Talking
+    emotion: 6
+  - stateName: OnPost
+    emotion: 4
+  - stateName: GoingToBreak
+    emotion: 12
+  - stateName: OnBreak
+    emotion: 1
+  - stateName: GoingToToilet
+    emotion: 3
+  - stateName: OffDuty
+    emotion: 12
+  - stateName: ChasingThief
+    emotion: 7
+  - stateName: EscortingThief
+    emotion: 6
+  - stateName: Evicting
+    emotion: 6
+  - stateName: StressedOut
+    emotion: 13

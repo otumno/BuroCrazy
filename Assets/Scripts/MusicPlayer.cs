@@ -1,4 +1,6 @@
+// Файл: MusicPlayer.cs
 using UnityEngine;
+using System.Collections;
 
 [RequireComponent(typeof(AudioSource))]
 public class MusicPlayer : MonoBehaviour
@@ -9,20 +11,36 @@ public class MusicPlayer : MonoBehaviour
     [Tooltip("Один трек, который будет играть всю ночь (в цикле)")]
     public AudioClip nightTrack;
 
+    [Header("Эффект приглушения")]
+    [Tooltip("Частота среза для фильтра. Чем ниже, тем глуше звук. (н-р, 1200)")]
+    public float muffledFrequency = 1200f;
+    
+    // --- НОВОЕ: Настройка громкости ---
+    [Tooltip("Громкость музыки в приглушенном состоянии (от 0.0 до 1.0)")]
+    [Range(0f, 1f)]
+    public float muffledVolume = 0.5f;
+
+    [Tooltip("Как быстро (в секундах) звук меняется")]
+    public float fadeDuration = 0.5f;
+
     private AudioSource audioSource;
+    private AudioLowPassFilter lowPassFilter;
+    private Coroutine effectsCoroutine;
     private int lastTrackIndex = -1;
     private bool isNightMusic = false;
-
+    private float initialVolume; // Запоминаем начальную громкость
+    
     void Awake()
     {
         audioSource = GetComponent<AudioSource>();
+        lowPassFilter = GetComponent<AudioLowPassFilter>(); 
+        initialVolume = audioSource.volume; // Сохраняем громкость из инспектора
     }
 
     void Update()
     {
         string period = ClientSpawner.CurrentPeriodName?.ToLower().Trim();
-
-        // Логика для ночи
+        
         if (period == "ночь")
         {
             if (!isNightMusic)
@@ -32,9 +50,13 @@ public class MusicPlayer : MonoBehaviour
                 audioSource.clip = nightTrack;
                 audioSource.loop = true;
                 if(nightTrack != null) audioSource.Play();
+                
+                // Принудительно отключаем все эффекты для ночной музыки
+                if(effectsCoroutine != null) StopCoroutine(effectsCoroutine);
+                if (lowPassFilter != null) lowPassFilter.cutoffFrequency = 22000f;
+                audioSource.volume = initialVolume;
             }
         }
-        // Логика для дня
         else
         {
             if (isNightMusic)
@@ -66,10 +88,61 @@ public class MusicPlayer : MonoBehaviour
         }
 
         int newIndex;
-        do { newIndex = Random.Range(0, dayTracks.Length); } while (newIndex == lastTrackIndex);
+        do { newIndex = Random.Range(0, dayTracks.Length);
+        } while (newIndex == lastTrackIndex);
         
         lastTrackIndex = newIndex;
         audioSource.clip = dayTracks[lastTrackIndex];
         audioSource.Play();
+    }
+
+    public void SetMuffled(bool isMuffled)
+    {
+        if (effectsCoroutine != null) StopCoroutine(effectsCoroutine);
+
+        if (isNightMusic)
+        {
+            if (lowPassFilter != null) lowPassFilter.cutoffFrequency = 22000f;
+            audioSource.volume = initialVolume;
+            return;
+        }
+
+        // Определяем целевые значения для громкости и фильтра
+        float targetVolume = isMuffled ? muffledVolume : initialVolume;
+        float targetFrequency = isMuffled ? muffledFrequency : 22000f;
+        
+        effectsCoroutine = StartCoroutine(LerpAudioEffects(targetVolume, targetFrequency));
+    }
+
+    // --- ИЗМЕНЕНО: Корутина теперь управляет и громкостью, и фильтром ---
+    private IEnumerator LerpAudioEffects(float targetVol, float targetFreq)
+    {
+        float startVol = audioSource.volume;
+        float startFreq = lowPassFilter != null ? lowPassFilter.cutoffFrequency : 22000f;
+        float time = 0;
+
+        while (time < fadeDuration)
+        {
+            time += Time.deltaTime;
+            float progress = time / fadeDuration;
+            
+            // Плавно меняем громкость
+            audioSource.volume = Mathf.Lerp(startVol, targetVol, progress);
+            
+            // Плавно меняем частоту фильтра
+            if (lowPassFilter != null)
+            {
+                lowPassFilter.cutoffFrequency = Mathf.Lerp(startFreq, targetFreq, progress);
+            }
+            
+            yield return null;
+        }
+
+        audioSource.volume = targetVol;
+        if (lowPassFilter != null)
+        {
+            lowPassFilter.cutoffFrequency = targetFreq;
+        }
+        effectsCoroutine = null;
     }
 }

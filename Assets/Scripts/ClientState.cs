@@ -1,3 +1,4 @@
+// Файл: ClientState.cs
 public enum ClientState
 {
     Spawning, MovingToGoal, MovingToSeat, MovingToRegistrarImpolite,
@@ -8,5 +9,6 @@ public enum ClientState
     Positioning, ReturningToWait, AtDesk1, AtDesk2,
     AtLimitedZoneEntrance, InsideLimitedZone,
     Enraged,
-    LeavingUpset // <-- НОВОЕ СОСТОЯНИЕ
+    LeavingUpset,
+    ReturningToRegistrar // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
 }
