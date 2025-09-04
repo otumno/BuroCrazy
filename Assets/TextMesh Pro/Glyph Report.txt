@@ -1,45 +1,13 @@
-Font: Noto Color Emoji  Style: Regular
+Font: Ramona  Style: Light
 Point Size: 179   Padding: -1070750849   SP/PD Ratio: -598184900,0%
 
-Characters included: 48/81
-Missing characters: 33
+Characters included: 98/99
+Missing characters: 1
 Excluded characters: 0
 
 Characters missing from font file:
 ----------------------------------------
-ID: 9	Hex: 9	Char [	]
-ID: 95	Hex: 5F	Char [_]
-ID: 119	Hex: 77	Char [w]
-ID: 97	Hex: 61	Char [a]
-ID: 108	Hex: 6C	Char [l]
-ID: 107	Hex: 6B	Char [k]
-ID: 101	Hex: 65	Char [e]
-ID: 114	Hex: 72	Char [r]
-ID: 115	Hex: 73	Char [s]
-ID: 65039	Hex: FE0F	Char [️]
-ID: 9312	Hex: 2460	Char [①]
-ID: 9313	Hex: 2461	Char [②]
-ID: 9314	Hex: 2462	Char [③]
-ID: 9315	Hex: 2463	Char [④]
-ID: 9316	Hex: 2464	Char [⑤]
-ID: 9317	Hex: 2465	Char [⑥]
-ID: 9318	Hex: 2466	Char [⑦]
-ID: 9319	Hex: 2467	Char [⑧]
-ID: 9320	Hex: 2468	Char [⑨]
-ID: 9321	Hex: 2469	Char [⑩]
-ID: 167	Hex: A7	Char [§]
-ID: 76	Hex: 4C	Char [L]
-ID: 80	Hex: 50	Char [P]
-ID: 83	Hex: 53	Char [S]
-ID: 90	Hex: 5A	Char [Z]
-ID: 122	Hex: 7A	Char [z]
-ID: 79	Hex: 4F	Char [O]
-ID: 111	Hex: 6F	Char [o]
-ID: 87	Hex: 57	Char [W]
-ID: 63	Hex: 3F	Char [?]
-ID: 33	Hex: 21	Char [!]
-ID: 64	Hex: 40	Char [@]
-ID: 46	Hex: 2E	Char [.]
+ID: 9633	Hex: 25A1	Char [□]
 
 Characters excluded from packing:
 ----------------------------------------

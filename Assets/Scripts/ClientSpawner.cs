@@ -1,4 +1,3 @@
-// Файл: ClientSpawner.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -73,7 +72,7 @@ public class ClientSpawner : MonoBehaviour
     private static Dictionary<int, MonoBehaviour> deskOccupants = new Dictionary<int, MonoBehaviour>();
     
     private int evacuationMilestone = 0;
-
+    
     void Awake() 
     { 
         Instance = this;
@@ -247,8 +246,7 @@ public class ClientSpawner : MonoBehaviour
             {
                 if (guard.GetCurrentState() != GuardMovement.GuardState.OnBreak && guard.GetCurrentState() != GuardMovement.GuardState.GoingToBreak)
                 {
-                    // --- ИЗМЕНЕНИЕ: Вызываем стандартизированный метод ---
-                    guard.GoOnBreak(duration);
+                   guard.GoOnBreak(duration);
                 }
             }
         }
@@ -313,8 +311,7 @@ public class ClientSpawner : MonoBehaviour
         { 
             if (client != null) 
             { 
-                var reason = force ?
-                    ClientPathfinding.LeaveReason.Angry : ClientPathfinding.LeaveReason.CalmedDown;
+                var reason = force ? ClientPathfinding.LeaveReason.Angry : ClientPathfinding.LeaveReason.CalmedDown;
                 client.ForceLeave(reason);
             } 
         } 
@@ -331,7 +328,7 @@ public class ClientSpawner : MonoBehaviour
         return clerks.FirstOrDefault(c => c.assignedServicePoint != null && c.assignedServicePoint.deskId == deskId);
     }
     
-    public static ClerkController GetAbsentClerk() { if (Instance == null) return null; 
+    public static ClerkController GetAbsentClerk() { if (Instance == null) return null;
         var clerks = FindObjectsByType<ClerkController>(FindObjectsSortMode.None);
         return clerks.FirstOrDefault(c => c.IsOnBreak());
     }
@@ -385,7 +382,7 @@ public class ClientSpawner : MonoBehaviour
     
     IEnumerator FadeLight(GameObject lightObject, bool turnOn) { var lightSource = lightObject.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
         if (lightSource == null) yield break; float startIntensity = turnOn ? 0f : lightSource.intensity; float endIntensity = turnOn ?
-            1f : 0f; float timer = 0f; if(turnOn) { lightSource.intensity = 0; lightObject.SetActive(true);
+        1f : 0f; float timer = 0f; if(turnOn) { lightSource.intensity = 0; lightObject.SetActive(true);
         } while(timer < lightFadeDuration) { timer += Time.deltaTime; lightSource.intensity = Mathf.Lerp(startIntensity, endIntensity, timer / lightFadeDuration); yield return null;
         } lightSource.intensity = endIntensity; if(!turnOn) { lightObject.SetActive(false); } }
     
@@ -406,5 +403,29 @@ public class ClientSpawner : MonoBehaviour
     public float GetPeriodTimer() 
     { 
         return periodTimer;
+    }
+
+    // --- НОВЫЕ МЕТОДЫ ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ ---
+
+    public int GetCurrentDay()
+    {
+        return dayCounter;
+    }
+
+    public void SetDay(int day)
+    {
+        dayCounter = day;
+        UpdateDayCounterUI();
+    }
+
+    public void ResetState()
+    {
+        dayCounter = 1;
+        UpdateDayCounterUI();
+        // Также сбрасываем нумерацию в очереди
+        if (ClientQueueManager.Instance != null)
+        {
+            ClientQueueManager.Instance.ResetQueueNumber();
+        }
     }
 }

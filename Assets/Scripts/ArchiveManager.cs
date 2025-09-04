@@ -12,15 +12,12 @@ public class ArchiveManager : MonoBehaviour
     public DocumentStack mainDocumentStack;
     [Tooltip("Максимальное количество документов в основной стопке до того, как они начнут появляться в других местах")]
     public int maxCapacityBeforeOverflow = 20;
-
     [Header("Точки для переполнения")]
     [Tooltip("Список трансформов, где будут появляться документы, если основная стопка переполнена")]
     public List<Transform> overflowPoints;
-
     [Header("Архивные шкафы")]
     [Tooltip("Список всех шкафов, куда архивариус будет относить документы")]
     public List<ArchiveCabinet> cabinets;
-    
     private List<Transform> occupiedOverflowPoints = new List<Transform>();
 
     void Awake()
@@ -74,5 +71,32 @@ public class ArchiveManager : MonoBehaviour
         {
             occupiedOverflowPoints.Remove(point);
         }
+    }
+
+    // --- НОВЫЕ МЕТОДЫ ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ И НОВОЙ ИГРЫ ---
+
+    public int GetCurrentDocumentCount()
+    {
+        if (mainDocumentStack == null) return 0;
+        return mainDocumentStack.CurrentSize;
+    }
+
+    public void SetDocumentCount(int count)
+    {
+        if (mainDocumentStack == null) return;
+        mainDocumentStack.TakeEntireStack(); // Очищаем стопку
+        for (int i = 0; i < count; i++)
+        {
+            mainDocumentStack.AddDocumentToStack();
+        }
+    }
+
+    public void ResetState()
+    {
+        if (mainDocumentStack != null)
+        {
+            mainDocumentStack.TakeEntireStack();
+        }
+        occupiedOverflowPoints.Clear();
     }
 }

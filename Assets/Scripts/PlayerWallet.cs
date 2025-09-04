@@ -28,13 +28,6 @@ public class PlayerWallet : MonoBehaviour
     {
         currentMoney += amount;
         UpdateMoneyText();
-
-        /* // ЭФФЕКТ ОТКЛЮЧЕН, ТАК КАК ТЕПЕРЬ ИСПОЛЬЗУЕТСЯ MoneyMover
-        if (moneyEffectPrefab != null)
-        {
-            Instantiate(moneyEffectPrefab, spawnPosition, Quaternion.identity);
-        }
-        */
     }
 
     private void UpdateMoneyText()
@@ -43,5 +36,24 @@ public class PlayerWallet : MonoBehaviour
         {
             moneyText.text = $"Счет: ${currentMoney}";
         }
+    }
+
+    // --- НОВЫЕ МЕТОДЫ ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ ---
+
+    public int GetCurrentMoney()
+    {
+        return currentMoney;
+    }
+
+    public void SetMoney(int amount)
+    {
+        currentMoney = amount;
+        UpdateMoneyText();
+    }
+
+    public void ResetState(int startingMoney = 5000)
+    {
+        currentMoney = startingMoney;
+        UpdateMoneyText();
     }
 }

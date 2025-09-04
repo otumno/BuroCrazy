@@ -1,83 +1,51 @@
-// Файл: CameraToggle.cs
 using UnityEngine;
-using System.Collections.Generic;
 
 public class CameraToggle : MonoBehaviour
 {
-    [Header("Камера и точки")]
-    public Camera mainCamera;
+    [Header("Точки для переключения")]
     public Transform positionOne;
     public Transform positionTwo;
-    
-    // --- НОВОЕ: Ссылка на плеер для управления звуком ---
-    [Header("Связанные системы")]
-    [Tooltip("Перетащите сюда объект с MusicPlayer")]
-    public MusicPlayer musicPlayer;
+
     [Header("Настройки")]
     public float moveSpeed = 10f;
 
-    [Header("UI для переключения (Черный список)")]
-    public List<GameObject> allToggleableUI;
-    public List<GameObject> hideInPositionOne;
-    public List<GameObject> hideInPositionTwo;
+    // --- Примечание: Все ссылки на UI и MusicPlayer временно убраны для максимальной простоты ---
 
     private bool isAtPositionOne = true;
-    
+    private Camera mainCamera;
+
     void Start()
     {
-        if (mainCamera == null)
-        {
-            mainCamera = Camera.main;
-        }
-        
-        if (mainCamera != null && positionOne != null)
+        mainCamera = GetComponent<Camera>();
+        // Устанавливаем начальную позицию
+        if (positionOne != null)
         {
             Vector3 startPos = positionOne.position;
-            startPos.z = mainCamera.transform.position.z;
-            mainCamera.transform.position = startPos;
+            startPos.z = transform.position.z;
+            transform.position = startPos;
         }
-        
-        UpdateUIVisibility();
-        // --- НОВОЕ: Устанавливаем начальное состояние звука ---
-        musicPlayer?.SetMuffled(!isAtPositionOne);
     }
 
-    void Update()
+    // Публичный метод, который будет вызывать UI кнопка
+    public void TogglePosition()
     {
+        isAtPositionOne = !isAtPositionOne;
+    }
+
+    void LateUpdate()
+    {
+        // Переключение по Tab теперь просто вызывает наш публичный метод
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             TogglePosition();
         }
 
+        // Логика движения
         if (mainCamera != null)
         {
-            Vector3 targetMarkerPosition = isAtPositionOne ?
-            positionOne.position : positionTwo.position;
-            Vector3 targetPosition = new Vector3(targetMarkerPosition.x, targetMarkerPosition.y, mainCamera.transform.position.z);
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, targetPosition, Time.deltaTime * moveSpeed);
-        }
-    }
-
-    public void TogglePosition()
-    {
-        isAtPositionOne = !isAtPositionOne;
-        UpdateUIVisibility();
-        
-        // --- НОВОЕ: Вызываем метод для изменения звука ---
-        // Если мы не у первой позиции (т.е. у второй, "нижней"), то звук нужно приглушить (isMuffled = true)
-        musicPlayer?.SetMuffled(!isAtPositionOne);
-    }
-
-    void UpdateUIVisibility()
-    {
-        List<GameObject> activeBlacklist = isAtPositionOne ?
-        hideInPositionOne : hideInPositionTwo;
-        foreach (var uiObject in allToggleableUI)
-        {
-            if (uiObject != null)
-            {
-                uiObject.SetActive(!activeBlacklist.Contains(uiObject));
-            }
+            Vector3 targetMarkerPosition = isAtPositionOne ? positionOne.position : positionTwo.position;
+            Vector3 targetPosition = new Vector3(targetMarkerPosition.x, targetMarkerPosition.y, transform.position.z);
+            transform.position = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * moveSpeed);
         }
     }
 }

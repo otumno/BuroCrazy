@@ -5,7 +5,13 @@ using System.Collections;
 [RequireComponent(typeof(AudioSource))]
 public class MusicPlayer : MonoBehaviour
 {
-    [Header("Плейлисты")]
+    [Header("Музыкальные темы")]
+    [Tooltip("Музыка для главного меню и экрана сохранений")]
+    public AudioClip menuTheme;
+    [Tooltip("Музыка для экрана начала дня (кабинет директора)")]
+    public AudioClip directorsOfficeTheme;
+
+    [Header("Игровые плейлисты")]
     [Tooltip("Музыка, которая играет в течение дня")]
     public AudioClip[] dayTracks;
     [Tooltip("Один трек, который будет играть всю ночь (в цикле)")]
@@ -14,12 +20,9 @@ public class MusicPlayer : MonoBehaviour
     [Header("Эффект приглушения")]
     [Tooltip("Частота среза для фильтра. Чем ниже, тем глуше звук. (н-р, 1200)")]
     public float muffledFrequency = 1200f;
-    
-    // --- НОВОЕ: Настройка громкости ---
     [Tooltip("Громкость музыки в приглушенном состоянии (от 0.0 до 1.0)")]
     [Range(0f, 1f)]
     public float muffledVolume = 0.5f;
-
     [Tooltip("Как быстро (в секундах) звук меняется")]
     public float fadeDuration = 0.5f;
 
@@ -28,17 +31,23 @@ public class MusicPlayer : MonoBehaviour
     private Coroutine effectsCoroutine;
     private int lastTrackIndex = -1;
     private bool isNightMusic = false;
-    private float initialVolume; // Запоминаем начальную громкость
+    private float initialVolume;
     
     void Awake()
     {
         audioSource = GetComponent<AudioSource>();
         lowPassFilter = GetComponent<AudioLowPassFilter>(); 
-        initialVolume = audioSource.volume; // Сохраняем громкость из инспектора
+        initialVolume = audioSource.volume;
     }
 
     void Update()
     {
+        // Не переключаем треки дня/ночи, если игра на паузе
+        if (Time.timeScale == 0f)
+        {
+            return;
+        }
+
         string period = ClientSpawner.CurrentPeriodName?.ToLower().Trim();
         
         if (period == "ночь")
@@ -46,15 +55,7 @@ public class MusicPlayer : MonoBehaviour
             if (!isNightMusic)
             {
                 isNightMusic = true;
-                audioSource.Stop();
-                audioSource.clip = nightTrack;
-                audioSource.loop = true;
-                if(nightTrack != null) audioSource.Play();
-                
-                // Принудительно отключаем все эффекты для ночной музыки
-                if(effectsCoroutine != null) StopCoroutine(effectsCoroutine);
-                if (lowPassFilter != null) lowPassFilter.cutoffFrequency = 22000f;
-                audioSource.volume = initialVolume;
+                PlayTrack(nightTrack, true);
             }
         }
         else
@@ -63,7 +64,6 @@ public class MusicPlayer : MonoBehaviour
             {
                 isNightMusic = false;
                 audioSource.Stop();
-                audioSource.loop = false;
             }
 
             if (!audioSource.isPlaying)
@@ -73,17 +73,43 @@ public class MusicPlayer : MonoBehaviour
         }
     }
 
+    // --- НОВЫЕ МЕТОДЫ, КОТОРЫХ НЕ ХВАТАЕТ ---
+    public void PlayMenuTheme()
+    {
+        PlayTrack(menuTheme, true);
+    }
+
+    public void PlayDirectorsOfficeTheme()
+    {
+        PlayTrack(directorsOfficeTheme, true);
+    }
+    
+    public void PlayGameplayMusic()
+    {
+        // Просто останавливаем текущий трек. 
+        // Update() сам подхватит и включит нужный трек дня/ночи, когда игра снимется с паузы.
+        audioSource.Stop();
+        isNightMusic = false; // Сбрасываем флаг, чтобы логика в Update сработала корректно
+    }
+
+    private void PlayTrack(AudioClip clip, bool loop)
+    {
+        if (audioSource.clip == clip && audioSource.isPlaying) return;
+
+        if (clip != null)
+        {
+            audioSource.clip = clip;
+            audioSource.loop = loop;
+            audioSource.Play();
+        }
+    }
+    
     void PlayRandomDayTrack()
     {
         if (dayTracks.Length == 0) return;
         if (dayTracks.Length == 1)
         {
-            if (audioSource.clip != dayTracks[0])
-            {
-                audioSource.clip = dayTracks[0];
-                audioSource.Play();
-            }
-            audioSource.loop = true;
+            PlayTrack(dayTracks[0], true);
             return;
         }
 
@@ -92,8 +118,7 @@ public class MusicPlayer : MonoBehaviour
         } while (newIndex == lastTrackIndex);
         
         lastTrackIndex = newIndex;
-        audioSource.clip = dayTracks[lastTrackIndex];
-        audioSource.Play();
+        PlayTrack(dayTracks[lastTrackIndex], false); // Дневные треки не зациклены
     }
 
     public void SetMuffled(bool isMuffled)
@@ -107,14 +132,12 @@ public class MusicPlayer : MonoBehaviour
             return;
         }
 
-        // Определяем целевые значения для громкости и фильтра
         float targetVolume = isMuffled ? muffledVolume : initialVolume;
         float targetFrequency = isMuffled ? muffledFrequency : 22000f;
         
         effectsCoroutine = StartCoroutine(LerpAudioEffects(targetVolume, targetFrequency));
     }
-
-    // --- ИЗМЕНЕНО: Корутина теперь управляет и громкостью, и фильтром ---
+    
     private IEnumerator LerpAudioEffects(float targetVol, float targetFreq)
     {
         float startVol = audioSource.volume;
@@ -126,10 +149,8 @@ public class MusicPlayer : MonoBehaviour
             time += Time.deltaTime;
             float progress = time / fadeDuration;
             
-            // Плавно меняем громкость
             audioSource.volume = Mathf.Lerp(startVol, targetVol, progress);
             
-            // Плавно меняем частоту фильтра
             if (lowPassFilter != null)
             {
                 lowPassFilter.cutoffFrequency = Mathf.Lerp(startFreq, targetFreq, progress);
@@ -144,5 +165,6 @@ public class MusicPlayer : MonoBehaviour
             lowPassFilter.cutoffFrequency = targetFreq;
         }
         effectsCoroutine = null;
+        yield break;
     }
 }
