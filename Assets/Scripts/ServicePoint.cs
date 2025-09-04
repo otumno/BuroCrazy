@@ -5,16 +5,16 @@ public class ServicePoint : MonoBehaviour
 {
     [Tooltip("ID этой стойки (1 для Стойки 1, 2 для Стойки 2 и т.д.)")]
     public int deskId;
-    
     [Tooltip("Точка, где должен стоять клерк")]
     public Transform clerkStandPoint;
-    
     [Tooltip("Точка, где должен стоять клиент (это и есть insideWaypoint для зоны)")]
     public Waypoint clientStandPoint;
-    
     [Tooltip("Точка на столе, куда кладется документ")]
     public Transform documentPointOnDesk;
-    
     [Tooltip("Ссылка на стопку документов, связанную с этим местом")]
     public DocumentStack documentStack;
+    
+    // --- НОВОЕ ПОЛЕ ---
+    [Tooltip("Точка, к которой будет подходить стажер, чтобы забрать документы со стола.")]
+    public Transform internCollectionPoint; 
 }

@@ -14,15 +14,16 @@ public class InternController : StaffController
     
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;
-
     [Header("Внешний вид")]
     [Tooltip("Укажите пол для выбора правильных спрайтов")]
     public Gender gender;
     private CharacterVisuals visuals;
-
     [Header("Основные параметры")]
     public List<Transform> patrolPoints;
     
+    [Header("Эффекты")]
+    [Tooltip("Префаб, который будет лететь от стопки к стажеру (можно использовать любой префаб документа)")]
+    public GameObject documentFlyEffectPrefab;
     [Header("Параметры поведения")]
     public float helpCheckInterval = 2f;
     public float chanceToServeFromQueue = 0.1f;
@@ -31,7 +32,6 @@ public class InternController : StaffController
     public float timeInToilet = 4f;
     [Tooltip("Через сколько секунд принудительно сбросить задачу, если стажер завис")]
     public float taskTimeout = 30f;
-    
     private static List<ClerkController> clerksBeingCovered = new List<ClerkController>();
     private Waypoint[] allWaypoints;
     private Transform currentPatrolTarget;
@@ -87,7 +87,6 @@ public class InternController : StaffController
                                  currentState == InternState.ServingFromQueue ||
                                  currentState == InternState.CoveringDesk ||
                                  currentState == InternState.Working ||
-                                 currentState == InternState.TakingStackToArchive ||
                                  currentState == InternState.TalkingToConfused;
         if (isInteractiveTask)
         {
@@ -105,14 +104,13 @@ public class InternController : StaffController
         currentState = newState;
         LogCurrentState(newState);
         timeInCurrentTask = 0f;
-
         visuals?.SetEmotionForState(newState);
     }
 
     private void LogCurrentState(InternState state) { logger?.LogState(state.ToString());
     }
+    
     public InternState GetCurrentState() => currentState;
-
     private void ForceReset(string reason)
     {
         Debug.LogWarning($"Стажер {gameObject.name} принудительно сброшен. Причина: {reason}");
@@ -126,14 +124,12 @@ public class InternController : StaffController
 
     private void LookForSomeoneToHelp()
     {
-        if (currentState != InternState.Patrolling) return;
-        
+        if (currentState != InternState.Patrolling && currentState != InternState.ReturningToPatrol && currentState != InternState.Inactive) return;
         DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
         DocumentStack stackToHelp = allStacks
             .Where(s => s != null && !s.IsEmpty && (ArchiveManager.Instance == null || s != ArchiveManager.Instance.mainDocumentStack))
             .OrderByDescending(s => s.CurrentSize)
             .FirstOrDefault();
-
         if (stackToHelp != null && (stackToHelp.IsFull || Random.value < 0.2f))
         {
             if (currentAction != null) StopCoroutine(currentAction);
@@ -178,7 +174,7 @@ public class InternController : StaffController
 
     private IEnumerator CoverDeskRoutine(ClerkController clerk)
     {
-        if (clerksBeingCovered.Contains(clerk))
+        if (clerksBeingCovered.Contains(clerk) || clerk.assignedServicePoint == null) // <-- FIX: Added null check
         {
             currentAction = StartCoroutine(ReturnToPatrolRoutine());
             yield break;
@@ -189,7 +185,9 @@ public class InternController : StaffController
 
         SetState(InternState.CoveringDesk);
         yield return StartCoroutine(MoveToTarget(clerk.assignedServicePoint.clerkStandPoint.position, InternState.Working));
-        while (clerkToCover != null && clerkToCover.IsOnBreak() && Vector2.Distance(clerkToCover.transform.position, clerkToCover.assignedServicePoint.clerkStandPoint.position) > 1.5f)
+        
+        // FIX: Added null check to prevent error
+        while (clerkToCover != null && clerkToCover.IsOnBreak() && clerkToCover.assignedServicePoint != null && Vector2.Distance(clerkToCover.transform.position, clerkToCover.assignedServicePoint.clerkStandPoint.position) > 1.5f)
         {
             yield return new WaitForSeconds(0.5f);
         }
@@ -279,35 +277,68 @@ public class InternController : StaffController
     private IEnumerator TakeStackToArchiveRoutine(DocumentStack stack)
     {
         SetState(InternState.TakingStackToArchive);
-        yield return StartCoroutine(MoveToTarget(stack.transform.position, InternState.Working));
+        ServicePoint targetServicePoint = stack.GetComponentInParent<ServicePoint>();
+        if (targetServicePoint == null || targetServicePoint.internCollectionPoint == null)
+        {
+            Debug.LogWarning($"У стопки {stack.name} не настроена точка сбора для стажера (internCollectionPoint). Стажер подойдет вплотную.");
+            agentMover.SetPath(BuildPathTo(stack.transform.position));
+            yield return new WaitUntil(() => !agentMover.IsMoving());
+        }
+        else
+        {
+            agentMover.SetPath(BuildPathTo(targetServicePoint.internCollectionPoint.position));
+            yield return new WaitUntil(() => !agentMover.IsMoving());
+        }
+        
+        int docCount = stack.CurrentSize;
+        if (docCount == 0)
+        {
+            yield return StartCoroutine(ReturnToPatrolRoutine());
+            yield break;
+        }
+
+        if (documentFlyEffectPrefab != null)
+        {
+            GameObject flyingDoc = Instantiate(documentFlyEffectPrefab, stack.transform.position, Quaternion.identity);
+            DocumentMover mover = flyingDoc.GetComponent<DocumentMover>();
+            bool hasArrived = false;
+            if (mover != null && stackHolder != null)
+            {
+                mover.StartMove(stackHolder.transform, () => { hasArrived = true; });
+                yield return new WaitUntil(() => hasArrived);
+                Destroy(flyingDoc);
+            }
+        }
+        
+        stack.TakeEntireStack();
+        stackHolder.ShowStack(docCount, stack.maxStackSize);
 
         Transform dropOffPoint = ArchiveManager.Instance.RequestDropOffPoint();
-
         if (dropOffPoint != null)
         {
-            int docCount = stack.CurrentSize;
-            stackHolder.ShowStack(docCount, stack.maxStackSize);
-            
-            yield return StartCoroutine(MoveToTarget(dropOffPoint.position, InternState.Working));
-            
-            int takenDocs = stack.TakeEntireStack();
-            for (int i = 0; i < takenDocs; i++)
+            agentMover.SetPath(BuildPathTo(dropOffPoint.position));
+            yield return new WaitUntil(() => !agentMover.IsMoving());
+
+            for (int i = 0; i < docCount; i++)
             {
                 ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
             }
             stackHolder.HideStack();
             yield return new WaitForSeconds(1f);
+            ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
         }
         else
         {
             Debug.LogWarning($"Стажер {name} не может отнести документы, архив переполнен!");
+            stackHolder.HideStack(); 
             yield return new WaitForSeconds(5f);
         }
         
         yield return StartCoroutine(ReturnToPatrolRoutine());
     }
     
-    public void GoOnBreak(float duration) { if (currentAction != null) StopCoroutine(currentAction); currentAction = StartCoroutine(BreakRoutine(duration));
+    public override void GoOnBreak(float duration) { if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = StartCoroutine(BreakRoutine(duration));
     }
 
     private IEnumerator StartShiftRoutine()
@@ -333,8 +364,20 @@ public class InternController : StaffController
     {
         isOnDuty = false;
         SetState(InternState.GoingToBreak);
-        yield return StartCoroutine(MoveToTarget(kitchenPoint.position, InternState.OnBreak));
-        yield return new WaitForSeconds(duration);
+        
+        Transform breakSpot = RequestKitchenPoint();
+        if (breakSpot != null)
+        {
+            yield return StartCoroutine(MoveToTarget(breakSpot.position, InternState.OnBreak));
+            yield return new WaitForSeconds(duration);
+            FreeKitchenPoint(breakSpot);
+        }
+        else
+        {
+            Debug.LogWarning($"Для {name} не настроены точки отдыха (Kitchen Points)!");
+            yield return new WaitForSeconds(duration);
+        }
+        
         isOnDuty = true;
         yield return StartCoroutine(ReturnToPatrolRoutine());
     }
@@ -342,8 +385,8 @@ public class InternController : StaffController
     private IEnumerator ToiletBreakRoutine()
     {
         SetState(InternState.GoingToToilet);
-        yield return StartCoroutine(MoveToTarget(staffToiletPoint.position, InternState.AtToilet));
-        yield return new WaitForSeconds(timeInToilet);
+        yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet));
+        SetState(InternState.AtToilet);
         yield return StartCoroutine(ReturnToPatrolRoutine());
     }
 
@@ -365,7 +408,7 @@ public class InternController : StaffController
     private void SelectNewPatrolPoint() { if (patrolPoints == null || patrolPoints.Count == 0) return;
         currentPatrolTarget = patrolPoints[Random.Range(0, patrolPoints.Count)]; }
 
-    private Queue<Waypoint> BuildPathTo(Vector2 targetPos)
+    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
         var path = new Queue<Waypoint>();
         Waypoint startNode = FindNearestVisibleWaypoint(transform.position);

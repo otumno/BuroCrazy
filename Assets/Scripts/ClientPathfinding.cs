@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 public class ClientPathfinding : MonoBehaviour
 {
-    public enum LeaveReason { Normal, Processed, Angry, CalmedDown, Upset, Theft } // <-- Добавлено Theft
+    public enum LeaveReason { Normal, Processed, Angry, CalmedDown, Upset, Theft }
     public ClientStateMachine stateMachine;
     public ClientMovement movement;
     public ClientNotification notification;
@@ -17,8 +17,6 @@ public class ClientPathfinding : MonoBehaviour
     [Range(0f, 1f)] public float babushkaFactor;
     [Range(0f, 1f)] public float suetunFactor;
     [Range(0f, 1f)] public float prolazaFactor;
-
-    // --- НОВОЕ: Визуальная часть ---
     [Header("Внешний вид")]
     public Gender gender;
     private CharacterVisuals visuals;
@@ -34,43 +32,37 @@ public class ClientPathfinding : MonoBehaviour
     public int billToPay = 0;
     public GameObject moneyPrefab;
     [Header("Создание беспорядка")]
-    [Tooltip("Список префабов мусора, из которых будет выбираться случайный.")]
     public List<GameObject> trashPrefabs;
-    [Tooltip("Список префабов луж.")]
     public List<GameObject> puddlePrefabs;
 
     [Header("Звуки")] 
     public AudioClip spawnSound, exitSound, confusedSound, toiletSound;
     public AudioClip successfulExitSound, dissatisfiedExitSound, helpedByInternSound, paymentSound;
     public AudioClip stampSound;
-    [Tooltip("Звук, когда 'пролаза' решает пойти без очереди")]
     public AudioClip impoliteSound;
-    [Tooltip("Звук, когда клиент решает уйти, не заплатив")]
     public AudioClip theftAttemptSound;
     public static int totalClients, clientsExited, clientsInWaiting, clientsToToilet, clientsToRegistration, clientsConfused;
     public static int clientsExitedAngry = 0, clientsExitedProcessed = 0;
 
     public CharacterVisuals GetVisuals() => visuals;
-
     public void Initialize(GameObject wZ, Waypoint eW) 
     { 
-        Debug.Log($"<color=green>Клиент {gameObject.name} успешно создан и инициализируется.</color>");	
         totalClients++;
         stateMachine = gameObject.GetComponent<ClientStateMachine>(); 
         movement = gameObject.GetComponent<ClientMovement>(); 
         notification = gameObject.GetComponent<ClientNotification>(); 
         docHolder = gameObject.GetComponent<DocumentHolder>();
         visuals = gameObject.GetComponent<CharacterVisuals>();
-
+        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Мы убрали лишние проверки и ненадежную инициализацию TextMeshPro ---
         if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null) 
         {
-            Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!");
+            Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!", gameObject);
             enabled = false;
             return; 
         }
 
-        // --- НОВЫЙ БЛОК: Настройка визуала при спавне ---
-        gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
+        gender = (Random.value > 0.5f) ?
+        Gender.Male : Gender.Female;
         visuals.Setup(gender);
         
         babushkaFactor = (float)Mathf.RoundToInt(Random.Range(0, 4)) * 0.25f;
@@ -82,15 +74,15 @@ public class ClientPathfinding : MonoBehaviour
         DocumentType startingDoc = DocumentType.None;
         if (Random.value < 0.2f)
         {
-            if (mainGoal == ClientGoal.GetCertificate1) { startingDoc = DocumentType.Form2; }
-            else if (mainGoal == ClientGoal.GetCertificate2) { startingDoc = DocumentType.Form1; }
+            if (mainGoal == ClientGoal.GetCertificate1) { startingDoc = DocumentType.Form2;
+            }
+            else if (mainGoal == ClientGoal.GetCertificate2) { startingDoc = DocumentType.Form1;
+            }
         }
         docHolder.SetDocument(startingDoc);
 
         stateMachine.Initialize(this);
-        movement.Initialize(this);
-        TextMeshPro tmp = GetComponentInChildren<TextMeshPro>(); 
-        if (tmp != null) notification.Initialize(this, tmp); 
+        movement.Initialize(this); 
         
         float basePatience = Random.Range(minPatienceTime, maxPatienceTime);
         totalPatienceTime = basePatience * (1 + babushkaFactor);
@@ -98,9 +90,48 @@ public class ClientPathfinding : MonoBehaviour
         if (spawnSound != null) AudioSource.PlayClipAtPoint(spawnSound, transform.position);
     }
 
-    public void OnClientExit() { if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.CalmedDown || reasonForLeaving == LeaveReason.Upset) { clientsExitedAngry++; } else if(isLeavingSuccessfully) { clientsExitedProcessed++; } clientsExited++; totalClients--; if (exitSound != null) AudioSource.PlayClipAtPoint(exitSound, transform.position); Destroy(gameObject); }
-    public void UnfreezeAndRestartAI() { if(stateMachine != null) stateMachine.StartCoroutine(stateMachine.MainLogicLoop()); }
-    public void CalmDownAndLeave() { if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) { reasonForLeaving = LeaveReason.CalmedDown; stateMachine.SetState(ClientState.Leaving); } }
+    void OnDestroy()
+    {
+        if (ClientQueueManager.Instance != null)
+        {
+            ClientQueueManager.Instance.RemoveClientFromQueue(this);
+        }
+        
+        if (stateMachine != null)
+        {
+            Waypoint lastGoal = stateMachine.GetCurrentGoal();
+            if (lastGoal != null)
+            {
+                var zone = lastGoal.GetComponentInParent<LimitedCapacityZone>();
+                if (zone != null)
+                {
+                    zone.ReleaseWaypoint(lastGoal);
+                }
+            }
+        }
+    }
+
+    public void OnClientExit() 
+    { 
+        if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.CalmedDown || reasonForLeaving == LeaveReason.Upset || reasonForLeaving == LeaveReason.Theft) 
+        { 
+            clientsExitedAngry++;
+        } 
+        else if(isLeavingSuccessfully) 
+        { 
+            clientsExitedProcessed++;
+        } 
+        clientsExited++; 
+        totalClients--; 
+        if (exitSound != null) AudioSource.PlayClipAtPoint(exitSound, transform.position); 
+        Destroy(gameObject);
+    }
+
+    public void UnfreezeAndRestartAI() { if(stateMachine != null) stateMachine.StartCoroutine(stateMachine.MainLogicLoop());
+    }
+    
+    public void CalmDownAndLeave() { if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) { reasonForLeaving = LeaveReason.CalmedDown;
+        stateMachine.SetState(ClientState.Leaving); } }
     
     public void CalmDownAndReturnToQueue() 
     {
@@ -111,7 +142,8 @@ public class ClientPathfinding : MonoBehaviour
         }
     }
 
-    public void Freeze() { if(stateMachine != null) stateMachine.StopAllActionCoroutines(); GetComponent<AgentMover>()?.Stop(); }
+    public void Freeze() { if(stateMachine != null) stateMachine.StopAllActionCoroutines(); GetComponent<AgentMover>()?.Stop();
+    }
     
     public void ForceLeave(LeaveReason reason = LeaveReason.CalmedDown) 
     {
@@ -150,26 +182,6 @@ public class ClientPathfinding : MonoBehaviour
         }
     }
 
-    public static ClientPathfinding FindClosestConfusedClient(Vector3 position) { return FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Where(c => c != null && c.stateMachine != null && c.stateMachine.GetCurrentState() == ClientState.Confused).OrderBy(c => Vector3.Distance(c.transform.position, position)).FirstOrDefault(); }
-
-    void OnDestroy()
-    {
-        if (ClientQueueManager.Instance != null)
-        {
-            ClientQueueManager.Instance.OnClientLeavesWaitingZone(this);
-        }
-        
-        if (stateMachine != null)
-        {
-            Waypoint lastGoal = stateMachine.GetCurrentGoal();
-            if (lastGoal != null)
-            {
-                var zone = lastGoal.GetComponentInParent<LimitedCapacityZone>();
-                if (zone != null)
-                {
-                    zone.ReleaseWaypoint(lastGoal);
-                }
-            }
-        }
+    public static ClientPathfinding FindClosestConfusedClient(Vector3 position) { return FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Where(c => c != null && c.stateMachine != null && c.stateMachine.GetCurrentState() == ClientState.Confused).OrderBy(c => Vector3.Distance(c.transform.position, position)).FirstOrDefault();
     }
 }

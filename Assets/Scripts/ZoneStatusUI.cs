@@ -17,19 +17,16 @@ public class ZoneStatusUI : MonoBehaviour
             return;
         }
 
-        // --- ИЗМЕНЕНИЕ: Получаем текущие и максимальные значения ---
         int currentOccupancy = monitoredZone.GetCurrentOccupancy();
         int capacity = monitoredZone.capacity;
 
         if (currentOccupancy >= capacity)
         {
-            // Формируем строку для занятого состояния
             statusText.text = $"{currentOccupancy}/{capacity} ЗАНЯТО";
             statusText.color = Color.red;
         }
         else
         {
-            // Формируем строку для свободного состояния
             statusText.text = $"{currentOccupancy}/{capacity} СВОБОДНО";
             statusText.color = Color.green;
         }

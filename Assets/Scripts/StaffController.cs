@@ -2,17 +2,19 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
-// Абстрактный класс - его нельзя повесить на объект напрямую, только унаследоваться от него.
 public abstract class StaffController : MonoBehaviour
 {
     [Header("График работы")]
     [Tooltip("Настройте рабочие периоды ниже с помощью галочек.")]
     public List<string> workPeriods;
-
+    
     [Header("Стандартные точки")]
     public Transform homePoint;
-    public Transform kitchenPoint;
+    [Tooltip("Список всех возможных точек для отдыха на кухне.")]
+    public List<Transform> kitchenPoints;
+    [Tooltip("Точка входа (ожидания) в зону туалета для персонала.")]
     public Transform staffToiletPoint;
 
     [Header("Звуки смены")]
@@ -24,14 +26,14 @@ public abstract class StaffController : MonoBehaviour
     protected AgentMover agentMover;
     protected CharacterStateLogger logger;
 
-    // Публичный метод, чтобы ClientSpawner мог узнать статус
-    public bool IsOnDuty() => isOnDuty;
+    private static List<Transform> occupiedKitchenPoints = new List<Transform>();
 
-    // Методы, которые будут вызываться из ClientSpawner
+    public bool IsOnDuty() => isOnDuty;
+    
     public abstract void StartShift();
     public abstract void EndShift();
+    public abstract void GoOnBreak(float duration);
 
-    // Общая логика для всех наследников
     protected virtual void Awake()
     {
         agentMover = GetComponent<AgentMover>();
@@ -40,10 +42,82 @@ public abstract class StaffController : MonoBehaviour
 
     protected virtual void Start()
     {
-        // При старте игры все сотрудники по умолчанию вне смены и дома
         if (homePoint != null)
         {
             transform.position = homePoint.position;
         }
     }
+
+    protected Transform RequestKitchenPoint()
+    {
+        if (kitchenPoints == null || kitchenPoints.Count == 0) return null;
+
+        var randomizedPoints = kitchenPoints.OrderBy(p => Random.value).ToList();
+
+        foreach (var point in randomizedPoints)
+        {
+            if (!occupiedKitchenPoints.Contains(point))
+            {
+                occupiedKitchenPoints.Add(point);
+                return point;
+            }
+        }
+        
+        return randomizedPoints.FirstOrDefault();
+    }
+
+    protected void FreeKitchenPoint(Transform point)
+    {
+        if (point != null && occupiedKitchenPoints.Contains(point))
+        {
+            occupiedKitchenPoints.Remove(point);
+        }
+    }
+
+    protected IEnumerator EnterLimitedZoneAndWaitRoutine(Transform zoneEntrance, float waitDuration)
+    {
+        if (zoneEntrance == null)
+        {
+            Debug.LogError($"{name} не может войти в зону, так как точка входа не задана!");
+            yield break;
+        }
+
+        LimitedCapacityZone zone = zoneEntrance.GetComponentInParent<LimitedCapacityZone>();
+        if (zone == null)
+        {
+            Debug.LogError($"{name} пытается использовать {zoneEntrance.name} как вход в зону, но на родительском объекте нет компонента LimitedCapacityZone!");
+            yield return new WaitForSeconds(waitDuration); 
+            yield break;
+        }
+
+        zone.JoinQueue(gameObject);
+        yield return new WaitUntil(() => zone.IsFirstInQueue(gameObject));
+
+        Waypoint insidePoint = null;
+        while (insidePoint == null)
+        {
+            if (this == null || !gameObject.activeInHierarchy) yield break;
+            insidePoint = zone.RequestAndOccupyWaypoint(gameObject);
+            if (insidePoint == null)
+            {
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
+        
+        zone.LeaveQueue(gameObject);
+        agentMover.SetPath(BuildPathTo(insidePoint.transform.position));
+        yield return new WaitUntil(() => !agentMover.IsMoving());
+
+        yield return new WaitForSeconds(waitDuration);
+
+        zone.ReleaseWaypoint(insidePoint);
+        
+        if (zone.exitWaypoint != null)
+        {
+            agentMover.SetPath(BuildPathTo(zone.exitWaypoint.transform.position));
+            yield return new WaitUntil(() => !agentMover.IsMoving());
+        }
+    }
+    
+    protected abstract Queue<Waypoint> BuildPathTo(Vector2 targetPos);
 }

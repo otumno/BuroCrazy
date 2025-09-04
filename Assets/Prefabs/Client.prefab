@@ -945,6 +945,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4c2a005dc3d43e4b832cea4d2af76ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  notificationText: {fileID: 0}
   queueNumberText: {fileID: 4369404502389981473}
 --- !u!82 &6796169321003199953
 AudioSource:
@@ -1102,6 +1103,8 @@ MonoBehaviour:
   stoppingDistance: 0.2
   rubberBandStrength: 3
   priority: 1
+  slowingDistance: 2
+  movementSmoothing: 5
 --- !u!114 &1297463190667798324
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1134,7 +1137,7 @@ MonoBehaviour:
   bodyRenderer: {fileID: 8254600904554153275}
   faceRenderer: {fileID: 3410635693542173386}
   spriteCollection: {fileID: 11400000, guid: 353cecdf3dbe99647a3b64ac83940024, type: 2}
-  stateEmotionMap: {fileID: 0}
+  stateEmotionMap: {fileID: 11400000, guid: bd148befb14c01a4cb1387d785650324, type: 2}
 --- !u!114 &-4168684608645338407
 MonoBehaviour:
   m_ObjectHideFlags: 0

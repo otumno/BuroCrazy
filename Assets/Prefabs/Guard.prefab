@@ -703,6 +703,11 @@ MonoBehaviour:
   catchDistance: 1
   talkTime: 3
   reprimandSound: {fileID: 8300000, guid: 22f8a3d39e8b7f8419e8ca5b9cf1dafa, type: 3}
+  obstacleLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
+  deskPoint: {fileID: 0}
+  protocolStack: {fileID: 0}
   maxStress: 100
   stressGainRate: 0.2
   stressGainPerViolator: 25
@@ -792,8 +797,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bodyRenderer: {fileID: 8254600904554153275}
   faceRenderer: {fileID: 6353657022690395043}
-  spriteCollection: {fileID: 11400000, guid: c11a566eacebd4345a4951d3cfdfc1c9, type: 2}
-  stateEmotionMap: {fileID: 0}
+  spriteCollection: {fileID: 11400000, guid: beab52f1c80e8ac4c98dcb2a60a80988, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: 2e2b81eb0b087b343a2f80516527a884, type: 2}
 --- !u!114 &3906857994926293848
 MonoBehaviour:
   m_ObjectHideFlags: 0

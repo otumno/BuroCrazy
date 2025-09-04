@@ -7,20 +7,17 @@ using System.Linq;
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class ServiceWorkerController : StaffController
 {
-    public enum WorkerState { Idle, SearchingForWork, GoingToMess, Cleaning, GoingToToilet, AtToilet, OffDuty, StressedOut }
+    public enum WorkerState { Idle, SearchingForWork, GoingToMess, Cleaning, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, StressedOut }
     
     [Header("Настройки Уборщика")]
     private WorkerState currentState = WorkerState.OffDuty;
-
     [Header("Внешний вид")]
     [Tooltip("Укажите пол для выбора правильных спрайтов")]
     public Gender gender;
     private CharacterVisuals visuals;
-
     [Header("Дополнительные объекты")]
     public GameObject nightLight;
     public Transform broomTransform;
-    
     [Header("Параметры уборки")]
     public float cleaningTimeTrash = 2f;
     public float cleaningTimePuddle = 4f;
@@ -42,11 +39,13 @@ public class ServiceWorkerController : StaffController
     private float currentStress = 0f;
     
     private Quaternion initialBroomRotation;
+    private Waypoint[] allWaypoints;
 
     protected override void Awake()
     {
         base.Awake();
         visuals = GetComponent<CharacterVisuals>();
+        allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
     }
 
     protected override void Start()
@@ -74,7 +73,7 @@ public class ServiceWorkerController : StaffController
     
     public override void StartShift() 
     { 
-        if (isOnDuty) return; 
+        if (isOnDuty) return;
         isOnDuty = true; 
         SetState(WorkerState.Idle); 
         currentAction = null;
@@ -82,15 +81,15 @@ public class ServiceWorkerController : StaffController
 
     public override void EndShift() 
     { 
-        if (!isOnDuty) return; 
+        if (!isOnDuty) return;
         isOnDuty = false; 
         if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(GoHomeRoutine()); 
+        currentAction = StartCoroutine(GoHomeRoutine());
     }
 
     private void SetState(WorkerState newState) 
     { 
-        if (currentState == newState) return; 
+        if (currentState == newState) return;
         currentState = newState; 
         logger.LogState(newState.ToString());
 
@@ -138,7 +137,7 @@ public class ServiceWorkerController : StaffController
     private void UpdateStress()
     {
         if (currentState == WorkerState.StressedOut || !isOnDuty) return;
-        bool isResting = currentState == WorkerState.AtToilet || currentState == WorkerState.OffDuty;
+        bool isResting = currentState == WorkerState.AtToilet || currentState == WorkerState.OffDuty || currentState == WorkerState.OnBreak;
         if (isResting) { currentStress -= stressReliefRate * Time.deltaTime;
         }
         currentStress = Mathf.Clamp(currentStress, 0, maxStress);
@@ -154,7 +153,8 @@ public class ServiceWorkerController : StaffController
         SetState(WorkerState.GoingToMess);
         yield return StartCoroutine(MoveToTarget(initialMess.transform.position, WorkerState.Cleaning));
 
-        if (initialMess == null) { currentAction = null; yield break; }
+        if (initialMess == null) { currentAction = null; yield break;
+        }
         
         float cleaningTime = GetCleaningTime(initialMess);
         float totalStressGain = 0;
@@ -162,7 +162,8 @@ public class ServiceWorkerController : StaffController
         StartCoroutine(AnimateBroom(cleaningTime));
         yield return new WaitForSeconds(cleaningTime);
 
-        if (initialMess == null) { currentAction = null; yield break; }
+        if (initialMess == null) { currentAction = null; yield break;
+        }
 
         MessPoint.MessType typeToClean = initialMess.type;
         if (typeToClean == MessPoint.MessType.Trash)
@@ -244,40 +245,154 @@ public class ServiceWorkerController : StaffController
     private IEnumerator GoHomeRoutine() { 
         if (homePoint != null)
         {
-            yield return StartCoroutine(MoveToTarget(homePoint.position, WorkerState.OffDuty)); 
+            yield return StartCoroutine(MoveToTarget(homePoint.position, WorkerState.OffDuty));
         }
         currentAction = null;
     }
-    private IEnumerator ToiletBreakRoutine() { yield return StartCoroutine(MoveToTarget(staffToiletPoint.position, WorkerState.AtToilet)); yield return new WaitForSeconds(timeInToilet);
+    private IEnumerator ToiletBreakRoutine() 
+    { 
+        SetState(WorkerState.GoingToToilet);
+        yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet)); 
+        SetState(WorkerState.AtToilet);
     }
-    private IEnumerator StressedOutRoutine() { SetState(WorkerState.StressedOut); 
-        if (homePoint != null)
+    
+    private IEnumerator StressedOutRoutine() 
+    { 
+        SetState(WorkerState.StressedOut); 
+        
+        Transform breakSpot = RequestKitchenPoint();
+        if (breakSpot != null)
         {
-            yield return StartCoroutine(MoveToTarget(homePoint.position, WorkerState.StressedOut)); 
+            yield return StartCoroutine(MoveToTarget(breakSpot.position, WorkerState.StressedOut));
+            yield return new WaitForSeconds(stressedOutDuration);
+            FreeKitchenPoint(breakSpot);
         }
-        yield return new WaitForSeconds(stressedOutDuration);
-        currentStress = maxStress * 0.5f; }
-    private IEnumerator MoveToTarget(Vector2 targetPosition, WorkerState stateOnArrival) { agentMover.SetPath(BuildPathTo(targetPosition));
-        yield return new WaitUntil(() => !agentMover.IsMoving()); SetState(stateOnArrival); }
+        else 
+        {
+            yield return new WaitForSeconds(stressedOutDuration);
+        }
+        
+        currentStress = maxStress * 0.5f;
+    }
+    
+    private IEnumerator MoveToTarget(Vector2 targetPosition, WorkerState stateOnArrival) 
+    { 
+        agentMover.SetPath(BuildPathTo(targetPosition));
+        yield return new WaitUntil(() => !agentMover.IsMoving()); 
+        SetState(stateOnArrival);
+    }
+    
+    public override void GoOnBreak(float duration)
+    {
+        if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = StartCoroutine(BreakRoutine(duration));
+    }
+    
+    private IEnumerator BreakRoutine(float duration)
+    {
+        SetState(WorkerState.GoingToBreak);
+        
+        Transform breakSpot = RequestKitchenPoint();
+        if (breakSpot != null)
+        {
+            yield return StartCoroutine(MoveToTarget(breakSpot.position, WorkerState.OnBreak));
+            yield return new WaitForSeconds(duration);
+            FreeKitchenPoint(breakSpot);
+        }
+        else
+        {
+            Debug.LogWarning($"Для {name} не настроены точки отдыха (Kitchen Points)!");
+            yield return new WaitForSeconds(duration);
+        }
+    }
+
     public WorkerState GetCurrentState() => currentState;
     
     public float GetStressPercent() => currentStress / maxStress;
-    private bool CanPathTo(Vector2 targetPosition) { var path = BuildPathTo(targetPosition);
-        return path != null && path.Count > 0; }
-    private Queue<Waypoint> BuildPathTo(Vector2 targetPos) { var path = new Queue<Waypoint>();
-        Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); if (allWaypoints.Length == 0) return path; Waypoint startNode = allWaypoints.OrderBy(wp => Vector2.Distance(transform.position, wp.transform.position)).FirstOrDefault();
-        Waypoint endNode = allWaypoints.OrderBy(wp => Vector2.Distance(targetPos, wp.transform.position)).FirstOrDefault(); if (startNode == null || endNode == null) return path;
-        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>(); Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>(); var queue = new PriorityQueue<Waypoint>();
-        foreach (var wp in allWaypoints) { distances[wp] = float.MaxValue; previous[wp] = null; } distances[startNode] = 0; queue.Enqueue(startNode, 0);
-        while(queue.Count > 0) { Waypoint current = queue.Dequeue(); if (current == endNode) { ReconstructPath(previous, endNode, path); return path;
-        } if (current.neighbors == null) continue; foreach(var neighbor in current.neighbors) { if(neighbor == null) continue;
-            float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position); if(distances.ContainsKey(neighbor) && newDist < distances[neighbor]) { distances[neighbor] = newDist; previous[neighbor] = current;
-                queue.Enqueue(neighbor, newDist); } } } return path; }
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) { List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } pathList.Reverse(); path.Clear();
-        foreach (var wp in pathList) { path.Enqueue(wp); } }
-    private class PriorityQueue<T> { private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
-        public int Count => elements.Count; public void Enqueue(T item, float priority) { elements.Add(new KeyValuePair<T, float>(item, priority));
-        } public T Dequeue() { int bestIndex = 0; for (int i = 0; i < elements.Count; i++) { if (elements[i].Value < elements[bestIndex].Value) { bestIndex = i;
-        } } T bestItem = elements[bestIndex].Key; elements.RemoveAt(bestIndex); return bestItem; } }
+    
+    private bool CanPathTo(Vector2 targetPosition) 
+    { 
+        var path = BuildPathTo(targetPosition);
+        return path != null && path.Count > 0;
+    }
+    
+    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos) 
+    { 
+        var path = new Queue<Waypoint>();
+        if (allWaypoints.Length == 0) return path; 
+        
+        Waypoint startNode = allWaypoints.OrderBy(wp => Vector2.Distance(transform.position, wp.transform.position)).FirstOrDefault();
+        Waypoint endNode = allWaypoints.OrderBy(wp => Vector2.Distance(targetPos, wp.transform.position)).FirstOrDefault();
+        
+        if (startNode == null || endNode == null) return path;
+        
+        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
+        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>(); 
+        var queue = new PriorityQueue<Waypoint>();
+        
+        foreach (var wp in allWaypoints) 
+        { 
+            distances[wp] = float.MaxValue; 
+            previous[wp] = null; 
+        } 
+        
+        distances[startNode] = 0; 
+        queue.Enqueue(startNode, 0);
+        
+        while(queue.Count > 0) 
+        { 
+            Waypoint current = queue.Dequeue(); 
+            if (current == endNode) 
+            { 
+                ReconstructPath(previous, endNode, path); 
+                return path;
+            } 
+            
+            if (current.neighbors == null) continue; 
+            
+            foreach(var neighbor in current.neighbors) 
+            { 
+                if(neighbor == null) continue;
+                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position); 
+                if(distances.ContainsKey(neighbor) && newDist < distances[neighbor]) 
+                { 
+                    distances[neighbor] = newDist; 
+                    previous[neighbor] = current;
+                    queue.Enqueue(neighbor, newDist); 
+                } 
+            } 
+        } 
+        return path; 
+    }
+    
+    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) 
+    { 
+        List<Waypoint> pathList = new List<Waypoint>();
+        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } 
+        pathList.Reverse(); 
+        path.Clear();
+        foreach (var wp in pathList) { path.Enqueue(wp); } 
+    }
+    
+    private class PriorityQueue<T> 
+    { 
+        private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
+        public int Count => elements.Count; 
+        public void Enqueue(T item, float priority) { elements.Add(new KeyValuePair<T, float>(item, priority));
+        } 
+        public T Dequeue() 
+        { 
+            int bestIndex = 0; 
+            for (int i = 0; i < elements.Count; i++) 
+            { 
+                if (elements[i].Value < elements[bestIndex].Value) 
+                { 
+                    bestIndex = i;
+                } 
+            } 
+            T bestItem = elements[bestIndex].Key; 
+            elements.RemoveAt(bestIndex); 
+            return bestItem; 
+        } 
+    }
 }

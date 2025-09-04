@@ -6,14 +6,12 @@ public class CharacterVisuals : MonoBehaviour
     [Header("Ссылки на компоненты")]
     public SpriteRenderer bodyRenderer;
     public SpriteRenderer faceRenderer;
-    
     [Header("Данные")]
     public EmotionSpriteCollection spriteCollection;
     
-    // --- НОВОЕ: Ссылка на карту эмоций ---
     [Tooltip("Перетащите сюда ассет с картой состояний и эмоций для этого типа персонажа")]
     public StateEmotionMap stateEmotionMap;
-
+    
     private Gender characterGender;
     private ClientNotification clientNotification;
 
@@ -50,7 +48,6 @@ public class CharacterVisuals : MonoBehaviour
     public void SetEmotionForState(System.Enum state)
     {
         if (stateEmotionMap == null) return;
-
         // Ищем в карте эмоцию для текущего состояния
         if (stateEmotionMap.TryGetEmotionForState(state.ToString(), out Emotion emotionToShow))
         {

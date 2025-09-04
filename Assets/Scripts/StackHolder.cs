@@ -12,7 +12,6 @@ public class StackHolder : MonoBehaviour
 
     void Start()
     {
-        // Прячем спрайт при старте
         if (stackSpriteRenderer != null)
         {
             stackSpriteRenderer.enabled = false;
@@ -23,13 +22,24 @@ public class StackHolder : MonoBehaviour
     public void ShowStack(int documentCount, int maxStackSize)
     {
         if (stackSpriteRenderer == null || stackSizeSprites.Count == 0 || documentCount == 0) return;
-
-        // Определяем, какой спрайт показать
+        
         float ratio = (float)documentCount / maxStackSize;
         int spriteIndex = Mathf.FloorToInt(ratio * (stackSizeSprites.Count - 0.01f));
         spriteIndex = Mathf.Clamp(spriteIndex, 0, stackSizeSprites.Count - 1);
 
         stackSpriteRenderer.sprite = stackSizeSprites[spriteIndex];
+        stackSpriteRenderer.enabled = true;
+    }
+
+    // --- НОВЫЙ МЕТОД ---
+    /// <summary>
+    /// Показывает только один документ (самый первый спрайт из списка).
+    /// </summary>
+    public void ShowSingleDocumentSprite()
+    {
+        if (stackSpriteRenderer == null || stackSizeSprites.Count == 0) return;
+
+        stackSpriteRenderer.sprite = stackSizeSprites[0]; // Всегда используем первый спрайт
         stackSpriteRenderer.enabled = true;
     }
 

@@ -18,18 +18,15 @@ public class ClerkController : StaffController
     public ClerkRole role = ClerkRole.Regular;
     [Tooltip("Рабочее место для ролей Registrar, Regular, Cashier. Для Archivist должно быть пустым.")]
     public ServicePoint assignedServicePoint;
-    
     [Header("Настройки для ролей")]
     [Tooltip("Точка, куда нужно приносить документы в архив (используется ТОЛЬКО для роли 'Registrar')")]
     public Transform archiveDropOffPoint;
     [Tooltip("Рабочее место для архивариуса, где он ожидает появления документов. (Только для роли 'Archivist')")]
     public Transform archivistWaitingPoint;
-
     [Header("Внешний вид")]
     [Tooltip("Укажите пол для выбора правильных спрайтов")]
     public Gender gender;
     private CharacterVisuals visuals;
-
     [Header("Поведение")]
     public float timeInToilet = 10f;
     public float chanceToGoToToilet = 0.005f;
@@ -43,16 +40,14 @@ public class ClerkController : StaffController
     public float stressReliefRate = 10f;
     public float stressedOutDuration = 20f;
     private float currentStress = 0f;
-
     private bool isWaitingForClient = false;
     private bool isCarryingDocumentToArchive = false;
     private Waypoint[] allWaypoints;
     private float callClientCooldown = 0f;
-    
     private StackHolder stackHolder;
     public static ClerkController RegistrarInstance { get; private set; }
     private Coroutine waitingForClientCoroutine;
-    
+
     protected override void Awake()
     {
         base.Awake(); 
@@ -60,7 +55,6 @@ public class ClerkController : StaffController
         stackHolder = GetComponent<StackHolder>();
         allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
         if (role == ClerkRole.Cashier && assignedServicePoint != null) assignedServicePoint.deskId = -1;
-        
         if (role == ClerkRole.Registrar)
         {
             RegistrarInstance = this;
@@ -77,10 +71,10 @@ public class ClerkController : StaffController
 
     void Update()
     {
-        if (Time.timeScale == 0f) { agentMover?.Stop(); return; }
+        if (Time.timeScale == 0f) { agentMover?.Stop();
+            return; }
 
         UpdateStress();
-        
         if (role == ClerkRole.Archivist && isOnDuty && currentAction == null)
         {
             if (!isCarryingDocumentToArchive && ArchiveManager.Instance != null && ArchiveManager.Instance.GetStackToProcess().CurrentSize > 0)
@@ -93,7 +87,8 @@ public class ClerkController : StaffController
         {
             if (Time.time > callClientCooldown)
             {
-                if (assignedServicePoint != null && Vector2.Distance(transform.position, assignedServicePoint.clerkStandPoint.position) < 0.5f)
+                if (assignedServicePoint != null && Vector2.Distance(transform.position, 
+                    assignedServicePoint.clerkStandPoint.position) < 0.5f)
                 {
                     bool clientCalled = ClientQueueManager.Instance.CallNextClient(this);
                     if (clientCalled)
@@ -110,7 +105,8 @@ public class ClerkController : StaffController
 
         if (role == ClerkRole.Regular && currentState == ClerkState.Working && Random.value < chanceToGoToToilet * Time.deltaTime)
         {
-            if (currentAction == null) { currentAction = StartCoroutine(ToiletBreakRoutine()); }
+            if (currentAction == null) { currentAction = StartCoroutine(ToiletBreakRoutine());
+            }
         }
     }
     
@@ -126,16 +122,6 @@ public class ClerkController : StaffController
         if (!isOnDuty) return;
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(EndShiftRoutine());
-    }
-
-    private void SetState(ClerkState newState)
-    {
-        if (currentState == newState) return;
-        currentState = newState;
-        LogCurrentState();
-
-        // --- ИЗМЕНЕНО: Весь switch-блок заменен одной строкой! ---
-        visuals?.SetEmotionForState(newState);
     }
 
     private IEnumerator StartShiftRoutine()
@@ -155,7 +141,7 @@ public class ClerkController : StaffController
             {
                 SetState(ClerkState.Working);
             }
-            currentAction = null; 
+            currentAction = null;
         }
         else 
         {
@@ -228,15 +214,21 @@ public class ClerkController : StaffController
         }
         isWaitingForClient = false;
         currentStress += stressGainPerClient;
-
-        if (role == ClerkRole.Regular && assignedServicePoint != null && assignedServicePoint.documentStack != null)
+        if (assignedServicePoint != null && assignedServicePoint.documentStack != null)
         {
-            DocumentStack myStack = assignedServicePoint.documentStack;
-            myStack.AddDocumentToStack();
-
-            if (myStack.IsFull && currentAction == null)
+            if (role == ClerkRole.Cashier)
             {
-                currentAction = StartCoroutine(TakeStackToArchiveRoutine(myStack));
+                assignedServicePoint.documentStack.AddDocumentToStack();
+            }
+            else if (role == ClerkRole.Regular)
+            {
+                DocumentStack myStack = assignedServicePoint.documentStack;
+                myStack.AddDocumentToStack();
+
+                if (myStack.IsFull && currentAction == null)
+                {
+                    currentAction = StartCoroutine(TakeStackToArchiveRoutine(myStack));
+                }
             }
         }
     }
@@ -246,8 +238,19 @@ public class ClerkController : StaffController
         SetState(ClerkState.StressedOut);
         if(assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
         isWaitingForClient = false;
-        yield return StartCoroutine(MoveToTarget(kitchenPoint.position, ClerkState.StressedOut));
-        yield return new WaitForSeconds(stressedOutDuration);
+        
+        Transform breakSpot = RequestKitchenPoint();
+        if (breakSpot != null)
+        {
+            yield return StartCoroutine(MoveToTarget(breakSpot.position, ClerkState.StressedOut));
+            yield return new WaitForSeconds(stressedOutDuration);
+            FreeKitchenPoint(breakSpot);
+        }
+        else
+        {
+            yield return new WaitForSeconds(stressedOutDuration);
+        }
+        
         currentStress = maxStress * 0.7f;
         
         if (isOnDuty && role != ClerkRole.Archivist)
@@ -260,16 +263,17 @@ public class ClerkController : StaffController
         }
     }
 
-    public float GetStressPercent() => currentStress / maxStress;
-
-    public void GoOnBreak(float duration)
+    public override void GoOnBreak(float duration)
     {
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(BreakRoutine(duration));
     }
 
+    public float GetStressPercent() => currentStress / maxStress;
+
     public ClerkState GetCurrentState() => currentState;
     public bool IsOnBreak() => currentState != ClerkState.Working && currentState != ClerkState.ReturningToWork && currentState != ClerkState.GoingToArchive;
+    
     public string GetStatusInfo()
     {
         switch (currentState)
@@ -277,17 +281,25 @@ public class ClerkController : StaffController
             case ClerkState.Working: 
                 if (role == ClerkRole.Archivist) return "Работает в архиве";
                 return $"Работает: {assignedServicePoint.name}";
-            case ClerkState.OnBreak: return "На перерыве (кухня)";
+            case ClerkState.OnBreak: return "На перерыве";
             case ClerkState.AtToilet: return "На перерыве (туалет)";
             case ClerkState.ReturningToWork: return $"Возвращается на работу: {assignedServicePoint.name}";
-            case ClerkState.GoingToBreak: return $"Идет на перерыв: {kitchenPoint.name}";
-            case ClerkState.GoingToToilet: return $"Идет в туалет: {staffToiletPoint.name}";
+            case ClerkState.GoingToBreak: return $"Идет на перерыв";
+            case ClerkState.GoingToToilet: return $"Идет в туалет";
             case ClerkState.StressedOut: return "СОРВАЛСЯ!";
             case ClerkState.GoingToArchive: return "Несет документы в архив";
             case ClerkState.AtArchive: return "Сдает документы в архив";
             case ClerkState.Inactive: return "Вне смены";
             default: return currentState.ToString();
         }
+    }
+
+    private void SetState(ClerkState newState)
+    {
+        if (currentState == newState) return;
+        currentState = newState;
+        LogCurrentState();
+        visuals?.SetEmotionForState(newState);
     }
 
     private void LogCurrentState()
@@ -300,8 +312,20 @@ public class ClerkController : StaffController
         SetState(ClerkState.GoingToBreak);
         if(assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
         isWaitingForClient = false;
-        yield return StartCoroutine(MoveToTarget(kitchenPoint.position, ClerkState.OnBreak));
-        yield return new WaitForSeconds(duration);
+        
+        Transform breakSpot = RequestKitchenPoint();
+        if (breakSpot != null)
+        {
+            yield return StartCoroutine(MoveToTarget(breakSpot.position, ClerkState.OnBreak));
+            yield return new WaitForSeconds(duration);
+            FreeKitchenPoint(breakSpot);
+        }
+        else
+        {
+            Debug.LogWarning($"Для {name} не настроены точки отдыха (Kitchen Points)!");
+            yield return new WaitForSeconds(duration);
+        }
+        
         yield return StartCoroutine(ReturnToWorkRoutine());
     }
 
@@ -310,8 +334,10 @@ public class ClerkController : StaffController
         SetState(ClerkState.GoingToToilet);
         if(assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
         isWaitingForClient = false;
-        yield return StartCoroutine(MoveToTarget(staffToiletPoint.position, ClerkState.AtToilet));
-        yield return new WaitForSeconds(timeInToilet);
+        
+        yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet));
+
+        SetState(ClerkState.AtToilet); 
         yield return StartCoroutine(ReturnToWorkRoutine());
     }
 
@@ -326,13 +352,13 @@ public class ClerkController : StaffController
         if (dropOffPoint != null)
         {
             yield return StartCoroutine(MoveToTarget(dropOffPoint.position, ClerkState.AtArchive));
-            
             int takenDocs = stack.TakeEntireStack();
             for (int i = 0; i < takenDocs; i++)
             {
                 ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
             }
             yield return new WaitForSeconds(1f);
+			ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
         }
         else
         {
@@ -353,7 +379,7 @@ public class ClerkController : StaffController
         if (stack.TakeOneDocument()) 
         {
             isCarryingDocumentToArchive = true;
-            stackHolder.ShowStack(1, 1);
+            stackHolder.ShowSingleDocumentSprite();
             currentAction = StartCoroutine(DeliverDocumentToCabinet());
         }
         else
@@ -368,7 +394,6 @@ public class ClerkController : StaffController
         if (cabinet != null)
         {
             yield return StartCoroutine(MoveToTarget(cabinet.transform.position, ClerkState.Working));
-            
             stackHolder.HideStack();
             isCarryingDocumentToArchive = false;
             yield return new WaitForSeconds(1f);
@@ -388,22 +413,34 @@ public class ClerkController : StaffController
         SetState(stateOnArrival);
     }
 
-    private Queue<Waypoint> BuildPathTo(Vector2 targetPos)
+    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
         var path = new Queue<Waypoint>();
         Waypoint startNode = FindNearestVisibleWaypoint();
         Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
         if (startNode == null || endNode == null) return path;
+        
         Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
         Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
         var queue = new PriorityQueue<Waypoint>();
-        foreach (var wp in allWaypoints) { distances[wp] = float.MaxValue; previous[wp] = null; }
+        
+        foreach (var wp in allWaypoints) 
+        { 
+            distances[wp] = float.MaxValue; 
+            previous[wp] = null;
+        }
+        
         distances[startNode] = 0;
         queue.Enqueue(startNode, 0);
+        
         while (queue.Count > 0)
         {
             Waypoint current = queue.Dequeue();
-            if (current == endNode) { ReconstructPath(previous, endNode, path); return path; }
+            if (current == endNode) 
+            { 
+                ReconstructPath(previous, endNode, path); 
+                return path;
+            }
 
             foreach (var neighbor in current.neighbors)
             {
@@ -425,18 +462,26 @@ public class ClerkController : StaffController
     private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
     {
         List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); }
+        for (Waypoint at = goal; at != null; at = previous[at]) 
+        { 
+            pathList.Add(at);
+        }
         pathList.Reverse();
         path.Clear();
-        foreach (var wp in pathList) { path.Enqueue(wp); }
+        foreach (var wp in pathList) 
+        { 
+            path.Enqueue(wp);
+        }
     }
 
     private Waypoint FindNearestVisibleWaypoint(Vector2? position = null)
     {
         Vector2 pos = position ?? (Vector2)transform.position;
         if (allWaypoints == null) return null;
+        
         Waypoint bestWaypoint = null;
         float minDistance = float.MaxValue;
+        
         foreach (var wp in allWaypoints)
         {
             if (wp == null) continue;
@@ -444,7 +489,11 @@ public class ClerkController : StaffController
             if (distance < minDistance)
             {
                 RaycastHit2D hit = Physics2D.Linecast(pos, wp.transform.position, LayerMask.GetMask("Obstacles"));
-                if (hit.collider == null) { minDistance = distance; bestWaypoint = wp; }
+                if (hit.collider == null) 
+                { 
+                    minDistance = distance; 
+                    bestWaypoint = wp;
+                }
             }
         }
         return bestWaypoint;
@@ -453,12 +502,24 @@ public class ClerkController : StaffController
     private class PriorityQueue<T>
     {
         private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
+        
         public int Count => elements.Count;
-        public void Enqueue(T item, float priority) { elements.Add(new KeyValuePair<T, float>(item, priority)); }
+        
+        public void Enqueue(T item, float priority) 
+        { 
+            elements.Add(new KeyValuePair<T, float>(item, priority));
+        }
+        
         public T Dequeue()
         {
             int bestIndex = 0;
-            for (int i = 0; i < elements.Count; i++) { if (elements[i].Value < elements[bestIndex].Value) { bestIndex = i; } }
+            for (int i = 0; i < elements.Count; i++) 
+            { 
+                if (elements[i].Value < elements[bestIndex].Value) 
+                { 
+                    bestIndex = i;
+                } 
+            }
             T bestItem = elements[bestIndex].Key;
             elements.RemoveAt(bestIndex);
             return bestItem;

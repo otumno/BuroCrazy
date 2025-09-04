@@ -13,7 +13,6 @@ public class CameraToggle : MonoBehaviour
     [Header("Связанные системы")]
     [Tooltip("Перетащите сюда объект с MusicPlayer")]
     public MusicPlayer musicPlayer;
-
     [Header("Настройки")]
     public float moveSpeed = 10f;
 
@@ -23,7 +22,7 @@ public class CameraToggle : MonoBehaviour
     public List<GameObject> hideInPositionTwo;
 
     private bool isAtPositionOne = true;
-
+    
     void Start()
     {
         if (mainCamera == null)
@@ -39,7 +38,6 @@ public class CameraToggle : MonoBehaviour
         }
         
         UpdateUIVisibility();
-        
         // --- НОВОЕ: Устанавливаем начальное состояние звука ---
         musicPlayer?.SetMuffled(!isAtPositionOne);
     }
@@ -53,7 +51,8 @@ public class CameraToggle : MonoBehaviour
 
         if (mainCamera != null)
         {
-            Vector3 targetMarkerPosition = isAtPositionOne ? positionOne.position : positionTwo.position;
+            Vector3 targetMarkerPosition = isAtPositionOne ?
+            positionOne.position : positionTwo.position;
             Vector3 targetPosition = new Vector3(targetMarkerPosition.x, targetMarkerPosition.y, mainCamera.transform.position.z);
             mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, targetPosition, Time.deltaTime * moveSpeed);
         }
@@ -71,7 +70,8 @@ public class CameraToggle : MonoBehaviour
 
     void UpdateUIVisibility()
     {
-        List<GameObject> activeBlacklist = isAtPositionOne ? hideInPositionOne : hideInPositionTwo;
+        List<GameObject> activeBlacklist = isAtPositionOne ?
+        hideInPositionOne : hideInPositionTwo;
         foreach (var uiObject in allToggleableUI)
         {
             if (uiObject != null)

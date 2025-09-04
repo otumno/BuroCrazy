@@ -11,27 +11,31 @@ public class GuardManager : MonoBehaviour
     [Header("Настройки менеджера")]
     [Tooltip("Шанс (0-1), с которым охранник заметит попытку кражи")]
     public float chanceToNoticeTheft = 0.6f;
-
     private List<GuardMovement> allGuards = new List<GuardMovement>();
-    private List<ClientPathfinding> assignedViolators = new List<ClientPathfinding>();
+    
+    // --- ИЗМЕНЕНО: Более надежное отслеживание целей ---
+    private HashSet<ClientPathfinding> targetsBeingHandled = new HashSet<ClientPathfinding>();
     private List<ClientPathfinding> reportedThieves = new List<ClientPathfinding>();
     private List<ClientPathfinding> clientsToEvict = new List<ClientPathfinding>();
-    private List<ClientPathfinding> assignedEvictees = new List<ClientPathfinding>();
 
     void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); }
-        else { Instance = this; }
+        if (Instance != null && Instance != this) { Destroy(gameObject);
+        }
+        else { Instance = this;
+        }
     }
 
     void Start()
     {
-        // Находим всех охранников на сцене при старте
         allGuards = FindObjectsByType<GuardMovement>(FindObjectsSortMode.None).ToList();
     }
 
     void Update()
     {
+        // --- ИСПРАВЛЕНО: Убираем неактуальные цели (например, если клиент исчез или успокоился) ---
+        targetsBeingHandled.RemoveWhere(client => client == null || client.stateMachine.GetCurrentState() != ClientState.Enraged);
+        
         ManageChasing();
         ManageTheftIntervention();
         ManageEvictions();
@@ -39,7 +43,7 @@ public class GuardManager : MonoBehaviour
     
     public void ReportTheft(ClientPathfinding thief)
     {
-        if (!reportedThieves.Contains(thief))
+        if (!reportedThieves.Contains(thief) && !targetsBeingHandled.Contains(thief))
         {
             Debug.Log($"[GuardManager] Получено сообщение о попытке кражи клиентом {thief.name}!");
             reportedThieves.Add(thief);
@@ -59,18 +63,24 @@ public class GuardManager : MonoBehaviour
     private void ManageChasing()
     {
         if (ClientQueueManager.Instance == null) return;
-        var unassignedViolators = ClientQueueManager.Instance.dissatisfiedClients.Where(v => v != null && !assignedViolators.Contains(v)).ToList();
+        var unassignedViolators = ClientQueueManager.Instance.dissatisfiedClients
+            .Where(v => v != null && !targetsBeingHandled.Contains(v)).ToList();
         if (unassignedViolators.Count == 0) return;
+
         var availableGuards = allGuards.Where(g => g != null && g.IsAvailableAndOnDuty()).ToList();
+        if (availableGuards.Count == 0) return;
         foreach (var violator in unassignedViolators)
         {
-            if (availableGuards.Count > 0)
+            if (availableGuards.Any())
             {
-                GuardMovement closestGuard = availableGuards.OrderBy(g => Vector2.Distance(g.transform.position, violator.transform.position)).FirstOrDefault();
+                GuardMovement closestGuard = availableGuards
+                    .OrderBy(g => Vector2.Distance(g.transform.position, violator.transform.position))
+                    .FirstOrDefault();
                 if (closestGuard != null)
                 {
+                    Debug.Log($"[GuardManager] Охранник {closestGuard.name} назначен на усмирение {violator.name}");
                     closestGuard.AssignToChase(violator);
-                    assignedViolators.Add(violator);
+                    targetsBeingHandled.Add(violator); 
                     availableGuards.Remove(closestGuard);
                 }
             }
@@ -81,65 +91,69 @@ public class GuardManager : MonoBehaviour
     private void ManageTheftIntervention()
     {
         if (reportedThieves.Count == 0) return;
-        ClientPathfinding thief = reportedThieves[0];
-        if (thief == null)
-        {
-            reportedThieves.RemoveAt(0);
-            return;
-        }
-
         var availableGuards = allGuards.Where(g => g != null && g.IsAvailableAndOnDuty()).ToList();
-        if (availableGuards.Count > 0)
+        if (availableGuards.Count == 0) return;
+
+        for (int i = reportedThieves.Count - 1; i >= 0; i--)
         {
+            ClientPathfinding thief = reportedThieves[i];
+            if (thief == null || targetsBeingHandled.Contains(thief))
+            {
+                reportedThieves.RemoveAt(i);
+                continue;
+            }
+
             if (Random.value < chanceToNoticeTheft)
             {
-                GuardMovement closestGuard = availableGuards.OrderBy(g => Vector2.Distance(g.transform.position, thief.transform.position)).FirstOrDefault();
+                GuardMovement closestGuard = availableGuards
+                    .OrderBy(g => Vector2.Distance(g.transform.position, thief.transform.position))
+                    .FirstOrDefault();
                 if (closestGuard != null)
                 {
                     closestGuard.AssignToCatchThief(thief);
-                    reportedThieves.Remove(thief); 
+                    targetsBeingHandled.Add(thief);
+                    availableGuards.Remove(closestGuard);
+                    reportedThieves.RemoveAt(i);
                 }
             }
             else
             {
                 Debug.Log($"Охрана не заметила, как {thief.name} пытается уйти, не заплатив!");
-                reportedThieves.Remove(thief); 
+                reportedThieves.RemoveAt(i);
             }
+
+            if (availableGuards.Count == 0) break;
         }
     }
 
     private void ManageEvictions()
     {
-        if (clientsToEvict.Count == 0) return;
-        var unassignedEvictees = clientsToEvict.Where(c => c != null && !assignedEvictees.Contains(c)).ToList();
+        var unassignedEvictees = clientsToEvict.Where(c => c != null && !targetsBeingHandled.Contains(c)).ToList();
         if (unassignedEvictees.Count == 0) return;
+        
         var availableGuards = allGuards.Where(g => g != null && g.IsAvailableAndOnDuty()).ToList();
         if (availableGuards.Count == 0) return;
-
         foreach (var clientToEvict in unassignedEvictees)
         {
-            if (availableGuards.Count > 0)
+            if (availableGuards.Any())
             {
                 GuardMovement closestGuard = availableGuards.OrderBy(g => Vector2.Distance(g.transform.position, clientToEvict.transform.position)).FirstOrDefault();
                 if (closestGuard != null)
                 {
                     closestGuard.AssignToEvict(clientToEvict);
-                    assignedEvictees.Add(clientToEvict);
+                    targetsBeingHandled.Add(clientToEvict);
                     availableGuards.Remove(closestGuard);
                 }
             }
             else break;
         }
-        
-        clientsToEvict.RemoveAll(c => assignedEvictees.Contains(c));
     }
 
     public void ReportTaskFinished(ClientPathfinding target)
     {
         if (target != null)
         {
-            if (assignedViolators.Contains(target)) assignedViolators.Remove(target);
-            if (assignedEvictees.Contains(target)) assignedEvictees.Remove(target);
+            targetsBeingHandled.Remove(target);
         }
     }
 }
