@@ -1,4 +1,3 @@
-// Файл: DocumentStack.cs
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +11,7 @@ public class DocumentStack : MonoBehaviour
     public GameObject documentVisualPrefab;
     [Tooltip("Вертикальное смещение для каждого нового документа в стопке.")]
     public float stackOffset = 0.05f;
+    
     private List<GameObject> visualStack = new List<GameObject>();
     public int CurrentSize => visualStack.Count;
     public bool IsFull => CurrentSize >= maxStackSize;
@@ -49,10 +49,24 @@ public class DocumentStack : MonoBehaviour
     public bool TakeOneDocument()
     {
         if (IsEmpty) return false;
-
+        
         GameObject docToRemove = visualStack.Last();
         visualStack.Remove(docToRemove);
         Destroy(docToRemove);
         return true;
+    }
+
+    // --- МЕТОД ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ ---
+    public void SetCount(int count)
+    {
+        // Сначала очищаем стопку от старых визуальных объектов
+        TakeEntireStack();
+
+        // Затем создаем нужное количество новых
+        int countToCreate = Mathf.Min(count, maxStackSize);
+        for (int i = 0; i < countToCreate; i++)
+        {
+            AddDocumentToStack();
+        }
     }
 }

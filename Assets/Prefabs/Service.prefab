@@ -514,7 +514,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   workPeriods: []
   homePoint: {fileID: 0}
-  kitchenPoint: {fileID: 0}
+  kitchenPoints: []
   staffToiletPoint: {fileID: 0}
   startShiftSound: {fileID: 0}
   endShiftSound: {fileID: 0}
@@ -1005,7 +1005,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 3
+  m_SortingOrder: 2
   m_Sprite: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

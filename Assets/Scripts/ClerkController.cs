@@ -47,7 +47,7 @@ public class ClerkController : StaffController
     private StackHolder stackHolder;
     public static ClerkController RegistrarInstance { get; private set; }
     private Coroutine waitingForClientCoroutine;
-
+    
     protected override void Awake()
     {
         base.Awake(); 
@@ -105,8 +105,7 @@ public class ClerkController : StaffController
 
         if (role == ClerkRole.Regular && currentState == ClerkState.Working && Random.value < chanceToGoToToilet * Time.deltaTime)
         {
-            if (currentAction == null) { currentAction = StartCoroutine(ToiletBreakRoutine());
-            }
+            if (currentAction == null) { currentAction = StartCoroutine(ToiletBreakRoutine()); }
         }
     }
     
@@ -252,7 +251,6 @@ public class ClerkController : StaffController
         }
         
         currentStress = maxStress * 0.7f;
-        
         if (isOnDuty && role != ClerkRole.Archivist)
         {
              yield return StartCoroutine(ReturnToWorkRoutine());
@@ -273,7 +271,6 @@ public class ClerkController : StaffController
 
     public ClerkState GetCurrentState() => currentState;
     public bool IsOnBreak() => currentState != ClerkState.Working && currentState != ClerkState.ReturningToWork && currentState != ClerkState.GoingToArchive;
-    
     public string GetStatusInfo()
     {
         switch (currentState)
@@ -345,7 +342,8 @@ public class ClerkController : StaffController
     {
         SetState(ClerkState.GoingToArchive);
         isWaitingForClient = false;
-        ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
+        if (assignedServicePoint != null)
+            ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
 
         Transform dropOffPoint = ArchiveManager.Instance.RequestDropOffPoint();
 
@@ -358,7 +356,7 @@ public class ClerkController : StaffController
                 ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
             }
             yield return new WaitForSeconds(1f);
-			ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
+            ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
         }
         else
         {
@@ -419,14 +417,12 @@ public class ClerkController : StaffController
         Waypoint startNode = FindNearestVisibleWaypoint();
         Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
         if (startNode == null || endNode == null) return path;
-        
         Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
         Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
         var queue = new PriorityQueue<Waypoint>();
-        
         foreach (var wp in allWaypoints) 
         { 
-            distances[wp] = float.MaxValue; 
+            distances[wp] = float.MaxValue;
             previous[wp] = null;
         }
         
@@ -438,7 +434,7 @@ public class ClerkController : StaffController
             Waypoint current = queue.Dequeue();
             if (current == endNode) 
             { 
-                ReconstructPath(previous, endNode, path); 
+                ReconstructPath(previous, endNode, path);
                 return path;
             }
 
@@ -481,7 +477,6 @@ public class ClerkController : StaffController
         
         Waypoint bestWaypoint = null;
         float minDistance = float.MaxValue;
-        
         foreach (var wp in allWaypoints)
         {
             if (wp == null) continue;
@@ -491,7 +486,7 @@ public class ClerkController : StaffController
                 RaycastHit2D hit = Physics2D.Linecast(pos, wp.transform.position, LayerMask.GetMask("Obstacles"));
                 if (hit.collider == null) 
                 { 
-                    minDistance = distance; 
+                    minDistance = distance;
                     bestWaypoint = wp;
                 }
             }
@@ -502,7 +497,6 @@ public class ClerkController : StaffController
     private class PriorityQueue<T>
     {
         private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
-        
         public int Count => elements.Count;
         
         public void Enqueue(T item, float priority) 
@@ -525,4 +519,7 @@ public class ClerkController : StaffController
             return bestItem;
         }
     }
+
+    public override float GetStressValue() { return currentStress; }
+    public override void SetStressValue(float stress) { currentStress = stress; }
 }

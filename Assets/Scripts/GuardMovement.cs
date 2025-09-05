@@ -54,7 +54,7 @@ public class GuardMovement : StaffController
     private int guardLayer, clientLayer;
     private List<Waypoint> nightPatrolRoute;
     private Waypoint[] allWaypoints;
-
+    
     protected override void Awake() 
     { 
         base.Awake();
@@ -142,8 +142,7 @@ public class GuardMovement : StaffController
     }
 
     public float GetStressPercent() => currentStress / maxStress;
-    private void LogCurrentState() { logger?.LogState(GetStatusInfo());
-    }
+    private void LogCurrentState() { logger?.LogState(GetStatusInfo()); }
     public GuardState GetCurrentState() => currentState;
     public bool IsAvailableAndOnDuty() => isOnDuty && currentState != GuardState.Chasing && currentState != GuardState.Talking && currentState != GuardState.ChasingThief && currentState != GuardState.EscortingThief && currentState != GuardState.Evicting && currentState != GuardState.StressedOut && currentState != GuardState.WritingReport;
     
@@ -156,10 +155,18 @@ public class GuardMovement : StaffController
         } 
     }
 
-    public void ReturnToPatrol() { if(isOnDuty && currentState == GuardState.OnBreak) { if(currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(ReturnToPatrolRoutine()); } }
+    public void ReturnToPatrol() 
+    { 
+        if(isOnDuty && currentState == GuardState.OnBreak) 
+        { 
+            if(currentAction != null) StopCoroutine(currentAction);
+            currentAction = StartCoroutine(ReturnToPatrolRoutine()); 
+        } 
+    }
     
-    public void GoToPost(Transform post) { if(currentAction != null) StopCoroutine(currentAction);
+    public void GoToPost(Transform post) 
+    { 
+        if(currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(GoToPostRoutine(post));
     }
     
@@ -256,7 +263,7 @@ public class GuardMovement : StaffController
     
     private IEnumerator ToiletBreakRoutine() 
     { 
-        SetState(GuardState.GoingToToilet); 
+        SetState(GuardState.GoingToToilet);
         yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet));
         SetState(GuardState.AtToilet);
     }
@@ -270,7 +277,6 @@ public class GuardMovement : StaffController
         Physics2D.IgnoreLayerCollision(guardLayer, clientLayer, true);
 
         bool isCurrentlyDirectChasing = false;
-        
         while (currentChaseTarget != null && Vector2.Distance(transform.position, currentChaseTarget.transform.position) > catchDistance)
         {
             RaycastHit2D hit = Physics2D.Linecast(transform.position, currentChaseTarget.transform.position, obstacleLayerMask);
@@ -349,7 +355,6 @@ public class GuardMovement : StaffController
         Physics2D.IgnoreLayerCollision(guardLayer, clientLayer, true);
         
         bool isCurrentlyDirectChasing = false;
-        
         while(currentChaseTarget != null && Vector2.Distance(transform.position, currentChaseTarget.transform.position) > catchDistance)
         {
             RaycastHit2D hit = Physics2D.Linecast(transform.position, currentChaseTarget.transform.position, obstacleLayerMask);
@@ -518,58 +523,157 @@ public class GuardMovement : StaffController
         SetState(stateOnArrival);
     }
     
-    private void SelectNewRandomWaypoint(List<Waypoint> route) { if (route == null || route.Count == 0) return;
-        if (route.Count == 1) { currentPatrolTarget = route[0]; return; } Waypoint newWaypoint; do { newWaypoint = route[Random.Range(0, route.Count)];
-        } while (newWaypoint == currentPatrolTarget); currentPatrolTarget = newWaypoint; }
-    
-    private void StartShouting() { if (shoutCoroutine == null && chaseShoutClip != null && audioSource != null) { shoutCoroutine = StartCoroutine(ShoutRoutine());
-    } }
-    
-    private void StopShouting() { if (shoutCoroutine != null) { StopCoroutine(shoutCoroutine);
-        shoutCoroutine = null;
-    } }
-    
-    private IEnumerator ShoutRoutine() { while (true) { audioSource.PlayOneShot(chaseShoutClip);
-        yield return new WaitForSeconds(Random.Range(3f, 5f));
-    } }
-    
-    public string GetStatusInfo() { switch (currentState) { case GuardState.StressedOut: return "СОРВАЛСЯ!";
-        case GuardState.WritingReport: return "Пишет протокол";
-        case GuardState.Patrolling: return $"Патрулирует. Цель: {currentPatrolTarget?.name}"; case GuardState.OnPost: return $"На посту";
-        case GuardState.Chasing: return $"Преследует: {currentChaseTarget?.name}";
-        case GuardState.Talking: return $"Разговаривает с: {currentChaseTarget?.name}"; case GuardState.WaitingAtWaypoint: return $"Ожидает на точке: {currentPatrolTarget?.name}";
-        case GuardState.OffDuty: return "Смена окончена";
-        case GuardState.ChasingThief: return $"Ловит воришку: {currentChaseTarget?.name}"; case GuardState.EscortingThief: return $"Ведет в кассу: {currentChaseTarget?.name}";
-        case GuardState.Evicting: return $"Выпроваживает: {currentChaseTarget?.name}";
-        default: return currentState.ToString(); } }
-    
-    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos) { var path = new Queue<Waypoint>();
-        Waypoint startNode = FindNearestVisibleWaypoint(transform.position); Waypoint endNode = FindNearestVisibleWaypoint(targetPos); if (startNode == null || endNode == null) { startNode = FindNearestWaypoint(transform.position);
-            endNode = FindNearestWaypoint(targetPos); } if (startNode == null || endNode == null) return path;
-        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>(); Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
-        PriorityQueue<Waypoint, float> queue = new PriorityQueue<Waypoint, float>(); foreach (var wp in allWaypoints) { distances[wp] = float.MaxValue; previous[wp] = null;
-        } distances[startNode] = 0; queue.Enqueue(startNode, 0); while(queue.Count > 0) { Waypoint current = queue.Dequeue();
-            if (current == endNode) { ReconstructPath(previous, endNode, path); return path; } foreach(var neighbor in current.neighbors) { if(neighbor == null) continue;
-                if (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag)) continue; float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
-                if(distances.ContainsKey(neighbor) && newDist < distances[neighbor]) { distances[neighbor] = newDist; previous[neighbor] = current; queue.Enqueue(neighbor, newDist); } } } return path;
+    private void SelectNewRandomWaypoint(List<Waypoint> route) 
+    { 
+        if (route == null || route.Count == 0) return;
+        if (route.Count == 1) { currentPatrolTarget = route[0]; return; } 
+        Waypoint newWaypoint; 
+        do { newWaypoint = route[Random.Range(0, route.Count)];
+        } while (newWaypoint == currentPatrolTarget); 
+        currentPatrolTarget = newWaypoint; 
     }
     
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) { List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } pathList.Reverse(); path.Clear();
-        foreach (var wp in pathList) { path.Enqueue(wp); } }
-    
-    private Waypoint FindNearestVisibleWaypoint(Vector2 position) { if (allWaypoints == null) return null;
-        Waypoint bestWaypoint = null; float minDistance = float.MaxValue; foreach (var wp in allWaypoints) { if (wp == null) continue;
-            float distance = Vector2.Distance(position, wp.transform.position); if (distance < minDistance) { RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles"));
-                if (hit.collider == null) { minDistance = distance; bestWaypoint = wp; } } } return bestWaypoint;
+    private void StartShouting() 
+    { 
+        if (shoutCoroutine == null && chaseShoutClip != null && audioSource != null) 
+        { 
+            shoutCoroutine = StartCoroutine(ShoutRoutine());
+        } 
     }
     
-    private Waypoint FindNearestWaypoint(Vector2 position) { if (allWaypoints == null) return null;
+    private void StopShouting() 
+    { 
+        if (shoutCoroutine != null) 
+        { 
+            StopCoroutine(shoutCoroutine);
+            shoutCoroutine = null;
+        } 
+    }
+    
+    private IEnumerator ShoutRoutine() 
+    { 
+        while (true) 
+        { 
+            audioSource.PlayOneShot(chaseShoutClip);
+            yield return new WaitForSeconds(Random.Range(3f, 5f));
+        } 
+    }
+    
+    public string GetStatusInfo() 
+    { 
+        switch (currentState) 
+        { 
+            case GuardState.StressedOut: return "СОРВАЛСЯ!";
+            case GuardState.WritingReport: return "Пишет протокол";
+            case GuardState.Patrolling: return $"Патрулирует. Цель: {currentPatrolTarget?.name}"; 
+            case GuardState.OnPost: return $"На посту";
+            case GuardState.Chasing: return $"Преследует: {currentChaseTarget?.name}";
+            case GuardState.Talking: return $"Разговаривает с: {currentChaseTarget?.name}"; 
+            case GuardState.WaitingAtWaypoint: return $"Ожидает на точке: {currentPatrolTarget?.name}";
+            case GuardState.OffDuty: return "Смена окончена";
+            case GuardState.ChasingThief: return $"Ловит воришку: {currentChaseTarget?.name}"; 
+            case GuardState.EscortingThief: return $"Ведет в кассу: {currentChaseTarget?.name}";
+            case GuardState.Evicting: return $"Выпроваживает: {currentChaseTarget?.name}";
+            default: return currentState.ToString(); 
+        } 
+    }
+    
+    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos) 
+    { 
+        var path = new Queue<Waypoint>();
+        Waypoint startNode = FindNearestVisibleWaypoint(transform.position); 
+        Waypoint endNode = FindNearestVisibleWaypoint(targetPos); 
+        if (startNode == null || endNode == null) 
+        { 
+            startNode = FindNearestWaypoint(transform.position);
+            endNode = FindNearestWaypoint(targetPos); 
+        } 
+        if (startNode == null || endNode == null) return path;
+        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>(); 
+        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
+        PriorityQueue<Waypoint, float> queue = new PriorityQueue<Waypoint, float>(); 
+        foreach (var wp in allWaypoints) 
+        { 
+            distances[wp] = float.MaxValue; 
+            previous[wp] = null;
+        } 
+        distances[startNode] = 0; 
+        queue.Enqueue(startNode, 0); 
+        while(queue.Count > 0) 
+        { 
+            Waypoint current = queue.Dequeue();
+            if (current == endNode) { ReconstructPath(previous, endNode, path); return path; } 
+            foreach(var neighbor in current.neighbors) 
+            { 
+                if(neighbor == null) continue;
+                if (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag)) continue; 
+                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
+                if(distances.ContainsKey(neighbor) && newDist < distances[neighbor]) 
+                { 
+                    distances[neighbor] = newDist; 
+                    previous[neighbor] = current; 
+                    queue.Enqueue(neighbor, newDist); 
+                } 
+            } 
+        } 
+        return path;
+    }
+    
+    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) 
+    { 
+        List<Waypoint> pathList = new List<Waypoint>();
+        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } 
+        pathList.Reverse(); 
+        path.Clear();
+        foreach (var wp in pathList) { path.Enqueue(wp); } 
+    }
+    
+    private Waypoint FindNearestVisibleWaypoint(Vector2 position) 
+    { 
+        if (allWaypoints == null) return null;
+        Waypoint bestWaypoint = null; 
+        float minDistance = float.MaxValue; 
+        foreach (var wp in allWaypoints) 
+        { 
+            if (wp == null) continue;
+            float distance = Vector2.Distance(position, wp.transform.position); 
+            if (distance < minDistance) 
+            { 
+                RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles"));
+                if (hit.collider == null) 
+                { 
+                    minDistance = distance; 
+                    bestWaypoint = wp; 
+                } 
+            } 
+        } 
+        return bestWaypoint;
+    }
+    
+    private Waypoint FindNearestWaypoint(Vector2 position) 
+    { 
+        if (allWaypoints == null) return null;
         return allWaypoints.OrderBy(wp => Vector2.Distance(position, wp.transform.position)).FirstOrDefault();
     }
     
-    private class PriorityQueue<T, U> where U : System.IComparable<U> { private SortedDictionary<U, Queue<T>> d = new SortedDictionary<U, Queue<T>>();
-        public int Count => d.Sum(p => p.Value.Count); public void Enqueue(T i, U p) { if (!d.ContainsKey(p)) d[p] = new Queue<T>();
-            d[p].Enqueue(i); } public T Dequeue() { var p = d.First(); T i = p.Value.Dequeue(); if (p.Value.Count == 0) d.Remove(p.Key);
-            return i; } }
+    private class PriorityQueue<T, U> where U : System.IComparable<U> 
+    { 
+        private SortedDictionary<U, Queue<T>> d = new SortedDictionary<U, Queue<T>>();
+        public int Count => d.Sum(p => p.Value.Count); 
+        public void Enqueue(T i, U p) 
+        { 
+            if (!d.ContainsKey(p)) d[p] = new Queue<T>();
+            d[p].Enqueue(i); 
+        } 
+        public T Dequeue() 
+        { 
+            var p = d.First(); 
+            T i = p.Value.Dequeue(); 
+            if (p.Value.Count == 0) d.Remove(p.Key);
+            return i; 
+        } 
+    }
+
+    public override float GetStressValue() { return currentStress; }
+    public override void SetStressValue(float stress) { currentStress = stress; }
 }

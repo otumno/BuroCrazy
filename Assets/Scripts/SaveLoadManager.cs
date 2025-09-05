@@ -1,23 +1,18 @@
 using UnityEngine;
 using System.IO;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 public class SaveLoadManager : MonoBehaviour
 {
     public static SaveLoadManager Instance { get; private set; }
-
     private int currentSlotIndex = 0;
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-        }
-        else
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); }
+        else { Instance = this; DontDestroyOnLoad(gameObject); }
     }
 
     public void SaveGame(int slotIndex)
@@ -25,15 +20,33 @@ public class SaveLoadManager : MonoBehaviour
         currentSlotIndex = slotIndex;
         SaveData data = new SaveData();
         
-        if (ClientSpawner.Instance != null)
-            data.day = ClientSpawner.Instance.GetCurrentDay();
+        data.day = ClientSpawner.Instance.GetCurrentDay();
+        data.money = PlayerWallet.Instance.GetCurrentMoney();
+        data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
 
-        if (PlayerWallet.Instance != null)
-            data.money = PlayerWallet.Instance.GetCurrentMoney();
+        data.allStaffData = new List<StaffSaveData>();
+        StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
+        foreach (var staffMember in allStaff)
+        {
+            StaffSaveData staffData = new StaffSaveData();
+            staffData.characterName = staffMember.gameObject.name;
+            staffData.position = staffMember.transform.position;
+            staffData.stressLevel = staffMember.GetStressValue();
+            data.allStaffData.Add(staffData);
+        }
+
+        data.allDocumentStackData = new List<DocumentStackSaveData>();
+        DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
+        foreach (var stack in allStacks)
+        {
+            if (ArchiveManager.Instance != null && stack == ArchiveManager.Instance.mainDocumentStack) continue;
+
+            DocumentStackSaveData stackData = new DocumentStackSaveData();
+            stackData.stackOwnerName = stack.gameObject.name;
+            stackData.documentCount = stack.CurrentSize;
+            data.allDocumentStackData.Add(stackData);
+        }
         
-        if (ArchiveManager.Instance != null)
-            data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
-
         string json = JsonUtility.ToJson(data, true);
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         File.WriteAllText(path, json);
@@ -52,24 +65,38 @@ public class SaveLoadManager : MonoBehaviour
             string json = File.ReadAllText(path);
             SaveData data = JsonUtility.FromJson<SaveData>(json);
 
-            if (ClientSpawner.Instance != null)
-                ClientSpawner.Instance.SetDay(data.day);
+            ClientSpawner.Instance.SetDay(data.day);
+            PlayerWallet.Instance.SetMoney(data.money);
+            ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
 
-            if (PlayerWallet.Instance != null)
-                PlayerWallet.Instance.SetMoney(data.money);
-            
-            if (ArchiveManager.Instance != null)
-                ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
+            StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
+            foreach (var staffData in data.allStaffData)
+            {
+                StaffController staffMember = allStaff.FirstOrDefault(s => s.gameObject.name == staffData.characterName);
+                if (staffMember != null)
+                {
+                    staffMember.transform.position = staffData.position;
+                    staffMember.SetStressValue(staffData.stressLevel);
+                }
+            }
+
+            DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
+            foreach (var stackData in data.allDocumentStackData)
+            {
+                DocumentStack stack = allStacks.FirstOrDefault(s => s.gameObject.name == stackData.stackOwnerName);
+                if (stack != null)
+                {
+                    stack.SetCount(stackData.documentCount);
+                }
+            }
 
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
             Debug.Log($"Игра загружена из слота {slotIndex}");
             return true;
         }
-        else
-        {
-            Debug.LogWarning($"Файл сохранения для слота {slotIndex} не найден!");
-            return false;
-        }
+        
+        Debug.LogWarning($"Файл сохранения для слота {slotIndex} не найден!");
+        return false;
     }
     
     public bool GetLastSavedSlot(out int lastSlotIndex)
@@ -79,6 +106,7 @@ public class SaveLoadManager : MonoBehaviour
             lastSlotIndex = PlayerPrefs.GetInt("LastUsedSlot");
             return DoesSaveExist(lastSlotIndex);
         }
+        
         lastSlotIndex = -1;
         return false;
     }

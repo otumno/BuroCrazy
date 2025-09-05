@@ -212,7 +212,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   workPeriods: []
   homePoint: {fileID: 0}
-  kitchenPoint: {fileID: 0}
+  kitchenPoints: []
   staffToiletPoint: {fileID: 0}
   startShiftSound: {fileID: 8300000, guid: 7df9251a62a0ec148b130536dba1b021, type: 3}
   endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
@@ -301,6 +301,8 @@ MonoBehaviour:
   stoppingDistance: 0.2
   rubberBandStrength: 5
   priority: 1
+  slowingDistance: 2
+  movementSmoothing: 5
 --- !u!114 &8134405870419592947
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,6 +319,8 @@ MonoBehaviour:
   stoppingDistance: 0.2
   rubberBandStrength: 5
   priority: 3
+  slowingDistance: 2
+  movementSmoothing: 5
 --- !u!114 &-4469930473842612289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -599,7 +603,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 3
+  m_SortingOrder: 2
   m_Sprite: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
