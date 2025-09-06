@@ -3,7 +3,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class ServiceWorkerController : StaffController
 {
@@ -40,6 +39,10 @@ public class ServiceWorkerController : StaffController
     
     private Quaternion initialBroomRotation;
     private Waypoint[] allWaypoints;
+
+    // --- НОВОЕ ПОЛЕ ---
+    [Header("Навыки")]
+    public CharacterSkills skills;
     
     protected override void Awake()
     {
@@ -59,6 +62,15 @@ public class ServiceWorkerController : StaffController
         
         currentState = WorkerState.OffDuty;
         SetState(currentState);
+        
+        // --- НОВАЯ ЛОГИКА: Назначаем навыки уборщику ---
+        if (skills != null)
+        {
+            skills.paperworkMastery = 0.0f;
+            skills.pedantry = 0.75f;
+            skills.softSkills = 0.25f;
+            skills.sedentaryResilience = 0.5f;
+        }
     }
 
     void Update()
@@ -71,26 +83,26 @@ public class ServiceWorkerController : StaffController
         }
     }
     
-    public override void StartShift() 
-    { 
+    public override void StartShift()
+    {
         if (isOnDuty) return;
-        isOnDuty = true; 
-        SetState(WorkerState.Idle); 
+        isOnDuty = true;
+        SetState(WorkerState.Idle);
         currentAction = null;
     }
 
-    public override void EndShift() 
-    { 
+    public override void EndShift()
+    {
         if (!isOnDuty) return;
-        isOnDuty = false; 
+        isOnDuty = false;
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(GoHomeRoutine());
     }
 
-    private void SetState(WorkerState newState) 
-    { 
+    private void SetState(WorkerState newState)
+    {
         if (currentState == newState) return;
-        currentState = newState; 
+        currentState = newState;
         logger.LogState(newState.ToString());
 
         visuals?.SetEmotionForState(newState);
@@ -138,9 +150,12 @@ public class ServiceWorkerController : StaffController
     {
         if (currentState == WorkerState.StressedOut || !isOnDuty) return;
         bool isResting = currentState == WorkerState.AtToilet || currentState == WorkerState.OffDuty || currentState == WorkerState.OnBreak;
-        if (isResting) 
-        { 
-            currentStress -= stressReliefRate * Time.deltaTime;
+        
+        // --- ИЗМЕНЁННАЯ ЛОГИКА: Прирост стресса зависит от навыков ---
+        float finalStressGainRate = stressGainPerTrash; // Пока не реализован расчет по типу
+        if (isOnDuty && !isResting) 
+        {
+            currentStress += finalStressGainRate * (1f - skills.softSkills) * Time.deltaTime;
         }
         currentStress = Mathf.Clamp(currentStress, 0, maxStress);
         if (currentStress >= maxStress)
@@ -149,7 +164,8 @@ public class ServiceWorkerController : StaffController
             currentAction = StartCoroutine(StressedOutRoutine());
         }
     }
-
+    
+    // Остальные методы без изменений на данном этапе
     private IEnumerator GoAndCleanRoutine(MessPoint initialMess)
     {
         SetState(WorkerState.GoingToMess);
@@ -176,7 +192,7 @@ public class ServiceWorkerController : StaffController
         {
             totalStressGain += CleanArea(dirtAreaCleaningRadius, typeToClean);
         }
-        else 
+        else
         {
             if (initialMess != null)
             {
@@ -244,8 +260,8 @@ public class ServiceWorkerController : StaffController
         broomTransform.localRotation = initialBroomRotation;
     }
     
-    private IEnumerator GoHomeRoutine() 
-    { 
+    private IEnumerator GoHomeRoutine()
+    {
         if (homePoint != null)
         {
             yield return StartCoroutine(MoveToTarget(homePoint.position, WorkerState.OffDuty));
@@ -253,15 +269,15 @@ public class ServiceWorkerController : StaffController
         currentAction = null;
     }
 
-    private IEnumerator ToiletBreakRoutine() 
-    { 
+    private IEnumerator ToiletBreakRoutine()
+    {
         SetState(WorkerState.GoingToToilet);
-        yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet)); 
+        yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet));
         SetState(WorkerState.AtToilet);
     }
     
-    private IEnumerator StressedOutRoutine() 
-    { 
+    private IEnumerator StressedOutRoutine()
+    {
         SetState(WorkerState.StressedOut);
         Transform breakSpot = RequestKitchenPoint();
         if (breakSpot != null)
@@ -270,7 +286,7 @@ public class ServiceWorkerController : StaffController
             yield return new WaitForSeconds(stressedOutDuration);
             FreeKitchenPoint(breakSpot);
         }
-        else 
+        else
         {
             yield return new WaitForSeconds(stressedOutDuration);
         }
@@ -278,10 +294,10 @@ public class ServiceWorkerController : StaffController
         currentStress = maxStress * 0.5f;
     }
     
-    private IEnumerator MoveToTarget(Vector2 targetPosition, WorkerState stateOnArrival) 
-    { 
+    private IEnumerator MoveToTarget(Vector2 targetPosition, WorkerState stateOnArrival)
+    {
         agentMover.SetPath(BuildPathTo(targetPosition));
-        yield return new WaitUntil(() => !agentMover.IsMoving()); 
+        yield return new WaitUntil(() => !agentMover.IsMoving());
         SetState(stateOnArrival);
     }
     
@@ -311,91 +327,92 @@ public class ServiceWorkerController : StaffController
     public WorkerState GetCurrentState() => currentState;
     public float GetStressPercent() => currentStress / maxStress;
     
-    private bool CanPathTo(Vector2 targetPosition) 
-    { 
+    private bool CanPathTo(Vector2 targetPosition)
+    {
         var path = BuildPathTo(targetPosition);
         return path != null && path.Count > 0;
     }
     
-    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos) 
-    { 
+    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
+    {
         var path = new Queue<Waypoint>();
-        if (allWaypoints.Length == 0) return path; 
+        if (allWaypoints.Length == 0) return path;
         
         Waypoint startNode = allWaypoints.OrderBy(wp => Vector2.Distance(transform.position, wp.transform.position)).FirstOrDefault();
         Waypoint endNode = allWaypoints.OrderBy(wp => Vector2.Distance(targetPos, wp.transform.position)).FirstOrDefault();
         if (startNode == null || endNode == null) return path;
         
         Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
-        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>(); 
+        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
         var queue = new PriorityQueue<Waypoint>();
-        foreach (var wp in allWaypoints) 
-        { 
+        foreach (var wp in allWaypoints)
+        {
             distances[wp] = float.MaxValue;
-            previous[wp] = null; 
-        } 
+            previous[wp] = null;
+        }
         
         distances[startNode] = 0;
         queue.Enqueue(startNode, 0);
         
-        while(queue.Count > 0) 
-        { 
+        while(queue.Count > 0)
+        {
             Waypoint current = queue.Dequeue();
-            if (current == endNode) 
-            { 
+            if (current == endNode)
+            {
                 ReconstructPath(previous, endNode, path);
                 return path;
-            } 
+            }
             
             if (current.neighbors == null) continue;
-            foreach(var neighbor in current.neighbors) 
-            { 
+            foreach(var neighbor in current.neighbors)
+            {
                 if(neighbor == null) continue;
-                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position); 
-                if(distances.ContainsKey(neighbor) && newDist < distances[neighbor]) 
-                { 
+                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
+                if(distances.ContainsKey(neighbor) && newDist < distances[neighbor])
+                {
                     distances[neighbor] = newDist;
                     previous[neighbor] = current;
-                    queue.Enqueue(neighbor, newDist); 
-                } 
-            } 
-        } 
+                    queue.Enqueue(neighbor, newDist);
+                }
+            }
+        }
         return path;
     }
     
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) 
-    { 
+    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
+    {
         List<Waypoint> pathList = new List<Waypoint>();
         for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at);
-        } 
-        pathList.Reverse(); 
+        }
+        pathList.Reverse();
         path.Clear();
         foreach (var wp in pathList) { path.Enqueue(wp);
-        } 
+        }
     }
     
-    private class PriorityQueue<T> 
-    { 
+    private class PriorityQueue<T>
+    {
         private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
-        public int Count => elements.Count; 
+        public int Count => elements.Count;
         public void Enqueue(T item, float priority) { elements.Add(new KeyValuePair<T, float>(item, priority));
-        } 
-        public T Dequeue() 
-        { 
+        }
+        public T Dequeue()
+        {
             int bestIndex = 0;
-            for (int i = 0; i < elements.Count; i++) 
-            { 
-                if (elements[i].Value < elements[bestIndex].Value) 
-                { 
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (elements[i].Value < elements[bestIndex].Value)
+                {
                     bestIndex = i;
-                } 
-            } 
+                }
+            }
             T bestItem = elements[bestIndex].Key;
-            elements.RemoveAt(bestIndex); 
-            return bestItem; 
-        } 
+            elements.RemoveAt(bestIndex);
+            return bestItem;
+        }
     }
 
-    public override float GetStressValue() { return currentStress; }
+    public override float GetStressValue() { return currentStress;
+    }
     public override void SetStressValue(float stress) { currentStress = stress; }
 }

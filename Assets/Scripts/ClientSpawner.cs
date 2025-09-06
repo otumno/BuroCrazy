@@ -1,3 +1,4 @@
+// Файл: ClientSpawner.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -5,21 +6,21 @@ using System.Linq;
 using TMPro;
 
 [System.Serializable]
-public class LightingPreset 
-{ 
+public class LightingPreset
+{
     public Color lightColor = Color.white;
-    [Range(0f, 2f)] public float lightIntensity = 1f; 
+    [Range(0f, 2f)] public float lightIntensity = 1f;
 }
 
 [System.Serializable]
-public class SpawningPeriod 
-{ 
+public class SpawningPeriod
+{
     public string periodName;
-    public float durationInSeconds = 60f; 
+    public float durationInSeconds = 60f;
     public float spawnRate = 5f;
-    public int spawnBatchSize = 1; 
+    public int spawnBatchSize = 1;
     public int crowdSpawnCount = 0;
-    public int numberOfCrowdsToSpawn = 0; 
+    public int numberOfCrowdsToSpawn = 0;
     public LightingPreset lightingSettings;
     public Color panelColor = new Color(1,1,1,0);
     public List<GameObject> lightsToEnable;
@@ -73,21 +74,24 @@ public class ClientSpawner : MonoBehaviour
     
     private int evacuationMilestone = 0;
     
-    void Awake() 
-    { 
+    // --- НОВОЕ ПОЛЕ ---
+    public DailyMandates currentMandates;
+
+    void Awake()
+    {
         Instance = this;
     }
 
-    void Start() 
-    { 
-        if (periods == null || periods.Length == 0) 
-        { 
+    void Start()
+    {
+        if (periods == null || periods.Length == 0)
+        {
             enabled = false;
-            return; 
+            return;
         }
 
-        if (pauseUIPanel != null) pauseUIPanel.SetActive(false); 
-        UpdateDayCounterUI(); 
+        if (pauseUIPanel != null) pauseUIPanel.SetActive(false);
+        UpdateDayCounterUI();
 
         int nightIndex = -1;
         for (int i = 0; i < periods.Length; i++)
@@ -111,20 +115,20 @@ public class ClientSpawner : MonoBehaviour
         else
         {
             Debug.LogWarning("Период с именем 'Ночь' не найден. Игра начнется с первого периода в списке.");
-            currentPeriodIndex = -1; 
+            currentPeriodIndex = -1;
             GoToNextPeriod();
         }
     }
     
-    void Update() 
-    { 
+    void Update()
+    {
         if (Input.GetKeyDown(KeyCode.Space)) { bool isPaused = Time.timeScale == 0f;
             Time.timeScale = isPaused ? 1f : 0f; if (pauseUIPanel != null) pauseUIPanel.SetActive(!isPaused);
-        } 
-        if (Time.timeScale == 0f) return; 
+        }
+        if (Time.timeScale == 0f) return;
         
-        periodTimer += Time.deltaTime; 
-        UpdateUITimer(); 
+        periodTimer += Time.deltaTime;
+        UpdateUITimer();
         UpdateLighting();
         if (CurrentPeriodName != null && CurrentPeriodName.ToLower().Trim() == "вечер")
         {
@@ -132,29 +136,35 @@ public class ClientSpawner : MonoBehaviour
         }
         
         if (periodTimer >= periods[currentPeriodIndex].durationInSeconds) { GoToNextPeriod();
-        } 
+        }
         CheckCrowdDensity();
     }
     
-    void GoToNextPeriod() 
-    { 
-        if (previousPeriod != null && previousPeriod.periodName.ToLower().Trim() == "вечер") 
-        { 
+    void GoToNextPeriod()
+    {
+        // --- НОВАЯ ЛОГИКА ---
+        if (DirectorManager.Instance != null && previousPeriod != null && !nightPeriodNames.Contains(previousPeriod.periodName.ToLower().Trim()))
+        {
+            DirectorManager.Instance.CheckDailyMandates();
+        }
+        
+        if (previousPeriod != null && previousPeriod.periodName.ToLower().Trim() == "вечер")
+        {
             if (GuardManager.Instance != null)
             {
                 GuardManager.Instance.EvictRemainingClients();
             }
-        } 
+        }
         
         previousPeriod = periods[currentPeriodIndex];
-        currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length; 
+        currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length;
         if (currentPeriodIndex == 0) { dayCounter++; UpdateDayCounterUI(); ClientQueueManager.Instance.ResetQueueNumber();
-        } 
+        }
         StartNewPeriod();
     }
 
     void UpdateDayCounterUI() { if (dayCounterText != null) { dayCounterText.text = $"День: {dayCounter}";
-    } }
+        } }
 
     void StartNewPeriod(bool resetTimer = true)
     {
@@ -182,8 +192,8 @@ public class ClientSpawner : MonoBehaviour
         }
         
         bool canSpawnClients = !isNightTime && periodNameLower != "конец дня";
-        if (newPeriod.spawnRate > 0 && canSpawnClients) 
-        { 
+        if (newPeriod.spawnRate > 0 && canSpawnClients)
+        {
             continuousSpawnCoroutine = StartCoroutine(HandleContinuousSpawning(newPeriod));
         }
 
@@ -232,7 +242,7 @@ public class ClientSpawner : MonoBehaviour
 
     void HandleSpecialPeriodLogic(string periodNameLower, float duration)
     {
-        if (periodNameLower == "обед") 
+        if (periodNameLower == "обед")
         {
             var clerksOnDuty = FindObjectsByType<ClerkController>(FindObjectsSortMode.None).Where(c => c.IsOnDuty()).ToList();
             if (clerksOnDuty.Any())
@@ -260,61 +270,61 @@ public class ClientSpawner : MonoBehaviour
         }
     }
 
-    IEnumerator ManageClerkLunchBreaks(List<ClerkController> clerksOnBreak, float totalLunchDuration) 
-    { 
+    IEnumerator ManageClerkLunchBreaks(List<ClerkController> clerksOnBreak, float totalLunchDuration)
+    {
         if (clerksOnBreak == null || clerksOnBreak.Count == 0) yield break;
-        float breakDurationPerClerk = totalLunchDuration / clerksOnBreak.Count; 
+        float breakDurationPerClerk = totalLunchDuration / clerksOnBreak.Count;
         var shuffledClerks = clerksOnBreak.OrderBy(c => Random.value).ToList();
-        foreach (var clerk in shuffledClerks) 
-        { 
+        foreach (var clerk in shuffledClerks)
+        {
             if (clerk != null && clerk.IsOnDuty())
             {
                 clerk.GoOnBreak(breakDurationPerClerk);
-                yield return new WaitForSeconds(breakDurationPerClerk); 
+                yield return new WaitForSeconds(breakDurationPerClerk);
             }
-        } 
+        }
     }
 
-    void ManageEveningEvacuation() 
-    { 
+    void ManageEveningEvacuation()
+    {
         SpawningPeriod currentPeriod = periods[currentPeriodIndex];
-        float progress = periodTimer / currentPeriod.durationInSeconds; 
+        float progress = periodTimer / currentPeriod.durationInSeconds;
         int currentMilestone = Mathf.FloorToInt(progress * 10);
-        if (currentMilestone > evacuationMilestone) 
-        { 
+        if (currentMilestone > evacuationMilestone)
+        {
             evacuationMilestone = currentMilestone;
             var allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Where(c => c != null && c.stateMachine.GetCurrentState() != ClientState.Leaving && c.stateMachine.GetCurrentState() != ClientState.LeavingUpset).ToList();
-            if (allClients.Count == 0) return; 
-            if (currentMilestone >= 9) 
-            { 
+            if (allClients.Count == 0) return;
+            if (currentMilestone >= 9)
+            {
                 EvacuateAllClients();
-            } 
-            else 
-            { 
+            }
+            else
+            {
                 int clientsToEvacuateCount = Mathf.CeilToInt(allClients.Count * 0.1f);
-                var shuffledClients = allClients.OrderBy(c => Random.value).ToList(); 
-                for (int i = 0; i < clientsToEvacuateCount; i++) 
-                { 
-                    if (i < shuffledClients.Count) 
-                    { 
-                        shuffledClients[i].ForceLeave(ClientPathfinding.LeaveReason.CalmedDown); 
-                    } 
-                } 
-            } 
-        } 
+                var shuffledClients = allClients.OrderBy(c => Random.value).ToList();
+                for (int i = 0; i < clientsToEvacuateCount; i++)
+                {
+                    if (i < shuffledClients.Count)
+                    {
+                       shuffledClients[i].ForceLeave(ClientPathfinding.LeaveReason.CalmedDown);
+                    }
+                }
+            }
+        }
     }
     
-    void EvacuateAllClients(bool force = false) 
-    { 
+    void EvacuateAllClients(bool force = false)
+    {
         ClientPathfinding[] allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
-        foreach (var client in allClients) 
-        { 
-            if (client != null) 
-            { 
+        foreach (var client in allClients)
+        {
+            if (client != null)
+            {
                 var reason = force ? ClientPathfinding.LeaveReason.Angry : ClientPathfinding.LeaveReason.CalmedDown;
                 client.ForceLeave(reason);
-            } 
-        } 
+            }
+        }
     }
 
     public static LimitedCapacityZone GetRegistrationZone() => Instance.registrationZone;
@@ -336,21 +346,21 @@ public class ClientSpawner : MonoBehaviour
     public static void ReportDeskOccupation(int deskId, MonoBehaviour occupant) { deskOccupants[deskId] = occupant;
     }
     
-    void SpawnClientBatch(int count) 
-    { 
-        for (int i = 0; i < count; i++) 
-        { 
-            if (ClientPathfinding.totalClients < maxClientsOnScene) 
-            { 
+    void SpawnClientBatch(int count)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            if (ClientPathfinding.totalClients < maxClientsOnScene)
+            {
                 GameObject clientGO = Instantiate(clientPrefab, spawnPoint.position, Quaternion.identity);
-                ClientPathfinding client = clientGO.GetComponent<ClientPathfinding>(); 
-                if (client != null) 
-                { 
+                ClientPathfinding client = clientGO.GetComponent<ClientPathfinding>();
+                if (client != null)
+                {
                     client.Initialize(Instance.waitingZoneObject, Instance.exitWaypoint);
-                } 
-            } 
+                }
+            }
             else break;
-        } 
+        }
     }
     
     IEnumerator HandleContinuousSpawning(SpawningPeriod period) { yield return new WaitForSeconds(initialSpawnDelay);
@@ -367,7 +377,7 @@ public class ClientSpawner : MonoBehaviour
     
     void CheckCrowdDensity() { if (crowdAudioSource == null || waitingZoneObject == null) return;
         Collider2D[] clients = Physics2D.OverlapCircleAll(waitingZoneObject.transform.position, 2f, LayerMask.GetMask("Client")); int clientCount = clients.Length; if (clientCount >= minClientsForCrowdSound) { if (!crowdAudioSource.isPlaying) crowdAudioSource.Play();
-            float volume = Mathf.InverseLerp(minClientsForCrowdSound, maxClientsForFullVolume, clientCount); crowdAudioSource.volume = Mathf.Clamp01(volume); } else { if (crowdAudioSource.isPlaying) crowdAudioSource.Stop();
+        float volume = Mathf.InverseLerp(minClientsForCrowdSound, maxClientsForFullVolume, clientCount); crowdAudioSource.volume = Mathf.Clamp01(volume); } else { if (crowdAudioSource.isPlaying) crowdAudioSource.Stop();
         } }
     
     void UpdateLighting() { if (globalLight == null || previousPeriod == null) return;
@@ -386,22 +396,22 @@ public class ClientSpawner : MonoBehaviour
         } while(timer < lightFadeDuration) { timer += Time.deltaTime; lightSource.intensity = Mathf.Lerp(startIntensity, endIntensity, timer / lightFadeDuration); yield return null;
         } lightSource.intensity = endIntensity; if(!turnOn) { lightObject.SetActive(false); } }
     
-    public SpawningPeriod GetCurrentPeriod() 
-    { 
-        if (periods != null && periods.Length > 0 && currentPeriodIndex >= 0 && currentPeriodIndex < periods.Length) 
-        { 
+    public SpawningPeriod GetCurrentPeriod()
+    {
+        if (periods != null && periods.Length > 0 && currentPeriodIndex >= 0 && currentPeriodIndex < periods.Length)
+        {
             return periods[currentPeriodIndex];
-        } 
+        }
         return null;
     }
     
-    public SpawningPeriod GetPreviousPeriod() 
-    { 
+    public SpawningPeriod GetPreviousPeriod()
+    {
         return previousPeriod;
     }
     
-    public float GetPeriodTimer() 
-    { 
+    public float GetPeriodTimer()
+    {
         return periodTimer;
     }
 

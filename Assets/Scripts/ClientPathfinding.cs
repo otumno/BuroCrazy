@@ -17,6 +17,7 @@ public class ClientPathfinding : MonoBehaviour
     [Range(0f, 1f)] public float babushkaFactor;
     [Range(0f, 1f)] public float suetunFactor;
     [Range(0f, 1f)] public float prolazaFactor;
+    
     [Header("Внешний вид")]
     public Gender gender;
     private CharacterVisuals visuals;
@@ -35,7 +36,7 @@ public class ClientPathfinding : MonoBehaviour
     public List<GameObject> trashPrefabs;
     public List<GameObject> puddlePrefabs;
 
-    [Header("Звуки")] 
+    [Header("Звуки")]
     public AudioClip spawnSound, exitSound, confusedSound, toiletSound;
     public AudioClip successfulExitSound, dissatisfiedExitSound, helpedByInternSound, paymentSound;
     public AudioClip stampSound;
@@ -44,30 +45,37 @@ public class ClientPathfinding : MonoBehaviour
     public static int totalClients, clientsExited, clientsInWaiting, clientsToToilet, clientsToRegistration, clientsConfused;
     public static int clientsExitedAngry = 0, clientsExitedProcessed = 0;
 
+    // --- НОВОЕ ПОЛЕ ---
+    [Header("Документы")]
+    [Range(0f, 1f)] public float documentQuality;
+
     public CharacterVisuals GetVisuals() => visuals;
-    public void Initialize(GameObject wZ, Waypoint eW) 
-    { 
+    public void Initialize(GameObject wZ, Waypoint eW)
+    {
         totalClients++;
-        stateMachine = gameObject.GetComponent<ClientStateMachine>(); 
-        movement = gameObject.GetComponent<ClientMovement>(); 
-        notification = gameObject.GetComponent<ClientNotification>(); 
+        stateMachine = gameObject.GetComponent<ClientStateMachine>();
+        movement = gameObject.GetComponent<ClientMovement>();
+        notification = gameObject.GetComponent<ClientNotification>();
         docHolder = gameObject.GetComponent<DocumentHolder>();
         visuals = gameObject.GetComponent<CharacterVisuals>();
         // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Мы убрали лишние проверки и ненадежную инициализацию TextMeshPro ---
-        if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null) 
+        if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null)
         {
             Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!", gameObject);
             enabled = false;
-            return; 
+            return;
         }
 
-        gender = (Random.value > 0.5f) ?
-        Gender.Male : Gender.Female;
+        gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
         visuals.Setup(gender);
         
-        babushkaFactor = (float)Mathf.RoundToInt(Random.Range(0, 4)) * 0.25f;
-        suetunFactor = (float)Mathf.RoundToInt(Random.Range(0, 4)) * 0.25f;
-        prolazaFactor = (float)Mathf.RoundToInt(Random.Range(0, 4)) * 0.25f;
+        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Генерация факторов с шагом 0.25 ---
+        babushkaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
+        suetunFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
+        prolazaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
+        
+        // --- НОВАЯ ЛОГИКА: Генерация качества документа ---
+        documentQuality = 1.0f - (suetunFactor * 0.5f);
 
         var goals = System.Enum.GetValues(typeof(ClientGoal));
         mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
@@ -82,8 +90,7 @@ public class ClientPathfinding : MonoBehaviour
         docHolder.SetDocument(startingDoc);
 
         stateMachine.Initialize(this);
-        movement.Initialize(this); 
-        
+        movement.Initialize(this);
         float basePatience = Random.Range(minPatienceTime, maxPatienceTime);
         totalPatienceTime = basePatience * (1 + babushkaFactor);
 
@@ -111,19 +118,19 @@ public class ClientPathfinding : MonoBehaviour
         }
     }
 
-    public void OnClientExit() 
-    { 
-        if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.CalmedDown || reasonForLeaving == LeaveReason.Upset || reasonForLeaving == LeaveReason.Theft) 
-        { 
+    public void OnClientExit()
+    {
+        if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.CalmedDown || reasonForLeaving == LeaveReason.Upset || reasonForLeaving == LeaveReason.Theft)
+        {
             clientsExitedAngry++;
-        } 
-        else if(isLeavingSuccessfully) 
-        { 
+        }
+        else if(isLeavingSuccessfully)
+        {
             clientsExitedProcessed++;
-        } 
-        clientsExited++; 
-        totalClients--; 
-        if (exitSound != null) AudioSource.PlayClipAtPoint(exitSound, transform.position); 
+        }
+        clientsExited++;
+        totalClients--;
+        if (exitSound != null) AudioSource.PlayClipAtPoint(exitSound, transform.position);
         Destroy(gameObject);
     }
 
@@ -133,9 +140,9 @@ public class ClientPathfinding : MonoBehaviour
     public void CalmDownAndLeave() { if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) { reasonForLeaving = LeaveReason.CalmedDown;
         stateMachine.SetState(ClientState.Leaving); } }
     
-    public void CalmDownAndReturnToQueue() 
+    public void CalmDownAndReturnToQueue()
     {
-        if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) 
+        if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged)
         {
             stateMachine.SetGoal(ClientQueueManager.Instance.ChooseNewGoal(this));
             stateMachine.SetState(ClientState.ReturningToWait);
@@ -145,7 +152,7 @@ public class ClientPathfinding : MonoBehaviour
     public void Freeze() { if(stateMachine != null) stateMachine.StopAllActionCoroutines(); GetComponent<AgentMover>()?.Stop();
     }
     
-    public void ForceLeave(LeaveReason reason = LeaveReason.CalmedDown) 
+    public void ForceLeave(LeaveReason reason = LeaveReason.CalmedDown)
     {
         if (stateMachine.GetCurrentState() == ClientState.Leaving || stateMachine.GetCurrentState() == ClientState.LeavingUpset)
         {
@@ -154,29 +161,29 @@ public class ClientPathfinding : MonoBehaviour
         }
 
         LimitedCapacityZone currentZone = stateMachine.GetCurrentGoal()?.GetComponentInParent<LimitedCapacityZone>();
-        if(currentZone != null) 
-        { 
+        if(currentZone != null)
+        {
             currentZone.LeaveQueue(gameObject);
-            currentZone.ReleaseWaypoint(stateMachine.GetCurrentGoal()); 
+            currentZone.ReleaseWaypoint(stateMachine.GetCurrentGoal());
         }
         ClientQueueManager.Instance.RemoveClientFromQueue(this);
-        if(ClientQueueManager.Instance.dissatisfiedClients.Contains(this)) 
-        { 
+        if(ClientQueueManager.Instance.dissatisfiedClients.Contains(this))
+        {
             ClientQueueManager.Instance.dissatisfiedClients.Remove(this);
         }
 
         reasonForLeaving = reason;
-        if (reason == LeaveReason.Angry && !ClientQueueManager.Instance.dissatisfiedClients.Contains(this)) 
+        if (reason == LeaveReason.Angry && !ClientQueueManager.Instance.dissatisfiedClients.Contains(this))
         {
             ClientQueueManager.Instance.dissatisfiedClients.Add(this);
         }
         
         stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
-        if (reason == LeaveReason.Upset) 
+        if (reason == LeaveReason.Upset)
         {
             stateMachine.SetState(ClientState.LeavingUpset);
         }
-        else 
+        else
         {
             stateMachine.SetState(ClientState.Leaving);
         }

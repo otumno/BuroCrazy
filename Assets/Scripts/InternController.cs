@@ -3,7 +3,6 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]
@@ -41,12 +40,16 @@ public class InternController : StaffController
     private float timeInCurrentTask = 0f;
     private StackHolder stackHolder;
     
+    // --- НОВОЕ ПОЛЕ ---
+    [Header("Навыки")]
+    public CharacterSkills skills;
+    
     protected override void Awake()
     {
         base.Awake();
         visuals = GetComponent<CharacterVisuals>();
         allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
-        stackHolder = GetComponent<StackHolder>(); 
+        stackHolder = GetComponent<StackHolder>();
     }
 
     protected override void Start()
@@ -54,27 +57,23 @@ public class InternController : StaffController
         base.Start();
         visuals?.Setup(gender);
         currentState = InternState.Inactive;
-        LogCurrentState(currentState);
-    }
-    
-    public override void StartShift() 
-    { 
-        if (isOnDuty) return;
-        if (currentAction != null) StopCoroutine(currentAction); 
-        currentAction = StartCoroutine(StartShiftRoutine());
-    }
+        
+        // --- НОВАЯ ЛОГИКА: Назначаем навыки стажеру ---
+        if (skills != null)
+        {
+            skills.paperworkMastery = 0.5f;
+            skills.pedantry = 0.25f;
+            skills.softSkills = 0.75f;
+            skills.corruption = 0.0f;
+        }
 
-    public override void EndShift() 
-    { 
-        if (!isOnDuty) return;
-        if (currentAction != null) StopCoroutine(currentAction); 
-        currentAction = StartCoroutine(EndShiftRoutine());
+        LogCurrentState(currentState);
     }
 
     void Update()
     {
         if (!isOnDuty || Time.timeScale == 0f) { if (agentMover != null) agentMover.Stop();
-            return; }
+        return; }
 
         helpTimer += Time.deltaTime;
         if (helpTimer >= helpCheckInterval)
@@ -185,7 +184,6 @@ public class InternController : StaffController
 
         SetState(InternState.CoveringDesk);
         yield return StartCoroutine(MoveToTarget(clerk.assignedServicePoint.clerkStandPoint.position, InternState.Working));
-        
         // FIX: Added null check to prevent error
         while (clerkToCover != null && clerkToCover.IsOnBreak() && clerkToCover.assignedServicePoint != null && Vector2.Distance(clerkToCover.transform.position, clerkToCover.assignedServicePoint.clerkStandPoint.position) > 1.5f)
         {
@@ -330,7 +328,7 @@ public class InternController : StaffController
         else
         {
             Debug.LogWarning($"Стажер {name} не может отнести документы, архив переполнен!");
-            stackHolder.HideStack(); 
+            stackHolder.HideStack();
             yield return new WaitForSeconds(5f);
         }
         
@@ -339,6 +337,22 @@ public class InternController : StaffController
     
     public override void GoOnBreak(float duration) { if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(BreakRoutine(duration));
+    }
+    
+    // --- ИСПРАВЛЕННАЯ РЕАЛИЗАЦИЯ StartShift() ---
+    public override void StartShift() 
+    { 
+        if (isOnDuty) return;
+        if (currentAction != null) StopCoroutine(currentAction); 
+        currentAction = StartCoroutine(StartShiftRoutine());
+    }
+
+    // --- ИСПРАВЛЕННАЯ РЕАЛИЗАЦИЯ EndShift() ---
+    public override void EndShift() 
+    { 
+        if (!isOnDuty) return;
+        if (currentAction != null) StopCoroutine(currentAction); 
+        currentAction = StartCoroutine(EndShiftRoutine());
     }
 
     private IEnumerator StartShiftRoutine()
