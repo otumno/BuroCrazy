@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]
@@ -17,15 +18,18 @@ public class ClerkController : StaffController
     public ClerkRole role = ClerkRole.Regular;
     [Tooltip("Рабочее место для ролей Registrar, Regular, Cashier. Для Archivist должно быть пустым.")]
     public ServicePoint assignedServicePoint;
+
     [Header("Настройки для ролей")]
     [Tooltip("Точка, куда нужно приносить документы в архив (используется ТОЛЬКО для роли 'Registrar')")]
     public Transform archiveDropOffPoint;
     [Tooltip("Рабочее место для архивариуса, где он ожидает появления документов. (Только для роли 'Archivist')")]
     public Transform archivistWaitingPoint;
+
     [Header("Внешний вид")]
     [Tooltip("Укажите пол для выбора правильных спрайтов")]
     public Gender gender;
     private CharacterVisuals visuals;
+
     [Header("Поведение")]
     public float timeInToilet = 10f;
     public float chanceToGoToToilet = 0.005f;
@@ -39,6 +43,7 @@ public class ClerkController : StaffController
     public float stressReliefRate = 10f;
     public float stressedOutDuration = 20f;
     private float currentStress = 0f;
+
     private bool isWaitingForClient = false;
     private bool isCarryingDocumentToArchive = false;
     private Waypoint[] allWaypoints;
@@ -46,11 +51,10 @@ public class ClerkController : StaffController
     private StackHolder stackHolder;
     public static ClerkController RegistrarInstance { get; private set; }
     private Coroutine waitingForClientCoroutine;
-    
-    // --- НОВОЕ ПОЛЕ ---
+
     [Header("Навыки")]
     public CharacterSkills skills;
-    
+
     protected override void Awake()
     {
         base.Awake();
@@ -70,7 +74,6 @@ public class ClerkController : StaffController
         visuals?.Setup(gender);
         currentState = ClerkState.Inactive;
         
-        // --- НОВАЯ ЛОГИКА: Назначаем навыки в зависимости от роли ---
         if (skills != null)
         {
             if (role == ClerkRole.Archivist)
@@ -90,10 +93,10 @@ public class ClerkController : StaffController
 
     void Update()
     {
-        if (Time.timeScale == 0f) { agentMover?.Stop();
-        return; }
+        if (Time.timeScale == 0f) { agentMover?.Stop(); return; }
 
         UpdateStress();
+
         if (role == ClerkRole.Archivist && isOnDuty && currentAction == null)
         {
             if (!isCarryingDocumentToArchive && ArchiveManager.Instance != null && ArchiveManager.Instance.GetStackToProcess().CurrentSize > 0)
@@ -106,8 +109,7 @@ public class ClerkController : StaffController
         {
             if (Time.time > callClientCooldown)
             {
-                if (assignedServicePoint != null && Vector2.Distance(transform.position,
-                    assignedServicePoint.clerkStandPoint.position) < 0.5f)
+                if (assignedServicePoint != null && Vector2.Distance(transform.position, assignedServicePoint.clerkStandPoint.position) < 0.5f)
                 {
                     bool clientCalled = ClientQueueManager.Instance.CallNextClient(this);
                     if (clientCalled)
@@ -122,11 +124,9 @@ public class ClerkController : StaffController
             }
         }
         
-        // --- НОВАЯ ЛОГИКА: Шанс сходить в туалет зависит от навыка сидячести ---
-        if (role == ClerkRole.Regular && currentState == ClerkState.Working && Random.value < (chanceToGoToToilet * (1f - skills.sedentaryResilience)) * Time.deltaTime)
+        if (skills != null && role == ClerkRole.Regular && currentState == ClerkState.Working && Random.value < (chanceToGoToToilet * (1f - skills.sedentaryResilience)) * Time.deltaTime)
         {
-            if (currentAction == null) { currentAction = StartCoroutine(ToiletBreakRoutine());
-            }
+            if (currentAction == null) { currentAction = StartCoroutine(ToiletBreakRoutine()); }
         }
     }
     
@@ -134,9 +134,14 @@ public class ClerkController : StaffController
     {
         if (currentState == ClerkState.StressedOut) return;
         bool isResting = currentState == ClerkState.OnBreak || currentState == ClerkState.AtToilet || currentState == ClerkState.Inactive;
-        
-        // --- ИЗМЕНЁННАЯ ЛОГИКА: Прирост стресса зависит от навыков ---
-        float finalStressGainRate = stressGainRate * (1f - skills.softSkills * 0.5f);
+
+        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+        float finalStressGainRate = stressGainRate;
+        if (skills != null) // Проверяем, назначены ли навыки персонажу
+        {
+            finalStressGainRate *= (1f - skills.softSkills * 0.5f);
+        }
+
         if (isOnDuty && !isResting)
         {
             currentStress += finalStressGainRate * Time.deltaTime;
@@ -153,7 +158,6 @@ public class ClerkController : StaffController
         }
     }
 
-    // Остальные методы без изменений на данном этапе
     public override void StartShift()
     {
         if (isOnDuty) return;
@@ -544,7 +548,6 @@ public class ClerkController : StaffController
         }
     }
 
-    public override float GetStressValue() { return currentStress;
-    }
+    public override float GetStressValue() { return currentStress; }
     public override void SetStressValue(float stress) { currentStress = stress; }
 }

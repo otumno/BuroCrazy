@@ -521,6 +521,8 @@ MonoBehaviour:
   gender: 0
   nightLight: {fileID: 4243835597554722814}
   broomTransform: {fileID: 8964890097708150952}
+  flashlightOffsetDistance: 1
+  flashlightSmoothingSpeed: 5
   cleaningTimeTrash: 0.5
   cleaningTimePuddle: 3
   cleaningTimePerDirtLevel: 0.7
@@ -534,6 +536,7 @@ MonoBehaviour:
   stressGainPerPuddle: 5
   stressReliefRate: 10
   stressedOutDuration: 20
+  skills: {fileID: 11400000, guid: 8afbe8754d0e07742934c9f3516f2142, type: 2}
 --- !u!114 &-5925413273702332012
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1005,7 +1008,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_Sprite: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

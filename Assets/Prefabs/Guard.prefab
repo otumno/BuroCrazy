@@ -279,7 +279,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_Sprite: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -397,7 +397,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 2
+  m_SortingOrder: 4
   m_Sprite: {fileID: 7876013394166872669, guid: 8a22c1d4233bc5541a97fa8c8ba19576, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -693,6 +693,8 @@ MonoBehaviour:
   endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
   gender: 0
   nightLight: {fileID: 3322908452176313420}
+  flashlightOffsetDistance: 1
+  flashlightSmoothingSpeed: 5
   patrolRoute: []
   minWaitTime: 1
   maxWaitTime: 3
@@ -712,6 +714,7 @@ MonoBehaviour:
   stressGainRate: 0.2
   stressGainPerViolator: 25
   stressReliefRate: 10
+  skills: {fileID: 11400000, guid: 9b5b37158e007b14a8390c11b10c3074, type: 2}
 --- !u!114 &7243027972721051166
 MonoBehaviour:
   m_ObjectHideFlags: 0

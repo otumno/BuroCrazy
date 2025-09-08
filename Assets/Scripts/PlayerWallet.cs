@@ -51,7 +51,7 @@ public class PlayerWallet : MonoBehaviour
         UpdateMoneyText();
     }
 
-    public void ResetState(int startingMoney = 5000)
+    public void ResetState(int startingMoney = 100)
     {
         currentMoney = startingMoney;
         UpdateMoneyText();

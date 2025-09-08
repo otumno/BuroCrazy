@@ -399,6 +399,7 @@ MonoBehaviour:
   chanceToGoToToilet: 0.008
   timeInToilet: 4
   taskTimeout: 5
+  skills: {fileID: 11400000, guid: 05796c8f594ceed43a520c44f439c320, type: 2}
 --- !u!114 &2626675050234470189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -613,7 +614,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_Sprite: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

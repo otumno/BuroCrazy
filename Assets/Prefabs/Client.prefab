@@ -894,6 +894,7 @@ MonoBehaviour:
   stampSound: {fileID: 8300000, guid: 376290e6043fac04886976dc238e3bff, type: 3}
   impoliteSound: {fileID: 8300000, guid: 69910c191e71f3b48aed14dc56149ebd, type: 3}
   theftAttemptSound: {fileID: 8300000, guid: 7aaca9aebcfd4ab44ae00a69b31d1d3a, type: 3}
+  documentQuality: 0
 --- !u!114 &2801172396659410360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1260,7 +1261,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_Sprite: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

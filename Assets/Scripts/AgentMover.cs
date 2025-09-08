@@ -10,11 +10,14 @@ public class AgentMover : MonoBehaviour
     public float moveSpeed = 2f;
     public float stoppingDistance = 0.2f;
 
+    private float baseMoveSpeed;
+
     [Header("Система 'Резиночки'")]
     [Tooltip("Насколько сильно персонаж стремится вернуться на свой путь. Выше значение - жестче 'резинка'.")]
     public float rubberBandStrength = 5f;
     [Tooltip("Приоритет персонажа. Охранник > Клерк > Клиент. Решает, кто кого продавливает.")]
     public int priority = 1;
+    
     private Rigidbody2D rb;
     private Queue<Waypoint> path;
     private Vector2 pathAnchor; 
@@ -26,38 +29,39 @@ public class AgentMover : MonoBehaviour
     private bool isDirectChasing = false;
     private Vector2 directChaseTarget;
     
-    // --- НОВОЕ: Параметры для плавного торможения ---
     [Header("Настройки преследования")]
     [Tooltip("С какого расстояния персонаж начнет замедляться при прямой погоне.")]
     public float slowingDistance = 2.0f;
     [Tooltip("Насколько плавно персонаж меняет скорость. Меньше значение - более плавное движение.")]
     public float movementSmoothing = 5f;
 
-
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         pathAnchor = transform.position;
+        baseMoveSpeed = moveSpeed;
+    }
+
+    public void ApplySpeedMultiplier(float multiplier)
+    {
+        moveSpeed = baseMoveSpeed * multiplier;
     }
 
     void FixedUpdate()
     {
         Vector2 desiredVelocity;
-
         if (isDirectChasing)
         {
             Vector2 vectorToTarget = directChaseTarget - (Vector2)transform.position;
             float distanceToTarget = vectorToTarget.magnitude;
             
-            // --- УЛУЧШЕНИЕ: Добавлено плавное торможение при приближении к цели ---
             float targetSpeed = moveSpeed;
             if (distanceToTarget < slowingDistance)
             {
-                // Чем ближе к цели, тем ниже скорость.
                 targetSpeed = moveSpeed * (distanceToTarget / slowingDistance);
             }
 
-            if (distanceToTarget > 0.01f) // Проверка на очень малое расстояние
+            if (distanceToTarget > 0.01f)
             {
                 Vector2 direction = vectorToTarget.normalized;
                 desiredVelocity = direction * targetSpeed;
@@ -67,7 +71,6 @@ public class AgentMover : MonoBehaviour
                 desiredVelocity = Vector2.zero;
             }
             
-            // --- ИСПРАВЛЕНО: Уменьшен коэффициент для более плавного движения ---
             rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, desiredVelocity, Time.fixedDeltaTime * movementSmoothing);
             UpdateSpriteDirection(rb.linearVelocity);
             HandleDirtLogic();

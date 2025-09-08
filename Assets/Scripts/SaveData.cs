@@ -1,5 +1,5 @@
-using System.Collections.Generic; // Необходимо для работы со списками
-using UnityEngine; // Необходимо для Vector3
+using System.Collections.Generic;
+using UnityEngine;
 
 [System.Serializable]
 public class SaveData
@@ -9,24 +9,27 @@ public class SaveData
     public int money;
     public int archiveDocumentCount;
 
+    // --- НОВЫЕ ПОЛЯ ДЛЯ ПРИКАЗОВ ---
+    public List<string> activePermanentOrderNames;
+    public List<string> completedOneTimeOrderNames;
+    // ------------------------------------
+
     // Списки для хранения данных об отдельных объектах
     public List<StaffSaveData> allStaffData;
     public List<DocumentStackSaveData> allDocumentStackData;
 }
 
-// Отдельная структура для хранения данных одного сотрудника
 [System.Serializable]
 public struct StaffSaveData
 {
-    public string characterName; // Уникальное имя объекта, например "Clerk_Registrar"
+    public string characterName;
     public float stressLevel;
     public Vector3 position;
 }
 
-// Отдельная структура для хранения данных одной стопки документов
 [System.Serializable]
 public struct DocumentStackSaveData
 {
-    public string stackOwnerName; // Уникальное имя объекта, на котором лежит стопка
+    public string stackOwnerName;
     public int documentCount;
 }

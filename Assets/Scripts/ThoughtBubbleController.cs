@@ -1,3 +1,4 @@
+// Файл: ThoughtBubbleController.cs
 using UnityEngine;
 using System.Collections;
 using TMPro;
@@ -7,11 +8,10 @@ public class ThoughtBubbleController : MonoBehaviour
     [Header("Настройки")]
     [Tooltip("Ссылка на ассет с коллекцией всех мыслей")]
     public ThoughtCollection thoughtCollection;
-
+    
     [Header("Ссылки на компоненты (перетащить из иерархии префаба)")]
     [Tooltip("Объект 'ThoughtBubble', который включает фон и текст")]
     public GameObject thoughtBubbleObject;
-
     [Tooltip("Компонент TextMeshPro для отображения мысли")]
     public TextMeshPro thoughtTextMesh;
     
@@ -20,13 +20,10 @@ public class ThoughtBubbleController : MonoBehaviour
     public float maxThinkInterval = 20f;
     public float thoughtDuration = 4f;
 
-    // Ссылки на скрипты состояний
     private ClientPathfinding clientPathfinding;
     private ClerkController clerkController;
     private GuardMovement guardMovement;
     private InternController internController;
-    
-    private Coroutine thinkLoopCoroutine;
 
     void Awake()
     {
@@ -46,27 +43,44 @@ public class ThoughtBubbleController : MonoBehaviour
         }
         
         thoughtBubbleObject.SetActive(false);
-        thinkLoopCoroutine = StartCoroutine(ThinkLoop());
+        StartCoroutine(ThinkLoop()); // Запускаем основной цикл один раз при старте
     }
     
-    public void TriggerCriticalThought(string activityKey)
+    /// <summary>
+    /// Показывает конкретное сообщение, прерывая любую текущую мысль.
+    /// </summary>
+    /// <param name="message">Текст для отображения</param>
+    /// <param name="duration">Как долго показывать сообщение</param>
+    /// <param name="textColor">Цвет текста</param>
+    public void ShowPriorityMessage(string message, float duration = 3f, Color? textColor = null)
     {
-        if (thoughtBubbleObject.activeSelf) return;
-
-        string thoughtText = thoughtCollection.GetRandomThought(activityKey, 0f);
-        if (!string.IsNullOrEmpty(thoughtText))
-        {
-            StartCoroutine(ShowThought(thoughtText, Color.red, true));
-        }
+        // Останавливаем ВСЕ корутины на этом скрипте
+        // Это гарантирует, что старый цикл мыслей и другие сообщения будут прерваны
+        StopAllCoroutines();
+        
+        // Если цвет не указан, используем черный. Иначе - тот, что передали.
+        Color colorToShow = textColor ?? Color.black;
+        // Запускаем показ нового сообщения
+        StartCoroutine(ShowSingleMessageRoutine(message, duration, colorToShow));
     }
 
-    public void StopThinking()
+    /// <summary>
+    /// Корутина, которая показывает одно сообщение, а затем перезапускает основной цикл мыслей.
+    /// </summary>
+    private IEnumerator ShowSingleMessageRoutine(string text, float duration, Color color)
     {
-        if (thinkLoopCoroutine != null)
-        {
-            StopCoroutine(thinkLoopCoroutine);
-        }
+        thoughtTextMesh.text = text;
+        thoughtTextMesh.color = color; // Используем переданный цвет
+        thoughtBubbleObject.SetActive(true);
+
+        yield return new WaitForSeconds(duration);
+
+        thoughtBubbleObject.SetActive(false);
+
+        // После того, как приоритетное сообщение было показано, перезапускаем основной цикл
+        StartCoroutine(ThinkLoop());
     }
+
 
     private IEnumerator ThinkLoop()
     {
@@ -75,31 +89,56 @@ public class ThoughtBubbleController : MonoBehaviour
             float waitTime = Random.Range(minThinkInterval, maxThinkInterval);
             yield return new WaitForSeconds(waitTime);
 
-            if (thoughtBubbleObject.activeSelf) continue;
-
             (string activityKey, float parameterValue) = DetermineThoughtParameters();
-
             if (!string.IsNullOrEmpty(activityKey))
             {
                 string thoughtText = thoughtCollection.GetRandomThought(activityKey, parameterValue);
                 if (!string.IsNullOrEmpty(thoughtText))
                 {
-                    // --- ИЗМЕНЕНИЕ: Определяем цвет и передаем его дальше ---
                     Color thoughtColor = GetColorForParameter(parameterValue);
-                    StartCoroutine(ShowThought(thoughtText, thoughtColor));
+                    // Запускаем показ как отдельную корутину, которая НЕ перезапускает главный цикл
+                    StartCoroutine(ShowRandomThoughtRoutine(thoughtText, thoughtColor));
                 }
             }
         }
     }
 
-    // --- НОВЫЙ МЕТОД: Определяет цвет на основе параметра ---
-    private Color GetColorForParameter(float parameterValue)
+    /// <summary>
+    /// Корутина для показа ОБЫЧНОЙ мысли. Она не перезапускает главный цикл.
+    /// </summary>
+    private IEnumerator ShowRandomThoughtRoutine(string text, Color color)
     {
-        if (parameterValue >= 0.66f) return Color.green; // Зеленый для высокого терпения / низкого стресса
-        if (parameterValue >= 0.33f) return Color.yellow; // Желтый для среднего
-        return new Color(1.0f, 0.64f, 0.0f); // Оранжевый для низкого терпения / высокого стресса
+        thoughtTextMesh.text = text;
+        thoughtTextMesh.color = color;
+        thoughtBubbleObject.SetActive(true);
+
+        yield return new WaitForSeconds(thoughtDuration);
+        
+        thoughtBubbleObject.SetActive(false);
+    }
+    
+    public void TriggerCriticalThought(string activityKey)
+    {
+        StopAllCoroutines();
+        string thoughtText = thoughtCollection.GetRandomThought(activityKey, 0f);
+        if (!string.IsNullOrEmpty(thoughtText))
+        {
+            // Используем ту же корутину, что и для приоритетных сообщений
+            StartCoroutine(ShowSingleMessageRoutine(thoughtText.ToUpper(), thoughtDuration, Color.red));
+        }
     }
 
+    public void StopThinking()
+    {
+        StopAllCoroutines();
+    }
+    
+    private Color GetColorForParameter(float parameterValue)
+    {
+        if (parameterValue >= 0.66f) return Color.green;
+        if (parameterValue >= 0.33f) return Color.yellow;
+        return new Color(1.0f, 0.64f, 0.0f);
+    }
 
     private (string, float) DetermineThoughtParameters()
     {
@@ -109,7 +148,6 @@ public class ThoughtBubbleController : MonoBehaviour
         if (clientPathfinding != null)
         {
             ClientState state = clientPathfinding.stateMachine.GetCurrentState();
-            
             switch (state)
             {
                 case ClientState.AtWaitingArea:
@@ -148,7 +186,7 @@ public class ThoughtBubbleController : MonoBehaviour
                     key = $"Client_{state}";
                     break;
             }
-            param = Random.Range(0.2f, 1f); // ЗАГЛУШКА
+            param = Random.Range(0.2f, 1f);
         }
         else if (clerkController != null)
         {
@@ -159,7 +197,6 @@ public class ThoughtBubbleController : MonoBehaviour
                 key = "Staff_OnBreak";
             else
                 key = "Staff_Working";
-            
             param = 1f - clerkController.GetStressPercent();
         }
         else if (guardMovement != null)
@@ -173,7 +210,6 @@ public class ThoughtBubbleController : MonoBehaviour
                 key = "Staff_OnBreak";
             else
                 key = "Staff_Working";
-
             param = 1f - guardMovement.GetStressPercent();
         }
         else if (internController != null)
@@ -185,31 +221,9 @@ public class ThoughtBubbleController : MonoBehaviour
                 key = "Staff_OnBreak";
             else
                 key = "Staff_Working";
-            
-            param = Random.Range(0.2f, 1f); // ЗАГЛУШКА
+            param = Random.Range(0.2f, 1f);
         }
         
         return (key, param);
-    }
-
-    private IEnumerator ShowThought(string text, Color? textColor = null, bool allCaps = false)
-    {
-        thoughtTextMesh.text = allCaps ? text.ToUpper() : text;
-        
-        // --- ИЗМЕНЕНИЕ: Теперь мы всегда устанавливаем цвет ---
-        if (textColor.HasValue)
-        {
-            thoughtTextMesh.color = textColor.Value;
-        }
-        else
-        {
-            thoughtTextMesh.color = Color.black; // Стандартный цвет, если никакой не передан
-        }
-        
-        thoughtBubbleObject.SetActive(true);
-        
-        yield return new WaitForSeconds(thoughtDuration);
-
-        thoughtBubbleObject.SetActive(false);
     }
 }

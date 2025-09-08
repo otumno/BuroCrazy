@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class ServiceWorkerController : StaffController
 {
@@ -10,13 +11,22 @@ public class ServiceWorkerController : StaffController
     
     [Header("Настройки Уборщика")]
     private WorkerState currentState = WorkerState.OffDuty;
+    
     [Header("Внешний вид")]
     [Tooltip("Укажите пол для выбора правильных спрайтов")]
     public Gender gender;
     private CharacterVisuals visuals;
+    
     [Header("Дополнительные объекты")]
     public GameObject nightLight;
     public Transform broomTransform;
+    
+    [Header("Настройки фонарика")]
+    [Tooltip("На каком расстоянии от центра будет фонарик при движении")]
+    public float flashlightOffsetDistance = 0.5f;
+    [Tooltip("Насколько плавно фонарик меняет свое положение")]
+    public float flashlightSmoothingSpeed = 5f;
+    
     [Header("Параметры уборки")]
     public float cleaningTimeTrash = 2f;
     public float cleaningTimePuddle = 4f;
@@ -39,8 +49,8 @@ public class ServiceWorkerController : StaffController
     
     private Quaternion initialBroomRotation;
     private Waypoint[] allWaypoints;
+    private Rigidbody2D rb;
 
-    // --- НОВОЕ ПОЛЕ ---
     [Header("Навыки")]
     public CharacterSkills skills;
     
@@ -49,6 +59,7 @@ public class ServiceWorkerController : StaffController
         base.Awake();
         visuals = GetComponent<CharacterVisuals>();
         allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
+        rb = GetComponent<Rigidbody2D>();
     }
 
     protected override void Start()
@@ -63,7 +74,6 @@ public class ServiceWorkerController : StaffController
         currentState = WorkerState.OffDuty;
         SetState(currentState);
         
-        // --- НОВАЯ ЛОГИКА: Назначаем навыки уборщику ---
         if (skills != null)
         {
             skills.paperworkMastery = 0.0f;
@@ -81,6 +91,28 @@ public class ServiceWorkerController : StaffController
         {
             currentAction = StartCoroutine(MainAI_Loop());
         }
+    }
+    
+    void LateUpdate()
+    {
+        if (nightLight == null || !nightLight.activeSelf)
+        {
+            return;
+        }
+
+        Vector2 velocity = rb.linearVelocity;
+        Vector3 targetPosition = Vector3.zero;
+
+        if (velocity.magnitude > 0.1f)
+        {
+            targetPosition = (Vector3)velocity.normalized * flashlightOffsetDistance;
+        }
+
+        nightLight.transform.localPosition = Vector3.Lerp(
+            nightLight.transform.localPosition,
+            targetPosition,
+            Time.deltaTime * flashlightSmoothingSpeed
+        );
     }
     
     public override void StartShift()
@@ -113,7 +145,13 @@ public class ServiceWorkerController : StaffController
         SetState(WorkerState.Idle);
         yield return new WaitForSeconds(Random.Range(0.5f, 1.5f));
 
-        if (Random.value < chanceToGoToToilet)
+        float finalChanceToGoToToilet = chanceToGoToToilet;
+        if (skills != null)
+        {
+            finalChanceToGoToToilet *= (1f - skills.sedentaryResilience);
+        }
+
+        if (Random.value < finalChanceToGoToToilet)
         {
             yield return StartCoroutine(ToiletBreakRoutine());
         }
@@ -151,12 +189,21 @@ public class ServiceWorkerController : StaffController
         if (currentState == WorkerState.StressedOut || !isOnDuty) return;
         bool isResting = currentState == WorkerState.AtToilet || currentState == WorkerState.OffDuty || currentState == WorkerState.OnBreak;
         
-        // --- ИЗМЕНЁННАЯ ЛОГИКА: Прирост стресса зависит от навыков ---
-        float finalStressGainRate = stressGainPerTrash; // Пока не реализован расчет по типу
+        float finalStressGainRate = stressGainPerTrash;
         if (isOnDuty && !isResting) 
         {
-            currentStress += finalStressGainRate * (1f - skills.softSkills) * Time.deltaTime;
+            float stressMultiplier = 1f;
+            if (skills != null)
+            {
+                stressMultiplier = (1f - skills.softSkills);
+            }
+            currentStress += finalStressGainRate * stressMultiplier * Time.deltaTime;
         }
+        else
+        {
+            currentStress -= stressReliefRate * Time.deltaTime;
+        }
+
         currentStress = Mathf.Clamp(currentStress, 0, maxStress);
         if (currentStress >= maxStress)
         {
@@ -165,14 +212,12 @@ public class ServiceWorkerController : StaffController
         }
     }
     
-    // Остальные методы без изменений на данном этапе
     private IEnumerator GoAndCleanRoutine(MessPoint initialMess)
     {
         SetState(WorkerState.GoingToMess);
         yield return StartCoroutine(MoveToTarget(initialMess.transform.position, WorkerState.Cleaning));
 
-        if (initialMess == null) { currentAction = null; yield break;
-        }
+        if (initialMess == null) { currentAction = null; yield break; }
         
         float cleaningTime = GetCleaningTime(initialMess);
         float totalStressGain = 0;
@@ -180,8 +225,7 @@ public class ServiceWorkerController : StaffController
         StartCoroutine(AnimateBroom(cleaningTime));
         yield return new WaitForSeconds(cleaningTime);
 
-        if (initialMess == null) { currentAction = null; yield break;
-        }
+        if (initialMess == null) { currentAction = null; yield break; }
 
         MessPoint.MessType typeToClean = initialMess.type;
         if (typeToClean == MessPoint.MessType.Trash)
@@ -412,7 +456,6 @@ public class ServiceWorkerController : StaffController
         }
     }
 
-    public override float GetStressValue() { return currentStress;
-    }
+    public override float GetStressValue() { return currentStress; }
     public override void SetStressValue(float stress) { currentStress = stress; }
 }

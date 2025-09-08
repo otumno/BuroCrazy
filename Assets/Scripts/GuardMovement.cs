@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+
 [RequireComponent(typeof(Rigidbody2D), typeof(AgentMover), typeof(CharacterStateLogger))]
 public class GuardMovement : StaffController
 {
@@ -10,20 +11,30 @@ public class GuardMovement : StaffController
     
     [Header("Настройки Охранника")]
     private GuardState currentState = GuardState.OffDuty;
+    
     [Header("Внешний вид")]
     [Tooltip("Укажите пол для выбора правильных спрайтов")]
     public Gender gender;
     private CharacterVisuals visuals;
+    
     [Header("Дополнительные объекты")]
     public GameObject nightLight;
     
+    [Header("Настройки фонарика")]
+    [Tooltip("На каком расстоянии от центра будет фонарик при движении")]
+    public float flashlightOffsetDistance = 0.5f;
+    [Tooltip("Насколько плавно фонарик меняет свое положение")]
+    public float flashlightSmoothingSpeed = 5f;
+
     [Header("Настройки патрулирования")]
     public List<Waypoint> patrolRoute;
     [SerializeField] private float minWaitTime = 1f;
     [SerializeField] private float maxWaitTime = 3f;
+    
     [Header("Прочее поведение")]
     public float chanceToGoToToilet = 0.01f;
     public float timeInToilet = 5f;
+    
     [Header("Настройки преследования")]
     [Tooltip("Множитель скорости во время погони. 1.5 = на 50% быстрее.")]
     public float chaseSpeedMultiplier = 1.5f;
@@ -34,11 +45,13 @@ public class GuardMovement : StaffController
     public AudioClip reprimandSound;
     [Tooltip("Выберите слой, на котором находятся препятствия (стены, столы и т.д.)")]
     public LayerMask obstacleLayerMask;
+    
     [Header("Рабочее место и протоколы")]
     [Tooltip("Точка, куда охранник пойдет писать протокол")]
     public Transform deskPoint;
     [Tooltip("Стопка, куда охранник будет складывать протоколы")]
     public DocumentStack protocolStack;
+    
     [Header("Система Стресса")]
     public float maxStress = 100f;
     public float stressGainRate = 0.2f;
@@ -53,8 +66,8 @@ public class GuardMovement : StaffController
     private int guardLayer, clientLayer;
     private List<Waypoint> nightPatrolRoute;
     private Waypoint[] allWaypoints;
+    private Rigidbody2D rb;
     
-    // --- НОВОЕ ПОЛЕ ---
     [Header("Навыки")]
     public CharacterSkills skills;
     
@@ -64,6 +77,7 @@ public class GuardMovement : StaffController
         visuals = GetComponent<CharacterVisuals>();
         audioSource = GetComponent<AudioSource>();
         allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
+        rb = GetComponent<Rigidbody2D>();
     }
     
     protected override void Start()
@@ -77,7 +91,6 @@ public class GuardMovement : StaffController
         currentState = GuardState.OffDuty;
         LogCurrentState();
         
-        // --- НОВАЯ ЛОГИКА: Назначаем навыки охраннику ---
         if (skills != null)
         {
             skills.paperworkMastery = 0.25f;
@@ -93,6 +106,28 @@ public class GuardMovement : StaffController
         UpdateStress();
     }
     
+    void LateUpdate()
+    {
+        if (nightLight == null || !nightLight.activeSelf)
+        {
+            return;
+        }
+
+        Vector2 velocity = rb.linearVelocity;
+        Vector3 targetPosition = Vector3.zero;
+
+        if (velocity.magnitude > 0.1f)
+        {
+            targetPosition = (Vector3)velocity.normalized * flashlightOffsetDistance;
+        }
+
+        nightLight.transform.localPosition = Vector3.Lerp(
+            nightLight.transform.localPosition,
+            targetPosition,
+            Time.deltaTime * flashlightSmoothingSpeed
+        );
+    }
+
     public override void StartShift()
     {
         if(isOnDuty) return;
@@ -120,8 +155,12 @@ public class GuardMovement : StaffController
         if (currentState == GuardState.StressedOut) return;
         bool isResting = currentState == GuardState.OnBreak || currentState == GuardState.AtToilet || currentState == GuardState.OffDuty;
         
-        // --- ИЗМЕНЁННАЯ ЛОГИКА: Прирост стресса зависит от навыков ---
-        float finalStressGainRate = stressGainRate * (1f - skills.softSkills * 0.5f);
+        float finalStressGainRate = stressGainRate;
+        if (skills != null)
+        {
+            finalStressGainRate *= (1f - skills.softSkills * 0.5f);
+        }
+
         if (isOnDuty && !isResting)
         {
             currentStress += finalStressGainRate * Time.deltaTime;
@@ -138,7 +177,6 @@ public class GuardMovement : StaffController
         }
     }
 
-    // Остальные методы без изменений на данном этапе
     private IEnumerator StressedOutRoutine()
     {
         SetState(GuardState.StressedOut);
@@ -161,6 +199,7 @@ public class GuardMovement : StaffController
     private void LogCurrentState() { logger?.LogState(GetStatusInfo()); }
     public GuardState GetCurrentState() => currentState;
     public bool IsAvailableAndOnDuty() => isOnDuty && currentState != GuardState.Chasing && currentState != GuardState.Talking && currentState != GuardState.ChasingThief && currentState != GuardState.EscortingThief && currentState != GuardState.Evicting && currentState != GuardState.StressedOut && currentState != GuardState.WritingReport;
+    
     public override void GoOnBreak(float duration)
     {
         if(isOnDuty && currentState != GuardState.GoingToBreak && currentState != GuardState.OnBreak)
@@ -268,10 +307,18 @@ public class GuardMovement : StaffController
             }
             SetState(GuardState.WaitingAtWaypoint);
             yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
-            if (Random.value < chanceToGoToToilet)
+
+            float finalChanceToGoToToilet = chanceToGoToToilet;
+            if (skills != null)
+            {
+                finalChanceToGoToToilet *= (1f - skills.sedentaryResilience);
+            }
+
+            if (Random.value < finalChanceToGoToToilet)
             {
                 yield return StartCoroutine(ToiletBreakRoutine());
             }
+            
             SetState(GuardState.Patrolling);
         }
     }
@@ -398,10 +445,8 @@ public class GuardMovement : StaffController
 
         agentMover.StopDirectChase();
         
-        if (currentChaseTarget != null) { yield return StartCoroutine(EscortThiefToCashier());
-        }
-        else { GoBackToDuties();
-        }
+        if (currentChaseTarget != null) { yield return StartCoroutine(EscortThiefToCashier()); }
+        else { GoBackToDuties(); }
     }
 
     private IEnumerator EvictRoutine(ClientPathfinding target, bool isStressedOut = false)
@@ -465,7 +510,7 @@ public class GuardMovement : StaffController
         SetState(GuardState.EscortingThief);
         StopShouting();
         ClientPathfinding thief = currentChaseTarget;
-        thief?.GetVisuals()?.SetEmotion(Emotion.Scared);
+        thief?.GetVisuals()?.SetEmotion(Emotion.Sly);
         if (thief != null)
         {
             thief.Freeze();
@@ -692,7 +737,6 @@ public class GuardMovement : StaffController
         }
     }
 
-    public override float GetStressValue() { return currentStress;
-    }
+    public override float GetStressValue() { return currentStress; }
     public override void SetStressValue(float stress) { currentStress = stress; }
 }

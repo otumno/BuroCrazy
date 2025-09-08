@@ -230,6 +230,7 @@ MonoBehaviour:
   stressGainPerClient: 5
   stressReliefRate: 10
   stressedOutDuration: 20
+  skills: {fileID: 11400000, guid: 5b72efa5ed8aad245be60e023eb9f13b, type: 2}
 --- !u!114 &-6969218027224662082
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -603,7 +604,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
-  m_SortingOrder: 2
+  m_SortingOrder: 3
   m_Sprite: {fileID: 6368444177438590102, guid: c16aadcb7b8665a49b4e8da92c7d91f1, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0

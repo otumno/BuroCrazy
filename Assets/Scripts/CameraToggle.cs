@@ -1,3 +1,4 @@
+// Файл: CameraToggle.cs
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -13,7 +14,7 @@ public class CameraToggle : MonoBehaviour
     
     [Header("Настройки")]
     public float moveSpeed = 10f;
-
+    
     [Header("UI для переключения (Черный список)")]
     public List<GameObject> allToggleableUI;
     public List<GameObject> hideInPositionOne;
@@ -41,11 +42,32 @@ public class CameraToggle : MonoBehaviour
 
     void LateUpdate()
     {
+        // --- Логика для колесика мыши (остается без изменений) ---
+        float scrollInput = Input.GetAxis("Mouse ScrollWheel");
+
+        if (scrollInput > 0f) // Скролл вверх
+        {
+            if (!isAtPositionOne)
+            {
+                SetPosition(true);
+            }
+        }
+        else if (scrollInput < 0f) // Скролл вниз
+        {
+            if (isAtPositionOne)
+            {
+                SetPosition(false);
+            }
+        }
+
+        // --- НОВАЯ ЛОГИКА: Возвращаем управление клавишей Tab ---
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             TogglePosition();
         }
+        // ---------------------------------------------------------
 
+        // Логика плавного движения камеры (остается без изменений)
         if (mainCamera != null)
         {
             Vector3 targetMarkerPosition = isAtPositionOne ? positionOne.position : positionTwo.position;
@@ -54,35 +76,19 @@ public class CameraToggle : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Этот публичный метод будет вызываться по нажатию на Tab или на кнопку в UI.
+    /// </summary>
     public void TogglePosition()
     {
-        // --- ДИАГНОСТИКА НАЧАЛАСЬ ---
-        Debug.Log("--- НАЧАТ ПРОЦЕСС ПЕРЕКЛЮЧЕНИЯ КАМЕРЫ ---");
-        Debug.Log($"До нажатия, камера была в позиции 1: {isAtPositionOne}");
+        // Просто переключаем на противоположную позицию
+        SetPosition(!isAtPositionOne);
+    }
 
-        isAtPositionOne = !isAtPositionOne;
-        
-        Debug.Log($"После нажатия, камера должна быть в позиции 1: {isAtPositionOne}");
-        
-        if (positionOne != null)
-        {
-            Debug.Log($"Координаты Position One: {positionOne.position}");
-        }
-        else
-        {
-            Debug.LogError("ССЫЛКА НА Position One ПУСТАЯ (NONE) В ИНСПЕКТОРЕ!");
-        }
-
-        if (positionTwo != null)
-        {
-            Debug.Log($"Координаты Position Two: {positionTwo.position}");
-        }
-        else
-        {
-            Debug.LogError("ССЫЛКА НА Position Two ПУСТАЯ (NONE) В ИНСПЕКТОРЕ!");
-        }
-        // --- ДИАГНОСТИКА ОКОНЧЕНА ---
-
+    // Этот приватный метод устанавливает конкретную позицию и обновляет все системы
+    private void SetPosition(bool setToPositionOne)
+    {
+        isAtPositionOne = setToPositionOne;
         UpdateUIVisibility();
         musicPlayer?.SetMuffled(!isAtPositionOne);
     }
