@@ -488,7 +488,7 @@ PrefabInstance:
     - target: {fileID: 140038621745414845, guid: 12fe46041d2bb6d4f8ab006e3b86d47a, type: 3}
       propertyPath: musicPlayer
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 517151229}
     - target: {fileID: 140038621745414845, guid: 12fe46041d2bb6d4f8ab006e3b86d47a, type: 3}
       propertyPath: mainMenuPanel
       value: 
@@ -500,7 +500,7 @@ PrefabInstance:
     - target: {fileID: 140038621745414845, guid: 12fe46041d2bb6d4f8ab006e3b86d47a, type: 3}
       propertyPath: directorManager
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 517151228}
     - target: {fileID: 140038621745414845, guid: 12fe46041d2bb6d4f8ab006e3b86d47a, type: 3}
       propertyPath: saveSelectionPanel
       value: 
@@ -614,6 +614,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 12fe46041d2bb6d4f8ab006e3b86d47a, type: 3}
+--- !u!114 &517151228 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5563200730189803666, guid: 12fe46041d2bb6d4f8ab006e3b86d47a, type: 3}
+  m_PrefabInstance: {fileID: 517151227}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c6d1fa630e27134987f31e2ea3aa7e2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &517151229 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7782447930348207097, guid: 12fe46041d2bb6d4f8ab006e3b86d47a, type: 3}
+  m_PrefabInstance: {fileID: 517151227}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b4140768b136a649b5afca5c4bad3f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &707032159
 GameObject:
   m_ObjectHideFlags: 0

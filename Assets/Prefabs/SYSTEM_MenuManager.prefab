@@ -480,9 +480,13 @@ MonoBehaviour:
   minLeavesToAnimate: 25
   maxLeavesToAnimate: 50
   staggerDelay: 0.02
+  uiPanelFadeTime: 0.5
   blackoutImage: {fileID: 1352730742560980954}
   leafTransitionContainer: {fileID: 6061291601326193921}
   uiAudioSource: {fileID: 5483891998187546075}
+  musicPlayer: {fileID: 7782447930348207097}
+  saveLoadManager: {fileID: 1642619667686331713}
+  directorManager: {fileID: 5563200730189803666}
 --- !u!82 &5483891998187546075
 AudioSource:
   m_ObjectHideFlags: 0

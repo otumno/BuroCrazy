@@ -1,3 +1,4 @@
+// File: DirectorDocumentReviewPanel.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -6,11 +7,19 @@ using System.Linq;
 
 public class DirectorDocumentReviewPanel : MonoBehaviour
 {
+    // Class for Inspector settings
+    [System.Serializable]
+    public class CharacterStyle
+    {
+        [Tooltip("The desired size of the letter (width, height). For example, (10, 15) for a tall letter.")]
+        public Vector2 preferredSize = new Vector2(10, 12); // Set your base size here
+    }
+
     private const string loremIpsumSource = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
     private const string ascenderLetters = "bdfhijklt";
     private const string descenderLetters = "gjpqy";
 
-    [Header("UI Элементы")]
+    [Header("UI Elements")]
     public TextMeshProUGUI titleText;
     public TextMeshProUGUI mandatesText;
     public TextMeshProUGUI feeAndBribeText;
@@ -20,18 +29,23 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
     public Button approveWithBribeButton;
     public Button postponeButton;
 
-    [Header("Настройки генерации текста")]
+    [Header("Text Generation Settings")]
     [SerializeField] private int maxCapacity = 200;
     [SerializeField] private int wordCountToDisplay = 35;
     [SerializeField] private int maxStartIndex = 50;
     
-    [Header("Префабы сетки документа")]
+    [Header("'Letter' Style Settings")]
+    public CharacterStyle capitalLetterStyle;
+    public CharacterStyle ascenderLetterStyle;
+    public CharacterStyle descenderLetterStyle;
+
+    [Header("Document Grid Prefabs")]
     public GameObject gridSquarePrefab;
     public GameObject gridSpacePrefab;
     public GameObject punctuationSquarePrefab;
     public Transform gridContainer;
-
-    [Header("Отладка")]
+    
+    [Header("Debugging")]
     [SerializeField] private bool showDebugInfo = false;
 
     private ClientPathfinding currentClient;
@@ -51,7 +65,7 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
         Time.timeScale = 0f;
         gameObject.SetActive(true);
         titleText.text = DocumentTitleGenerator.GenerateTitle();
-        feeAndBribeText.text = $"Пошлина: ${client.directorDocumentFee} | Взятка: ${client.directorDocumentBribe}";
+        feeAndBribeText.text = $"Fee: ${client.directorDocumentFee} | Bribe: ${client.directorDocumentBribe}";
         approveWithBribeButton.gameObject.SetActive(client.directorDocumentBribe > 0);
         GenerateDocumentGrid(client);
         UpdateMandatesText();
@@ -70,10 +84,9 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
         int errorCount = currentClient.directorDocumentLayout.gridState.Count(c => c == true);
         float actualErrorRate = (totalSymbols > 0) ? ((float)errorCount / totalSymbols) * 100f : 0f;
         float allowedErrorRate = DirectorManager.Instance.currentMandates.allowedDirectorErrorRate;
-
         if (actualErrorRate > allowedErrorRate)
         {
-            Debug.LogWarning($"СТРАЙК! Директор одобрил документ с {actualErrorRate:F1}% ошибок при норме <= {allowedErrorRate}%.");
+            Debug.LogWarning($"STRIKE! The director approved a document with {actualErrorRate:F1}% errors when the norm was <= {allowedErrorRate}%.");
             DirectorManager.Instance.AddStrike();
         }
 
@@ -113,8 +126,11 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
         currentClient = null;
     }
 
-    public void OnPostponeClicked() { ClosePanel(); }
-    
+    public void OnPostponeClicked() 
+    {
+        ClosePanel();
+    }
+
     private void GenerateDocumentGrid(ClientPathfinding client)
     {
         foreach (Transform child in gridContainer) { Destroy(child.gameObject); }
@@ -138,7 +154,7 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
             {
                 if(client.directorDocumentLayout.gridState[i] == true)
                 {
-                    float chanceToFix = 1.0f - client.suetunFactor; 
+                    float chanceToFix = 1.0f - client.suetunFactor;
                     if(Random.value < chanceToFix) { client.directorDocumentLayout.gridState[i] = false; }
                 }
             }
@@ -146,9 +162,7 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
         }
 
         int gridIndex = 0;
-        int wordsProcessed = 0;
-        bool isFirstLetter = true;
-        bool capitalizeNextLetter = false;
+        bool isFirstLetterOfSentence = true;
 
         int randomStart = Random.Range(0, maxStartIndex);
         int actualStartIndex = loremIpsumSource.IndexOf(' ', randomStart) + 1;
@@ -171,38 +185,46 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
             if (gridIndex >= maxCapacity) break;
             
             GameObject square;
-            RectTransform rect;
+            LayoutElement layoutElement;
 
             if (c == ' ')
             {
                 Instantiate(gridSpacePrefab, gridContainer);
-                wordsProcessed++;
             }
             else if (char.IsPunctuation(c))
             {
                 square = Instantiate(punctuationSquarePrefab, gridContainer);
-                capitalizeNextLetter = true;
+                isFirstLetterOfSentence = true;
             }
             else
             {
                 square = Instantiate(gridSquarePrefab, gridContainer);
-                rect = square.GetComponent<RectTransform>();
+                layoutElement = square.GetComponent<LayoutElement>();
 
-                if(isFirstLetter || capitalizeNextLetter)
+                if(isFirstLetterOfSentence)
                 {
-                    rect.localScale = new Vector3(1, 1.2f, 1);
-                    isFirstLetter = false;
-                    capitalizeNextLetter = false;
+                    if (layoutElement != null)
+                    {
+                        layoutElement.preferredWidth = capitalLetterStyle.preferredSize.x;
+                        layoutElement.preferredHeight = capitalLetterStyle.preferredSize.y;
+                    }
+                    isFirstLetterOfSentence = false;
                 }
                 else if (ascenderLetters.Contains(c))
                 {
-                    rect.localScale = new Vector3(1, 1.13f, 1);
-                    rect.anchoredPosition += new Vector2(0, rect.sizeDelta.y * 0.065f);
+                    if (layoutElement != null)
+                    {
+                        layoutElement.preferredWidth = ascenderLetterStyle.preferredSize.x;
+                        layoutElement.preferredHeight = ascenderLetterStyle.preferredSize.y;
+                    }
                 }
                 else if (descenderLetters.Contains(c))
                 {
-                    rect.localScale = new Vector3(1, 1.13f, 1);
-                    rect.anchoredPosition -= new Vector2(0, rect.sizeDelta.y * 0.065f);
+                    if (layoutElement != null)
+                    {
+                        layoutElement.preferredWidth = descenderLetterStyle.preferredSize.x;
+                        layoutElement.preferredHeight = descenderLetterStyle.preferredSize.y;
+                    }
                 }
             }
             
@@ -218,17 +240,16 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
     private void UpdateMandatesText()
     {
         if (DirectorManager.Instance == null || DirectorManager.Instance.currentMandates == null) return;
-        
         float allowedErrorRate = DirectorManager.Instance.currentMandates.allowedDirectorErrorRate;
 
         if (showDebugInfo && currentClient != null && currentClient.directorDocumentLayout != null)
         {
             int errorCount = currentClient.directorDocumentLayout.gridState.Count(c => c == true);
-            mandatesText.text = $"НОРМА: <= {allowedErrorRate}%\n<color=red>ОТЛАДКА: В документе {errorCount} ошибок.</color>";
+            mandatesText.text = $"NORM: <= {allowedErrorRate}%\n<color=red>DEBUG: Document has {errorCount} errors.</color>";
         }
         else 
         { 
-            mandatesText.text = $"Норма дня: Ошибок не более {allowedErrorRate}%"; 
+            mandatesText.text = $"Daily Norm: Errors no more than {allowedErrorRate}%";
         }
     }
 }
