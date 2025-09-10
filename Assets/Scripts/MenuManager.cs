@@ -1,298 +1,229 @@
-// Файл: MenuManager.cs
+// Файл: MenuManager.cs (ФИНАЛЬНАЯ ВЕРСИЯ)
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class MenuManager : MonoBehaviour
 {
-    [Header("Панели UI")]
-    public GameObject mainMenuPanel;
-    public GameObject startOfDayPanel;
-    public GameObject saveSelectionPanel;
-    public GameObject orderSelectionPanel;
+    public static MenuManager Instance { get; private set; }
 
-    [Header("UI для сохранения")]
+    [Header("Панели UI (назначаются в MainMenuScene)")]
+    public GameObject mainMenuPanel;
+    public GameObject saveSelectionPanel;
+    
+    [Header("UI для сохранения (назначаются в MainMenuScene)")]
     public SaveSlotUI[] saveSlots;
     public Button continueButton;
-
-    [Header("Кнопки в игровом UI")]
-    public GameObject inGameUIButtons;
     
-    [Header("Настройки перехода")]
-    public GameObject paperPrefab;
-    public List<Sprite> paperSprites;
+    [Header("Эффект с листами для смены сцен")]
+    public float totalTransitionDuration = 2.5f;
+    public GameObject transitionLeafPrefab;
+    public AudioClip transitionSound;
+    public List<Transform> leafTargetPositions;
+    public int minLeavesToAnimate = 25;
+    public int maxLeavesToAnimate = 50;
+    public float staggerDelay = 0.02f;
+    
+    [Header("Ссылки на компоненты (должны быть частью этого префаба)")]
+    public float uiPanelFadeTime = 0.5f;
     public Image blackoutImage;
-    public Transform canvasTransform;
-    public List<Transform> paperFallTargets;
-    public int numberOfPapers = 7;
-    public float transitionTime = 0.6f;
-    public AudioClip paperSwooshSound;
+    public Transform leafTransitionContainer;
     public AudioSource uiAudioSource;
 
     [Header("Ссылки на другие менеджеры")]
     public MusicPlayer musicPlayer;
     public SaveLoadManager saveLoadManager;
-    public OrderSelectionUI orderSelectionUI;
-    
     public DirectorManager directorManager;
-    public StartOfDayPanel startOfDayPanelScript;
 
+    private GameObject startOfDayPanel, orderSelectionPanel, inGameUIButtons;
+    private OrderSelectionUI orderSelectionUI;
+    private StartOfDayPanel startOfDayPanelScript;
     private GameObject currentPanel;
     private bool isTransitioning = false;
     private int lastLoadedSlotIndex = -1;
     private bool isPausedForMenu = false;
+    private int slotIndexToLoad;
+    private bool isNewGameRequest = false;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+        
+        if (musicPlayer == null) musicPlayer = GetComponentInChildren<MusicPlayer>();
+        if (saveLoadManager == null) saveLoadManager = GetComponentInChildren<SaveLoadManager>();
+        if (directorManager == null) directorManager = GetComponentInChildren<DirectorManager>();
+        
+        if (leafTargetPositions.Count == 0 && transform.Find("LeafTransitionContainer/LeafTargets") != null)
+        {
+            var targetsContainer = transform.Find("LeafTransitionContainer/LeafTargets");
+            foreach (Transform child in targetsContainer) { leafTargetPositions.Add(child); }
+        }
+
+        SceneManager.sceneLoaded += OnSceneLoaded;
+    }
+
+    void OnDestroy() { SceneManager.sceneLoaded -= OnSceneLoaded; }
+    
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "GameScene")
+        {
+            startOfDayPanelScript = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+            if (startOfDayPanelScript != null) startOfDayPanel = startOfDayPanelScript.gameObject;
+            orderSelectionUI = FindFirstObjectByType<OrderSelectionUI>(FindObjectsInactive.Include);
+            if (orderSelectionUI != null) orderSelectionPanel = orderSelectionUI.gameObject;
+            inGameUIButtons = GameObject.Find("InGameUIButtons");
+            
+            if(startOfDayPanel != null) startOfDayPanel.SetActive(false);
+            if(orderSelectionPanel != null) orderSelectionPanel.SetActive(false);
+            if(inGameUIButtons != null) inGameUIButtons.SetActive(false);
+        }
+        else if (scene.name == "MainMenuScene")
+        {
+            mainMenuPanel = GameObject.Find("MainMenuPanel");
+            saveSelectionPanel = GameObject.Find("SaveSelectionPanel");
+            Start();
+        }
+    }
 
     private void Start()
     {
-        mainMenuPanel.SetActive(true);
-        saveSelectionPanel.SetActive(false);
-        startOfDayPanel.SetActive(false);
-        inGameUIButtons.SetActive(false);
-        if (orderSelectionPanel != null) orderSelectionPanel.SetActive(false);
-        
-        if (saveLoadManager.GetLastSavedSlot(out lastLoadedSlotIndex))
+        if(SceneManager.GetActiveScene().name != "MainMenuScene") return;
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
+        if (saveSelectionPanel != null) saveSelectionPanel.SetActive(false);
+        if (SaveLoadManager.Instance != null && SaveLoadManager.Instance.GetLastSavedSlot(out lastLoadedSlotIndex))
         {
-            continueButton.gameObject.SetActive(true);
+            if (continueButton != null) continueButton.gameObject.SetActive(true);
         }
-        else
-        {
-            continueButton.gameObject.SetActive(false);
-        }
-        
-        Time.timeScale = 0f;
-        musicPlayer?.PlayMenuTheme();
+        else { if (continueButton != null) continueButton.gameObject.SetActive(false); }
         currentPanel = mainMenuPanel;
     }
 
-    private void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            if (!isTransitioning && currentPanel == null && !isPausedForMenu) 
-            {
-                ToggleSimplePauseMenu();
-            }
-            else if (!isTransitioning && isPausedForMenu)
-            {
-                ToggleSimplePauseMenu();
-            }
-        }
-    }
+    public void OnContinueClicked() { if(SaveLoadManager.Instance.GetLastSavedSlot(out lastLoadedSlotIndex)) { OnSaveSlotClicked(lastLoadedSlotIndex); } }
+    public void OnStartGameClicked() { if (saveSelectionPanel == null) return; mainMenuPanel.SetActive(false); saveSelectionPanel.SetActive(true); currentPanel = saveSelectionPanel; for (int i = 0; i < saveSlots.Length; i++) { if(saveSlots[i] != null) saveSlots[i].Setup(i, this, SaveLoadManager.Instance); } }
+    public void OnSaveSlotClicked(int slotIndex) { slotIndexToLoad = slotIndex; isNewGameRequest = false; StartCoroutine(MasterTransitionRoutine("GameScene")); }
+    public void OnNewGameClicked(int slotIndex) { SaveLoadManager.Instance.DeleteSave(slotIndex); slotIndexToLoad = slotIndex; isNewGameRequest = true; StartCoroutine(MasterTransitionRoutine("GameScene")); }
+    public void OnBackToMainMenuClicked() { Time.timeScale = 1f; StartCoroutine(MasterTransitionRoutine("MainMenuScene")); }
     
-    public void ToggleSimplePauseMenu()
+    private IEnumerator MasterTransitionRoutine(string sceneName)
     {
-        if (isTransitioning) return;
-
-        isPausedForMenu = !isPausedForMenu;
-        Time.timeScale = isPausedForMenu ? 0f : 1f;
-
-        if (isPausedForMenu)
-        {
-            musicPlayer?.PlayDirectorsOfficeTheme();
-            StartCoroutine(SimpleFadeTransition(startOfDayPanel));
-        }
-        else
-        {
-            musicPlayer?.PlayGameplayMusic();
-            StartCoroutine(SimpleFadeTransition(null));
-        }
-    }
-
-    private IEnumerator SimpleFadeTransition(GameObject panelToShow)
-    {
+        if (isTransitioning) yield break;
         isTransitioning = true;
-        float fadeDuration = 0.3f;
-
-        yield return StartCoroutine(FadeBlackout(true, fadeDuration));
-
-        if (currentPanel != null) currentPanel.SetActive(false);
-        inGameUIButtons.SetActive(false);
-
-        if (panelToShow != null)
+        List<GameObject> activeLeaves = new List<GameObject>();
+        int leavesCount = Random.Range(minLeavesToAnimate, maxLeavesToAnimate + 1);
+        
+        yield return StartCoroutine(FadeOutPhase(leavesCount, activeLeaves));
+        AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
+        yield return new WaitUntil(() => asyncLoad.isDone);
+        
+        // ИСПРАВЛЕНИЕ: Правильная последовательность
+        if (sceneName == "GameScene")
         {
-            panelToShow.SetActive(true);
-            currentPanel = panelToShow;
-            if (startOfDayPanelScript != null) startOfDayPanelScript.UpdatePanelInfo();
+            // Сначала готовим стол "за кулисами"
+            yield return StartCoroutine(PostSceneLoadRoutine());
         }
-        else
-        {
-            currentPanel = null;
-            inGameUIButtons.SetActive(true);
-        }
+        
+        // А теперь рассеиваем переход, чтобы показать готовый стол
+        yield return StartCoroutine(FadeInPhase(activeLeaves));
 
-        yield return StartCoroutine(FadeBlackout(false, fadeDuration));
         isTransitioning = false;
     }
 
-    private void HandleGameLoad(int slotIndex)
+    private IEnumerator FadeOutPhase(int leavesCount, List<GameObject> leaves)
     {
-        if (!saveLoadManager.LoadGame(slotIndex))
+        if (uiAudioSource != null && transitionSound != null) uiAudioSource.PlayOneShot(transitionSound);
+        StartCoroutine(FadeBlackout(true, totalTransitionDuration));
+        leavesCount = Mathf.Min(leavesCount, leafTargetPositions.Count);
+        List<Transform> shuffledTargets = leafTargetPositions.OrderBy(t => Random.value).ToList();
+        for (int i = 0; i < leavesCount; i++)
         {
-            Debug.LogError($"Не удалось загрузить игру из слота {slotIndex}!");
-            return;
+            GameObject leaf = Instantiate(transitionLeafPrefab, leafTransitionContainer);
+            leaves.Add(leaf);
+            Vector3 startPos = GetRandomOffscreenPosition();
+            Vector3 targetPos = shuffledTargets[i].position;
+            float flightDuration = Random.Range(totalTransitionDuration * 0.6f, totalTransitionDuration);
+            var leafScript = leaf.GetComponent<FallingLeaf>();
+            StartCoroutine(leafScript.Animate(startPos, targetPos, flightDuration, true, false));
+            yield return new WaitForSecondsRealtime(staggerDelay);
         }
-        musicPlayer?.PlayDirectorsOfficeTheme();
-        StartCoroutine(LoadAndShowOrdersRoutine());
+        yield return new WaitForSecondsRealtime(totalTransitionDuration);
     }
-    
-    private IEnumerator LoadAndShowOrdersRoutine()
-    {
-        yield return StartCoroutine(TransitionRoutine(startOfDayPanel));
 
-        if (directorManager.activeOrders.Count == 0)
+    private IEnumerator FadeInPhase(List<GameObject> leaves)
+    {
+        yield return new WaitForSecondsRealtime(0.2f);
+        if (uiAudioSource != null && transitionSound != null) uiAudioSource.PlayOneShot(transitionSound);
+        StartCoroutine(FadeBlackout(false, totalTransitionDuration));
+        foreach (GameObject leaf in leaves)
         {
-            Debug.Log("День еще не начат, показываю панель приказов поверх стола.");
-            directorManager.PrepareDay();
-            
-            orderSelectionPanel.SetActive(true); 
-            orderSelectionUI.SetupAndAnimate();
+            if (leaf == null) continue;
+            Vector3 startPos = leaf.transform.position;
+            Vector3 endPos = GetRandomOffscreenPosition();
+            float flightDuration = Random.Range(totalTransitionDuration * 0.6f, totalTransitionDuration);
+            var leafScript = leaf.GetComponent<FallingLeaf>();
+            if(leafScript != null) StartCoroutine(leafScript.Animate(startPos, endPos, flightDuration, false, true));
+            yield return new WaitForSecondsRealtime(staggerDelay);
         }
+        yield return new WaitForSecondsRealtime(totalTransitionDuration + 1.0f);
+        foreach (GameObject leaf in leaves) { if(leaf != null) Destroy(leaf); }
     }
 
-    public void OnContinueClicked() 
-    { 
-        if(saveLoadManager.GetLastSavedSlot(out lastLoadedSlotIndex)) 
-        {
-            HandleGameLoad(lastLoadedSlotIndex);
-        } 
-    }
-
-    public void OnStartGameClicked() 
-    { 
-        for (int i = 0; i < saveSlots.Length; i++) { if(saveSlots[i] != null) saveSlots[i].Setup(i, this, saveLoadManager); } 
-        TransitionTo(saveSelectionPanel); 
-    }
-
-    public void OnSaveSlotClicked(int slotIndex) 
-    { 
-        HandleGameLoad(slotIndex);
-    }
-    
-    public void OnNewGameClicked(int slotIndex) 
+    private IEnumerator PostSceneLoadRoutine()
     {
-        ClientSpawner.Instance?.ResetState();
-        PlayerWallet.Instance?.ResetState();
-        ArchiveManager.Instance?.ResetState();
-        directorManager?.ResetState();
+        if (isNewGameRequest) { ClientSpawner.Instance?.ResetState(); PlayerWallet.Instance?.ResetState(); ArchiveManager.Instance?.ResetState(); DirectorManager.Instance?.ResetState(); SaveLoadManager.Instance.SaveGame(slotIndexToLoad); }
+        else { if (!SaveLoadManager.Instance.LoadGame(slotIndexToLoad)) { yield break; } }
         
-        saveLoadManager.SaveGame(slotIndex);
-        musicPlayer?.PlayDirectorsOfficeTheme();
-        
-        StartCoroutine(LoadAndShowOrdersRoutine());
-    }
-    
-    public void OnStartDayClicked()
-    {
-        if (directorManager.activeOrders.Count > 0)
-        {
-            OnFinalStartDayClicked();
-        }
-        else
-        {
-            directorManager.PrepareDay();
-            orderSelectionPanel.SetActive(true);
-            orderSelectionUI.SetupAndAnimate();
-        }
-    }
-    
-    public void OnOpenDirectorsOfficeClicked()
-    {
         Time.timeScale = 0f;
-        musicPlayer?.PlayDirectorsOfficeTheme();
-        inGameUIButtons.SetActive(false);
-        orderSelectionPanel.SetActive(false);
-        TransitionTo(startOfDayPanel);
-    }
-
-    public void OnBackToMainMenuClicked() 
-    { 
-        if(saveLoadManager.GetLastSavedSlot(out lastLoadedSlotIndex)) { saveLoadManager.SaveGame(lastLoadedSlotIndex); } else { saveLoadManager.SaveGame(0); } 
-        if (saveLoadManager.GetLastSavedSlot(out int lastSaveSlot)) { lastLoadedSlotIndex = lastSaveSlot; continueButton.gameObject.SetActive(true); } 
-        musicPlayer?.PlayMenuTheme(); 
-        TransitionTo(mainMenuPanel); 
-    }
-    
-    public void OnExitGameClicked()
-    {
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #else
-        Application.Quit();
-        #endif
+        MusicPlayer.Instance?.PlayDirectorsOfficeTheme();
+        DirectorManager.Instance.PrepareDay();
+        if (startOfDayPanel != null)
+        {
+            startOfDayPanel.SetActive(true);
+            currentPanel = startOfDayPanel;
+        }
+        if (orderSelectionPanel != null)
+        {
+            orderSelectionPanel.SetActive(true);
+            if (orderSelectionUI != null) orderSelectionUI.SetupAndAnimate();
+        }
+        yield return null;
     }
     
-    public void OnFinalStartDayClicked()
-    {
-        // --- ИЗМЕНЕНИЕ: Сбрасываем флаг паузы ---
-        isPausedForMenu = false;
-
-        Time.timeScale = 1f;
-        musicPlayer?.PlayGameplayMusic();
-        TransitionTo(null);
-        if (inGameUIButtons != null) { inGameUIButtons.SetActive(true); }
-        if (directorManager.activeOrders.Count == 0) { Debug.LogError("КРИТИЧЕСКАЯ ОШИБКА: День начался без выбранного приказа!"); }
-        if (saveLoadManager.GetLastSavedSlot(out int lastSlot)) { saveLoadManager.SaveGame(lastSlot); } else { saveLoadManager.SaveGame(0); }
-    }
-
-    private void TransitionTo(GameObject panelToShow)
-    {
-        if (isTransitioning) return;
-        StartCoroutine(TransitionRoutine(panelToShow));
-    }
-    
-    private IEnumerator TransitionRoutine(GameObject newPanel)
+    public IEnumerator StartGameplaySequence()
     {
         isTransitioning = true;
-        StartCoroutine(FadeBlackout(true, transitionTime));
-        if (uiAudioSource != null && paperSwooshSound != null)
-            uiAudioSource.PlayOneShot(paperSwooshSound);
-
-        List<GameObject> papers = new List<GameObject>();
-        for (int i = 0; i < numberOfPapers; i++)
-        {
-            Transform targetPoint = paperFallTargets[Random.Range(0, paperFallTargets.Count)];
-            Sprite paperSprite = paperSprites[Random.Range(0, paperSprites.Count)];
-            GameObject paper = Instantiate(paperPrefab, canvasTransform);
-            paper.GetComponent<Image>().sprite = paperSprite;
-            papers.Add(paper);
-            StartCoroutine(MovePaperRoutine(paper.transform, targetPoint.position, true));
-            yield return new WaitForSecondsRealtime(transitionTime / numberOfPapers);
-        }
-
-        yield return new WaitForSecondsRealtime(transitionTime);
-        if (currentPanel != null) currentPanel.SetActive(false);
         
-        if (newPanel != null) newPanel.SetActive(true);
+        // ИСПРАВЛЕНИЕ: Используем простой и надежный Fade-эффект
+        yield return StartCoroutine(FadeBlackout(true, uiPanelFadeTime));
 
-        currentPanel = newPanel;
-        inGameUIButtons.SetActive(currentPanel == null);
-
-        StartCoroutine(FadeBlackout(false, transitionTime));
-        if (uiAudioSource != null && paperSwooshSound != null)
-            uiAudioSource.PlayOneShot(paperSwooshSound);
-        foreach (var paper in papers)
-        {
-            if (paper != null)
-                StartCoroutine(MovePaperRoutine(paper.transform, Vector3.zero, false));
-            yield return new WaitForSecondsRealtime(transitionTime / numberOfPapers);
-        }
-
-        yield return new WaitForSecondsRealtime(transitionTime);
-        foreach (var paper in papers) { if (paper != null) Destroy(paper); }
-
+        if(orderSelectionPanel != null) orderSelectionPanel.SetActive(false);
+        if(startOfDayPanel != null) startOfDayPanel.SetActive(false);
+        currentPanel = null;
+        MusicPlayer.Instance?.PlayGameplayMusic();
+        if(inGameUIButtons != null) inGameUIButtons.SetActive(true);
+        
+        // Рассеиваем черноту, чтобы показать игровой мир
+        yield return StartCoroutine(FadeBlackout(false, uiPanelFadeTime));
+        
+        Time.timeScale = 1f;
+        isPausedForMenu = false;
         isTransitioning = false;
-        if (newPanel == startOfDayPanel && startOfDayPanelScript != null)
-        {
-            startOfDayPanelScript.UpdatePanelInfo();
-        }
-        
-        yield break;
     }
+
+    public void OnFinalStartDayClicked() { StartCoroutine(StartGameplaySequence()); }
     
-    public void StartTransitionTo(GameObject newPanel) { TransitionTo(newPanel); }
-    private IEnumerator MovePaperRoutine(Transform paper, Vector3 targetPos, bool isFallingIn) { float timer = 0f; Vector3 startPos; Vector3 endPos; float paperHeightBuffer = paper.GetComponent<RectTransform>().rect.height; if (isFallingIn) { startPos = new Vector3(Random.Range(0, Screen.width), Screen.height + paperHeightBuffer, 0); endPos = targetPos; } else { startPos = paper.position; endPos = new Vector3(startPos.x + Random.Range(-300f, 300f), -paperHeightBuffer, 0); } Quaternion startRot = Quaternion.Euler(0, 0, Random.Range(-60f, 60f)); Quaternion endRot = Quaternion.Euler(0, 0, Random.Range(-15f, 15f)); while (timer < transitionTime) { if (paper == null) yield break; float progress = 1 - Mathf.Pow(1 - (timer / transitionTime), 3); paper.position = Vector3.LerpUnclamped(startPos, endPos, progress); paper.rotation = Quaternion.Slerp(startRot, endRot, progress); timer += Time.unscaledDeltaTime; yield return null; } yield break; }
-    private IEnumerator FadeBlackout(bool fadeIn, float duration) { float timer = 0f; float startAlpha = fadeIn ? 0f : 0.8f; float endAlpha = fadeIn ? 0.8f : 0f; Color color = blackoutImage.color; while(timer < duration) { float progress = timer / duration; color.a = Mathf.Lerp(startAlpha, endAlpha, progress); blackoutImage.color = color; timer += Time.unscaledDeltaTime; yield return null; } color.a = endAlpha; blackoutImage.color = color; yield break; }
+    // ... (остальные методы без изменений) ...
+    private Vector3 GetRandomOffscreenPosition() { Vector3 position; int side = Random.Range(0, 4); float padding = 100f; RectTransform canvasRect = leafTransitionContainer.root.GetComponent<RectTransform>(); float screenWidth = canvasRect.rect.width; float screenHeight = canvasRect.rect.height; if (side == 0) position = new Vector3(Random.Range(-padding, screenWidth + padding), screenHeight + padding, 0); else if (side == 1) position = new Vector3(Random.Range(-padding, screenWidth + padding), -padding, 0); else if (side == 2) position = new Vector3(-padding, Random.Range(-padding, screenHeight + padding), 0); else position = new Vector3(screenWidth + padding, Random.Range(-padding, screenHeight + padding), 0); return position; }
+    public void ToggleSimplePauseMenu() { if (isTransitioning) return; isPausedForMenu = !isPausedForMenu; Time.timeScale = isPausedForMenu ? 0f : 1f; if (isPausedForMenu) { MusicPlayer.Instance?.PlayDirectorsOfficeTheme(); StartCoroutine(SimpleFadeTransition(startOfDayPanel)); } else { MusicPlayer.Instance?.PlayGameplayMusic(); StartCoroutine(SimpleFadeTransition(null)); } }
+    public void OnStartDayClicked() { if (isTransitioning) return; if (DirectorManager.Instance != null && (DirectorManager.Instance.activeOrders.Count > 0 || DirectorManager.Instance.activePermanentOrders.Count > 0)) { OnFinalStartDayClicked(); } else { DirectorManager.Instance?.PrepareDay(); if (currentPanel != null) currentPanel.SetActive(false); if (orderSelectionPanel != null) orderSelectionPanel.SetActive(true); if (orderSelectionUI != null) orderSelectionUI.SetupAndAnimate(); currentPanel = orderSelectionPanel; } }
+    public void TriggerEndOfDaySequence() { if (isTransitioning) return; Time.timeScale = 0f; MusicPlayer.Instance?.PlayDirectorsOfficeTheme(); if (inGameUIButtons != null) inGameUIButtons.SetActive(false); if (orderSelectionPanel != null) orderSelectionPanel.SetActive(false); StartCoroutine(SimpleFadeTransition(startOfDayPanel)); }
+    private IEnumerator SimpleFadeTransition(GameObject panelToShow) { isTransitioning = true; yield return StartCoroutine(FadeBlackout(true, uiPanelFadeTime)); if (currentPanel != null) currentPanel.SetActive(false); if(inGameUIButtons != null) inGameUIButtons.SetActive(false); if (panelToShow != null) { panelToShow.SetActive(true); currentPanel = panelToShow; if (startOfDayPanelScript != null) startOfDayPanelScript.UpdatePanelInfo(); } else { currentPanel = null; if(inGameUIButtons != null) inGameUIButtons.SetActive(true); } yield return StartCoroutine(FadeBlackout(false, uiPanelFadeTime)); isTransitioning = false; }
+    private IEnumerator FadeBlackout(bool fadeIn, float duration) { if (blackoutImage == null) { yield break; } blackoutImage.gameObject.SetActive(true); float timer = 0f; float startAlpha = fadeIn ? 0f : 1f; float endAlpha = fadeIn ? 1f : 0f; Color color = blackoutImage.color; while(timer < duration) { float progress = timer / duration; color.a = Mathf.Lerp(startAlpha, endAlpha, progress); blackoutImage.color = color; timer += Time.unscaledDeltaTime; yield return null; } color.a = endAlpha; blackoutImage.color = color; if (!fadeIn) { blackoutImage.gameObject.SetActive(false); } }
+    public void OnExitGameClicked() { Application.Quit(); }
 }

@@ -13,14 +13,36 @@ public class SaveSlotUI : MonoBehaviour
     private MenuManager menuManager;
     private SaveLoadManager saveLoadManager;
 
-    public void Setup(int index, MenuManager manager, SaveLoadManager saveManager)
-    {
-        slotIndex = index;
-        menuManager = manager;
-        saveLoadManager = saveManager;
+public void Setup(int index, MenuManager manager, SaveLoadManager saveManager)
+{
+    slotIndex = index;
+    // Запоминаем ссылки, которые нам передал MenuManager
+    menuManager = manager;
+    saveLoadManager = saveManager;
 
-        UpdateVisuals();
+    // Полностью перенастраиваем кнопки каждый раз, чтобы избежать ошибок
+    loadOrNewGameButton.onClick.RemoveAllListeners();
+    deleteButton.onClick.RemoveAllListeners();
+
+    SaveData data = saveLoadManager.GetDataForSlot(slotIndex);
+    if (data != null)
+    {
+        infoText.text = $"День: {data.day}\nСчет: ${data.money}";
+        loadOrNewGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Загрузить";
+        deleteButton.gameObject.SetActive(true);
+
+        loadOrNewGameButton.onClick.AddListener(() => menuManager.OnSaveSlotClicked(slotIndex));
+        deleteButton.onClick.AddListener(OnDeleteClicked);
     }
+    else
+    {
+        infoText.text = "Пустой слот";
+        loadOrNewGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Новая игра";
+        deleteButton.gameObject.SetActive(false);
+
+        loadOrNewGameButton.onClick.AddListener(() => menuManager.OnNewGameClicked(slotIndex));
+    }
+}
 
     public void UpdateVisuals()
     {

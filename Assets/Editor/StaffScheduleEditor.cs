@@ -15,7 +15,7 @@ public class StaffScheduleEditor : Editor
         StaffController staff = (StaffController)target;
 
         // Ищем на сцене ClientSpawner
-        ClientSpawner spawner = FindObjectOfType<ClientSpawner>();
+        ClientSpawner spawner = FindFirstObjectByType<ClientSpawner>();
 
         if (spawner == null || spawner.periods == null || spawner.periods.Length == 0)
         {

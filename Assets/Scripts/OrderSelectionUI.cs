@@ -13,10 +13,8 @@ public class OrderSelectionUI : MonoBehaviour
     public List<TextMeshProUGUI> titleTexts;
     public List<TextMeshProUGUI> descriptionTexts;
     public List<Image> iconImages;
-
-    [Tooltip("Перетащите сюда компонент Canvas Group с этой панели")]
     public CanvasGroup canvasGroup;
-
+    
     [Header("Целевые точки для анимации")]
     public List<RectTransform> buttonTargetPositions;
     
@@ -27,12 +25,17 @@ public class OrderSelectionUI : MonoBehaviour
     [Header("Настройки анимации")]
     public float buttonFallDuration = 0.4f;
     public AudioClip buttonLandSound;
-    [Header("Случайная задержка между кнопками")]
     public float minDelayBetweenButtons = 0.1f;
     public float maxDelayBetweenButtons = 0.25f;
 
     private List<DirectorOrder> currentOfferedOrders;
     private bool isSetupRunning = false;
+
+    void Start()
+    {
+        if (menuManager == null) menuManager = MenuManager.Instance;
+        if (startOfDayPanel == null) startOfDayPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+    }
 
     void OnEnable()
     {
@@ -50,11 +53,9 @@ public class OrderSelectionUI : MonoBehaviour
     private IEnumerator SetupRoutine()
     {
         isSetupRunning = true;
-        
-        // --- ИЗМЕНЕНИЕ №1: СРАЗУ ВКЛЮЧАЕМ ИНТЕРАКТИВНОСТЬ ---
         if (canvasGroup != null) 
         {
-            canvasGroup.interactable = true;
+            canvasGroup.interactable = false;
         }
         
         foreach (var button in orderButtons)
@@ -99,10 +100,19 @@ public class OrderSelectionUI : MonoBehaviour
     private void OnOrderSelected(int index)
     {
         if (index < 0 || currentOfferedOrders == null || index >= currentOfferedOrders.Count) return;
+        
         DirectorOrder selectedOrder = currentOfferedOrders[index];
         DirectorManager.Instance.SelectOrder(selectedOrder);
-        if (startOfDayPanel != null) { startOfDayPanel.UpdatePanelInfo(); }
+        
+        // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
+        // Вместо запуска игры, мы просто прячем эту панель
         gameObject.SetActive(false);
+        
+        // И просим стол директора обновить информацию (показать выбранный приказ)
+        if (startOfDayPanel != null)
+        {
+            startOfDayPanel.UpdatePanelInfo();
+        }
     }
     
     private IEnumerator AnimateButtonsIn()
@@ -113,7 +123,6 @@ public class OrderSelectionUI : MonoBehaviour
             {
                 if (i >= buttonTargetPositions.Count || buttonTargetPositions[i] == null)
                 {
-                    Debug.LogError($"Целевая точка для кнопки {i} не настроена!");
                     continue;
                 }
                 
@@ -129,22 +138,19 @@ public class OrderSelectionUI : MonoBehaviour
             }
         }
         
-        // --- ИЗМЕНЕНИЕ №2: Этот блок больше не нужен, так как мы включили интерактивность в самом начале ---
-        /*
         if (canvasGroup != null)
         {
             canvasGroup.interactable = true;
         }
-        */
-        
+
         isSetupRunning = false;
     }
     
     private IEnumerator MoveButton(RectTransform buttonTransform, Vector3 endPosition)
     {
-        if (buttonLandSound != null && Camera.main != null)
+        if (buttonLandSound != null && menuManager != null && menuManager.uiAudioSource != null)
         {
-            AudioSource.PlayClipAtPoint(buttonLandSound, Camera.main.transform.position, 0.7f);
+            menuManager.uiAudioSource.PlayOneShot(buttonLandSound);
         }
         Vector3 startPosition = buttonTransform.anchoredPosition;
         float elapsedTime = 0f;

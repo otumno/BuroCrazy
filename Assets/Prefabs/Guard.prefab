@@ -710,9 +710,9 @@ MonoBehaviour:
     m_Bits: 0
   deskPoint: {fileID: 0}
   protocolStack: {fileID: 0}
-  maxStress: 100
+  maxStress: 200
   stressGainRate: 0.2
-  stressGainPerViolator: 25
+  stressGainPerViolator: 10
   stressReliefRate: 10
   skills: {fileID: 11400000, guid: 9b5b37158e007b14a8390c11b10c3074, type: 2}
 --- !u!114 &7243027972721051166

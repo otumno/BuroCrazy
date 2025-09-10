@@ -29,9 +29,11 @@ public class ClientPathfinding : MonoBehaviour
 
     public bool isLeavingSuccessfully = false;
     public LeaveReason reasonForLeaving = LeaveReason.Normal;
+    
     [Header("Касса")]
     public int billToPay = 0;
     public GameObject moneyPrefab;
+    
     [Header("Создание беспорядка")]
     public List<GameObject> trashPrefabs;
     public List<GameObject> puddlePrefabs;
@@ -45,11 +47,17 @@ public class ClientPathfinding : MonoBehaviour
     public static int totalClients, clientsExited, clientsInWaiting, clientsToToilet, clientsToRegistration, clientsConfused;
     public static int clientsExitedAngry = 0, clientsExitedProcessed = 0;
 
-    // --- НОВОЕ ПОЛЕ ---
     [Header("Документы")]
     [Range(0f, 1f)] public float documentQuality;
 
+    [Header("Данные документа Директора")]
+    public int directorDocumentFee;
+    public int directorDocumentBribe;
+    public bool hasBeenSentForRevision = false;
+	public DirectorDocumentLayout directorDocumentLayout;
+
     public CharacterVisuals GetVisuals() => visuals;
+    
     public void Initialize(GameObject wZ, Waypoint eW)
     {
         totalClients++;
@@ -58,7 +66,7 @@ public class ClientPathfinding : MonoBehaviour
         notification = gameObject.GetComponent<ClientNotification>();
         docHolder = gameObject.GetComponent<DocumentHolder>();
         visuals = gameObject.GetComponent<CharacterVisuals>();
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Мы убрали лишние проверки и ненадежную инициализацию TextMeshPro ---
+        
         if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null)
         {
             Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!", gameObject);
@@ -69,25 +77,34 @@ public class ClientPathfinding : MonoBehaviour
         gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
         visuals.Setup(gender);
         
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Генерация факторов с шагом 0.25 ---
         babushkaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         suetunFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         prolazaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
-        
-        // --- НОВАЯ ЛОГИКА: Генерация качества документа ---
         documentQuality = 1.0f - (suetunFactor * 0.5f);
+        
+        // Если mainGoal не была принудительно установлена (например, для Директора), выбираем случайную
+        if (mainGoal == default(ClientGoal))
+        {
+            var goals = System.Enum.GetValues(typeof(ClientGoal));
+            mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
+        }
 
-        var goals = System.Enum.GetValues(typeof(ClientGoal));
-        mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
         DocumentType startingDoc = DocumentType.None;
         if (Random.value < 0.2f)
         {
-            if (mainGoal == ClientGoal.GetCertificate1) { startingDoc = DocumentType.Form2;
-            }
-            else if (mainGoal == ClientGoal.GetCertificate2) { startingDoc = DocumentType.Form1;
-            }
+            if (mainGoal == ClientGoal.GetCertificate1) { startingDoc = DocumentType.Form2; }
+            else if (mainGoal == ClientGoal.GetCertificate2) { startingDoc = DocumentType.Form1; }
         }
         docHolder.SetDocument(startingDoc);
+
+        if (mainGoal == ClientGoal.DirectorApproval)
+        {
+            directorDocumentFee = Random.Range(250, 751);
+            if (Random.value < 0.33f)
+            {
+                directorDocumentBribe = Random.Range(50, 151);
+            }
+        }
 
         stateMachine.Initialize(this);
         movement.Initialize(this);
@@ -134,11 +151,9 @@ public class ClientPathfinding : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void UnfreezeAndRestartAI() { if(stateMachine != null) stateMachine.StartCoroutine(stateMachine.MainLogicLoop());
-    }
+    public void UnfreezeAndRestartAI() { if(stateMachine != null) stateMachine.StartCoroutine(stateMachine.MainLogicLoop()); }
     
-    public void CalmDownAndLeave() { if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) { reasonForLeaving = LeaveReason.CalmedDown;
-        stateMachine.SetState(ClientState.Leaving); } }
+    public void CalmDownAndLeave() { if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) { reasonForLeaving = LeaveReason.CalmedDown; stateMachine.SetState(ClientState.Leaving); } }
     
     public void CalmDownAndReturnToQueue()
     {
@@ -149,8 +164,7 @@ public class ClientPathfinding : MonoBehaviour
         }
     }
 
-    public void Freeze() { if(stateMachine != null) stateMachine.StopAllActionCoroutines(); GetComponent<AgentMover>()?.Stop();
-    }
+    public void Freeze() { if(stateMachine != null) stateMachine.StopAllActionCoroutines(); GetComponent<AgentMover>()?.Stop(); }
     
     public void ForceLeave(LeaveReason reason = LeaveReason.CalmedDown)
     {
@@ -189,6 +203,5 @@ public class ClientPathfinding : MonoBehaviour
         }
     }
 
-    public static ClientPathfinding FindClosestConfusedClient(Vector3 position) { return FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Where(c => c != null && c.stateMachine != null && c.stateMachine.GetCurrentState() == ClientState.Confused).OrderBy(c => Vector3.Distance(c.transform.position, position)).FirstOrDefault();
-    }
+    public static ClientPathfinding FindClosestConfusedClient(Vector3 position) { return FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Where(c => c != null && c.stateMachine != null && c.stateMachine.GetCurrentState() == ClientState.Confused).OrderBy(c => Vector3.Distance(c.transform.position, position)).FirstOrDefault(); }
 }

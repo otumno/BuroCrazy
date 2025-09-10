@@ -5,5 +5,6 @@ public enum ClientGoal
     GetCertificate2,
     PayTax,
     VisitToilet,
-    AskAndLeave
+    AskAndLeave,
+    DirectorApproval // Добавлена новая цель
 }

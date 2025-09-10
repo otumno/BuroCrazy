@@ -11,19 +11,22 @@ public class GuardManager : MonoBehaviour
     [Header("Настройки менеджера")]
     [Tooltip("Шанс (0-1), с которым охранник заметит попытку кражи")]
     public float chanceToNoticeTheft = 0.6f;
+    [Tooltip("Перетащите сюда объект барьера со сцены")]
+    public SecurityBarrier securityBarrier;
+
     private List<GuardMovement> allGuards = new List<GuardMovement>();
-    
-    // --- ИЗМЕНЕНО: Более надежное отслеживание целей ---
     private HashSet<ClientPathfinding> targetsBeingHandled = new HashSet<ClientPathfinding>();
     private List<ClientPathfinding> reportedThieves = new List<ClientPathfinding>();
     private List<ClientPathfinding> clientsToEvict = new List<ClientPathfinding>();
+    
+    private string lastCheckedPeriodName = "";
+    private bool morningTaskAssigned = false;
+    private bool nightTaskAssigned = false;
 
     void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject);
-        }
-        else { Instance = this;
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); }
+        else { Instance = this; }
     }
 
     void Start()
@@ -33,12 +36,11 @@ public class GuardManager : MonoBehaviour
 
     void Update()
     {
-        // --- ИСПРАВЛЕНО: Убираем неактуальные цели (например, если клиент исчез или успокоился) ---
         targetsBeingHandled.RemoveWhere(client => client == null || client.stateMachine.GetCurrentState() != ClientState.Enraged);
-        
         ManageChasing();
         ManageTheftIntervention();
         ManageEvictions();
+        ManageBarrierTasks();
     }
     
     public void ReportTheft(ClientPathfinding thief)
@@ -60,6 +62,45 @@ public class GuardManager : MonoBehaviour
         }
     }
 
+    private void ManageBarrierTasks()
+    {
+        if (securityBarrier == null || ClientSpawner.Instance == null) return;
+
+        string currentPeriod = ClientSpawner.CurrentPeriodName;
+
+        if (currentPeriod != lastCheckedPeriodName)
+        {
+            morningTaskAssigned = false;
+            nightTaskAssigned = false;
+            lastCheckedPeriodName = currentPeriod;
+        }
+
+        if (currentPeriod == "Утро" && !morningTaskAssigned && securityBarrier.IsActive())
+        {
+            var availableGuard = allGuards.FirstOrDefault(g => g.IsAvailableAndOnDuty());
+            if (availableGuard != null)
+            {
+                Debug.Log($"GuardManager: Назначаю {availableGuard.name} на ДЕАКТИВАЦИЮ барьера.");
+                availableGuard.AssignToOperateBarrier(securityBarrier, false);
+                morningTaskAssigned = true;
+            }
+        }
+
+        if (currentPeriod == "Ночь" && !nightTaskAssigned && !securityBarrier.IsActive())
+        {
+            if (FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length == 0)
+            {
+                var availableGuard = allGuards.FirstOrDefault(g => g.IsAvailableAndOnDuty());
+                if (availableGuard != null)
+                {
+                    Debug.Log($"GuardManager: Клиентов нет. Назначаю {availableGuard.name} на АКТИВАЦИЮ барьера.");
+                    availableGuard.AssignToOperateBarrier(securityBarrier, true);
+                    nightTaskAssigned = true;
+                }
+            }
+        }
+    }
+
     private void ManageChasing()
     {
         if (ClientQueueManager.Instance == null) return;
@@ -69,6 +110,7 @@ public class GuardManager : MonoBehaviour
 
         var availableGuards = allGuards.Where(g => g != null && g.IsAvailableAndOnDuty()).ToList();
         if (availableGuards.Count == 0) return;
+
         foreach (var violator in unassignedViolators)
         {
             if (availableGuards.Any())
@@ -133,6 +175,7 @@ public class GuardManager : MonoBehaviour
         
         var availableGuards = allGuards.Where(g => g != null && g.IsAvailableAndOnDuty()).ToList();
         if (availableGuards.Count == 0) return;
+
         foreach (var clientToEvict in unassignedEvictees)
         {
             if (availableGuards.Any())

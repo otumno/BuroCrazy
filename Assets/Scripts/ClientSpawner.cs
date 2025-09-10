@@ -33,6 +33,8 @@ public class ClientSpawner : MonoBehaviour
     public Transform spawnPoint;
     public int maxClientsOnScene = 100;
     public float initialSpawnDelay = 5f;
+    [Tooltip("Сколько клиентов с документами для директора должно появиться за день")]
+    public int directorClientsPerDay = 1;
 
     [Header("Ссылки на объекты сцены")]
     public GameObject waitingZoneObject;
@@ -45,6 +47,8 @@ public class ClientSpawner : MonoBehaviour
     public LimitedCapacityZone desk2Zone;
     public LimitedCapacityZone cashierZone;
     public LimitedCapacityZone toiletZone;
+    [Tooltip("Перетащите сюда зону 'Приемная Директора'")]
+    public LimitedCapacityZone directorReceptionZone;
     
     [Header("Настройки цикла дня и ночи")]
     public SpawningPeriod[] periods;
@@ -54,7 +58,7 @@ public class ClientSpawner : MonoBehaviour
     public float lightFadeDuration = 0.5f;
     public TextMeshProUGUI timeDisplay;
     public UnityEngine.Rendering.Universal.Light2D globalLight;
-
+    
     [Header("UI Элементы")]
     public GameObject pauseUIPanel;
     public TextMeshProUGUI dayCounterText;
@@ -69,16 +73,15 @@ public class ClientSpawner : MonoBehaviour
     private SpawningPeriod previousPeriod;
     private float periodTimer;
     private Coroutine crowdSpawnCoroutine, lightManagementCoroutine, clerkBreakCoroutine, continuousSpawnCoroutine;
-    
-    // --- ИЗМЕНЕНИЕ 1: День теперь начинается с 0 ---
     private int dayCounter = 0;
-
     public static ClientSpawner Instance { get; private set; }
     private static Dictionary<int, MonoBehaviour> deskOccupants = new Dictionary<int, MonoBehaviour>();
     
     private int evacuationMilestone = 0;
     public DailyMandates currentMandates;
     private float globalSpawnRateMultiplier = 1f;
+    
+    private List<int> directorClientSpawnPeriods = new List<int>();
 
     void Awake()
     {
@@ -94,8 +97,6 @@ public class ClientSpawner : MonoBehaviour
         }
 
         if (pauseUIPanel != null) pauseUIPanel.SetActive(false);
-        
-        // --- ИЗМЕНЕНИЕ 2: Обновляем UI сразу, чтобы показать "День: 0" ---
         UpdateDayCounterUI();
 
         int nightIndex = -1;
@@ -141,7 +142,7 @@ public class ClientSpawner : MonoBehaviour
         if (periodTimer >= periods[currentPeriodIndex].durationInSeconds) { GoToNextPeriod(); }
         CheckCrowdDensity();
     }
-
+    
     public void ApplyOrderEffects(DirectorOrder order)
     {
         globalSpawnRateMultiplier = order.clientSpawnRateMultiplier;
@@ -163,7 +164,13 @@ public class ClientSpawner : MonoBehaviour
     {
         previousPeriod = periods[currentPeriodIndex];
         currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length;
-        if (currentPeriodIndex == 0) { dayCounter++; UpdateDayCounterUI(); ClientQueueManager.Instance.ResetQueueNumber(); }
+        if (currentPeriodIndex == 0) 
+        { 
+            dayCounter++; 
+            UpdateDayCounterUI(); 
+            ClientQueueManager.Instance.ResetQueueNumber();
+            PlanDirectorClientSpawns();
+        }
         StartNewPeriod();
     }
 
@@ -191,6 +198,13 @@ public class ClientSpawner : MonoBehaviour
 
         UpdateAllStaffShifts(periodNameLower);
         HandleSpecialPeriodLogic(periodNameLower, newPeriod.durationInSeconds);
+        
+        if (directorClientSpawnPeriods.Contains(currentPeriodIndex))
+        {
+            StartCoroutine(SpawnDirectorClientRoutine());
+            directorClientSpawnPeriods.Remove(currentPeriodIndex); 
+        }
+
         if (newPeriod.numberOfCrowdsToSpawn > 0 && newPeriod.crowdSpawnCount > 0) { crowdSpawnCoroutine = StartCoroutine(SpawnCrowdsDuringPeriod(newPeriod)); }
         
         bool canSpawnClients = !isNightTime && periodNameLower != "конец дня";
@@ -210,6 +224,51 @@ public class ClientSpawner : MonoBehaviour
 
         lightManagementCoroutine = StartCoroutine(ManageLocalLightsSmoothly(newPeriod));
         if (previousPeriod == null) { globalLight.color = newPeriod.lightingSettings.lightColor; globalLight.intensity = newPeriod.lightingSettings.lightIntensity; }
+    }
+    
+    private void PlanDirectorClientSpawns()
+    {
+        directorClientSpawnPeriods.Clear();
+        
+        List<int> validPeriodIndices = new List<int>();
+        for (int i = 0; i < periods.Length; i++)
+        {
+            string nameLower = periods[i].periodName.ToLower().Trim();
+            if (nameLower != "вечер" && nameLower != "ночь")
+            {
+                validPeriodIndices.Add(i);
+            }
+        }
+
+        if (validPeriodIndices.Count == 0)
+        {
+            Debug.LogWarning("Нет подходящих дневных периодов для спавна клиентов для Директора!");
+            return;
+        }
+
+        for (int i = 0; i < directorClientsPerDay; i++)
+        {
+            int randomPeriodIndex = validPeriodIndices[Random.Range(0, validPeriodIndices.Count)];
+            directorClientSpawnPeriods.Add(randomPeriodIndex);
+        }
+        Debug.Log($"Запланирован спавн {directorClientsPerDay} клиентов для Директора в периодах: {string.Join(", ", directorClientSpawnPeriods)}");
+    }
+
+    private IEnumerator SpawnDirectorClientRoutine()
+    {
+        yield return new WaitForSeconds(Random.Range(5f, periods[currentPeriodIndex].durationInSeconds * 0.8f));
+
+        if (ClientPathfinding.totalClients < maxClientsOnScene)
+        {
+            Debug.Log("Спавним клиента с документами для Директора!");
+            GameObject clientGO = Instantiate(clientPrefab, spawnPoint.position, Quaternion.identity);
+            ClientPathfinding client = clientGO.GetComponent<ClientPathfinding>();
+            if (client != null)
+            {
+                client.mainGoal = ClientGoal.DirectorApproval;
+                client.Initialize(Instance.waitingZoneObject, Instance.exitWaypoint);
+            }
+        }
     }
     
     void ToggleStaffLights(bool enable)
@@ -414,7 +473,6 @@ public class ClientSpawner : MonoBehaviour
 
     public void ResetState()
     {
-        // --- ИЗМЕНЕНИЕ 3: При сбросе для новой игры день также становится 0 ---
         dayCounter = 0;
         UpdateDayCounterUI();
         if (ClientQueueManager.Instance != null)

@@ -1,4 +1,4 @@
-// Файл: LimitedCapacityZone.cs (Финальная исправленная версия)
+// Файл: LimitedCapacityZone.cs
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +8,7 @@ public class LimitedCapacityZone : MonoBehaviour
     [Header("Настройки Вместимости")]
     public int capacity = 1;
     public List<string> tagsToCount;
+    
     [Header("Настройки Вейпоинтов")]
     [Tooltip("Точка, у которой выстраивается очередь. Является точкой входа по умолчанию.")]
     public Waypoint waitingWaypoint;
@@ -16,21 +17,53 @@ public class LimitedCapacityZone : MonoBehaviour
     [Space]
     public List<Waypoint> insideWaypoints;
 
+    // --- НОВОЕ ПОЛЕ ---
+    [Header("Специальные объекты зоны")]
+    [Tooltip("(Опционально) Укажите стопку, куда будут сбрасываться документы в этой зоне.")]
+    public DocumentStack archiveDropOffStack;
+    // ------------------
+
     private List<Waypoint> occupiedWaypoints = new List<Waypoint>();
     private Queue<GameObject> waitingQueue = new Queue<GameObject>();
     private Dictionary<Waypoint, GameObject> occupiedWaypointOwners = new Dictionary<Waypoint, GameObject>();
 
-    public int GetCurrentOccupancy() { return occupiedWaypoints.Count;
+    public int GetCurrentOccupancy() 
+    { 
+        return occupiedWaypoints.Count;
     }
-    public void JoinQueue(GameObject character) { if (!waitingQueue.Contains(character) && !IsInside(character)) waitingQueue.Enqueue(character);
+    
+    public void JoinQueue(GameObject character) 
+    { 
+        if (!waitingQueue.Contains(character) && !IsInside(character)) 
+            waitingQueue.Enqueue(character);
     }
-    public void JumpQueue(GameObject character) { if (!waitingQueue.Contains(character) && !IsInside(character)) { List<GameObject> tempList = waitingQueue.ToList(); tempList.Insert(0, character);
-        waitingQueue = new Queue<GameObject>(tempList); } }
-    public void LeaveQueue(GameObject character) { if (waitingQueue.Contains(character)) { waitingQueue = new Queue<GameObject>(waitingQueue.Where(p => p != character));
-    } }
-    public bool IsFirstInQueue(GameObject character) { return waitingQueue.Count > 0 && waitingQueue.Peek() == character;
+    
+    public void JumpQueue(GameObject character) 
+    { 
+        if (!waitingQueue.Contains(character) && !IsInside(character)) 
+        { 
+            List<GameObject> tempList = waitingQueue.ToList(); 
+            tempList.Insert(0, character);
+            waitingQueue = new Queue<GameObject>(tempList); 
+        } 
     }
-    public bool IsWaypointOccupied(Waypoint wp) { return occupiedWaypoints.Contains(wp);
+    
+    public void LeaveQueue(GameObject character) 
+    { 
+        if (waitingQueue.Contains(character)) 
+        { 
+            waitingQueue = new Queue<GameObject>(waitingQueue.Where(p => p != character));
+        } 
+    }
+    
+    public bool IsFirstInQueue(GameObject character) 
+    { 
+        return waitingQueue.Count > 0 && waitingQueue.Peek() == character;
+    }
+    
+    public bool IsWaypointOccupied(Waypoint wp) 
+    { 
+        return occupiedWaypoints.Contains(wp);
     }
 
     public List<ClientPathfinding> GetOccupyingClients()
@@ -71,7 +104,6 @@ public class LimitedCapacityZone : MonoBehaviour
 
     public void ReleaseWaypoint(Waypoint waypointToRelease)
     {
-        // --- FIX: Added a null check to prevent ArgumentNullException ---
         if (waypointToRelease == null)
         {
             return;
@@ -87,8 +119,11 @@ public class LimitedCapacityZone : MonoBehaviour
         }
     }
 
-    public Waypoint GetRandomInsideWaypoint() { if (insideWaypoints == null || insideWaypoints.Count == 0) return null;
-        return insideWaypoints[Random.Range(0, insideWaypoints.Count)]; }
+    public Waypoint GetRandomInsideWaypoint() 
+    { 
+        if (insideWaypoints == null || insideWaypoints.Count == 0) return null;
+        return insideWaypoints[Random.Range(0, insideWaypoints.Count)]; 
+    }
     
     private bool IsInside(GameObject character) 
     { 

@@ -7,7 +7,7 @@ using System.Linq;
 [RequireComponent(typeof(Rigidbody2D), typeof(AgentMover), typeof(CharacterStateLogger))]
 public class GuardMovement : StaffController
 {
-    public enum GuardState { Patrolling, WaitingAtWaypoint, Chasing, Talking, OnPost, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, ChasingThief, EscortingThief, Evicting, StressedOut, WritingReport }
+    public enum GuardState { Patrolling, WaitingAtWaypoint, Chasing, Talking, OnPost, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, ChasingThief, EscortingThief, Evicting, StressedOut, WritingReport, OperatingBarrier }
     
     [Header("Настройки Охранника")]
     private GuardState currentState = GuardState.OffDuty;
@@ -180,6 +180,7 @@ public class GuardMovement : StaffController
     private IEnumerator StressedOutRoutine()
     {
         SetState(GuardState.StressedOut);
+		currentStress = maxStress * 0.9f;
         var clients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
         ClientPathfinding targetClient = clients
             .Where(c => c != null)
@@ -198,7 +199,16 @@ public class GuardMovement : StaffController
     public float GetStressPercent() => currentStress / maxStress;
     private void LogCurrentState() { logger?.LogState(GetStatusInfo()); }
     public GuardState GetCurrentState() => currentState;
-    public bool IsAvailableAndOnDuty() => isOnDuty && currentState != GuardState.Chasing && currentState != GuardState.Talking && currentState != GuardState.ChasingThief && currentState != GuardState.EscortingThief && currentState != GuardState.Evicting && currentState != GuardState.StressedOut && currentState != GuardState.WritingReport;
+    
+    public bool IsAvailableAndOnDuty() => isOnDuty && 
+        currentState != GuardState.Chasing && 
+        currentState != GuardState.Talking && 
+        currentState != GuardState.ChasingThief && 
+        currentState != GuardState.EscortingThief && 
+        currentState != GuardState.Evicting && 
+        currentState != GuardState.StressedOut && 
+        currentState != GuardState.WritingReport &&
+        currentState != GuardState.OperatingBarrier;
     
     public override void GoOnBreak(float duration)
     {
@@ -207,6 +217,34 @@ public class GuardMovement : StaffController
             if(currentAction != null) StopCoroutine(currentAction);
             currentAction = StartCoroutine(BreakRoutine(duration));
         }
+    }
+
+    public void AssignToOperateBarrier(SecurityBarrier barrier, bool shouldActivate)
+    {
+        if (!IsAvailableAndOnDuty()) return;
+        if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = StartCoroutine(OperateBarrierRoutine(barrier, shouldActivate));
+    }
+
+    private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate)
+    {
+        SetState(GuardState.OperatingBarrier);
+
+        yield return StartCoroutine(MoveToTarget(barrier.guardInteractionPoint.position, GuardState.OperatingBarrier));
+        
+        Debug.Log($"{name} {(activate ? "активирует" : "деактивирует")} барьер...");
+        yield return new WaitForSeconds(2.5f);
+
+        if (activate)
+        {
+            barrier.ActivateBarrier();
+        }
+        else
+        {
+            barrier.DeactivateBarrier();
+        }
+
+        GoBackToDuties();
     }
 
     public void ReturnToPatrol()
@@ -532,7 +570,7 @@ public class GuardMovement : StaffController
     
     private void GoBackToDuties()
     {
-        if(currentState == GuardState.Chasing || currentState == GuardState.ChasingThief || currentState == GuardState.Evicting || currentState == GuardState.StressedOut)
+        if(currentState == GuardState.Chasing || currentState == GuardState.ChasingThief || currentState == GuardState.Evicting || currentState == GuardState.StressedOut || currentState == GuardState.OperatingBarrier)
         {
             agentMover.moveSpeed /= chaseSpeedMultiplier;
         }
@@ -634,6 +672,7 @@ public class GuardMovement : StaffController
             case GuardState.ChasingThief: return $"Ловит воришку: {currentChaseTarget?.name}";
             case GuardState.EscortingThief: return $"Ведет в кассу: {currentChaseTarget?.name}";
             case GuardState.Evicting: return $"Выпроваживает: {currentChaseTarget?.name}";
+            case GuardState.OperatingBarrier: return "Управляет барьером";
             default: return currentState.ToString();
         }
     }
