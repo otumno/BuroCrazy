@@ -701,7 +701,8 @@ MonoBehaviour:
   chanceToGoToToilet: 0.01
   timeInToilet: 5
   chaseSpeedMultiplier: 2
-  chaseShoutClip: {fileID: 0}
+  directChaseDistance: 7
+  chaseShoutClip: {fileID: 8300000, guid: 8cd1dfc95f4c3e542b9b93128e4c7682, type: 3}
   catchDistance: 1
   talkTime: 3
   reprimandSound: {fileID: 8300000, guid: 22f8a3d39e8b7f8419e8ca5b9cf1dafa, type: 3}

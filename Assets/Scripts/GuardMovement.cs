@@ -1,4 +1,4 @@
-// Файл: GuardMovement.cs
+// Файл: GuardMovement.cs - ВЕРСИЯ С НОВОЙ ГИБРИДНОЙ ЛОГИКОЙ ПОГОНИ
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -25,7 +25,7 @@ public class GuardMovement : StaffController
     public float flashlightOffsetDistance = 0.5f;
     [Tooltip("Насколько плавно фонарик меняет свое положение")]
     public float flashlightSmoothingSpeed = 5f;
-
+    
     [Header("Настройки патрулирования")]
     public List<Waypoint> patrolRoute;
     [SerializeField] private float minWaitTime = 1f;
@@ -38,6 +38,8 @@ public class GuardMovement : StaffController
     [Header("Настройки преследования")]
     [Tooltip("Множитель скорости во время погони. 1.5 = на 50% быстрее.")]
     public float chaseSpeedMultiplier = 1.5f;
+    [Tooltip("С какого расстояния охранник переключится на прямое преследование, если видит цель")]
+    public float directChaseDistance = 7f; 
     public AudioClip chaseShoutClip;
     [Tooltip("С какого расстояния охранник может начать разговор с нарушителем")]
     public float catchDistance = 1.2f;
@@ -63,8 +65,6 @@ public class GuardMovement : StaffController
     private Coroutine shoutCoroutine;
     private Waypoint currentPatrolTarget;
     private ClientPathfinding currentChaseTarget;
-    private int guardLayer, clientLayer;
-    private List<Waypoint> nightPatrolRoute;
     private Waypoint[] allWaypoints;
     private Rigidbody2D rb;
     
@@ -84,13 +84,8 @@ public class GuardMovement : StaffController
     {
         base.Start();
         visuals?.Setup(gender);
-        guardLayer = LayerMask.NameToLayer("Guard");
-        clientLayer = LayerMask.NameToLayer("Client");
-        nightPatrolRoute = NightPatrolRoute.GetNightRoute();
-        
         currentState = GuardState.OffDuty;
         LogCurrentState();
-        
         if (skills != null)
         {
             skills.paperworkMastery = 0.25f;
@@ -115,7 +110,6 @@ public class GuardMovement : StaffController
 
         Vector2 velocity = rb.linearVelocity;
         Vector3 targetPosition = Vector3.zero;
-
         if (velocity.magnitude > 0.1f)
         {
             targetPosition = (Vector3)velocity.normalized * flashlightOffsetDistance;
@@ -180,12 +174,13 @@ public class GuardMovement : StaffController
     private IEnumerator StressedOutRoutine()
     {
         SetState(GuardState.StressedOut);
-		currentStress = maxStress * 0.9f;
+        currentStress = maxStress * 0.9f;
         var clients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
         ClientPathfinding targetClient = clients
             .Where(c => c != null)
             .OrderBy(c => Vector2.Distance(transform.position, c.transform.position))
             .FirstOrDefault();
+            
         if (targetClient != null)
         {
             Debug.Log($"Охранник {name} сорвался и выпроваживает клиента {targetClient.name}");
@@ -209,7 +204,7 @@ public class GuardMovement : StaffController
         currentState != GuardState.StressedOut && 
         currentState != GuardState.WritingReport &&
         currentState != GuardState.OperatingBarrier;
-    
+        
     public override void GoOnBreak(float duration)
     {
         if(isOnDuty && currentState != GuardState.GoingToBreak && currentState != GuardState.OnBreak)
@@ -229,12 +224,10 @@ public class GuardMovement : StaffController
     private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate)
     {
         SetState(GuardState.OperatingBarrier);
-
         yield return StartCoroutine(MoveToTarget(barrier.guardInteractionPoint.position, GuardState.OperatingBarrier));
         
         Debug.Log($"{name} {(activate ? "активирует" : "деактивирует")} барьер...");
         yield return new WaitForSeconds(2.5f);
-
         if (activate)
         {
             barrier.ActivateBarrier();
@@ -254,12 +247,6 @@ public class GuardMovement : StaffController
             if(currentAction != null) StopCoroutine(currentAction);
             currentAction = StartCoroutine(ReturnToPatrolRoutine());
         }
-    }
-    
-    public void GoToPost(Transform post)
-    {
-        if(currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(GoToPostRoutine(post));
     }
     
     public void AssignToChase(ClientPathfinding target)
@@ -327,11 +314,6 @@ public class GuardMovement : StaffController
         currentAction = StartCoroutine(ReturnToPatrolRoutine());
     }
     
-    private IEnumerator GoToPostRoutine(Transform post)
-    {
-        yield return StartCoroutine(MoveToTarget(post.position, GuardState.OnPost));
-    }
-    
     private IEnumerator PatrolRoutine(List<Waypoint> route)
     {
         SetState(GuardState.Patrolling);
@@ -367,46 +349,37 @@ public class GuardMovement : StaffController
         yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet));
         SetState(GuardState.AtToilet);
     }
-    
+
     private IEnumerator ChaseRoutine(ClientPathfinding target)
     {
         currentChaseTarget = target;
         SetState(GuardState.Chasing);
-        agentMover.moveSpeed *= chaseSpeedMultiplier;
+        agentMover.ApplySpeedMultiplier(chaseSpeedMultiplier);
         StartShouting();
-        Physics2D.IgnoreLayerCollision(guardLayer, clientLayer, true);
 
-        bool isCurrentlyDirectChasing = false;
         while (currentChaseTarget != null && Vector2.Distance(transform.position, currentChaseTarget.transform.position) > catchDistance)
         {
             RaycastHit2D hit = Physics2D.Linecast(transform.position, currentChaseTarget.transform.position, obstacleLayerMask);
-            bool hasLineOfSight = (hit.collider == null);
+            bool hasLineOfSight = hit.collider == null;
+            float distanceToTarget = Vector2.Distance(transform.position, currentChaseTarget.transform.position);
 
-            if (hasLineOfSight)
+            if (hasLineOfSight && distanceToTarget < directChaseDistance)
             {
-                if (!isCurrentlyDirectChasing)
-                {
-                    isCurrentlyDirectChasing = true;
-                    agentMover.StartDirectChase(currentChaseTarget.transform.position);
-                }
-                agentMover.UpdateDirectChase(currentChaseTarget.transform.position);
+                agentMover.StartDirectChase(currentChaseTarget.transform.position);
             }
             else
             {
-                if (isCurrentlyDirectChasing)
-                {
-                    isCurrentlyDirectChasing = false;
-                    agentMover.StopDirectChase();
-                }
                 agentMover.SetPath(BuildPathTo(currentChaseTarget.transform.position));
             }
             
-            yield return null;
+            yield return new WaitForSeconds(0.2f);
         }
         
         agentMover.StopDirectChase();
+
         if (currentChaseTarget != null)
         {
+            agentMover.Stop();
             yield return StartCoroutine(TalkToClient());
         }
         else
@@ -438,8 +411,7 @@ public class GuardMovement : StaffController
         {
             clientToCalm.UnfreezeAndRestartAI();
             if (Random.value < 0.5f) { clientToCalm.CalmDownAndReturnToQueue(); }
-            else { clientToCalm.CalmDownAndLeave();
-            }
+            else { clientToCalm.CalmDownAndLeave(); }
         }
         
         currentStress += stressGainPerViolator;
@@ -448,80 +420,20 @@ public class GuardMovement : StaffController
     
     private IEnumerator CatchThiefRoutine(ClientPathfinding target)
     {
-        currentChaseTarget = target;
         SetState(GuardState.ChasingThief);
-        agentMover.moveSpeed *= chaseSpeedMultiplier;
-        StartShouting();
-        Physics2D.IgnoreLayerCollision(guardLayer, clientLayer, true);
-        
-        bool isCurrentlyDirectChasing = false;
-        while(currentChaseTarget != null && Vector2.Distance(transform.position, currentChaseTarget.transform.position) > catchDistance)
-        {
-            RaycastHit2D hit = Physics2D.Linecast(transform.position, currentChaseTarget.transform.position, obstacleLayerMask);
-            bool hasLineOfSight = (hit.collider == null);
+        yield return StartCoroutine(ChaseRoutine(target));
 
-            if (hasLineOfSight)
-            {
-                if (!isCurrentlyDirectChasing)
-                {
-                    isCurrentlyDirectChasing = true;
-                    agentMover.StartDirectChase(currentChaseTarget.transform.position);
-                }
-                agentMover.UpdateDirectChase(currentChaseTarget.transform.position);
-            }
-            else
-            {
-                if (isCurrentlyDirectChasing)
-                {
-                    isCurrentlyDirectChasing = false;
-                    agentMover.StopDirectChase();
-                }
-                agentMover.SetPath(BuildPathTo(currentChaseTarget.transform.position));
-            }
-            yield return null;
+        if (currentChaseTarget != null) 
+        { 
+            yield return StartCoroutine(EscortThiefToCashier());
         }
-
-        agentMover.StopDirectChase();
-        
-        if (currentChaseTarget != null) { yield return StartCoroutine(EscortThiefToCashier()); }
-        else { GoBackToDuties(); }
     }
-
+    
     private IEnumerator EvictRoutine(ClientPathfinding target, bool isStressedOut = false)
     {
-        currentChaseTarget = target;
         SetState(GuardState.Evicting);
-        agentMover.moveSpeed *= chaseSpeedMultiplier;
-        
-        bool isCurrentlyDirectChasing = false;
-        
-        while(currentChaseTarget != null && Vector2.Distance(transform.position, currentChaseTarget.transform.position) > catchDistance)
-        {
-            RaycastHit2D hit = Physics2D.Linecast(transform.position, currentChaseTarget.transform.position, obstacleLayerMask);
-            bool hasLineOfSight = (hit.collider == null);
+        yield return StartCoroutine(ChaseRoutine(target));
 
-            if (hasLineOfSight)
-            {
-                if (!isCurrentlyDirectChasing)
-                {
-                    isCurrentlyDirectChasing = true;
-                    agentMover.StartDirectChase(currentChaseTarget.transform.position);
-                }
-                agentMover.UpdateDirectChase(currentChaseTarget.transform.position);
-            }
-            else
-            {
-                if (isCurrentlyDirectChasing)
-                {
-                    isCurrentlyDirectChasing = false;
-                    agentMover.StopDirectChase();
-                }
-                agentMover.SetPath(BuildPathTo(currentChaseTarget.transform.position));
-            }
-            yield return null;
-        }
-        
-        agentMover.StopDirectChase();
         if (currentChaseTarget != null)
         {
             SetState(GuardState.Talking);
@@ -531,7 +443,7 @@ public class GuardMovement : StaffController
             yield return new WaitForSeconds(talkTime);
             if (currentChaseTarget != null)
             {
-                currentChaseTarget.stateMachine.GetHelpFromIntern(ClientSpawner.Instance.exitWaypoint);
+                currentChaseTarget.ForceLeave(ClientPathfinding.LeaveReason.Angry);
             }
         }
 
@@ -570,10 +482,7 @@ public class GuardMovement : StaffController
     
     private void GoBackToDuties()
     {
-        if(currentState == GuardState.Chasing || currentState == GuardState.ChasingThief || currentState == GuardState.Evicting || currentState == GuardState.StressedOut || currentState == GuardState.OperatingBarrier)
-        {
-            agentMover.moveSpeed /= chaseSpeedMultiplier;
-        }
+        agentMover.ApplySpeedMultiplier(1f); 
         
         ClientPathfinding finishedTarget = currentChaseTarget;
         if (GuardManager.Instance != null)
@@ -581,7 +490,6 @@ public class GuardMovement : StaffController
             GuardManager.Instance.ReportTaskFinished(currentChaseTarget);
         }
         
-        Physics2D.IgnoreLayerCollision(guardLayer, clientLayer, false);
         StopShouting();
         currentChaseTarget = null;
         currentAction = null;
@@ -652,7 +560,8 @@ public class GuardMovement : StaffController
     {
         while (true)
         {
-            audioSource.PlayOneShot(chaseShoutClip);
+            if(audioSource.isActiveAndEnabled)
+                audioSource.PlayOneShot(chaseShoutClip);
             yield return new WaitForSeconds(Random.Range(3f, 5f));
         }
     }
@@ -680,29 +589,37 @@ public class GuardMovement : StaffController
     protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
         var path = new Queue<Waypoint>();
+        if (allWaypoints == null || allWaypoints.Length == 0) return path;
+
         Waypoint startNode = FindNearestVisibleWaypoint(transform.position);
         Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
-        if (startNode == null || endNode == null)
-        {
-            startNode = FindNearestWaypoint(transform.position);
-            endNode = FindNearestWaypoint(targetPos);
-        }
+        if (startNode == null) startNode = FindNearestWaypoint(transform.position);
+        if (endNode == null) endNode = FindNearestWaypoint(targetPos);
+        
         if (startNode == null || endNode == null) return path;
+        
         Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
         Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
-        PriorityQueue<Waypoint, float> queue = new PriorityQueue<Waypoint, float>();
+        var queue = new PriorityQueue<Waypoint>();
+        
         foreach (var wp in allWaypoints)
         {
-            distances[wp] = float.MaxValue;
-            previous[wp] = null;
+            if(wp != null)
+            {
+                distances[wp] = float.MaxValue;
+                previous[wp] = null;
+            }
         }
+        
         distances[startNode] = 0;
         queue.Enqueue(startNode, 0);
+        
         while(queue.Count > 0)
         {
             Waypoint current = queue.Dequeue();
-            if (current == endNode) { ReconstructPath(previous, endNode, path); return path;
-            }
+            if (current == endNode) { ReconstructPath(previous, endNode, path); return path; }
+            
+            if(current.neighbors == null) continue;
             foreach(var neighbor in current.neighbors)
             {
                 if(neighbor == null) continue;
@@ -722,12 +639,10 @@ public class GuardMovement : StaffController
     private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
     {
         List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at);
-        }
+        for (Waypoint at = goal; at != null; at = previous.ContainsKey(at) ? previous[at] : null) { pathList.Add(at); }
         pathList.Reverse();
         path.Clear();
-        foreach (var wp in pathList) { path.Enqueue(wp);
-        }
+        foreach (var wp in pathList) { path.Enqueue(wp); }
     }
     
     private Waypoint FindNearestVisibleWaypoint(Vector2 position)
@@ -755,24 +670,24 @@ public class GuardMovement : StaffController
     private Waypoint FindNearestWaypoint(Vector2 position)
     {
         if (allWaypoints == null) return null;
-        return allWaypoints.OrderBy(wp => Vector2.Distance(position, wp.transform.position)).FirstOrDefault();
+        return allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(position, wp.transform.position)).FirstOrDefault();
     }
     
-    private class PriorityQueue<T, U> where U : System.IComparable<U>
+    private class PriorityQueue<T>
     {
-        private SortedDictionary<U, Queue<T>> d = new SortedDictionary<U, Queue<T>>();
-        public int Count => d.Sum(p => p.Value.Count);
-        public void Enqueue(T i, U p)
-        {
-            if (!d.ContainsKey(p)) d[p] = new Queue<T>();
-            d[p].Enqueue(i);
-        }
+        private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
+        public int Count => elements.Count;
+        public void Enqueue(T item, float priority) { elements.Add(new KeyValuePair<T, float>(item, priority)); }
         public T Dequeue()
         {
-            var p = d.First();
-            T i = p.Value.Dequeue();
-            if (p.Value.Count == 0) d.Remove(p.Key);
-            return i;
+            int bestIndex = 0;
+            for (int i = 0; i < elements.Count; i++)
+            {
+                if (elements[i].Value < elements[bestIndex].Value) { bestIndex = i; }
+            }
+            T bestItem = elements[bestIndex].Key;
+            elements.RemoveAt(bestIndex);
+            return bestItem;
         }
     }
 

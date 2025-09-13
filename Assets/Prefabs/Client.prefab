@@ -892,9 +892,14 @@ MonoBehaviour:
   helpedByInternSound: {fileID: 8300000, guid: 9861d14bca3c11745ae3373651364473, type: 3}
   paymentSound: {fileID: 8300000, guid: 2ae0d81ea878af74cbab93f5216b85b5, type: 3}
   stampSound: {fileID: 8300000, guid: 376290e6043fac04886976dc238e3bff, type: 3}
-  impoliteSound: {fileID: 8300000, guid: 69910c191e71f3b48aed14dc56149ebd, type: 3}
+  impoliteSound: {fileID: 8300000, guid: 7b308f16c6523a34fbc48a5afa443131, type: 3}
   theftAttemptSound: {fileID: 8300000, guid: 7aaca9aebcfd4ab44ae00a69b31d1d3a, type: 3}
   documentQuality: 0
+  directorDocumentFee: 0
+  directorDocumentBribe: 0
+  hasBeenSentForRevision: 0
+  directorDocumentLayout:
+    gridState: 
 --- !u!114 &2801172396659410360
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -282,7 +282,7 @@ GameObject:
   - component: {fileID: 4904683047623850215}
   - component: {fileID: 4211910687900602752}
   - component: {fileID: -5925413273702332012}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Service
   m_TagString: Service
   m_Icon: {fileID: 0}
@@ -856,7 +856,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8964890097708150952}
   - component: {fileID: 4179168228397412881}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Broom
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -89,6 +89,9 @@ public class StateEmotionMapEditor : Editor
             case CharacterType.ServiceWorker:
                 enumType = typeof(ServiceWorkerController.WorkerState);
                 break;
+			case CharacterType.Director:
+            enumType = typeof(DirectorAvatarController.DirectorState); 
+            break;
         }
         
         if (enumType != null)

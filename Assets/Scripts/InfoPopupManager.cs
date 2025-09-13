@@ -95,5 +95,12 @@ public class InfoPopupManager : MonoBehaviour
         }
     }
 
-    public void HideInfo() { if (popupPanel != null) { popupPanel.SetActive(false); targetToFollow = null; } }
+    public void HideInfo() 
+{ 
+    if (popupPanel != null) 
+    { 
+        popupPanel.SetActive(false); 
+        targetToFollow = null; // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
+    } 
+}
 }

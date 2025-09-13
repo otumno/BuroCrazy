@@ -5,5 +5,6 @@ public enum CharacterType
     Clerk,
     Guard,
     Intern,
-    ServiceWorker
+    ServiceWorker,
+	Director
 }

@@ -35,12 +35,12 @@ public class ClientSpawner : MonoBehaviour
     public float initialSpawnDelay = 5f;
     [Tooltip("Сколько клиентов с документами для директора должно появиться за день")]
     public int directorClientsPerDay = 1;
-
+    
     [Header("Ссылки на объекты сцены")]
     public GameObject waitingZoneObject;
     public Waypoint exitWaypoint;
     public FormTable formTable;
-
+    
     [Header("ЗОНЫ ОБСЛУЖИВАНИЯ")]
     public LimitedCapacityZone registrationZone;
     public LimitedCapacityZone desk1Zone;
@@ -77,12 +77,11 @@ public class ClientSpawner : MonoBehaviour
     public static ClientSpawner Instance { get; private set; }
     private static Dictionary<int, MonoBehaviour> deskOccupants = new Dictionary<int, MonoBehaviour>();
     
-    private int evacuationMilestone = 0;
     public DailyMandates currentMandates;
     private float globalSpawnRateMultiplier = 1f;
     
     private List<int> directorClientSpawnPeriods = new List<int>();
-
+    
     void Awake()
     {
         Instance = this;
@@ -116,6 +115,23 @@ public class ClientSpawner : MonoBehaviour
             periodTimer = Mathf.Max(0, nightPeriod.durationInSeconds - 10f);
             int prevIndex = (nightIndex == 0) ? periods.Length - 1 : nightIndex - 1;
             previousPeriod = periods[prevIndex];
+            
+            if (globalLight != null)
+            {
+                globalLight.color = nightPeriod.lightingSettings.lightColor;
+                globalLight.intensity = nightPeriod.lightingSettings.lightIntensity;
+            }
+            foreach (var lightObj in allControllableLights)
+            {
+                if (lightObj != null)
+                {
+                    bool shouldBeOn = nightPeriod.lightsToEnable.Contains(lightObj);
+                    lightObj.SetActive(shouldBeOn);
+                    var lightSource = lightObj.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
+                    if(lightSource != null) lightSource.intensity = shouldBeOn ? 1f : 0f;
+                }
+            }
+            
             StartNewPeriod(false);
         }
         else
@@ -128,18 +144,35 @@ public class ClientSpawner : MonoBehaviour
     
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space)) { bool isPaused = Time.timeScale == 0f; Time.timeScale = isPaused ? 1f : 0f; if (pauseUIPanel != null) pauseUIPanel.SetActive(!isPaused); }
+        if (Input.GetKeyDown(KeyCode.Space)) 
+        { 
+            bool isPaused = Time.timeScale == 0f;
+            Time.timeScale = isPaused ? 1f : 0f; 
+            if (pauseUIPanel != null) pauseUIPanel.SetActive(!isPaused);
+        }
         if (Time.timeScale == 0f) return;
         
         periodTimer += Time.deltaTime;
         UpdateUITimer();
         UpdateLighting();
-        if (CurrentPeriodName != null && CurrentPeriodName.ToLower().Trim() == "вечер")
+        
+        string periodNameLower = CurrentPeriodName?.ToLower().Trim();
+        if (periodNameLower == "вечер" && MenuManager.Instance != null && !MenuManager.Instance.isTransitioning)
         {
-            ManageEveningEvacuation();
+            if (periods.Length > currentPeriodIndex && periods[currentPeriodIndex] != null)
+            {
+                float timeLeft = periods[currentPeriodIndex].durationInSeconds - periodTimer;
+                if (timeLeft <= 10f)
+                {
+                    MenuManager.Instance.TriggerNextDayTransition();
+                }
+            }
         }
         
-        if (periodTimer >= periods[currentPeriodIndex].durationInSeconds) { GoToNextPeriod(); }
+        if (periods.Length > currentPeriodIndex && periods[currentPeriodIndex] != null && periodTimer >= periods[currentPeriodIndex].durationInSeconds) 
+        { 
+            GoToNextPeriod();
+        }
         CheckCrowdDensity();
     }
     
@@ -148,25 +181,18 @@ public class ClientSpawner : MonoBehaviour
         globalSpawnRateMultiplier = order.clientSpawnRateMultiplier;
     }
     
-    public void HandleEndOfDay()
-    {
-        if (previousPeriod != null && previousPeriod.periodName.ToLower().Trim() == "вечер")
-        {
-            if (GuardManager.Instance != null)
-            {
-                GuardManager.Instance.EvictRemainingClients();
-            }
-        }
-        GoToNextPeriod();
-    }
-
     public void GoToNextPeriod()
     {
-        previousPeriod = periods[currentPeriodIndex];
-        currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length;
+		MusicPlayer.Instance?.OnPeriodChanged();
+        if (periods.Length > 0)
+        {
+            previousPeriod = periods[currentPeriodIndex];
+            currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length;
+        }
+        
         if (currentPeriodIndex == 0) 
         { 
-            dayCounter++; 
+            dayCounter++;
             UpdateDayCounterUI(); 
             ClientQueueManager.Instance.ResetQueueNumber();
             PlanDirectorClientSpawns();
@@ -174,7 +200,13 @@ public class ClientSpawner : MonoBehaviour
         StartNewPeriod();
     }
 
-    void UpdateDayCounterUI() { if (dayCounterText != null) { dayCounterText.text = $"День: {dayCounter}"; } }
+    void UpdateDayCounterUI() 
+    { 
+        if (dayCounterText != null) 
+        { 
+            dayCounterText.text = $"День: {dayCounter}";
+        } 
+    }
 
     void StartNewPeriod(bool resetTimer = true)
     {
@@ -183,9 +215,10 @@ public class ClientSpawner : MonoBehaviour
             periodTimer = 0;
         }
         
-        evacuationMilestone = 0;
         SpawningPeriod newPeriod = periods[currentPeriodIndex];
         CurrentPeriodName = newPeriod.periodName;
+		
+		MusicPlayer.Instance?.OnPeriodChanged();
 
         if (continuousSpawnCoroutine != null) StopCoroutine(continuousSpawnCoroutine);
         if (crowdSpawnCoroutine != null) StopCoroutine(crowdSpawnCoroutine);
@@ -205,7 +238,10 @@ public class ClientSpawner : MonoBehaviour
             directorClientSpawnPeriods.Remove(currentPeriodIndex); 
         }
 
-        if (newPeriod.numberOfCrowdsToSpawn > 0 && newPeriod.crowdSpawnCount > 0) { crowdSpawnCoroutine = StartCoroutine(SpawnCrowdsDuringPeriod(newPeriod)); }
+        if (newPeriod.numberOfCrowdsToSpawn > 0 && newPeriod.crowdSpawnCount > 0) 
+        { 
+            crowdSpawnCoroutine = StartCoroutine(SpawnCrowdsDuringPeriod(newPeriod));
+        }
         
         bool canSpawnClients = !isNightTime && periodNameLower != "конец дня";
         if (newPeriod.spawnRate > 0 && canSpawnClients)
@@ -222,14 +258,19 @@ public class ClientSpawner : MonoBehaviour
             EvacuateAllClients(true);
         }
 
+        if (lightManagementCoroutine != null) StopCoroutine(lightManagementCoroutine);
         lightManagementCoroutine = StartCoroutine(ManageLocalLightsSmoothly(newPeriod));
-        if (previousPeriod == null) { globalLight.color = newPeriod.lightingSettings.lightColor; globalLight.intensity = newPeriod.lightingSettings.lightIntensity; }
+        
+        if (previousPeriod == null) 
+        { 
+            globalLight.color = newPeriod.lightingSettings.lightColor;
+            globalLight.intensity = newPeriod.lightingSettings.lightIntensity; 
+        }
     }
     
     private void PlanDirectorClientSpawns()
     {
         directorClientSpawnPeriods.Clear();
-        
         List<int> validPeriodIndices = new List<int>();
         for (int i = 0; i < periods.Length; i++)
         {
@@ -257,8 +298,7 @@ public class ClientSpawner : MonoBehaviour
     private IEnumerator SpawnDirectorClientRoutine()
     {
         yield return new WaitForSeconds(Random.Range(5f, periods[currentPeriodIndex].durationInSeconds * 0.8f));
-
-        if (ClientPathfinding.totalClients < maxClientsOnScene)
+        if (FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length < maxClientsOnScene)
         {
             Debug.Log("Спавним клиента с документами для Директора!");
             GameObject clientGO = Instantiate(clientPrefab, spawnPoint.position, Quaternion.identity);
@@ -348,35 +388,6 @@ public class ClientSpawner : MonoBehaviour
             }
         }
     }
-
-    void ManageEveningEvacuation()
-    {
-        SpawningPeriod currentPeriod = periods[currentPeriodIndex];
-        float progress = periodTimer / currentPeriod.durationInSeconds;
-        int currentMilestone = Mathf.FloorToInt(progress * 10);
-        if (currentMilestone > evacuationMilestone)
-        {
-            evacuationMilestone = currentMilestone;
-            var allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Where(c => c != null && c.stateMachine.GetCurrentState() != ClientState.Leaving && c.stateMachine.GetCurrentState() != ClientState.LeavingUpset).ToList();
-            if (allClients.Count == 0) return;
-            if (currentMilestone >= 9)
-            {
-                EvacuateAllClients();
-            }
-            else
-            {
-                int clientsToEvacuateCount = Mathf.CeilToInt(allClients.Count * 0.1f);
-                var shuffledClients = allClients.OrderBy(c => Random.value).ToList();
-                for (int i = 0; i < clientsToEvacuateCount; i++)
-                {
-                    if (i < shuffledClients.Count)
-                    {
-                       shuffledClients[i].ForceLeave(ClientPathfinding.LeaveReason.CalmedDown);
-                    }
-                }
-            }
-        }
-    }
     
     void EvacuateAllClients(bool force = false)
     {
@@ -405,7 +416,7 @@ public class ClientSpawner : MonoBehaviour
     {
         for (int i = 0; i < count; i++)
         {
-            if (ClientPathfinding.totalClients < maxClientsOnScene)
+            if (FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length < maxClientsOnScene)
             {
                 GameObject clientGO = Instantiate(clientPrefab, spawnPoint.position, Quaternion.identity);
                 ClientPathfinding client = clientGO.GetComponent<ClientPathfinding>();
@@ -424,22 +435,107 @@ public class ClientSpawner : MonoBehaviour
         while(true)
         {
             SpawnClientBatch(period.spawnBatchSize);
-            float finalSpawnRate = period.spawnRate / globalSpawnRateMultiplier;
-            yield return new WaitForSeconds(finalSpawnRate);
+            float finalSpawnRate = period.spawnRate > 0 ? period.spawnRate / globalSpawnRateMultiplier : float.MaxValue;
+            if (finalSpawnRate > 0)
+                yield return new WaitForSeconds(finalSpawnRate);
+            else
+                yield return null; // Avoid infinite loop if spawn rate is 0 or less
         }
     }
     
-    IEnumerator SpawnCrowdsDuringPeriod(SpawningPeriod period) { float timeSlice = period.durationInSeconds / (period.numberOfCrowdsToSpawn + 1); for (int i = 1; i <= period.numberOfCrowdsToSpawn; i++) { yield return new WaitForSeconds(timeSlice); SpawnClientBatch(period.crowdSpawnCount); } }
+    IEnumerator SpawnCrowdsDuringPeriod(SpawningPeriod period) 
+    { 
+        float timeSlice = period.durationInSeconds / (period.numberOfCrowdsToSpawn + 1);
+        for (int i = 1; i <= period.numberOfCrowdsToSpawn; i++) 
+        { 
+            yield return new WaitForSeconds(timeSlice);
+            SpawnClientBatch(period.crowdSpawnCount);
+        } 
+    }
     
-    void UpdateUITimer() { if (timeDisplay != null) { SpawningPeriod currentPeriod = periods[currentPeriodIndex]; float timeLeft = currentPeriod.durationInSeconds - periodTimer; string formattedTime = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(timeLeft / 60), Mathf.FloorToInt(timeLeft % 60)); timeDisplay.text = $"Период: {currentPeriod.periodName}\nОсталось: {formattedTime}"; } }
+    void UpdateUITimer() 
+    { 
+        if (timeDisplay != null) 
+        { 
+            SpawningPeriod currentPeriod = periods[currentPeriodIndex];
+            float timeLeft = currentPeriod.durationInSeconds - periodTimer; 
+            string formattedTime = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(timeLeft / 60), Mathf.FloorToInt(timeLeft % 60));
+            timeDisplay.text = $"Период: {currentPeriod.periodName}\nОсталось: {formattedTime}"; 
+        } 
+    }
     
-    void CheckCrowdDensity() { if (crowdAudioSource == null || waitingZoneObject == null) return; Collider2D[] clients = Physics2D.OverlapCircleAll(waitingZoneObject.transform.position, 2f, LayerMask.GetMask("Client")); int clientCount = clients.Length; if (clientCount >= minClientsForCrowdSound) { if (!crowdAudioSource.isPlaying) crowdAudioSource.Play(); float volume = Mathf.InverseLerp(minClientsForCrowdSound, maxClientsForFullVolume, clientCount); crowdAudioSource.volume = Mathf.Clamp01(volume); } else { if (crowdAudioSource.isPlaying) crowdAudioSource.Stop(); } }
+    void CheckCrowdDensity() 
+    { 
+        if (crowdAudioSource == null || waitingZoneObject == null) return;
+        int clientCount = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length; 
+        if (clientCount >= minClientsForCrowdSound) 
+        { 
+            if (!crowdAudioSource.isPlaying) crowdAudioSource.Play();
+            float volume = Mathf.InverseLerp(minClientsForCrowdSound, maxClientsForFullVolume, clientCount); 
+            crowdAudioSource.volume = Mathf.Clamp01(volume); 
+        } 
+        else 
+        { 
+            if (crowdAudioSource.isPlaying) crowdAudioSource.Stop();
+        } 
+    }
     
-    void UpdateLighting() { if (globalLight == null || previousPeriod == null) return; SpawningPeriod currentPeriod = periods[currentPeriodIndex]; float progress = Mathf.Clamp01(periodTimer / currentPeriod.durationInSeconds); globalLight.color = Color.Lerp(previousPeriod.lightingSettings.lightColor, currentPeriod.lightingSettings.lightColor, progress); globalLight.intensity = Mathf.Lerp(previousPeriod.lightingSettings.lightIntensity, currentPeriod.lightingSettings.lightIntensity, progress); }
+    void UpdateLighting() 
+    { 
+        if (globalLight == null || previousPeriod == null) return;
+        SpawningPeriod currentPeriod = periods[currentPeriodIndex]; 
+        if(currentPeriod.durationInSeconds > 0)
+        {
+            float progress = Mathf.Clamp01(periodTimer / currentPeriod.durationInSeconds);
+            globalLight.color = Color.Lerp(previousPeriod.lightingSettings.lightColor, currentPeriod.lightingSettings.lightColor, progress); 
+            globalLight.intensity = Mathf.Lerp(previousPeriod.lightingSettings.lightIntensity, currentPeriod.lightingSettings.lightIntensity, progress);
+        }
+    }
     
-    IEnumerator ManageLocalLightsSmoothly(SpawningPeriod period) { var lightsToTurnOn = period.lightsToEnable.Where(l => l != null && !l.activeSelf).ToList(); var lightsToTurnOff = allControllableLights.Except(period.lightsToEnable).Where(l => l != null && l.activeSelf).ToList(); lightsToTurnOn = lightsToTurnOn.OrderBy(l => Random.value).ToList(); lightsToTurnOff = lightsToTurnOff.OrderBy(l => Random.value).ToList(); foreach (var lightObject in lightsToTurnOff) { StartCoroutine(FadeLight(lightObject, false)); yield return new WaitForSeconds(Random.Range(0.05f, 0.2f)); } foreach (var lightObject in lightsToTurnOn) { StartCoroutine(FadeLight(lightObject, true)); yield return new WaitForSeconds(Random.Range(0.05f, 0.2f)); } }
+    IEnumerator ManageLocalLightsSmoothly(SpawningPeriod period) 
+    { 
+        var lightsToTurnOn = period.lightsToEnable.Where(l => l != null && !l.activeSelf).ToList();
+        var lightsToTurnOff = allControllableLights.Except(period.lightsToEnable).Where(l => l != null && l.activeSelf).ToList(); 
+        lightsToTurnOn = lightsToTurnOn.OrderBy(l => Random.value).ToList(); 
+        lightsToTurnOff = lightsToTurnOff.OrderBy(l => Random.value).ToList();
+        
+        foreach (var lightObject in lightsToTurnOff) 
+        { 
+            if(lightObject != null) StartCoroutine(FadeLight(lightObject, false));
+            yield return new WaitForSeconds(Random.Range(0.05f, 0.2f));
+        } 
+        foreach (var lightObject in lightsToTurnOn) 
+        { 
+            if(lightObject != null) StartCoroutine(FadeLight(lightObject, true));
+            yield return new WaitForSeconds(Random.Range(0.05f, 0.2f));
+        } 
+    }
     
-    IEnumerator FadeLight(GameObject lightObject, bool turnOn) { var lightSource = lightObject.GetComponent<UnityEngine.Rendering.Universal.Light2D>(); if (lightSource == null) yield break; float startIntensity = turnOn ? 0f : lightSource.intensity; float endIntensity = turnOn ? 1f : 0f; float timer = 0f; if(turnOn) { lightSource.intensity = 0; lightObject.SetActive(true); } while(timer < lightFadeDuration) { timer += Time.deltaTime; lightSource.intensity = Mathf.Lerp(startIntensity, endIntensity, timer / lightFadeDuration); yield return null; } lightSource.intensity = endIntensity; if(!turnOn) { lightObject.SetActive(false); } }
+    IEnumerator FadeLight(GameObject lightObject, bool turnOn) 
+    { 
+        var lightSource = lightObject.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
+        if (lightSource == null) yield break; 
+        
+        float startIntensity = turnOn ? 0f : lightSource.intensity; 
+        float endIntensity = turnOn ? 1f : 0f; 
+        float timer = 0f; 
+        
+        if(turnOn) 
+        { 
+            lightSource.intensity = 0;
+            lightObject.SetActive(true);
+        } 
+        
+        while(timer < lightFadeDuration) 
+        { 
+            timer += Time.deltaTime;
+            lightSource.intensity = Mathf.Lerp(startIntensity, endIntensity, timer / lightFadeDuration); 
+            yield return null;
+        } 
+        
+        lightSource.intensity = endIntensity;
+        if(!turnOn) { lightObject.SetActive(false); } 
+    }
     
     public SpawningPeriod GetCurrentPeriod()
     {

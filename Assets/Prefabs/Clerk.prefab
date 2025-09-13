@@ -51,10 +51,9 @@ GameObject:
   - component: {fileID: -39200213975195727}
   - component: {fileID: -5355575680228437556}
   - component: {fileID: 2013173742581785441}
-  - component: {fileID: 8134405870419592947}
   - component: {fileID: -4469930473842612289}
   - component: {fileID: 7754943441221024242}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Clerk
   m_TagString: Clerk
   m_Icon: {fileID: 0}
@@ -304,24 +303,6 @@ MonoBehaviour:
   priority: 1
   slowingDistance: 2
   movementSmoothing: 5
---- !u!114 &8134405870419592947
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2985711966202016409}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f459ff02702cb794b8af16738c08b48c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 2
-  stoppingDistance: 0.2
-  rubberBandStrength: 5
-  priority: 3
-  slowingDistance: 2
-  movementSmoothing: 5
 --- !u!114 &-4469930473842612289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -365,7 +346,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5172397277722008718}
   - component: {fileID: 5983023426307726712}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: StackInHands
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -18,18 +18,15 @@ public class ClerkController : StaffController
     public ClerkRole role = ClerkRole.Regular;
     [Tooltip("Рабочее место для ролей Registrar, Regular, Cashier. Для Archivist должно быть пустым.")]
     public ServicePoint assignedServicePoint;
-
     [Header("Настройки для ролей")]
     [Tooltip("Точка, куда нужно приносить документы в архив (используется ТОЛЬКО для роли 'Registrar')")]
     public Transform archiveDropOffPoint;
     [Tooltip("Рабочее место для архивариуса, где он ожидает появления документов. (Только для роли 'Archivist')")]
     public Transform archivistWaitingPoint;
-
     [Header("Внешний вид")]
     [Tooltip("Укажите пол для выбора правильных спрайтов")]
     public Gender gender;
     private CharacterVisuals visuals;
-
     [Header("Поведение")]
     public float timeInToilet = 10f;
     public float chanceToGoToToilet = 0.005f;
@@ -43,7 +40,6 @@ public class ClerkController : StaffController
     public float stressReliefRate = 10f;
     public float stressedOutDuration = 20f;
     private float currentStress = 0f;
-
     private bool isWaitingForClient = false;
     private bool isCarryingDocumentToArchive = false;
     private Waypoint[] allWaypoints;
@@ -51,7 +47,6 @@ public class ClerkController : StaffController
     private StackHolder stackHolder;
     public static ClerkController RegistrarInstance { get; private set; }
     private Coroutine waitingForClientCoroutine;
-
     [Header("Навыки")]
     public CharacterSkills skills;
 
@@ -93,10 +88,13 @@ public class ClerkController : StaffController
 
     void Update()
     {
-        if (Time.timeScale == 0f) { agentMover?.Stop(); return; }
+        if (Time.timeScale == 0f) 
+        {
+            return; 
+        }
 
         UpdateStress();
-
+        
         if (role == ClerkRole.Archivist && isOnDuty && currentAction == null)
         {
             if (!isCarryingDocumentToArchive && ArchiveManager.Instance != null && ArchiveManager.Instance.GetStackToProcess().CurrentSize > 0)
@@ -109,7 +107,8 @@ public class ClerkController : StaffController
         {
             if (Time.time > callClientCooldown)
             {
-                if (assignedServicePoint != null && Vector2.Distance(transform.position, assignedServicePoint.clerkStandPoint.position) < 0.5f)
+                if (assignedServicePoint != null && Vector2.Distance(transform.position, 
+                    assignedServicePoint.clerkStandPoint.position) < 0.5f)
                 {
                     bool clientCalled = ClientQueueManager.Instance.CallNextClient(this);
                     if (clientCalled)
@@ -126,7 +125,10 @@ public class ClerkController : StaffController
         
         if (skills != null && role == ClerkRole.Regular && currentState == ClerkState.Working && Random.value < (chanceToGoToToilet * (1f - skills.sedentaryResilience)) * Time.deltaTime)
         {
-            if (currentAction == null) { currentAction = StartCoroutine(ToiletBreakRoutine()); }
+            if (currentAction == null) 
+            {
+                currentAction = StartCoroutine(ToiletBreakRoutine()); 
+            }
         }
     }
     
@@ -134,10 +136,9 @@ public class ClerkController : StaffController
     {
         if (currentState == ClerkState.StressedOut) return;
         bool isResting = currentState == ClerkState.OnBreak || currentState == ClerkState.AtToilet || currentState == ClerkState.Inactive;
-
-        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+        
         float finalStressGainRate = stressGainRate;
-        if (skills != null) // Проверяем, назначены ли навыки персонажу
+        if (skills != null)
         {
             finalStressGainRate *= (1f - skills.softSkills * 0.5f);
         }
@@ -173,29 +174,32 @@ public class ClerkController : StaffController
     }
 
     private IEnumerator StartShiftRoutine()
+{
+    yield return new WaitForSeconds(Random.Range(0f, 5f));
+    isOnDuty = true;
+    if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
+    
+    // --- НОВАЯ ЛОГИКА: Разделяем поведение для разных ролей ---
+    if (role == ClerkRole.Archivist)
     {
-        yield return new WaitForSeconds(Random.Range(0f, 5f));
-        isOnDuty = true;
-        if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
-        
-        if (role == ClerkRole.Archivist)
+        Debug.Log($"Архивариус {name} начинает смену.");
+        if (archivistWaitingPoint != null)
         {
-            Debug.Log($"Архивариус {name} начинает смену.");
-            if (archivistWaitingPoint != null)
-            {
-                yield return StartCoroutine(MoveToTarget(archivistWaitingPoint.position, ClerkState.Working));
-            }
-            else
-            {
-                SetState(ClerkState.Working);
-            }
-            currentAction = null;
+            // Архивариус просто идет на свою точку ожидания
+            yield return StartCoroutine(MoveToTarget(archivistWaitingPoint.position, ClerkState.Working));
         }
         else
         {
-            yield return StartCoroutine(ReturnToWorkRoutine());
+            SetState(ClerkState.Working);
         }
+        currentAction = null; // Завершаем действие
     }
+    else
+    {
+        // Все остальные клерки работают по-старому
+        yield return StartCoroutine(ReturnToWorkRoutine());
+    }
+}
     
     private IEnumerator EndShiftRoutine()
     {
@@ -297,9 +301,9 @@ public class ClerkController : StaffController
     }
 
     public float GetStressPercent() => currentStress / maxStress;
-
     public ClerkState GetCurrentState() => currentState;
     public bool IsOnBreak() => currentState != ClerkState.Working && currentState != ClerkState.ReturningToWork && currentState != ClerkState.GoingToArchive;
+    
     public string GetStatusInfo()
     {
         switch (currentState)
@@ -373,6 +377,7 @@ public class ClerkController : StaffController
         isWaitingForClient = false;
         if (assignedServicePoint != null)
             ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
+        
         Transform dropOffPoint = ArchiveManager.Instance.RequestDropOffPoint();
 
         if (dropOffPoint != null)
@@ -445,9 +450,11 @@ public class ClerkController : StaffController
         Waypoint startNode = FindNearestVisibleWaypoint();
         Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
         if (startNode == null || endNode == null) return path;
+        
         Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
         Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
         var queue = new PriorityQueue<Waypoint>();
+        
         foreach (var wp in allWaypoints)
         {
             distances[wp] = float.MaxValue;
@@ -505,6 +512,7 @@ public class ClerkController : StaffController
         
         Waypoint bestWaypoint = null;
         float minDistance = float.MaxValue;
+        
         foreach (var wp in allWaypoints)
         {
             if (wp == null) continue;

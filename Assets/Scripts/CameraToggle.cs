@@ -10,8 +10,9 @@ public class CameraToggle : MonoBehaviour
     public Transform positionTwo;
     
     [Header("Связанные системы")]
-    public MusicPlayer musicPlayer;
-    
+    // ИЗМЕНЕНИЕ: Заменяем прямую ссылку на ссылку на посредника
+    public CameraAudioLink audioLink; 
+
     [Header("Настройки")]
     public float moveSpeed = 10f;
     
@@ -21,12 +22,18 @@ public class CameraToggle : MonoBehaviour
     public List<GameObject> hideInPositionTwo;
 
     private bool isAtPositionOne = true;
-    
+
     void Start()
     {
         if (mainCamera == null)
         {
             mainCamera = Camera.main;
+        }
+        
+        // ИЗМЕНЕНИЕ: Ищем посредника, если он не назначен
+        if (audioLink == null)
+        {
+            audioLink = GetComponent<CameraAudioLink>();
         }
         
         if (mainCamera != null && positionOne != null)
@@ -37,22 +44,21 @@ public class CameraToggle : MonoBehaviour
         }
         
         UpdateUIVisibility();
-        musicPlayer?.SetMuffled(!isAtPositionOne);
+        // ИЗМЕНЕНИЕ: Вызываем метод посредника
+        audioLink?.ToggleMuffledAudio(!isAtPositionOne);
     }
 
     void LateUpdate()
     {
-        // --- Логика для колесика мыши (остается без изменений) ---
         float scrollInput = Input.GetAxis("Mouse ScrollWheel");
-
-        if (scrollInput > 0f) // Скролл вверх
+        if (scrollInput > 0f)
         {
             if (!isAtPositionOne)
             {
                 SetPosition(true);
             }
         }
-        else if (scrollInput < 0f) // Скролл вниз
+        else if (scrollInput < 0f)
         {
             if (isAtPositionOne)
             {
@@ -60,37 +66,31 @@ public class CameraToggle : MonoBehaviour
             }
         }
 
-        // --- НОВАЯ ЛОГИКА: Возвращаем управление клавишей Tab ---
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             TogglePosition();
         }
-        // ---------------------------------------------------------
-
-        // Логика плавного движения камеры (остается без изменений)
+        
         if (mainCamera != null)
         {
             Vector3 targetMarkerPosition = isAtPositionOne ? positionOne.position : positionTwo.position;
             Vector3 targetPosition = new Vector3(targetMarkerPosition.x, targetMarkerPosition.y, mainCamera.transform.position.z);
-            mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, targetPosition, Time.deltaTime * moveSpeed);
+            float deltaTime = Time.timeScale > 0f ? Time.deltaTime : Time.unscaledDeltaTime;
+			mainCamera.transform.position = Vector3.Lerp(mainCamera.transform.position, targetPosition, deltaTime * moveSpeed);
         }
     }
-
-    /// <summary>
-    /// Этот публичный метод будет вызываться по нажатию на Tab или на кнопку в UI.
-    /// </summary>
+    
     public void TogglePosition()
     {
-        // Просто переключаем на противоположную позицию
         SetPosition(!isAtPositionOne);
     }
 
-    // Этот приватный метод устанавливает конкретную позицию и обновляет все системы
     private void SetPosition(bool setToPositionOne)
     {
         isAtPositionOne = setToPositionOne;
         UpdateUIVisibility();
-        musicPlayer?.SetMuffled(!isAtPositionOne);
+        // ИЗМЕНЕНИЕ: Вызываем метод посредника
+        audioLink?.ToggleMuffledAudio(!isAtPositionOne);
     }
 
     void UpdateUIVisibility()

@@ -44,18 +44,19 @@ public class ClientPathfinding : MonoBehaviour
     public AudioClip stampSound;
     public AudioClip impoliteSound;
     public AudioClip theftAttemptSound;
+    
     public static int totalClients, clientsExited, clientsInWaiting, clientsToToilet, clientsToRegistration, clientsConfused;
     public static int clientsExitedAngry = 0, clientsExitedProcessed = 0;
 
     [Header("Документы")]
     [Range(0f, 1f)] public float documentQuality;
-
+    
     [Header("Данные документа Директора")]
     public int directorDocumentFee;
     public int directorDocumentBribe;
     public bool hasBeenSentForRevision = false;
 	public DirectorDocumentLayout directorDocumentLayout;
-
+    
     public CharacterVisuals GetVisuals() => visuals;
     
     public void Initialize(GameObject wZ, Waypoint eW)
@@ -66,7 +67,6 @@ public class ClientPathfinding : MonoBehaviour
         notification = gameObject.GetComponent<ClientNotification>();
         docHolder = gameObject.GetComponent<DocumentHolder>();
         visuals = gameObject.GetComponent<CharacterVisuals>();
-        
         if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null)
         {
             Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!", gameObject);
@@ -82,7 +82,6 @@ public class ClientPathfinding : MonoBehaviour
         prolazaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         documentQuality = 1.0f - (suetunFactor * 0.5f);
         
-        // Если mainGoal не была принудительно установлена (например, для Директора), выбираем случайную
         if (mainGoal == default(ClientGoal))
         {
             var goals = System.Enum.GetValues(typeof(ClientGoal));
@@ -96,7 +95,7 @@ public class ClientPathfinding : MonoBehaviour
             else if (mainGoal == ClientGoal.GetCertificate2) { startingDoc = DocumentType.Form1; }
         }
         docHolder.SetDocument(startingDoc);
-
+        
         if (mainGoal == ClientGoal.DirectorApproval)
         {
             directorDocumentFee = Random.Range(250, 751);
@@ -121,6 +120,9 @@ public class ClientPathfinding : MonoBehaviour
             ClientQueueManager.Instance.RemoveClientFromQueue(this);
         }
         
+        // --- ИЗМЕНЕНИЕ: Сообщаем столу директора, что мы ушли и нашу иконку нужно убрать ---
+        StartOfDayPanel.Instance?.RemoveDocumentIcon(this);
+
         if (stateMachine != null)
         {
             Waypoint lastGoal = stateMachine.GetCurrentGoal();
@@ -203,5 +205,11 @@ public class ClientPathfinding : MonoBehaviour
         }
     }
 
-    public static ClientPathfinding FindClosestConfusedClient(Vector3 position) { return FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Where(c => c != null && c.stateMachine != null && c.stateMachine.GetCurrentState() == ClientState.Confused).OrderBy(c => Vector3.Distance(c.transform.position, position)).FirstOrDefault(); }
+    public static ClientPathfinding FindClosestConfusedClient(Vector3 position) 
+    { 
+        return FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
+            .Where(c => c != null && c.stateMachine != null && c.stateMachine.GetCurrentState() == ClientState.Confused)
+            .OrderBy(c => Vector3.Distance(c.transform.position, position))
+            .FirstOrDefault();
+    }
 }

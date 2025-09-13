@@ -1,142 +1,206 @@
-// Файл: MusicPlayer.cs
+// File: MusicPlayer.cs
 using UnityEngine;
 using System.Collections;
-using UnityEngine.SceneManagement; // Необходимо для работы со сценами
+using System.Linq;
+using UnityEngine.SceneManagement;
 
-[RequireComponent(typeof(AudioSource))] //
+[RequireComponent(typeof(AudioSource), typeof(AudioLowPassFilter))]
 public class MusicPlayer : MonoBehaviour
 {
-    // --- НОВЫЙ КОД: Синглтон и "Бессмертие" ---
     public static MusicPlayer Instance { get; private set; }
 
-    // Метод Awake вызывается самым первым при запуске скрипта
     void Awake()
     {
-        // Проверяем, не существует ли уже другой экземпляр MusicPlayer
-        if (Instance != null && Instance != this)
-        {
-            // Если да, то этот - дубликат, и его нужно уничтожить
-            Destroy(gameObject);
-            return;
-        }
-        // Если нет, то этот экземпляр становится основным
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        // Говорим Unity не уничтожать этот объект при загрузке новой сцены
-        //DontDestroyOnLoad(gameObject);
-
-        // Код из старого Awake
-        audioSource = GetComponent<AudioSource>(); //
-        lowPassFilter = GetComponent<AudioLowPassFilter>(); //
-        initialVolume = audioSource.volume; //
+        // DontDestroyOnLoad(gameObject); // This should be commented out if this object is a child of another DontDestroyOnLoad object
+        
+        audioSource = GetComponent<AudioSource>();
+        lowPassFilter = GetComponent<AudioLowPassFilter>();
+        initialVolume = audioSource.volume;
     }
-    // --- КОНЕЦ НОВОГО КОДА ---
 
-    [Header("Музыкальные темы")]
-    public AudioClip menuTheme; //
-    public AudioClip directorsOfficeTheme; //
-    [Header("Игровые плейлисты")]
-    public AudioClip[] dayTracks; //
-    public AudioClip nightTrack; //
-    public AudioClip radioSwitchSound; //
-    [Header("Эффект приглушения")]
-    public float muffledFrequency = 1200f; //
+    [Header("Musical Themes")]
+    public AudioClip menuTheme;
+    public AudioClip directorsOfficeTheme;
+    
+    [Header("In-Game Playlists")]
+    public AudioClip[] dayTracks;
+    public AudioClip nightTrack;
+    public AudioClip radioSwitchSound;
+    
+    [Header("Muffling Effect")]
+    public float muffledFrequency = 1200f;
     [Range(0f, 1f)]
-    public float muffledVolume = 0.5f; //
-    public float fadeDuration = 0.5f; //
+    public float muffledVolume = 0.5f;
+    public float fadeDuration = 0.5f;
 
     private AudioSource audioSource;
     private AudioLowPassFilter lowPassFilter;
     private Coroutine effectsCoroutine;
-    private int lastTrackIndex = -1; //
-    private bool isNightMusic = false; //
+    private int lastTrackIndex = -1;
+    private bool isGameplayMusicActive = false;
     private float initialVolume;
+    private AudioClip lastPlayedGameplayTrack;
+    private float lastTrackTime = 0f;
 
-    // --- НОВЫЙ КОД: Логика, основанная на сценах ---
     void Start()
     {
-        // Подписываемся на событие, которое срабатывает каждый раз, когда загружается новая сцена
         SceneManager.sceneLoaded += OnSceneLoaded;
-        // При самом первом запуске игры, мы в главном меню, поэтому включаем соответствующую тему
         PlayMenuTheme();
     }
 
-    // Этот метод теперь вызывается автоматически при смене сцены
+    void Update()
+    {
+        if (audioSource.isPlaying || !isGameplayMusicActive || Time.timeScale == 0f)
+        {
+            return;
+        }
+        PlayCorrectTrackForCurrentTime();
+    }
+
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Проверяем имя загруженной сцены
-        if (scene.name == "MainMenuScene") // <-- Укажите здесь ТОЧНОЕ имя вашей сцены с меню
+        if (scene.name == "MainMenuScene")
         {
             PlayMenuTheme();
         }
-        else if (scene.name == "GameScene") // <-- Укажите здесь ТОЧНОЕ имя вашей игровой сцены
+    }
+    
+    public void OnPeriodChanged()
+    {
+        if (!isGameplayMusicActive) return;
+        bool isNightNow = IsNightTime();
+        if ((audioSource.clip == nightTrack && !isNightNow) || (dayTracks.Contains(audioSource.clip) && isNightNow))
         {
-            PlayGameplayMusic();
+            audioSource.Stop();
+        }
+    }
+    
+    public void PauseGameplayMusicAndPlayOfficeTheme()
+    {
+        if (!isGameplayMusicActive || audioSource.clip == directorsOfficeTheme) return;
+        lastTrackTime = audioSource.time;
+        isGameplayMusicActive = false;
+        PlayTrack(directorsOfficeTheme, true);
+    }
+
+    public void ResumeGameplayMusic()
+    {
+        if (isGameplayMusicActive) return;
+        isGameplayMusicActive = true;
+        PlayTrack(lastPlayedGameplayTrack, dayTracks.Length <= 1);
+        if (audioSource != null)
+        {
+            audioSource.time = lastTrackTime;
         }
     }
 
-    // Старый метод Update() больше не нужен, так как логика переключения треков (день/ночь)
-    // должна управляться из игрового менеджера (например, ClientSpawner) внутри игровой сцены.
-    // void Update() { ... }
-
-    // --- КОНЕЦ НОВОГО КОДА ---
-    
     public void RequestNextTrack()
     {
-        if (isNightMusic || Time.timeScale == 0f || dayTracks.Length == 0) //
+        if (!isGameplayMusicActive || IsNightTime() || Time.timeScale == 0f || dayTracks.Length == 0) return;
+        if (radioSwitchSound != null && Camera.main != null)
         {
-            return; //
+            AudioSource.PlayClipAtPoint(radioSwitchSound, Camera.main.transform.position);
         }
+        PlayRandomDayTrack();
+    }
+    
+    public void StartGameplayMusic() 
+    {
+        isGameplayMusicActive = true;
+        audioSource.Stop();
+        PlayCorrectTrackForCurrentTime();
+    }
 
-        if (radioSwitchSound != null) //
+    private void PlayCorrectTrackForCurrentTime()
+    {
+        if (IsNightTime())
         {
-            if (Camera.main != null) //
-            {
-                AudioSource.PlayClipAtPoint(radioSwitchSound, Camera.main.transform.position); //
-            }
+            PlayTrack(nightTrack, true);
         }
-        
-        PlayRandomDayTrack(); //
+        else
+        {
+            PlayRandomDayTrack();
+        }
+    }
+
+    private bool IsNightTime()
+    {
+        if (ClientSpawner.Instance == null || ClientSpawner.Instance.nightPeriodNames == null) return false;
+        return ClientSpawner.Instance.nightPeriodNames.Any(p => p.Equals(ClientSpawner.CurrentPeriodName, System.StringComparison.InvariantCultureIgnoreCase));
     }
     
     private void PlayTrack(AudioClip clip, bool loop)
     {
-        if (clip == null) return; //
-        if (audioSource.clip == clip && audioSource.isPlaying) return; //
+        if (clip == null) { audioSource.Stop(); return; };
+        if (audioSource.clip == clip && audioSource.isPlaying) return;
         
-        audioSource.clip = clip; //
-        audioSource.loop = loop; //
-        audioSource.Play(); //
+        audioSource.clip = clip;
+        audioSource.loop = loop;
+        audioSource.Play();
+
+        if(isGameplayMusicActive && clip != nightTrack && clip != directorsOfficeTheme && clip != menuTheme)
+        {
+            lastPlayedGameplayTrack = clip;
+        }
     }
     
-    void PlayRandomDayTrack()
+    private void PlayRandomDayTrack()
     {
-        if (dayTracks.Length == 0) return; //
-        if (dayTracks.Length == 1) //
-        {
-            PlayTrack(dayTracks[0], true); //
-            return; //
+        if (dayTracks.Length == 0) return;
+        if (dayTracks.Length == 1) { PlayTrack(dayTracks[0], true); return; }
+        int newIndex;
+        do { newIndex = Random.Range(0, dayTracks.Length); } while (newIndex == lastTrackIndex);
+        lastTrackIndex = newIndex;
+        PlayTrack(dayTracks[lastTrackIndex], false);
+    }
+    
+    public void PlayMenuTheme() { isGameplayMusicActive = false; lastPlayedGameplayTrack = null; PlayTrack(menuTheme, true); }
+    public void PlayDirectorsOfficeTheme() { isGameplayMusicActive = false; lastPlayedGameplayTrack = null; PlayTrack(directorsOfficeTheme, true); }
+    
+    public void SetMuffled(bool isMuffled) 
+    { 
+        if (effectsCoroutine != null) StopCoroutine(effectsCoroutine);
+        
+        bool isNight = IsNightTime();
+        if (isNight) 
+        { 
+            if (lowPassFilter != null) lowPassFilter.cutoffFrequency = 22000f;
+            audioSource.volume = initialVolume; 
+            return; 
+        } 
+        
+        float targetVolume = isMuffled ? muffledVolume : initialVolume;
+        float targetFrequency = isMuffled ? muffledFrequency : 22000f;
+        effectsCoroutine = StartCoroutine(LerpAudioEffects(targetVolume, targetFrequency));
+    }
+
+    private IEnumerator LerpAudioEffects(float targetVol, float targetFreq) 
+    { 
+        float startVol = audioSource.volume;
+        float startFreq = lowPassFilter != null ? lowPassFilter.cutoffFrequency : 22000f;
+        float time = 0;
+
+        while (time < fadeDuration) 
+        { 
+            time += Time.unscaledDeltaTime;
+            float progress = time / fadeDuration; 
+            audioSource.volume = Mathf.Lerp(startVol, targetVol, progress);
+            if (lowPassFilter != null) 
+            {
+                lowPassFilter.cutoffFrequency = Mathf.Lerp(startFreq, targetFreq, progress);
+            } 
+            yield return null; 
         }
 
-        int newIndex;
-        do { newIndex = Random.Range(0, dayTracks.Length); //
-        } while (newIndex == lastTrackIndex);
+        audioSource.volume = targetVol;
+        if (lowPassFilter != null) 
+        {
+            lowPassFilter.cutoffFrequency = targetFreq;
+        }
         
-        lastTrackIndex = newIndex; //
-        PlayTrack(dayTracks[lastTrackIndex], false); //
+        effectsCoroutine = null; 
+        yield break; // This line fixes the error
     }
-    
-    public void PlayMenuTheme() { PlayTrack(menuTheme, true); } //
-    public void PlayDirectorsOfficeTheme() { PlayTrack(directorsOfficeTheme, true); }
-    public void PlayGameplayMusic() { audioSource.Stop(); //
-        isNightMusic = false; } //
-    public void SetMuffled(bool isMuffled) { if (effectsCoroutine != null) StopCoroutine(effectsCoroutine); //
-        if (isNightMusic) { if (lowPassFilter != null) lowPassFilter.cutoffFrequency = 22000f; audioSource.volume = initialVolume; return; } float targetVolume = isMuffled ? //
-        muffledVolume : initialVolume; //
- float targetFrequency = isMuffled ? muffledFrequency : 22000f; effectsCoroutine = StartCoroutine(LerpAudioEffects(targetVolume, targetFrequency)); //
-    }
-    private IEnumerator LerpAudioEffects(float targetVol, float targetFreq) { float startVol = audioSource.volume; //
-        float startFreq = lowPassFilter != null ? lowPassFilter.cutoffFrequency : 22000f; float time = 0; //
-        while (time < fadeDuration) { time += Time.unscaledDeltaTime; float progress = time / fadeDuration; audioSource.volume = Mathf.Lerp(startVol, targetVol, progress); //
-            if (lowPassFilter != null) { lowPassFilter.cutoffFrequency = Mathf.Lerp(startFreq, targetFreq, progress); } yield return null; } audioSource.volume = targetVol; //
-        if (lowPassFilter != null) { lowPassFilter.cutoffFrequency = targetFreq; } effectsCoroutine = null; yield break; } //
 }

@@ -10,6 +10,7 @@ public class AgentMover : MonoBehaviour
     public float moveSpeed = 2f;
     public float stoppingDistance = 0.2f;
 
+    // --- ИЗМЕНЕНИЕ: Добавлено поле для хранения базовой скорости ---
     private float baseMoveSpeed;
 
     [Header("Система 'Резиночки'")]
@@ -34,14 +35,16 @@ public class AgentMover : MonoBehaviour
     public float slowingDistance = 2.0f;
     [Tooltip("Насколько плавно персонаж меняет скорость. Меньше значение - более плавное движение.")]
     public float movementSmoothing = 5f;
-
+    
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         pathAnchor = transform.position;
+        // --- ИЗМЕНЕНИЕ: Запоминаем базовую скорость при старте ---
         baseMoveSpeed = moveSpeed;
     }
 
+    // --- НОВЫЙ МЕТОД: Позволяет временно изменять скорость ---
     public void ApplySpeedMultiplier(float multiplier)
     {
         moveSpeed = baseMoveSpeed * multiplier;
@@ -149,6 +152,7 @@ public class AgentMover : MonoBehaviour
     {
         if (isDirectChasing)
         {
+            // Используем rb.velocity, так как linearVelocity устарело
             return rb.linearVelocity.magnitude > 0.1f;
         }
         return path != null && path.Count > 0;

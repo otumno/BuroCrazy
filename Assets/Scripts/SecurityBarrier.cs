@@ -8,9 +8,16 @@ public class SecurityBarrier : MonoBehaviour
     [Header("Настройки")]
     [Tooltip("Коллайдер, который будет блокировать путь")]
     public Collider2D barrierCollider;
+
+    // --- НАЧАЛО ИЗМЕНЕНИЙ ---
+    [Header("Визуальные элементы")]
+    [Tooltip("Иконка замка, которая отображается, когда барьер активен")]
+    public GameObject lockIcon;
+    // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
     [Tooltip("Точка, к которой должен подойти охранник для взаимодействия")]
     public Transform guardInteractionPoint;
-
+    
     [Header("Звуки")]
     public AudioClip activateSound;
     public AudioClip deactivateSound;
@@ -19,6 +26,16 @@ public class SecurityBarrier : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); }
         else { Instance = this; }
+    }
+
+    // --- НОВЫЙ МЕТОД ---
+    void Start()
+    {
+        // Устанавливаем правильное состояние замка при запуске игры
+        if (lockIcon != null)
+        {
+            lockIcon.SetActive(IsActive());
+        }
     }
 
     /// <summary>
@@ -33,6 +50,8 @@ public class SecurityBarrier : MonoBehaviour
             {
                 AudioSource.PlayClipAtPoint(activateSound, transform.position);
             }
+            // --- ДОБАВЛЕНО ---
+            if (lockIcon != null) lockIcon.SetActive(true);
             Debug.Log("Защитный барьер АКТИВИРОВАН.");
         }
     }
@@ -49,6 +68,8 @@ public class SecurityBarrier : MonoBehaviour
             {
                 AudioSource.PlayClipAtPoint(deactivateSound, transform.position);
             }
+            // --- ДОБАВЛЕНО ---
+            if (lockIcon != null) lockIcon.SetActive(false);
             Debug.Log("Защитный барьер ДЕАКТИВИРОВАН.");
         }
     }

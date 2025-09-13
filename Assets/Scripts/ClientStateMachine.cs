@@ -1,4 +1,4 @@
-// Файл: ClientStateMachine.cs
+// File: ClientStateMachine.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,13 +10,12 @@ public class ClientStateMachine : MonoBehaviour
     private AgentMover agentMover;
     private CharacterStateLogger logger;
 
-    [Header("Настройки")]
+    [Header("Settings")]
     [SerializeField] private float zonePatienceTime = 15f;
     [SerializeField] private float rageDuration = 10f;
     [SerializeField] private float requiredServiceDistance = 1.5f;
     [SerializeField] private float clerkWaitTimeout = 20f;
-    
-    [Header("Генерация беспорядка")]
+    [Header("Mess Generation")]
     [SerializeField] private float baseTrashChancePerSecond = 0.01f;
     [SerializeField] private float puddleChanceInToilet = 0.2f;
     [SerializeField] private float puddleChanceOnUpset = 0.3f;
@@ -61,9 +60,9 @@ public class ClientStateMachine : MonoBehaviour
 
         if (parent.mainGoal == ClientGoal.DirectorApproval)
         {
-            Debug.Log($"[Регистратура] Клиент {parent.name} с документами для Директора! Направляю в приемную.");
+            Debug.Log($"[Registration] Client {parent.name} with documents for the Director! Sending to reception.");
             yield return new WaitForSeconds(Random.Range(1f, 2f));
-            servingClerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("Вам в приемную\nдиректора, пожалуйста.", 3f, Color.cyan);
+            servingClerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("Please proceed to the\ndirector's reception.", 3f, Color.cyan);
             
             LimitedCapacityZone receptionZone = ClientSpawner.Instance.directorReceptionZone;
             if (receptionZone != null && receptionZone.waitingWaypoint != null)
@@ -74,7 +73,7 @@ public class ClientStateMachine : MonoBehaviour
             }
             else
             {
-                Debug.LogError("Не настроена зона или точка входа в приемную директора (directorReceptionZone)!");
+                Debug.LogError("The director's reception zone or its entry point (directorReceptionZone) is not configured!");
                 SetState(ClientState.Confused);
             }
             yield break;
@@ -86,22 +85,21 @@ public class ClientStateMachine : MonoBehaviour
             parent.totalPatienceTime -= patiencePenalty;
             if (patiencePenalty > 0)
             {
-                Debug.Log($"[Soft Skills] Регистратор {servingClerk.name} снизил терпение клиента на {patiencePenalty:F1} сек.");
+                Debug.Log($"[Soft Skills] Registrar {servingClerk.name} reduced client's patience by {patiencePenalty:F1} sec.");
             }
         }
 
-        Debug.Log($"[Регистратура] Обычный клиент {parent.name} у регистратора {servingClerk.name}.");
+        Debug.Log($"[Registration] Regular client {parent.name} with registrar {servingClerk.name}.");
         yield return new WaitForSeconds(Random.Range(2f, 4f));
         
         Waypoint correctDestination = DetermineCorrectGoalAfterRegistration();
         Waypoint actualDestination = correctDestination;
-        
         if (servingClerk.skills != null)
         {
             float chanceOfError = (1f - servingClerk.skills.softSkills) * 0.5f;
             if (Random.value < chanceOfError)
             {
-                Debug.LogWarning($"[Регистратура] ОШИБКА! Регистратор {servingClerk.name} неправильно направил клиента {parent.name}.");
+                Debug.LogWarning($"[Registration] ERROR! Registrar {servingClerk.name} misdirected client {parent.name}.");
                 List<Waypoint> possibleDestinations = new List<Waypoint> { ClientSpawner.GetDesk1Zone().waitingWaypoint, ClientSpawner.GetDesk2Zone().waitingWaypoint, ClientSpawner.GetCashierZone().waitingWaypoint };
                 possibleDestinations.Remove(correctDestination);
                 if(possibleDestinations.Count > 0) { actualDestination = possibleDestinations[Random.Range(0, possibleDestinations.Count)]; }
@@ -109,11 +107,10 @@ public class ClientStateMachine : MonoBehaviour
         }
 
         string destinationName = string.IsNullOrEmpty(actualDestination.friendlyName) ? actualDestination.name : actualDestination.friendlyName;
-        string directionMessage = $"Пройдите, пожалуйста, к\n'{destinationName}'";
+        string directionMessage = $"Please proceed to\n'{destinationName}'";
         servingClerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage(directionMessage, 3f, Color.white);
         
-        Debug.Log($"[Регистратура] Клиент {parent.name} направлен к {actualDestination.name}.");
-        
+        Debug.Log($"[Registration] Client {parent.name} directed to {actualDestination.name}.");
         if (myQueueNumber != -1) { ClientQueueManager.Instance.RemoveClientFromQueue(parent); }
         SetGoal(actualDestination);
         SetState(ClientState.MovingToGoal);
@@ -160,16 +157,26 @@ public class ClientStateMachine : MonoBehaviour
                 parent.totalPatienceTime -= patiencePenalty;
                 if (patiencePenalty > 0)
                 {
-                    Debug.Log($"[Soft Skills] Клерк {clerk.name} снизил терпение клиента на {patiencePenalty:F1} сек.");
+                    Debug.Log($"[Soft Skills] Clerk {clerk.name} reduced client's patience by {patiencePenalty:F1} sec.");
                 }
+            }
+            
+            if (parent.docHolder.GetCurrentDocumentType() == DocumentType.None)
+            {
+                Debug.Log($"[Clerk-{deskId}] Client {parent.name} has no documents. Sending to form table.");
+                clerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("Please get a form\nfrom the table!", 3f, Color.yellow);
+                yield return new WaitForSeconds(2f);
+                previousGoal = GetCurrentGoal();
+                yield return StartCoroutine(ExitZoneAndSetNewGoal(ClientSpawner.Instance.formTable.tableWaypoint, ClientState.MovingToGoal));
+                yield break;
             }
 
             float documentErrorPercent = (1f - parent.documentQuality) * 100f;
-            Debug.Log($"[Клерк-{deskId}] Проверяет: {parent.name}, Качество: {parent.documentQuality:P0}, % Ошибок: {documentErrorPercent:F1}%");
+            Debug.Log($"[Clerk-{deskId}] Checking: {parent.name}, Quality: {parent.documentQuality:P0}, Error %: {documentErrorPercent:F1}%");
 
             if (documentErrorPercent > 25f)
             {
-                clerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("Вам отказано!\nСлишком много ошибок.", 3f, Color.red);
+                clerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("Rejected!\nToo many errors.", 3f, Color.red);
                 yield return new WaitForSeconds(2f);
                 parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
                 yield return StartCoroutine(ExitZoneAndSetNewGoal(ClientSpawner.Instance.exitWaypoint, ClientState.LeavingUpset));
@@ -181,20 +188,19 @@ public class ClientStateMachine : MonoBehaviour
                 float chanceToSpotErrors = clerk.skills != null ? clerk.skills.pedantry : 0.5f;
                 if (Random.value < chanceToSpotErrors)
                 {
-                    clerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("Документ нужно\nпеределать!", 3f, Color.yellow);
+                    clerk.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("The document needs\nto be redone!", 3f, Color.yellow);
                     yield return new WaitForSeconds(3f);
-					previousGoal = GetCurrentGoal(); // Запоминаем стойку клерка, от которой нас отправили
+					previousGoal = GetCurrentGoal();
                     yield return StartCoroutine(ExitZoneAndSetNewGoal(ClientSpawner.Instance.formTable.tableWaypoint, ClientState.MovingToGoal));
                     yield break;
                 }
                 else
                 {
-                    Debug.Log($"[Клерк-{deskId}] ПРОПУСТИЛ ошибку (Душность: {chanceToSpotErrors:P0}). Обрабатывает некачественный документ!");
+                    Debug.Log($"[Clerk-{deskId}] MISSED an error (Pedantry: {chanceToSpotErrors:P0}). Processing a poor-quality document!");
                 }
             }
             
-            Debug.Log($"[Клерк-{deskId}] Продолжает обслуживание клиента {parent.name}.");
-            
+            Debug.Log($"[Clerk-{deskId}] Continuing to serve client {parent.name}.");
             DocumentType docTypeInHand = parent.docHolder.GetCurrentDocumentType();
             GameObject prefabToFly = parent.docHolder.GetPrefabForType(docTypeInHand); 
             parent.docHolder.SetDocument(DocumentType.None);
@@ -203,12 +209,13 @@ public class ClientStateMachine : MonoBehaviour
             if (prefabToFly != null && clerk.assignedServicePoint != null) { 
                 flyingDoc = Instantiate(prefabToFly, parent.docHolder.handPoint.position, Quaternion.identity);
                 DocumentMover mover = flyingDoc.GetComponent<DocumentMover>(); 
-                if (mover != null) { mover.StartMove(clerk.assignedServicePoint.documentPointOnDesk, () => { transferToClerkComplete = true; }); yield return new WaitUntil(() => transferToClerkComplete); } 
+                if (mover != null) { mover.StartMove(clerk.assignedServicePoint.documentPointOnDesk, () => { transferToClerkComplete = true; });
+                yield return new WaitUntil(() => transferToClerkComplete); } 
             } 
             yield return new WaitForSeconds(Random.Range(2f, 3f));
             if (flyingDoc != null) { Destroy(flyingDoc); } 
             
-            float choice = Random.value - (parent.suetunFactor * 0.2f); 
+            float choice = Random.value - (parent.suetunFactor * 0.2f);
             DocumentType newDocType; 
             if (choice < 0.8f) 
             { 
@@ -218,15 +225,15 @@ public class ClientStateMachine : MonoBehaviour
             { 
                 newDocType = (deskId == 1) ? DocumentType.Form2 : DocumentType.Form1; 
             } 
-            GameObject newDocPrefab = parent.docHolder.GetPrefabForType(newDocType); 
+            GameObject newDocPrefab = parent.docHolder.GetPrefabForType(newDocType);
             bool transferToClientComplete = false; 
             if (newDocPrefab != null && clerk.assignedServicePoint != null) 
             { 
-                GameObject newDocOnDesk = Instantiate(newDocPrefab, clerk.assignedServicePoint.documentPointOnDesk.position, Quaternion.identity); 
+                GameObject newDocOnDesk = Instantiate(newDocPrefab, clerk.assignedServicePoint.documentPointOnDesk.position, Quaternion.identity);
                 if (parent.stampSound != null) { AudioSource.PlayClipAtPoint(parent.stampSound, clerk.assignedServicePoint.documentPointOnDesk.position); } 
-                yield return new WaitForSeconds(2.5f); 
+                yield return new WaitForSeconds(2.5f);
                 DocumentMover mover = newDocOnDesk.GetComponent<DocumentMover>(); 
-                if (mover != null) { mover.StartMove(parent.docHolder.handPoint, () => { parent.docHolder.ReceiveTransferredDocument(newDocType, newDocOnDesk); transferToClientComplete = true; }); 
+                if (mover != null) { mover.StartMove(parent.docHolder.handPoint, () => { parent.docHolder.ReceiveTransferredDocument(newDocType, newDocOnDesk); transferToClientComplete = true; });
                 yield return new WaitUntil(() => transferToClientComplete); } 
             } 
             
@@ -235,11 +242,11 @@ public class ClientStateMachine : MonoBehaviour
         } 
         else if (targetZone == ClientSpawner.GetCashierZone()) 
         { 
-            yield return StartCoroutine(PayBillRoutine()); 
+            yield return StartCoroutine(PayBillRoutine());
         } 
         else if (targetZone == ClientSpawner.GetToiletZone()) 
         { 
-            yield return StartCoroutine(ToiletRoutineInZone()); 
+            yield return StartCoroutine(ToiletRoutineInZone());
         } 
     }
 
@@ -289,7 +296,6 @@ public class ClientStateMachine : MonoBehaviour
             if (myQueueNumber != -1)
             {
                 if(newState != ClientState.Leaving || parent.reasonForLeaving != ClientPathfinding.LeaveReason.Processed)
-           
                  ClientQueueManager.Instance.ServiceFinishedForNumber(myQueueNumber);
             }
         }
@@ -410,7 +416,7 @@ public class ClientStateMachine : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"{name} хотел двигаться, но currentGoal не был установлен.");
+            Debug.LogWarning($"{name} wanted to move, but currentGoal was not set.");
             SetState(ClientState.Confused);
         }
     }
@@ -470,7 +476,7 @@ public class ClientStateMachine : MonoBehaviour
             return;
         }
         
-        Debug.LogWarning($"{name} прибыл в {dest.name}, но не знает, что делать дальше. Назначенный клерк: {(myClerk != null ? myClerk.name : "null")}");
+        Debug.LogWarning($"{name} arrived at {dest.name}, but doesn't know what to do next. Assigned clerk: {(myClerk != null ? myClerk.name : "null")}");
         SetState(ClientState.Confused);
     }
 
@@ -479,7 +485,7 @@ public class ClientStateMachine : MonoBehaviour
         if (targetZone == null) { SetState(ClientState.Confused); yield break; }
         
         agentMover.Stop();
-        targetZone.JoinQueue(parent.gameObject); 
+        targetZone.JoinQueue(parent.gameObject);
         zonePatienceCoroutine = StartCoroutine(PatienceMonitorForZone(targetZone));
         yield return new WaitUntil(() => targetZone.IsFirstInQueue(parent.gameObject)); 
         
@@ -497,7 +503,7 @@ public class ClientStateMachine : MonoBehaviour
         SetGoal(freeSpot); 
         SetState(ClientState.InsideLimitedZone);
         
-		Debug.Log($"[ПРОВЕРКА] Клиент {parent.name} входит в зону {targetZone.name}. Его цель: {parent.mainGoal}");
+		Debug.Log($"[CHECK] Client {parent.name} is entering zone {targetZone.name}. Their goal is: {parent.mainGoal}");
         if (parent.mainGoal == ClientGoal.DirectorApproval && targetZone == ClientSpawner.Instance.directorReceptionZone)
         {
             StartOfDayPanel directorsDesk = StartOfDayPanel.Instance;
@@ -545,13 +551,13 @@ public class ClientStateMachine : MonoBehaviour
             yield return new WaitForSeconds(0.5f);
             waitTimer += 0.5f; 
             if (waitTimer > clerkWaitTimeout) { 
-                Debug.LogWarning($"Клиент {parent.name} не дождался кассира и ушел в 'Confused'");
+                Debug.LogWarning($"Client {parent.name} didn't wait for the cashier and became 'Confused'");
                 yield return StartCoroutine(ExitZoneAndSetNewGoal(null, ClientState.Confused)); 
                 yield break; 
             } 
         } 
 
-        string billMessage = $"С вас: ${parent.billToPay}";
+        string billMessage = $"That will be: ${parent.billToPay}";
         cashier.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage(billMessage, 3f, new Color(0.1f, 0.4f, 0.1f));
 
         if (parent.moneyPrefab != null) { 
@@ -573,14 +579,13 @@ public class ClientStateMachine : MonoBehaviour
             parent.billToPay = 0; 
         } 
         cashier?.ServiceComplete();
-        
         if (parent.mainGoal == ClientGoal.DirectorApproval)
         {
             LimitedCapacityZone receptionZone = ClientSpawner.Instance.directorReceptionZone;
             if (receptionZone != null && receptionZone.archiveDropOffStack != null)
             {
                 receptionZone.archiveDropOffStack.AddDocumentToStack();
-                Debug.Log("Копия документа директора создана в приемной для архивации.");
+                Debug.Log("A copy of the director's document has been created in the reception for archiving.");
             }
         }
         
@@ -671,43 +676,353 @@ public class ClientStateMachine : MonoBehaviour
                     if (impoliteGoal != null) { SetGoal(impoliteGoal); SetState(ClientState.MovingToRegistrarImpolite); break; } 
                 } 
                 Waypoint initialGoal = null;
-                if (parent.mainGoal == ClientGoal.VisitToilet) { initialGoal = ClientSpawner.GetToiletZone().waitingWaypoint; } else { initialGoal = ClientQueueManager.Instance.ChooseNewGoal(parent); } if(initialGoal != null) { SetGoal(initialGoal); SetState(ClientState.MovingToGoal); } else { Debug.LogError($"Не удалось найти начальную цель для {gameObject.name}. Зона ожидания настроена?"); SetState(ClientState.Confused); } 
+                if (parent.mainGoal == ClientGoal.VisitToilet) { initialGoal = ClientSpawner.GetToiletZone().waitingWaypoint; } else { initialGoal = ClientQueueManager.Instance.ChooseNewGoal(parent); } if(initialGoal != null) { SetGoal(initialGoal); SetState(ClientState.MovingToGoal); } else { Debug.LogError($"Could not find an initial goal for {gameObject.name}. Is the waiting zone configured?"); SetState(ClientState.Confused); } 
                 break;
-            case ClientState.ReturningToRegistrar: yield return StartCoroutine(MoveToGoalRoutine()); if (currentState == ClientState.ReturningToRegistrar) { SetState(ClientState.AtRegistration); } break;
-            case ClientState.MovingToGoal: case ClientState.GoingToCashier: case ClientState.Leaving: case ClientState.LeavingUpset: yield return StartCoroutine(MoveToGoalRoutine()); if (currentState == ClientState.MovingToGoal) { HandleArrivalAfterMove(); } else if (currentState == ClientState.GoingToCashier) { SetState(ClientState.AtCashier); } else if (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset) { parent.OnClientExit(); } break;
-            case ClientState.MovingToRegistrarImpolite: yield return StartCoroutine(MoveToGoalRoutine()); if (currentState == ClientState.MovingToRegistrarImpolite) { yield return StartCoroutine(HandleImpoliteArrival()); } break;
-            case ClientState.MovingToSeat: if (seatTarget != null) { parent.movement.StartStuckCheck(); agentMover.SetPath(BuildPathTo(seatTarget.position)); yield return new WaitUntil(() => !agentMover.IsMoving()); parent.movement.StopStuckCheck(); } SetState(ClientState.SittingInWaitingArea); break;
-            case ClientState.AtLimitedZoneEntrance: yield return StartCoroutine(EnterZoneRoutine()); break;
-            case ClientState.InsideLimitedZone: yield return StartCoroutine(ServiceRoutineInsideZone()); break;
-            case ClientState.SittingInWaitingArea: ClientQueueManager.Instance.StartPatienceTimer(parent); yield return new WaitUntil(() => currentState != ClientState.SittingInWaitingArea); break;
-            case ClientState.AtWaitingArea: millingCoroutine = StartCoroutine(MillAroundAndWaitForSeat()); yield return new WaitUntil(() => currentState != ClientState.AtWaitingArea); break;
-            case ClientState.AtDesk1: yield return StartCoroutine(OfficeServiceRoutine(ClientSpawner.GetDesk1Zone())); break;
-            case ClientState.AtDesk2: yield return StartCoroutine(OfficeServiceRoutine(ClientSpawner.GetDesk2Zone())); break;
-            case ClientState.AtCashier: yield return StartCoroutine(PayBillRoutine()); break;
-            case ClientState.AtRegistration: yield return StartCoroutine(RegistrationServiceRoutine()); break;
-            case ClientState.Confused: yield return StartCoroutine(ConfusedRoutine()); break;
-            case ClientState.Enraged: yield return StartCoroutine(EnragedRoutine()); break;
-            case ClientState.PassedRegistration: yield return StartCoroutine(PassedRegistrationRoutine()); break;
-            default: yield return null; break;
+            case ClientState.ReturningToRegistrar: 
+                yield return StartCoroutine(MoveToGoalRoutine()); 
+                if (currentState == ClientState.ReturningToRegistrar) { SetState(ClientState.AtRegistration); } 
+                break;
+            case ClientState.MovingToGoal: 
+            case ClientState.GoingToCashier: 
+            case ClientState.Leaving: 
+            case ClientState.LeavingUpset: 
+                yield return StartCoroutine(MoveToGoalRoutine()); 
+                if (currentState == ClientState.MovingToGoal) { HandleArrivalAfterMove(); } 
+                else if (currentState == ClientState.GoingToCashier) { SetState(ClientState.AtCashier); } 
+                else if (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset) { parent.OnClientExit(); } 
+                break;
+            case ClientState.MovingToRegistrarImpolite: 
+                yield return StartCoroutine(MoveToGoalRoutine()); 
+                if (currentState == ClientState.MovingToRegistrarImpolite) { yield return StartCoroutine(HandleImpoliteArrival()); } 
+                break;
+            case ClientState.MovingToSeat: 
+                if (seatTarget != null) { parent.movement.StartStuckCheck(); agentMover.SetPath(BuildPathTo(seatTarget.position)); yield return new WaitUntil(() => !agentMover.IsMoving()); parent.movement.StopStuckCheck(); } 
+                SetState(ClientState.SittingInWaitingArea); 
+                break;
+            case ClientState.AtLimitedZoneEntrance: 
+                yield return StartCoroutine(EnterZoneRoutine()); 
+                break;
+            case ClientState.InsideLimitedZone: 
+                yield return StartCoroutine(ServiceRoutineInsideZone()); 
+                break;
+            case ClientState.SittingInWaitingArea: 
+                ClientQueueManager.Instance.StartPatienceTimer(parent);
+                yield return new WaitUntil(() => currentState != ClientState.SittingInWaitingArea); 
+                break;
+            case ClientState.AtWaitingArea: 
+                millingCoroutine = StartCoroutine(MillAroundAndWaitForSeat());
+                yield return new WaitUntil(() => currentState != ClientState.AtWaitingArea); 
+                break;
+            case ClientState.AtDesk1: 
+                yield return StartCoroutine(OfficeServiceRoutine(ClientSpawner.GetDesk1Zone())); 
+                break;
+            case ClientState.AtDesk2: 
+                yield return StartCoroutine(OfficeServiceRoutine(ClientSpawner.GetDesk2Zone()));
+                break;
+            case ClientState.AtCashier: 
+                yield return StartCoroutine(PayBillRoutine()); 
+                break;
+            case ClientState.AtRegistration: 
+                yield return StartCoroutine(RegistrationServiceRoutine()); 
+                break;
+            case ClientState.Confused: 
+                yield return StartCoroutine(ConfusedRoutine()); 
+                break;
+            case ClientState.Enraged: 
+                yield return StartCoroutine(EnragedRoutine()); 
+                break;
+            case ClientState.PassedRegistration: 
+                yield return StartCoroutine(PassedRegistrationRoutine()); 
+                break;
+            default: 
+                yield return null; 
+                break;
         } 
         mainActionCoroutine = null;
     }
 
-    private IEnumerator OfficeServiceRoutine(LimitedCapacityZone zone) { if (currentState == ClientState.AtDesk1 || currentState == ClientState.AtDesk2) { targetZone = zone; SetState(ClientState.AtLimitedZoneEntrance); yield return StartCoroutine(EnterZoneRoutine()); if (currentState != ClientState.InsideLimitedZone) yield break; } else { SetState(ClientState.Confused); yield break; } }
-    private IEnumerator PatienceMonitorForZone(LimitedCapacityZone zone) { yield return new WaitForSeconds(zonePatienceTime); if (currentState == ClientState.AtLimitedZoneEntrance) { zone.LeaveQueue(parent.gameObject); if (parent.puddlePrefabs != null && parent.puddlePrefabs.Count > 0 && zone == ClientSpawner.GetToiletZone() && Random.value < puddleChanceOnUpset) { if (MessManager.Instance.CanCreateMess()) { GameObject randomPuddlePrefab = parent.puddlePrefabs[Random.Range(0, parent.puddlePrefabs.Count)]; Instantiate(randomPuddlePrefab, transform.position, Quaternion.identity); } } if (Random.value < 0.5f) { SetState(ClientState.Enraged); } else { parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset; SetState(ClientState.LeavingUpset); } } }
-    private IEnumerator AttemptToStealRoutine() { parent.GetVisuals()?.SetEmotion(Emotion.Sly); yield return new WaitForSeconds(Random.Range(1f, 2f)); GuardManager.Instance.ReportTheft(parent); parent.reasonForLeaving = ClientPathfinding.LeaveReason.Theft; yield return StartCoroutine(ExitZoneAndSetNewGoal(ClientSpawner.Instance.exitWaypoint, ClientState.Leaving)); }
-    private IEnumerator ConfusedRoutine() { agentMover.Stop(); isBeingHelped = false; while(!isBeingHelped) { yield return new WaitForSeconds(3f); if (isBeingHelped) break; float recoveryChance = 0.3f * (1f - parent.babushkaFactor); float choice = Random.value; if (choice < recoveryChance) { SetGoal(previousGoal); SetState(ClientState.MovingToGoal); yield break; } else if (choice < recoveryChance + 0.2f) { SetGoal(ClientQueueManager.Instance.ChooseNewGoal(parent)); SetState(ClientState.MovingToGoal); yield break; } } }
-    private IEnumerator EnragedRoutine() { ClientQueueManager.Instance.AddAngryClient(parent); if (parent.trashPrefabs != null && parent.trashPrefabs.Count > 0) { int trashCount = Random.Range(4, 8); for(int i = 0; i < trashCount; i++) { if (MessManager.Instance.CanCreateMess()) { GameObject randomTrashPrefab = parent.trashPrefabs[Random.Range(0, parent.trashPrefabs.Count)]; Vector2 randomOffset = Random.insideUnitCircle * 0.5f; Instantiate(randomTrashPrefab, (Vector2)transform.position + randomOffset, Quaternion.identity); } } } var thoughtController = GetComponent<ThoughtBubbleController>(); if (thoughtController != null) { thoughtController.StopThinking(); StartCoroutine(RageThinkLoop(thoughtController)); } float rageTimer = Time.time + rageDuration; while (Time.time < rageTimer) { Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); if(allWaypoints.Length > 0) { Waypoint randomTarget = allWaypoints[Random.Range(0, allWaypoints.Length)]; agentMover.SetPath(BuildPathTo(randomTarget.transform.position)); yield return new WaitUntil(() => !agentMover.IsMoving() || Vector2.Distance(transform.position, randomTarget.transform.position) < 2f); } else { yield return new WaitForSeconds(1f); } } parent.reasonForLeaving = ClientPathfinding.LeaveReason.Angry; SetGoal(ClientSpawner.Instance.exitWaypoint); SetState(ClientState.Leaving); }
-    private IEnumerator RageThinkLoop(ThoughtBubbleController controller) { while (GetCurrentState() == ClientState.Enraged) { controller.TriggerCriticalThought($"Client_{ClientState.Enraged}"); yield return new WaitForSeconds(Random.Range(2f, 4f)); } }
-    private IEnumerator MillAroundAndWaitForSeat() { ClientQueueManager.Instance.StartPatienceTimer(parent); while (currentState == ClientState.AtWaitingArea) { Transform freeSeat = ClientQueueManager.Instance.FindSeatForClient(parent); if (freeSeat != null) { GoToSeat(freeSeat); yield break; } Waypoint randomStandingPoint = ClientQueueManager.Instance.ChooseNewGoal(parent); if(randomStandingPoint != null) { SetGoal(randomStandingPoint); yield return StartCoroutine(MoveToGoalRoutine()); } yield return new WaitForSeconds(Random.Range(2f, 4f)); } }
-    public void GetHelpFromIntern(Waypoint newGoal = null) { if (parent.helpedByInternSound != null) AudioSource.PlayClipAtPoint(parent.helpedByInternSound, transform.position); if(currentState == ClientState.Confused) { isBeingHelped = true; SetGoal(newGoal ?? ClientQueueManager.Instance.ChooseNewGoal(parent)); SetState(ClientState.MovingToGoal); } else { StopAllActionCoroutines(); if(newGoal != null) { if (newGoal == ClientSpawner.Instance.exitWaypoint) { parent.reasonForLeaving = ClientPathfinding.LeaveReason.Normal; SetState(ClientState.Leaving); } else { SetState(ClientState.MovingToGoal); } ClientQueueManager.Instance.RemoveClientFromQueue(parent); SetGoal(newGoal); } } }
-    public Queue<Waypoint> BuildPathTo(Vector2 targetPos) { var newPath = new Queue<Waypoint>(); Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); if (allWaypoints.Length == 0) return newPath; Waypoint start = FindNearestVisibleWaypoint(transform.position, allWaypoints); Waypoint goal = allWaypoints.FirstOrDefault(wp => Vector2.Distance(wp.transform.position, targetPos) < 0.01f); if (goal == null) { goal = FindNearestVisibleWaypoint(targetPos, allWaypoints); } if (start == null) { start = FindNearestWaypoint(transform.position, allWaypoints); } if (goal == null) { goal = FindNearestWaypoint(targetPos, allWaypoints); } if (start == null || goal == null) { SetState(ClientState.Confused); return newPath; } Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>(); Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>(); PriorityQueue<Waypoint, float> queue = new PriorityQueue<Waypoint, float>(); foreach (var wp in allWaypoints) { distances[wp] = float.MaxValue; previous[wp] = null; } distances[start] = 0; queue.Enqueue(start, 0); while (queue.Count > 0) { Waypoint current = queue.Dequeue(); if (current == goal) { ReconstructPath(previous, goal, newPath); return newPath; } if (current.neighbors == null || current.neighbors.Count == 0) continue; foreach (var neighbor in current.neighbors) { if (neighbor == null) continue; if (neighbor.type == Waypoint.WaypointType.StaffOnly && neighbor != ClientSpawner.Instance.exitWaypoint) continue; float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position); if (distances.ContainsKey(neighbor) && newDist < distances[neighbor]) { distances[neighbor] = newDist; previous[neighbor] = current; queue.Enqueue(neighbor, newDist); } } } SetState(ClientState.Confused); return newPath; }
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) { List<Waypoint> pathList = new List<Waypoint>(); for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } pathList.Reverse(); path.Clear(); foreach (var wp in pathList) { path.Enqueue(wp); } }
-    private Waypoint FindNearestVisibleWaypoint(Vector2 position, Waypoint[] wps) { if(wps == null || wps.Length == 0) return null; Waypoint bestWaypoint = null; float minDistance = float.MaxValue; foreach (var wp in wps) { if (wp.type == Waypoint.WaypointType.StaffOnly) continue; float distance = Vector2.Distance(position, wp.transform.position); if (distance < minDistance) { RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles")); if (hit.collider == null) { minDistance = distance; bestWaypoint = wp; } } } return bestWaypoint; }
-    private Waypoint FindNearestWaypoint(Vector2 p, Waypoint[] wps) { if(wps == null || wps.Length == 0) return null; return wps.Where(wp => wp.type != Waypoint.WaypointType.StaffOnly).OrderBy(wp => Vector2.Distance(p, wp.transform.position)).FirstOrDefault(); }
+    private IEnumerator OfficeServiceRoutine(LimitedCapacityZone zone) 
+    { 
+        if (currentState == ClientState.AtDesk1 || currentState == ClientState.AtDesk2) { 
+            targetZone = zone;
+            SetState(ClientState.AtLimitedZoneEntrance); 
+            yield return StartCoroutine(EnterZoneRoutine()); 
+            if (currentState != ClientState.InsideLimitedZone) yield break; 
+        } else { 
+            SetState(ClientState.Confused); 
+            yield break;
+        } 
+    }
+
+    private IEnumerator PatienceMonitorForZone(LimitedCapacityZone zone) 
+    { 
+        yield return new WaitForSeconds(zonePatienceTime); 
+        if (currentState == ClientState.AtLimitedZoneEntrance) { 
+            zone.LeaveQueue(parent.gameObject);
+            if (parent.puddlePrefabs != null && parent.puddlePrefabs.Count > 0 && zone == ClientSpawner.GetToiletZone() && Random.value < puddleChanceOnUpset) { 
+                if (MessManager.Instance.CanCreateMess()) { 
+                    GameObject randomPuddlePrefab = parent.puddlePrefabs[Random.Range(0, parent.puddlePrefabs.Count)];
+                    Instantiate(randomPuddlePrefab, transform.position, Quaternion.identity); 
+                } 
+            } 
+            if (Random.value < 0.5f) { SetState(ClientState.Enraged); } 
+            else { parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset; SetState(ClientState.LeavingUpset); } 
+        } 
+    }
+
+    private IEnumerator AttemptToStealRoutine() 
+    { 
+        parent.GetVisuals()?.SetEmotion(Emotion.Sly); 
+        yield return new WaitForSeconds(Random.Range(1f, 2f)); 
+        GuardManager.Instance.ReportTheft(parent); 
+        parent.reasonForLeaving = ClientPathfinding.LeaveReason.Theft;
+        yield return StartCoroutine(ExitZoneAndSetNewGoal(ClientSpawner.Instance.exitWaypoint, ClientState.Leaving)); 
+    }
+
+    private IEnumerator ConfusedRoutine() 
+    { 
+        agentMover.Stop(); 
+        isBeingHelped = false;
+        while(!isBeingHelped) { 
+            yield return new WaitForSeconds(3f); 
+            if (isBeingHelped) break; 
+            float recoveryChance = 0.3f * (1f - parent.babushkaFactor);
+            float choice = Random.value; 
+            if (choice < recoveryChance) { SetGoal(previousGoal); SetState(ClientState.MovingToGoal); yield break; } 
+            else if (choice < recoveryChance + 0.2f) { SetGoal(ClientQueueManager.Instance.ChooseNewGoal(parent)); SetState(ClientState.MovingToGoal); yield break; } 
+        } 
+    }
+
+    private IEnumerator EnragedRoutine() 
+    { 
+        ClientQueueManager.Instance.AddAngryClient(parent);
+        if (parent.trashPrefabs != null && parent.trashPrefabs.Count > 0) { 
+            int trashCount = Random.Range(4, 8);
+            for(int i = 0; i < trashCount; i++) { 
+                if (MessManager.Instance.CanCreateMess()) { 
+                    GameObject randomTrashPrefab = parent.trashPrefabs[Random.Range(0, parent.trashPrefabs.Count)];
+                    Vector2 randomOffset = Random.insideUnitCircle * 0.5f; 
+                    Instantiate(randomTrashPrefab, (Vector2)transform.position + randomOffset, Quaternion.identity); 
+                } 
+            } 
+        } 
+        var thoughtController = GetComponent<ThoughtBubbleController>();
+        if (thoughtController != null) { 
+            thoughtController.StopThinking(); 
+            StartCoroutine(RageThinkLoop(thoughtController)); 
+        } 
+        float rageTimer = Time.time + rageDuration;
+        while (Time.time < rageTimer) { 
+            Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); 
+            if(allWaypoints.Length > 0) { 
+                Waypoint randomTarget = allWaypoints[Random.Range(0, allWaypoints.Length)]; 
+                agentMover.SetPath(BuildPathTo(randomTarget.transform.position));
+                yield return new WaitUntil(() => !agentMover.IsMoving() || Vector2.Distance(transform.position, randomTarget.transform.position) < 2f); 
+            } else { 
+                yield return new WaitForSeconds(1f);
+            } 
+        } 
+        parent.reasonForLeaving = ClientPathfinding.LeaveReason.Angry; 
+        SetGoal(ClientSpawner.Instance.exitWaypoint); 
+        SetState(ClientState.Leaving); 
+    }
+
+    private IEnumerator RageThinkLoop(ThoughtBubbleController controller) 
+    { 
+        while (GetCurrentState() == ClientState.Enraged) { 
+            controller.TriggerCriticalThought($"Client_{ClientState.Enraged}");
+            yield return new WaitForSeconds(Random.Range(2f, 4f)); 
+        } 
+    }
+
+    private IEnumerator MillAroundAndWaitForSeat() 
+    { 
+        ClientQueueManager.Instance.StartPatienceTimer(parent);
+        while (currentState == ClientState.AtWaitingArea) { 
+            Transform freeSeat = ClientQueueManager.Instance.FindSeatForClient(parent); 
+            if (freeSeat != null) { GoToSeat(freeSeat); yield break; } 
+            Waypoint randomStandingPoint = ClientQueueManager.Instance.ChooseNewGoal(parent); 
+            if(randomStandingPoint != null) { 
+                SetGoal(randomStandingPoint); 
+                yield return StartCoroutine(MoveToGoalRoutine()); 
+            } 
+            yield return new WaitForSeconds(Random.Range(2f, 4f));
+        } 
+    }
+
+    public void GetHelpFromIntern(Waypoint newGoal = null) 
+    { 
+        if (parent.helpedByInternSound != null) AudioSource.PlayClipAtPoint(parent.helpedByInternSound, transform.position);
+        if(currentState == ClientState.Confused) { 
+            isBeingHelped = true; 
+            SetGoal(newGoal ?? ClientQueueManager.Instance.ChooseNewGoal(parent)); 
+            SetState(ClientState.MovingToGoal); 
+        } else { 
+            StopAllActionCoroutines();
+            if(newGoal != null) { 
+                if (newGoal == ClientSpawner.Instance.exitWaypoint) { 
+                    parent.reasonForLeaving = ClientPathfinding.LeaveReason.Normal; 
+                    SetState(ClientState.Leaving); 
+                } else { 
+                    SetState(ClientState.MovingToGoal); 
+                } 
+                ClientQueueManager.Instance.RemoveClientFromQueue(parent); 
+                SetGoal(newGoal);
+            } 
+        } 
+    }
+
+    public Queue<Waypoint> BuildPathTo(Vector2 targetPos) 
+    { 
+        var newPath = new Queue<Waypoint>(); 
+        Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
+        if (allWaypoints.Length == 0) return newPath; 
+        Waypoint start = FindNearestVisibleWaypoint(transform.position, allWaypoints); 
+        Waypoint goal = allWaypoints.FirstOrDefault(wp => Vector2.Distance(wp.transform.position, targetPos) < 0.01f);
+        if (goal == null) { goal = FindNearestVisibleWaypoint(targetPos, allWaypoints); } 
+        if (start == null) { start = FindNearestWaypoint(transform.position, allWaypoints); } 
+        if (goal == null) { goal = FindNearestWaypoint(targetPos, allWaypoints); } 
+        if (start == null || goal == null) { SetState(ClientState.Confused); return newPath; } 
+        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>(); 
+        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
+        PriorityQueue<Waypoint, float> queue = new PriorityQueue<Waypoint, float>(); 
+        foreach (var wp in allWaypoints) { 
+            distances[wp] = float.MaxValue; 
+            previous[wp] = null;
+        } 
+        distances[start] = 0; 
+        queue.Enqueue(start, 0); 
+        while (queue.Count > 0) { 
+            Waypoint current = queue.Dequeue();
+            if (current == goal) { ReconstructPath(previous, goal, newPath); return newPath; } 
+            if (current.neighbors == null || current.neighbors.Count == 0) continue;
+            foreach (var neighbor in current.neighbors) { 
+                if (neighbor == null) continue; 
+                if (neighbor.type == Waypoint.WaypointType.StaffOnly && neighbor != ClientSpawner.Instance.exitWaypoint) continue;
+                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position); 
+                if (distances.ContainsKey(neighbor) && newDist < distances[neighbor]) { 
+                    distances[neighbor] = newDist; 
+                    previous[neighbor] = current;
+                    queue.Enqueue(neighbor, newDist); 
+                } 
+            } 
+        } 
+        SetState(ClientState.Confused); 
+        return newPath; 
+    }
+
+    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) 
+    { 
+        List<Waypoint> pathList = new List<Waypoint>();
+        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } 
+        pathList.Reverse(); 
+        path.Clear();
+        foreach (var wp in pathList) { path.Enqueue(wp); } 
+    }
+
+    private Waypoint FindNearestVisibleWaypoint(Vector2 position, Waypoint[] wps) 
+    { 
+        if(wps == null || wps.Length == 0) return null;
+        Waypoint bestWaypoint = null; 
+        float minDistance = float.MaxValue; 
+        foreach (var wp in wps) { 
+            if (wp.type == Waypoint.WaypointType.StaffOnly) continue;
+            float distance = Vector2.Distance(position, wp.transform.position); 
+            if (distance < minDistance) { 
+                RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles"));
+                if (hit.collider == null) { minDistance = distance; bestWaypoint = wp; } 
+            } 
+        } 
+        return bestWaypoint;
+    }
+
+    private Waypoint FindNearestWaypoint(Vector2 p, Waypoint[] wps) 
+    { 
+        if(wps == null || wps.Length == 0) return null;
+        return wps.Where(wp => wp.type != Waypoint.WaypointType.StaffOnly).OrderBy(wp => Vector2.Distance(p, wp.transform.position)).FirstOrDefault(); 
+    }
+    
     public ClientState GetCurrentState() => currentState;
+    
     public Waypoint GetCurrentGoal() => currentGoal; 
+    
     public void SetGoal(Waypoint g) => currentGoal = g;
-    public string GetStatusInfo() { if (parent == null) return "Нет данных"; string traits = $"Б: {parent.babushkaFactor:F2} | C: {parent.suetunFactor:F2} | П: {parent.prolazaFactor:F2}"; string goal = $"Цель: {parent.mainGoal}"; string statusText = ""; string goalName = (currentGoal != null) ? currentGoal.name : (seatTarget != null ? seatTarget.name : "неизвестно"); switch (currentState) { case ClientState.MovingToGoal: case ClientState.MovingToRegistrarImpolite: case ClientState.GoingToCashier: case ClientState.Leaving: case ClientState.LeavingUpset: statusText += $"Идет к: {goalName}"; break; case ClientState.MovingToSeat: statusText += $"Идет на место: {seatTarget.name}"; break; case ClientState.AtWaitingArea: statusText += "Ожидает стоя"; break; case ClientState.SittingInWaitingArea: statusText += "Ожидает сидя"; break; case ClientState.AtRegistration: statusText += "Обслуживается в регистратуре"; break; case ClientState.AtDesk1: statusText += "Обслуживается у Стойки 1"; break; case ClientState.AtDesk2: statusText += "Обслуживается у Стойки 2"; break; case ClientState.InsideLimitedZone: statusText += $"В зоне: {targetZone?.name}"; break; case ClientState.Enraged: statusText += "В ЯРОСТИ!"; break; case ClientState.AtCashier: statusText += "Оплачивает"; break; case ClientState.AtLimitedZoneEntrance: statusText += $"Ждет входа в зону: {targetZone?.name}"; break; default: statusText += currentState.ToString(); break; } if (parent.docHolder != null) { DocumentType docType = parent.docHolder.GetCurrentDocumentType(); if (docType != DocumentType.None) { statusText += $" (несет {docType})"; } } return $"{traits}\n{goal}\n{statusText}"; }
-    private class PriorityQueue<T, U> where U : System.IComparable<U> { private SortedDictionary<U, Queue<T>> dictionary = new SortedDictionary<U, Queue<T>>(); public int Count => dictionary.Sum(p => p.Value.Count); public void Enqueue(T item, U priority) { if (!dictionary.ContainsKey(priority)) { dictionary[priority] = new Queue<T>(); } dictionary[priority].Enqueue(item); } public T Dequeue() { var pair = dictionary.First(); T item = pair.Value.Dequeue(); if (pair.Value.Count == 0) { dictionary.Remove(pair.Key); } return item; } }
+    
+    public string GetStatusInfo() 
+    { 
+        if (parent == null) return "No data";
+        string traits = $"B: {parent.babushkaFactor:F2} | S: {parent.suetunFactor:F2} | P: {parent.prolazaFactor:F2}"; 
+        string goal = $"Goal: {parent.mainGoal}"; 
+        string statusText = "";
+        string goalName = (currentGoal != null) ? currentGoal.name : (seatTarget != null ? seatTarget.name : "unknown");
+        switch (currentState) { 
+            case ClientState.MovingToGoal: 
+            case ClientState.MovingToRegistrarImpolite: 
+            case ClientState.GoingToCashier: 
+            case ClientState.Leaving: 
+            case ClientState.LeavingUpset: 
+                statusText += $"Going to: {goalName}"; 
+                break;
+            case ClientState.MovingToSeat: 
+                statusText += $"Going to seat: {seatTarget.name}"; 
+                break; 
+            case ClientState.AtWaitingArea: 
+                statusText += "Waiting while standing"; 
+                break;
+            case ClientState.SittingInWaitingArea: 
+                statusText += "Waiting while sitting"; 
+                break; 
+            case ClientState.AtRegistration: 
+                statusText += "Being served at registration"; 
+                break;
+            case ClientState.AtDesk1: 
+                statusText += "Being served at Desk 1"; 
+                break; 
+            case ClientState.AtDesk2: 
+                statusText += "Being served at Desk 2"; 
+                break;
+            case ClientState.InsideLimitedZone: 
+                statusText += $"In zone: {targetZone?.name}"; 
+                break; 
+            case ClientState.Enraged: 
+                statusText += "ENRAGED!"; 
+                break; 
+            case ClientState.AtCashier: 
+                statusText += "Paying";
+                break; 
+            case ClientState.AtLimitedZoneEntrance: 
+                statusText += $"Waiting to enter zone: {targetZone?.name}"; 
+                break; 
+            default: 
+                statusText += currentState.ToString(); 
+                break;
+        } 
+        if (parent.docHolder != null) { 
+            DocumentType docType = parent.docHolder.GetCurrentDocumentType(); 
+            if (docType != DocumentType.None) { 
+                statusText += $" (carrying {docType})";
+            } 
+        } 
+        return $"{traits}\n{goal}\n{statusText}"; 
+    }
+    
+    private class PriorityQueue<T, U> where U : System.IComparable<U> 
+    { 
+        private SortedDictionary<U, Queue<T>> dictionary = new SortedDictionary<U, Queue<T>>();
+        public int Count => dictionary.Sum(p => p.Value.Count); 
+        public void Enqueue(T item, U priority) { 
+            if (!dictionary.ContainsKey(priority)) { 
+                dictionary[priority] = new Queue<T>();
+            } 
+            dictionary[priority].Enqueue(item); 
+        } 
+        public T Dequeue() { 
+            var pair = dictionary.First(); 
+            T item = pair.Value.Dequeue();
+            if (pair.Value.Count == 0) { 
+                dictionary.Remove(pair.Key); 
+            } 
+            return item; 
+        } 
+    }
 }

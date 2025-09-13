@@ -1,9 +1,12 @@
-// Файл: StartOfDayPanel.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
+[RequireComponent(typeof(CanvasGroup))]
 public class StartOfDayPanel : MonoBehaviour
 {
     public static StartOfDayPanel Instance { get; private set; }
@@ -11,62 +14,95 @@ public class StartOfDayPanel : MonoBehaviour
     [Header("UI Компоненты")]
     public TextMeshProUGUI dayInfoText;
     public Button startDayButton;
-    public Button hireButton;
+    public DirectorDeskButton directorDeskButton;
     
     [Header("Документы Директора")]
     public GameObject documentIconPrefab;
     public Transform documentContainer;
     
-    private MenuManager menuManager;
     private DirectorManager directorManager;
     private Dictionary<ClientPathfinding, GameObject> activeDocumentIcons = new Dictionary<ClientPathfinding, GameObject>();
+    private CanvasGroup canvasGroup;
     
     void Awake()
     {
         Instance = this;
+        canvasGroup = GetComponent<CanvasGroup>();
     }
     
-    private void Start()
-    {
-        menuManager = MenuManager.Instance;
-        directorManager = DirectorManager.Instance;
-        
-        if (startDayButton != null && menuManager != null)
-        {
-            startDayButton.onClick.RemoveAllListeners();
-            startDayButton.onClick.AddListener(OnStartOrContinueClicked);
-        }
-    }
-
-    private void OnEnable()
-    {
-        UpdatePanelInfo();
-    }
+    // Метод Update() полностью удален, чтобы избежать конфликтов.
 
     public void UpdatePanelInfo()
     {
         if (directorManager == null) directorManager = DirectorManager.Instance;
-        if (directorManager == null || ClientSpawner.Instance == null) return;
+        if (directorManager == null || ClientSpawner.Instance == null || startDayButton == null) return;
         
-        string dayInfo = $"День: {ClientSpawner.Instance.GetCurrentDay()}\n";
-        dayInfo += $"Страйки: {directorManager.currentStrikes}/3\n";
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine($"День: {ClientSpawner.Instance.GetCurrentDay()}");
+        sb.AppendLine($"Страйки: {directorManager.currentStrikes}/3");
+
+        bool hasActiveOrders = directorManager.activeOrders.Count > 0 || directorManager.activePermanentOrders.Count > 0;
         
-        if (directorManager.activeOrders.Count > 0)
+        if (hasActiveOrders)
         {
-            DirectorOrder activeOrder = directorManager.activeOrders[0];
-            dayInfo += $"\n<b>Активный приказ:</b>\n<color=yellow>{activeOrder.orderName}</color>";
-            startDayButton.GetComponentInChildren<TextMeshProUGUI>().text = "Начать день";
+            var orderNames = directorManager.activePermanentOrders.Select(o => o.orderName).ToList();
+            if (directorManager.activeOrders.Count > 0) orderNames.Add(directorManager.activeOrders[0].orderName);
+            sb.AppendLine($"\n<b>Активные приказы:</b>\n<color=yellow>{string.Join("\n", orderNames)}</color>");
         }
         else
         {
-            dayInfo += "\n<color=red>Требуется издать приказ на день!</color>";
-            startDayButton.GetComponentInChildren<TextMeshProUGUI>().text = "Выберите приказ";
+             sb.AppendLine("\n<color=red>Требуется издать приказ на день!</color>");
         }
+        dayInfoText.text = sb.ToString();
 
-        dayInfoText.text = dayInfo;
-        startDayButton.interactable = true;
+        var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
+        startDayButton.onClick.RemoveAllListeners();
+        
+        bool isMidDayPause = ClientSpawner.Instance.GetPeriodTimer() > 0 && Time.timeScale == 0f;
+
+        if (isMidDayPause)
+        {
+            buttonText.text = "Продолжить день";
+            startDayButton.onClick.AddListener(() => MenuManager.Instance.StartOrResumeGameplay());
+        }
+        else if (hasActiveOrders)
+        {
+            buttonText.text = "Начать день";
+            startDayButton.onClick.AddListener(() => MenuManager.Instance.StartOrResumeGameplay());
+        }
+        else
+        {
+            buttonText.text = "Выберите приказ";
+            startDayButton.onClick.AddListener(() => MenuManager.Instance.ShowOrderSelection());
+        }
     }
     
+    public void ShowPanel()
+    {
+        StartCoroutine(Fade(true, true));
+    }
+    
+    public IEnumerator Fade(bool fadeIn, bool forceInteractable)
+    {
+        float fadeTime = 0.3f;
+        float startAlpha = fadeIn ? 0f : 1f;
+        float endAlpha = fadeIn ? 1f : 0f;
+        
+        canvasGroup.blocksRaycasts = true;
+        
+        float timer = 0f;
+        while (timer < fadeTime)
+        {
+            timer += Time.unscaledDeltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timer / fadeTime);
+            yield return null;
+        }
+        
+        canvasGroup.alpha = endAlpha;
+        canvasGroup.interactable = fadeIn || forceInteractable;
+        canvasGroup.blocksRaycasts = fadeIn || forceInteractable;
+    }
+
     public void RegisterDirectorDocument(ClientPathfinding client)
     {
         if (documentIconPrefab == null || documentContainer == null) return;
@@ -74,15 +110,6 @@ public class StartOfDayPanel : MonoBehaviour
 
         GameObject iconInstance = Instantiate(documentIconPrefab, documentContainer);
         
-        RectTransform containerRect = documentContainer.GetComponent<RectTransform>();
-        RectTransform iconRect = iconInstance.GetComponent<RectTransform>();
-        if (containerRect != null && iconRect != null)
-        {
-            float randomX = Random.Range(-containerRect.rect.width / 2 + iconRect.rect.width, containerRect.rect.width / 2 - iconRect.rect.width);
-            float randomY = Random.Range(-containerRect.rect.height / 2 + iconRect.rect.height, containerRect.rect.height / 2 - iconRect.rect.height);
-            iconRect.anchoredPosition = new Vector2(randomX, randomY);
-        }
-
         if (iconInstance.TryGetComponent<DirectorDocumentIcon>(out var docIconScript))
         {
             var reviewPanel = FindFirstObjectByType<DirectorDocumentReviewPanel>(FindObjectsInactive.Include);
@@ -90,6 +117,7 @@ public class StartOfDayPanel : MonoBehaviour
         }
         
         activeDocumentIcons.Add(client, iconInstance);
+        if (directorDeskButton != null) directorDeskButton.UpdateAppearance(activeDocumentIcons.Count);
     }
 
     public void RemoveDocumentIcon(ClientPathfinding client)
@@ -102,14 +130,13 @@ public class StartOfDayPanel : MonoBehaviour
                 Destroy(iconToRemove);
             }
             activeDocumentIcons.Remove(client);
+            
+            if (directorDeskButton != null) directorDeskButton.UpdateAppearance(activeDocumentIcons.Count);
         }
     }
     
-    private void OnStartOrContinueClicked()
+    public int GetWaitingDocumentCount()
     {
-        if (menuManager == null) menuManager = MenuManager.Instance;
-        if (menuManager == null) return;
-
-        menuManager.OnStartDayClicked();
+        return activeDocumentIcons.Count;
     }
 }

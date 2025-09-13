@@ -1,11 +1,11 @@
-// Файл: OrderSelectionUI.cs
+// Файл: OrderSelectionUI.cs - Упрощенная версия
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 
+[RequireComponent(typeof(CanvasGroup))]
 public class OrderSelectionUI : MonoBehaviour
 {
     [Header("UI Components")]
@@ -13,66 +13,23 @@ public class OrderSelectionUI : MonoBehaviour
     public List<TextMeshProUGUI> titleTexts;
     public List<TextMeshProUGUI> descriptionTexts;
     public List<Image> iconImages;
-    public CanvasGroup canvasGroup;
-    
-    [Header("Целевые точки для анимации")]
-    public List<RectTransform> buttonTargetPositions;
-    
-    [Header("Manager References")]
-    public MenuManager menuManager;
-    public StartOfDayPanel startOfDayPanel;
-    
-    [Header("Настройки анимации")]
-    public float buttonFallDuration = 0.4f;
-    public AudioClip buttonLandSound;
-    public float minDelayBetweenButtons = 0.1f;
-    public float maxDelayBetweenButtons = 0.25f;
+	
+	[Header("Звуки")]
+	public AudioClip orderSelectedSound;
 
+    private CanvasGroup canvasGroup;
     private List<DirectorOrder> currentOfferedOrders;
-    private bool isSetupRunning = false;
 
-    void Start()
+    void Awake()
     {
-        if (menuManager == null) menuManager = MenuManager.Instance;
-        if (startOfDayPanel == null) startOfDayPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+        canvasGroup = GetComponent<CanvasGroup>();
     }
-
-    void OnEnable()
+    
+    public void Setup()
     {
-        if (!isSetupRunning)
-        {
-            StartCoroutine(SetupRoutine());
-        }
-    }
-
-    void OnDisable()
-    {
-        isSetupRunning = false;
-    }
-
-    private IEnumerator SetupRoutine()
-    {
-        isSetupRunning = true;
-        if (canvasGroup != null) 
-        {
-            canvasGroup.interactable = false;
-        }
-        
-        foreach (var button in orderButtons)
-        {
-            if(button != null) button.gameObject.SetActive(true);
-        }
-
-        yield return new WaitForEndOfFrame();
-        
-        SetupAndAnimate();
-    }
-
-    public void SetupAndAnimate()
-    {
-        if (DirectorManager.Instance == null) { isSetupRunning = false; return; }
+        if (DirectorManager.Instance == null) return;
         currentOfferedOrders = DirectorManager.Instance.offeredOrders;
-        if (currentOfferedOrders == null) { isSetupRunning = false; return; }
+        if (currentOfferedOrders == null) return;
         
         for (int i = 0; i < orderButtons.Count; i++)
         {
@@ -93,75 +50,43 @@ public class OrderSelectionUI : MonoBehaviour
                 orderButtons[i].gameObject.SetActive(false);
             }
         }
-        
-        StartCoroutine(AnimateButtonsIn());
     }
 
     private void OnOrderSelected(int index)
     {
         if (index < 0 || currentOfferedOrders == null || index >= currentOfferedOrders.Count) return;
         
+		    if (MenuManager.Instance?.uiAudioSource != null && orderSelectedSound != null)
+    {
+        MenuManager.Instance.uiAudioSource.PlayOneShot(orderSelectedSound);
+    }
+		
         DirectorOrder selectedOrder = currentOfferedOrders[index];
         DirectorManager.Instance.SelectOrder(selectedOrder);
         
-        // --- ГЛАВНОЕ ИЗМЕНЕНИЕ ---
-        // Вместо запуска игры, мы просто прячем эту панель
-        gameObject.SetActive(false);
-        
-        // И просим стол директора обновить информацию (показать выбранный приказ)
-        if (startOfDayPanel != null)
-        {
-            startOfDayPanel.UpdatePanelInfo();
-        }
+        // Просто выключаем себя и показываем главный стол
+        StartCoroutine(Fade(false));
+        StartOfDayPanel.Instance.ShowPanel();
     }
-    
-    private IEnumerator AnimateButtonsIn()
-    {
-        for (int i = 0; i < orderButtons.Count; i++)
-        {
-            if (i < currentOfferedOrders.Count && orderButtons[i] != null)
-            {
-                if (i >= buttonTargetPositions.Count || buttonTargetPositions[i] == null)
-                {
-                    continue;
-                }
-                
-                RectTransform buttonRect = orderButtons[i].GetComponent<RectTransform>();
-                Vector3 endPosition = buttonTargetPositions[i].anchoredPosition;
-                
-                buttonRect.anchoredPosition = new Vector2(endPosition.x, endPosition.y + 700f);
 
-                yield return StartCoroutine(MoveButton(buttonRect, endPosition));
-                
-                float delay = Random.Range(minDelayBetweenButtons, maxDelayBetweenButtons);
-                yield return new WaitForSecondsRealtime(delay);
-            }
-        }
+    public IEnumerator Fade(bool fadeIn)
+    {
+        float fadeTime = 0.3f; // Можно вынести в настройки
+        float startAlpha = fadeIn ? 0f : 1f;
+        float endAlpha = fadeIn ? 1f : 0f;
         
-        if (canvasGroup != null)
+        canvasGroup.blocksRaycasts = true;
+        
+        float timer = 0f;
+        while (timer < fadeTime)
         {
-            canvasGroup.interactable = true;
-        }
-
-        isSetupRunning = false;
-    }
-    
-    private IEnumerator MoveButton(RectTransform buttonTransform, Vector3 endPosition)
-    {
-        if (buttonLandSound != null && menuManager != null && menuManager.uiAudioSource != null)
-        {
-            menuManager.uiAudioSource.PlayOneShot(buttonLandSound);
-        }
-        Vector3 startPosition = buttonTransform.anchoredPosition;
-        float elapsedTime = 0f;
-        while (elapsedTime < buttonFallDuration)
-        {
-            elapsedTime += Time.unscaledDeltaTime;
-            float progress = elapsedTime / buttonFallDuration;
-            float easedProgress = 1 - Mathf.Pow(1 - progress, 3);
-            buttonTransform.anchoredPosition = Vector3.LerpUnclamped(startPosition, endPosition, easedProgress);
+            timer += Time.unscaledDeltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timer / fadeTime);
             yield return null;
         }
-        buttonTransform.anchoredPosition = endPosition;
+        
+        canvasGroup.alpha = endAlpha;
+        canvasGroup.interactable = fadeIn;
+        canvasGroup.blocksRaycasts = fadeIn;
     }
 }

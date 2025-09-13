@@ -6,7 +6,6 @@ public class InGameUI_Actions : MonoBehaviour
     // Метод для кнопки Радио
     public void OnRadioButtonClick()
     {
-        // Находим "бессмертный" MusicPlayer и вызываем его метод
         if (MusicPlayer.Instance != null)
         {
             MusicPlayer.Instance.RequestNextTrack();
@@ -14,21 +13,29 @@ public class InGameUI_Actions : MonoBehaviour
     }
 
     // Метод для кнопки Кабинет/Пауза
-    public void OnCabinetButtonClick()
+public void OnCabinetButtonClick()
+{
+    if (MenuManager.Instance != null)
     {
-        // Находим "бессмертный" MenuManager и вызываем его метод
-        if (MenuManager.Instance != null)
-        {
-            MenuManager.Instance.ToggleSimplePauseMenu();
-        }
+        MenuManager.Instance.OnCabinetButtonClick();
     }
+}
 
     // Метод для кнопки "Главное меню" (которая на панели паузы)
-    public void OnMainMenuButtonClick()
+public void OnMainMenuButtonClick()
+{
+    if (MenuManager.Instance != null)
     {
-        if (MenuManager.Instance != null)
+        MenuManager.Instance.GoToMainMenu();
+    }
+}
+
+    // Метод для кнопки "К столу"
+    public void OnGoToDeskButtonClick()
+    {
+        if (DirectorAvatarController.Instance != null)
         {
-            MenuManager.Instance.OnBackToMainMenuClicked();
+            DirectorAvatarController.Instance.GoToDesk();
         }
     }
 }

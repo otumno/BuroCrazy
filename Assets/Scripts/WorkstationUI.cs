@@ -1,3 +1,4 @@
+// Файл: WorkstationUI.cs
 using UnityEngine;
 using TMPro;
 using System.Collections.Generic;
@@ -8,10 +9,9 @@ public class WorkstationUI : MonoBehaviour
     [Header("Режим отслеживания")]
     [Tooltip("(Для одного персонажа) Перетащите сюда объект Клерка или Охранника")]
     public MonoBehaviour trackedCharacter;
-    
     [Tooltip("(Для группы) Перетащите сюда ВСЕХ охранников со сцены")]
     public List<GuardMovement> trackedGuards;
-
+    
     [Header("UI Компоненты")]
     [Tooltip("Основное текстовое поле для вывода статуса(ов)")]
     public TextMeshProUGUI statusText;
@@ -22,7 +22,6 @@ public class WorkstationUI : MonoBehaviour
 
     void Start()
     {
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Используем GetComponentInChildren для надежного поиска ---
         if (statusText == null)
         {
             statusText = GetComponentInChildren<TextMeshProUGUI>();
@@ -46,8 +45,7 @@ public class WorkstationUI : MonoBehaviour
     {
         if (Time.timeScale == 0f)
         {
-            statusText.text = "Пауза";
-            statusText.color = Color.grey;
+            // Больше не пишем "Пауза" здесь, чтобы не перезатирать статусы
             return;
         }
 
@@ -92,12 +90,31 @@ public class WorkstationUI : MonoBehaviour
         string period = ClientSpawner.CurrentPeriodName?.ToLower().Trim();
         switch (state)
         {
-            case ClerkController.ClerkState.Working: statusText.text = "На месте"; statusText.color = Color.green; break;
-            case ClerkController.ClerkState.OnBreak: if (period == "ночь") { statusText.text = "Смена окончена"; statusText.color = Color.grey; } else { statusText.text = "Обед"; statusText.color = Color.yellow; } break;
+            case ClerkController.ClerkState.Working: 
+                statusText.text = "На месте";
+                statusText.color = Color.green; 
+                break;
+            case ClerkController.ClerkState.OnBreak: 
+                if (period == "ночь") 
+                { 
+                    statusText.text = "Смена окончена"; 
+                    statusText.color = Color.grey;
+                } 
+                else 
+                { 
+                    statusText.text = "Обед"; 
+                    statusText.color = Color.yellow; 
+                } 
+                break;
             case ClerkController.ClerkState.AtToilet:
             case ClerkController.ClerkState.GoingToToilet:
-                statusText.text = "Перерыв"; statusText.color = Color.yellow; break;
-            default: statusText.text = "Отсутствует"; statusText.color = Color.red; break;
+                statusText.text = "Перерыв";
+                statusText.color = Color.yellow; 
+                break;
+            default: 
+                statusText.text = "Отсутствует"; 
+                statusText.color = Color.red; 
+                break;
         }
     }
 

@@ -24,22 +24,21 @@ public class FallingLeaf : MonoBehaviour
 
         Color startColor = fadeToBlack ? originalColor : Color.black;
         Color endColor = fadeToBlack ? Color.black : originalColor;
-
         while (timer < duration)
         {
+            // --- Проверка на случай, если объект уничтожили раньше времени ---
+            if (this == null || rectTransform == null) yield break; 
+            
             timer += Time.unscaledDeltaTime;
             float progress = Mathf.Clamp01(timer / duration);
             float easedProgress;
 
-            // ИЗМЕНЕНИЕ: Выбираем тип динамики
             if (useEaseIn)
             {
-                // Медленный старт, быстрый финиш (для разлета)
-                easedProgress = progress * progress * progress; 
+                easedProgress = progress * progress * progress;
             }
             else
             {
-                // Быстрый старт, медленный финиш (для прилета)
                 easedProgress = 1 - Mathf.Pow(1 - progress, 3);
             }
 
@@ -49,7 +48,8 @@ public class FallingLeaf : MonoBehaviour
             yield return null;
         }
 
-        rectTransform.position = endPos;
-        leafImage.color = endColor;
+        // --- ДОБАВЬТЕ ЭТУ СТРОКУ ---
+        // Когда анимация завершена, лист сам себя уничтожает.
+        Destroy(gameObject);
     }
 }
