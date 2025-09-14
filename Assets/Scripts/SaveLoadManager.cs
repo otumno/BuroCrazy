@@ -5,19 +5,8 @@ using System.Linq;
 
 public class SaveLoadManager : MonoBehaviour
 {
-    public static SaveLoadManager Instance { get; private set; }
+    public static SaveLoadManager Instance { get; set; }
     private int currentSlotIndex = 0;
-
-    private void Awake()
-    {
-        if (Instance != null && Instance != this) 
-        { 
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this; 
-        //DontDestroyOnLoad(gameObject);
-    }
 
     public void SaveGame(int slotIndex)
     {

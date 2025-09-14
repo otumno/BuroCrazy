@@ -13,8 +13,6 @@ public class ServiceWorkerController : StaffController
     private WorkerState currentState = WorkerState.OffDuty;
     
     [Header("Внешний вид")]
-    [Tooltip("Укажите пол для выбора правильных спрайтов")]
-    public Gender gender;
     private CharacterVisuals visuals;
     
     [Header("Дополнительные объекты")]
@@ -50,9 +48,6 @@ public class ServiceWorkerController : StaffController
     private Quaternion initialBroomRotation;
     private Waypoint[] allWaypoints;
     private Rigidbody2D rb;
-
-    [Header("Навыки")]
-    public CharacterSkills skills;
     
     protected override void Awake()
     {
@@ -225,7 +220,25 @@ public class ServiceWorkerController : StaffController
         StartCoroutine(AnimateBroom(cleaningTime));
         yield return new WaitForSeconds(cleaningTime);
 
-        if (initialMess == null) { currentAction = null; yield break; }
+ActionType performedAction;
+switch (initialMess.type)
+{
+    case MessPoint.MessType.Trash:
+        performedAction = ActionType.CleanTrash;
+        break;
+    case MessPoint.MessType.Puddle:
+        performedAction = ActionType.CleanPuddle;
+        break;
+    case MessPoint.MessType.Dirt:
+        performedAction = ActionType.CleanDirt;
+        break;
+    default:
+        currentAction = null;
+        yield break;
+}
+ExperienceManager.Instance?.GrantXP(this, performedAction);
+		
+		
 
         MessPoint.MessType typeToClean = initialMess.type;
         if (typeToClean == MessPoint.MessType.Trash)

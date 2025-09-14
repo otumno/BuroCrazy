@@ -24,8 +24,6 @@ public class ClerkController : StaffController
     [Tooltip("Рабочее место для архивариуса, где он ожидает появления документов. (Только для роли 'Archivist')")]
     public Transform archivistWaitingPoint;
     [Header("Внешний вид")]
-    [Tooltip("Укажите пол для выбора правильных спрайтов")]
-    public Gender gender;
     private CharacterVisuals visuals;
     [Header("Поведение")]
     public float timeInToilet = 10f;
@@ -47,8 +45,6 @@ public class ClerkController : StaffController
     private StackHolder stackHolder;
     public static ClerkController RegistrarInstance { get; private set; }
     private Coroutine waitingForClientCoroutine;
-    [Header("Навыки")]
-    public CharacterSkills skills;
 
     protected override void Awake()
     {
@@ -427,6 +423,7 @@ public class ClerkController : StaffController
             yield return StartCoroutine(MoveToTarget(cabinet.transform.position, ClerkState.Working));
             stackHolder.HideStack();
             isCarryingDocumentToArchive = false;
+			ExperienceManager.Instance?.GrantXP(this, ActionType.ArchiveDocument);
             yield return new WaitForSeconds(1f);
         }
         else

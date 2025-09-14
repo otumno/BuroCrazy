@@ -13,8 +13,6 @@ public class GuardMovement : StaffController
     private GuardState currentState = GuardState.OffDuty;
     
     [Header("Внешний вид")]
-    [Tooltip("Укажите пол для выбора правильных спрайтов")]
-    public Gender gender;
     private CharacterVisuals visuals;
     
     [Header("Дополнительные объекты")]
@@ -67,9 +65,6 @@ public class GuardMovement : StaffController
     private ClientPathfinding currentChaseTarget;
     private Waypoint[] allWaypoints;
     private Rigidbody2D rb;
-    
-    [Header("Навыки")]
-    public CharacterSkills skills;
     
     protected override void Awake()
     {
@@ -324,6 +319,7 @@ public class GuardMovement : StaffController
             {
                 SetState(GuardState.Patrolling);
                 yield return StartCoroutine(MoveToTarget(currentPatrolTarget.transform.position, GuardState.WaitingAtWaypoint));
+				ExperienceManager.Instance?.GrantXP(this, ActionType.PatrolWaypoint);
             }
             SetState(GuardState.WaitingAtWaypoint);
             yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
@@ -409,6 +405,7 @@ public class GuardMovement : StaffController
         
         if(clientToCalm != null)
         {
+			ExperienceManager.Instance?.GrantXP(this, ActionType.CalmDownViolator);
             clientToCalm.UnfreezeAndRestartAI();
             if (Random.value < 0.5f) { clientToCalm.CalmDownAndReturnToQueue(); }
             else { clientToCalm.CalmDownAndLeave(); }
@@ -474,6 +471,7 @@ public class GuardMovement : StaffController
                 thief.stateMachine.StopAllActionCoroutines();
                 thief.stateMachine.SetGoal(cashierZone.waitingWaypoint);
                 thief.stateMachine.SetState(ClientState.MovingToGoal);
+				ExperienceManager.Instance?.GrantXP(this, ActionType.CatchThief);
             }
         }
         currentStress += stressGainPerViolator;

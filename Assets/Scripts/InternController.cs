@@ -14,8 +14,6 @@ public class InternController : StaffController
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;
     [Header("Внешний вид")]
-    [Tooltip("Укажите пол для выбора правильных спрайтов")]
-    public Gender gender;
     private CharacterVisuals visuals;
     [Header("Основные параметры")]
     public List<Transform> patrolPoints;
@@ -39,10 +37,6 @@ public class InternController : StaffController
     private ClerkController clerkToCover = null;
     private float timeInCurrentTask = 0f;
     private StackHolder stackHolder;
-    
-    // --- НОВОЕ ПОЛЕ ---
-    [Header("Навыки")]
-    public CharacterSkills skills;
     
     protected override void Awake()
     {
@@ -195,6 +189,7 @@ public class InternController : StaffController
             clerksBeingCovered.Remove(clerk);
         }
         clerkToCover = null;
+		ExperienceManager.Instance?.GrantXP(this, ActionType.CoverDesk);
         yield return StartCoroutine(ReturnToPatrolRoutine());
     }
 
@@ -219,6 +214,7 @@ public class InternController : StaffController
         {
             Waypoint correctGoal = DetermineCorrectGoalFor(client);
             client.stateMachine.GetHelpFromIntern(correctGoal);
+			ExperienceManager.Instance?.GrantXP(this, ActionType.HelpConfusedClient);
         }
 
         helpTarget = null;
@@ -322,6 +318,7 @@ public class InternController : StaffController
                 ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
             }
             stackHolder.HideStack();
+			ExperienceManager.Instance?.GrantXP(this, ActionType.DeliverDocuments);
             yield return new WaitForSeconds(1f);
             ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
         }

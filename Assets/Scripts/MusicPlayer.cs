@@ -7,18 +7,17 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(AudioSource), typeof(AudioLowPassFilter))]
 public class MusicPlayer : MonoBehaviour
 {
-    public static MusicPlayer Instance { get; private set; }
+    public static MusicPlayer Instance { get; set; }
 
-    void Awake()
-    {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
-        // DontDestroyOnLoad(gameObject); // This should be commented out if this object is a child of another DontDestroyOnLoad object
-        
-        audioSource = GetComponent<AudioSource>();
-        lowPassFilter = GetComponent<AudioLowPassFilter>();
-        initialVolume = audioSource.volume;
-    }
+ void Awake()
+{
+    // Управление синглтоном удалено. Этим теперь занимается MenuManager.
+    
+    // Оставляем только настройку компонентов.
+    audioSource = GetComponent<AudioSource>();
+    lowPassFilter = GetComponent<AudioLowPassFilter>();
+    initialVolume = audioSource.volume;
+}
 
     [Header("Musical Themes")]
     public AudioClip menuTheme;

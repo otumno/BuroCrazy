@@ -45,6 +45,14 @@ public class MenuManager : MonoBehaviour
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
+		
+		HiringManager.Instance = GetComponent<HiringManager>();
+		ExperienceManager.Instance = GetComponent<ExperienceManager>();
+		PayrollManager.Instance = GetComponent<PayrollManager>();
+		DirectorManager.Instance = GetComponent<DirectorManager>();
+		SaveLoadManager.Instance = GetComponent<SaveLoadManager>();
+		MusicPlayer.Instance = GetComponent<MusicPlayer>();
+		
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 

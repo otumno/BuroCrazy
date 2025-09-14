@@ -1,4 +1,4 @@
-// Файл: StaffController.cs
+// Файл: StaffController.cs - ПОЛНАЯ ВЕРСИЯ
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,18 +6,33 @@ using System.Linq;
 
 public abstract class StaffController : MonoBehaviour
 {
+    // --- ENUM'Ы ДЛЯ СИСТЕМЫ ---
+    public enum StaffType { Clerk, Guard, Intern, ServiceWorker }
+    public enum Role { Unassigned, Intern, Registrar, Cashier, Archivist, Guard, Janitor }
+    
     [Header("График работы")]
     [Tooltip("Настройте рабочие периоды ниже с помощью галочек.")]
     public List<string> workPeriods;
+    
     [Header("Стандартные точки")]
     public Transform homePoint;
     [Tooltip("Список всех возможных точек для отдыха на кухне.")]
     public List<Transform> kitchenPoints;
     [Tooltip("Точка входа (ожидания) в зону туалета для персонала.")]
     public Transform staffToiletPoint;
+    
     [Header("Звуки смены")]
     public AudioClip startShiftSound;
     public AudioClip endShiftSound;
+
+    [Header("Прогрессия и Роль")]
+	public Gender gender;
+    public CharacterSkills skills;
+    public Role currentRole = Role.Intern;
+    public int rank = 0;
+    public int experiencePoints = 0;
+    public int salaryPerPeriod = 15; // Базовая зарплата за один рабочий период
+	public bool isReadyForPromotion = false; // <--- ДОБАВЬТЕ ЭТУ СТРОКУ
 
     protected bool isOnDuty = false;
     protected Coroutine currentAction;
@@ -30,7 +45,7 @@ public abstract class StaffController : MonoBehaviour
     public abstract void StartShift();
     public abstract void EndShift();
     public abstract void GoOnBreak(float duration);
-    
+
     protected virtual void Awake()
     {
         agentMover = GetComponent<AgentMover>();
@@ -115,8 +130,7 @@ public abstract class StaffController : MonoBehaviour
     }
     
     protected abstract Queue<Waypoint> BuildPathTo(Vector2 targetPos);
-
-    // --- МЕТОДЫ ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ ---
+    
     public virtual float GetStressValue() { return 0f; }
     public virtual void SetStressValue(float stress) { }
 }

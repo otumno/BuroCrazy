@@ -5,7 +5,7 @@ using System.Linq;
 
 public class DirectorManager : MonoBehaviour
 {
-    public static DirectorManager Instance { get; private set; }
+    public static DirectorManager Instance { get; set; }
 
     [Header("Настройки")]
     public List<DirectorOrder> allOrders;
@@ -25,17 +25,6 @@ public class DirectorManager : MonoBehaviour
     
     private List<DirectorDocument> directorDocumentsInPlay = new List<DirectorDocument>();
     private float directorDocumentTimer = 0f;
-
-    void Awake()
-    {
-        if (Instance != null && Instance != this) 
-        { 
-            Destroy(gameObject);
-            return; 
-        }
-        Instance = this; 
-        //DontDestroyOnLoad(gameObject);
-    }
 
     void Update()
     {
