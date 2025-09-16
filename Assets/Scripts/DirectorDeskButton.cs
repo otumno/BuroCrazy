@@ -7,25 +7,17 @@ using System.Collections.Generic;
 public class DirectorDeskButton : MonoBehaviour
 {
     [Header("Ссылки на компоненты")]
-    [Tooltip("Текстовое поле для счетчика документов")]
     public TextMeshProUGUI countText;
-    [Tooltip("Префаб ОДНОЙ иконки документа, которая будет копироваться")]
     public GameObject documentIconPrefab;
-    [Tooltip("Объект-контейнер, внутри которого будут создаваться иконки")]
     public Transform iconContainer;
     
     [Header("Настройки стопки")]
-    [Tooltip("Максимальное количество видимых иконок в стопке")]
     public int maxVisibleIcons = 10;
-    [Tooltip("Небольшое смещение для каждой новой иконки по оси Y")]
     public float yOffsetPerIcon = 5f;
-    [Tooltip("Максимальное случайное смещение по оси X для создания небрежности")]
     public float maxRandomXOffset = 3f;
-    [Tooltip("Максимальный случайный угол поворота для создания небрежности")]
     public float maxRandomRotation = 5f;
     
     [Header("Звук")]
-    [Tooltip("Звук, который проигрывается при добавлении нового документа в стопку")]
     public AudioClip newDocumentSound;
     
     private AudioSource uiAudioSource;
@@ -35,14 +27,12 @@ public class DirectorDeskButton : MonoBehaviour
     void Start()
     {
         thisButton = GetComponent<Button>();
-        if (thisButton != null)
+        thisButton.onClick.AddListener(OnClick);
+        
+        // Получаем AudioSource от нового менеджера
+        if (MainUIManager.Instance != null)
         {
-            thisButton.onClick.AddListener(OnClick);
-        }
-
-        if (MenuManager.Instance != null)
-        {
-            uiAudioSource = MenuManager.Instance.uiAudioSource;
+            uiAudioSource = MainUIManager.Instance.uiAudioSource;
         }
 
         if (StartOfDayPanel.Instance != null)
@@ -64,7 +54,6 @@ public class DirectorDeskButton : MonoBehaviour
             {
                 uiAudioSource.PlayOneShot(newDocumentSound);
             }
-            
             countText.text = $"На рассмотрении: {count}";
         }
 
@@ -91,11 +80,12 @@ public class DirectorDeskButton : MonoBehaviour
         }
     }
 
-public void OnClick()
-{
-    if (MenuManager.Instance != null)
+    public void OnClick()
     {
-        MenuManager.Instance.ShowPausePanel();
+        // Обращаемся к правильному менеджеру
+        if (MainUIManager.Instance != null)
+        {
+            MainUIManager.Instance.ShowPausePanel(true);
+        }
     }
-}
 }

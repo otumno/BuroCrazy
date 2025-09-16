@@ -12,6 +12,8 @@ public class AgentMover : MonoBehaviour
 
     // --- ИЗМЕНЕНИЕ: Добавлено поле для хранения базовой скорости ---
     private float baseMoveSpeed;
+	
+	public UnityEngine.AI.NavMeshAgent agent; // БЫЛО: private NavMeshAgent agent;
 
     [Header("Система 'Резиночки'")]
     [Tooltip("Насколько сильно персонаж стремится вернуться на свой путь. Выше значение - жестче 'резинка'.")]

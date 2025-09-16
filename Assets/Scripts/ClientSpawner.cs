@@ -157,17 +157,14 @@ public class ClientSpawner : MonoBehaviour
         UpdateLighting();
         
         string periodNameLower = CurrentPeriodName?.ToLower().Trim();
-        if (periodNameLower == "вечер" && MenuManager.Instance != null && !MenuManager.Instance.isTransitioning)
-        {
-            if (periods.Length > currentPeriodIndex && periods[currentPeriodIndex] != null)
-            {
-                float timeLeft = periods[currentPeriodIndex].durationInSeconds - periodTimer;
-                if (timeLeft <= 10f)
-                {
-                    MenuManager.Instance.TriggerNextDayTransition();
-                }
-            }
-        }
+if (periodNameLower == "вечер" && MainUIManager.Instance != null && !MainUIManager.Instance.isTransitioning)
+{
+    float timeLeft = periods[currentPeriodIndex].durationInSeconds - periodTimer;
+    if (timeLeft <= 10f)
+    {
+        MainUIManager.Instance.TriggerNextDayTransition(); 
+    }
+}
         
         if (periods.Length > currentPeriodIndex && periods[currentPeriodIndex] != null && periodTimer >= periods[currentPeriodIndex].durationInSeconds) 
         { 

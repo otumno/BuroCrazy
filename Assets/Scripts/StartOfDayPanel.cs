@@ -60,21 +60,21 @@ public class StartOfDayPanel : MonoBehaviour
         
         bool isMidDayPause = ClientSpawner.Instance.GetPeriodTimer() > 0 && Time.timeScale == 0f;
 
-        if (isMidDayPause)
-        {
-            buttonText.text = "Продолжить день";
-            startDayButton.onClick.AddListener(() => MenuManager.Instance.StartOrResumeGameplay());
-        }
-        else if (hasActiveOrders)
-        {
-            buttonText.text = "Начать день";
-            startDayButton.onClick.AddListener(() => MenuManager.Instance.StartOrResumeGameplay());
-        }
-        else
-        {
-            buttonText.text = "Выберите приказ";
-            startDayButton.onClick.AddListener(() => MenuManager.Instance.ShowOrderSelection());
-        }
+if (isMidDayPause)
+{
+    buttonText.text = "Продолжить день";
+    startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay());
+}
+else if (hasActiveOrders)
+{
+    buttonText.text = "Начать день";
+    startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay());
+}
+else
+{
+    buttonText.text = "Выберите приказ";
+    startDayButton.onClick.AddListener(() => MainUIManager.Instance.ShowOrderSelection());
+}
     }
     
     public void ShowPanel()

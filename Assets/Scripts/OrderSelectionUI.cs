@@ -1,4 +1,4 @@
-// Файл: OrderSelectionUI.cs - Упрощенная версия
+// Файл: OrderSelectionUI.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -13,9 +13,10 @@ public class OrderSelectionUI : MonoBehaviour
     public List<TextMeshProUGUI> titleTexts;
     public List<TextMeshProUGUI> descriptionTexts;
     public List<Image> iconImages;
-	
-	[Header("Звуки")]
-	public AudioClip orderSelectedSound;
+    
+    [Header("Настройки анимации и звуков")]
+    public AudioClip buttonLandSound;
+    public AudioClip orderSelectedSound;
 
     private CanvasGroup canvasGroup;
     private List<DirectorOrder> currentOfferedOrders;
@@ -24,16 +25,18 @@ public class OrderSelectionUI : MonoBehaviour
     {
         canvasGroup = GetComponent<CanvasGroup>();
     }
-    
+
+    // Этот метод вызывается из GameSceneUIManager для настройки панели
     public void Setup()
     {
         if (DirectorManager.Instance == null) return;
+        
         currentOfferedOrders = DirectorManager.Instance.offeredOrders;
         if (currentOfferedOrders == null) return;
         
         for (int i = 0; i < orderButtons.Count; i++)
         {
-            if (i < currentOfferedOrders.Count)
+            if (i < currentOfferedOrders.Count && currentOfferedOrders[i] != null)
             {
                 orderButtons[i].gameObject.SetActive(true);
                 DirectorOrder order = currentOfferedOrders[i];
@@ -56,22 +59,26 @@ public class OrderSelectionUI : MonoBehaviour
     {
         if (index < 0 || currentOfferedOrders == null || index >= currentOfferedOrders.Count) return;
         
-		    if (MenuManager.Instance?.uiAudioSource != null && orderSelectedSound != null)
-    {
-        MenuManager.Instance.uiAudioSource.PlayOneShot(orderSelectedSound);
-    }
-		
+        if (MainUIManager.Instance?.uiAudioSource != null && orderSelectedSound != null)
+        {
+            MainUIManager.Instance.uiAudioSource.PlayOneShot(orderSelectedSound);
+        }
+        
         DirectorOrder selectedOrder = currentOfferedOrders[index];
         DirectorManager.Instance.SelectOrder(selectedOrder);
         
-        // Просто выключаем себя и показываем главный стол
+        // Прячем себя и показываем главный стол директора
         StartCoroutine(Fade(false));
-        StartOfDayPanel.Instance.ShowPanel();
+        if (StartOfDayPanel.Instance != null)
+        {
+            StartOfDayPanel.Instance.ShowPanel();
+        }
     }
 
+    // Корутина для плавного появления/исчезновения
     public IEnumerator Fade(bool fadeIn)
     {
-        float fadeTime = 0.3f; // Можно вынести в настройки
+        float fadeTime = 0.3f;
         float startAlpha = fadeIn ? 0f : 1f;
         float endAlpha = fadeIn ? 1f : 0f;
         
@@ -80,6 +87,7 @@ public class OrderSelectionUI : MonoBehaviour
         float timer = 0f;
         while (timer < fadeTime)
         {
+            // Используем unscaledDeltaTime, так как игра может быть на паузе
             timer += Time.unscaledDeltaTime;
             canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timer / fadeTime);
             yield return null;

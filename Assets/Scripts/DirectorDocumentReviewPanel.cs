@@ -148,7 +148,9 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
     private void ClosePanel()
     {
         gameObject.SetActive(false);
-        if(MenuManager.Instance != null && !MenuManager.Instance.isTransitioning)
+        
+        // ИСПРАВЛЕНО: Обращаемся к GameSceneUIManager
+        if(MainUIManager.Instance != null && !MainUIManager.Instance.isTransitioning)
         {
             Time.timeScale = 1f;
         }

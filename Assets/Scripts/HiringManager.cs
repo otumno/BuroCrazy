@@ -21,6 +21,8 @@ public class HiringManager : MonoBehaviour
 
     [Header("Префабы сотрудников")]
     public GameObject internPrefab; // Нам нужен только префаб стажера
+	public List<StaffController> AllStaff = new List<StaffController>();
+public List<StaffController> UnassignedStaff = new List<StaffController>();
 
     // Список точек, который будет заполняться автоматически при загрузке сцены
     private List<Transform> unassignedStaffPoints = new List<Transform>();
@@ -55,12 +57,21 @@ public class HiringManager : MonoBehaviour
         }
     }
 
+public void ResetState()
+{
+    AvailableCandidates.Clear();
+    occupiedPoints.Clear();
+    UnassignedStaff.Clear();
+    AllStaff.Clear();
+    Debug.Log("[HiringManager] Состояние сброшено для новой игры.");
+}
+
     private void FindSceneSpecificReferences()
     {
         unassignedStaffPoints.Clear();
         occupiedPoints.Clear();
 
-        InternPointsRegistry registry = FindObjectOfType<InternPointsRegistry>();
+        InternPointsRegistry registry = FindFirstObjectByType<InternPointsRegistry>();
         if (registry != null)
         {
             unassignedStaffPoints = registry.points;

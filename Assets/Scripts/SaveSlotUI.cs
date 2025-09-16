@@ -1,82 +1,56 @@
 using UnityEngine;
-using TMPro; // Для работы с TextMeshPro
-using UnityEngine.UI; // Для работы с кнопками
+using UnityEngine.UI;
+using TMPro;
 
 public class SaveSlotUI : MonoBehaviour
 {
-    [Header("UI элементы")]
-    public TextMeshProUGUI infoText; // Текст "День 5, $1234" или "Пустой слот"
-    public Button loadOrNewGameButton;
-    public Button deleteButton;
+    [SerializeField] private int slotIndex;
+    [SerializeField] private Button continueButton;
+    [SerializeField] private Button newGameButton;
+    [SerializeField] private Button deleteButton;
+    [SerializeField] private TextMeshProUGUI infoText;
 
-    private int slotIndex;
-    private MenuManager menuManager;
-    private SaveLoadManager saveLoadManager;
-
-public void Setup(int index, MenuManager manager, SaveLoadManager saveManager)
-{
-    slotIndex = index;
-    // Запоминаем ссылки, которые нам передал MenuManager
-    menuManager = manager;
-    saveLoadManager = saveManager;
-
-    // Полностью перенастраиваем кнопки каждый раз, чтобы избежать ошибок
-    loadOrNewGameButton.onClick.RemoveAllListeners();
-    deleteButton.onClick.RemoveAllListeners();
-
-    SaveData data = saveLoadManager.GetDataForSlot(slotIndex);
-    if (data != null)
+    public void Setup(int index)
     {
-        infoText.text = $"День: {data.day}\nСчет: ${data.money}";
-        loadOrNewGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Загрузить";
-        deleteButton.gameObject.SetActive(true);
+        slotIndex = index;
 
-        loadOrNewGameButton.onClick.AddListener(() => menuManager.OnSaveSlotClicked(slotIndex));
-        deleteButton.onClick.AddListener(OnDeleteClicked);
-    }
-    else
-    {
-        infoText.text = "Пустой слот";
-        loadOrNewGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Новая игра";
-        deleteButton.gameObject.SetActive(false);
-
-        loadOrNewGameButton.onClick.AddListener(() => menuManager.OnNewGameClicked(slotIndex));
-    }
-}
-
-    public void UpdateVisuals()
-    {
-        SaveData data = saveLoadManager.GetDataForSlot(slotIndex);
-
-        if (data != null) // Если сохранение есть
+        // Проверяем, что все ссылки на кнопки и текст установлены в префабе
+        if (continueButton == null || newGameButton == null || deleteButton == null || infoText == null)
         {
-            infoText.text = $"День: {data.day}\nСчет: ${data.money}";
-            loadOrNewGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Загрузить";
+            Debug.LogError($"[SaveSlotUI #{slotIndex}] Ошибка! Не все поля (кнопки, текст) назначены в инспекторе префаба!");
+            return;
+        }
+
+        bool slotInUse = SaveLoadManager.Instance.DoesSaveExist(slotIndex);
+        Debug.Log($"[SaveSlotUI #{slotIndex}] Слот используется: {slotInUse}");
+
+        if (slotInUse)
+        {
+            SaveData data = SaveLoadManager.Instance.GetDataForSlot(slotIndex);
+            continueButton.gameObject.SetActive(true);
+            newGameButton.gameObject.SetActive(false);
             deleteButton.gameObject.SetActive(true);
-
-            // Настраиваем кнопки
-            loadOrNewGameButton.onClick.RemoveAllListeners();
-            loadOrNewGameButton.onClick.AddListener(() => menuManager.OnSaveSlotClicked(slotIndex));
-
-            deleteButton.onClick.RemoveAllListeners();
-            deleteButton.onClick.AddListener(OnDeleteClicked);
+            
+            infoText.text = (data != null) ? $"День: {data.day}\nДеньги: ${data.money}" : "Ошибка чтения данных";
         }
-        else // Если сохранения нет
+        else
         {
-            infoText.text = "Пустой слот";
-            loadOrNewGameButton.GetComponentInChildren<TextMeshProUGUI>().text = "Новая игра";
+            continueButton.gameObject.SetActive(false);
+            newGameButton.gameObject.SetActive(true);
             deleteButton.gameObject.SetActive(false);
-
-            // Настраиваем кнопки
-            loadOrNewGameButton.onClick.RemoveAllListeners();
-            loadOrNewGameButton.onClick.AddListener(() => menuManager.OnNewGameClicked(slotIndex));
+            infoText.text = "Пустой слот";
         }
-    }
 
-    private void OnDeleteClicked()
-    {
-        // TODO: Сделать окно подтверждения "Вы уверены?"
-        saveLoadManager.DeleteSave(slotIndex);
-        UpdateVisuals(); // Обновляем UI, чтобы показать "Пустой слот"
+        continueButton.onClick.RemoveAllListeners();
+        newGameButton.onClick.RemoveAllListeners();
+        deleteButton.onClick.RemoveAllListeners();
+
+        continueButton.onClick.AddListener(() => MainUIManager.Instance.OnSaveSlotClicked(slotIndex));
+        newGameButton.onClick.AddListener(() => MainUIManager.Instance.OnNewGameClicked(slotIndex));
+        deleteButton.onClick.AddListener(() =>
+        {
+            SaveLoadManager.Instance.DeleteSave(slotIndex);
+            FindFirstObjectByType<SaveLoadPanelController>()?.RefreshSlots();
+        });
     }
 }

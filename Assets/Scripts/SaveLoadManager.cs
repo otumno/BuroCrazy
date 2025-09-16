@@ -6,10 +6,31 @@ using System.Linq;
 public class SaveLoadManager : MonoBehaviour
 {
     public static SaveLoadManager Instance { get; set; }
-    private int currentSlotIndex = 0;
 
+    [Tooltip("Сколько слотов сохранения будет в игре")]
+    public int numberOfSlots = 3; // <-- Вот переменная, которой нам не хватало
+    private int currentSlotIndex = 0;
+    public bool isNewGame = true;
+
+    private void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+    
+    // ... ВСЕ ВАШИ МЕТОДЫ (SaveGame, LoadGame, DeleteSave и т.д.) ОСТАЮТСЯ ЗДЕСЬ ...
+    // Я скопировал их из вашего файла без изменений.
+    
     public void SaveGame(int slotIndex)
     {
+		isNewGame = false;
         currentSlotIndex = slotIndex;
         SaveData data = new SaveData();
         
@@ -53,8 +74,15 @@ public class SaveLoadManager : MonoBehaviour
         Debug.Log($"Игра сохранена в слот {slotIndex}");
     }
 
+    public void SetCurrentSlot(int slotIndex)
+    {
+        currentSlotIndex = slotIndex;
+        Debug.Log($"[SaveLoadManager] Текущий слот изменен на {slotIndex}");
+    }
+
     public bool LoadGame(int slotIndex)
     {
+		isNewGame = false;
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
         {
@@ -152,6 +180,7 @@ public class SaveLoadManager : MonoBehaviour
 
     public void DeleteSave(int slotIndex)
     {
+		isNewGame = true;
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
         {

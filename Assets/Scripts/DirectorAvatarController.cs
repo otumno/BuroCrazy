@@ -73,6 +73,24 @@ public class DirectorAvatarController : MonoBehaviour
 			}
 		}
 
+public void TeleportTo(Vector3 position)
+{
+    if (agentMover != null && agentMover.agent != null)
+    {
+        // Выключаем NavMeshAgent, чтобы он не сопротивлялся
+        agentMover.agent.enabled = false;
+    }
+
+    // Мгновенно перемещаем объект
+    transform.position = position;
+
+    if (agentMover != null && agentMover.agent != null)
+    {
+        // Включаем NavMeshAgent обратно. Теперь он будет работать с новой позиции.
+        agentMover.agent.enabled = true;
+    }
+    Debug.Log($"[DirectorAvatarController] Директор телепортирован в {position}");
+}
 
     public void MoveToWaypoint(Waypoint targetWaypoint)
     {

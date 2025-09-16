@@ -3,39 +3,20 @@ using UnityEngine;
 
 public class InGameUI_Actions : MonoBehaviour
 {
-    // Метод для кнопки Радио
     public void OnRadioButtonClick()
     {
-        if (MusicPlayer.Instance != null)
-        {
-            MusicPlayer.Instance.RequestNextTrack();
-        }
+        MusicPlayer.Instance?.RequestNextTrack();
     }
 
-    // Метод для кнопки Кабинет/Пауза
-public void OnCabinetButtonClick()
-{
-    if (MenuManager.Instance != null)
+    public void OnCabinetButtonClick()
     {
-        MenuManager.Instance.OnCabinetButtonClick();
+        // Используем правильный метод из нового MenuManager (который живет в GameScene)
+        MainUIManager.Instance?.ShowPausePanel(true);
     }
-}
 
-    // Метод для кнопки "Главное меню" (которая на панели паузы)
-public void OnMainMenuButtonClick()
-{
-    if (MenuManager.Instance != null)
+    public void OnMainMenuButtonClick()
     {
-        MenuManager.Instance.GoToMainMenu();
-    }
-}
-
-    // Метод для кнопки "К столу"
-    public void OnGoToDeskButtonClick()
-    {
-        if (DirectorAvatarController.Instance != null)
-        {
-            DirectorAvatarController.Instance.GoToDesk();
-        }
+        // Используем правильный метод из нового MenuManager (который живет в GameScene)
+        MainUIManager.Instance?.GoToMainMenu();
     }
 }
