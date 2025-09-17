@@ -2,13 +2,14 @@ using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System; // <<< НУЖНО ДЛЯ ПОЛУЧЕНИЯ ДАТЫ ФАЙЛА
 
 public class SaveLoadManager : MonoBehaviour
 {
     public static SaveLoadManager Instance { get; set; }
 
     [Tooltip("Сколько слотов сохранения будет в игре")]
-    public int numberOfSlots = 3; // <-- Вот переменная, которой нам не хватало
+    public int numberOfSlots = 3;
     private int currentSlotIndex = 0;
     public bool isNewGame = true;
 
@@ -24,16 +25,20 @@ public class SaveLoadManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
-    // ... ВСЕ ВАШИ МЕТОДЫ (SaveGame, LoadGame, DeleteSave и т.д.) ОСТАЮТСЯ ЗДЕСЬ ...
-    // Я скопировал их из вашего файла без изменений.
-    
+
+public int GetCurrentSlot()
+{
+    return currentSlotIndex;
+}
+
+    // Этот метод сохраняет ТЕКУЩЕЕ состояние игры. Его мы вызываем из меню паузы и т.д.
     public void SaveGame(int slotIndex)
     {
-		isNewGame = false;
+        isNewGame = false;
         currentSlotIndex = slotIndex;
         SaveData data = new SaveData();
-        
+
+        // ... вся ваша логика сбора данных остается без изменений ...
         data.day = ClientSpawner.Instance.GetCurrentDay();
         data.money = PlayerWallet.Instance.GetCurrentMoney();
         data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
@@ -66,14 +71,38 @@ public class SaveLoadManager : MonoBehaviour
             data.allDocumentStackData.Add(stackData);
         }
         
-        string json = JsonUtility.ToJson(data, true);
-        string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
-        File.WriteAllText(path, json);
-        
+        // <<< НОВЫЙ МЕТОД ДЛЯ ЗАПИСИ ДАННЫХ В ФАЙЛ >>>
+        // Мы вынесли это в отдельный метод, чтобы не дублировать код
+        WriteSaveDataToFile(slotIndex, data);
+
         PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
         Debug.Log($"Игра сохранена в слот {slotIndex}");
     }
 
+    // <<< НОВЫЙ МЕТОД >>>
+    // Этот метод сохраняет данные для НОВОЙ ИГРЫ. Он не собирает информацию со сцены,
+    // а принимает уже готовый объект 'initialData'.
+    public void SaveNewGame(int slotIndex, SaveData initialData)
+    {
+        isNewGame = false;
+        currentSlotIndex = slotIndex;
+
+        WriteSaveDataToFile(slotIndex, initialData);
+
+        PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
+        Debug.Log($"Новая игра создана и сохранена в слот {slotIndex}");
+    }
+    
+    // <<< НОВЫЙ ВСПОМОГАТЕЛЬНЫЙ МЕТОД >>>
+    // Просто записывает переданные данные в файл сохранения.
+    private void WriteSaveDataToFile(int slotIndex, SaveData data)
+    {
+        string json = JsonUtility.ToJson(data, true);
+        string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
+        File.WriteAllText(path, json);
+    }
+    
+    // ... Остальные ваши методы (LoadGame, DeleteSave и т.д.) ...
     public void SetCurrentSlot(int slotIndex)
     {
         currentSlotIndex = slotIndex;
@@ -82,7 +111,8 @@ public class SaveLoadManager : MonoBehaviour
 
     public bool LoadGame(int slotIndex)
     {
-		isNewGame = false;
+        // ... Ваш код загрузки остается без изменений ...
+        isNewGame = false;
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
         {
@@ -154,21 +184,10 @@ public class SaveLoadManager : MonoBehaviour
         Debug.LogWarning($"Файл сохранения для слота {slotIndex} не найден!");
         return false;
     }
-    
-    public bool GetLastSavedSlot(out int lastSlotIndex)
-    {
-        if (PlayerPrefs.HasKey("LastUsedSlot"))
-        {
-            lastSlotIndex = PlayerPrefs.GetInt("LastUsedSlot");
-            return DoesSaveExist(lastSlotIndex);
-        }
-        
-        lastSlotIndex = -1;
-        return false;
-    }
 
     public SaveData GetDataForSlot(int slotIndex)
     {
+        // ... Ваш код остается без изменений ...
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
         {
@@ -180,7 +199,8 @@ public class SaveLoadManager : MonoBehaviour
 
     public void DeleteSave(int slotIndex)
     {
-		isNewGame = true;
+        // ... Ваш код остается без изменений ...
+        isNewGame = true;
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
         {
@@ -193,5 +213,49 @@ public class SaveLoadManager : MonoBehaviour
     {
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         return File.Exists(path);
+    }
+    
+    // <<< НОВЫЙ МЕТОД, НУЖЕН ДЛЯ MainMenuManager >>>
+    // Проверяет, существует ли ХОТЯ БЫ ОДНО сохранение.
+    public bool DoesAnySaveExist()
+    {
+        for (int i = 0; i < numberOfSlots; i++)
+        {
+            if (DoesSaveExist(i))
+            {
+                return true; // Нашли хотя бы один файл, выходим
+            }
+        }
+        return false; // Не нашли ни одного
+    }
+    
+    // <<< НОВЫЙ МЕТОД, НУЖЕН ДЛЯ MainMenuManager (кнопка "Продолжить") >>>
+    // Находит индекс самого последнего измененного файла сохранения.
+    public int GetLatestSaveSlotIndex()
+    {
+        int latestSlot = -1;
+        DateTime latestTime = DateTime.MinValue;
+
+        for (int i = 0; i < numberOfSlots; i++)
+        {
+            string path = Path.Combine(Application.persistentDataPath, $"save_slot_{i}.json");
+            if (File.Exists(path))
+            {
+                DateTime writeTime = File.GetLastWriteTime(path);
+                if (writeTime > latestTime)
+                {
+                    latestTime = writeTime;
+                    latestSlot = i;
+                }
+            }
+        }
+        return latestSlot;
+    }
+    
+    // <<< НОВЫЙ МЕТОД, НУЖЕН ДЛЯ SaveSlotController >>>
+    // Проверяет, пуст ли слот. Просто для удобства и читаемости кода.
+    public bool IsSlotEmpty(int slotIndex)
+    {
+        return !DoesSaveExist(slotIndex);
     }
 }

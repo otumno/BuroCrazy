@@ -1,100 +1,92 @@
-// Файл: OrderSelectionUI.cs
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 using System.Collections;
-using System.Collections.Generic;
 
-[RequireComponent(typeof(CanvasGroup))]
 public class OrderSelectionUI : MonoBehaviour
 {
-    [Header("UI Components")]
-    public List<Button> orderButtons;
-    public List<TextMeshProUGUI> titleTexts;
-    public List<TextMeshProUGUI> descriptionTexts;
-    public List<Image> iconImages;
+    [SerializeField] private List<OrderCardUI> orderCards; // Ссылки на 3 карточки приказа
+    [SerializeField] private CanvasGroup canvasGroup;
     
-    [Header("Настройки анимации и звуков")]
-    public AudioClip buttonLandSound;
-    public AudioClip orderSelectedSound;
-
-    private CanvasGroup canvasGroup;
     private List<DirectorOrder> currentOfferedOrders;
 
-    void Awake()
-    {
-        canvasGroup = GetComponent<CanvasGroup>();
-    }
-
-    // Этот метод вызывается из GameSceneUIManager для настройки панели
+    // Этот метод будет вызываться из MainUIManager, чтобы показать панель
     public void Setup()
     {
-        if (DirectorManager.Instance == null) return;
-        
-        currentOfferedOrders = DirectorManager.Instance.offeredOrders;
-        if (currentOfferedOrders == null) return;
-        
-        for (int i = 0; i < orderButtons.Count; i++)
-        {
-            if (i < currentOfferedOrders.Count && currentOfferedOrders[i] != null)
-            {
-                orderButtons[i].gameObject.SetActive(true);
-                DirectorOrder order = currentOfferedOrders[i];
-                titleTexts[i].text = order.orderName;
-                descriptionTexts[i].text = order.orderDescription;
-                iconImages[i].sprite = order.icon;
+        // Просим у DirectorManager три случайных приказа на выбор
+        currentOfferedOrders = DirectorManager.Instance.GetRandomOrders(3);
 
-                orderButtons[i].onClick.RemoveAllListeners();
-                int orderIndex = i;
-                orderButtons[i].onClick.AddListener(() => OnOrderSelected(orderIndex));
+        // Настраиваем каждую карточку
+        for (int i = 0; i < orderCards.Count; i++)
+        {
+            if (i < currentOfferedOrders.Count)
+            {
+                // "Знакомим" карточку с ее приказом и даем ей номер
+                orderCards[i].Setup(currentOfferedOrders[i], i);
+                // Подписываемся на событие клика
+                orderCards[i].OnOrderSelected += HandleOrderSelection; 
+                orderCards[i].gameObject.SetActive(true);
             }
             else
             {
-                orderButtons[i].gameObject.SetActive(false);
+                orderCards[i].gameObject.SetActive(false);
             }
         }
     }
 
-    private void OnOrderSelected(int index)
+    // Этот метод сработает, когда мы нажмем на любую из карточек
+    private void HandleOrderSelection(int selectedIndex)
+{
+    // 1. Сообщаем DirectorManager, какой приказ мы выбрали
+    DirectorManager.Instance.SelectOrder(currentOfferedOrders[selectedIndex]);
+    
+    // 2. Отписываемся от событий, чтобы избежать багов
+    foreach (var card in orderCards)
     {
-        if (index < 0 || currentOfferedOrders == null || index >= currentOfferedOrders.Count) return;
-        
-        if (MainUIManager.Instance?.uiAudioSource != null && orderSelectedSound != null)
-        {
-            MainUIManager.Instance.uiAudioSource.PlayOneShot(orderSelectedSound);
-        }
-        
-        DirectorOrder selectedOrder = currentOfferedOrders[index];
-        DirectorManager.Instance.SelectOrder(selectedOrder);
-        
-        // Прячем себя и показываем главный стол директора
-        StartCoroutine(Fade(false));
-        if (StartOfDayPanel.Instance != null)
-        {
-            StartOfDayPanel.Instance.ShowPanel();
-        }
+        card.OnOrderSelected -= HandleOrderSelection;
     }
 
+    // 3. Находим стол директора и делаем его интерактивным
+    var startOfDayPanel = FindFirstObjectByType<StartOfDayPanel>();
+    if (startOfDayPanel != null)
+    {
+        startOfDayPanel.UpdatePanelInfo();
+        var cg = startOfDayPanel.GetComponent<CanvasGroup>();
+        cg.interactable = true;
+        cg.blocksRaycasts = true;
+    }
+
+    // 4. Просто выключаем себя, чтобы показать слой ниже.
+    gameObject.SetActive(false);
+}
+    
     // Корутина для плавного появления/исчезновения
     public IEnumerator Fade(bool fadeIn)
+{
+    float targetAlpha = fadeIn ? 1f : 0f;
+    if(fadeIn)
     {
-        float fadeTime = 0.3f;
-        float startAlpha = fadeIn ? 0f : 1f;
-        float endAlpha = fadeIn ? 1f : 0f;
-        
-        canvasGroup.blocksRaycasts = true;
-        
-        float timer = 0f;
-        while (timer < fadeTime)
-        {
-            // Используем unscaledDeltaTime, так как игра может быть на паузе
-            timer += Time.unscaledDeltaTime;
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timer / fadeTime);
-            yield return null;
-        }
-        
-        canvasGroup.alpha = endAlpha;
-        canvasGroup.interactable = fadeIn;
-        canvasGroup.blocksRaycasts = fadeIn;
+        gameObject.SetActive(true);
     }
+
+    // Делаем панель интерактивной СРАЗУ, как только она начинает появляться
+    canvasGroup.interactable = fadeIn;
+    canvasGroup.blocksRaycasts = fadeIn;
+
+    float elapsedTime = 0f;
+    float duration = 0.3f;
+    float startAlpha = canvasGroup.alpha;
+    while (elapsedTime < duration)
+    {
+        canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / duration);
+        elapsedTime += Time.unscaledDeltaTime;
+        yield return null;
+    }
+    canvasGroup.alpha = targetAlpha;
+
+    if(!fadeIn)
+    {
+        gameObject.SetActive(false);
+    }
+}
 }

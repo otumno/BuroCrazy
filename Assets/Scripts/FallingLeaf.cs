@@ -1,4 +1,4 @@
-// Файл: FallingLeaf.cs
+// Файл: FallingLeaf.cs - ОБНОВЛЕННАЯ ВЕРСИЯ
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
@@ -17,22 +17,22 @@ public class FallingLeaf : MonoBehaviour
         originalColor = leafImage.color;
     }
 
-    public IEnumerator Animate(Vector3 startPos, Vector3 endPos, float duration, bool fadeToBlack, bool useEaseIn)
+    // --- ИЗМЕНЕНИЕ: Добавлены новые параметры с значениями по умолчанию ---
+    public IEnumerator Animate(Vector3 startPos, Vector3 endPos, float duration, bool fadeToBlack, bool useEaseIn, float dwellDuration = 2.0f, float fadeOutDuration = 0.5f)
     {
         float timer = 0f;
         rectTransform.position = startPos;
 
         Color startColor = fadeToBlack ? originalColor : Color.black;
         Color endColor = fadeToBlack ? Color.black : originalColor;
+        
+        // --- ЭТАП 1: Движение листа (как и было) ---
         while (timer < duration)
         {
-            // --- Проверка на случай, если объект уничтожили раньше времени ---
-            if (this == null || rectTransform == null) yield break; 
-            
+            if (this == null || rectTransform == null) yield break;
             timer += Time.unscaledDeltaTime;
             float progress = Mathf.Clamp01(timer / duration);
             float easedProgress;
-
             if (useEaseIn)
             {
                 easedProgress = progress * progress * progress;
@@ -48,8 +48,25 @@ public class FallingLeaf : MonoBehaviour
             yield return null;
         }
 
-        // --- ДОБАВЬТЕ ЭТУ СТРОКУ ---
-        // Когда анимация завершена, лист сам себя уничтожает.
+        // --- ЭТАП 2 (НОВЫЙ): Задержка на месте ---
+        // Лист лежит на "земле" заданное время
+        yield return new WaitForSecondsRealtime(dwellDuration);
+
+        // --- ЭТАП 3 (НОВЫЙ): Плавное исчезновение ---
+        timer = 0f;
+        Color currentColor = leafImage.color;
+        Color transparentColor = new Color(currentColor.r, currentColor.g, currentColor.b, 0);
+
+        while(timer < fadeOutDuration)
+        {
+            if (this == null || leafImage == null) yield break;
+            timer += Time.unscaledDeltaTime;
+            leafImage.color = Color.Lerp(currentColor, transparentColor, timer / fadeOutDuration);
+            yield return null;
+        }
+
+        // --- ЭТАП 4: Уничтожение объекта ---
+        // Происходит только после полного исчезновения
         Destroy(gameObject);
     }
 }

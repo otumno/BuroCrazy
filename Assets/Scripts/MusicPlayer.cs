@@ -59,12 +59,19 @@ public class MusicPlayer : MonoBehaviour
     }
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+{
+    if (scene.name == "MainMenuScene")
     {
-        if (scene.name == "MainMenuScene")
-        {
-            PlayMenuTheme();
-        }
+        PlayMenuTheme();
     }
+    // <<< ДОБАВЬТЕ ЭТИ СТРОКИ >>>
+    else if (scene.name == "GameScene") // <-- Укажите здесь правильное имя вашей игровой сцены
+    {
+        // Когда загружается игровая сцена, мы еще не начали день.
+        // Поэтому включаем спокойную музыку кабинета директора.
+        PlayDirectorsOfficeTheme();
+    }
+}
     
     public void OnPeriodChanged()
     {

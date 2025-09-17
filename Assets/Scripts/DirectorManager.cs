@@ -1,248 +1,85 @@
-// Файл: DirectorManager.cs
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 
 public class DirectorManager : MonoBehaviour
 {
-    public static DirectorManager Instance { get; set; }
+    // Сделали сеттер публичным для совместимости с SystemBootstrapper
+    public static DirectorManager Instance { get; set; } 
 
-    [Header("Настройки")]
-    public List<DirectorOrder> allOrders;
-    public List<DailyMandates> allMandates;
+    [Header("Настройки Приказов")]
+    [SerializeField] public List<DirectorOrder> allOrders;
 
-    [Header("Текущее состояние")]
-    public DailyMandates currentMandates;
+    [Header("Настройки Норм Дня")]
+    [SerializeField] public List<DailyMandates> allPossibleMandates; // Список всех возможных норм
+    public DailyMandates currentMandates { get; private set; } // Нормы на текущий день
+
+    [Header("Состояние Директора")]
     public int currentStrikes = 0;
+    
     public List<DirectorOrder> activeOrders = new List<DirectorOrder>();
-    public List<DirectorOrder> activePermanentOrders = new List<DirectorOrder>();
     public List<DirectorOrder> offeredOrders = new List<DirectorOrder>();
+    public List<DirectorOrder> activePermanentOrders = new List<DirectorOrder>();
     public List<DirectorOrder> completedOneTimeOrders = new List<DirectorOrder>();
 
-    [Header("Документы Директора")]
-    public float directorDocumentInterval = 120f;
-    public GameObject directorDocumentPrefab;
-    
-    private List<DirectorDocument> directorDocumentsInPlay = new List<DirectorDocument>();
-    private float directorDocumentTimer = 0f;
-
-    void Update()
+    private void Awake()
     {
-        if (Time.timeScale == 0f) return;
-        
-        if (directorDocumentPrefab != null)
+        if (Instance == null)
         {
-            directorDocumentTimer += Time.deltaTime;
-            if (directorDocumentTimer >= directorDocumentInterval)
-            {
-                directorDocumentTimer = 0f;
-                SpawnDirectorDocument();
-            }
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
         }
     }
 
     public void PrepareDay()
     {
         activeOrders.Clear();
-        ApplyAllActiveEffects();
-        
-        int dailyIncome = 0;
-        foreach (var permanentOrder in activePermanentOrders)
+        // В начале дня выбираем случайную норму из списка
+        if (allPossibleMandates != null && allPossibleMandates.Count > 0)
         {
-            dailyIncome += permanentOrder.permanentDailyIncome;
-        }
-        if (dailyIncome > 0 && PlayerWallet.Instance != null)
-        {
-            PlayerWallet.Instance.AddMoney(dailyIncome, Vector3.zero);
-        }
-
-        if (allMandates != null && allMandates.Count > 0)
-        {
-            currentMandates = allMandates[Random.Range(0, allMandates.Count)];
-        }
-
-        offeredOrders.Clear();
-        var availableOrders = allOrders.Except(completedOneTimeOrders).ToList();
-        
-        for (int i = 0; i < 3; i++)
-        {
-            if (availableOrders.Count == 0) break;
-            
-            float totalWeight = availableOrders.Sum(order => order.selectionWeight);
-            float randomWeight = Random.Range(0, totalWeight);
-            DirectorOrder selectedOrder = null;
-            
-            foreach (var order in availableOrders)
-            {
-                randomWeight -= order.selectionWeight;
-                if (randomWeight <= 0)
-                {
-                    selectedOrder = order;
-                    break;
-                }
-            }
-
-            if (selectedOrder != null)
-            {
-                offeredOrders.Add(selectedOrder);
-                availableOrders.Remove(selectedOrder);
-            }
+            currentMandates = allPossibleMandates[Random.Range(0, allPossibleMandates.Count)];
         }
     }
-    
-    public void SelectOrder(DirectorOrder order)
-    {
-        if (order == null) return;
-        
-        if (order.oneTimeMoneyBonus != 0 && PlayerWallet.Instance != null)
-        {
-            PlayerWallet.Instance.AddMoney(order.oneTimeMoneyBonus, Vector3.zero);
-        }
 
-        if (order.removeStrike)
-        {
-            currentStrikes = Mathf.Max(0, currentStrikes - 1);
-        }
-
-        if (order.duration == OrderDuration.Permanent)
-        {
-            if (!activePermanentOrders.Contains(order)) activePermanentOrders.Add(order);
-        }
-        else
-        {
-            activeOrders.Add(order);
-        }
-
-        if (order.isOneTimeOnly)
-        {
-            if (!completedOneTimeOrders.Contains(order)) completedOneTimeOrders.Add(order);
-        }
-        
-        ApplyAllActiveEffects();
-        offeredOrders.Clear();
-    }
-    
-    public void ApplyAllActiveEffects()
-    {
-        DirectorOrder combinedEffects = ScriptableObject.CreateInstance<DirectorOrder>();
-        var allActiveOrders = activePermanentOrders.Concat(activeOrders);
-        
-        foreach (var order in allActiveOrders)
-        {
-            combinedEffects.staffMoveSpeedMultiplier *= order.staffMoveSpeedMultiplier;
-            combinedEffects.clientSpawnRateMultiplier *= order.clientSpawnRateMultiplier;
-            combinedEffects.clerkStressGainMultiplier *= order.clerkStressGainMultiplier;
-            combinedEffects.clientPatienceMultiplier *= order.clientPatienceMultiplier;
-            combinedEffects.messGenerationMultiplier *= order.messGenerationMultiplier;
-            combinedEffects.staffStressReliefMultiplier *= order.staffStressReliefMultiplier;
-            if (order.disableGuards) combinedEffects.disableGuards = true;
-        }
-
-        if (ClientSpawner.Instance != null)
-        {
-            ClientSpawner.Instance.ApplyOrderEffects(combinedEffects);
-        }
-
-        StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
-        foreach (var staff in allStaff)
-        {
-            staff.GetComponent<AgentMover>()?.ApplySpeedMultiplier(combinedEffects.staffMoveSpeedMultiplier);
-        }
-    }
-    
     public void ResetState()
     {
         currentStrikes = 0;
         activeOrders.Clear();
+        offeredOrders.Clear();
         activePermanentOrders.Clear();
         completedOneTimeOrders.Clear();
-        offeredOrders.Clear();
-        currentMandates = null;
-        
-        foreach(var doc in directorDocumentsInPlay)
-        {
-            if (doc != null) Destroy(doc.gameObject);
-        }
-        directorDocumentsInPlay.Clear();
-        directorDocumentTimer = 0f;
     }
-
+    
+    // --- НОВЫЙ МЕТОД ---
     public void AddStrike()
     {
         currentStrikes++;
-        if (currentStrikes >= 3) 
-        { 
-            Debug.Log("GAME OVER: Внеплановая проверка!"); 
-            // Здесь нужно будет добавить логику завершения игры, например, через MenuManager
-        }
+        Debug.LogWarning($"Директор получил страйк! Всего страйков: {currentStrikes}");
+        // TODO: Добавить логику Game Over при currentStrikes >= 3
     }
-    
-    public void CheckDailyMandates()
+
+    // ... (остальные методы GetRandomOrders, SelectOrder) ...
+    public List<DirectorOrder> GetRandomOrders(int count)
     {
-        if (currentMandates == null) return;
-        
-        bool failedMandate = false;
-        
-        if (ArchiveManager.Instance != null && ArchiveManager.Instance.GetCurrentDocumentCount() > currentMandates.maxArchiveDocumentCount)
-        {
-            AddStrike();
-            failedMandate = true;
-        }
-
-        DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
-        foreach (var stack in allStacks)
-        {
-            if (ArchiveManager.Instance != null && stack == ArchiveManager.Instance.mainDocumentStack) continue;
-            
-            if (stack.CurrentSize > currentMandates.maxDeskDocumentCount)
-            {
-                AddStrike();
-                failedMandate = true;
-                break;
-            }
-        }
-
-        if (ClientPathfinding.clientsExitedProcessed < currentMandates.minProcessedClients)
-        {
-            AddStrike();
-            failedMandate = true;
-        }
-
-        if (ClientPathfinding.clientsExitedAngry > currentMandates.maxUpsetClients)
-        {
-            AddStrike();
-            failedMandate = true;
-        }
-
-        if (!failedMandate)
-        {
-            Debug.Log("Все нормы дня выполнены! Отличная работа, Директор!");
-        }
+        offeredOrders.Clear();
+        if (allOrders == null || allOrders.Count == 0) return offeredOrders;
+        var availableOrders = allOrders.Where(o => !o.isOneTimeOnly || !completedOneTimeOrders.Contains(o)).ToList();
+        var randomOrders = availableOrders.OrderBy(x => Random.value * (1f / x.selectionWeight)).Take(count).ToList();
+        offeredOrders.AddRange(randomOrders);
+        return offeredOrders;
     }
-    
-    public void SpawnDirectorDocument()
+    public void SelectOrder(DirectorOrder selectedOrder)
     {
-        if (directorDocumentPrefab == null) return;
-        
-        GameObject docGO = Instantiate(directorDocumentPrefab, Vector3.zero, Quaternion.identity);
-        DirectorDocument newDoc = docGO.GetComponent<DirectorDocument>();
-        
-        if (newDoc != null)
-        {
-            newDoc.hiddenErrorsCount = Random.Range(0, 11);
-            if (currentMandates != null) 
-            { 
-                // Используем правильное имя переменной
-                newDoc.allowedErrorRate = currentMandates.allowedDirectorErrorRate; 
-            }
-            newDoc.isCorrupted = (Random.value < 0.2f);
-            
-            if (newDoc.isCorrupted) 
-            { 
-                newDoc.bribeAmount = Random.Range(50, 201); 
-            }
-            
-            directorDocumentsInPlay.Add(newDoc);
-        }
+        if (selectedOrder == null) return;
+        Debug.Log($"Выбран приказ: {selectedOrder.orderName}");
+        if(selectedOrder.duration == OrderDuration.SingleDay) { activeOrders.Add(selectedOrder); }
+        else if (selectedOrder.duration == OrderDuration.Permanent) { if (!activePermanentOrders.Contains(selectedOrder)) { activePermanentOrders.Add(selectedOrder); } }
+        if(selectedOrder.isOneTimeOnly) { if (!completedOneTimeOrders.Contains(selectedOrder)) { completedOneTimeOrders.Add(selectedOrder); } }
+        if(selectedOrder.oneTimeMoneyBonus != 0) { PlayerWallet.Instance.AddMoney(selectedOrder.oneTimeMoneyBonus, Vector3.zero); }
+        if(selectedOrder.removeStrike && currentStrikes > 0) { currentStrikes--; }
+        offeredOrders.Clear();
     }
 }

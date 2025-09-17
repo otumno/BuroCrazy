@@ -1,142 +1,127 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
-[RequireComponent(typeof(CanvasGroup))]
 public class StartOfDayPanel : MonoBehaviour
 {
     public static StartOfDayPanel Instance { get; private set; }
 
-    [Header("UI Компоненты")]
-    public TextMeshProUGUI dayInfoText;
-    public Button startDayButton;
-    public DirectorDeskButton directorDeskButton;
+    [Header("Основные UI Элементы")]
+    [SerializeField] private TextMeshProUGUI dayText;
+    [SerializeField] private Button startDayButton;
+    [SerializeField] private CanvasGroup canvasGroup;
     
     [Header("Документы Директора")]
-    public GameObject documentIconPrefab;
-    public Transform documentContainer;
+    [SerializeField] private GameObject documentIconPrefab;
+    [SerializeField] private Transform documentIconsContainer;
+    [SerializeField] private DirectorDocumentReviewPanel reviewPanel; // <-- Новая ссылка
+
+    // Используем словарь для быстрой связи клиента и его иконки
+    private Dictionary<ClientPathfinding, DirectorDocumentIcon> waitingDocumentIcons = new Dictionary<ClientPathfinding, DirectorDocumentIcon>();
     
-    private DirectorManager directorManager;
-    private Dictionary<ClientPathfinding, GameObject> activeDocumentIcons = new Dictionary<ClientPathfinding, GameObject>();
-    private CanvasGroup canvasGroup;
-    
-    void Awake()
+    // ... (остальные поля moneyText, strikesText, activeOrdersText) ...
+    [SerializeField] private TextMeshProUGUI moneyText;
+    [SerializeField] private TextMeshProUGUI strikesText;
+    [SerializeField] private TextMeshProUGUI activeOrdersText;
+
+    private void Awake()
     {
         Instance = this;
-        canvasGroup = GetComponent<CanvasGroup>();
     }
-    
-    // Метод Update() полностью удален, чтобы избежать конфликтов.
 
     public void UpdatePanelInfo()
     {
-        if (directorManager == null) directorManager = DirectorManager.Instance;
-        if (directorManager == null || ClientSpawner.Instance == null || startDayButton == null) return;
-        
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"День: {ClientSpawner.Instance.GetCurrentDay()}");
-        sb.AppendLine($"Страйки: {directorManager.currentStrikes}/3");
-
-        bool hasActiveOrders = directorManager.activeOrders.Count > 0 || directorManager.activePermanentOrders.Count > 0;
-        
-        if (hasActiveOrders)
+        // ... (весь ваш код для обновления текста и кнопок) ...
+        if (dayText != null) dayText.text = $"ДЕНЬ {ClientSpawner.Instance.GetCurrentDay() + 1}";
+        if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
+        if (strikesText != null) strikesText.text = $"Страйки: {DirectorManager.Instance.currentStrikes} / 3";
+        if (activeOrdersText != null)
         {
-            var orderNames = directorManager.activePermanentOrders.Select(o => o.orderName).ToList();
-            if (directorManager.activeOrders.Count > 0) orderNames.Add(directorManager.activeOrders[0].orderName);
-            sb.AppendLine($"\n<b>Активные приказы:</b>\n<color=yellow>{string.Join("\n", orderNames)}</color>");
+            var dailyOrders = DirectorManager.Instance.activeOrders.Select(o => o.orderName);
+            var permanentOrders = DirectorManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
+            var allActiveOrders = dailyOrders.Concat(permanentOrders);
+            if (allActiveOrders.Any()) { activeOrdersText.text = "<b>Активные приказы:</b>\n" + string.Join("\n", allActiveOrders); activeOrdersText.gameObject.SetActive(true); }
+            else { activeOrdersText.gameObject.SetActive(false); }
         }
-        else
+        if (startDayButton != null)
         {
-             sb.AppendLine("\n<color=red>Требуется издать приказ на день!</color>");
+            var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
+            startDayButton.onClick.RemoveAllListeners();
+            bool isMidDayPause = Time.timeScale == 0f && ClientSpawner.Instance.GetCurrentPeriod() != null && ClientSpawner.Instance.GetCurrentPeriod().periodName.ToLower() != "ночь";
+            if (isMidDayPause) { buttonText.text = "Продолжить день"; startDayButton.interactable = true; startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay()); }
+            else if (DirectorManager.Instance.offeredOrders.Count > 0) { buttonText.text = "Выберите приказ"; startDayButton.interactable = false;  }
+            else { buttonText.text = "Начать день"; startDayButton.interactable = true; startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay()); }
         }
-        dayInfoText.text = sb.ToString();
-
-        var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
-        startDayButton.onClick.RemoveAllListeners();
-        
-        bool isMidDayPause = ClientSpawner.Instance.GetPeriodTimer() > 0 && Time.timeScale == 0f;
-
-if (isMidDayPause)
-{
-    buttonText.text = "Продолжить день";
-    startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay());
-}
-else if (hasActiveOrders)
-{
-    buttonText.text = "Начать день";
-    startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay());
-}
-else
-{
-    buttonText.text = "Выберите приказ";
-    startDayButton.onClick.AddListener(() => MainUIManager.Instance.ShowOrderSelection());
-}
     }
+
+public IEnumerator Fade(bool fadeIn, bool interactableAfterFade)
+{
+    if (canvasGroup == null) yield break;
+
+    float startAlpha = fadeIn ? 0f : 1f;
+    float endAlpha = fadeIn ? 1f : 0f;
+    float fadeDuration = 0.3f; // Можешь вынести в инспектор, если нужно
     
-    public void ShowPanel()
+    // Перед началом анимации делаем панель неактивной, чтобы избежать случайных кликов
+    canvasGroup.interactable = false;
+    canvasGroup.blocksRaycasts = false;
+
+    if (fadeIn)
     {
-        StartCoroutine(Fade(true, true));
-    }
-    
-    public IEnumerator Fade(bool fadeIn, bool forceInteractable)
-    {
-        float fadeTime = 0.3f;
-        float startAlpha = fadeIn ? 0f : 1f;
-        float endAlpha = fadeIn ? 1f : 0f;
-        
-        canvasGroup.blocksRaycasts = true;
-        
-        float timer = 0f;
-        while (timer < fadeTime)
-        {
-            timer += Time.unscaledDeltaTime;
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timer / fadeTime);
-            yield return null;
-        }
-        
-        canvasGroup.alpha = endAlpha;
-        canvasGroup.interactable = fadeIn || forceInteractable;
-        canvasGroup.blocksRaycasts = fadeIn || forceInteractable;
+        gameObject.SetActive(true);
     }
 
+    float timer = 0f;
+    while (timer < fadeDuration)
+    {
+        timer += Time.unscaledDeltaTime;
+        canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timer / fadeDuration);
+        yield return null;
+    }
+
+    canvasGroup.alpha = endAlpha;
+
+    // После завершения анимации устанавливаем интерактивность
+    canvasGroup.interactable = interactableAfterFade;
+    canvasGroup.blocksRaycasts = interactableAfterFade;
+
+    if (!fadeIn)
+    {
+        gameObject.SetActive(false);
+    }
+}
+
+    // --- ОБНОВЛЕННЫЕ МЕТОДЫ ---
     public void RegisterDirectorDocument(ClientPathfinding client)
     {
-        if (documentIconPrefab == null || documentContainer == null) return;
-        if (activeDocumentIcons.ContainsKey(client)) return;
+        if (documentIconPrefab == null || documentIconsContainer == null || waitingDocumentIcons.ContainsKey(client)) return;
 
-        GameObject iconInstance = Instantiate(documentIconPrefab, documentContainer);
-        
-        if (iconInstance.TryGetComponent<DirectorDocumentIcon>(out var docIconScript))
+        GameObject iconGO = Instantiate(documentIconPrefab, documentIconsContainer);
+        DirectorDocumentIcon icon = iconGO.GetComponent<DirectorDocumentIcon>();
+        if (icon != null)
         {
-            var reviewPanel = FindFirstObjectByType<DirectorDocumentReviewPanel>(FindObjectsInactive.Include);
-            docIconScript.Setup(client, reviewPanel);
+            // Передаем и клиента, и панель обзора
+            icon.Setup(client, reviewPanel); 
+            waitingDocumentIcons.Add(client, icon);
         }
-        
-        activeDocumentIcons.Add(client, iconInstance);
-        if (directorDeskButton != null) directorDeskButton.UpdateAppearance(activeDocumentIcons.Count);
     }
 
+    // Теперь метод принимает клиента, а не иконку
     public void RemoveDocumentIcon(ClientPathfinding client)
     {
-        if (client != null && activeDocumentIcons.ContainsKey(client))
+        if (client != null && waitingDocumentIcons.ContainsKey(client))
         {
-            GameObject iconToRemove = activeDocumentIcons[client];
-            if (iconToRemove != null)
-            {
-                Destroy(iconToRemove);
-            }
-            activeDocumentIcons.Remove(client);
-            
-            if (directorDeskButton != null) directorDeskButton.UpdateAppearance(activeDocumentIcons.Count);
+            DirectorDocumentIcon iconToRemove = waitingDocumentIcons[client];
+            waitingDocumentIcons.Remove(client);
+            if(iconToRemove != null) Destroy(iconToRemove.gameObject);
         }
     }
-    
+
     public int GetWaitingDocumentCount()
     {
-        return activeDocumentIcons.Count;
+        return waitingDocumentIcons.Count;
     }
 }

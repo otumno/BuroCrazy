@@ -1,3 +1,4 @@
+// Файл: MainUIManager.cs - ОБНОВЛЕННАЯ ВЕРСИЯ
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,12 +10,15 @@ public class MainUIManager : MonoBehaviour
     [Header("Ссылки на компоненты UI")]
     public AudioSource uiAudioSource;
     [SerializeField] private GameObject pausePanel;
-    
     [Header("Панели главного меню")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject saveLoadPanel;
     
-    private TransitionManager transitionManager;
+    // --- НОВОЕ ПОЛЕ ДЛЯ НАСТРОЙКИ ---
+    [Header("Настройки переходов")]
+    [Tooltip("Как долго будет видна заставка 'День N' (в секундах)")]
+    public float splashScreenDwellTime = 1.0f;
+
     public bool isTransitioning { get; private set; } = false;
 
     private void Awake()
@@ -26,7 +30,6 @@ public class MainUIManager : MonoBehaviour
         }
         else if (Instance != this)
         {
-            Debug.LogWarning($"Найден и уничтожен дубликат MainUIManager ({this.GetInstanceID()}).");
             Destroy(gameObject);
         }
     }
@@ -36,22 +39,16 @@ public class MainUIManager : MonoBehaviour
         if (Instance == this)
         {
             Instance = null;
-            Debug.Log($"Главный MainUIManager ({this.GetInstanceID()}) был уничтожен и очистил ссылку на себя.");
         }
     }
 
     private IEnumerator LoadSceneRoutine(string sceneName)
     {
         isTransitioning = true;
-
-        if (transitionManager == null)
+        if (TransitionManager.Instance != null)
         {
-            transitionManager = FindFirstObjectByType<TransitionManager>();
-        }
-        
-        if (transitionManager != null)
-        {
-            yield return transitionManager.StartTransition(true);
+            // true = FadeIn (экран становится черным)
+            yield return TransitionManager.Instance.AnimateTransition(true);
         }
 
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
@@ -62,95 +59,166 @@ public class MainUIManager : MonoBehaviour
 
         if (sceneName == "GameScene")
         {
+            // --- ИЗМЕНЕНИЕ: Мы находим объекты, но передаем их в новую, более умную корутину ---
             StartOfDayPanel startOfDayPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
             OrderSelectionUI orderSelectionUI = FindFirstObjectByType<OrderSelectionUI>(FindObjectsInactive.Include);
             DaySplashScreenController daySplashScreenController = FindFirstObjectByType<DaySplashScreenController>(FindObjectsInactive.Include);
-            GameObject inGameUIButtons = FindFirstObjectByType<InGameUI_Actions>(FindObjectsInactive.Include)?.gameObject;
-
-            yield return StartCoroutine(UnveilSequence(startOfDayPanel, orderSelectionUI, daySplashScreenController, inGameUIButtons));
+            
+            // Запускаем нашу новую, полностью переписанную последовательность
+            yield return StartCoroutine(UnveilSequence(startOfDayPanel, orderSelectionUI, daySplashScreenController));
         }
-
-        isTransitioning = false;
-    }
-    
-    private IEnumerator UnveilSequence(StartOfDayPanel startOfDayPanel, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController, GameObject inGameUIButtons)
-    {
-        PauseGame(true);
-
-        if (SaveLoadManager.Instance.isNewGame)
-        {
-            DirectorManager.Instance.ResetState();
-            PlayerWallet.Instance.ResetState();
-            ClientSpawner.Instance.ResetState();
-            ArchiveManager.Instance.ResetState();
-            HiringManager.Instance.ResetState();
-        }
-        DirectorManager.Instance.PrepareDay();
-        HiringManager.Instance.GenerateNewCandidates();
-
-        if (DirectorAvatarController.Instance != null && DirectorAvatarController.Instance.directorChairPoint != null)
-        {
-            DirectorAvatarController.Instance.TeleportTo(DirectorAvatarController.Instance.directorChairPoint.position);
-            DirectorAvatarController.Instance.ForceSetAtDeskState(true);
-        }
-
-        if (inGameUIButtons != null) inGameUIButtons.SetActive(false);
-        if (startOfDayPanel != null) startOfDayPanel.GetComponent<CanvasGroup>().alpha = 0;
-        if (orderSelectionUI != null) orderSelectionUI.GetComponent<CanvasGroup>().alpha = 0;
         
-        if (daySplashScreenController != null)
+        if (sceneName == "MainMenuScene")
         {
-            daySplashScreenController.Setup(ClientSpawner.Instance.GetCurrentDay() + 1);
-            yield return daySplashScreenController.Fade(true);
-            yield return new WaitForSecondsRealtime(1.5f);
-            yield return daySplashScreenController.Fade(false);
-        }
-
-        if (startOfDayPanel != null)
-        {
-            startOfDayPanel.UpdatePanelInfo();
-            StartCoroutine(startOfDayPanel.Fade(true, true));
-        }
-        if (orderSelectionUI != null)
-        {
-            orderSelectionUI.Setup();
-            StartCoroutine(orderSelectionUI.Fade(true));
-        }
-
-        if (transitionManager != null)
-        {
-            yield return transitionManager.StartTransition(false);
+            isTransitioning = false;
         }
     }
     
-    public void OnSaveSlotClicked(int slotIndex)
+    // --- ПОЛНОСТЬЮ ПЕРЕПИСАННАЯ КОРУТИНА ---
+private IEnumerator UnveilSequence(StartOfDayPanel startOfDayPanel, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController)
+{
+    // --- ЭТАП 1: ПОДГОТОВКА ЗА ЧЕРНЫМ ЭКРАНОМ ---
+    PauseGame(true);
+
+    if (SaveLoadManager.Instance.isNewGame)
     {
-        if (isTransitioning) return;
-        SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
-        SaveLoadManager.Instance.isNewGame = false;
-        StartCoroutine(LoadSceneRoutine("GameScene"));
+        Debug.Log("<color=cyan>[MainUIManager] Это НОВАЯ ИГРА. Сбрасываем состояния менеджеров.</color>");
+        DirectorManager.Instance.ResetState();
+        HiringManager.Instance.ResetState();
+        PlayerWallet.Instance.ResetState();
+        ClientSpawner.Instance.ResetState();
+        ArchiveManager.Instance.ResetState();
+    }
+    else
+    {
+        // <<< ВОТ ИСПРАВЛЕНИЕ! >>>
+        // Если это не новая игра, значит, мы должны загрузить данные.
+        // Делаем это ЗДЕСЬ, когда все менеджеры уже существуют.
+        Debug.Log("<color=green>[MainUIManager] Это ЗАГРУЗКА ИГРЫ. Вызываем SaveLoadManager.LoadGame().</color>");
+        SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
     }
 
-    public void OnNewGameClicked(int slotIndex)
+    DirectorManager.Instance.PrepareDay();
+    HiringManager.Instance.GenerateNewCandidates();
+
+    if (DirectorAvatarController.Instance != null && DirectorAvatarController.Instance.directorChairPoint != null)
     {
-        if (isTransitioning) return;
-        SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
-        SaveLoadManager.Instance.isNewGame = true;
-        StartCoroutine(LoadSceneRoutine("GameScene"));
+        DirectorAvatarController.Instance.TeleportTo(DirectorAvatarController.Instance.directorChairPoint.position);
+        DirectorAvatarController.Instance.ForceSetAtDeskState(true);
+    }
+	
+    if (startOfDayPanel != null)
+    {
+        startOfDayPanel.gameObject.SetActive(true);
+        var cg = startOfDayPanel.GetComponent<CanvasGroup>();
+        cg.alpha = 1;
+        cg.interactable = false; // Нельзя нажимать
+    }
+    if (orderSelectionUI != null)
+    {
+        orderSelectionUI.gameObject.SetActive(true);
+        var cg = orderSelectionUI.GetComponent<CanvasGroup>();
+        cg.alpha = 1;
+        cg.interactable = false; // Нельзя нажимать
+    }
+    if (daySplashScreenController != null)
+    {
+        daySplashScreenController.gameObject.SetActive(true);
+        daySplashScreenController.Setup(ClientSpawner.Instance.GetCurrentDay() + 1);
+        var cg = daySplashScreenController.GetComponent<CanvasGroup>();
+        cg.alpha = 1;
+    }
+    
+    // --- ЭТАП 2: УБИРАЕМ "ШТОРЫ" ПО ОЧЕРЕДИ ---
+    
+    // 1. Убираем черный экран перехода. Под ним уже готова заставка "День N".
+    if (TransitionManager.Instance != null)
+    {
+        yield return TransitionManager.Instance.AnimateTransition(false);
     }
 
-    #region Логика кнопок главного меню
+    // 2. Ждем, пока игрок посмотрит на заставку.
+    yield return new WaitForSecondsRealtime(splashScreenDwellTime);
+
+    // 3. Убираем заставку "День N". Под ней уже готова панель приказов.
+    if (daySplashScreenController != null)
+    {
+        yield return daySplashScreenController.Fade(false);
+    }
+    
+    // 4. Делаем панель приказов активной для нажатий.
+    if (orderSelectionUI != null)
+    {
+        orderSelectionUI.Setup();
+        orderSelectionUI.GetComponent<CanvasGroup>().interactable = true;
+        orderSelectionUI.GetComponent<CanvasGroup>().blocksRaycasts = true;
+    }
+    
+    // На этом этапе управление переходит к игроку. Он должен выбрать приказ.
+    isTransitioning = false;
+}
+
+    #region Навигация и вызовы из UI (без изменений)
+
+public void OnSaveSlotClicked(int slotIndex)
+{
+    if (isTransitioning) return;
+    Debug.Log($"[MainUIManager] ПОЛУЧЕНА КОМАНДА на загрузку игры из слота #{slotIndex}...");
+
+    // 1. Просто запоминаем, какой слот надо будет загрузить.
+    SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
+    SaveLoadManager.Instance.isNewGame = false;
+
+    // 2. СРАЗУ ЗАПУСКАЕМ загрузку сцены. Загрузка данных произойдет позже.
+    StartCoroutine(LoadSceneRoutine("GameScene"));
+}
+
+public void OnNewGameClicked(int slotIndex)
+{
+    if (isTransitioning) return;
+    Debug.Log($"[MainUIManager] Создание новой игры в слоте #{slotIndex}...");
+
+    // 1. Устанавливаем текущий слот
+    SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
+    SaveLoadManager.Instance.isNewGame = true; // Указываем, что это новая игра
+
+    // 2. СОЗДАЕМ И СОХРАНЯЕМ СТАРТОВЫЕ ДАННЫЕ! (Этого шага не хватало)
+    // Это создаст файл save_slot_N.json, который будет виден при следующем запуске
+    SaveData newGameData = new SaveData
+    {
+        day = 1,
+        money = 150, // Ваши стартовые деньги
+        archiveDocumentCount = 0,
+        activePermanentOrderNames = new System.Collections.Generic.List<string>(),
+        completedOneTimeOrderNames = new System.Collections.Generic.List<string>(),
+        allStaffData = new System.Collections.Generic.List<StaffSaveData>(),
+        allDocumentStackData = new System.Collections.Generic.List<DocumentStackSaveData>()
+    };
+    SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
+    
+    // 3. Запускаем переход на игровую сцену
+    StartCoroutine(LoadSceneRoutine("GameScene"));
+}
+    
     public void OnClick_Continue()
     {
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
-        if (saveLoadPanel != null) saveLoadPanel.SetActive(true);
+        var savePanel = FindFirstObjectByType<SaveLoadPanelController>()?.gameObject;
+        if(savePanel != null)
+        {
+            savePanel.SetActive(true);
+        }
         SaveLoadManager.Instance.isNewGame = false;
     }
 
     public void OnClick_NewGame()
     {
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
-        if (saveLoadPanel != null) saveLoadPanel.SetActive(true);
+        var savePanel = FindFirstObjectByType<SaveLoadPanelController>()?.gameObject;
+        if(savePanel != null)
+        {
+            savePanel.SetActive(true);
+        }
         SaveLoadManager.Instance.isNewGame = true;
     }
 
@@ -164,31 +232,26 @@ public class MainUIManager : MonoBehaviour
         Debug.Log("Выход из игры...");
         Application.Quit();
     }
+
+    public void GoToMainMenu()
+    {
+        if(isTransitioning) return;
+        StartCoroutine(LoadSceneRoutine("MainMenuScene"));
+    }
+
+    public void TriggerNextDayTransition()
+    {
+        if (isTransitioning) return;
+        StartCoroutine(LoadSceneRoutine("GameScene"));
+    }
+
     #endregion
-	
-	public void TriggerNextDayTransition()
-{
-    if (isTransitioning) return;
-    // Этот метод просто перезапускает игровую сцену.
-    // Наша новая логика в LoadSceneRoutine сама подхватит
-    // перезагрузку и запустит "церемонию" нового дня.
-    StartCoroutine(LoadSceneRoutine("GameScene"));
-}
     
-	public void GoToMainMenu()
-{
-    // Этот метод просто вызывает уже существующую у нас логику
-    // загрузки главного меню.
-    StartCoroutine(LoadSceneRoutine("MainMenuScene"));
-}
-	
-	
-    #region Управление UI панелями
+    #region Управление UI панелями (без изменений)
 
     public void ShowPausePanel(bool show)
     {
         if (isTransitioning) return;
-        
         if (show)
         {
             PauseGame();
@@ -212,7 +275,7 @@ public class MainUIManager : MonoBehaviour
 
     #endregion
     
-    #region Управление временем и геймплеем
+    #region Управление временем и геймплеем (без изменений)
     public void PauseGame(bool playMusic = true)
     {
         Time.timeScale = 0f;
@@ -237,24 +300,30 @@ public class MainUIManager : MonoBehaviour
         StartCoroutine(StartGameplaySequence());
     }
 
-    private IEnumerator StartGameplaySequence()
+private IEnumerator StartGameplaySequence()
+{
+    isTransitioning = true;
+    StartOfDayPanel sodp = FindFirstObjectByType<StartOfDayPanel>();
+    OrderSelectionUI osui = FindFirstObjectByType<OrderSelectionUI>();
+    GameObject igub = FindFirstObjectByType<InGameUI_Actions>()?.gameObject;
+
+    if (sodp != null) yield return StartCoroutine(sodp.Fade(false, false));
+    if (osui != null && osui.gameObject.activeSelf) yield return StartCoroutine(osui.Fade(false));
+
+    if (igub != null)
     {
-        isTransitioning = true;
-        
-        StartOfDayPanel sodp = FindFirstObjectByType<StartOfDayPanel>();
-        OrderSelectionUI osui = FindFirstObjectByType<OrderSelectionUI>();
-        GameObject igub = FindFirstObjectByType<InGameUI_Actions>()?.gameObject;
-
-        if (sodp != null) yield return StartCoroutine(sodp.Fade(false, false));
-        if (osui != null && osui.gameObject.activeSelf) yield return StartCoroutine(osui.Fade(false));
-
-        if (igub != null)
-        {
-            igub.SetActive(true);
-        }
-        
-        ResumeGame();
-        isTransitioning = false;
+        igub.SetActive(true);
     }
+    
+    ResumeGame();
+    isTransitioning = false;
+
+    // <<< ДОБАВЬТЕ ЭТУ СТРОКУ В САМОМ КОНЦЕ >>>
+    // Даем команду MusicPlayer'у начать проигрывать музыку геймплея (день/ночь)
+    if (MusicPlayer.Instance != null)
+    {
+        MusicPlayer.Instance.StartGameplayMusic();
+    }
+}
     #endregion
 }
