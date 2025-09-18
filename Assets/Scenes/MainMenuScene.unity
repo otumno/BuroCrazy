@@ -141,13 +141,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2af2dd3b1174294a9a7550f19c5b63c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  transitionPanelObject: {fileID: 2063886888}
+  blackoutCanvasGroup: {fileID: 2063886894}
+  leavesContainer: {fileID: 1556624907}
   audioSource: {fileID: 96204286}
   leafPrefab: {fileID: 2016514429891180889, guid: ca02e6d2f0e798146b3baa3e6da06ca8, type: 3}
   numberOfLeaves: 50
-  leafSpeed: 1000
-  leafDwellDuration: 1
-  leafFadeOutDuration: 0.5
+  leafSpeed: 3000
   startPoints:
   - {fileID: 489261262}
   - {fileID: 1167299537}
@@ -192,8 +191,11 @@ MonoBehaviour:
   - {fileID: 266542557}
   - {fileID: 181028930}
   - {fileID: 706405766}
-  fadeDuration: 3
+  fadeToBlackDuration: 1.5
+  blackScreenHoldDuration: 1
+  fadeToVisibleDuration: 1.5
   leavesSound: {fileID: 8300000, guid: 7e6a35fa62700e049aad989da57c0973, type: 3}
+  leavesExitSound: {fileID: 8300000, guid: 7e6a35fa62700e049aad989da57c0973, type: 3}
 --- !u!114 &96204283
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1759,6 +1761,11 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 6625247494626739943, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
   m_PrefabInstance: {fileID: 8306906582853188634}
   m_PrefabAsset: {fileID: 0}
+--- !u!224 &1556624907 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2329025650815340842, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+  m_PrefabInstance: {fileID: 8306906582853188634}
+  m_PrefabAsset: {fileID: 0}
 --- !u!224 &1638779907 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3857984293289801358, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -2028,7 +2035,6 @@ GameObject:
   - component: {fileID: 1864426797}
   - component: {fileID: 1864426796}
   - component: {fileID: 1864426798}
-  - component: {fileID: 1864426799}
   m_Layer: 5
   m_Name: SaveSelectionPanel
   m_TagString: Untagged
@@ -2115,22 +2121,6 @@ MonoBehaviour:
   - {fileID: 1656875041}
   - {fileID: 360953377}
   - {fileID: 695686111}
---- !u!114 &1864426799
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1864426794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bab77e0c4c526d341a8a96a30d483a37, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  initialBackground: {fileID: 0}
-  finalBackground: {fileID: 0}
-  fadeDelay: 2
-  fadeDuration: 10
 --- !u!1 &1902055739
 GameObject:
   m_ObjectHideFlags: 0
@@ -2261,6 +2251,11 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 2000
   m_TargetDisplay: 0
+--- !u!225 &2063886894 stripped
+CanvasGroup:
+  m_CorrespondingSourceObject: {fileID: 4328939966884396420, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+  m_PrefabInstance: {fileID: 8306906582853188634}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2085123106
 GameObject:
   m_ObjectHideFlags: 0
@@ -2601,6 +2596,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1663327023189599198, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: allPossibleOrders.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1663327023189599198, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allPossibleOrders.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 91cbdd7bfe01c6441a52262968012dff, type: 2}
+    - target: {fileID: 1663327023189599198, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allPossibleOrders.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 491694cc3f4d30143915192e7ef54f4c, type: 2}
+    - target: {fileID: 1663327023189599198, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allPossibleOrders.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 058e4cbdaf16d3d4e98da4fbc646fd05, type: 2}
     - target: {fileID: 1664084752037518102, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2326.6924
@@ -2657,6 +2668,10 @@ PrefabInstance:
       propertyPath: saveLoadPanel
       value: 
       objectReference: {fileID: 1864426794}
+    - target: {fileID: 5124801575726824158, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: splashScreenDwellTime
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 5147576532701257959, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_Pivot.x
       value: 0

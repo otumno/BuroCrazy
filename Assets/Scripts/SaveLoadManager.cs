@@ -2,7 +2,7 @@ using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System; // <<< НУЖНО ДЛЯ ПОЛУЧЕНИЯ ДАТЫ ФАЙЛА
+using System;
 
 public class SaveLoadManager : MonoBehaviour
 {
@@ -10,8 +10,8 @@ public class SaveLoadManager : MonoBehaviour
 
     [Tooltip("Сколько слотов сохранения будет в игре")]
     public int numberOfSlots = 3;
-    private int currentSlotIndex = 0;
     public bool isNewGame = true;
+    private int currentSlotIndex = 0;
 
     private void Awake()
     {
@@ -26,19 +26,12 @@ public class SaveLoadManager : MonoBehaviour
         }
     }
 
-public int GetCurrentSlot()
-{
-    return currentSlotIndex;
-}
-
-    // Этот метод сохраняет ТЕКУЩЕЕ состояние игры. Его мы вызываем из меню паузы и т.д.
     public void SaveGame(int slotIndex)
     {
         isNewGame = false;
         currentSlotIndex = slotIndex;
         SaveData data = new SaveData();
 
-        // ... вся ваша логика сбора данных остается без изменений ...
         data.day = ClientSpawner.Instance.GetCurrentDay();
         data.money = PlayerWallet.Instance.GetCurrentMoney();
         data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
@@ -71,30 +64,20 @@ public int GetCurrentSlot()
             data.allDocumentStackData.Add(stackData);
         }
         
-        // <<< НОВЫЙ МЕТОД ДЛЯ ЗАПИСИ ДАННЫХ В ФАЙЛ >>>
-        // Мы вынесли это в отдельный метод, чтобы не дублировать код
         WriteSaveDataToFile(slotIndex, data);
-
         PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
         Debug.Log($"Игра сохранена в слот {slotIndex}");
     }
 
-    // <<< НОВЫЙ МЕТОД >>>
-    // Этот метод сохраняет данные для НОВОЙ ИГРЫ. Он не собирает информацию со сцены,
-    // а принимает уже готовый объект 'initialData'.
     public void SaveNewGame(int slotIndex, SaveData initialData)
     {
         isNewGame = false;
         currentSlotIndex = slotIndex;
-
         WriteSaveDataToFile(slotIndex, initialData);
-
         PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
         Debug.Log($"Новая игра создана и сохранена в слот {slotIndex}");
     }
     
-    // <<< НОВЫЙ ВСПОМОГАТЕЛЬНЫЙ МЕТОД >>>
-    // Просто записывает переданные данные в файл сохранения.
     private void WriteSaveDataToFile(int slotIndex, SaveData data)
     {
         string json = JsonUtility.ToJson(data, true);
@@ -102,16 +85,19 @@ public int GetCurrentSlot()
         File.WriteAllText(path, json);
     }
     
-    // ... Остальные ваши методы (LoadGame, DeleteSave и т.д.) ...
     public void SetCurrentSlot(int slotIndex)
     {
         currentSlotIndex = slotIndex;
         Debug.Log($"[SaveLoadManager] Текущий слот изменен на {slotIndex}");
     }
+    
+    public int GetCurrentSlot()
+    {
+        return currentSlotIndex;
+    }
 
     public bool LoadGame(int slotIndex)
     {
-        // ... Ваш код загрузки остается без изменений ...
         isNewGame = false;
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
@@ -126,7 +112,9 @@ public int GetCurrentSlot()
 
             if (DirectorManager.Instance != null)
             {
-                var allOrders = DirectorManager.Instance.allOrders;
+                // <<< ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ >>>
+                // Используем правильный список 'allPossibleOrders'
+                var allOrders = DirectorManager.Instance.allPossibleOrders;
                 DirectorManager.Instance.activePermanentOrders.Clear();
                 DirectorManager.Instance.completedOneTimeOrders.Clear();
 
@@ -187,7 +175,6 @@ public int GetCurrentSlot()
 
     public SaveData GetDataForSlot(int slotIndex)
     {
-        // ... Ваш код остается без изменений ...
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
         {
@@ -199,7 +186,6 @@ public int GetCurrentSlot()
 
     public void DeleteSave(int slotIndex)
     {
-        // ... Ваш код остается без изменений ...
         isNewGame = true;
         string path = Path.Combine(Application.persistentDataPath, $"save_slot_{slotIndex}.json");
         if (File.Exists(path))
@@ -215,22 +201,18 @@ public int GetCurrentSlot()
         return File.Exists(path);
     }
     
-    // <<< НОВЫЙ МЕТОД, НУЖЕН ДЛЯ MainMenuManager >>>
-    // Проверяет, существует ли ХОТЯ БЫ ОДНО сохранение.
     public bool DoesAnySaveExist()
     {
         for (int i = 0; i < numberOfSlots; i++)
         {
             if (DoesSaveExist(i))
             {
-                return true; // Нашли хотя бы один файл, выходим
+                return true;
             }
         }
-        return false; // Не нашли ни одного
+        return false;
     }
     
-    // <<< НОВЫЙ МЕТОД, НУЖЕН ДЛЯ MainMenuManager (кнопка "Продолжить") >>>
-    // Находит индекс самого последнего измененного файла сохранения.
     public int GetLatestSaveSlotIndex()
     {
         int latestSlot = -1;
@@ -252,8 +234,6 @@ public int GetCurrentSlot()
         return latestSlot;
     }
     
-    // <<< НОВЫЙ МЕТОД, НУЖЕН ДЛЯ SaveSlotController >>>
-    // Проверяет, пуст ли слот. Просто для удобства и читаемости кода.
     public bool IsSlotEmpty(int slotIndex)
     {
         return !DoesSaveExist(slotIndex);

@@ -26,6 +26,8 @@ public abstract class StaffController : MonoBehaviour
     public AudioClip endShiftSound;
 
     [Header("Прогрессия и Роль")]
+	    [Tooltip("Имя персонажа, которое будет отображаться в UI")]
+		public string characterName = "Безымянный";
 	public Gender gender;
     public CharacterSkills skills;
     public Role currentRole = Role.Intern;

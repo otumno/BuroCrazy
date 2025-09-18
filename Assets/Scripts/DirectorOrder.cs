@@ -14,8 +14,13 @@ public class DirectorOrder : ScriptableObject
     [Header("Основная информация")]
     public string orderName;
     [TextArea(3, 5)]
-    public string orderDescription;
+    public string description;
     public Sprite icon;
+	
+	 [Header("Настройки геймплея")]
+    [Tooltip("Допустимый процент ошибок для этого приказа (например, 0.1 для 10%)")]
+    [Range(0f, 1f)]
+    public float allowedDirectorErrorRate;
 
     [Header("Мета-настройки Приказа")]
     [Tooltip("Как долго действует приказ: один день или навсегда.")]

@@ -1,4 +1,3 @@
-// Файл: FallingLeaf.cs - ОБНОВЛЕННАЯ ВЕРСИЯ
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
@@ -10,63 +9,82 @@ public class FallingLeaf : MonoBehaviour
     private Color originalColor;
     private RectTransform rectTransform;
 
+    // <<< НОВОЕ: Переменные для запоминания пути >>>
+    private Vector3 startPosition;
+    private Vector3 endPosition;
+    private float movementDuration;
+    private bool useEaseInForMovement;
+
     void Awake()
     {
         leafImage = GetComponent<Image>();
         rectTransform = GetComponent<RectTransform>();
         originalColor = leafImage.color;
     }
-
-    // --- ИЗМЕНЕНИЕ: Добавлены новые параметры с значениями по умолчанию ---
-    public IEnumerator Animate(Vector3 startPos, Vector3 endPos, float duration, bool fadeToBlack, bool useEaseIn, float dwellDuration = 2.0f, float fadeOutDuration = 0.5f)
+    
+    void Update()
     {
+        if (TransitionManager.Instance != null)
+        {
+            leafImage.color = Color.Lerp(Color.black, originalColor, TransitionManager.GlobalFadeValue);
+        }
+    }
+
+    /// <summary>
+    /// Анимация ПОЯВЛЕНИЯ листа.
+    /// </summary>
+    public IEnumerator AnimateMovement(Vector3 startPos, Vector3 endPos, float duration, bool useEaseIn)
+    {
+        // <<< ИЗМЕНЕНИЕ: Запоминаем параметры для обратного пути >>>
+        this.startPosition = startPos;
+        this.endPosition = endPos;
+        this.movementDuration = duration;
+        this.useEaseInForMovement = useEaseIn;
+
         float timer = 0f;
         rectTransform.position = startPos;
-
-        Color startColor = fadeToBlack ? originalColor : Color.black;
-        Color endColor = fadeToBlack ? Color.black : originalColor;
         
-        // --- ЭТАП 1: Движение листа (как и было) ---
-        while (timer < duration)
+        while (timer < movementDuration)
         {
             if (this == null || rectTransform == null) yield break;
+            
             timer += Time.unscaledDeltaTime;
             float progress = Mathf.Clamp01(timer / duration);
-            float easedProgress;
-            if (useEaseIn)
-            {
-                easedProgress = progress * progress * progress;
-            }
-            else
-            {
-                easedProgress = 1 - Mathf.Pow(1 - progress, 3);
-            }
+            
+            // Используем EaseOut (быстро в начале, медленно в конце)
+            float easedProgress = 1 - Mathf.Pow(1 - progress, 3);
 
             rectTransform.position = Vector3.LerpUnclamped(startPos, endPos, easedProgress);
-            leafImage.color = Color.Lerp(startColor, endColor, progress);
-
+            
             yield return null;
         }
+    }
 
-        // --- ЭТАП 2 (НОВЫЙ): Задержка на месте ---
-        // Лист лежит на "земле" заданное время
-        yield return new WaitForSecondsRealtime(dwellDuration);
+    /// <summary>
+    /// <<< НОВЫЙ МЕТОД: Анимация ИСЧЕЗНОВЕНИЯ листа >>>
+    /// </summary>
+    public IEnumerator AnimateExit()
+    {
+        float timer = 0f;
+        Vector3 currentPos = rectTransform.position; // Начинаем с текущей позиции
+        Vector3 targetPos = startPosition;          // Летим обратно на старт
 
-        // --- ЭТАП 3 (НОВЫЙ): Плавное исчезновение ---
-        timer = 0f;
-        Color currentColor = leafImage.color;
-        Color transparentColor = new Color(currentColor.r, currentColor.g, currentColor.b, 0);
-
-        while(timer < fadeOutDuration)
+        while (timer < movementDuration)
         {
-            if (this == null || leafImage == null) yield break;
+            if (this == null || rectTransform == null) yield break;
+
             timer += Time.unscaledDeltaTime;
-            leafImage.color = Color.Lerp(currentColor, transparentColor, timer / fadeOutDuration);
+            float progress = Mathf.Clamp01(timer / movementDuration);
+
+            // Используем EaseIn (медленно в начале, быстро в конце) для эффекта "взлета"
+            float easedProgress = progress * progress * progress;
+
+            rectTransform.position = Vector3.LerpUnclamped(currentPos, targetPos, easedProgress);
+
             yield return null;
         }
 
-        // --- ЭТАП 4: Уничтожение объекта ---
-        // Происходит только после полного исчезновения
+        // В конце анимации лист самоуничтожается
         Destroy(gameObject);
     }
 }

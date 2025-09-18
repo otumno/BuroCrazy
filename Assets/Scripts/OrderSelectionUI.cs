@@ -1,30 +1,25 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
+[RequireComponent(typeof(CanvasGroup))]
 public class OrderSelectionUI : MonoBehaviour
 {
-    [SerializeField] private List<OrderCardUI> orderCards; // Ссылки на 3 карточки приказа
-    [SerializeField] private CanvasGroup canvasGroup;
-    
-    private List<DirectorOrder> currentOfferedOrders;
+    [Header("UI Компоненты")]
+    [SerializeField] private List<OrderCardUI> orderCards;
+    private CanvasGroup canvasGroup;
 
-    // Этот метод будет вызываться из MainUIManager, чтобы показать панель
+    private void Awake() { canvasGroup = GetComponent<CanvasGroup>(); }
+
     public void Setup()
     {
-        // Просим у DirectorManager три случайных приказа на выбор
-        currentOfferedOrders = DirectorManager.Instance.GetRandomOrders(3);
-
-        // Настраиваем каждую карточку
+        if (DirectorManager.Instance == null) return;
+        List<DirectorOrder> availableOrders = DirectorManager.Instance.GetAvailableOrdersForDay();
         for (int i = 0; i < orderCards.Count; i++)
         {
-            if (i < currentOfferedOrders.Count)
+            if (i < availableOrders.Count)
             {
-                // "Знакомим" карточку с ее приказом и даем ей номер
-                orderCards[i].Setup(currentOfferedOrders[i], i);
-                // Подписываемся на событие клика
-                orderCards[i].OnOrderSelected += HandleOrderSelection; 
+                orderCards[i].Setup(availableOrders[i], this);
                 orderCards[i].gameObject.SetActive(true);
             }
             else
@@ -34,59 +29,45 @@ public class OrderSelectionUI : MonoBehaviour
         }
     }
 
-    // Этот метод сработает, когда мы нажмем на любую из карточек
-    private void HandleOrderSelection(int selectedIndex)
-{
-    // 1. Сообщаем DirectorManager, какой приказ мы выбрали
-    DirectorManager.Instance.SelectOrder(currentOfferedOrders[selectedIndex]);
-    
-    // 2. Отписываемся от событий, чтобы избежать багов
-    foreach (var card in orderCards)
+    public void OnOrderSelected(DirectorOrder selectedOrder)
     {
-        card.OnOrderSelected -= HandleOrderSelection;
+        if (DirectorManager.Instance != null)
+        {
+            DirectorManager.Instance.SelectOrder(selectedOrder);
+        }
+        StartCoroutine(UpdateAndFadeOut());
     }
 
-    // 3. Находим стол директора и делаем его интерактивным
-    var startOfDayPanel = FindFirstObjectByType<StartOfDayPanel>();
-    if (startOfDayPanel != null)
+    // <<< НОВАЯ ОБЪЕДИНЕННАЯ КОРУТИНА >>>
+    private IEnumerator UpdateAndFadeOut()
     {
-        startOfDayPanel.UpdatePanelInfo();
-        var cg = startOfDayPanel.GetComponent<CanvasGroup>();
-        cg.interactable = true;
-        cg.blocksRaycasts = true;
+        // Сначала плавно прячем эту панель
+        yield return StartCoroutine(Fade(false));
+
+        // Затем ждем конца кадра, чтобы все изменения применились
+        yield return new WaitForEndOfFrame();
+
+        // И только теперь надежно обновляем панель стола
+        if (StartOfDayPanel.Instance != null)
+        {
+            StartOfDayPanel.Instance.UpdatePanelInfo();
+        }
     }
 
-    // 4. Просто выключаем себя, чтобы показать слой ниже.
-    gameObject.SetActive(false);
-}
-    
-    // Корутина для плавного появления/исчезновения
     public IEnumerator Fade(bool fadeIn)
-{
-    float targetAlpha = fadeIn ? 1f : 0f;
-    if(fadeIn)
     {
-        gameObject.SetActive(true);
+        float targetAlpha = fadeIn ? 1f : 0f;
+        float startAlpha = canvasGroup.alpha;
+        float fadeDuration = 0.5f;
+        canvasGroup.interactable = fadeIn;
+        canvasGroup.blocksRaycasts = fadeIn;
+        float elapsedTime = 0f;
+        while (elapsedTime < fadeDuration)
+        {
+            elapsedTime += Time.unscaledDeltaTime;
+            canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / fadeDuration);
+            yield return null;
+        }
+        canvasGroup.alpha = targetAlpha;
     }
-
-    // Делаем панель интерактивной СРАЗУ, как только она начинает появляться
-    canvasGroup.interactable = fadeIn;
-    canvasGroup.blocksRaycasts = fadeIn;
-
-    float elapsedTime = 0f;
-    float duration = 0.3f;
-    float startAlpha = canvasGroup.alpha;
-    while (elapsedTime < duration)
-    {
-        canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsedTime / duration);
-        elapsedTime += Time.unscaledDeltaTime;
-        yield return null;
-    }
-    canvasGroup.alpha = targetAlpha;
-
-    if(!fadeIn)
-    {
-        gameObject.SetActive(false);
-    }
-}
 }

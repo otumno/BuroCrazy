@@ -1,33 +1,47 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System;
 
 public class OrderCardUI : MonoBehaviour
 {
+    [Header("Ссылки на UI элементы")]
     [SerializeField] private TextMeshProUGUI titleText;
     [SerializeField] private TextMeshProUGUI descriptionText;
-    [SerializeField] private Image iconImage;
     [SerializeField] private Button selectButton;
+    [SerializeField] private Image iconImage; // Необязательно, если нет иконок
 
-    private int cardIndex;
-    public event Action<int> OnOrderSelected;
+    private DirectorOrder currentOrder;
+    private OrderSelectionUI selectionManager;
 
-    private void Awake()
+    // Метод для настройки карточки данными из приказа
+    public void Setup(DirectorOrder order, OrderSelectionUI manager)
     {
-        selectButton.onClick.AddListener(HandleClick);
-    }
+        currentOrder = order;
+        selectionManager = manager;
 
-    public void Setup(DirectorOrder order, int index)
-    {
-        this.cardIndex = index;
         titleText.text = order.orderName;
-        descriptionText.text = order.orderDescription;
-        if(order.icon != null) iconImage.sprite = order.icon;
+        descriptionText.text = order.description;
+
+        if (iconImage != null && order.icon != null)
+        {
+            iconImage.sprite = order.icon;
+            iconImage.gameObject.SetActive(true);
+        }
+        else if (iconImage != null)
+        {
+            iconImage.gameObject.SetActive(false);
+        }
+        
+        // Убедимся, что на кнопке нет старых действий и добавляем новое
+        selectButton.onClick.RemoveAllListeners();
+        selectButton.onClick.AddListener(OnCardSelected);
     }
 
-    private void HandleClick()
+    // Что происходит, когда игрок нажимает на кнопку
+    private void OnCardSelected()
     {
-        OnOrderSelected?.Invoke(cardIndex);
+        // Карточка сообщает главному менеджеру, что ее выбрали
+        Debug.Log($"Выбран приказ: {currentOrder.orderName}");
+        selectionManager.OnOrderSelected(currentOrder);
     }
 }

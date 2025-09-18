@@ -10,7 +10,7 @@ public class RankData : ScriptableObject
     
     [Header("Требования и бонусы")]
     [Tooltip("Сколько всего опыта нужно для достижения СЛЕДУЮЩЕГО ранга.")]
-    public int xpToNextRank = 100;
+    public int experienceRequired = 100;
     
     [Tooltip("Стоимость повышения до этого ранга.")]
     public int promotionCost = 500;
