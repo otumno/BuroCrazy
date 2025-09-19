@@ -1,3 +1,5 @@
+// Файл: HiringPanelUI.cs
+
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,15 +25,17 @@ public class HiringPanelUI : MonoBehaviour
         }
         activeCards.Clear();
 
-        var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None).ToList();
+        // --- ИЗМЕНЕНИЕ: Берем список напрямую из менеджера ---
+        if (HiringManager.Instance == null) return;
         
+        var allStaff = HiringManager.Instance.AllStaff;
+
         foreach (var staffMember in allStaff)
         {
             GameObject cardGO = Instantiate(teamMemberCardPrefab, teamListContent);
             TeamMemberCardUI cardUI = cardGO.GetComponent<TeamMemberCardUI>();
             if (cardUI != null)
             {
-                // <<< ИЗМЕНЕНИЕ: Вызываем упрощенный Setup >>>
                 cardUI.Setup(staffMember);
                 activeCards.Add(cardUI);
             }

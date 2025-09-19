@@ -22,6 +22,30 @@ public class MainUIManager : MonoBehaviour
     }
     #endregion
 
+    /// <summary>
+    /// Показывает панель стола директора, ставит игру на паузу и включает музыку кабинета.
+    /// </summary>
+    public void ShowDirectorDesk()
+{
+    if (isTransitioning) return;
+
+    // Ищем панель, даже если она неактивна
+    StartOfDayPanel deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); // <-- ДОБАВЛЕНА ;
+
+    if (deskPanel != null)
+    {
+        // Ставим игру на паузу и включаем музыку
+        PauseGame(true);
+        
+        // Запускаем анимацию появления панели
+        StartCoroutine(deskPanel.Fade(true, true));
+    }
+    else
+    {
+        Debug.LogError("[MainUIManager] Не удалось найти StartOfDayPanel на сцене!");
+    }
+}
+
     private IEnumerator LoadSceneRoutine(string sceneName)
     {
         isTransitioning = true;
@@ -109,23 +133,25 @@ private IEnumerator StartGameplaySequence()
 {
     isTransitioning = true;
     Debug.Log("<color=lime>[MainUIManager] Начало последовательности StartGameplaySequence.</color>");
+    
+    if (pausePanel != null)
+    {
+        pausePanel.SetActive(false);
+    }
 
-    // <<< НАЧАЛО ИСПРАВЛЕНИЙ >>>
-    // 1. Находим панель стола директора
-    StartOfDayPanel sodp = FindFirstObjectByType<StartOfDayPanel>();
+    // Находим и прячем панель стола директора
+    StartOfDayPanel sodp = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); // <-- ДОБАВЛЕНА ;
     if (sodp != null)
     {
         Debug.Log("<color=lime>[MainUIManager] Прячем StartOfDayPanel...</color>");
-        // 2. Плавно прячем ее, делая неинтерактивной
-        yield return StartCoroutine(sodp.Fade(false, false)); 
+        yield return StartCoroutine(sodp.Fade(false, false));
     }
-    // <<< КОНЕЦ ИСПРАВЛЕНИЙ >>>
 
-    // 3. Снимаем игру с паузы
+    // Снимаем игру с паузы
     Debug.Log("<color=lime>[MainUIManager] Снимаем игру с паузы.</color>");
     ResumeGame();
     
-    // 4. Включаем музыку геймплея
+    // Включаем музыку геймплея
     if (MusicPlayer.Instance != null)
     {
         Debug.Log("<color=lime>[MainUIManager] Включаем музыку геймплея.</color>");

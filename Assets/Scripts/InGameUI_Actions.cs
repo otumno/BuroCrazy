@@ -10,13 +10,21 @@ public class InGameUI_Actions : MonoBehaviour
 
     public void OnCabinetButtonClick()
     {
-        // Используем правильный метод из нового MenuManager (который живет в GameScene)
-        MainUIManager.Instance?.ShowPausePanel(true);
+        MainUIManager.Instance?.ShowDirectorDesk();
     }
 
     public void OnMainMenuButtonClick()
     {
-        // Используем правильный метод из нового MenuManager (который живет в GameScene)
         MainUIManager.Instance?.GoToMainMenu();
+    }
+
+    // --- ДОБАВЛЕНО ---
+    /// <summary>
+    /// Вызывается при нажатии на кнопку "За стол".
+    /// </summary>
+    public void OnGoToDeskButtonClick()
+    {
+        // Находим экземпляр аватара директора и вызываем его метод GoToDesk()
+        DirectorAvatarController.Instance?.GoToDesk();
     }
 }

@@ -1,16 +1,16 @@
+// Файл: HiringManager.cs
+
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.SceneManagement;
 
-// Вспомогательный класс для хранения данных о кандидате.
-// Он не является MonoBehaviour, поэтому может находиться в этом же файле.
 [System.Serializable]
 public class Candidate
 {
     public string Name;
     public Gender Gender;
-    public StaffController.Role Role = StaffController.Role.Intern; // Все кандидаты - стажеры
+    public StaffController.Role Role = StaffController.Role.Intern;
     public CharacterSkills Skills;
     public int HiringCost;
 }
@@ -20,11 +20,12 @@ public class HiringManager : MonoBehaviour
     public static HiringManager Instance { get; set; }
 
     [Header("Префабы сотрудников")]
-    public GameObject internPrefab; // Нам нужен только префаб стажера
-	public List<StaffController> AllStaff = new List<StaffController>();
-public List<StaffController> UnassignedStaff = new List<StaffController>();
+    public GameObject internPrefab;
+	
+    // --- ИЗМЕНЕНИЕ: Эти списки теперь будут главным источником данных ---
+    public List<StaffController> AllStaff = new List<StaffController>();
+    public List<StaffController> UnassignedStaff = new List<StaffController>();
 
-    // Список точек, который будет заполняться автоматически при загрузке сцены
     private List<Transform> unassignedStaffPoints = new List<Transform>();
     private Dictionary<Transform, StaffController> occupiedPoints = new Dictionary<Transform, StaffController>();
 
@@ -33,8 +34,7 @@ public List<StaffController> UnassignedStaff = new List<StaffController>();
     public int maxCandidatesPerDay = 4;
     public int baseCost = 100;
     public int costPerSkillPoint = 150;
-    
-    // Списки имен для генерации (для обоих полов)
+
     private List<string> firstNamesMale = new List<string> { "Виктор", "Иван", "Петр", "Семён", "Аркадий", "Борис", "Геннадий" };
     private List<string> firstNamesFemale = new List<string> { "Анна", "Мария", "Ольга", "Светлана", "Ирина", "Валентина", "Галина" };
     private List<string> lastNames = new List<string> { "Скрепкин", "Бланков", "Циркуляров", "Печаткин", "Архивариусов", "Формуляров" };
@@ -43,6 +43,21 @@ public List<StaffController> UnassignedStaff = new List<StaffController>();
 
     public List<Candidate> AvailableCandidates { get; private set; } = new List<Candidate>();
 
+    // --- ДОБАВЛЕНО: Правильная инициализация синглтона ---
+    void Awake()
+    {
+        if (Instance == null) 
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        } 
+        else if (Instance != this) 
+        {
+            Destroy(gameObject);
+        }
+    }
+
     void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -50,27 +65,25 @@ public List<StaffController> UnassignedStaff = new List<StaffController>();
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Если загрузилась именно игровая сцена, ищем нужные объекты
-        if (scene.name == "GameScene")
+        if (scene.name == "GameScene") // Укажите имя вашей основной сцены
         {
             FindSceneSpecificReferences();
         }
     }
 
-public void ResetState()
-{
-    AvailableCandidates.Clear();
-    occupiedPoints.Clear();
-    UnassignedStaff.Clear();
-    AllStaff.Clear();
-    Debug.Log("[HiringManager] Состояние сброшено для новой игры.");
-}
+    public void ResetState()
+    {
+        AvailableCandidates.Clear();
+        occupiedPoints.Clear();
+        UnassignedStaff.Clear();
+        AllStaff.Clear();
+        Debug.Log("[HiringManager] Состояние сброшено для новой игры.");
+    }
 
     private void FindSceneSpecificReferences()
     {
         unassignedStaffPoints.Clear();
         occupiedPoints.Clear();
-
         InternPointsRegistry registry = FindFirstObjectByType<InternPointsRegistry>();
         if (registry != null)
         {
@@ -134,7 +147,7 @@ public void ResetState()
         if (unassignedStaffPoints.Count == 0)
         {
              Debug.LogError("[HiringManager] Не найдено ни одной точки для размещения стажера!");
-             return false;
+            return false;
         }
 
         Transform freePoint = unassignedStaffPoints.FirstOrDefault(p => !occupiedPoints.ContainsKey(p));
@@ -145,15 +158,18 @@ public void ResetState()
         }
         
         PlayerWallet.Instance.AddMoney(-candidate.HiringCost, Vector3.zero);
-
         GameObject newStaffGO = Instantiate(internPrefab, freePoint.position, Quaternion.identity);
         
-        // Получаем любой контроллер, т.к. пол есть в базовом StaffController
         StaffController staffController = newStaffGO.GetComponent<StaffController>();
         if (staffController != null)
         {
+            staffController.characterName = candidate.Name; // --- ДОБАВЛЕНО: Присваиваем имя
             staffController.skills = candidate.Skills;
             staffController.gender = candidate.Gender;
+            
+            // --- ДОБАВЛЕНО: Добавляем нового сотрудника в наши списки ---
+            AllStaff.Add(staffController);
+            UnassignedStaff.Add(staffController);
         }
         newStaffGO.name = candidate.Name;
 
@@ -166,10 +182,12 @@ public void ResetState()
     public void FireStaff(StaffController staffToFire)
     {
         if (staffToFire == null) return;
-
         Debug.Log($"Сотрудник {staffToFire.name} уволен!");
+        
+        // --- ДОБАВЛЕНО: Удаляем сотрудника из списков ---
+        if(AllStaff.Contains(staffToFire)) AllStaff.Remove(staffToFire);
+        if(UnassignedStaff.Contains(staffToFire)) UnassignedStaff.Remove(staffToFire);
 
-        // Если уволенный сотрудник занимал место в кабинете, освобождаем его
         if (occupiedPoints.ContainsValue(staffToFire))
         {
             Transform pointToFree = occupiedPoints.FirstOrDefault(kvp => kvp.Value == staffToFire).Key;
