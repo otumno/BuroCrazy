@@ -41,7 +41,7 @@ public class StartOfDayPanel : MonoBehaviour
 
     public void UpdatePanelInfo()
     {
-        if (dayText != null) dayText.text = $"ДЕНЬ {ClientSpawner.Instance.GetCurrentDay() + 1}";
+        if (dayText != null) dayText.text = $"ДЕНЬ {ClientSpawner.Instance.GetCurrentDay()}";
         if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
         if (strikesText != null) strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
         if (activeOrdersText != null)

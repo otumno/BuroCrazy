@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 602a80440fe6e5e4d89843d878ae7570, type: 3}
+  m_Name: RoleData_Clerk
+  m_EditorClassIdentifier: 
+  roleType: 5
+  moveSpeed: 4
+  priority: 3
+  spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: eb749ec48a08bef40ae01024a4f27c97, type: 2}
+  accessoryPrefab: {fileID: 0}

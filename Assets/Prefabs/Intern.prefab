@@ -390,7 +390,14 @@ MonoBehaviour:
   staffToiletPoint: {fileID: 0}
   startShiftSound: {fileID: 0}
   endShiftSound: {fileID: 0}
+  characterName: "\u0411\u0435\u0437\u044B\u043C\u044F\u043D\u043D\u044B\u0439"
   gender: 0
+  skills: {fileID: 11400000, guid: 05796c8f594ceed43a520c44f439c320, type: 2}
+  currentRole: 1
+  rank: 0
+  experiencePoints: 0
+  salaryPerPeriod: 15
+  isReadyForPromotion: 0
   patrolPoints: []
   documentFlyEffectPrefab: {fileID: 0}
   helpCheckInterval: 2
@@ -399,7 +406,6 @@ MonoBehaviour:
   chanceToGoToToilet: 0.008
   timeInToilet: 4
   taskTimeout: 5
-  skills: {fileID: 11400000, guid: 05796c8f594ceed43a520c44f439c320, type: 2}
 --- !u!114 &2626675050234470189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -469,6 +475,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 2
   stoppingDistance: 0.2
+  agent: {fileID: 0}
   rubberBandStrength: 5
   priority: 1
   slowingDistance: 2

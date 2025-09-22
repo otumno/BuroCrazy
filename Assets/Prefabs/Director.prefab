@@ -240,6 +240,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 2
   stoppingDistance: 0.2
+  characterSpriteRenderer: {fileID: 2633991379055616326}
+  idleSprite: {fileID: -1879888799911037929, guid: 32a694ee5b9f5534fa0001f7a6bd106a, type: 3}
+  walkSprite1: {fileID: 6859326965049662136, guid: 00e6be823e8fb304ab86be6fc0c6f594, type: 3}
+  walkSprite2: {fileID: -5397753365343789046, guid: 34594ad59abd42a45a25ede94167e6e5, type: 3}
+  animationSpeed: 0.3
+  agent: {fileID: 0}
   rubberBandStrength: 5
   priority: 1
   slowingDistance: 2
@@ -275,8 +281,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   bodyRenderer: {fileID: 2633991379055616326}
   faceRenderer: {fileID: 3227728695837205682}
-  spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
-  stateEmotionMap: {fileID: 11400000, guid: eb749ec48a08bef40ae01024a4f27c97, type: 2}
+  headAttachPoint: {fileID: 0}
+  handAttachPoint: {fileID: 0}
 --- !u!114 &1286350224349572312
 MonoBehaviour:
   m_ObjectHideFlags: 0

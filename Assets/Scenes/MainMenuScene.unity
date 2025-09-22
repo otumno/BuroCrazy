@@ -2866,6 +2866,10 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: masterVolume
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 4328939966884396420, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_Alpha
       value: 0

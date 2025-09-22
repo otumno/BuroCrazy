@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 602a80440fe6e5e4d89843d878ae7570, type: 3}
+  m_Name: RoleData_Janitor
+  m_EditorClassIdentifier: 
+  roleType: 5
+  moveSpeed: 4
+  priority: 3
+  spriteCollection: {fileID: 11400000, guid: 0ff7fd45c494db04b9736516405c49cb, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: db98f0986a2f75f4eb6cf346c31aef95, type: 2}
+  accessoryPrefab: {fileID: 8227943836967275960, guid: 99186f8a3aace0b438d2e3263ada580c, type: 3}
