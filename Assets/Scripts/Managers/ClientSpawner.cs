@@ -143,35 +143,50 @@ public class ClientSpawner : MonoBehaviour
     }
     
     void Update()
-    {
-        if (Input.GetKeyDown(KeyCode.Space)) 
-        { 
-            bool isPaused = Time.timeScale == 0f;
-            Time.timeScale = isPaused ? 1f : 0f; 
-            if (pauseUIPanel != null) pauseUIPanel.SetActive(!isPaused);
-        }
-        if (Time.timeScale == 0f) return;
-        
-        periodTimer += Time.deltaTime;
-        UpdateUITimer();
-        UpdateLighting();
-        
-        string periodNameLower = CurrentPeriodName?.ToLower().Trim();
-if (periodNameLower == "вечер" && MainUIManager.Instance != null && !MainUIManager.Instance.isTransitioning)
 {
-    float timeLeft = periods[currentPeriodIndex].durationInSeconds - periodTimer;
-    if (timeLeft <= 10f)
+    if (Input.GetKeyDown(KeyCode.Space)) 
     {
-        MainUIManager.Instance.TriggerNextDayTransition(); 
-    }
-}
+        // Проверяем, открыт ли стол директора или другие важные панели
+        bool isDirectorDeskOpen = StartOfDayPanel.Instance != null && StartOfDayPanel.Instance.gameObject.activeInHierarchy;
+        // Сюда можно добавить проверки других панелей, которые должны блокировать паузу
+        bool isAnyOtherMajorPanelOpen = false; 
         
-        if (periods.Length > currentPeriodIndex && periods[currentPeriodIndex] != null && periodTimer >= periods[currentPeriodIndex].durationInSeconds) 
-        { 
-            GoToNextPeriod();
+        if (isDirectorDeskOpen || isAnyOtherMajorPanelOpen)
+        {
+            // Если открыт стол директора или другая важная панель, ничего не делаем
         }
-        CheckCrowdDensity();
+        else
+        {
+            // Если мы на главном игровом экране, вызываем централизованную логику паузы
+            bool isPaused = Time.timeScale == 0f;
+            MainUIManager.Instance?.ShowPausePanel(!isPaused);
+        }
     }
+    
+    // Если игра на паузе, остальная логика Update не выполняется
+    if (Time.timeScale == 0f) return;
+    
+    periodTimer += Time.deltaTime;
+    UpdateUITimer();
+    UpdateLighting();
+    
+    string periodNameLower = CurrentPeriodName?.ToLower().Trim();
+    if (periodNameLower == "вечер" && MainUIManager.Instance != null && !MainUIManager.Instance.isTransitioning)
+    {
+        float timeLeft = periods[currentPeriodIndex].durationInSeconds - periodTimer;
+        if (timeLeft <= 10f)
+        {
+            MainUIManager.Instance.TriggerNextDayTransition();
+        }
+    }
+    
+    if (periods.Length > currentPeriodIndex && periods[currentPeriodIndex] != null && periodTimer >= periods[currentPeriodIndex].durationInSeconds) 
+    { 
+        GoToNextPeriod();
+    }
+    
+    CheckCrowdDensity();
+}
     
     public void ApplyOrderEffects(DirectorOrder order)
     {

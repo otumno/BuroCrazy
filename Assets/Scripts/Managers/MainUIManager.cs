@@ -162,11 +162,22 @@ private IEnumerator StartGameplaySequence()
     Debug.Log("<color=lime>[MainUIManager] Последовательность StartGameplaySequence завершена. Игровой день запущен.</color>");
 }
     public void ShowPausePanel(bool show)
+{
+    if (isTransitioning) return;
+
+    if (show)
     {
-        if (isTransitioning) return;
-        if (show) { PauseGame(); if (pausePanel != null) pausePanel.SetActive(true); }
-        else { ResumeGame(); if (pausePanel != null) pausePanel.SetActive(false); }
+        PauseGame(false); // Ставим игру на паузу, но пока не трогаем музыку
+        MusicPlayer.Instance?.PauseGameplayMusicForManualPause();
+        if (pausePanel != null) pausePanel.SetActive(true);
     }
+    else 
+    { 
+        ResumeGame();
+        MusicPlayer.Instance?.ResumeGameplayMusicFromManualPause();
+        if (pausePanel != null) pausePanel.SetActive(false);
+    }
+}
     public void GoToMainMenu()
     {
         if (isTransitioning) return;

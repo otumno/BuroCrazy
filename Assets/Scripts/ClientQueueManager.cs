@@ -24,6 +24,29 @@ public class ClientQueueManager : MonoBehaviour
     private int nextQueueNumber = 1;
     public List<ClientPathfinding> dissatisfiedClients = new List<ClientPathfinding>();
     public List<int> currentlyCalledNumbers = new List<int>();
+	
+	public bool CanCallClient(ClerkController clerk)
+{
+    // Нельзя вызвать, если очередь пуста
+    if (queue.Count == 0) return false;
+
+    // Нельзя вызвать, если у стоек регистрации уже максимальное количество вызванных клиентов
+    LimitedCapacityZone registrationZone = ClientSpawner.GetRegistrationZone();
+    if (registrationZone != null)
+    {
+        int activeClientsInZone = registrationZone.GetOccupyingClients()
+            .Count(c => c != null && queue.ContainsKey(c) && currentlyCalledNumbers.Contains(queue[c]));
+        
+        if (activeClientsInZone >= registrationZone.capacity)
+        {
+            return false;
+        }
+    }
+
+    // Если все проверки пройдены, можно вызывать
+    return true;
+}
+	
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); }

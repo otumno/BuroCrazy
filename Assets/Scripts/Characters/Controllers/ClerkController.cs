@@ -1,4 +1,4 @@
-// Файл: ClerkController.cs
+// Файл: ClerkController.cs (полностью переработанная версия)
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,154 +14,250 @@ public class ClerkController : StaffController
     public enum ClerkRole { Regular, Cashier, Registrar, Archivist }
 
     [Header("Настройки клерка")]
-    private ClerkState currentState = ClerkState.Inactive;
     public ClerkRole role = ClerkRole.Regular;
-    [Tooltip("Рабочее место для ролей Registrar, Regular, Cashier. Для Archivist должно быть пустым.")]
     public ServicePoint assignedServicePoint;
-    [Header("Настройки для ролей")]
-    [Tooltip("Точка, куда нужно приносить документы в архив (используется ТОЛЬКО для роли 'Registrar')")]
-    public Transform archiveDropOffPoint;
-    [Tooltip("Рабочее место для архивариуса, где он ожидает появления документов. (Только для роли 'Archivist')")]
-    public Transform archivistWaitingPoint;
+
     [Header("Внешний вид")]
-    private CharacterVisuals visuals;
-	[Tooltip("Набор спрайтов (униформа) для этой роли")]
     public EmotionSpriteCollection spriteCollection;
-    [Tooltip("Карта состояний и эмоций для этой роли")]
     public StateEmotionMap stateEmotionMap;
+    
     [Header("Поведение")]
     public float timeInToilet = 10f;
-    public float chanceToGoToToilet = 0.005f;
-    public float callClientCooldownDuration = 1f;
     public float clientArrivalTimeout = 16f;
     
     [Header("Стресс")]
     public float maxStress = 100f;
-    public float stressGainRate = 0.5f;
     public float stressGainPerClient = 5f;
     public float stressReliefRate = 10f;
-    public float stressedOutDuration = 20f;
     private float currentStress = 0f;
+
+    private ClerkState currentState = ClerkState.Inactive;
     private bool isWaitingForClient = false;
-    private bool isCarryingDocumentToArchive = false;
-    private Waypoint[] allWaypoints;
-    private float callClientCooldown = 0f;
     private StackHolder stackHolder;
-    public static ClerkController RegistrarInstance { get; private set; }
-    private Coroutine waitingForClientCoroutine;
+    private Waypoint[] allWaypoints;
+
+    // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ВНЕШНИХ СИСТЕМ ---
+
+public bool IsOnBreak()
+{
+    // Клерк считается "на перерыве", если он находится в одном из этих состояний
+    return currentState == ClerkState.OnBreak || 
+           currentState == ClerkState.GoingToBreak || 
+           currentState == ClerkState.AtToilet || 
+           currentState == ClerkState.GoingToToilet ||
+           currentState == ClerkState.StressedOut; // Стресс - это тоже своего рода "перерыв"
+}
+
+    public ClerkState GetCurrentState() => currentState;
+
+    public string GetStatusInfo()
+    {
+        switch (currentState)
+        {
+            case ClerkState.Working: return role == ClerkRole.Archivist ? "Работает в архиве" : $"Работает: {assignedServicePoint?.name}";
+            case ClerkState.OnBreak: return "На перерыве";
+            case ClerkState.AtToilet: return "В туалете";
+            case ClerkState.StressedOut: return "СОРВАЛСЯ!";
+            case ClerkState.GoingToArchive: return "Несет документы в архив";
+            case ClerkState.Inactive: return "Вне смены";
+            default: return currentState.ToString();
+        }
+    }
+    
+    public void InitializeFromData(RoleData data)
+    {
+        var mover = GetComponent<AgentMover>();
+        if (mover != null)
+        {
+            mover.moveSpeed = data.moveSpeed;
+            mover.priority = data.priority;
+        }
+        this.spriteCollection = data.spriteCollection;
+        this.stateEmotionMap = data.stateEmotionMap;
+        // У клерка нет аксессуаров, так что это поле мы не используем
+    }
+    
+    public void ServiceComplete()
+    {
+        isWaitingForClient = false;
+        currentStress += stressGainPerClient;
+        if (assignedServicePoint != null && assignedServicePoint.documentStack != null)
+        {
+            if (role == ClerkRole.Cashier || role == ClerkRole.Regular)
+            {
+                assignedServicePoint.documentStack.AddDocumentToStack();
+            }
+        }
+    }
+    
+    // --- МЕТОДЫ UNITY ---
 
     protected override void Awake()
     {
         base.Awake();
-        visuals = GetComponent<CharacterVisuals>();
         stackHolder = GetComponent<StackHolder>();
         allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
-        if (role == ClerkRole.Cashier && assignedServicePoint != null) assignedServicePoint.deskId = -1;
-        if (role == ClerkRole.Registrar)
-        {
-            RegistrarInstance = this;
-        }
     }
 
-protected override void Start()
-{
-    base.Start();
-    
-    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-    visuals = GetComponent<CharacterVisuals>();
-    if (visuals != null)
+    protected override void Start()
     {
-        visuals.Setup(this.gender, this.spriteCollection, this.stateEmotionMap);
+        base.Start();
+        SetState(ClerkState.Inactive);
     }
-    // ----------------------
-    
-    currentState = ClerkState.Inactive;
-    
-    if (skills != null)
-    {
-        if (role == ClerkRole.Archivist)
-        {
-            skills.paperworkMastery = 1.0f;
-            skills.pedantry = 1.0f;
-        }
-        else if (role == ClerkRole.Cashier)
-        {
-            skills.sedentaryResilience = 1.0f;
-            skills.softSkills = 0.75f;
-        }
-    }
-    
-    LogCurrentState();
-}
-
-public void InitializeFromData(RoleData data)
-{
-    // Применяем настройки из RoleData к компоненту AgentMover
-    var mover = GetComponent<AgentMover>();
-    if (mover != null)
-    {
-        mover.moveSpeed = data.moveSpeed;
-        mover.priority = data.priority;
-    }
-
-    // Сохраняем ссылки на визуальные ассеты
-    this.spriteCollection = data.spriteCollection;
-    this.stateEmotionMap = data.stateEmotionMap;
-}
-
 
     void Update()
     {
-        if (Time.timeScale == 0f) 
-        {
-            return; 
-        }
-
+        if (Time.timeScale == 0f || !isOnDuty) return;
         UpdateStress();
-        
-        if (role == ClerkRole.Archivist && isOnDuty && currentAction == null)
-        {
-            if (!isCarryingDocumentToArchive && ArchiveManager.Instance != null && ArchiveManager.Instance.GetStackToProcess().CurrentSize > 0)
-            {
-                currentAction = StartCoroutine(PickupDocumentFromArchiveStack());
-            }
-        }
-        
-        if (role == ClerkRole.Registrar && isOnDuty && currentState == ClerkState.Working && currentAction == null && !isWaitingForClient && waitingForClientCoroutine == null)
-        {
-            if (Time.time > callClientCooldown)
-            {
-                if (assignedServicePoint != null && Vector2.Distance(transform.position, 
-                    assignedServicePoint.clerkStandPoint.position) < 0.5f)
-                {
-                    bool clientCalled = ClientQueueManager.Instance.CallNextClient(this);
-                    if (clientCalled)
-                    {
-                        waitingForClientCoroutine = StartCoroutine(WaitForClientRoutine());
-                    }
-                    else
-                    {
-                        callClientCooldown = Time.time + callClientCooldownDuration;
-                    }
-                }
-            }
-        }
-        
-        if (skills != null && role == ClerkRole.Regular && currentState == ClerkState.Working && Random.value < (chanceToGoToToilet * (1f - skills.sedentaryResilience)) * Time.deltaTime)
-        {
-            if (currentAction == null) 
-            {
-                currentAction = StartCoroutine(ToiletBreakRoutine()); 
-            }
-        }
     }
+    
+    // --- "МОЗГ" КЛЕРКА: РЕАЛИЗАЦИЯ МЕТОДОВ ИЗ STAFFCONTROLLER ---
+
+    protected override bool TryExecuteAction(ActionType actionType)
+    {
+        switch (actionType)
+        {
+            case ActionType.ProcessDocument:
+                if (role == ClerkRole.Registrar && !isWaitingForClient && ClientQueueManager.Instance.CanCallClient(this))
+                {
+                    currentAction = StartCoroutine(CallNextClientRoutine());
+                    return true;
+                }
+                return false;
+
+            case ActionType.ArchiveDocument:
+                if (role == ClerkRole.Archivist && ArchiveManager.Instance.GetStackToProcess().CurrentSize > 0)
+                {
+                    currentAction = StartCoroutine(ProcessArchiveStackRoutine());
+                    return true;
+                }
+                return false;
+            
+            case ActionType.TakeStackToArchive:
+                if ((role == ClerkRole.Regular || role == ClerkRole.Registrar) && assignedServicePoint.documentStack.IsFull)
+                {
+                    currentAction = StartCoroutine(TakeStackToArchiveRoutine(assignedServicePoint.documentStack));
+                    return true;
+                }
+                return false;
+        }
+        return false;
+    }
+
+    protected override void ExecuteDefaultAction()
+    {
+        currentAction = StartCoroutine(ReturnToWorkRoutine());
+    }
+    
+    // --- РЕАЛИЗАЦИЯ ПОВЕДЕНИЯ (КОРУТИНЫ) ---
+
+    private IEnumerator CallNextClientRoutine()
+    {
+        isWaitingForClient = true;
+        bool clientCalled = ClientQueueManager.Instance.CallNextClient(this);
+        if (clientCalled)
+        {
+            yield return new WaitForSeconds(clientArrivalTimeout); // Ждем подхода клиента
+        }
+        else
+        {
+            yield return new WaitForSeconds(2f); // Небольшая задержка, если очередь пуста
+        }
+        isWaitingForClient = false;
+        currentAction = null;
+    }
+    
+    private IEnumerator ProcessArchiveStackRoutine()
+    {
+        DocumentStack stack = ArchiveManager.Instance.GetStackToProcess();
+        yield return StartCoroutine(MoveToTarget(stack.transform.position, ClerkState.Working));
+
+        if (stack.TakeOneDocument())
+        {
+            stackHolder.ShowSingleDocumentSprite();
+            
+            ArchiveCabinet cabinet = ArchiveManager.Instance.GetRandomCabinet();
+            if (cabinet != null)
+            {
+                yield return StartCoroutine(MoveToTarget(cabinet.transform.position, ClerkState.Working));
+                stackHolder.HideStack();
+                ExperienceManager.Instance?.GrantXP(this, ActionType.ArchiveDocument);
+                yield return new WaitForSeconds(1f);
+            }
+        }
+        currentAction = null;
+    }
+
+    private IEnumerator TakeStackToArchiveRoutine(DocumentStack stack)
+    {
+        SetState(ClerkState.GoingToArchive);
+        ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
+        
+        Transform dropOffPoint = ArchiveManager.Instance.RequestDropOffPoint();
+        if (dropOffPoint != null)
+        {
+            yield return StartCoroutine(MoveToTarget(dropOffPoint.position, ClerkState.AtArchive));
+            
+            int takenDocs = stack.TakeEntireStack();
+            for (int i = 0; i < takenDocs; i++)
+            {
+                ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
+            }
+            yield return new WaitForSeconds(1f);
+            ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
+            ExperienceManager.Instance?.GrantXP(this, ActionType.DeliverDocuments); // Используем от стажера
+        }
+        currentAction = null; // Завершаем, ExecuteDefaultAction вернет нас на место
+    }
+
+    private IEnumerator ReturnToWorkRoutine()
+    {
+        if (role == ClerkRole.Archivist)
+        {
+            // Архивариус просто ждет на своей точке
+            // TODO: нужна точка ожидания для архивариуса
+        }
+        else if (assignedServicePoint != null)
+        {
+            SetState(ClerkState.ReturningToWork);
+            yield return StartCoroutine(MoveToTarget(assignedServicePoint.clerkStandPoint.position, ClerkState.Working));
+            ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, this);
+        }
+        currentAction = null;
+    }
+    
+    public override void GoOnBreak(float duration)
+    {
+        if (!isOnDuty) return;
+        currentAction = StartCoroutine(BreakRoutine(duration));
+    }
+    
+    private IEnumerator BreakRoutine(float duration)
+    {
+        SetState(ClerkState.GoingToBreak);
+        if (assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
+        
+        Transform breakSpot = RequestKitchenPoint();
+        if (breakSpot != null)
+        {
+            yield return StartCoroutine(MoveToTarget(breakSpot.position, ClerkState.OnBreak));
+            yield return new WaitForSeconds(duration);
+            FreeKitchenPoint(breakSpot);
+        }
+        else
+        {
+            yield return new WaitForSeconds(duration);
+        }
+        currentAction = null;
+    }
+	 // --- ВСПОМОГАТЕЛЬНЫЕ И УНАСЛЕДОВАННЫЕ МЕТОДЫ ---
     
     private void UpdateStress()
     {
         if (currentState == ClerkState.StressedOut) return;
         bool isResting = currentState == ClerkState.OnBreak || currentState == ClerkState.AtToilet || currentState == ClerkState.Inactive;
         
-        float finalStressGainRate = stressGainRate;
+        float finalStressGainRate = 0.5f; // Базовое значение, можно вынести в public поле
         if (skills != null)
         {
             finalStressGainRate *= (1f - skills.softSkills * 0.5f);
@@ -176,290 +272,6 @@ public void InitializeFromData(RoleData data)
             currentStress -= stressReliefRate * Time.deltaTime;
         }
         currentStress = Mathf.Clamp(currentStress, 0, maxStress);
-        if (currentStress >= maxStress)
-        {
-            if (currentAction != null) StopCoroutine(currentAction);
-            currentAction = StartCoroutine(StressedOutRoutine());
-        }
-    }
-
-    public override void StartShift()
-    {
-        if (isOnDuty) return;
-        if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(StartShiftRoutine());
-    }
-
-    public override void EndShift()
-    {
-        if (!isOnDuty) return;
-        if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(EndShiftRoutine());
-    }
-
-    private IEnumerator StartShiftRoutine()
-{
-    yield return new WaitForSeconds(Random.Range(0f, 5f));
-    isOnDuty = true;
-    if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
-    
-    // --- НОВАЯ ЛОГИКА: Разделяем поведение для разных ролей ---
-    if (role == ClerkRole.Archivist)
-    {
-        Debug.Log($"Архивариус {name} начинает смену.");
-        if (archivistWaitingPoint != null)
-        {
-            // Архивариус просто идет на свою точку ожидания
-            yield return StartCoroutine(MoveToTarget(archivistWaitingPoint.position, ClerkState.Working));
-        }
-        else
-        {
-            SetState(ClerkState.Working);
-        }
-        currentAction = null; // Завершаем действие
-    }
-    else
-    {
-        // Все остальные клерки работают по-старому
-        yield return StartCoroutine(ReturnToWorkRoutine());
-    }
-}
-    
-    private IEnumerator EndShiftRoutine()
-    {
-        isOnDuty = false;
-        if(assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
-        if (homePoint != null)
-        {
-            yield return StartCoroutine(MoveToTarget(homePoint.position, ClerkState.Inactive));
-            if (endShiftSound != null) AudioSource.PlayClipAtPoint(endShiftSound, homePoint.position);
-        }
-        currentAction = null;
-    }
-    
-    private IEnumerator ReturnToWorkRoutine()
-    {
-        if (assignedServicePoint == null)
-        {
-            Debug.LogError($"У клерка {name} (роль: {role}) не назначен ServicePoint, ему некуда возвращаться! Смена прервана.", gameObject);
-            isOnDuty = false;
-            SetState(ClerkState.Inactive);
-            yield break;
-        }
-        SetState(ClerkState.ReturningToWork);
-        yield return StartCoroutine(MoveToTarget(assignedServicePoint.clerkStandPoint.position, ClerkState.Working));
-        ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, this);
-        currentAction = null;
-    }
-
-    private IEnumerator WaitForClientRoutine()
-    {
-        isWaitingForClient = true;
-        yield return new WaitForSeconds(clientArrivalTimeout);
-        Debug.LogWarning($"[{name}] Клиент не прибыл за {clientArrivalTimeout} сек. Возобновляю вызовы.");
-        isWaitingForClient = false;
-        waitingForClientCoroutine = null;
-    }
-
-    public void ServiceComplete()
-    {
-        if (waitingForClientCoroutine != null)
-        {
-            StopCoroutine(waitingForClientCoroutine);
-            waitingForClientCoroutine = null;
-        }
-        isWaitingForClient = false;
-        currentStress += stressGainPerClient;
-        if (assignedServicePoint != null && assignedServicePoint.documentStack != null)
-        {
-            if (role == ClerkRole.Cashier)
-            {
-                assignedServicePoint.documentStack.AddDocumentToStack();
-            }
-            else if (role == ClerkRole.Regular)
-            {
-                DocumentStack myStack = assignedServicePoint.documentStack;
-                myStack.AddDocumentToStack();
-
-                if (myStack.IsFull && currentAction == null)
-                {
-                    currentAction = StartCoroutine(TakeStackToArchiveRoutine(myStack));
-                }
-            }
-        }
-    }
-
-    private IEnumerator StressedOutRoutine()
-    {
-        SetState(ClerkState.StressedOut);
-        if(assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
-        isWaitingForClient = false;
-        
-        Transform breakSpot = RequestKitchenPoint();
-        if (breakSpot != null)
-        {
-            yield return StartCoroutine(MoveToTarget(breakSpot.position, ClerkState.StressedOut));
-            yield return new WaitForSeconds(stressedOutDuration);
-            FreeKitchenPoint(breakSpot);
-        }
-        else
-        {
-            yield return new WaitForSeconds(stressedOutDuration);
-        }
-        
-        currentStress = maxStress * 0.7f;
-        if (isOnDuty && role != ClerkRole.Archivist)
-        {
-             yield return StartCoroutine(ReturnToWorkRoutine());
-        }
-        else
-        {
-            currentAction = null;
-        }
-    }
-
-    public override void GoOnBreak(float duration)
-    {
-        if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(BreakRoutine(duration));
-    }
-
-    public float GetStressPercent() => currentStress / maxStress;
-    public ClerkState GetCurrentState() => currentState;
-    public bool IsOnBreak() => currentState != ClerkState.Working && currentState != ClerkState.ReturningToWork && currentState != ClerkState.GoingToArchive;
-    
-    public string GetStatusInfo()
-    {
-        switch (currentState)
-        {
-            case ClerkState.Working:
-                if (role == ClerkRole.Archivist) return "Работает в архиве";
-                return $"Работает: {assignedServicePoint.name}";
-            case ClerkState.OnBreak: return "На перерыве";
-            case ClerkState.AtToilet: return "На перерыве (туалет)";
-            case ClerkState.ReturningToWork: return $"Возвращается на работу: {assignedServicePoint.name}";
-            case ClerkState.GoingToBreak: return $"Идет на перерыв";
-            case ClerkState.GoingToToilet: return $"Идет в туалет";
-            case ClerkState.StressedOut: return "СОРВАЛСЯ!";
-            case ClerkState.GoingToArchive: return "Несет документы в архив";
-            case ClerkState.AtArchive: return "Сдает документы в архив";
-            case ClerkState.Inactive: return "Вне смены";
-            default: return currentState.ToString();
-        }
-    }
-
-    private void SetState(ClerkState newState)
-    {
-        if (currentState == newState) return;
-        currentState = newState;
-        LogCurrentState();
-        visuals?.SetEmotionForState(newState);
-    }
-
-    private void LogCurrentState()
-    {
-        logger?.LogState(GetStatusInfo());
-    }
-    
-    private IEnumerator BreakRoutine(float duration)
-    {
-        SetState(ClerkState.GoingToBreak);
-        if(assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
-        isWaitingForClient = false;
-        
-        Transform breakSpot = RequestKitchenPoint();
-        if (breakSpot != null)
-        {
-            yield return StartCoroutine(MoveToTarget(breakSpot.position, ClerkState.OnBreak));
-            yield return new WaitForSeconds(duration);
-            FreeKitchenPoint(breakSpot);
-        }
-        else
-        {
-            Debug.LogWarning($"Для {name} не настроены точки отдыха (Kitchen Points)!");
-            yield return new WaitForSeconds(duration);
-        }
-        
-        yield return StartCoroutine(ReturnToWorkRoutine());
-    }
-
-    private IEnumerator ToiletBreakRoutine()
-    {
-        SetState(ClerkState.GoingToToilet);
-        if(assignedServicePoint != null) ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
-        isWaitingForClient = false;
-        
-        yield return StartCoroutine(EnterLimitedZoneAndWaitRoutine(staffToiletPoint, timeInToilet));
-
-        SetState(ClerkState.AtToilet);
-        yield return StartCoroutine(ReturnToWorkRoutine());
-    }
-
-    private IEnumerator TakeStackToArchiveRoutine(DocumentStack stack)
-    {
-        SetState(ClerkState.GoingToArchive);
-        isWaitingForClient = false;
-        if (assignedServicePoint != null)
-            ClientSpawner.ReportDeskOccupation(assignedServicePoint.deskId, null);
-        
-        Transform dropOffPoint = ArchiveManager.Instance.RequestDropOffPoint();
-
-        if (dropOffPoint != null)
-        {
-            yield return StartCoroutine(MoveToTarget(dropOffPoint.position, ClerkState.AtArchive));
-            int takenDocs = stack.TakeEntireStack();
-            for (int i = 0; i < takenDocs; i++)
-            {
-                ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
-            }
-            yield return new WaitForSeconds(1f);
-            ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
-        }
-        else
-        {
-            Debug.LogWarning($"{name} не может отнести документы, архив переполнен!");
-            yield return new WaitForSeconds(5f);
-            currentAction = StartCoroutine(TakeStackToArchiveRoutine(stack));
-            yield break;
-        }
-
-        yield return StartCoroutine(ReturnToWorkRoutine());
-    }
-
-    private IEnumerator PickupDocumentFromArchiveStack()
-    {
-        DocumentStack stack = ArchiveManager.Instance.GetStackToProcess();
-        yield return StartCoroutine(MoveToTarget(stack.transform.position, ClerkState.Working));
-
-        if (stack.TakeOneDocument())
-        {
-            isCarryingDocumentToArchive = true;
-            stackHolder.ShowSingleDocumentSprite();
-            currentAction = StartCoroutine(DeliverDocumentToCabinet());
-        }
-        else
-        {
-            currentAction = null;
-        }
-    }
-
-    private IEnumerator DeliverDocumentToCabinet()
-    {
-        ArchiveCabinet cabinet = ArchiveManager.Instance.GetRandomCabinet();
-        if (cabinet != null)
-        {
-            yield return StartCoroutine(MoveToTarget(cabinet.transform.position, ClerkState.Working));
-            stackHolder.HideStack();
-            isCarryingDocumentToArchive = false;
-			ExperienceManager.Instance?.GrantXP(this, ActionType.ArchiveDocument);
-            yield return new WaitForSeconds(1f);
-        }
-        else
-        {
-            Debug.LogError("Архивариус не нашел ни одного шкафа!");
-            isCarryingDocumentToArchive = false;
-        }
-        currentAction = null;
     }
 
     private IEnumerator MoveToTarget(Vector2 targetPosition, ClerkState stateOnArrival)
@@ -469,21 +281,37 @@ public void InitializeFromData(RoleData data)
         SetState(stateOnArrival);
     }
 
+    private void SetState(ClerkState newState)
+    {
+        if (currentState == newState) return;
+        currentState = newState;
+        LogCurrentState();
+        visuals?.SetEmotionForState(newState);
+    }
+    
+    private void LogCurrentState()
+    {
+        logger?.LogState(GetStatusInfo());
+    }
+
     protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
         var path = new Queue<Waypoint>();
         Waypoint startNode = FindNearestVisibleWaypoint();
         Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
         if (startNode == null || endNode == null) return path;
-        
+
         Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
         Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
         var queue = new PriorityQueue<Waypoint>();
-        
+
         foreach (var wp in allWaypoints)
         {
-            distances[wp] = float.MaxValue;
-            previous[wp] = null;
+            if (wp != null)
+            {
+                distances[wp] = float.MaxValue;
+                previous[wp] = null;
+            }
         }
         
         distances[startNode] = 0;
@@ -518,7 +346,7 @@ public void InitializeFromData(RoleData data)
     private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
     {
         List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous[at])
+        for (Waypoint at = goal; at != null; at = previous.ContainsKey(at) ? previous[at] : null)
         {
             pathList.Add(at);
         }
@@ -537,7 +365,6 @@ public void InitializeFromData(RoleData data)
         
         Waypoint bestWaypoint = null;
         float minDistance = float.MaxValue;
-        
         foreach (var wp in allWaypoints)
         {
             if (wp == null) continue;
@@ -554,18 +381,18 @@ public void InitializeFromData(RoleData data)
         }
         return bestWaypoint;
     }
-
-    private class PriorityQueue<T>
+    
+    private class PriorityQueue<Waypoint>
     {
-        private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
+        private List<KeyValuePair<Waypoint, float>> elements = new List<KeyValuePair<Waypoint, float>>();
         public int Count => elements.Count;
         
-        public void Enqueue(T item, float priority)
+        public void Enqueue(Waypoint item, float priority)
         {
-            elements.Add(new KeyValuePair<T, float>(item, priority));
+            elements.Add(new KeyValuePair<Waypoint, float>(item, priority));
         }
         
-        public T Dequeue()
+        public Waypoint Dequeue()
         {
             int bestIndex = 0;
             for (int i = 0; i < elements.Count; i++)
@@ -575,12 +402,19 @@ public void InitializeFromData(RoleData data)
                     bestIndex = i;
                 }
             }
-            T bestItem = elements[bestIndex].Key;
+            Waypoint bestItem = elements[bestIndex].Key;
             elements.RemoveAt(bestIndex);
             return bestItem;
         }
     }
 
-    public override float GetStressValue() { return currentStress; }
-    public override void SetStressValue(float stress) { currentStress = stress; }
+    public override float GetStressValue() 
+    { 
+        return currentStress; 
+    }
+    
+    public override void SetStressValue(float stress) 
+    { 
+        currentStress = stress; 
+    }
 }

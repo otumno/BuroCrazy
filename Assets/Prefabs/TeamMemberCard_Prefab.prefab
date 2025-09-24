@@ -236,6 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a389120d1aa5d324ab2261d95f503aff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  background: {fileID: 0}
   nameText: {fileID: 8574207317581412897}
   roleText: {fileID: 5353517388794806779}
   rankText: {fileID: 6496587555293944055}
@@ -248,6 +249,10 @@ MonoBehaviour:
   changeRoleButton: {fileID: 4716594361796685859}
   xpBarFill: {fileID: 573656083183113901}
   xpText: {fileID: 1809722731768602503}
+  internBackground: {fileID: 6836126954204489789, guid: 4e2ed40d76b97cc47a91c2e18885a477, type: 3}
+  clerkBackground: {fileID: 2278640363447310153, guid: 1b99a0dbeddc342439aa9ce6e359337d, type: 3}
+  guardBackground: {fileID: 4252009037039433891, guid: 79697c87f75e77b46b62253ca0a68f6b, type: 3}
+  janitorBackground: {fileID: -5705218731820523284, guid: fc2a8236382f74e42829c54c729aa250, type: 3}
 --- !u!114 &4474859630869812912
 MonoBehaviour:
   m_ObjectHideFlags: 0

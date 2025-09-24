@@ -173,6 +173,7 @@ public void AssignNewRole(StaffController staff, StaffController.Role newRole)
         case StaffController.Role.Guard:
             newController = staffGO.AddComponent<GuardMovement>();
             staffGO.AddComponent<GuardNotification>();
+			staffGO.GetComponent<GuardMovement>()?.InitializeFromData(dataForNewRole);
             break;
         // ... (другие case'ы)
         case StaffController.Role.Janitor:

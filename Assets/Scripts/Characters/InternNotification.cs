@@ -7,21 +7,24 @@ public class InternNotification : MonoBehaviour
 {
     private InternController parent;
     private TextMeshPro notificationText;
-    
+
     void Start()
     {
         parent = GetComponent<InternController>();
         notificationText = GetComponentInChildren<TextMeshPro>();
         if (parent == null || notificationText == null) 
         { 
-            enabled = false; 
+            enabled = false;
         }
     }
 
     void Update()
     {
         if (notificationText == null || parent == null) return;
-        var state = parent.GetCurrentState();
+        
+        // Теперь этот вызов будет работать, так как метод GetCurrentState() существует
+        var state = parent.GetCurrentState(); 
+        
         notificationText.text = GetStateText(state);
         notificationText.color = GetStateColor(state);
     }

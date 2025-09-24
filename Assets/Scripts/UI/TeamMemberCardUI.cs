@@ -3,10 +3,12 @@ using UnityEngine.UI;
 using TMPro;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 
 public class TeamMemberCardUI : MonoBehaviour
 {
     [Header("Ссылки на UI элементы")]
+    [SerializeField] private Image background;
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI roleText;
     [SerializeField] private TextMeshProUGUI rankText;
@@ -23,13 +25,19 @@ public class TeamMemberCardUI : MonoBehaviour
     [Header("XP Bar")]
     [SerializeField] private Image xpBarFill;
     [SerializeField] private TextMeshProUGUI xpText;
+
+    [Header("Спрайты фонов для ролей")]
+    public Sprite internBackground;
+    public Sprite clerkBackground;
+    public Sprite guardBackground;
+    public Sprite janitorBackground;
     
     private StaffController assignedStaff;
 
     public void Setup(StaffController staff)
     {
         this.assignedStaff = staff;
-        // Привязываем обработчики ко всем кнопкам
+        
         if (fireButton != null)
         {
             fireButton.onClick.RemoveAllListeners();
@@ -45,6 +53,7 @@ public class TeamMemberCardUI : MonoBehaviour
             changeRoleButton.onClick.RemoveAllListeners();
             changeRoleButton.onClick.AddListener(OnChangeRoleButtonClicked);
         }
+
         UpdateCard();
     }
 
@@ -52,13 +61,10 @@ public class TeamMemberCardUI : MonoBehaviour
     {
         if (assignedStaff == null) 
         {
-            // Если сотрудник был уволен и карточка еще не успела удалиться,
-            // можно скрыть ее, чтобы избежать ошибок.
             gameObject.SetActive(false);
             return;
         }
 
-        // --- ОБНОВЛЕНИЕ ОСНОВНЫХ ПОЛЕЙ ---
         if (nameText != null) 
             nameText.text = assignedStaff.characterName;
         
@@ -88,7 +94,6 @@ public class TeamMemberCardUI : MonoBehaviour
             skillsText.text = sb.ToString();
         }
 
-        // --- ОБНОВЛЕНИЕ XP И РАНГА ---
         if (ExperienceManager.Instance != null)
         {
             RankData currentRank = ExperienceManager.Instance.GetRankByXP(assignedStaff.experiencePoints);
@@ -108,7 +113,7 @@ public class TeamMemberCardUI : MonoBehaviour
                     int currentXpInLevel = assignedStaff.experiencePoints - xpForCurrentRank;
                     
                     if (xpBarFill != null)
-                        xpBarFill.fillAmount = (float)currentXpInLevel / totalXpForLevel;
+                        xpBarFill.fillAmount = totalXpForLevel > 0 ? (float)currentXpInLevel / totalXpForLevel : 1f;
                     if (xpText != null)
                         xpText.text = $"XP: {currentXpInLevel} / {totalXpForLevel}";
                 }
@@ -127,14 +132,39 @@ public class TeamMemberCardUI : MonoBehaviour
             }
         }
 
-        // --- УПРАВЛЕНИЕ ВИДИМОСТЬЮ КНОПОК ---
         if (promoteButton != null)
         {
             promoteButton.gameObject.SetActive(assignedStaff.isReadyForPromotion);
         }
         if (changeRoleButton != null)
         {
-			changeRoleButton.gameObject.SetActive(true);
+            changeRoleButton.gameObject.SetActive(true);
+        }
+        
+        if (background != null)
+        {
+            background.sprite = GetBackgroundForRole(assignedStaff.currentRole);
+            background.color = Color.white;
+        }
+    }
+    
+    private Sprite GetBackgroundForRole(StaffController.Role role)
+    {
+        switch (role)
+        {
+            case StaffController.Role.Intern:
+                return internBackground;
+            case StaffController.Role.Clerk:
+            case StaffController.Role.Registrar:
+            case StaffController.Role.Cashier:
+            case StaffController.Role.Archivist:
+                return clerkBackground;
+            case StaffController.Role.Guard:
+                return guardBackground;
+            case StaffController.Role.Janitor:
+                return janitorBackground;
+            default:
+                return null;
         }
     }
     
@@ -156,10 +186,8 @@ public class TeamMemberCardUI : MonoBehaviour
         }
     }
 
-private void OnChangeRoleButtonClicked()
-{
-    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-    // Вместо (true) мы используем FindObjectsInactive.Include
-    FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include)?.OpenForStaff(assignedStaff);
-}
+    private void OnChangeRoleButtonClicked()
+    {
+        FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include)?.OpenForStaff(assignedStaff);
+    }
 }

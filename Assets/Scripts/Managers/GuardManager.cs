@@ -199,4 +199,25 @@ public class GuardManager : MonoBehaviour
             targetsBeingHandled.Remove(target);
         }
     }
+	
+	/// <summary>
+/// Находит вора, которого еще не пытается поймать другой охранник.
+/// </summary>
+public ClientPathfinding GetThiefToCatch()
+{
+    // Убираем из списка "потерянные" цели
+    reportedThieves.RemoveAll(t => t == null); 
+    // Находим первого вора, которым еще никто не занимается
+    return reportedThieves.FirstOrDefault(t => !targetsBeingHandled.Contains(t));
+}
+
+/// <summary>
+/// Находит клиента для выпроваживания, которым еще не занимается другой охранник.
+/// </summary>
+public ClientPathfinding GetClientToEvict()
+{
+    clientsToEvict.RemoveAll(c => c == null);
+    return clientsToEvict.FirstOrDefault(c => !targetsBeingHandled.Contains(c));
+}
+	
 }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 602a80440fe6e5e4d89843d878ae7570, type: 3}
   m_Name: RoleData_Guard
   m_EditorClassIdentifier: 
-  roleType: 3
+  roleType: 5
   moveSpeed: 4
   priority: 3
   spriteCollection: {fileID: 11400000, guid: beab52f1c80e8ac4c98dcb2a60a80988, type: 2}

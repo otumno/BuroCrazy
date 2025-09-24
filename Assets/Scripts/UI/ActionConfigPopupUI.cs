@@ -161,49 +161,46 @@ public class ActionConfigPopupUI : MonoBehaviour
         }
     }
 
-    private void OnSave()
-{
-    // --- Часть 1: Смена роли (без изменений) ---
-    string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
-    StaffController.Role newRole = (StaffController.Role)System.Enum.Parse(typeof(StaffController.Role), selectedRoleName);
-
-    if (newRole != currentStaff.currentRole)
+private void OnSave()
     {
-        HiringManager.Instance.AssignNewRole(currentStaff, newRole);
-    }
-    
-    // --- Часть 2: ДОБАВЛЕНО - Сохранение нового списка активных действий ---
-        if (ClientSpawner.Instance != null && ClientSpawner.Instance.periods.Length > 0)
-        {
-            currentStaff.workPeriods.Clear();
-            List<string> allPeriods = ClientSpawner.Instance.periods.Select(p => p.periodName).ToList();
-            int startIndex = shiftDropdown.value;
-            int duration = GetShiftDurationByRank(currentStaff.rank);
+        // --- ИЗМЕНЕНИЕ ЗДЕСЬ: Новый, надежный способ определения роли ---
 
-            for (int i = 0; i < duration; i++)
+        // Шаг 1: Получаем порядковый номер (индекс) выбранной опции
+        int selectedIndex = roleDropdown.value;
+
+        // Шаг 2: Создаем ТОЧНО ТАКОЙ ЖЕ список системных ролей (enum), как и при заполнении
+        List<StaffController.Role> assignableRolesEnum = System.Enum.GetValues(typeof(StaffController.Role))
+                .Cast<StaffController.Role>()
+                .Where(role => role != StaffController.Role.Unassigned && role != StaffController.Role.Intern)
+                .ToList();
+
+        // Шаг 3: Берем из списка системных ролей элемент с нужным нам индексом
+        StaffController.Role newRole = assignableRolesEnum[selectedIndex];
+
+        // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+
+        // Если роль изменилась, вызываем "смену мозга"
+        if (newRole != currentStaff.currentRole)
+        {
+            HiringManager.Instance.AssignNewRole(currentStaff, newRole);
+        }
+        
+        // Сохранение списка активных действий
+        currentStaff.activeActions.Clear();
+        foreach (Transform iconTransform in activeActionsContent)
+        {
+            ActionIconUI iconUI = iconTransform.GetComponent<ActionIconUI>();
+            if (iconUI != null)
             {
-                // Добавляем периоды по кругу, чтобы смена "переносилась" на следующий день
-                int periodIndex = (startIndex + i) % allPeriods.Count;
-                currentStaff.workPeriods.Add(allPeriods[periodIndex]);
+                currentStaff.activeActions.Add(iconUI.actionData);
             }
         }
-    
-    // Проходим по всем иконкам, которые игрок перетащил в контейнер активных действий
-    foreach (Transform iconTransform in activeActionsContent)
-    {
-        ActionIconUI iconUI = iconTransform.GetComponent<ActionIconUI>();
-        if (iconUI != null)
-        {
-            // Добавляем "паспорт" действия из иконки в "память" сотрудника
-            currentStaff.activeActions.Add(iconUI.actionData);
-        }
-    }
-    Debug.Log($"Сохранен новый список из {currentStaff.activeActions.Count} действий для {currentStaff.characterName}.");
+        Debug.Log($"Сохранен новый список из {currentStaff.activeActions.Count} действий для {currentStaff.characterName}.");
 
-    // --- Часть 3: Закрытие и обновление (без изменений) ---
-    gameObject.SetActive(false);
-    FindFirstObjectByType<HiringPanelUI>()?.RefreshTeamList();
-}
+        gameObject.SetActive(false);
+        FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+    }
 
     private void OnCancel()
     {

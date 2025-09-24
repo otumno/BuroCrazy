@@ -5,6 +5,7 @@ public enum ActionType
     // Действия Клерка
     ProcessDocument,    // Обработка документа у стойки
     ArchiveDocument,    // Архивирование документа (для Архивариуса)
+	TakeStackToArchive,    
 
     // Действия Уборщика
     CleanTrash,         // Уборка мусора
@@ -20,5 +21,7 @@ public enum ActionType
     // Действия Охранника
     PatrolWaypoint,     // Достижение одной точки патрулирования
     CatchThief,         // Успешная поимка воришки
-    CalmDownViolator    // Успешное усмирение нарушителя
+    CalmDownViolator,		// Успешное усмирение нарушителя
+	OperateBarrier, 
+	EvictClient    
 }
