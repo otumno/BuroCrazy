@@ -20,4 +20,7 @@ public class RankData : ScriptableObject
     
     [Tooltip("Множитель к базовой зарплате за период.")]
     public float salaryMultiplier = 1.0f;
+	
+	[Tooltip("Максимальное количество активных действий для этого ранга.")]
+	public int maxActions = 2;
 }

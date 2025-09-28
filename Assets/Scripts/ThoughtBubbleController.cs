@@ -59,7 +59,7 @@ public class ThoughtBubbleController : MonoBehaviour
         StopAllCoroutines();
         
         // Если цвет не указан, используем черный. Иначе - тот, что передали.
-        Color colorToShow = textColor ?? Color.black;
+        Color colorToShow = textColor ?? Color.white;
         // Запускаем показ нового сообщения
         StartCoroutine(ShowSingleMessageRoutine(message, duration, colorToShow));
     }

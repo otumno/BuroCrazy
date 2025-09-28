@@ -794,7 +794,8 @@ public class ClientStateMachine : MonoBehaviour
     }
 
     private IEnumerator EnragedRoutine() 
-    { 
+    {
+		GuardManager.Instance.ReportViolator(parent);
         ClientQueueManager.Instance.AddAngryClient(parent);
         if (parent.trashPrefabs != null && parent.trashPrefabs.Count > 0) { 
             int trashCount = Random.Range(4, 8);
@@ -805,7 +806,7 @@ public class ClientStateMachine : MonoBehaviour
                     Instantiate(randomTrashPrefab, (Vector2)transform.position + randomOffset, Quaternion.identity); 
                 } 
             } 
-        } 
+        }		
         var thoughtController = GetComponent<ThoughtBubbleController>();
         if (thoughtController != null) { 
             thoughtController.StopThinking(); 

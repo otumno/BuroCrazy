@@ -24,7 +24,9 @@ public class GraphBuilder : MonoBehaviour
 
                 Vector2 direction = (wp2.transform.position - wp1.transform.position).normalized;
                 float distance = Vector2.Distance(wp1.transform.position, wp2.transform.position);
-
+				
+				if (distance > maxDistance) continue;
+				
                 RaycastHit2D hit = Physics2D.CircleCast(wp1.transform.position, pathRadius, direction, distance, obstacleMask);
                 
                 if (hit.collider == null)

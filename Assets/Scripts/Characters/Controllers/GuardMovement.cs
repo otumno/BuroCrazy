@@ -1,3 +1,4 @@
+// Файл: Scripts/Characters/Controllers/GuardMovement.cs --- ФИНАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ ---
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -6,72 +7,89 @@ using System.Linq;
 [RequireComponent(typeof(Rigidbody2D), typeof(AgentMover), typeof(CharacterStateLogger))]
 public class GuardMovement : StaffController
 {
-    public enum GuardState { Patrolling, WaitingAtWaypoint, Chasing, Talking, OnPost, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, ChasingThief, EscortingThief, Evicting, StressedOut, WritingReport, OperatingBarrier }
+    public enum GuardState { Idle, Patrolling, WaitingAtWaypoint, Chasing, Talking, OnPost, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, ChasingThief, EscortingThief, Evicting, StressedOut, WritingReport, OperatingBarrier }
     
-    [Header("Настройки Охранника")]
+    [Header("Состояние Охранника")]
     private GuardState currentState = GuardState.OffDuty;
-    
-    [Header("Внешний вид")]
-    public EmotionSpriteCollection spriteCollection;
-    public StateEmotionMap stateEmotionMap;
 
-    [Header("Аксессуары")]
-    public GameObject accessoryPrefab;
-    
-    [Header("Дополнительные объекты")]
-    public GameObject nightLight;
-    
-    [Header("Параметры поведения")]
-    [SerializeField] private float minWaitTime = 1f;
-    [SerializeField] private float maxWaitTime = 3f;
-    [SerializeField] private float chaseSpeedMultiplier = 1.5f;
-    [SerializeField] private float talkTime = 3f;
+    [Header("Ссылки на компоненты (Prefab)")]
+    public GameObject nightLight; // <<< ВОЗВРАЩЕНО
 
-    [Header("Стресс")]
-    public float maxStress = 100f;
-    public float stressGainPerViolator = 25f;
-    public float stressReliefRate = 10f;
-    private float currentStress = 0f;
+    // Внутренние переменные, которые заполняются из RoleData
+    private float minWaitTime;
+    private float maxWaitTime;
+    private float chaseSpeedMultiplier;
+    private float talkTime;
+    private float timeInToilet;
+    private float maxStress;
+    private float stressGainPerViolator;
+    private float stressReliefRate;
     
-    [Header("Рабочее место и протоколы")]
-    [Tooltip("Точка, куда охранник пойдет писать протокол")]
-    public Transform deskPoint;
-    [Tooltip("Стопка, куда охранник будет складывать протоколы")]
-    public DocumentStack protocolStack;
-
     private ClientPathfinding currentChaseTarget;
-    private Rigidbody2D rb;
     private Waypoint[] allWaypoints;
+    private Coroutine needsCoroutine;
+	private int unreportedIncidents = 0;
 
-    public GuardState GetCurrentState()
+    public GuardState GetCurrentState() { return currentState; }
+    public bool IsAvailableAndOnDuty() { return isOnDuty && currentAction == null; }
+    
+	public override bool IsOnBreak()
+{
+    return currentState == GuardState.OnBreak ||
+           currentState == GuardState.GoingToBreak || 
+           currentState == GuardState.AtToilet || 
+           currentState == GuardState.GoingToToilet ||
+           currentState == GuardState.StressedOut;
+}
+	
+	public void InterruptWithNewTask(ClientPathfinding target, bool isThief)
     {
-        return currentState;
-    }
+        // 1. Если охранник уже что-то делает (например, патрулирует), прерываем это.
+        if (currentAction != null)
+        {
+            StopCoroutine(currentAction);
+            Debug.Log($"{characterName} прерывает '{currentAction}' для экстренной задачи!");
+        }
 
-    public bool IsAvailableAndOnDuty()
-    {
-        return isOnDuty && currentAction == null;
+        // 2. Немедленно запускаем новую, экстренную задачу.
+        if (isThief)
+        {
+            currentAction = StartCoroutine(CatchThiefRoutine(target));
+        }
+        else
+        {
+            currentAction = StartCoroutine(ChaseRoutine(target));
+        }
     }
-
-    public string GetStatusInfo()
+	
+    public override string GetStatusInfo()
     {
         switch (currentState)
         {
             case GuardState.StressedOut: return "СОРВАЛСЯ!";
             case GuardState.WritingReport: return "Пишет протокол";
-            case GuardState.Patrolling: return $"Патрулирует. Цель: {patrolPoints.FirstOrDefault()?.name}";
+            case GuardState.Patrolling: return "Патрулирует";
+            case GuardState.OnPost: return "На посту";
             case GuardState.Chasing: return $"Преследует: {currentChaseTarget?.name}";
             case GuardState.Talking: return $"Разговаривает с: {currentChaseTarget?.name}";
             case GuardState.OffDuty: return "Смена окончена";
             default: return currentState.ToString();
         }
     }
-    
+
+    // --- <<< БЛОК КОМАНД ДЛЯ МЕНЕДЖЕРА ВОЗВРАЩЕН >>> ---
+    public void ReturnToPatrol()
+    {
+        if (!isOnDuty) return;
+        if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = null; 
+    }
+
     public void AssignToChase(ClientPathfinding target)
     {
         if (!IsAvailableAndOnDuty()) return;
         if (currentAction != null) StopCoroutine(currentAction);
-        currentAction = StartCoroutine(ChaseRoutine(target, GuardState.Chasing, ActionType.CalmDownViolator));
+        currentAction = StartCoroutine(ChaseRoutine(target));
     }
 
     public void AssignToCatchThief(ClientPathfinding target)
@@ -80,7 +98,7 @@ public class GuardMovement : StaffController
         if (currentAction != null) StopCoroutine(currentAction);
         currentAction = StartCoroutine(CatchThiefRoutine(target));
     }
-    
+
     public void AssignToEvict(ClientPathfinding target)
     {
         if (!IsAvailableAndOnDuty()) return;
@@ -88,39 +106,13 @@ public class GuardMovement : StaffController
         currentAction = StartCoroutine(EvictRoutine(target));
     }
 
-public void AssignToOperateBarrier(SecurityBarrier barrier, bool shouldActivate)
-{
-    if (!IsAvailableAndOnDuty()) return;
-    if (currentAction != null) StopCoroutine(currentAction);
-    currentAction = StartCoroutine(OperateBarrierRoutine(barrier, shouldActivate));
-}
-
-public void ReturnToPatrol()
-{
-    if (!isOnDuty) return;
-    if (currentAction != null) StopCoroutine(currentAction);
-    currentAction = null; // Это заставит ActionDecisionLoop запустить ExecuteDefaultAction (патрулирование)
-}
-
-// --- НОВАЯ КОРУТИНА для работы с барьером ---
-private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate)
-{
-    SetState(GuardState.OperatingBarrier);
-    yield return StartCoroutine(MoveToTarget(barrier.guardInteractionPoint.position, GuardState.OperatingBarrier));
+    public void AssignToOperateBarrier(SecurityBarrier barrier, bool shouldActivate)
+    {
+        if (!IsAvailableAndOnDuty()) return;
+        if (currentAction != null) StopCoroutine(currentAction);
+        currentAction = StartCoroutine(OperateBarrierRoutine(barrier, shouldActivate));
+    }
     
-    yield return new WaitForSeconds(2.5f);
-    if (activate)
-    {
-        barrier.ActivateBarrier();
-    }
-    else
-    {
-        barrier.DeactivateBarrier();
-    }
-    ExperienceManager.Instance?.GrantXP(this, ActionType.OperateBarrier);
-    currentAction = null;
-}
-
     public void InitializeFromData(RoleData data)
     {
         var mover = GetComponent<AgentMover>();
@@ -128,136 +120,301 @@ private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate
         {
             mover.moveSpeed = data.moveSpeed;
             mover.priority = data.priority;
+            mover.idleSprite = data.idleSprite;
+            mover.walkSprite1 = data.walkSprite1;
+            mover.walkSprite2 = data.walkSprite2;
         }
+        
         this.spriteCollection = data.spriteCollection;
         this.stateEmotionMap = data.stateEmotionMap;
-        this.accessoryPrefab = data.accessoryPrefab;
-    }
-    
-    protected override void Awake()
-    {
-        base.Awake();
-        rb = GetComponent<Rigidbody2D>();
-        allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
-    }
+        this.visuals?.EquipAccessory(data.accessoryPrefab);
 
-    protected override void Start()
-    {
-        base.Start();
-        SetState(GuardState.OffDuty);
+        this.minWaitTime = data.guard_minWaitTime;
+        this.maxWaitTime = data.guard_maxWaitTime;
+        this.chaseSpeedMultiplier = data.guard_chaseSpeedMultiplier;
+        this.talkTime = data.guard_talkTime;
+        this.timeInToilet = data.guard_timeInToilet;
+        this.maxStress = data.guard_maxStress;
+        this.stressGainPerViolator = data.guard_stressGainPerViolator;
+        this.stressReliefRate = data.guard_stressReliefRate;
     }
     
-    void Update()
+public override void StartShift()
+{
+    base.StartShift(); // <<< УБЕДИСЬ, ЧТО ЭТА СТРОКА ЕСТЬ!
+    thoughtBubble?.ShowPriorityMessage("Приступаю к работе.", 2f, Color.green);
+    if (needsCoroutine != null) StopCoroutine(needsCoroutine);
+    needsCoroutine = StartCoroutine(NeedsCheckRoutine());
+}
+
+    public override void EndShift()
     {
-        if (Time.timeScale == 0f || !isOnDuty) return;
-        UpdateStress();
+        base.EndShift();
+        thoughtBubble?.ShowPriorityMessage("Смена окончена.", 2f, Color.yellow);
+        if (needsCoroutine != null) StopCoroutine(needsCoroutine);
     }
     
-    protected override bool TryExecuteAction(ActionType actionType)
+    private IEnumerator NeedsCheckRoutine()
     {
-        switch (actionType)
+        while (isOnDuty)
         {
-            case ActionType.CalmDownViolator:
-                var violator = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
-                    .FirstOrDefault(c => c != null && c.stateMachine != null && c.stateMachine.GetCurrentState() == ClientState.Enraged);
-                if (violator != null)
-                {
-                    currentAction = StartCoroutine(ChaseRoutine(violator, GuardState.Chasing, ActionType.CalmDownViolator));
-                    return true;
-                }
-                return false;
-
-            case ActionType.CatchThief:
-                ClientPathfinding thief = GuardManager.Instance?.GetThiefToCatch();
-                if (thief != null)
-                {
-                    currentAction = StartCoroutine(CatchThiefRoutine(thief));
-                    return true;
-                }
-                return false;
-                
-            case ActionType.EvictClient:
-                ClientPathfinding clientToEvict = GuardManager.Instance?.GetClientToEvict();
-                if (clientToEvict != null)
-                {
-                    currentAction = StartCoroutine(EvictRoutine(clientToEvict));
-                    return true;
-                }
-                return false;
+            yield return new WaitForSeconds(Random.Range(45f, 90f));
+            if (currentAction == null && ScenePointsRegistry.Instance?.staffToiletPoint != null)
+            {
+                currentAction = StartCoroutine(GoToToiletRoutine());
+                yield return new WaitUntil(() => currentAction == null);
+            }
         }
-        return false;
     }
 
-    protected override void ExecuteDefaultAction()
+    protected override bool CanExecuteActionConditions(ActionType actionType)
+{
+    switch (actionType)
     {
-        currentAction = StartCoroutine(PatrolRoutine());
+        case ActionType.OperateBarrier:
+            var barrier = GuardManager.Instance.securityBarrier;
+            if (barrier == null) return false;
+            string currentPeriod = ClientSpawner.CurrentPeriodName;
+            bool isNightTime = ClientSpawner.Instance.nightPeriodNames.Any(p => p.Equals(currentPeriod, System.StringComparison.InvariantCultureIgnoreCase));
+            if (!isNightTime && barrier.IsActive()) return true;
+            if (isNightTime && !barrier.IsActive() && FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length == 0) return true;
+            return false;
+
+        case ActionType.CalmDownViolator:
+            return GuardManager.Instance.GetViolatorToHandle() != null;
+
+        case ActionType.CatchThief:
+            return GuardManager.Instance.GetThiefToCatch() != null;
+
+        case ActionType.PatrolWaypoint:
+            return true; 
+
+        default:
+            return base.CanExecuteActionConditions(actionType);
+    }
+}
+    
+    protected override IEnumerator ExecuteActionCoroutine(ActionType actionType)
+{
+    var actionData = activeActions.FirstOrDefault(a => a.actionType == actionType);
+    if (actionData == null)
+    {
+        Debug.LogError($"Не найдены данные для действия {actionType} в списке активных действий!");
+        yield break;
     }
 
-    private IEnumerator PatrolRoutine()
+    switch (actionType)
     {
-        SetState(GuardState.Patrolling);
-        var patrolTarget = SelectNewPatrolPoint();
-        if (patrolTarget != null)
+        case ActionType.PatrolWaypoint:
+            // --- <<< ГЛАВНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ >>> ---
+            // Мы запускаем корутину и ждем ее завершения
+            yield return StartCoroutine(PatrolRoutine(actionData));
+            break;
+
+        case ActionType.OperateBarrier:
+            var barrier = GuardManager.Instance.securityBarrier;
+            bool isNight = ClientSpawner.CurrentPeriodName == "Ночь";
+            yield return StartCoroutine(OperateBarrierRoutine(barrier, isNight));
+            break;
+
+        case ActionType.CalmDownViolator:
+            ClientPathfinding violator = GuardManager.Instance.GetViolatorToHandle();
+            if (violator != null)
+            {
+                GuardManager.Instance.AssignTarget(violator);
+                yield return StartCoroutine(ChaseRoutine(violator));
+            }
+            break;
+
+        case ActionType.CatchThief:
+            ClientPathfinding thief = GuardManager.Instance.GetThiefToCatch();
+            if (thief != null)
+            {
+                GuardManager.Instance.AssignTarget(thief);
+                yield return StartCoroutine(CatchThiefRoutine(thief));
+            }
+            break;
+            
+        case ActionType.EvictClient:
+            // (Если ты будешь добавлять эту логику, она будет здесь)
+            break;
+
+        default:
+            Debug.LogWarning($"Для охранника не реализована корутина-исполнитель для действия: {actionType}");
+            break;
+    }
+}
+    
+protected override IEnumerator ExecuteDefaultAction()
+{
+    // Эта корутина сама установит currentAction = null в конце
+    yield return StartCoroutine(GoToPostRoutine()); 
+}
+
+    private IEnumerator GoToPostRoutine()
+    {
+        thoughtBubble?.ShowPriorityMessage("Иду на пост...", 2f);
+        var postPoint = ScenePointsRegistry.Instance?.guardPostPoint;
+        if (postPoint == null)
         {
-            yield return StartCoroutine(MoveToTarget(patrolTarget.position, GuardState.WaitingAtWaypoint));
-            ExperienceManager.Instance?.GrantXP(this, ActionType.PatrolWaypoint);
+            yield return StartCoroutine(PatrolRoutine(null));
+            yield break;
         }
-        SetState(GuardState.WaitingAtWaypoint);
-        yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
+        
+        SetState(GuardState.OnPost);
+        yield return StartCoroutine(MoveToTarget(postPoint.position, GuardState.OnPost));
+        thoughtBubble?.ShowPriorityMessage("На посту. Все спокойно.", 3f);
+        
+        float chillTime = Random.Range(ClientSpawner.Instance.minChillTime, ClientSpawner.Instance.maxChillTime);
+        yield return new WaitForSeconds(chillTime); 
+        currentAction = null;
+    }
+
+    private IEnumerator GoToToiletRoutine()
+    {
+        thoughtBubble?.ShowPriorityMessage("Нужно отойти.", 2f, Color.yellow);
+        SetState(GuardState.GoingToToilet);
+        yield return StartCoroutine(MoveToTarget(ScenePointsRegistry.Instance.staffToiletPoint.position, GuardState.AtToilet));
+        yield return new WaitForSeconds(timeInToilet);
+        SetState(GuardState.Idle);
+        currentAction = null;
+    }
+
+    private IEnumerator PatrolRoutine(StaffAction patrolActionData)
+{
+    thoughtBubble?.ShowPriorityMessage("Начинаю патрулирование.", 2f);
+    SetState(GuardState.Patrolling);
+    var thisPatrolInstance = currentAction;
+
+    // Решаем, патрулировать по времени или по количеству точек
+    if (patrolActionData != null && patrolActionData.patrolPointsToVisit > 0)
+    {
+        // --- НОВАЯ ЛОГИКА: Патрулирование по количеству точек ---
+        for (int i = 0; i < patrolActionData.patrolPointsToVisit; i++)
+        {
+            if (currentAction != thisPatrolInstance) yield break; // Проверка на прерывание
+
+            var patrolTarget = SelectNewPatrolPoint();
+            if (patrolTarget != null)
+            {
+                yield return StartCoroutine(MoveToTarget(patrolTarget.position, GuardState.WaitingAtWaypoint));
+                ExperienceManager.Instance?.GrantXP(this, ActionType.PatrolWaypoint);
+                yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
+            }
+            else
+            {
+                thoughtBubble?.ShowPriorityMessage("Некуда патрулировать!", 2f, Color.red);
+                yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
+                break; // Выход, если точки не найдены
+            }
+        }
+    }
+    else
+    {
+        // --- СТАРАЯ ЛОГИКА: Патрулирование по времени (как запасной вариант) ---
+        float duration = patrolActionData?.actionDuration ?? 30f;
+        float startTime = Time.time;
+        while (Time.time < startTime + duration)
+        {
+            if (currentAction != thisPatrolInstance) yield break; // Проверка на прерывание
+            
+            var patrolTarget = SelectNewPatrolPoint();
+            if (patrolTarget != null)
+            {
+                yield return StartCoroutine(MoveToTarget(patrolTarget.position, GuardState.WaitingAtWaypoint));
+                ExperienceManager.Instance?.GrantXP(this, ActionType.PatrolWaypoint);
+                yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
+            }
+            else
+            {
+                thoughtBubble?.ShowPriorityMessage("Некуда патрулировать!", 2f, Color.red);
+                yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
+                break;
+            }
+        }
+    }
+    
+    thoughtBubble?.ShowPriorityMessage("Патрулирование окончено. Отдыхаю.", 2f, Color.gray);
+    if (patrolActionData != null)
+    {
+        actionCooldowns[patrolActionData.actionType] = Time.time + patrolActionData.actionCooldown;
+    }
+    
+    currentAction = null;
+}
+    
+    private Transform SelectNewPatrolPoint()
+    {
+        var points = ScenePointsRegistry.Instance?.guardPatrolPoints;
+        if (points == null || points.Count == 0) return null;
+        return points[Random.Range(0, points.Count)];
+    }
+
+    public override void GoOnBreak(float duration)
+    {
+        if (!isOnDuty || currentAction != null) return;
+        currentAction = StartCoroutine(BreakRoutine(duration));
+    }
+
+    private IEnumerator BreakRoutine(float duration)
+    {
+        thoughtBubble?.ShowPriorityMessage("Ухожу на обед.", 2f);
+        SetState(GuardState.GoingToBreak);
+        Transform breakSpot = RequestKitchenPoint();
+        if (breakSpot != null)
+        {
+            yield return StartCoroutine(MoveToTarget(breakSpot.position, GuardState.OnBreak));
+            yield return new WaitForSeconds(duration);
+            FreeKitchenPoint(breakSpot);
+        }
+        else { yield return new WaitForSeconds(duration); }
         currentAction = null;
     }
     
-    private IEnumerator ChaseRoutine(ClientPathfinding target, GuardState chaseState, ActionType finalAction)
+    private IEnumerator ChaseRoutine(ClientPathfinding target)
     {
+        thoughtBubble?.ShowPriorityMessage("Замечен нарушитель! Выдвигаюсь!", 2f, Color.red);
         currentChaseTarget = target;
-        SetState(chaseState);
+        SetState(GuardState.Chasing);
         agentMover.ApplySpeedMultiplier(chaseSpeedMultiplier);
-        
-        float catchDistance = 1.2f;
-        while (currentChaseTarget != null && Vector2.Distance(transform.position, currentChaseTarget.transform.position) > catchDistance)
+        while (currentChaseTarget != null && Vector2.Distance(transform.position, currentChaseTarget.transform.position) > 1.2f)
         {
             agentMover.StartDirectChase(currentChaseTarget.transform.position);
             yield return new WaitForSeconds(0.2f);
         }
-        
         agentMover.StopDirectChase();
         agentMover.ApplySpeedMultiplier(1f);
-
         if (currentChaseTarget != null)
         {
             agentMover.Stop();
-            if(finalAction == ActionType.CalmDownViolator)
-            {
-                yield return StartCoroutine(TalkToClientRoutine(currentChaseTarget));
-            }
+            yield return StartCoroutine(TalkToClientRoutine(currentChaseTarget));
         }
-        
-        if (finalAction != ActionType.CatchThief && finalAction != ActionType.EvictClient)
-        {
-             currentChaseTarget = null;
-             currentAction = null;
-        }
+        currentChaseTarget = null;
+        currentAction = null;
     }
-    
+
     private IEnumerator TalkToClientRoutine(ClientPathfinding clientToCalm)
     {
+        thoughtBubble?.ShowPriorityMessage("Гражданин, пройдемте...", 3f, Color.blue);
         SetState(GuardState.Talking);
         clientToCalm.Freeze();
         yield return new WaitForSeconds(talkTime);
         if(clientToCalm != null)
         {
+			unreportedIncidents++;
             ExperienceManager.Instance?.GrantXP(this, ActionType.CalmDownViolator);
             clientToCalm.UnfreezeAndRestartAI();
             if (Random.value < 0.5f) { clientToCalm.CalmDownAndReturnToQueue(); }
             else { clientToCalm.CalmDownAndLeave(); }
         }
-        currentStress += stressGainPerViolator;
+        // <<< ИСПРАВЛЕНО: currentStress заменен на currentFrustration >>>
+        currentFrustration += stressGainPerViolator;
     }
-    
-    private IEnumerator CatchThiefRoutine(ClientPathfinding thief)
+
+    private IEnumerator CatchThiefRoutine(ClientPathfinding thief) 
     {
         SetState(GuardState.ChasingThief);
-        yield return StartCoroutine(ChaseRoutine(thief, GuardState.ChasingThief, ActionType.CatchThief));
+        yield return StartCoroutine(ChaseRoutine(thief));
         if (currentChaseTarget != null)
         {
             yield return StartCoroutine(EscortThiefToCashierRoutine(currentChaseTarget));
@@ -265,9 +422,10 @@ private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate
         }
         currentAction = null;
     }
-
+    
     private IEnumerator EscortThiefToCashierRoutine(ClientPathfinding thief)
     {
+        thoughtBubble?.ShowPriorityMessage("Попался, воришка!", 2f, Color.red);
         SetState(GuardState.EscortingThief);
         thief.Freeze();
         yield return new WaitForSeconds(talkTime / 2);
@@ -275,19 +433,21 @@ private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate
         LimitedCapacityZone cashierZone = ClientSpawner.GetCashierZone();
         if (cashierZone != null)
         {
+			unreportedIncidents++;
             thief.stateMachine.StopAllActionCoroutines();
             thief.stateMachine.SetGoal(cashierZone.waitingWaypoint);
             thief.stateMachine.SetState(ClientState.MovingToGoal);
             ExperienceManager.Instance?.GrantXP(this, ActionType.CatchThief);
         }
-        currentStress += stressGainPerViolator;
+        // <<< ИСПРАВЛЕНО: currentStress заменен на currentFrustration >>>
+        currentFrustration += stressGainPerViolator;
     }
 
     private IEnumerator EvictRoutine(ClientPathfinding client)
     {
         SetState(GuardState.Evicting);
-        yield return StartCoroutine(ChaseRoutine(client, GuardState.Evicting, ActionType.EvictClient));
-        if (currentChaseTarget != null)
+        yield return StartCoroutine(ChaseRoutine(client));
+        if(currentChaseTarget != null)
         {
             yield return StartCoroutine(ConfrontAndEvictRoutine(currentChaseTarget));
             yield return StartCoroutine(WriteReportRoutine());
@@ -297,6 +457,7 @@ private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate
     
     private IEnumerator ConfrontAndEvictRoutine(ClientPathfinding client)
     {
+        thoughtBubble?.ShowPriorityMessage("Прошу покинуть помещение!", 3f, Color.blue);
         SetState(GuardState.Talking);
         client.Freeze();
         yield return new WaitForSeconds(talkTime);
@@ -309,177 +470,89 @@ private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate
 
     private IEnumerator WriteReportRoutine()
     {
-        if (deskPoint == null || protocolStack == null) yield break;
-
+        var desk = ScenePointsRegistry.Instance?.guardReportDesk;
+        if (desk == null) {
+            thoughtBubble?.ShowPriorityMessage("Нужно составить протокол, но где?", 2f, Color.yellow);
+            yield break;
+        }
+        thoughtBubble?.ShowPriorityMessage("Составляю протокол...", 4f);
         SetState(GuardState.WritingReport);
-        yield return StartCoroutine(MoveToTarget(deskPoint.position, GuardState.WritingReport));
-
-        Debug.Log($"{name} пишет протокол...");
+        yield return StartCoroutine(MoveToTarget(desk.position, GuardState.WritingReport));
         yield return new WaitForSeconds(5f);
-
-        protocolStack.AddDocumentToStack();
-        Debug.Log($"{name} закончил протокол.");
-    }
-
-    public override void GoOnBreak(float duration) 
-    {
-        if (!isOnDuty || currentAction != null) return;
-        currentAction = StartCoroutine(BreakRoutine(duration));
-    }
-
-    private IEnumerator BreakRoutine(float duration)
-    {
-        SetState(GuardState.GoingToBreak);
-        Transform breakSpot = RequestKitchenPoint();
-        if (breakSpot != null)
+        DocumentStack stack = desk.GetComponent<DocumentStack>();
+        if(stack != null)
         {
-            yield return StartCoroutine(MoveToTarget(breakSpot.position, GuardState.OnBreak));
-            yield return new WaitForSeconds(duration);
-            FreeKitchenPoint(breakSpot);
+             stack.AddDocumentToStack();
+			 unreportedIncidents--;
         }
-        else
-        {
-            yield return new WaitForSeconds(duration);
-        }
+		currentAction = null;
+    }
+    
+    private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate) 
+    {
+        thoughtBubble?.ShowPriorityMessage(activate ? "Закрываю барьер на ночь." : "Открываю барьер.", 2f);
+        SetState(GuardState.OperatingBarrier);
+        yield return StartCoroutine(MoveToTarget(barrier.guardInteractionPoint.position, GuardState.OperatingBarrier));
+        yield return new WaitForSeconds(2.5f);
+        if (activate) { barrier.ActivateBarrier(); }
+        else { barrier.DeactivateBarrier(); }
+        ExperienceManager.Instance?.GrantXP(this, ActionType.OperateBarrier);
         currentAction = null;
     }
 
+    protected override void Awake()
+    {
+        base.Awake();
+        allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
+    }
+
+    protected override void Start()
+    {
+        base.Start();
+        SetState(GuardState.OffDuty);
+    }
+
+    private void Update() 
+    {
+        if(Time.timeScale == 0f || !isOnDuty) return;
+        UpdateStress();
+    }
+    
     private void UpdateStress()
     {
         if (currentState == GuardState.StressedOut || !isOnDuty) return;
         bool isResting = currentState == GuardState.AtToilet || currentState == GuardState.OffDuty || currentState == GuardState.OnBreak;
-        if (!isResting)
+        if (isResting)
         {
-             currentStress += stressGainPerViolator * 0.01f * Time.deltaTime;
+            // <<< ИСПРАВЛЕНО: currentStress заменен на currentFrustration >>>
+            currentFrustration -= stressReliefRate * Time.deltaTime;
         }
-        else
-        {
-            currentStress -= stressReliefRate * Time.deltaTime;
-        }
-        currentStress = Mathf.Clamp(currentStress, 0, maxStress);
-    }
-    
-    private IEnumerator MoveToTarget(Vector2 targetPosition, GuardState stateOnArrival)
-    {
-        agentMover.SetPath(BuildPathTo(targetPosition));
-        yield return new WaitUntil(() => !agentMover.IsMoving());
-        SetState(stateOnArrival);
-    }
-    
-    private Transform SelectNewPatrolPoint()
-    {
-        if (patrolPoints == null || patrolPoints.Count == 0) return null;
-        return patrolPoints[Random.Range(0, patrolPoints.Count)];
+        // <<< ИСПРАВЛЕНО: currentStress заменен на currentFrustration >>>
+        currentFrustration = Mathf.Clamp(currentFrustration, 0, maxStress);
     }
 
     private void SetState(GuardState newState)
     {
         if (currentState == newState) return;
         currentState = newState;
-        logger?.LogState(newState.ToString());
+        logger?.LogState(GetStatusInfo());
         visuals?.SetEmotionForState(newState);
+    }
+
+    private IEnumerator MoveToTarget(Vector2 targetPosition, GuardState stateOnArrival)
+    {
+        agentMover.SetPath(BuildPathTo(targetPosition));
+        yield return new WaitUntil(() => !agentMover.IsMoving());
+        SetState(stateOnArrival);
     }
 
     protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
-        var path = new Queue<Waypoint>();
-        if (allWaypoints == null || allWaypoints.Length == 0) return path;
-
-        Waypoint startNode = FindNearestVisibleWaypoint(transform.position);
-        Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
-        if (startNode == null) startNode = FindNearestWaypoint(transform.position);
-        if (endNode == null) endNode = FindNearestWaypoint(targetPos);
-        if (startNode == null || endNode == null) return path;
-        
-        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
-        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
-        var queue = new PriorityQueue<Waypoint>();
-        foreach (var wp in allWaypoints)
-        {
-            if(wp != null)
-            {
-                distances[wp] = float.MaxValue;
-                previous[wp] = null;
-            }
-        }
-        distances[startNode] = 0;
-        queue.Enqueue(startNode, 0);
-        while(queue.Count > 0)
-        {
-            Waypoint current = queue.Dequeue();
-            if (current == endNode) { ReconstructPath(previous, endNode, path); return path; }
-            if(current.neighbors == null) continue;
-            foreach(var neighbor in current.neighbors)
-            {
-                if(neighbor == null) continue;
-                if (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag)) continue;
-                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
-                if(distances.ContainsKey(neighbor) && newDist < distances[neighbor])
-                {
-                    distances[neighbor] = newDist;
-                    previous[neighbor] = current;
-                    queue.Enqueue(neighbor, newDist);
-                }
-            }
-        }
-        return path;
-    }
-    
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
-    {
-        List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous.ContainsKey(at) ? previous[at] : null) { pathList.Add(at); }
-        pathList.Reverse();
-        path.Clear();
-        foreach (var wp in pathList) { path.Enqueue(wp); }
-    }
-    
-    private Waypoint FindNearestVisibleWaypoint(Vector2 position)
-    {
-        if (allWaypoints == null) return null;
-        Waypoint bestWaypoint = null;
-        float minDistance = float.MaxValue;
-        foreach (var wp in allWaypoints)
-        {
-            if (wp == null) continue;
-            float distance = Vector2.Distance(position, wp.transform.position);
-            if (distance < minDistance)
-            {
-                RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles"));
-                if (hit.collider == null)
-                {
-                    minDistance = distance;
-                    bestWaypoint = wp;
-                }
-            }
-        }
-        return bestWaypoint;
-    }
-    
-    private Waypoint FindNearestWaypoint(Vector2 position)
-    {
-        if (allWaypoints == null) return null;
-        return allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(position, wp.transform.position)).FirstOrDefault();
-    }
-    
-    private class PriorityQueue<T>
-    {
-        private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
-        public int Count => elements.Count;
-        public void Enqueue(T item, float priority) { elements.Add(new KeyValuePair<T, float>(item, priority)); }
-        public T Dequeue()
-        {
-            int bestIndex = 0;
-            for (int i = 0; i < elements.Count; i++)
-            {
-                if (elements[i].Value < elements[bestIndex].Value) { bestIndex = i; }
-            }
-            T bestItem = elements[bestIndex].Key;
-            elements.RemoveAt(bestIndex);
-            return bestItem;
-        }
+        // Теперь здесь всего одна строка!
+        return PathfindingUtility.BuildPathTo(transform.position, targetPos, this.gameObject);
     }
 
-    public override float GetStressValue() { return currentStress; }
-    public override void SetStressValue(float stress) { currentStress = stress; }
+    // <<< ИСПРАВЛЕНО: методы Get/SetStressValue теперь работают с currentFrustration >>>
+    public override float GetStressValue() { return currentFrustration; }
+    public override void SetStressValue(float stress) { currentFrustration = stress; }
 }

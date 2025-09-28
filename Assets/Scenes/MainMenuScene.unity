@@ -1058,7 +1058,7 @@ GameObject:
   - component: {fileID: 1004667240}
   - component: {fileID: 1004667239}
   m_Layer: 5
-  m_Name: ButtonLoadGame
+  m_Name: ButtonPrimaryAction
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2332,9 +2332,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainMenuPanel: {fileID: 846011594}
   saveLoadPanel: {fileID: 1864426794}
-  continueButton: {fileID: 1483531252}
-  newGameButton: {fileID: 1004667239}
-  loadGameButton: {fileID: 0}
+  primaryActionButton: {fileID: 1004667239}
 --- !u!224 &1840667665 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8539679800124308825, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -2973,6 +2971,34 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: allRoleData.Array.size
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allRoleData.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 5f8e0b27c73b1b54ebd9940133093d48, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allRoleData.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 17f05bd7e4259a843adc9b6a8bcea9e3, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allRoleData.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: fd1626bd68637ee4db723fc772e19e7f, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allRoleData.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 91563cf72ac759f4aadbb626f7e0173c, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allRoleData.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 0d821a9eee0eb1d4785328bcf7038347, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allRoleData.Array.data[5]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 428bc3411e2781d4a853d3f4bf36d803, type: 2}
     - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: uiSource
       value: 

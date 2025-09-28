@@ -1,5 +1,7 @@
+// Файл: Scripts/UI/MainMenuActions.cs --- ОБНОВЛЕННАЯ УПРОЩЕННАЯ ВЕРСИЯ ---
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro; // Убедись, что эта строка есть для работы с TextMeshPro
 
 public class MainMenuActions : MonoBehaviour
 {
@@ -7,76 +9,73 @@ public class MainMenuActions : MonoBehaviour
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject saveLoadPanel;
 
-    [Header("Кнопки для управления видимостью")]
-    [SerializeField] private Button continueButton;
-    [SerializeField] private Button newGameButton;
-    [SerializeField] private Button loadGameButton;
+    // --- <<< ИЗМЕНЕНИЕ: Теперь у нас только ОДНА кнопка >>> ---
+    [Header("Главная кнопка")]
+    [SerializeField] private Button primaryActionButton; 
+    
+    private TextMeshProUGUI primaryActionButtonText; // Ссылка на текст внутри кнопки
 
     void Awake()
     {
-        // Проверяем, что все ссылки установлены
-        if (mainMenuPanel == null) Debug.LogError("<b><color=red>[MainMenuActions] ОШИБКА: Панель 'mainMenuPanel' НЕ НАЗНАЧЕНА!</color></b>", this);
-        if (saveLoadPanel == null) Debug.LogError("<b><color=red>[MainMenuActions] ОШИБКА: Панель 'saveLoadPanel' НЕ НАЗНАЧЕНА!</color></b>", this);
-        // ... (добавьте проверки для кнопок, если хотите быть на 100% уверены)
+        // Находим компонент текста на кнопке один раз при старте
+        if (primaryActionButton != null)
+        {
+            primaryActionButtonText = primaryActionButton.GetComponentInChildren<TextMeshProUGUI>();
+        }
+
+        // Назначаем действие: любая из вариаций кнопки будет открывать панель слотов
+        primaryActionButton.onClick.AddListener(Action_OpenSaveLoadPanel);
     }
 
     void Start()
     {
-        Debug.Log("<color=yellow>[MainMenuActions] Скрипт запущен (Start).</color>");
-        
+        // Проверяем, есть ли сохранения
         bool hasSaves = SaveLoadManager.Instance != null && SaveLoadManager.Instance.DoesAnySaveExist();
-        Debug.Log($"<color=yellow>[MainMenuActions] Проверка сохранений: hasSaves = {hasSaves}</color>");
 
-        continueButton.gameObject.SetActive(hasSaves);
-        loadGameButton.gameObject.SetActive(hasSaves);
-        newGameButton.gameObject.SetActive(!hasSaves);
-
-        Debug.Log("<color=yellow>[MainMenuActions] Начальное состояние: Показываю MainMenuPanel.</color>");
+        // --- <<< ИЗМЕНЕНИЕ: Вместо вкл/выкл кнопок, меняем текст >>> ---
+        if (primaryActionButtonText != null)
+        {
+            if (hasSaves)
+            {
+                // Если сохранения есть, кнопка предлагает их загрузить
+                primaryActionButtonText.text = "Загрузить игру";
+            }
+            else
+            {
+                // Если сохранений нет, кнопка предлагает начать новую игру
+                primaryActionButtonText.text = "Новая игра";
+            }
+        }
+        
+        // Показываем главное меню при старте
         ShowPanel(mainMenuPanel);
     }
     
     // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ КНОПОК ---
 
-    public void Action_Continue()
-    {
-        Debug.Log("<b><color=green>[MainMenuActions] ==> Вызван метод Action_Continue().</color></b>");
-        //ShowPanel(null); // Прячем панели перед переходом
-        
-        int latestSlot = SaveLoadManager.Instance.GetLatestSaveSlotIndex();
-        if (latestSlot != -1 && MainUIManager.Instance != null)
-        {
-            Debug.Log($"<color=green>[MainMenuActions] Передаю управление MainUIManager для загрузки слота #{latestSlot}.</color>");
-            MainUIManager.Instance.OnSaveSlotClicked(latestSlot);
-        }
-        else
-        {
-            Debug.LogError("<b><color=red>[MainMenuActions] Action_Continue() НЕ СМОГ загрузить игру! latestSlot или MainUIManager не найдены.</color></b>");
-        }
-    }
-
     public void Action_OpenSaveLoadPanel()
     {
-        Debug.Log("<b><color=cyan>[MainMenuActions] ==> Вызван метод Action_OpenSaveLoadPanel().</color></b>");
+        // Этот метод теперь вызывается в обоих случаях
+        Debug.Log("<b><color=cyan>[MainMenuActions] ==> Открываю панель выбора слотов...</color></b>");
         ShowPanel(saveLoadPanel);
     }
 
     public void Action_BackToMainMenu()
     {
-        Debug.Log("<b><color=orange>[MainMenuActions] ==> Вызван метод Action_BackToMainMenu().</color></b>");
+        Debug.Log("<b><color=orange>[MainMenuActions] ==> Возвращаюсь в главное меню...</color></b>");
         ShowPanel(mainMenuPanel);
     }
 
+
+
     public void Action_QuitGame()
     {
-        Debug.Log("<b><color=grey>[MainMenuActions] ==> Вызван метод Action_QuitGame().</color></b>");
+        Debug.Log("<b><color=grey>[MainMenuActions] ==> Выход из игры...</color></b>");
         Application.Quit();
     }
     
     private void ShowPanel(GameObject panelToShow)
     {
-        string panelName = (panelToShow == null) ? "НИКАКУЮ (все выключены)" : panelToShow.name;
-        Debug.Log($"<color=yellow>[MainMenuActions] Вызвана команда ShowPanel для панели: {panelName}</color>");
-
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (saveLoadPanel != null) saveLoadPanel.SetActive(false);
 

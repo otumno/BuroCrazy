@@ -19,10 +19,9 @@ GameObject:
   - component: {fileID: 7365621211184648416}
   - component: {fileID: 2130437202028965468}
   - component: {fileID: 6508645962072336894}
-  - component: {fileID: 3547459887875819468}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Universal_Staff_Template
-  m_TagString: Untagged
+  m_TagString: Clerk
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -179,6 +178,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 2
   stoppingDistance: 0.2
+  characterSpriteRenderer: {fileID: 2741279865766227009}
+  idleSprite: {fileID: 0}
+  walkSprite1: {fileID: 0}
+  walkSprite2: {fileID: 0}
+  animationSpeed: 0.3
   agent: {fileID: 0}
   rubberBandStrength: 5
   priority: 1
@@ -277,6 +281,13 @@ MonoBehaviour:
   - "\u041E\u0431\u0435\u0434"
   - "\u0414\u0435\u043D\u044C"
   - "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+  patrolPoints:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   homePoint: {fileID: 0}
   kitchenPoints:
   - {fileID: 0}
@@ -286,6 +297,8 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   staffToiletPoint: {fileID: 0}
+  frustrationPerFailure: 0.1
+  frustrationThreshold: 0.5
   startShiftSound: {fileID: 0}
   endShiftSound: {fileID: 0}
   characterName: "\u0421\u0435\u043C\u0451\u043D \u0421\u0435\u043C\u0451\u043D\u044B\u0447
@@ -300,32 +313,6 @@ MonoBehaviour:
   activeActions: []
   spriteCollection: {fileID: 11400000, guid: cdab1e82753fc0d4fb395149bfc4e7dc, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 785cfc11f7b6eee47a4deaaf43942ff6, type: 2}
-  patrolPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  documentFlyEffectPrefab: {fileID: 0}
-  helpCheckInterval: 2
-  chanceToServeFromQueue: 0.1
-  chanceToCoverDesk: 0.5
-  chanceToGoToToilet: 0.008
-  timeInToilet: 4
-  taskTimeout: 5
---- !u!114 &3547459887875819468
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1300310410156682885}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b8f1460a7d4078347afc0d328e5517d8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &1381716582639190742
 GameObject:
   m_ObjectHideFlags: 0
@@ -369,7 +356,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4591599421230261654}
   - component: {fileID: 7455280163820513184}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: StackInHands
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -622,7 +609,7 @@ Transform:
   m_GameObject: {fileID: 6457167719760752963}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.0135, y: 0.3943, z: 0}
+  m_LocalPosition: {x: -0.0135, y: 0.445, z: 0}
   m_LocalScale: {x: 0.21212, y: 0.24171999, z: 0.25}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -868,7 +855,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6204879837612137969}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: HeadAttachPoint
   m_TagString: Untagged
   m_Icon: {fileID: 0}

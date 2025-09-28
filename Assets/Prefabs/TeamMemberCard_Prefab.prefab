@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a389120d1aa5d324ab2261d95f503aff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  background: {fileID: 0}
+  background: {fileID: 6773365092927304013}
   nameText: {fileID: 8574207317581412897}
   roleText: {fileID: 5353517388794806779}
   rankText: {fileID: 6496587555293944055}

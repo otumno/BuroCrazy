@@ -21,6 +21,30 @@ private void Awake()
     else if (Instance != this) { Destroy(gameObject); }
 }
     #endregion
+	
+	void Update()
+{
+    if (Input.GetKeyDown(KeyCode.Space)) 
+    {
+        // Проверяем, активен ли StartOfDayPanel, чтобы пробел не закрывал его
+        StartOfDayPanel deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+        bool isDirectorDeskOpen = deskPanel != null && deskPanel.gameObject.activeInHierarchy;
+        
+        // Сюда можно добавить проверки других панелей, которые должны блокировать паузу
+        bool isAnyOtherMajorPanelOpen = false; 
+        
+        if (isDirectorDeskOpen || isAnyOtherMajorPanelOpen)
+        {
+            // Если открыт стол директора или другая важная панель, ничего не делаем
+        }
+        else
+        {
+            // Если мы на главном игровом экране, вызываем централизованную логику паузы
+            bool isPaused = Time.timeScale == 0f;
+            ShowPausePanel(!isPaused);
+        }
+    }
+}
 
     /// <summary>
     /// Показывает панель стола директора, ставит игру на паузу и включает музыку кабинета.

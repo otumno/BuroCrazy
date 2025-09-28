@@ -2,6 +2,7 @@
 
 public enum ActionType
 {
+	None,
     // Действия Клерка
     ProcessDocument,    // Обработка документа у стойки
     ArchiveDocument,    // Архивирование документа (для Архивариуса)

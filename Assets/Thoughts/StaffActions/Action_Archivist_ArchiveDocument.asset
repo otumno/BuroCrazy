@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7adf04ec182b7364f946365354a5eb92, type: 3}
-  m_Name: Action_ArchiveDocument
+  m_Name: Action_Archivist_ArchiveDocument
   m_EditorClassIdentifier: 
   actionType: 1
   displayName: "\u0410\u0440\u0445\u0438\u0432\u0438\u0440\u043E\u0432\u0430\u0442\u044C

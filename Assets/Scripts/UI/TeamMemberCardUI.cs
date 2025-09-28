@@ -69,7 +69,7 @@ public class TeamMemberCardUI : MonoBehaviour
             nameText.text = assignedStaff.characterName;
         
         if (roleText != null) 
-            roleText.text = assignedStaff.currentRole.ToString();
+            roleText.text = GetRoleNameInRussian(assignedStaff.currentRole);
 
         if (stressText != null)
         {
@@ -190,4 +190,20 @@ public class TeamMemberCardUI : MonoBehaviour
     {
         FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include)?.OpenForStaff(assignedStaff);
     }
+	
+	private string GetRoleNameInRussian(StaffController.Role role)
+{
+    switch (role)
+    {
+        case StaffController.Role.Intern: return "Стажёр";
+        case StaffController.Role.Clerk: return "Клерк";
+        case StaffController.Role.Registrar: return "Регистратор";
+        case StaffController.Role.Cashier: return "Кассир";
+        case StaffController.Role.Archivist: return "Архивариус";
+        case StaffController.Role.Guard: return "Охранник";
+        case StaffController.Role.Janitor: return "Уборщик";
+        default: return "Не назначено";
+    }
+	
+}
 }

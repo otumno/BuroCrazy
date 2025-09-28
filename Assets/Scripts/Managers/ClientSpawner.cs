@@ -35,6 +35,13 @@ public class ClientSpawner : MonoBehaviour
     public float initialSpawnDelay = 5f;
     [Tooltip("Сколько клиентов с документами для директора должно появиться за день")]
     public int directorClientsPerDay = 1;
+	[Header("Настройки AI персонала")]
+[Tooltip("Как часто (в секундах) система будет проверять, нужно ли сотрудникам начать или закончить смену.")]
+public float shiftCheckInterval = 10f;
+[Tooltip("Минимальное время, которое сотрудник 'отдыхает' на посту или у кулера (в секундах).")]
+public float minChillTime = 5f;
+[Tooltip("Максимальное время, которое сотрудник 'отдыхает' на посту или у кулера (в секундах).")]
+public float maxChillTime = 10f;
     
     [Header("Ссылки на объекты сцены")]
     public GameObject waitingZoneObject;
@@ -60,7 +67,6 @@ public class ClientSpawner : MonoBehaviour
     public UnityEngine.Rendering.Universal.Light2D globalLight;
     
     [Header("UI Элементы")]
-    public GameObject pauseUIPanel;
     public TextMeshProUGUI dayCounterText;
 
     [Header("Настройки звука толпы")]
@@ -88,80 +94,65 @@ public class ClientSpawner : MonoBehaviour
     }
 
     void Start()
+{
+	Instance = this;
+    if (periods == null || periods.Length == 0)
     {
-        if (periods == null || periods.Length == 0)
-        {
-            enabled = false;
-            return;
-        }
+        enabled = false;
+        return;
+    }
 
-        if (pauseUIPanel != null) pauseUIPanel.SetActive(false);
-        UpdateDayCounterUI();
+    // if (pauseUIPanel != null) pauseUIPanel.SetActive(false); // <-- ЭТА СТРОКА УДАЛЕНА
 
-        int nightIndex = -1;
-        for (int i = 0; i < periods.Length; i++)
-        {
-            if (periods[i].periodName.Equals("Ночь", System.StringComparison.InvariantCultureIgnoreCase))
-            {
-                nightIndex = i;
-                break;
-            }
-        }
+    UpdateDayCounterUI();
 
-        if (nightIndex != -1)
+    int nightIndex = -1;
+    for (int i = 0; i < periods.Length; i++)
+    {
+        if (periods[i].periodName.Equals("Ночь", System.StringComparison.InvariantCultureIgnoreCase))
         {
-            currentPeriodIndex = nightIndex;
-            SpawningPeriod nightPeriod = periods[nightIndex];
-            periodTimer = Mathf.Max(0, nightPeriod.durationInSeconds - 10f);
-            int prevIndex = (nightIndex == 0) ? periods.Length - 1 : nightIndex - 1;
-            previousPeriod = periods[prevIndex];
-            
-            if (globalLight != null)
-            {
-                globalLight.color = nightPeriod.lightingSettings.lightColor;
-                globalLight.intensity = nightPeriod.lightingSettings.lightIntensity;
-            }
-            foreach (var lightObj in allControllableLights)
-            {
-                if (lightObj != null)
-                {
-                    bool shouldBeOn = nightPeriod.lightsToEnable.Contains(lightObj);
-                    lightObj.SetActive(shouldBeOn);
-                    var lightSource = lightObj.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
-                    if(lightSource != null) lightSource.intensity = shouldBeOn ? 1f : 0f;
-                }
-            }
-            
-            StartNewPeriod(false);
-        }
-        else
-        {
-            Debug.LogWarning("Период с именем 'Ночь' не найден. Игра начнется с первого периода в списке.");
-            currentPeriodIndex = -1;
-            GoToNextPeriod();
+            nightIndex = i;
+            break;
         }
     }
+
+    if (nightIndex != -1)
+    {
+        currentPeriodIndex = nightIndex;
+        SpawningPeriod nightPeriod = periods[nightIndex];
+        periodTimer = Mathf.Max(0, nightPeriod.durationInSeconds - 10f);
+        int prevIndex = (nightIndex == 0) ? periods.Length - 1 : nightIndex - 1;
+        previousPeriod = periods[prevIndex];
+        if (globalLight != null)
+        {
+            globalLight.color = nightPeriod.lightingSettings.lightColor;
+            globalLight.intensity = nightPeriod.lightingSettings.lightIntensity;
+        }
+        foreach (var lightObj in allControllableLights)
+        {
+            if (lightObj != null)
+            {
+                bool shouldBeOn = nightPeriod.lightsToEnable.Contains(lightObj);
+                lightObj.SetActive(shouldBeOn);
+                var lightSource = lightObj.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
+                if(lightSource != null) lightSource.intensity = shouldBeOn ? 1f : 0f;
+            }
+        }
+        
+        StartNewPeriod(false);
+    }
+    else
+    {
+        Debug.LogWarning("Период с именем 'Ночь' не найден. Игра начнется с первого периода в списке.");
+        currentPeriodIndex = -1;
+        GoToNextPeriod();
+    }
+	StartCoroutine(PeriodicShiftCheckRoutine());
+}
     
     void Update()
 {
-    if (Input.GetKeyDown(KeyCode.Space)) 
-    {
-        // Проверяем, открыт ли стол директора или другие важные панели
-        bool isDirectorDeskOpen = StartOfDayPanel.Instance != null && StartOfDayPanel.Instance.gameObject.activeInHierarchy;
-        // Сюда можно добавить проверки других панелей, которые должны блокировать паузу
-        bool isAnyOtherMajorPanelOpen = false; 
-        
-        if (isDirectorDeskOpen || isAnyOtherMajorPanelOpen)
-        {
-            // Если открыт стол директора или другая важная панель, ничего не делаем
-        }
-        else
-        {
-            // Если мы на главном игровом экране, вызываем централизованную логику паузы
-            bool isPaused = Time.timeScale == 0f;
-            MainUIManager.Instance?.ShowPausePanel(!isPaused);
-        }
-    }
+    
     
     // Если игра на паузе, остальная логика Update не выполняется
     if (Time.timeScale == 0f) return;
@@ -241,7 +232,7 @@ public class ClientSpawner : MonoBehaviour
         bool isNightTime = nightPeriodNames.Any(p => p.Equals(periodNameLower, System.StringComparison.InvariantCultureIgnoreCase));
         ToggleStaffLights(isNightTime);
 
-        UpdateAllStaffShifts(periodNameLower);
+        //UpdateAllStaffShifts(periodNameLower);
         HandleSpecialPeriodLogic(periodNameLower, newPeriod.durationInSeconds);
         
         if (directorClientSpawnPeriods.Contains(currentPeriodIndex))
@@ -339,22 +330,38 @@ public class ClientSpawner : MonoBehaviour
         }
     }
     
-    void UpdateAllStaffShifts(string currentPeriodName)
+void UpdateAllStaffShifts(string currentPeriodName)
+{
+    // --- <<< ГЛАВНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ >>> ---
+    // Больше не ищем объекты, а берем готовый список у главного по кадрам.
+    var allStaffOnScene = HiringManager.Instance.AllStaff;
+    // ------------------------------------
+
+    foreach (var staffMember in allStaffOnScene)
     {
-        var allStaffOnScene = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
-        foreach (var staffMember in allStaffOnScene)
+        // Проверяем, что сотрудник не был уничтожен в процессе
+        if (staffMember == null) continue;
+
+        bool shouldWork = staffMember.workPeriods.Any(p => p.Equals(currentPeriodName, System.StringComparison.InvariantCultureIgnoreCase));
+        
+        if (shouldWork && !staffMember.IsOnDuty())
         {
-            bool shouldWork = staffMember.workPeriods.Any(p => p.Equals(currentPeriodName, System.StringComparison.InvariantCultureIgnoreCase));
-            if (shouldWork && !staffMember.IsOnDuty())
+            staffMember.StartShift();
+        }
+        else if (!shouldWork && staffMember.IsOnDuty())
+        {
+            staffMember.EndShift();
+        }
+        else if (!shouldWork && !staffMember.IsOnDuty())
+        {
+            var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
+            if (homeZone != null && !homeZone.GetComponent<Collider2D>().bounds.Contains(staffMember.transform.position))
             {
-                staffMember.StartShift();
-            }
-            else if (!shouldWork && staffMember.IsOnDuty())
-            {
-                staffMember.EndShift();
+                staffMember.GoHome();
             }
         }
     }
+}
 
     void HandleSpecialPeriodLogic(string periodNameLower, float duration)
     {
@@ -523,6 +530,27 @@ public class ClientSpawner : MonoBehaviour
         } 
     }
     
+private IEnumerator PeriodicShiftCheckRoutine()
+{
+    // Ждем несколько секунд после запуска сцены, чтобы все успело прогрузиться
+    yield return new WaitForSeconds(3f);
+    
+    while (true)
+    {
+        // Получаем имя текущего периода
+        string currentPeriodName = GetCurrentPeriod()?.periodName;
+        if (!string.IsNullOrEmpty(currentPeriodName))
+        {
+            // Вызываем нашу универсальную проверку смен
+            UpdateAllStaffShifts(currentPeriodName);
+        }
+
+        // Ждем до следующей проверки
+        yield return new WaitForSeconds(shiftCheckInterval);
+    }
+}
+	
+	
     IEnumerator FadeLight(GameObject lightObject, bool turnOn) 
     { 
         var lightSource = lightObject.GetComponent<UnityEngine.Rendering.Universal.Light2D>();

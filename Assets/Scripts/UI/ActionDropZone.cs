@@ -1,19 +1,33 @@
-// Файл: ActionDropZone.cs
+// Файл: UI/ActionDropZone.cs --- ФИНАЛЬНАЯ ВЕРСИЯ ---
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class ActionDropZone : MonoBehaviour, IDropHandler
 {
-    // Этот метод вызывается, когда на объект с этим скриптом "бросают" другой объект
+    public enum ZoneType { Available, Active }
+    public ZoneType type;
+    public ActionConfigPopupUI popupController;
+
+    // --- НОВОЕ ПОЛЕ: Ссылка на контейнер, КУДА нужно помещать иконки ---
+    public Transform contentContainer;
+
     public void OnDrop(PointerEventData eventData)
     {
-        GameObject droppedObject = eventData.pointerDrag; // Получаем объект, который мы тащили
-        ActionIconUI icon = droppedObject.GetComponent<ActionIconUI>();
+        // Проверяем, что все ссылки на месте, включая новую
+        if (popupController == null || contentContainer == null) return;
 
+        ActionIconUI icon = eventData.pointerDrag.GetComponent<ActionIconUI>();
         if (icon != null)
         {
-            // Устанавливаем родителя иконки на этот объект (наш контейнер)
-            icon.transform.SetParent(this.transform);
+            if (this.type == ZoneType.Active && !popupController.CanAddAction())
+            {
+                return;
+            }
+
+            // --- ИЗМЕНЕНИЕ: Теперь мы делаем иконку дочерней для ПРАВИЛЬНОГО контейнера ---
+            icon.transform.SetParent(contentContainer);
+            
+            popupController.OnActionDropped(icon.actionData, this.type);
         }
     }
 }

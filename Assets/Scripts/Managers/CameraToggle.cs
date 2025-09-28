@@ -50,6 +50,10 @@ public class CameraToggle : MonoBehaviour
 
     void LateUpdate()
     {
+		if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+    {
+        return;
+    }
         float scrollInput = Input.GetAxis("Mouse ScrollWheel");
         if (scrollInput > 0f)
         {

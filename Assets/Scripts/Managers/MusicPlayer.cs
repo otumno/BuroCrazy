@@ -106,7 +106,7 @@ public class MusicPlayer : MonoBehaviour
     {
         if (!isGameplayMusicActive) return;
         isGameplayMusicActive = false;
-        if(gameplaySource) gameplaySource.Stop();
+        if(gameplaySource) gameplaySource.Pause();
         PlayUiTrack(directorsOfficeTheme);
     }
 
@@ -119,11 +119,23 @@ public class MusicPlayer : MonoBehaviour
     }
     
     public void StartGameplayMusic() 
+{
+    isGameplayMusicActive = true;
+    if(uiSource) uiSource.Pause();
+    if(lowPassFilter != null) lowPassFilter.enabled = true;
+    
+    // --- НОВАЯ УМНАЯ ЛОГИКА ---
+    // Если в плеере уже есть трек, и он просто стоит на паузе,
+    if (gameplaySource.clip != null && !gameplaySource.isPlaying && gameplaySource.time > 0)
     {
-        isGameplayMusicActive = true;
-        if(uiSource) uiSource.Stop();
+        // ...то мы просто снимаем его с паузы.
+        gameplaySource.UnPause();
+    }
+    else // А если нет — запускаем новый, как и раньше.
+    {
         PlayCorrectTrackForCurrentTime();
     }
+}
     
     public void RequestNextTrack()
     {
@@ -152,6 +164,8 @@ public class MusicPlayer : MonoBehaviour
     private void PlayUiTrack(AudioClip clip)
     {
         if (uiSource == null || clip == null) return;
+		
+		if (lowPassFilter != null) lowPassFilter.enabled = false;
 
         if (uiSource.clip == clip && !uiSource.isPlaying)
         {
@@ -218,7 +232,7 @@ public class MusicPlayer : MonoBehaviour
             
             float currentVol = Mathf.Lerp(startVol, targetVol, progress);
             if(gameplaySource) gameplaySource.volume = currentVol;
-            if(uiSource) uiSource.volume = currentVol;
+            //if(uiSource) uiSource.volume = currentVol;
 
             if (lowPassFilter != null) 
             {

@@ -200,6 +200,17 @@ public class AgentMover : MonoBehaviour
         if (this.path != null && this.path.Count > 0)
         {
             pathAnchor = transform.position;
+            
+            // --- ДОБАВЛЕНО: Логирование и Визуализация ---
+            Debug.Log($"<color=cyan>[AgentMover]</color> {gameObject.name} получил новый путь из {path.Count} точек.");
+            // Рисуем полученный путь зелеными линиями на 10 секунд
+            Vector3 previousPoint = transform.position;
+            foreach(var waypoint in path)
+            {
+                Debug.DrawLine(previousPoint, waypoint.transform.position, Color.green, 10f);
+                previousPoint = waypoint.transform.position;
+            }
+            // ------------------------------------
         }
     }
 

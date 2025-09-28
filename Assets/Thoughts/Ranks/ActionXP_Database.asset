@@ -35,5 +35,11 @@ MonoBehaviour:
     xpGranted: 10
   - actionType: 10
     xpGranted: 10
+  - actionType: 11
+    xpGranted: 10
+  - actionType: 12
+    xpGranted: 10
+  - actionType: 13
+    xpGranted: 10
   - actionType: 10
     xpGranted: 0

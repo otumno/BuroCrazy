@@ -1,24 +1,48 @@
-// Файл: RoleData.cs
+// Файл: Scripts/Data/RoleData.cs
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "RoleData_New", menuName = "Bureau/Role Data")]
 public class RoleData : ScriptableObject
 {
-    [Header("Идентификация")]
+    [Header("Идентификация и Базовые Параметры")]
     public StaffController.Role roleType;
-
-    [Header("Параметры Agent Mover")]
     public float moveSpeed = 3f;
     public int priority = 1;
-
+    
     [Header("Внешний вид")]
-    [Tooltip("Набор спрайтов (униформа) для этой роли")]
     public EmotionSpriteCollection spriteCollection;
-    [Tooltip("Карта состояний и эмоций для этой роли")]
     public StateEmotionMap stateEmotionMap;
-    [Tooltip("Префаб аксессуара для этой роли (необязательно)")]
     public GameObject accessoryPrefab;
     
-    // Сюда можно добавлять любые другие параметры, специфичные для роли,
-    // например, chaseSpeedMultiplier для охранника.
+    [Header("Анимация ходьбы")]
+    public Sprite idleSprite;
+    public Sprite walkSprite1;
+    public Sprite walkSprite2;
+
+    // --- НАШИ НОВЫЕ РАЗДЕЛЫ ---
+
+    [Header("Специфика Охранника (Guard)")]
+    public float guard_minWaitTime = 1f;
+    public float guard_maxWaitTime = 3f;
+    public float guard_chaseSpeedMultiplier = 1.5f;
+    public float guard_talkTime = 3f;
+    public float guard_timeInToilet = 15f;
+    public float guard_maxStress = 100f;
+    public float guard_stressGainPerViolator = 25f;
+    public float guard_stressReliefRate = 10f;
+
+    [Header("Специфика Клерка (Clerk)")]
+    public float clerk_timeInToilet = 10f;
+    public float clerk_clientArrivalTimeout = 16f;
+    public float clerk_maxStress = 100f;
+    public float clerk_stressGainPerClient = 5f;
+    public float clerk_stressReliefRate = 10f;
+    
+    [Header("Специфика Уборщика (Service Worker)")]
+    public float worker_cleaningTimeTrash = 2f;
+    public float worker_cleaningTimePuddle = 4f;
+    public float worker_cleaningTimePerDirtLevel = 1.5f;
+    public float worker_maxStress = 100f;
+    public float worker_stressGainPerMess = 2f;
+    public float worker_stressReliefRate = 10f;
 }

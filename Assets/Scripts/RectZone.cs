@@ -21,4 +21,12 @@ public class RectZone : MonoBehaviour
         Vector3 bottomRight = new Vector3(center.x + width / 2, center.y - height / 2, 0);
         Gizmos.DrawWireCube(new Vector3(center.x, center.y, 0), new Vector3(width, height, 0));
     }
+	
+	public Vector2 GetRandomPointInside()
+{
+    float randomX = Random.Range(center.x - width / 2, center.x + width / 2);
+    float randomY = Random.Range(center.y - height / 2, center.y + height / 2);
+    return new Vector2(randomX, randomY);
+}
+	
 }

@@ -1,3 +1,4 @@
+// Файл: Scripts/Characters/Controllers/InternController.cs --- ПОЛНАЯ ОБНОВЛЕННАЯ ВЕРСИЯ ---
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,13 +15,37 @@ public class InternController : StaffController
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;
     
-    [Header("Внешний вид")]
-    public EmotionSpriteCollection spriteCollection;
-    public StateEmotionMap stateEmotionMap;
-    
     private Transform currentPatrolTarget;
     private StackHolder stackHolder;
-    // --- Поля 'visuals' и 'patrolPoints' удалены, так как они теперь в базовом классе StaffController ---
+    
+    // <<< --- НОВЫЙ МЕТОД: Инициализация для соответствия архитектуре --- >>>
+    public void InitializeFromData(RoleData data)
+    {
+        var mover = GetComponent<AgentMover>();
+        if (mover != null)
+        {
+            mover.moveSpeed = data.moveSpeed;
+            mover.priority = data.priority;
+            mover.idleSprite = data.idleSprite;
+            mover.walkSprite1 = data.walkSprite1;
+            mover.walkSprite2 = data.walkSprite2;
+        }
+        
+        this.spriteCollection = data.spriteCollection;
+        this.stateEmotionMap = data.stateEmotionMap;
+        this.visuals?.EquipAccessory(data.accessoryPrefab);
+        
+        // Для стажера нет уникальных параметров поведения в RoleData,
+        // поэтому эта часть остается пустой, но сам метод важен для единообразия.
+    }
+
+public override bool IsOnBreak()
+{
+    return currentState == InternState.OnBreak ||
+           currentState == InternState.GoingToBreak ||
+           currentState == InternState.AtToilet ||
+           currentState == InternState.GoingToToilet;
+}
 
     protected override void Awake()
     {
@@ -30,9 +55,8 @@ public class InternController : StaffController
 
     protected override void Start()
     {
-        base.Start(); // Вызывает Start() из StaffController, который запускает инициализацию
-        
-        // --- Настройка скиллов по умолчанию для стажера ---
+        base.Start();
+        // Устанавливаем базовые навыки по умолчанию при первом создании
         if (skills != null)
         {
             skills.paperworkMastery = 0.5f;
@@ -40,48 +64,47 @@ public class InternController : StaffController
             skills.softSkills = 0.75f;
             skills.corruption = 0.0f;
         }
-
         SetState(InternState.Inactive);
     }
     
-    // --- "МОЗГ" СТАЖЁРА: РЕАЛИЗАЦИЯ МЕТОДОВ ИЗ STAFFCONTROLLER ---
-
-    protected override bool TryExecuteAction(ActionType actionType)
+    protected override bool CanExecuteActionConditions(ActionType actionType)
+{
+    switch (actionType)
     {
-        // "Диспетчер" для стажера. Проверяет, можно ли запустить то или иное действие.
+        case ActionType.HelpConfusedClient:
+            return ClientPathfinding.FindClosestConfusedClient(transform.position) != null;
+        case ActionType.CoverDesk:
+            return ClientSpawner.GetAbsentClerk() != null;
+    }
+    return false;
+}
+protected override IEnumerator ExecuteDefaultAction()
+{
+    // Запускаем патрулирование как действие по умолчанию и ждем его завершения
+    yield return StartCoroutine(PatrolRoutine());
+}
+    
+    protected override IEnumerator ExecuteActionCoroutine(ActionType actionType)
+    {
         switch (actionType)
         {
             case ActionType.HelpConfusedClient:
                 var confusedClient = ClientPathfinding.FindClosestConfusedClient(transform.position);
                 if (confusedClient != null)
                 {
-                    currentAction = StartCoroutine(HelpConfusedClientRoutine(confusedClient));
-                    return true; // Действие можно выполнить
+                    yield return StartCoroutine(HelpConfusedClientRoutine(confusedClient));
                 }
-                return false; // Не найдено потерявшихся клиентов
-
+                break;
             case ActionType.CoverDesk:
                 var absentClerk = ClientSpawner.GetAbsentClerk();
-                // TODO: Добавить проверку, что клерка еще не подменяют
                 if (absentClerk != null) 
                 {
-                    currentAction = StartCoroutine(CoverDeskRoutine(absentClerk));
-                    return true; // Действие можно выполнить
+                    yield return StartCoroutine(CoverDeskRoutine(absentClerk));
                 }
-                return false; // Нет отсутствующих клерков
-            
-            // TODO: Добавить сюда case'ы для DeliverDocuments и ServeFromQueue, когда мы их реализуем
+                break;
         }
-        return false;
+		currentAction = null;
     }
-
-    protected override void ExecuteDefaultAction()
-    {
-        // Если других дел нет, стажер просто патрулирует
-        currentAction = StartCoroutine(PatrolRoutine());
-    }
-
-    // --- РЕАЛИЗАЦИЯ ПОВЕДЕНИЯ (КОРУТИНЫ) ---
 
     private IEnumerator HelpConfusedClientRoutine(ClientPathfinding client)
     {
@@ -93,10 +116,9 @@ public class InternController : StaffController
             yield return new WaitForSeconds(1f);
             Waypoint correctGoal = DetermineCorrectGoalFor(client);
             client.stateMachine.GetHelpFromIntern(correctGoal);
-			ExperienceManager.Instance?.GrantXP(this, ActionType.HelpConfusedClient);
+            ExperienceManager.Instance?.GrantXP(this, ActionType.HelpConfusedClient);
         }
-        
-        currentAction = null; // Завершаем действие
+        currentAction = null;
     }
     
     private IEnumerator CoverDeskRoutine(ClerkController clerk)
@@ -109,12 +131,9 @@ public class InternController : StaffController
 
         SetState(InternState.CoveringDesk);
         yield return StartCoroutine(MoveToTarget(clerk.assignedServicePoint.clerkStandPoint.position, InternState.Working));
-        
-        // Ждем, пока клерк не вернется
         yield return new WaitUntil(() => clerk == null || !clerk.IsOnBreak());
-
-		ExperienceManager.Instance?.GrantXP(this, ActionType.CoverDesk);
-        currentAction = null; // Завершаем действие
+        ExperienceManager.Instance?.GrantXP(this, ActionType.CoverDesk);
+        currentAction = null;
     }
 
     private IEnumerator PatrolRoutine()
@@ -126,16 +145,15 @@ public class InternController : StaffController
             yield return StartCoroutine(MoveToTarget(currentPatrolTarget.position, InternState.Patrolling));
         }
         yield return new WaitForSeconds(Random.Range(2f, 5f));
-        currentAction = null; // Завершаем действие
+        currentAction = null;
     }
 
     public override void GoOnBreak(float duration)
     {
-        // TODO: Реализовать логику перерыва
-        Debug.Log($"{characterName} уходит на перерыв.");
+        // Для стажеров перерыв может быть реализован как патруль или ничегонеделание
+        Debug.Log($"{characterName} (стажер) уходит на перерыв.");
+        currentAction = StartCoroutine(PatrolRoutine()); // Например, просто патрулирует
     }
-
-    // --- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
 
     private IEnumerator MoveToTarget(Vector2 targetPosition, InternState stateOnArrival)
     {
@@ -146,8 +164,9 @@ public class InternController : StaffController
     
     private void SelectNewPatrolPoint() 
     { 
-        if (patrolPoints == null || patrolPoints.Count == 0) return;
-        currentPatrolTarget = patrolPoints[Random.Range(0, patrolPoints.Count)]; 
+        var points = ScenePointsRegistry.Instance?.internPatrolPoints;
+        if (points == null || !points.Any()) return;
+        currentPatrolTarget = points[Random.Range(0, points.Count)];
     }
     
     private Waypoint DetermineCorrectGoalFor(ClientPathfinding client)
@@ -181,62 +200,63 @@ public class InternController : StaffController
     {
         if (currentState == newState) return;
         currentState = newState;
-        logger?.LogState(newState.ToString());
+        logger?.LogState(GetStatusInfo());
         visuals?.SetEmotionForState(newState);
     }
 
-public InternState GetCurrentState()
-{
-    return currentState;
-}
+    public InternState GetCurrentState()
+    {
+        return currentState;
+    }
+    
+    public override string GetStatusInfo()
+    {
+        return currentState.ToString();
+    }
 
-    // --- РЕАЛИЗАЦИЯ ПОИСКА ПУТИ (A*) ---
-    // Этот метод требуется базовым классом
     protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
+        // ... (логика поиска пути) ...
         var path = new Queue<Waypoint>();
         var allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
         if (allWaypoints.Length == 0) return path;
-
-        Waypoint startNode = FindNearestVisibleWaypoint(transform.position, allWaypoints);
-        Waypoint endNode = FindNearestVisibleWaypoint(targetPos, allWaypoints);
+        Waypoint startNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(transform.position, wp.transform.position)).FirstOrDefault();
+        Waypoint endNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(targetPos, wp.transform.position)).FirstOrDefault();
         if (startNode == null || endNode == null) return path;
         
-        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
-        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
-        List<Waypoint> unvisited = new List<Waypoint>();
+        var distances = new Dictionary<Waypoint, float>();
+        var previous = new Dictionary<Waypoint, Waypoint>();
+        var unvisited = new List<Waypoint>(allWaypoints.Where(wp => wp != null));
 
+        foreach (var wp in unvisited)
+        {
+            distances[wp] = float.MaxValue;
+            previous[wp] = null;
+        }
         distances[startNode] = 0;
         
-        foreach (var wp in allWaypoints)
-        {
-            if (wp != startNode)
-            {
-                distances[wp] = float.MaxValue;
-                previous[wp] = null;
-            }
-            unvisited.Add(wp);
-        }
-
         while (unvisited.Count > 0)
         {
-            unvisited.Sort((a, b) => distances[a].CompareTo(distances[b]));
+            unvisited.Sort((a,b) => distances[a].CompareTo(distances[b]));
             Waypoint current = unvisited[0];
             unvisited.Remove(current);
 
             if (current == endNode)
             {
-                ReconstructPath(previous, endNode, path);
+                var pathList = new List<Waypoint>();
+                for (Waypoint at = endNode; at != null; at = previous.ContainsKey(at) ? previous[at] : null) { pathList.Add(at); }
+                pathList.Reverse();
+                path.Clear();
+                foreach(var wp in pathList) { path.Enqueue(wp); }
                 return path;
             }
 
+            if (current.neighbors == null) continue;
             foreach (var neighbor in current.neighbors)
             {
-                if (neighbor == null) continue;
-                if (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag)) continue;
-
+                if (neighbor == null || (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag))) continue;
                 float alt = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
-                if (alt < distances[neighbor])
+                if (distances.ContainsKey(neighbor) && alt < distances[neighbor])
                 {
                     distances[neighbor] = alt;
                     previous[neighbor] = current;
@@ -244,41 +264,5 @@ public InternState GetCurrentState()
             }
         }
         return path;
-    }
-
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
-    {
-        List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous.ContainsKey(at) ? previous[at] : null)
-        {
-            pathList.Add(at);
-        }
-        pathList.Reverse();
-        path.Clear();
-        foreach (var wp in pathList)
-        {
-            path.Enqueue(wp);
-        }
-    }
-
-    private Waypoint FindNearestVisibleWaypoint(Vector2 position, Waypoint[] wps)
-    {
-        Waypoint bestWaypoint = null;
-        float minDistance = float.MaxValue;
-        foreach (var wp in wps)
-        {
-            if (wp == null) continue;
-            float distance = Vector2.Distance(position, wp.transform.position);
-            if (distance < minDistance)
-            {
-                RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles"));
-                if (hit.collider == null)
-                {
-                    minDistance = distance;
-                    bestWaypoint = wp;
-                }
-            }
-        }
-        return bestWaypoint;
     }
 }

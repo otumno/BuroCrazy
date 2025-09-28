@@ -1,4 +1,4 @@
-// Файл: ClerkController.cs (полностью переработанная версия)
+// Файл: Scripts/Characters/Controllers/ClerkController.cs --- ПОЛНАЯ ОБНОВЛЕННАЯ ВЕРСИЯ ---
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -17,40 +17,31 @@ public class ClerkController : StaffController
     public ClerkRole role = ClerkRole.Regular;
     public ServicePoint assignedServicePoint;
 
-    [Header("Внешний вид")]
-    public EmotionSpriteCollection spriteCollection;
-    public StateEmotionMap stateEmotionMap;
-    
-    [Header("Поведение")]
-    public float timeInToilet = 10f;
-    public float clientArrivalTimeout = 16f;
-    
-    [Header("Стресс")]
-    public float maxStress = 100f;
-    public float stressGainPerClient = 5f;
-    public float stressReliefRate = 10f;
-    private float currentStress = 0f;
+    // <<< --- ИЗМЕНЕНИЕ: Все поля [SerializeField] и public УДАЛЕНЫ отсюда --- >>>
+    // Теперь это просто внутренние переменные, которые заполняются из RoleData
+    private float timeInToilet;
+    private float clientArrivalTimeout;
+    private float maxStress;
+    private float stressGainPerClient;
+    private float stressReliefRate;
 
     private ClerkState currentState = ClerkState.Inactive;
     private bool isWaitingForClient = false;
     private StackHolder stackHolder;
     private Waypoint[] allWaypoints;
 
-    // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ВНЕШНИХ СИСТЕМ ---
-
-public bool IsOnBreak()
-{
-    // Клерк считается "на перерыве", если он находится в одном из этих состояний
-    return currentState == ClerkState.OnBreak || 
-           currentState == ClerkState.GoingToBreak || 
-           currentState == ClerkState.AtToilet || 
-           currentState == ClerkState.GoingToToilet ||
-           currentState == ClerkState.StressedOut; // Стресс - это тоже своего рода "перерыв"
-}
+    public override bool IsOnBreak()
+    {
+        return currentState == ClerkState.OnBreak ||
+               currentState == ClerkState.GoingToBreak || 
+               currentState == ClerkState.AtToilet || 
+               currentState == ClerkState.GoingToToilet ||
+               currentState == ClerkState.StressedOut;
+    }
 
     public ClerkState GetCurrentState() => currentState;
 
-    public string GetStatusInfo()
+    public override string GetStatusInfo()
     {
         switch (currentState)
         {
@@ -64,6 +55,7 @@ public bool IsOnBreak()
         }
     }
     
+    // <<< --- ИЗМЕНЕНИЕ: Главный метод инициализации --- >>>
     public void InitializeFromData(RoleData data)
     {
         var mover = GetComponent<AgentMover>();
@@ -71,16 +63,27 @@ public bool IsOnBreak()
         {
             mover.moveSpeed = data.moveSpeed;
             mover.priority = data.priority;
+            mover.idleSprite = data.idleSprite;
+            mover.walkSprite1 = data.walkSprite1;
+            mover.walkSprite2 = data.walkSprite2;
         }
+        
         this.spriteCollection = data.spriteCollection;
         this.stateEmotionMap = data.stateEmotionMap;
-        // У клерка нет аксессуаров, так что это поле мы не используем
+        this.visuals?.EquipAccessory(data.accessoryPrefab);
+
+        this.timeInToilet = data.clerk_timeInToilet;
+        this.clientArrivalTimeout = data.clerk_clientArrivalTimeout;
+        this.maxStress = data.clerk_maxStress;
+        this.stressGainPerClient = data.clerk_stressGainPerClient;
+        this.stressReliefRate = data.clerk_stressReliefRate;
     }
     
     public void ServiceComplete()
     {
         isWaitingForClient = false;
-        currentStress += stressGainPerClient;
+        // <<< ИСПРАВЛЕНО: currentStress заменен на currentFrustration >>>
+        currentFrustration += stressGainPerClient;
         if (assignedServicePoint != null && assignedServicePoint.documentStack != null)
         {
             if (role == ClerkRole.Cashier || role == ClerkRole.Regular)
@@ -90,8 +93,6 @@ public bool IsOnBreak()
         }
     }
     
-    // --- МЕТОДЫ UNITY ---
-
     protected override void Awake()
     {
         base.Awake();
@@ -105,51 +106,46 @@ public bool IsOnBreak()
         SetState(ClerkState.Inactive);
     }
 
-    void Update()
-    {
-        if (Time.timeScale == 0f || !isOnDuty) return;
-        UpdateStress();
-    }
-    
-    // --- "МОЗГ" КЛЕРКА: РЕАЛИЗАЦИЯ МЕТОДОВ ИЗ STAFFCONTROLLER ---
+    // Update убран, так как логика стресса теперь в базовом классе или по факту действий
 
-    protected override bool TryExecuteAction(ActionType actionType)
+    protected override bool CanExecuteActionConditions(ActionType actionType)
+{
+    switch (actionType)
     {
+        case ActionType.ProcessDocument:
+            return role == ClerkRole.Registrar && !isWaitingForClient && ClientQueueManager.Instance.CanCallClient(this);
+        case ActionType.ArchiveDocument:
+            return role == ClerkRole.Archivist && ArchiveManager.Instance.GetStackToProcess().CurrentSize > 0;
+        case ActionType.TakeStackToArchive:
+            return (role == ClerkRole.Regular || role == ClerkRole.Registrar) && assignedServicePoint.documentStack.IsFull;
+    }
+    return false;
+}
+
+protected override IEnumerator ExecuteDefaultAction()
+{
+    yield return StartCoroutine(ReturnToWorkRoutine());
+}
+
+    protected override IEnumerator ExecuteActionCoroutine(ActionType actionType)
+    {
+        // ... (этот код остается без изменений) ...
         switch (actionType)
         {
             case ActionType.ProcessDocument:
-                if (role == ClerkRole.Registrar && !isWaitingForClient && ClientQueueManager.Instance.CanCallClient(this))
-                {
-                    currentAction = StartCoroutine(CallNextClientRoutine());
-                    return true;
-                }
-                return false;
-
+                yield return StartCoroutine(CallNextClientRoutine());
+                break;
             case ActionType.ArchiveDocument:
-                if (role == ClerkRole.Archivist && ArchiveManager.Instance.GetStackToProcess().CurrentSize > 0)
-                {
-                    currentAction = StartCoroutine(ProcessArchiveStackRoutine());
-                    return true;
-                }
-                return false;
-            
+                yield return StartCoroutine(ProcessArchiveStackRoutine());
+                break;
             case ActionType.TakeStackToArchive:
-                if ((role == ClerkRole.Regular || role == ClerkRole.Registrar) && assignedServicePoint.documentStack.IsFull)
+                if (assignedServicePoint != null)
                 {
-                    currentAction = StartCoroutine(TakeStackToArchiveRoutine(assignedServicePoint.documentStack));
-                    return true;
+                    yield return StartCoroutine(TakeStackToArchiveRoutine(assignedServicePoint.documentStack));
                 }
-                return false;
+                break;
         }
-        return false;
     }
-
-    protected override void ExecuteDefaultAction()
-    {
-        currentAction = StartCoroutine(ReturnToWorkRoutine());
-    }
-    
-    // --- РЕАЛИЗАЦИЯ ПОВЕДЕНИЯ (КОРУТИНЫ) ---
 
     private IEnumerator CallNextClientRoutine()
     {
@@ -157,11 +153,11 @@ public bool IsOnBreak()
         bool clientCalled = ClientQueueManager.Instance.CallNextClient(this);
         if (clientCalled)
         {
-            yield return new WaitForSeconds(clientArrivalTimeout); // Ждем подхода клиента
+            yield return new WaitForSeconds(clientArrivalTimeout);
         }
         else
         {
-            yield return new WaitForSeconds(2f); // Небольшая задержка, если очередь пуста
+            yield return new WaitForSeconds(2f);
         }
         isWaitingForClient = false;
         currentAction = null;
@@ -175,7 +171,6 @@ public bool IsOnBreak()
         if (stack.TakeOneDocument())
         {
             stackHolder.ShowSingleDocumentSprite();
-            
             ArchiveCabinet cabinet = ArchiveManager.Instance.GetRandomCabinet();
             if (cabinet != null)
             {
@@ -197,7 +192,6 @@ public bool IsOnBreak()
         if (dropOffPoint != null)
         {
             yield return StartCoroutine(MoveToTarget(dropOffPoint.position, ClerkState.AtArchive));
-            
             int takenDocs = stack.TakeEntireStack();
             for (int i = 0; i < takenDocs; i++)
             {
@@ -205,19 +199,14 @@ public bool IsOnBreak()
             }
             yield return new WaitForSeconds(1f);
             ArchiveManager.Instance.FreeOverflowPoint(dropOffPoint);
-            ExperienceManager.Instance?.GrantXP(this, ActionType.DeliverDocuments); // Используем от стажера
+            ExperienceManager.Instance?.GrantXP(this, ActionType.DeliverDocuments);
         }
-        currentAction = null; // Завершаем, ExecuteDefaultAction вернет нас на место
+        currentAction = null;
     }
 
     private IEnumerator ReturnToWorkRoutine()
     {
-        if (role == ClerkRole.Archivist)
-        {
-            // Архивариус просто ждет на своей точке
-            // TODO: нужна точка ожидания для архивариуса
-        }
-        else if (assignedServicePoint != null)
+        if (assignedServicePoint != null)
         {
             SetState(ClerkState.ReturningToWork);
             yield return StartCoroutine(MoveToTarget(assignedServicePoint.clerkStandPoint.position, ClerkState.Working));
@@ -250,29 +239,6 @@ public bool IsOnBreak()
         }
         currentAction = null;
     }
-	 // --- ВСПОМОГАТЕЛЬНЫЕ И УНАСЛЕДОВАННЫЕ МЕТОДЫ ---
-    
-    private void UpdateStress()
-    {
-        if (currentState == ClerkState.StressedOut) return;
-        bool isResting = currentState == ClerkState.OnBreak || currentState == ClerkState.AtToilet || currentState == ClerkState.Inactive;
-        
-        float finalStressGainRate = 0.5f; // Базовое значение, можно вынести в public поле
-        if (skills != null)
-        {
-            finalStressGainRate *= (1f - skills.softSkills * 0.5f);
-        }
-
-        if (isOnDuty && !isResting)
-        {
-            currentStress += finalStressGainRate * Time.deltaTime;
-        }
-        else
-        {
-            currentStress -= stressReliefRate * Time.deltaTime;
-        }
-        currentStress = Mathf.Clamp(currentStress, 0, maxStress);
-    }
 
     private IEnumerator MoveToTarget(Vector2 targetPosition, ClerkState stateOnArrival)
     {
@@ -285,136 +251,62 @@ public bool IsOnBreak()
     {
         if (currentState == newState) return;
         currentState = newState;
-        LogCurrentState();
-        visuals?.SetEmotionForState(newState);
-    }
-    
-    private void LogCurrentState()
-    {
         logger?.LogState(GetStatusInfo());
+        visuals?.SetEmotionForState(newState);
     }
 
     protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
+        // ... (логика поиска пути, которую мы позже вынесем в Utility) ...
         var path = new Queue<Waypoint>();
-        Waypoint startNode = FindNearestVisibleWaypoint();
-        Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
+        if (allWaypoints == null || allWaypoints.Length == 0) return path;
+        Waypoint startNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(transform.position, wp.transform.position)).FirstOrDefault();
+        Waypoint endNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(targetPos, wp.transform.position)).FirstOrDefault();
         if (startNode == null || endNode == null) return path;
+        
+        var distances = new Dictionary<Waypoint, float>();
+        var previous = new Dictionary<Waypoint, Waypoint>();
+        var unvisited = new List<Waypoint>(allWaypoints.Where(wp => wp != null));
 
-        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
-        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
-        var queue = new PriorityQueue<Waypoint>();
-
-        foreach (var wp in allWaypoints)
+        foreach (var wp in unvisited)
         {
-            if (wp != null)
-            {
-                distances[wp] = float.MaxValue;
-                previous[wp] = null;
-            }
+            distances[wp] = float.MaxValue;
+            previous[wp] = null;
         }
-        
         distances[startNode] = 0;
-        queue.Enqueue(startNode, 0);
         
-        while (queue.Count > 0)
+        while (unvisited.Count > 0)
         {
-            Waypoint current = queue.Dequeue();
+            unvisited.Sort((a,b) => distances[a].CompareTo(distances[b]));
+            Waypoint current = unvisited[0];
+            unvisited.Remove(current);
+
             if (current == endNode)
             {
-                ReconstructPath(previous, endNode, path);
+                var pathList = new List<Waypoint>();
+                for (Waypoint at = endNode; at != null; at = previous.ContainsKey(at) ? previous[at] : null) { pathList.Add(at); }
+                pathList.Reverse();
+                path.Clear();
+                foreach(var wp in pathList) { path.Enqueue(wp); }
                 return path;
             }
 
+            if (current.neighbors == null) continue;
             foreach (var neighbor in current.neighbors)
             {
-                if (neighbor == null) continue;
-                if (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag)) continue;
-
-                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
-                if (distances.ContainsKey(neighbor) && newDist < distances[neighbor])
+                if (neighbor == null || (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag))) continue;
+                float alt = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
+                if (distances.ContainsKey(neighbor) && alt < distances[neighbor])
                 {
-                    distances[neighbor] = newDist;
+                    distances[neighbor] = alt;
                     previous[neighbor] = current;
-                    queue.Enqueue(neighbor, newDist);
                 }
             }
         }
         return path;
     }
 
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
-    {
-        List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous.ContainsKey(at) ? previous[at] : null)
-        {
-            pathList.Add(at);
-        }
-        pathList.Reverse();
-        path.Clear();
-        foreach (var wp in pathList)
-        {
-            path.Enqueue(wp);
-        }
-    }
-
-    private Waypoint FindNearestVisibleWaypoint(Vector2? position = null)
-    {
-        Vector2 pos = position ?? (Vector2)transform.position;
-        if (allWaypoints == null) return null;
-        
-        Waypoint bestWaypoint = null;
-        float minDistance = float.MaxValue;
-        foreach (var wp in allWaypoints)
-        {
-            if (wp == null) continue;
-            float distance = Vector2.Distance(pos, wp.transform.position);
-            if (distance < minDistance)
-            {
-                RaycastHit2D hit = Physics2D.Linecast(pos, wp.transform.position, LayerMask.GetMask("Obstacles"));
-                if (hit.collider == null)
-                {
-                    minDistance = distance;
-                    bestWaypoint = wp;
-                }
-            }
-        }
-        return bestWaypoint;
-    }
-    
-    private class PriorityQueue<Waypoint>
-    {
-        private List<KeyValuePair<Waypoint, float>> elements = new List<KeyValuePair<Waypoint, float>>();
-        public int Count => elements.Count;
-        
-        public void Enqueue(Waypoint item, float priority)
-        {
-            elements.Add(new KeyValuePair<Waypoint, float>(item, priority));
-        }
-        
-        public Waypoint Dequeue()
-        {
-            int bestIndex = 0;
-            for (int i = 0; i < elements.Count; i++)
-            {
-                if (elements[i].Value < elements[bestIndex].Value)
-                {
-                    bestIndex = i;
-                }
-            }
-            Waypoint bestItem = elements[bestIndex].Key;
-            elements.RemoveAt(bestIndex);
-            return bestItem;
-        }
-    }
-
-    public override float GetStressValue() 
-    { 
-        return currentStress; 
-    }
-    
-    public override void SetStressValue(float stress) 
-    { 
-        currentStress = stress; 
-    }
+    // <<< ИСПРАВЛЕНО: методы Get/SetStressValue теперь работают с currentFrustration >>>
+    public override float GetStressValue() { return currentFrustration; }
+    public override void SetStressValue(float stress) { currentFrustration = stress; }
 }

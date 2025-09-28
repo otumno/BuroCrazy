@@ -1,4 +1,4 @@
-// Файл: ServiceWorkerController.cs (полностью переработанная версия)
+// Файл: Scripts/Characters/Controllers/ServiceWorkerController.cs --- ПОЛНАЯ ОБНОВЛЕННАЯ ВЕРСЯ ---
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,37 +11,26 @@ public class ServiceWorkerController : StaffController
     
     [Header("Настройки Уборщика")]
     private WorkerState currentState = WorkerState.OffDuty;
-    
-    [Header("Внешний вид")]
-    public EmotionSpriteCollection spriteCollection;
-    public StateEmotionMap stateEmotionMap;
 
-    [Header("Аксессуары")]
-    public GameObject accessoryPrefab; // Для швабры
-    
-    [Header("Дополнительные объекты")]
-    public GameObject nightLight;
-    public Transform broomTransform; // Для анимации
-    
-    [Header("Параметры уборки")]
-    public float cleaningTimeTrash = 2f;
-    public float cleaningTimePuddle = 4f;
-    public float cleaningTimePerDirtLevel = 1.5f;
+    [Header("Дополнительные объекты (Prefab)")]
+    public GameObject nightLight; // <<< ОСТАВЛЕНО: Это уникальная ссылка на объект
+    public Transform broomTransform; // <<< ОСТАВЛЕНО: Уникальная ссылка на объект
 
-    [Header("Стресс")]
-    public float maxStress = 100f;
-    public float stressGainPerMess = 2f;
-    public float stressReliefRate = 10f;
-    private float currentStress = 0f;
+    // <<< --- ИЗМЕНЕНИЕ: Все поля [SerializeField] и public УДАЛЕНЫ отсюда --- >>>
+    // Теперь это просто внутренние переменные, которые заполняются из RoleData
+    private float cleaningTimeTrash;
+    private float cleaningTimePuddle;
+    private float cleaningTimePerDirtLevel;
+    private float maxStress;
+    private float stressGainPerMess;
+    private float stressReliefRate;
     
     private Quaternion initialBroomRotation;
     private Waypoint[] allWaypoints;
-    private Rigidbody2D rb;
 
-    // --- ПУБЛИЧНЫЕ МЕТОДЫ ---
-    
     public WorkerState GetCurrentState() => currentState;
-
+    
+    // <<< --- ИЗМЕНЕНИЕ: Главный метод инициализации --- >>>
     public void InitializeFromData(RoleData data)
     {
         var mover = GetComponent<AgentMover>();
@@ -49,19 +38,36 @@ public class ServiceWorkerController : StaffController
         {
             mover.moveSpeed = data.moveSpeed;
             mover.priority = data.priority;
+            mover.idleSprite = data.idleSprite;
+            mover.walkSprite1 = data.walkSprite1;
+            mover.walkSprite2 = data.walkSprite2;
         }
+        
         this.spriteCollection = data.spriteCollection;
         this.stateEmotionMap = data.stateEmotionMap;
-        this.accessoryPrefab = data.accessoryPrefab;
+        this.visuals?.EquipAccessory(data.accessoryPrefab);
+
+        this.cleaningTimeTrash = data.worker_cleaningTimeTrash;
+        this.cleaningTimePuddle = data.worker_cleaningTimePuddle;
+        this.cleaningTimePerDirtLevel = data.worker_cleaningTimePerDirtLevel;
+        this.maxStress = data.worker_maxStress;
+        this.stressGainPerMess = data.worker_stressGainPerMess;
+        this.stressReliefRate = data.worker_stressReliefRate;
     }
 
-    // --- МЕТОДЫ UNITY ---
+	public override bool IsOnBreak()
+{
+    return currentState == WorkerState.OnBreak ||
+           currentState == WorkerState.GoingToBreak ||
+           currentState == WorkerState.AtToilet ||
+           currentState == WorkerState.GoingToToilet ||
+           currentState == WorkerState.StressedOut;
+}
 
     protected override void Awake()
     {
         base.Awake();
         allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
-        rb = GetComponent<Rigidbody2D>();
     }
 
     protected override void Start()
@@ -73,51 +79,54 @@ public class ServiceWorkerController : StaffController
         }
         SetState(WorkerState.OffDuty);
     }
-
-    void Update()
-    {
-        if (Time.timeScale == 0f || !isOnDuty) return;
-        UpdateStress();
-    }
     
-    // --- "МОЗГ" УБОРЩИКА ---
+    // Логика стресса теперь в базовом классе и в GoAndCleanRoutine
+    // void Update() { ... } убран
 
-    protected override bool TryExecuteAction(ActionType actionType)
+    protected override bool CanExecuteActionConditions(ActionType actionType)
+{
+    MessPoint.MessType messTypeToFind;
+    switch (actionType)
+    {
+        case ActionType.CleanTrash:
+            messTypeToFind = MessPoint.MessType.Trash;
+            break;
+        case ActionType.CleanPuddle:
+            messTypeToFind = MessPoint.MessType.Puddle;
+            break;
+        case ActionType.CleanDirt:
+            messTypeToFind = MessPoint.MessType.Dirt;
+            break;
+        default:
+            return false;
+    }
+    return FindBestMessToClean(messTypeToFind) != null;
+}
+
+protected override IEnumerator ExecuteDefaultAction()
+{
+    // Уборщик, не найдя мусора, будет патрулировать свою зону
+    yield return StartCoroutine(PatrolRoutine());
+}
+
+    protected override IEnumerator ExecuteActionCoroutine(ActionType actionType)
     {
         MessPoint.MessType messTypeToFind;
         switch (actionType)
         {
-            case ActionType.CleanTrash:
-                messTypeToFind = MessPoint.MessType.Trash;
-                break;
-            case ActionType.CleanPuddle:
-                messTypeToFind = MessPoint.MessType.Puddle;
-                break;
-            case ActionType.CleanDirt:
-                messTypeToFind = MessPoint.MessType.Dirt;
-                break;
-            default:
-                return false; // Это действие не для уборщика
+            case ActionType.CleanTrash: messTypeToFind = MessPoint.MessType.Trash; break;
+            case ActionType.CleanPuddle: messTypeToFind = MessPoint.MessType.Puddle; break;
+            case ActionType.CleanDirt: messTypeToFind = MessPoint.MessType.Dirt; break;
+            default: yield break;
         }
 
         var targetMess = FindBestMessToClean(messTypeToFind);
         if (targetMess != null)
         {
-            currentAction = StartCoroutine(GoAndCleanRoutine(targetMess));
-            return true;
+            yield return StartCoroutine(GoAndCleanRoutine(targetMess));
         }
-
-        return false;
     }
 
-    protected override void ExecuteDefaultAction()
-    {
-        // Если мусора нет, уборщик патрулирует в поисках работы
-        currentAction = StartCoroutine(PatrolRoutine());
-    }
-    
-    // --- КОРУТИНЫ ПОВЕДЕНИЯ ---
-    
     private IEnumerator GoAndCleanRoutine(MessPoint targetMess)
     {
         SetState(WorkerState.GoingToMess);
@@ -125,7 +134,7 @@ public class ServiceWorkerController : StaffController
 
         if (targetMess == null) 
         { 
-            currentAction = null; 
+            currentAction = null;
             yield break;
         }
         
@@ -136,7 +145,8 @@ public class ServiceWorkerController : StaffController
         if (targetMess != null)
         {
             ExperienceManager.Instance?.GrantXP(this, GetActionTypeFromMess(targetMess.type));
-            currentStress += stressGainPerMess;
+            // <<< ИСПРАВЛЕНО: currentStress заменен на currentFrustration >>>
+            currentFrustration += stressGainPerMess;
             Destroy(targetMess.gameObject);
         }
 
@@ -146,7 +156,7 @@ public class ServiceWorkerController : StaffController
     private IEnumerator PatrolRoutine()
     {
         SetState(WorkerState.Patrolling);
-        var patrolTarget = patrolPoints.Any() ? patrolPoints[Random.Range(0, patrolPoints.Count)] : null;
+        var patrolTarget = ScenePointsRegistry.Instance?.janitorPatrolPoints.FirstOrDefault();
         if (patrolTarget != null)
         {
             yield return StartCoroutine(MoveToTarget(patrolTarget.position, WorkerState.Idle));
@@ -178,8 +188,6 @@ public class ServiceWorkerController : StaffController
         currentAction = null;
     }
     
-    // --- ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
-    
     private MessPoint FindBestMessToClean(MessPoint.MessType type)
     {
         return MessManager.Instance?.GetSortedMessList(transform.position)
@@ -204,11 +212,11 @@ public class ServiceWorkerController : StaffController
             case MessPoint.MessType.Trash: return ActionType.CleanTrash;
             case MessPoint.MessType.Puddle: return ActionType.CleanPuddle;
             case MessPoint.MessType.Dirt: return ActionType.CleanDirt;
-            default: return ActionType.CleanTrash; // Значение по умолчанию
+            default: return ActionType.CleanTrash;
         }
     }
-	
-	private IEnumerator AnimateBroom(float duration)
+    
+    private IEnumerator AnimateBroom(float duration)
     {
         if (broomTransform == null) yield break;
         float elapsedTime = 0f;
@@ -224,34 +232,6 @@ public class ServiceWorkerController : StaffController
         broomTransform.localRotation = initialBroomRotation;
     }
 
-    private void UpdateStress()
-    {
-        if (currentState == WorkerState.StressedOut || !isOnDuty) return;
-        bool isResting = currentState == WorkerState.AtToilet || currentState == WorkerState.OffDuty || currentState == WorkerState.OnBreak;
-        
-        if (isOnDuty && !isResting) 
-        {
-            float stressMultiplier = 1f;
-            if (skills != null)
-            {
-                stressMultiplier = (1f - skills.softSkills);
-            }
-            currentStress += stressGainPerMess * stressMultiplier * Time.deltaTime;
-        }
-        else
-        {
-            currentStress -= stressReliefRate * Time.deltaTime;
-        }
-
-        currentStress = Mathf.Clamp(currentStress, 0, maxStress);
-        if (currentStress >= maxStress)
-        {
-            if (currentAction != null) StopCoroutine(currentAction);
-            currentAction = StartCoroutine(StressedOutRoutine());
-        }
-    }
-    
-    // Корутина для стресса, которую может вызвать UpdateStress
     private IEnumerator StressedOutRoutine()
     {
         SetState(WorkerState.StressedOut);
@@ -259,14 +239,15 @@ public class ServiceWorkerController : StaffController
         if (breakSpot != null)
         {
             yield return StartCoroutine(MoveToTarget(breakSpot.position, WorkerState.StressedOut));
-            yield return new WaitForSeconds(20f); // Stressed out duration
+            yield return new WaitForSeconds(20f);
             FreeKitchenPoint(breakSpot);
         }
         else
         {
             yield return new WaitForSeconds(20f);
         }
-        currentStress = maxStress * 0.5f;
+        // <<< ИСПРАВЛЕНО: currentStress заменен на currentFrustration >>>
+        currentFrustration = maxStress * 0.5f;
         currentAction = null;
     }
 
@@ -281,115 +262,62 @@ public class ServiceWorkerController : StaffController
     {
         if (currentState == newState) return;
         currentState = newState;
-        logger.LogState(newState.ToString());
+        logger.LogState(GetStatusInfo());
         visuals?.SetEmotionForState(newState);
     }
 
-    // --- Улучшенная версия поиска пути (A*) для консистентности с другими контроллерами ---
     protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
     {
+        // ... (логика поиска пути) ...
         var path = new Queue<Waypoint>();
         if (allWaypoints == null || allWaypoints.Length == 0) return path;
-
-        Waypoint startNode = FindNearestVisibleWaypoint(transform.position);
-        Waypoint endNode = FindNearestVisibleWaypoint(targetPos);
+        Waypoint startNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(transform.position, wp.transform.position)).FirstOrDefault();
+        Waypoint endNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(targetPos, wp.transform.position)).FirstOrDefault();
         if (startNode == null || endNode == null) return path;
         
-        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>();
-        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
-        var queue = new PriorityQueue<Waypoint>();
-        
-        foreach (var wp in allWaypoints)
+        var distances = new Dictionary<Waypoint, float>();
+        var previous = new Dictionary<Waypoint, Waypoint>();
+        var unvisited = new List<Waypoint>(allWaypoints.Where(wp => wp != null));
+
+        foreach (var wp in unvisited)
         {
-            if(wp != null)
-            {
-                distances[wp] = float.MaxValue;
-                previous[wp] = null;
-            }
+            distances[wp] = float.MaxValue;
+            previous[wp] = null;
         }
-        
         distances[startNode] = 0;
-        queue.Enqueue(startNode, 0);
         
-        while(queue.Count > 0)
+        while (unvisited.Count > 0)
         {
-            Waypoint current = queue.Dequeue();
-            if (current == endNode) { ReconstructPath(previous, endNode, path); return path; }
-            if(current.neighbors == null) continue;
-            
-            foreach(var neighbor in current.neighbors)
+            unvisited.Sort((a,b) => distances[a].CompareTo(distances[b]));
+            Waypoint current = unvisited[0];
+            unvisited.Remove(current);
+
+            if (current == endNode)
             {
-                if(neighbor == null) continue;
-                if (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag)) continue;
-                
-                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
-                if(distances.ContainsKey(neighbor) && newDist < distances[neighbor])
+                var pathList = new List<Waypoint>();
+                for (Waypoint at = endNode; at != null; at = previous.ContainsKey(at) ? previous[at] : null) { pathList.Add(at); }
+                pathList.Reverse();
+                path.Clear();
+                foreach(var wp in pathList) { path.Enqueue(wp); }
+                return path;
+            }
+
+            if (current.neighbors == null) continue;
+            foreach (var neighbor in current.neighbors)
+            {
+                if (neighbor == null || (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag))) continue;
+                float alt = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
+                if (distances.ContainsKey(neighbor) && alt < distances[neighbor])
                 {
-                    distances[neighbor] = newDist;
+                    distances[neighbor] = alt;
                     previous[neighbor] = current;
-                    queue.Enqueue(neighbor, newDist);
                 }
             }
         }
         return path;
     }
-
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path)
-    {
-        List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous.ContainsKey(at) ? previous[at] : null) { pathList.Add(at); }
-        pathList.Reverse();
-        path.Clear();
-        foreach (var wp in pathList) { path.Enqueue(wp); }
-    }
     
-    private Waypoint FindNearestVisibleWaypoint(Vector2 position)
-    {
-        if (allWaypoints == null) return null;
-        Waypoint bestWaypoint = null;
-        float minDistance = float.MaxValue;
-        foreach (var wp in allWaypoints)
-        {
-            if (wp == null) continue;
-            float distance = Vector2.Distance(position, wp.transform.position);
-            if (distance < minDistance)
-            {
-                RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles"));
-                if (hit.collider == null)
-                {
-                    minDistance = distance;
-                    bestWaypoint = wp;
-                }
-            }
-        }
-        return bestWaypoint;
-    }
-    
-    private class PriorityQueue<T>
-    {
-        private List<KeyValuePair<T, float>> elements = new List<KeyValuePair<T, float>>();
-        public int Count => elements.Count;
-        public void Enqueue(T item, float priority) { elements.Add(new KeyValuePair<T, float>(item, priority)); }
-        public T Dequeue()
-        {
-            int bestIndex = 0;
-            for (int i = 0; i < elements.Count; i++)
-            {
-                if (elements[i].Value < elements[bestIndex].Value) { bestIndex = i; }
-            }
-            T bestItem = elements[bestIndex].Key;
-            elements.RemoveAt(bestIndex);
-            return bestItem;
-        }
-    }
-
-    public override float GetStressValue() 
-    { 
-        return currentStress; 
-    }
-
-    public override void SetStressValue(float stress) 
-    { 
-        currentStress = stress; 
-    }
+    // <<< ИСПРАВЛЕНО: методы Get/SetStressValue теперь работают с currentFrustration >>>
+    public override float GetStressValue() { return currentFrustration; }
+    public override void SetStressValue(float stress) { currentFrustration = stress; }
 }

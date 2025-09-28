@@ -16,14 +16,15 @@ public class GuardManager : MonoBehaviour
 
     private List<GuardMovement> allGuards = new List<GuardMovement>();
     private HashSet<ClientPathfinding> targetsBeingHandled = new HashSet<ClientPathfinding>();
-    private List<ClientPathfinding> reportedThieves = new List<ClientPathfinding>();
+	private List<ClientPathfinding> reportedThieves = new List<ClientPathfinding>();
+    private List<ClientPathfinding> reportedViolators = new List<ClientPathfinding>();
     private List<ClientPathfinding> clientsToEvict = new List<ClientPathfinding>();
     
     private string lastCheckedPeriodName = "";
     private bool morningTaskAssigned = false;
     private bool nightTaskAssigned = false;
 
-    void Awake()
+void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); }
         else { Instance = this; }
@@ -36,22 +37,81 @@ public class GuardManager : MonoBehaviour
 
     void Update()
     {
-        targetsBeingHandled.RemoveWhere(client => client == null || client.stateMachine.GetCurrentState() != ClientState.Enraged);
-        ManageChasing();
-        ManageTheftIntervention();
-        ManageEvictions();
+        // Убираем из "занятых" тех, кто уже не является целью (например, успокоился или ушел)
+        targetsBeingHandled.RemoveWhere(client => client == null || 
+                                           (client.stateMachine.GetCurrentState() != ClientState.Enraged && 
+                                            client.reasonForLeaving != ClientPathfinding.LeaveReason.Theft));
+        
+        // Старые методы ManageChasing, ManageTheftIntervention и т.д. нам больше не нужны,
+        // так как логика теперь работает через "мозг" охранника.
+        // Оставляем только управление барьером.
         ManageBarrierTasks();
     }
     
     public void ReportTheft(ClientPathfinding thief)
     {
-        if (!reportedThieves.Contains(thief) && !targetsBeingHandled.Contains(thief))
+        if (thief != null && !targetsBeingHandled.Contains(thief))
         {
-            Debug.Log($"[GuardManager] Получено сообщение о попытке кражи клиентом {thief.name}!");
-            reportedThieves.Add(thief);
+            Debug.Log($"[GuardManager] ПОЛУЧЕН СИГНАЛ: Кража от {thief.name}!");
+            
+            // Находим ЛЮБОГО охранника на смене (даже если он занят патрулем)
+            GuardMovement guard = FindBestGuardForTask(thief.transform.position);
+            if (guard != null)
+            {
+                targetsBeingHandled.Add(thief);
+                guard.InterruptWithNewTask(thief, true); // Вызываем прерывание
+            }
         }
     }
 
+private GuardMovement FindBestGuardForTask(Vector3 targetPosition)
+    {
+        // Ищем ближайшего охранника, который:
+        // 1. Существует и активен (g != null)
+        // 2. Находится на смене (g.IsOnDuty())
+        // 3. НЕ находится на перерыве или в туалете (!g.IsOnBreak())
+        return allGuards
+            .Where(g => g != null && g.IsOnDuty() && !g.IsOnBreak()) 
+            .OrderBy(g => Vector3.Distance(g.transform.position, targetPosition))
+            .FirstOrDefault();
+    }
+
+
+    public void ReportViolator(ClientPathfinding violator)
+    {
+        if (violator != null && !targetsBeingHandled.Contains(violator))
+        {
+            Debug.Log($"[GuardManager] ПОЛУЧЕН СИГНАЛ: Буйство от {violator.name}!");
+            
+            GuardMovement guard = FindBestGuardForTask(violator.transform.position);
+            if (guard != null)
+            {
+                targetsBeingHandled.Add(violator);
+                guard.InterruptWithNewTask(violator, false); // Вызываем прерывание
+            }
+        }
+    }
+	
+	public ClientPathfinding GetThiefToCatch()
+    {
+        reportedThieves.RemoveAll(t => t == null); // Чистим список от уничтоженных объектов
+        return reportedThieves.FirstOrDefault(t => !targetsBeingHandled.Contains(t));
+    }
+
+    public ClientPathfinding GetViolatorToHandle()
+    {
+        reportedViolators.RemoveAll(v => v == null);
+        return reportedViolators.FirstOrDefault(v => !targetsBeingHandled.Contains(v));
+    }
+	
+	public void AssignTarget(ClientPathfinding target)
+    {
+        if (target != null)
+        {
+            targetsBeingHandled.Add(target);
+        }
+    }
+	
     public void EvictRemainingClients()
     {
         var remainingClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).ToList();
@@ -200,16 +260,6 @@ public class GuardManager : MonoBehaviour
         }
     }
 	
-	/// <summary>
-/// Находит вора, которого еще не пытается поймать другой охранник.
-/// </summary>
-public ClientPathfinding GetThiefToCatch()
-{
-    // Убираем из списка "потерянные" цели
-    reportedThieves.RemoveAll(t => t == null); 
-    // Находим первого вора, которым еще никто не занимается
-    return reportedThieves.FirstOrDefault(t => !targetsBeingHandled.Contains(t));
-}
 
 /// <summary>
 /// Находит клиента для выпроваживания, которым еще не занимается другой охранник.

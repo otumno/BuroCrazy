@@ -1,58 +1,49 @@
-// Файл: ActionIconUI.cs
+// Файл: UI/ActionIconUI.cs --- НОВАЯ ВЕРСИЯ ---
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.EventSystems; // Добавлено для работы с событиями мыши
+using UnityEngine.EventSystems;
 
-// Добавляем интерфейсы для перетаскивания
+[RequireComponent(typeof(CanvasGroup))]
 public class ActionIconUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    [Header("Ссылки на UI")]
     [SerializeField] private TextMeshProUGUI actionNameText;
     [SerializeField] private Image backgroundImage;
-
     public StaffAction actionData { get; private set; }
     
-    // Переменные для процесса перетаскивания
-    private Transform parentAfterDrag;
     private CanvasGroup canvasGroup;
+    private Transform parentBeforeDrag; // Переменная для запоминания "дома"
 
-    private void Awake()
-    {
-        canvasGroup = GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-        {
-            // Добавляем CanvasGroup, если его нет. Он нужен для drag-and-drop.
-            canvasGroup = gameObject.AddComponent<CanvasGroup>();
-        }
-    }
+    private void Awake() { canvasGroup = GetComponent<CanvasGroup>(); }
 
     public void Setup(StaffAction data)
     {
-        // ... (этот метод без изменений)
+        this.actionData = data;
+        if (actionNameText != null) { actionNameText.text = data.displayName; }
     }
 
-    // Вызывается в момент, когда мы "схватили" иконку
     public void OnBeginDrag(PointerEventData eventData)
     {
-        Debug.Log($"Начато перетаскивание: {actionData.displayName}");
-        parentAfterDrag = transform.parent; // Запоминаем, где иконка лежала
-        transform.SetParent(transform.root); // Временно делаем иконку дочерней к Canvas, чтобы она была поверх всего
-        transform.SetAsLastSibling(); // Убеждаемся, что она рисуется последней (поверх всех)
-        canvasGroup.blocksRaycasts = false; // "Отключаем" иконку для мыши, чтобы можно было "увидеть", что под ней
+        canvasGroup.blocksRaycasts = false;
+        parentBeforeDrag = transform.parent; // Запоминаем, откуда нас взяли
+        transform.SetParent(GetComponentInParent<Canvas>().transform, true);
+        transform.SetAsLastSibling();
+        transform.localScale = Vector3.one;
     }
 
-    // Вызывается в каждом кадре, пока мы тащим иконку
     public void OnDrag(PointerEventData eventData)
     {
-        transform.position = Input.mousePosition; // Иконка следует за мышкой
+        transform.position = Input.mousePosition;
     }
 
-    // Вызывается в момент, когда мы "отпустили" иконку
     public void OnEndDrag(PointerEventData eventData)
     {
-        Debug.Log($"Завершено перетаскивание: {actionData.displayName}");
-        transform.SetParent(parentAfterDrag); // Возвращаем иконку на ее последнее место
-        canvasGroup.blocksRaycasts = true; // "Включаем" иконку для мыши обратно
+        canvasGroup.blocksRaycasts = true;
+        // Если после перетаскивания наш родитель все еще Canvas (т.е. мы не попали в DropZone)
+        if (transform.parent == parentBeforeDrag.GetComponentInParent<Canvas>().transform)
+        {
+            // ...то мы возвращаемся "домой".
+            transform.SetParent(parentBeforeDrag);
+        }
     }
 }

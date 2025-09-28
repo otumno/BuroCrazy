@@ -4,6 +4,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.SceneManagement;
+using System.Collections;
 
 [System.Serializable]
 
@@ -38,6 +39,8 @@ public class HiringManager : MonoBehaviour
     private List<string> patronymicsFemale = new List<string> { "Радеоновна", "Петровна", "Ивановна", "Семёновна", "Аркадьевна", "Борисовна", "Геннадьевна" };
 
     public List<Candidate> AvailableCandidates { get; private set; } = new List<Candidate>();
+	
+	private List<StaffController> staffBeingModified = new List<StaffController>();
 
 void Awake()
 {
@@ -152,85 +155,133 @@ public void PromoteStaff(StaffController staff)
 /// <summary>
 /// "Пересадка мозга": меняет роль сотрудника, удаляя старые и добавляя новые компоненты поведения.
 /// </summary>
-public void AssignNewRole(StaffController staff, StaffController.Role newRole)
+/// <summary>
+/// "Пересадка мозга": меняет роль сотрудника, удаляя старые и добавляя новые компоненты поведения.
+/// </summary>
+public Coroutine AssignNewRole(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
 {
-    if (staff.currentRole == newRole) return;
-    GameObject staffGO = staff.gameObject;
-    Debug.Log($"Меняем роль {staff.characterName} с {staff.currentRole} на {newRole}");
-
-    // --- Шаг 1: Находим нужную "должностную инструкцию" (RoleData) ---
-    RoleData dataForNewRole = allRoleData.FirstOrDefault(data => data.roleType == newRole);
-    if (dataForNewRole == null)
+    // Если роль не меняется, просто обновляем список действий и выходим.
+    // Это быстрая операция, не требующая сложной корутины.
+    if (staff.currentRole == newRole)
     {
-        Debug.LogError($"Не найден RoleData для роли {newRole}! Операция прервана.");
-        return;
-    }
-
-    // --- Шаг 2: Добавляем новые компоненты и получаем ссылку на новый "мозг" ---
-    StaffController newController = null; // Переменная для хранения нового контроллера
-    switch (newRole)
-    {
-        case StaffController.Role.Guard:
-            newController = staffGO.AddComponent<GuardMovement>();
-            staffGO.AddComponent<GuardNotification>();
-			staffGO.GetComponent<GuardMovement>()?.InitializeFromData(dataForNewRole);
-            break;
-        // ... (другие case'ы)
-        case StaffController.Role.Janitor:
-            newController = staffGO.AddComponent<ServiceWorkerController>();
-            staffGO.AddComponent<ServiceWorkerNotification>();
-            break;
+        staff.activeActions = newActions;
+        staff.RefreshAIState(); 
+        return null;
     }
     
-    staff.currentRole = newRole;
+    // Если роль действительно меняется, запускаем полную корутину "пересадки мозга".
+    return StartCoroutine(RoleChangeRoutine(staff, newRole, newActions));
+}
 
-    // --- Шаг 3: Обновляем внешний вид и экипируем аксессуар ---
-    var visuals = staffGO.GetComponent<CharacterVisuals>();
-    if (visuals != null && newController != null)
+// А это сама "операционная", где происходит вся магия.
+private IEnumerator RoleChangeRoutine(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
+{
+    if (staffBeingModified.Contains(staff))
     {
-        // Эта логика пока что заглушка, так как spriteCollection и stateEmotionMap 
-        // мы еще не перенесли на новые контроллеры. Мы это сделаем.
-        // visuals.Setup(staff.gender, newController.spriteCollection, newController.stateEmotionMap);
+        Debug.LogWarning($"<color=orange>ОПЕРАЦИЯ ПРЕРВАНА:</color> Повторный вызов для {staff.characterName}.");
+        yield break;
+    }
+    staffBeingModified.Add(staff);
 
-        // А вот экипировка аксессуара уже будет работать!
-        // Динамически получаем префаб аксессуара из нового контроллера
-        var accessoryField = newController.GetType().GetField("accessoryPrefab");
-        if (accessoryField != null)
+    try
+    {
+        GameObject staffGO = staff.gameObject;
+        Debug.Log($"<color=yellow>ОПЕРАЦИЯ:</color> Начинаем смену роли для {staff.characterName} с {staff.currentRole} на {newRole}");
+        
+        // 1. Сохраняем все данные, КРОМЕ списка действий
+        string savedName = staff.characterName;
+        Gender savedGender = staff.gender;
+        CharacterSkills savedSkills = staff.skills;
+        int savedRank = staff.rank;
+        int savedXP = staff.experiencePoints;
+        int savedSalary = staff.salaryPerPeriod;
+        bool savedPromoStatus = staff.isReadyForPromotion;
+        List<string> savedWorkPeriods = new List<string>(staff.workPeriods);
+
+        // 2. Уничтожаем старый компонент-контроллер
+        switch (staff.currentRole)
         {
-            GameObject accessoryToEquip = accessoryField.GetValue(newController) as GameObject;
-            visuals.EquipAccessory(accessoryToEquip);
+            case StaffController.Role.Intern: if(staffGO.GetComponent<InternController>()) Destroy(staffGO.GetComponent<InternController>()); break;
+            case StaffController.Role.Guard: if(staffGO.GetComponent<GuardMovement>()) Destroy(staffGO.GetComponent<GuardMovement>()); break;
+            case StaffController.Role.Clerk: case StaffController.Role.Registrar: case StaffController.Role.Cashier: case StaffController.Role.Archivist: if(staffGO.GetComponent<ClerkController>()) Destroy(staffGO.GetComponent<ClerkController>()); break;
+            case StaffController.Role.Janitor: if(staffGO.GetComponent<ServiceWorkerController>()) Destroy(staffGO.GetComponent<ServiceWorkerController>()); break;
+        }
+
+        yield return null; 
+
+        // 3. Добавляем новый компонент-контроллер
+        RoleData dataForNewRole = allRoleData.FirstOrDefault(data => data.roleType == newRole);
+        if (dataForNewRole == null)
+        {
+            Debug.LogError($"Не найден RoleData для роли {newRole}! Операция прервана.");
+            yield break;
+        }
+
+        switch (newRole)
+        {
+            case StaffController.Role.Guard: staffGO.AddComponent<GuardMovement>(); break;
+            case StaffController.Role.Clerk: staffGO.AddComponent<ClerkController>(); break;
+            case StaffController.Role.Janitor: staffGO.AddComponent<ServiceWorkerController>(); break;
+            case StaffController.Role.Intern: staffGO.AddComponent<InternController>(); break;
+        }
+
+        yield return null; 
+
+        // 4. Находим ссылку на НОВЫЙ контроллер и "вдыхаем" в него жизнь
+        StaffController newControllerReference = staffGO.GetComponent<StaffController>();
+        if (newControllerReference != null)
+        {
+            // Инициализируем его данными из RoleData (униформа, параметры)
+            if (newRole == StaffController.Role.Guard) (newControllerReference as GuardMovement)?.InitializeFromData(dataForNewRole);
+            if (newRole == StaffController.Role.Clerk || newRole == StaffController.Role.Registrar || newRole == StaffController.Role.Cashier || newRole == StaffController.Role.Archivist)
+            {
+                var clerk = (newControllerReference as ClerkController);
+                if (clerk != null)
+                {
+                    clerk.InitializeFromData(dataForNewRole);
+                    if (newRole == StaffController.Role.Registrar) clerk.role = ClerkController.ClerkRole.Registrar;
+                    else if (newRole == StaffController.Role.Cashier) clerk.role = ClerkController.ClerkRole.Cashier;
+                    else if (newRole == StaffController.Role.Archivist) clerk.role = ClerkController.ClerkRole.Archivist;
+                    else clerk.role = ClerkController.ClerkRole.Regular;
+                }
+            }
+            if (newRole == StaffController.Role.Janitor) (newControllerReference as ServiceWorkerController)?.InitializeFromData(dataForNewRole);
+            if (newRole == StaffController.Role.Intern) (newControllerReference as InternController)?.InitializeFromData(dataForNewRole);
+
+            // Восстанавливаем ВСЕ сохраненные данные
+            newControllerReference.characterName = savedName;
+            newControllerReference.gender = savedGender;
+            newControllerReference.skills = savedSkills;
+            newControllerReference.rank = savedRank;
+            newControllerReference.experiencePoints = savedXP;
+            newControllerReference.salaryPerPeriod = savedSalary;
+            newControllerReference.isReadyForPromotion = savedPromoStatus;
+            newControllerReference.workPeriods = savedWorkPeriods;
+            
+            // Напрямую присваиваем НОВЫЙ список действий
+            newControllerReference.activeActions = newActions;
+            
+            newControllerReference.currentRole = newRole;
+
+            // Обновляем ссылку на контроллер в главном списке сотрудников
+            int staffIndex = AllStaff.IndexOf(staff);
+            if (staffIndex != -1)
+            {
+                AllStaff[staffIndex] = newControllerReference;
+            }
+            
+            Debug.Log($"<color=green>ОПЕРАЦИЯ УСПЕШНА:</color> Роль для {newControllerReference.characterName} успешно изменена.");
         }
         else
         {
-            // Если у роли нет аксессуара, просто убираем старый
-            visuals.EquipAccessory(null);
+            Debug.LogError($"<color=red>КРИТИЧЕСКАЯ ОШИБКА:</color> После смены роли не удалось найти компонент StaffController!");
         }
     }
-	
-	// --- Шаг 4: Инициализируем новые компоненты данными из RoleData ---
-    switch (newRole)
+    finally
     {
-        case StaffController.Role.Guard:
-            staffGO.GetComponent<GuardMovement>()?.InitializeFromData(dataForNewRole);
-            break;
-        case StaffController.Role.Clerk: // Добавь сюда остальные роли клерков
-		case StaffController.Role.Registrar:
-		case StaffController.Role.Cashier:
-		case StaffController.Role.Archivist:
-            staffGO.GetComponent<ClerkController>()?.InitializeFromData(dataForNewRole);
-            break;
-        case StaffController.Role.Janitor:
-            staffGO.GetComponent<ServiceWorkerController>()?.InitializeFromData(dataForNewRole);
-            break;
+        // Вне зависимости от успеха или провала, убираем сотрудника из списка "модифицируемых"
+        staffBeingModified.Remove(staff);
     }
-
-    // --- Шаг 5: Обновляем базовые данные и внешний вид (как и раньше) ---
-    staff.currentRole = newRole;
-    staff.GetComponent<CharacterVisuals>()?.EquipAccessory(dataForNewRole.accessoryPrefab);
-    // И теперь вызываем Setup для CharacterVisuals, передавая данные из RoleData
-    staff.GetComponent<CharacterVisuals>()?.Setup(staff.gender, dataForNewRole.spriteCollection, dataForNewRole.stateEmotionMap);
-
-    Debug.Log($"Роль успешно изменена на {newRole}");
 }
 
 
