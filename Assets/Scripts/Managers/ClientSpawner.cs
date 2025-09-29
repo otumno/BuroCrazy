@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using System; 
 
 [System.Serializable]
 public class LightingPreset
@@ -147,7 +148,7 @@ public float maxChillTime = 10f;
         currentPeriodIndex = -1;
         GoToNextPeriod();
     }
-	StartCoroutine(PeriodicShiftCheckRoutine());
+	//StartCoroutine(PeriodicShiftCheckRoutine());
 }
     
     void Update()
@@ -185,23 +186,31 @@ public float maxChillTime = 10f;
     }
     
     public void GoToNextPeriod()
+{
+    MusicPlayer.Instance?.OnPeriodChanged();
+    if (periods.Length > 0)
     {
-		MusicPlayer.Instance?.OnPeriodChanged();
-        if (periods.Length > 0)
-        {
-            previousPeriod = periods[currentPeriodIndex];
-            currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length;
-        }
+        string previousPeriodName = periods[currentPeriodIndex].periodName;
+
+        previousPeriod = periods[currentPeriodIndex];
+        currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length;
         
-        if (currentPeriodIndex == 0) 
-        { 
-            dayCounter++;
-            UpdateDayCounterUI(); 
-            ClientQueueManager.Instance.ResetQueueNumber();
-            PlanDirectorClientSpawns();
-        }
-        StartNewPeriod();
+        // ВАЖНО: Сбрасываем таймер здесь, до вызова логики смен
+        periodTimer = 0; 
+        
+        // ВЫЗЫВАЕМ ПРОВЕРКУ СМЕН. ТОЛЬКО ЗДЕСЬ. ТОЛЬКО ОДИН РАЗ.
+        UpdateAllStaffShifts(periods[currentPeriodIndex].periodName, previousPeriodName);
     }
+    
+    if (currentPeriodIndex == 0) 
+    { 
+        dayCounter++;
+        UpdateDayCounterUI(); 
+        ClientQueueManager.Instance.ResetQueueNumber();
+        PlanDirectorClientSpawns();
+    }
+    StartNewPeriod();
+}
 
     void UpdateDayCounterUI() 
     { 
@@ -292,7 +301,7 @@ public float maxChillTime = 10f;
 
         for (int i = 0; i < directorClientsPerDay; i++)
         {
-            int randomPeriodIndex = validPeriodIndices[Random.Range(0, validPeriodIndices.Count)];
+            int randomPeriodIndex = validPeriodIndices[UnityEngine.Random.Range(0, validPeriodIndices.Count)];
             directorClientSpawnPeriods.Add(randomPeriodIndex);
         }
         Debug.Log($"Запланирован спавн {directorClientsPerDay} клиентов для Директора в периодах: {string.Join(", ", directorClientSpawnPeriods)}");
@@ -300,7 +309,7 @@ public float maxChillTime = 10f;
 
     private IEnumerator SpawnDirectorClientRoutine()
     {
-        yield return new WaitForSeconds(Random.Range(5f, periods[currentPeriodIndex].durationInSeconds * 0.8f));
+        yield return new WaitForSeconds(UnityEngine.Random.Range(5f, periods[currentPeriodIndex].durationInSeconds * 0.8f));
         if (FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length < maxClientsOnScene)
         {
             Debug.Log("Спавним клиента с документами для Директора!");
@@ -330,35 +339,23 @@ public float maxChillTime = 10f;
         }
     }
     
-void UpdateAllStaffShifts(string currentPeriodName)
+private void UpdateAllStaffShifts(string currentPeriodName, string previousPeriodName)
 {
-    // --- <<< ГЛАВНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ >>> ---
-    // Больше не ищем объекты, а берем готовый список у главного по кадрам.
     var allStaffOnScene = HiringManager.Instance.AllStaff;
-    // ------------------------------------
-
     foreach (var staffMember in allStaffOnScene)
     {
-        // Проверяем, что сотрудник не был уничтожен в процессе
         if (staffMember == null) continue;
 
-        bool shouldWork = staffMember.workPeriods.Any(p => p.Equals(currentPeriodName, System.StringComparison.InvariantCultureIgnoreCase));
-        
-        if (shouldWork && !staffMember.IsOnDuty())
+        bool isScheduledNow = staffMember.workPeriods.Any(p => p.Equals(currentPeriodName, StringComparison.InvariantCultureIgnoreCase));
+        bool wasScheduledBefore = !string.IsNullOrEmpty(previousPeriodName) && staffMember.workPeriods.Any(p => p.Equals(previousPeriodName, StringComparison.InvariantCultureIgnoreCase));
+
+        if (isScheduledNow && !wasScheduledBefore)
         {
             staffMember.StartShift();
         }
-        else if (!shouldWork && staffMember.IsOnDuty())
+        else if (!isScheduledNow && wasScheduledBefore)
         {
             staffMember.EndShift();
-        }
-        else if (!shouldWork && !staffMember.IsOnDuty())
-        {
-            var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
-            if (homeZone != null && !homeZone.GetComponent<Collider2D>().bounds.Contains(staffMember.transform.position))
-            {
-                staffMember.GoHome();
-            }
         }
     }
 }
@@ -397,7 +394,7 @@ void UpdateAllStaffShifts(string currentPeriodName)
     {
         if (clerksOnBreak == null || clerksOnBreak.Count == 0) yield break;
         float breakDurationPerClerk = totalLunchDuration / clerksOnBreak.Count;
-        var shuffledClerks = clerksOnBreak.OrderBy(c => Random.value).ToList();
+        var shuffledClerks = clerksOnBreak.OrderBy(c => UnityEngine.Random.value).ToList();
         foreach (var clerk in shuffledClerks)
         {
             if (clerk != null && clerk.IsOnDuty())
@@ -515,40 +512,20 @@ void UpdateAllStaffShifts(string currentPeriodName)
     { 
         var lightsToTurnOn = period.lightsToEnable.Where(l => l != null && !l.activeSelf).ToList();
         var lightsToTurnOff = allControllableLights.Except(period.lightsToEnable).Where(l => l != null && l.activeSelf).ToList(); 
-        lightsToTurnOn = lightsToTurnOn.OrderBy(l => Random.value).ToList(); 
-        lightsToTurnOff = lightsToTurnOff.OrderBy(l => Random.value).ToList();
+        lightsToTurnOn = lightsToTurnOn.OrderBy(l => UnityEngine.Random.value).ToList(); 
+        lightsToTurnOff = lightsToTurnOff.OrderBy(l => UnityEngine.Random.value).ToList();
         
         foreach (var lightObject in lightsToTurnOff) 
         { 
             if(lightObject != null) StartCoroutine(FadeLight(lightObject, false));
-            yield return new WaitForSeconds(Random.Range(0.05f, 0.2f));
+            yield return new WaitForSeconds(UnityEngine.Random.Range(0.05f, 0.2f));
         } 
         foreach (var lightObject in lightsToTurnOn) 
         { 
             if(lightObject != null) StartCoroutine(FadeLight(lightObject, true));
-            yield return new WaitForSeconds(Random.Range(0.05f, 0.2f));
+            yield return new WaitForSeconds(UnityEngine.Random.Range(0.05f, 0.2f));
         } 
     }
-    
-private IEnumerator PeriodicShiftCheckRoutine()
-{
-    // Ждем несколько секунд после запуска сцены, чтобы все успело прогрузиться
-    yield return new WaitForSeconds(3f);
-    
-    while (true)
-    {
-        // Получаем имя текущего периода
-        string currentPeriodName = GetCurrentPeriod()?.periodName;
-        if (!string.IsNullOrEmpty(currentPeriodName))
-        {
-            // Вызываем нашу универсальную проверку смен
-            UpdateAllStaffShifts(currentPeriodName);
-        }
-
-        // Ждем до следующей проверки
-        yield return new WaitForSeconds(shiftCheckInterval);
-    }
-}
 	
 	
     IEnumerator FadeLight(GameObject lightObject, bool turnOn) 

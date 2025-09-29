@@ -47,6 +47,7 @@ public abstract class StaffController : MonoBehaviour
     // --- Защищенные (protected) поля для дочерних классов ---
     protected bool isOnDuty = false;
     protected Coroutine currentAction;
+	private Coroutine actionDecisionCoroutine;
     protected AgentMover agentMover;
     protected CharacterStateLogger logger;
     protected CharacterVisuals visuals;
@@ -67,15 +68,15 @@ public abstract class StaffController : MonoBehaviour
         return "Статус не определен";
     }
 
-    public virtual void StartShift()
-    {
-        if (isOnDuty) return;
-        isOnDuty = true;
-        if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
-        
-        // Запускаем "мозг" сотрудника
-        currentAction = StartCoroutine(ActionDecisionLoop());
-    }
+public virtual void StartShift()
+{
+    if (isOnDuty) return;
+    isOnDuty = true;
+    if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
+    
+    if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
+    actionDecisionCoroutine = StartCoroutine(ActionDecisionLoop());
+}
 
 protected virtual bool CanExecuteActionConditions(ActionType actionType)
 {
@@ -162,51 +163,46 @@ private IEnumerator ActionDecisionLoop()
     Debug.Log($"<color=lime>AI ЗАПУЩЕН</color> для {characterName}");
     while (isOnDuty)
     {
-        if (currentAction == null)
+        // Если ничем не занят, ищем новую задачу
+        if (currentAction == null) 
         {
-            StaffAction chosenAction = null;
-            
-            // --- ЭТАП 2: Проверка списка рутинных действий по приоритету ---
-            if (chosenAction == null && activeActions.Any())
-            {
-                // --- ИЗМЕНЕНИЕ: Добавляем цикл с индексом для расчета бонуса ---
-                for (int i = 0; i < activeActions.Count; i++)
-                {
-                    var action = activeActions[i];
-                    
-                    // Рассчитываем бонус: чем выше действие в списке (меньше i), тем больше бонус.
-                    // Максимальный бонус 20% для первого действия, 0% для последнего.
-                    float priorityBonus = 0.2f * (1.0f - ((float)i / activeActions.Count));
-                    
-                    if (CanExecuteActionConditions(action.actionType) && CheckActionRoll(action, priorityBonus))
-                    {
-                        chosenAction = action;
-                        break;
-                    }
-                }
-                // --- КОНЕЦ ИЗМЕНЕНИЯ ---
-            }
+            // Пытаемся найти и запустить задачу.
+            // Эта функция вернет true, если задача была найдена и запущена.
+            bool taskFoundAndStarted = TryToStartNewAction();
 
-            // --- ЭТАП 3: Выполнение выбранного действия или переход к отдыху ---
-            if (chosenAction != null)
+            // Если ни одна задача не нашлась, запускаем действие по умолчанию
+            if (!taskFoundAndStarted)
             {
-                Debug.Log($"<color=green>AI РЕШЕНИЕ (Рутина):</color> {characterName} будет выполнять '{chosenAction.displayName}'.");
-                UpdateFrustration(true);
-                currentAction = StartCoroutine(ExecuteActionCoroutine(chosenAction.actionType));
-                yield return currentAction;
-            }
-            else
-            {
-                Debug.Log($"<color=gray>AI РЕШЕНИЕ (Бездействие):</color> {characterName} не нашел задач, идет на пост.");
-                UpdateFrustration(false);
                 currentAction = StartCoroutine(ExecuteDefaultAction());
-                yield return currentAction;
             }
         }
+        
+        // Просто ждем следующего кадра
         yield return null;
     }
 }
 
+private bool TryToStartNewAction()
+{
+    if (!activeActions.Any()) return false;
+
+    for (int i = 0; i < activeActions.Count; i++)
+    {
+        var action = activeActions[i];
+        float priorityBonus = 0.2f * (1.0f - ((float)i / activeActions.Count));
+        
+        if (CanExecuteActionConditions(action.actionType) && CheckActionRoll(action, priorityBonus))
+        {
+            Debug.Log($"<color=green>AI РЕШЕНИЕ:</color> {characterName} будет выполнять '{action.displayName}'.");
+            UpdateFrustration(true);
+            // Запускаем исполнителя и сохраняем ССЫЛКУ. Мозг НЕ ждет.
+            currentAction = StartCoroutine(ExecuteActionCoroutine(action.actionType));
+            return true; // Задача найдена и запущена, выходим
+        }
+    }
+    
+    return false; // Ни одна задача не подошла
+}
 
 private void UpdateFrustration(bool wasCycleSuccessful)
 {
@@ -241,7 +237,11 @@ private void UpdateFrustration(bool wasCycleSuccessful)
 	
 	protected abstract IEnumerator ExecuteActionCoroutine(ActionType actionType);
 
-    protected abstract Queue<Waypoint> BuildPathTo(Vector2 targetPos);
+    protected virtual Queue<Waypoint> BuildPathTo(Vector2 targetPos)
+{
+    // Теперь базовая реализация для всех сотрудников находится здесь.
+    return PathfindingUtility.BuildPathTo(transform.position, targetPos, this.gameObject);
+}
     
     public virtual float GetStressValue() { return 0f; }
     

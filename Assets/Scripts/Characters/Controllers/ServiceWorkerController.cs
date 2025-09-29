@@ -253,7 +253,7 @@ protected override IEnumerator ExecuteDefaultAction()
 
     private IEnumerator MoveToTarget(Vector2 targetPosition, WorkerState stateOnArrival)
     {
-        agentMover.SetPath(BuildPathTo(targetPosition));
+        agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
         yield return new WaitUntil(() => !agentMover.IsMoving());
         SetState(stateOnArrival);
     }
@@ -264,57 +264,6 @@ protected override IEnumerator ExecuteDefaultAction()
         currentState = newState;
         logger.LogState(GetStatusInfo());
         visuals?.SetEmotionForState(newState);
-    }
-
-    protected override Queue<Waypoint> BuildPathTo(Vector2 targetPos)
-    {
-        // ... (логика поиска пути) ...
-        var path = new Queue<Waypoint>();
-        if (allWaypoints == null || allWaypoints.Length == 0) return path;
-        Waypoint startNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(transform.position, wp.transform.position)).FirstOrDefault();
-        Waypoint endNode = allWaypoints.Where(wp => wp != null).OrderBy(wp => Vector2.Distance(targetPos, wp.transform.position)).FirstOrDefault();
-        if (startNode == null || endNode == null) return path;
-        
-        var distances = new Dictionary<Waypoint, float>();
-        var previous = new Dictionary<Waypoint, Waypoint>();
-        var unvisited = new List<Waypoint>(allWaypoints.Where(wp => wp != null));
-
-        foreach (var wp in unvisited)
-        {
-            distances[wp] = float.MaxValue;
-            previous[wp] = null;
-        }
-        distances[startNode] = 0;
-        
-        while (unvisited.Count > 0)
-        {
-            unvisited.Sort((a,b) => distances[a].CompareTo(distances[b]));
-            Waypoint current = unvisited[0];
-            unvisited.Remove(current);
-
-            if (current == endNode)
-            {
-                var pathList = new List<Waypoint>();
-                for (Waypoint at = endNode; at != null; at = previous.ContainsKey(at) ? previous[at] : null) { pathList.Add(at); }
-                pathList.Reverse();
-                path.Clear();
-                foreach(var wp in pathList) { path.Enqueue(wp); }
-                return path;
-            }
-
-            if (current.neighbors == null) continue;
-            foreach (var neighbor in current.neighbors)
-            {
-                if (neighbor == null || (neighbor.forbiddenTags != null && neighbor.forbiddenTags.Contains(gameObject.tag))) continue;
-                float alt = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position);
-                if (distances.ContainsKey(neighbor) && alt < distances[neighbor])
-                {
-                    distances[neighbor] = alt;
-                    previous[neighbor] = current;
-                }
-            }
-        }
-        return path;
     }
     
     // <<< ИСПРАВЛЕНО: методы Get/SetStressValue теперь работают с currentFrustration >>>

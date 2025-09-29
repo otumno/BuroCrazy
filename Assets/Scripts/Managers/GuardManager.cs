@@ -33,6 +33,18 @@ void Awake()
     void Start()
     {
         allGuards = FindObjectsByType<GuardMovement>(FindObjectsSortMode.None).ToList();
+		if (securityBarrier == null)
+        {
+            securityBarrier = FindObjectOfType<SecurityBarrier>();
+            if (securityBarrier != null)
+            {
+                Debug.Log("<color=lime>GuardManager:</color> Улика найдена. Связь с барьером установлена.");
+            }
+            else
+            {
+                Debug.LogError("<color=red>GuardManager:</color> Не удалось найти SecurityBarrier на сцене!");
+            }
+        }
     }
 
     void Update()

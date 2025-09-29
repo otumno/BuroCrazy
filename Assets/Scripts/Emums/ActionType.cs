@@ -2,7 +2,7 @@
 
 public enum ActionType
 {
-	None,
+	
     // Действия Клерка
     ProcessDocument,    // Обработка документа у стойки
     ArchiveDocument,    // Архивирование документа (для Архивариуса)
@@ -24,5 +24,6 @@ public enum ActionType
     CatchThief,         // Успешная поимка воришки
     CalmDownViolator,		// Успешное усмирение нарушителя
 	OperateBarrier, 
-	EvictClient    
+	EvictClient,
+	None
 }

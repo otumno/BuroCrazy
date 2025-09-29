@@ -176,6 +176,11 @@ public Coroutine AssignNewRole(StaffController staff, StaffController.Role newRo
 // А это сама "операционная", где происходит вся магия.
 private IEnumerator RoleChangeRoutine(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
 {
+	while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"HiringManager ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
     if (staffBeingModified.Contains(staff))
     {
         Debug.LogWarning($"<color=orange>ОПЕРАЦИЯ ПРЕРВАНА:</color> Повторный вызов для {staff.characterName}.");

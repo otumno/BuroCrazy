@@ -410,7 +410,7 @@ public class ClientStateMachine : MonoBehaviour
         if (currentGoal != null)
         {
             parent.movement.StartStuckCheck();
-            agentMover.SetPath(BuildPathTo(currentGoal.transform.position));
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, currentGoal.transform.position, this.gameObject));
             yield return new WaitUntil(() => !agentMover.IsMoving());
             parent.movement.StopStuckCheck();
         }
@@ -696,7 +696,7 @@ public class ClientStateMachine : MonoBehaviour
                 if (currentState == ClientState.MovingToRegistrarImpolite) { yield return StartCoroutine(HandleImpoliteArrival()); } 
                 break;
             case ClientState.MovingToSeat: 
-                if (seatTarget != null) { parent.movement.StartStuckCheck(); agentMover.SetPath(BuildPathTo(seatTarget.position)); yield return new WaitUntil(() => !agentMover.IsMoving()); parent.movement.StopStuckCheck(); } 
+                if (seatTarget != null) { parent.movement.StartStuckCheck(); agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, currentGoal.transform.position, this.gameObject)); yield return new WaitUntil(() => !agentMover.IsMoving()); parent.movement.StopStuckCheck(); } 
                 SetState(ClientState.SittingInWaitingArea); 
                 break;
             case ClientState.AtLimitedZoneEntrance: 
@@ -817,7 +817,7 @@ public class ClientStateMachine : MonoBehaviour
             Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None); 
             if(allWaypoints.Length > 0) { 
                 Waypoint randomTarget = allWaypoints[Random.Range(0, allWaypoints.Length)]; 
-                agentMover.SetPath(BuildPathTo(randomTarget.transform.position));
+                agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, currentGoal.transform.position, this.gameObject));
                 yield return new WaitUntil(() => !agentMover.IsMoving() || Vector2.Distance(transform.position, randomTarget.transform.position) < 2f); 
             } else { 
                 yield return new WaitForSeconds(1f);
@@ -871,76 +871,6 @@ public class ClientStateMachine : MonoBehaviour
                 SetGoal(newGoal);
             } 
         } 
-    }
-
-    public Queue<Waypoint> BuildPathTo(Vector2 targetPos) 
-    { 
-        var newPath = new Queue<Waypoint>(); 
-        Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
-        if (allWaypoints.Length == 0) return newPath; 
-        Waypoint start = FindNearestVisibleWaypoint(transform.position, allWaypoints); 
-        Waypoint goal = allWaypoints.FirstOrDefault(wp => Vector2.Distance(wp.transform.position, targetPos) < 0.01f);
-        if (goal == null) { goal = FindNearestVisibleWaypoint(targetPos, allWaypoints); } 
-        if (start == null) { start = FindNearestWaypoint(transform.position, allWaypoints); } 
-        if (goal == null) { goal = FindNearestWaypoint(targetPos, allWaypoints); } 
-        if (start == null || goal == null) { SetState(ClientState.Confused); return newPath; } 
-        Dictionary<Waypoint, float> distances = new Dictionary<Waypoint, float>(); 
-        Dictionary<Waypoint, Waypoint> previous = new Dictionary<Waypoint, Waypoint>();
-        PriorityQueue<Waypoint, float> queue = new PriorityQueue<Waypoint, float>(); 
-        foreach (var wp in allWaypoints) { 
-            distances[wp] = float.MaxValue; 
-            previous[wp] = null;
-        } 
-        distances[start] = 0; 
-        queue.Enqueue(start, 0); 
-        while (queue.Count > 0) { 
-            Waypoint current = queue.Dequeue();
-            if (current == goal) { ReconstructPath(previous, goal, newPath); return newPath; } 
-            if (current.neighbors == null || current.neighbors.Count == 0) continue;
-            foreach (var neighbor in current.neighbors) { 
-                if (neighbor == null) continue; 
-                if (neighbor.type == Waypoint.WaypointType.StaffOnly && neighbor != ClientSpawner.Instance.exitWaypoint) continue;
-                float newDist = distances[current] + Vector2.Distance(current.transform.position, neighbor.transform.position); 
-                if (distances.ContainsKey(neighbor) && newDist < distances[neighbor]) { 
-                    distances[neighbor] = newDist; 
-                    previous[neighbor] = current;
-                    queue.Enqueue(neighbor, newDist); 
-                } 
-            } 
-        } 
-        SetState(ClientState.Confused); 
-        return newPath; 
-    }
-
-    private void ReconstructPath(Dictionary<Waypoint, Waypoint> previous, Waypoint goal, Queue<Waypoint> path) 
-    { 
-        List<Waypoint> pathList = new List<Waypoint>();
-        for (Waypoint at = goal; at != null; at = previous[at]) { pathList.Add(at); } 
-        pathList.Reverse(); 
-        path.Clear();
-        foreach (var wp in pathList) { path.Enqueue(wp); } 
-    }
-
-    private Waypoint FindNearestVisibleWaypoint(Vector2 position, Waypoint[] wps) 
-    { 
-        if(wps == null || wps.Length == 0) return null;
-        Waypoint bestWaypoint = null; 
-        float minDistance = float.MaxValue; 
-        foreach (var wp in wps) { 
-            if (wp.type == Waypoint.WaypointType.StaffOnly) continue;
-            float distance = Vector2.Distance(position, wp.transform.position); 
-            if (distance < minDistance) { 
-                RaycastHit2D hit = Physics2D.Linecast(position, wp.transform.position, LayerMask.GetMask("Obstacles"));
-                if (hit.collider == null) { minDistance = distance; bestWaypoint = wp; } 
-            } 
-        } 
-        return bestWaypoint;
-    }
-
-    private Waypoint FindNearestWaypoint(Vector2 p, Waypoint[] wps) 
-    { 
-        if(wps == null || wps.Length == 0) return null;
-        return wps.Where(wp => wp.type != Waypoint.WaypointType.StaffOnly).OrderBy(wp => Vector2.Distance(p, wp.transform.position)).FirstOrDefault(); 
     }
     
     public ClientState GetCurrentState() => currentState;
@@ -1007,23 +937,4 @@ public class ClientStateMachine : MonoBehaviour
         return $"{traits}\n{goal}\n{statusText}"; 
     }
     
-    private class PriorityQueue<T, U> where U : System.IComparable<U> 
-    { 
-        private SortedDictionary<U, Queue<T>> dictionary = new SortedDictionary<U, Queue<T>>();
-        public int Count => dictionary.Sum(p => p.Value.Count); 
-        public void Enqueue(T item, U priority) { 
-            if (!dictionary.ContainsKey(priority)) { 
-                dictionary[priority] = new Queue<T>();
-            } 
-            dictionary[priority].Enqueue(item); 
-        } 
-        public T Dequeue() { 
-            var pair = dictionary.First(); 
-            T item = pair.Value.Dequeue();
-            if (pair.Value.Count == 0) { 
-                dictionary.Remove(pair.Key); 
-            } 
-            return item; 
-        } 
-    }
 }

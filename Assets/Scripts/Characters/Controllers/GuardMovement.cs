@@ -196,18 +196,17 @@ public override void StartShift()
     
     protected override IEnumerator ExecuteActionCoroutine(ActionType actionType)
 {
+    Debug.Log($"<color=yellow>[ЛОГ #3]</color> {characterName}: Исполнитель получил задачу '{actionType}'.");
     var actionData = activeActions.FirstOrDefault(a => a.actionType == actionType);
     if (actionData == null)
     {
-        Debug.LogError($"Не найдены данные для действия {actionType} в списке активных действий!");
+        Debug.LogError($"Не найдены данные для действия {actionType}!");
         yield break;
     }
 
     switch (actionType)
     {
         case ActionType.PatrolWaypoint:
-            // --- <<< ГЛАВНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ >>> ---
-            // Мы запускаем корутину и ждем ее завершения
             yield return StartCoroutine(PatrolRoutine(actionData));
             break;
 
@@ -243,6 +242,7 @@ public override void StartShift()
             Debug.LogWarning($"Для охранника не реализована корутина-исполнитель для действия: {actionType}");
             break;
     }
+    Debug.Log($"<color=red>[ЛОГ #8]</color> {characterName}: Исполнитель ЗАВЕРШИЛ свою работу для задачи '{actionType}'.");
 }
     
 protected override IEnumerator ExecuteDefaultAction()
@@ -253,6 +253,11 @@ protected override IEnumerator ExecuteDefaultAction()
 
     private IEnumerator GoToPostRoutine()
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         thoughtBubble?.ShowPriorityMessage("Иду на пост...", 2f);
         var postPoint = ScenePointsRegistry.Instance?.guardPostPoint;
         if (postPoint == null)
@@ -272,6 +277,11 @@ protected override IEnumerator ExecuteDefaultAction()
 
     private IEnumerator GoToToiletRoutine()
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         thoughtBubble?.ShowPriorityMessage("Нужно отойти.", 2f, Color.yellow);
         SetState(GuardState.GoingToToilet);
         yield return StartCoroutine(MoveToTarget(ScenePointsRegistry.Instance.staffToiletPoint.position, GuardState.AtToilet));
@@ -284,12 +294,12 @@ protected override IEnumerator ExecuteDefaultAction()
 {
     thoughtBubble?.ShowPriorityMessage("Начинаю патрулирование.", 2f);
     SetState(GuardState.Patrolling);
-    var thisPatrolInstance = currentAction;
+    var thisPatrolInstance = currentAction; // Запоминаем "себя" для проверки на прерывание
 
-    // Решаем, патрулировать по времени или по количеству точек
+    // --- ВОЗВРАЩАЕМ ЛОГИКУ КОНЕЧНОГО ПАТРУЛЯ ---
     if (patrolActionData != null && patrolActionData.patrolPointsToVisit > 0)
     {
-        // --- НОВАЯ ЛОГИКА: Патрулирование по количеству точек ---
+        // --- Патрулирование по количеству точек ---
         for (int i = 0; i < patrolActionData.patrolPointsToVisit; i++)
         {
             if (currentAction != thisPatrolInstance) yield break; // Проверка на прерывание
@@ -305,41 +315,45 @@ protected override IEnumerator ExecuteDefaultAction()
             {
                 thoughtBubble?.ShowPriorityMessage("Некуда патрулировать!", 2f, Color.red);
                 yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
-                break; // Выход, если точки не найдены
+                break; 
             }
         }
     }
     else
     {
-        // --- СТАРАЯ ЛОГИКА: Патрулирование по времени (как запасной вариант) ---
+        // --- Патрулирование по времени (как запасной вариант) ---
         float duration = patrolActionData?.actionDuration ?? 30f;
         float startTime = Time.time;
         while (Time.time < startTime + duration)
         {
             if (currentAction != thisPatrolInstance) yield break; // Проверка на прерывание
             
+            // В этой версии он будет просто стоять и ждать, можно добавить движение к 1 точке
             var patrolTarget = SelectNewPatrolPoint();
-            if (patrolTarget != null)
+             if (patrolTarget != null)
             {
                 yield return StartCoroutine(MoveToTarget(patrolTarget.position, GuardState.WaitingAtWaypoint));
                 ExperienceManager.Instance?.GrantXP(this, ActionType.PatrolWaypoint);
-                yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
-            }
-            else
-            {
-                thoughtBubble?.ShowPriorityMessage("Некуда патрулировать!", 2f, Color.red);
-                yield return new WaitForSeconds(Random.Range(minWaitTime, maxWaitTime));
-                break;
+                // Чтобы не зацикливаться на одной точке, ждем до конца таймера
+                 while (Time.time < startTime + duration)
+                 {
+                    if (currentAction != thisPatrolInstance) yield break;
+                    yield return null;
+                 }
+                 break;
             }
         }
+		currentAction = null;
     }
     
-    thoughtBubble?.ShowPriorityMessage("Патрулирование окончено. Отдыхаю.", 2f, Color.gray);
+    thoughtBubble?.ShowPriorityMessage("Патрулирование окончено. Ищу новые задачи.", 2f, Color.gray);
     if (patrolActionData != null)
     {
         actionCooldowns[patrolActionData.actionType] = Time.time + patrolActionData.actionCooldown;
     }
     
+    // --- САМАЯ ВАЖНАЯ СТРОКА ---
+    // Сообщаем "мозгу", что мы закончили и он может искать новое дело.
     currentAction = null;
 }
     
@@ -358,6 +372,11 @@ protected override IEnumerator ExecuteDefaultAction()
 
     private IEnumerator BreakRoutine(float duration)
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         thoughtBubble?.ShowPriorityMessage("Ухожу на обед.", 2f);
         SetState(GuardState.GoingToBreak);
         Transform breakSpot = RequestKitchenPoint();
@@ -373,6 +392,12 @@ protected override IEnumerator ExecuteDefaultAction()
     
     private IEnumerator ChaseRoutine(ClientPathfinding target)
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
+	
         thoughtBubble?.ShowPriorityMessage("Замечен нарушитель! Выдвигаюсь!", 2f, Color.red);
         currentChaseTarget = target;
         SetState(GuardState.Chasing);
@@ -395,6 +420,11 @@ protected override IEnumerator ExecuteDefaultAction()
 
     private IEnumerator TalkToClientRoutine(ClientPathfinding clientToCalm)
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         thoughtBubble?.ShowPriorityMessage("Гражданин, пройдемте...", 3f, Color.blue);
         SetState(GuardState.Talking);
         clientToCalm.Freeze();
@@ -425,6 +455,11 @@ protected override IEnumerator ExecuteDefaultAction()
     
     private IEnumerator EscortThiefToCashierRoutine(ClientPathfinding thief)
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         thoughtBubble?.ShowPriorityMessage("Попался, воришка!", 2f, Color.red);
         SetState(GuardState.EscortingThief);
         thief.Freeze();
@@ -457,6 +492,11 @@ protected override IEnumerator ExecuteDefaultAction()
     
     private IEnumerator ConfrontAndEvictRoutine(ClientPathfinding client)
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         thoughtBubble?.ShowPriorityMessage("Прошу покинуть помещение!", 3f, Color.blue);
         SetState(GuardState.Talking);
         client.Freeze();
@@ -470,6 +510,11 @@ protected override IEnumerator ExecuteDefaultAction()
 
     private IEnumerator WriteReportRoutine()
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         var desk = ScenePointsRegistry.Instance?.guardReportDesk;
         if (desk == null) {
             thoughtBubble?.ShowPriorityMessage("Нужно составить протокол, но где?", 2f, Color.yellow);
@@ -490,6 +535,11 @@ protected override IEnumerator ExecuteDefaultAction()
     
     private IEnumerator OperateBarrierRoutine(SecurityBarrier barrier, bool activate) 
     {
+		while (ScenePointsRegistry.Instance == null)
+    {
+        Debug.LogWarning($"Охранник {characterName} ждет, пока ScenePointsRegistry будет готов...");
+        yield return null; // Ждем один кадр
+    }
         thoughtBubble?.ShowPriorityMessage(activate ? "Закрываю барьер на ночь." : "Открываю барьер.", 2f);
         SetState(GuardState.OperatingBarrier);
         yield return StartCoroutine(MoveToTarget(barrier.guardInteractionPoint.position, GuardState.OperatingBarrier));
