@@ -22,6 +22,7 @@ public class ServiceWorkerNotification : MonoBehaviour
     {
         if (notificationText == null || parent == null) return;
         
+        // --- ИСПРАВЛЕНО: Теперь мы снова вызываем GetCurrentState(), который возвращает правильный enum ---
         var state = parent.GetCurrentState();
         notificationText.text = GetStateText(state);
         notificationText.color = GetStateColor(state);

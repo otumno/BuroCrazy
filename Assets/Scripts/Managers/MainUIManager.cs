@@ -144,7 +144,7 @@ private void Awake()
         if (isTransitioning) return;
         SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
         SaveLoadManager.Instance.isNewGame = true;
-        SaveData newGameData = new SaveData { day = 1, money = 150 };
+        SaveData newGameData = new SaveData { day = 1, money = 1000 };
         SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
         StartCoroutine(LoadSceneRoutine(gameSceneName));
     }
@@ -174,7 +174,8 @@ private IEnumerator StartGameplaySequence()
     // Снимаем игру с паузы
     Debug.Log("<color=lime>[MainUIManager] Снимаем игру с паузы.</color>");
     ResumeGame();
-    
+    HiringManager.Instance?.ActivateAllScheduledStaff();
+	
     // Включаем музыку геймплея
     if (MusicPlayer.Instance != null)
     {

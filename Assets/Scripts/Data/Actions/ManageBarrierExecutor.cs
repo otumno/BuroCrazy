@@ -1,0 +1,38 @@
+using System.Collections;
+using UnityEngine;
+
+public class ManageBarrierExecutor : ActionExecutor
+{
+    protected override IEnumerator ActionRoutine()
+    {
+        if (!(staff is GuardMovement guard))
+        {
+            FinishAction();
+            yield break;
+        }
+
+        var barrier = GuardManager.Instance.securityBarrier;
+        if (barrier == null || barrier.guardInteractionPoint == null)
+        {
+            FinishAction();
+            yield break;
+        }
+        
+        guard.SetState(GuardMovement.GuardState.OperatingBarrier);
+        yield return staff.StartCoroutine(guard.MoveToTarget(barrier.guardInteractionPoint.position, GuardMovement.GuardState.OperatingBarrier));
+        yield return new WaitForSeconds(2.0f);
+
+        string currentPeriodName = ClientSpawner.CurrentPeriodName;
+        if (currentPeriodName == "Утро" && barrier.IsActive())
+        {
+            barrier.DeactivateBarrier();
+        }
+        else if (currentPeriodName == "Ночь" && !barrier.IsActive())
+        {
+            barrier.ActivateBarrier();
+        }
+
+        guard.SetState(GuardMovement.GuardState.Idle);
+        FinishAction();
+    }
+}

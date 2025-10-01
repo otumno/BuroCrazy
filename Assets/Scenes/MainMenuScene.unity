@@ -2332,6 +2332,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainMenuPanel: {fileID: 846011594}
   saveLoadPanel: {fileID: 1864426794}
+  continueButton: {fileID: 1483531252}
   primaryActionButton: {fileID: 1004667239}
 --- !u!224 &1840667665 stripped
 RectTransform:

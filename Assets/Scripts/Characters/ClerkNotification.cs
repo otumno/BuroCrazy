@@ -12,12 +12,17 @@ public class ClerkNotification : MonoBehaviour
     {
         parent = GetComponent<ClerkController>();
         notificationText = GetComponentInChildren<TextMeshPro>();
-        if (parent == null || notificationText == null) { enabled = false; }
+        if (parent == null || notificationText == null) 
+        { 
+            enabled = false; 
+        }
     }
 
     void Update()
     {
         if (notificationText == null || parent == null) return;
+        
+        // --- ИСПРАВЛЕНО: Теперь мы снова вызываем GetCurrentState(), который возвращает правильный enum ---
         var state = parent.GetCurrentState();
         notificationText.text = GetStateText(state);
         notificationText.color = GetStateColor(state);
@@ -34,7 +39,6 @@ public class ClerkNotification : MonoBehaviour
                 return useEmoji ? "😑" : "§";
             case ClerkController.ClerkState.GoingToToilet:
             case ClerkController.ClerkState.AtToilet:
-                // --- ИЗМЕНЕНИЕ: Установлен эмодзи 😖 ---
                 return useEmoji ? "😖" : "!";
             case ClerkController.ClerkState.GoingToBreak:
             case ClerkController.ClerkState.OnBreak:

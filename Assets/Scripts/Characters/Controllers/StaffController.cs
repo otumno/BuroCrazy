@@ -1,4 +1,4 @@
-// Файл: StaffController.cs --- ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ ---
+// Файл: Assets/Scripts/Characters/Controllers/StaffController.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,84 +7,242 @@ using System.Linq;
 public abstract class StaffController : MonoBehaviour
 {
     public enum Role { Unassigned, Intern, Registrar, Cashier, Archivist, Guard, Janitor, Clerk }
-    
+
     [Header("График работы")]
     public List<string> workPeriods = new List<string>();
-    [Header("Патрулирование (для ролей, где это применимо)")]
-    public List<Transform> patrolPoints;
-
-    [Header("Стандартные точки")]
-    public Transform homePoint;
-    public List<Transform> kitchenPoints;
-    public Transform staffToiletPoint;
 
     [Header("Звуки смены")]
     public AudioClip startShiftSound;
     public AudioClip endShiftSound;
+
     [Header("Прогрессия и Роль")]
-	public string characterName = "Безымянный";
-	public Gender gender;
+    public string characterName = "Безымянный";
+    public Gender gender;
     public CharacterSkills skills;
     public Role currentRole = Role.Intern;
     public int rank = 0;
     public int experiencePoints = 0;
     public int salaryPerPeriod = 15;
-	public bool isReadyForPromotion = false;
+    public bool isReadyForPromotion = false;
     public List<StaffAction> activeActions = new List<StaffAction>();
-	
-	[Header("Настройки Выгорания")]
-	[Tooltip("Базовое значение, на которое увеличивается выгорание за успешный рабочий цикл.")]
-	[SerializeField] private float baseFrustrationGain = 0.1f;
-	[Tooltip("Навык, который снижает скорость выгорания (например, Усидчивость).")]
-	[SerializeField] private SkillType frustrationResistanceSkill = SkillType.SedentaryResilience;
+    
+    [Header("Настройки Выгорания")]
+    [Tooltip("Базовое значение, на которое увеличивается выгорание за успешный рабочий цикл.")]
+    [SerializeField] private float baseFrustrationGain = 0.1f;
+    [Tooltip("Навык, который снижает скорость выгорания (например, Усидчивость).")]
+    [SerializeField] private SkillType frustrationResistanceSkill = SkillType.SedentaryResilience;
 
-	protected float currentFrustration = 0f;
-	protected Dictionary<ActionType, float> actionCooldowns = new Dictionary<ActionType, float>();
+    // --- ИЗМЕНЕНО: Эти поля теперь protected, чтобы наследники имели к ним доступ ---
+    protected float currentFrustration = 0f;
+    protected Dictionary<ActionType, float> actionCooldowns = new Dictionary<ActionType, float>();
 
-	public EmotionSpriteCollection spriteCollection;
+    // --- ИЗМЕНЕНО: Ссылки на компоненты теперь инициализируются в Awake и доступны наследникам ---
+    public EmotionSpriteCollection spriteCollection;
     public StateEmotionMap stateEmotionMap;
-
-    // --- Защищенные (protected) поля для дочерних классов ---
     protected bool isOnDuty = false;
-    protected Coroutine currentAction;
-	private Coroutine actionDecisionCoroutine;
     protected AgentMover agentMover;
+	public AgentMover AgentMover => agentMover;
     protected CharacterStateLogger logger;
     protected CharacterVisuals visuals;
-	protected ThoughtBubbleController thoughtBubble;
+    public ThoughtBubbleController thoughtBubble { get; private set; }
 
-    private static List<Transform> occupiedKitchenPoints = new List<Transform>();
-    private bool isInitialized = false;
+    // --- НОВОЕ: Управление "мозгом" и "исполнителем" ---
+    private Coroutine actionDecisionCoroutine;
+    protected ActionExecutor currentExecutor;
 
-    // --- ОСНОВНЫЕ МЕТОДЫ УПРАВЛЕНИЯ ---
-
+    // --- ОСНОВНЫЕ МЕТОДЫ ---
     public bool IsOnDuty() => isOnDuty;
-	public bool IsIdle => currentAction == null;
-	
-	public abstract bool IsOnBreak();
+    public abstract bool IsOnBreak();
+    public virtual string GetStatusInfo() => "Статус не определен";
 
-	public virtual string GetStatusInfo()
+    public virtual void StartShift()
     {
-        return "Статус не определен";
+        if (isOnDuty) return;
+        isOnDuty = true;
+        if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
+        
+        if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
+        actionDecisionCoroutine = StartCoroutine(ActionDecisionLoop());
     }
 
-public virtual void StartShift()
+public float GetCurrentFrustration()
 {
-    if (isOnDuty) return;
-    isOnDuty = true;
-    if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
+    return currentFrustration;
+}
+
+public virtual void Initialize(RoleData data)
+    {
+        // Убеждаемся, что ссылки на компоненты получены
+        if (visuals == null) visuals = GetComponent<CharacterVisuals>();
+        if (agentMover == null) agentMover = GetComponent<AgentMover>();
+
+        this.currentRole = data.roleType;
+
+        // 1. Полная настройка визуала (тело, лицо, эмоции, аксессуар)
+        if (visuals != null)
+        {
+            visuals.SetupFromRoleData(data, this.gender);
+        }
+
+        // 2. Настройка анимации ходьбы
+        if (agentMover != null)
+        {
+            agentMover.SetAnimationSprites(data.idleSprite, data.walkSprite1, data.walkSprite2);
+            agentMover.moveSpeed = data.moveSpeed;
+            agentMover.priority = data.priority;
+        }
+
+        // 3. Настройка звуков (когда мы добавим их в RoleData)
+        // this.startShiftSound = data.startShiftSound;
+        // this.endShiftSound = data.endShiftSound;
+    }
+
+public void SetCurrentFrustration(float value)
+{
+    currentFrustration = Mathf.Clamp01(value);
+}
+
+    public virtual void EndShift()
+    {
+        if (!isOnDuty) return;
+        isOnDuty = false;
+        
+        if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
+        actionDecisionCoroutine = null;
+
+        if (currentExecutor != null) Destroy(currentExecutor);
+        currentExecutor = null;
+        
+        StartCoroutine(GoHomeRoutine());
+    }
+
+    // --- НОВЫЙ "МОЗГ" ---
+    private IEnumerator ActionDecisionLoop()
+{
+    Debug.Log($"<color=lime>AI ЗАПУЩЕН</color> для {characterName}");
+    while (isOnDuty)
+    {
+        // 1. КАЖДЫЙ ЦИКЛ проверяем, нет ли экстренных дел.
+        StaffAction emergencyAction = FindEmergencyAction();
+
+        if (emergencyAction != null)
+        {
+            // Если есть "пожар", нужно действовать!
+            if (currentExecutor != null) // Если мы сейчас чем-то заняты...
+            {
+                if (currentExecutor.IsInterruptible) // ... и это дело можно прервать...
+                {
+                    Debug.LogWarning($"<color=orange>ПРЕРЫВАНИЕ:</color> '{emergencyAction.displayName}' прерывает текущее действие!");
+                    Destroy(currentExecutor); // ... то мы уничтожаем текущего исполнителя.
+                    currentExecutor = null;
+                }
+                else
+                {
+                    // Если текущее дело нельзя прервать (например, мы уже ловим вора), пропускаем цикл.
+                    yield return new WaitForSeconds(1f);
+                    continue;
+                }
+            }
+
+            // Если мы свободны (или только что освободились), запускаем экстренное действие.
+            if (currentExecutor == null)
+            {
+                ExecuteAction(emergencyAction);
+            }
+        }
+        else if (currentExecutor == null)
+        {
+            // 2. Если "пожара" нет и мы свободны, ищем обычную задачу.
+            TryToStartStandardAction();
+        }
+
+        yield return new WaitForSeconds(1f);
+    }
+}
+
+private StaffAction FindEmergencyAction()
+{
+    if (activeActions == null) return null;
+
+    var emergencyActions = activeActions
+        .Where(a => a.priority >= 100)
+        .OrderByDescending(a => a.priority);
+
+    foreach (var action in emergencyActions)
+    {
+        if (action.AreConditionsMet(this)) // Для экстренных дел не делаем бросок кубиков, они всегда "успешны", если условия выполнены
+        {
+            return action; // Возвращаем первое же найденное экстренное дело.
+        }
+    }
+    return null; // Экстренных дел нет.
+}
+
+    private bool TryToStartStandardAction()
+{
+    if (activeActions == null || !activeActions.Any()) return false;
+
+    float bonusPerPosition = 0.05f;
+
+    for (int i = 0; i < activeActions.Count; i++)
+    {
+        var action = activeActions[i];
+        if (action.priority >= 100) continue;
+
+        if (actionCooldowns.ContainsKey(action.actionType) && Time.time < actionCooldowns[action.actionType])
+        {
+            continue;
+        }
+
+        float positionBonus = (activeActions.Count - i) * bonusPerPosition;
+        if (action.AreConditionsMet(this) && CheckActionRoll(action, positionBonus))
+        {
+            return ExecuteAction(action);
+        }
+    }
+
+    UpdateFrustration(false); // Вызывается только если ни одно стандартное действие не прошло
+    return false;
+}
+
+// --- НОВЫЙ ВСПОМОГАТЕЛЬНЫЙ МЕТОД, ЧТОБЫ НЕ ДУБЛИРОВАТЬ КОД ---
+private bool ExecuteAction(StaffAction actionToExecute)
+{
+    Debug.Log($"<color=green>AI РЕШЕНИЕ:</color> {characterName} будет выполнять '{actionToExecute.displayName}' (Приоритет: {actionToExecute.priority}).");
+    UpdateFrustration(true);
     
-    if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
-    actionDecisionCoroutine = StartCoroutine(ActionDecisionLoop());
+    System.Type executorType = actionToExecute.GetExecutorType();
+    currentExecutor = gameObject.AddComponent(executorType) as ActionExecutor;
+    
+    if (currentExecutor != null)
+    {
+        currentExecutor.Execute(this, actionToExecute);
+        actionCooldowns[actionToExecute.actionType] = Time.time + actionToExecute.actionCooldown;
+        return true;
+    }
+    else
+    {
+        Debug.LogError($"Не удалось добавить компонент-исполнитель типа '{executorType.Name}' для действия '{actionToExecute.displayName}'!");
+        return false;
+    }
 }
 
-protected virtual bool CanExecuteActionConditions(ActionType actionType)
-{
-    // Базовая реализация, которую могут использовать простые действия
-    return true;
-}
+    // --- НОВЫЙ ПУБЛИЧНЫЙ МЕТОД, который вызывает "исполнитель" по завершении ---
+    public void OnActionFinished()
+    {
+        this.currentExecutor = null;
+    }
+    
+    protected virtual void Awake()
+    {
+        agentMover = GetComponent<AgentMover>();
+        logger = GetComponent<CharacterStateLogger>();
+        visuals = GetComponent<CharacterVisuals>();
+        thoughtBubble = GetComponent<ThoughtBubbleController>();
+    }
 
-protected bool CheckActionRoll(StaffAction actionData, float priorityBonus)
+    #region Служебные методы (без изменений)
+    protected bool CheckActionRoll(StaffAction actionData, float positionBonus) // <-- ИЗМЕНЕНИЕ 4: Переименовали параметр для ясности
 {
     if (actionData == null) return false;
     
@@ -95,11 +253,13 @@ protected bool CheckActionRoll(StaffAction actionData, float priorityBonus)
         skillModifier += skills.GetSkillValue(actionData.secondarySkill.skill) * actionData.secondarySkill.strength * (actionData.secondarySkill.isPositiveEffect ? 1f : -1f);
     }
     
-    float initialChance = actionData.baseSuccessChance + skillModifier - currentFrustration + priorityBonus;
+    // --- ИЗМЕНЕНИЕ 5: Используем positionBonus в расчете ---
+    float initialChance = actionData.baseSuccessChance + skillModifier - currentFrustration + positionBonus;
     float finalChance = Mathf.Clamp(initialChance, actionData.minSuccessChance, actionData.maxSuccessChance);
-    float roll = Random.value;
+    float roll = UnityEngine.Random.value;
     
-    string logMessage = $"[ПРОВЕРКА: {actionData.displayName}] База:{actionData.baseSuccessChance:P0} + Навыки:{skillModifier:P0} - Выгорание:{currentFrustration:P0} + Бонус:{priorityBonus:P0} = {initialChance:P0} (Итог: {finalChance:P0}). Бросок: {roll:P0}.";
+    // В лог тоже добавили новый бонус для наглядности
+    string logMessage = $"[ПРОВЕРКА: {actionData.displayName}] База:{actionData.baseSuccessChance:P0} + Навыки:{skillModifier:P0} - Выгорание:{currentFrustration:P0} + БонусПозиции:{positionBonus:P0} = {initialChance:P0} (Итог: {finalChance:P0}). Бросок: {roll:P0}.";
     
     if (roll <= finalChance)
     {
@@ -115,254 +275,55 @@ protected bool CheckActionRoll(StaffAction actionData, float priorityBonus)
     }
 }
 
-
-
-    public virtual void EndShift()
+    protected void UpdateFrustration(bool wasCycleSuccessful)
     {
-        if (!isOnDuty) return;
-        isOnDuty = false;
-        
-        // Останавливаем "мозг"
-        if (currentAction != null)
+        float oldFrustration = currentFrustration;
+        if (wasCycleSuccessful)
         {
-            StopCoroutine(currentAction);
-            currentAction = null;
+            float resistance = skills.GetSkillValue(frustrationResistanceSkill);
+            float frustrationGain = baseFrustrationGain * (1f - resistance * 0.5f);
+            currentFrustration = Mathf.Clamp01(currentFrustration + frustrationGain);
+            Debug.Log($"<color=yellow>ИТОГ ЦИКЛА:</color> Успех. Выгорание: {oldFrustration:P0} -> {currentFrustration:P0} (+{frustrationGain:P0})");
         }
-        
-        // Запускаем процесс ухода домой (но не удаления)
-        StartCoroutine(GoHomeRoutine());
+        else
+        {
+            Debug.Log($"<color=gray>ИТОГ ЦИКЛА:</color> Провал/Бездействие. Выгорание без изменений.");
+        }
     }
     
-	public void GoHome()
-{
-    // Эта команда не проверяет, на смене ли сотрудник.
-    // Она просто прерывает любое текущее действие и отправляет его домой.
-    if (currentAction != null)
+    private IEnumerator GoHomeRoutine()
     {
-        StopCoroutine(currentAction);
-        currentAction = null;
+        var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
+        if (homeZone != null)
+        {
+            Vector2 targetPos = homeZone.GetRandomPointInside();
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPos, this.gameObject));
+            yield return new WaitUntil(() => !agentMover.IsMoving());
+            if (endShiftSound != null) AudioSource.PlayClipAtPoint(endShiftSound, transform.position);
+        }
     }
-    StartCoroutine(GoHomeRoutine());
-}
 	
-    public void FireAndGoHome()
+	public void FireAndGoHome()
     {
         isOnDuty = false;
-        if (currentAction != null)
+        if (actionDecisionCoroutine != null)
         {
-            StopCoroutine(currentAction);
-            currentAction = null;
+            StopCoroutine(actionDecisionCoroutine);
+            actionDecisionCoroutine = null;
+        }
+        if (currentExecutor != null)
+        {
+            Destroy(currentExecutor);
+            currentExecutor = null;
         }
         StartCoroutine(GoHomeAndDespawnRoutine());
     }
-    
-    // --- "МОЗГ" AI (УНИВЕРСАЛЬНЫЙ ДВИЖОК ПОВЕДЕНИЯ) ---
 
-private IEnumerator ActionDecisionLoop()
-{
-    Debug.Log($"<color=lime>AI ЗАПУЩЕН</color> для {characterName}");
-    while (isOnDuty)
-    {
-        // Если ничем не занят, ищем новую задачу
-        if (currentAction == null) 
-        {
-            // Пытаемся найти и запустить задачу.
-            // Эта функция вернет true, если задача была найдена и запущена.
-            bool taskFoundAndStarted = TryToStartNewAction();
-
-            // Если ни одна задача не нашлась, запускаем действие по умолчанию
-            if (!taskFoundAndStarted)
-            {
-                currentAction = StartCoroutine(ExecuteDefaultAction());
-            }
-        }
-        
-        // Просто ждем следующего кадра
-        yield return null;
-    }
-}
-
-private bool TryToStartNewAction()
-{
-    if (!activeActions.Any()) return false;
-
-    for (int i = 0; i < activeActions.Count; i++)
-    {
-        var action = activeActions[i];
-        float priorityBonus = 0.2f * (1.0f - ((float)i / activeActions.Count));
-        
-        if (CanExecuteActionConditions(action.actionType) && CheckActionRoll(action, priorityBonus))
-        {
-            Debug.Log($"<color=green>AI РЕШЕНИЕ:</color> {characterName} будет выполнять '{action.displayName}'.");
-            UpdateFrustration(true);
-            // Запускаем исполнителя и сохраняем ССЫЛКУ. Мозг НЕ ждет.
-            currentAction = StartCoroutine(ExecuteActionCoroutine(action.actionType));
-            return true; // Задача найдена и запущена, выходим
-        }
-    }
-    
-    return false; // Ни одна задача не подошла
-}
-
-private void UpdateFrustration(bool wasCycleSuccessful)
-{
-    float oldFrustration = currentFrustration;
-    if (wasCycleSuccessful)
-    {
-        float resistance = skills.GetSkillValue(frustrationResistanceSkill);
-        float frustrationGain = baseFrustrationGain * (1f - resistance * 0.5f);
-        currentFrustration = Mathf.Clamp01(currentFrustration + frustrationGain);
-        
-        Debug.Log($"<color=yellow>ИТОГ ЦИКЛА:</color> Успех. Выгорание: {oldFrustration:P0} -> {currentFrustration:P0} (+{frustrationGain:P0})");
-    }
-    else
-    {
-        currentFrustration = 0f;
-        Debug.Log($"<color=gray>ИТОГ ЦИКЛА:</color> Провал. Выгорание сброшено на 0.</color>");
-    }
-}
-    
-    // --- АБСТРАКТНЫЕ МЕТОДЫ (ДОЛЖНЫ БЫТЬ РЕАЛИЗОВАНЫ В ДОЧЕРНИХ КЛАССАХ) ---
-
-    public abstract void GoOnBreak(float duration);
-    
-    //protected abstract bool TryExecuteAction(ActionType actionType);
-
-    protected virtual IEnumerator ExecuteDefaultAction()
-{
-    // Базовая реализация может быть пустой, наследники ее переопределят
-    yield return null;
-    currentAction = null; // Убедимся, что сбрасываем действие
-}
-	
-	protected abstract IEnumerator ExecuteActionCoroutine(ActionType actionType);
-
-    protected virtual Queue<Waypoint> BuildPathTo(Vector2 targetPos)
-{
-    // Теперь базовая реализация для всех сотрудников находится здесь.
-    return PathfindingUtility.BuildPathTo(transform.position, targetPos, this.gameObject);
-}
-    
-    public virtual float GetStressValue() { return 0f; }
-    
-    public virtual void SetStressValue(float stress) { }
-
-    // --- РУТИНЫ И ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ---
-    
-private IEnumerator GoHomeRoutine()
-{
-    var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
-    if (homeZone != null)
-    {
-        Vector2 targetPos = homeZone.GetRandomPointInside();
-        agentMover.SetPath(BuildPathTo(targetPos));
-        yield return new WaitUntil(() => !agentMover.IsMoving());
-        if (endShiftSound != null) AudioSource.PlayClipAtPoint(endShiftSound, transform.position);
-        // Можно добавить здесь agentMover.enabled = false; чтобы они замирали до новой смены
-    }
-}
-    
     private IEnumerator GoHomeAndDespawnRoutine()
     {
-        Debug.Log($"Сотрудник {characterName} уволен и идет домой...");
         yield return StartCoroutine(GoHomeRoutine());
-        Debug.Log($"{characterName} дошел до точки ухода и исчезает.");
         Destroy(gameObject);
     }
-    
-    // --- МЕТОДЫ UNITY (AWAKE, START) ---
-
-    protected virtual void Awake()
-    {
-        agentMover = GetComponent<AgentMover>();
-        logger = GetComponent<CharacterStateLogger>();
-        visuals = GetComponent<CharacterVisuals>();
-		thoughtBubble = GetComponent<ThoughtBubbleController>();
-    }
-
-    protected virtual void Start()
-    {
-        if (!isInitialized)
-        {
-            if (homePoint != null)
-            {
-                transform.position = homePoint.position;
-            }
-            InitializeRole();
-            isInitialized = true;
-        }
-    }
-
-    private void InitializeRole()
-    {
-        // Теперь этот метод просто настраивает визуал для стажера при первом появлении
-        if (this.currentRole == Role.Intern)
-        {
-            var internController = GetComponent<InternController>();
-            if (internController != null && visuals != null)
-            {
-                visuals.Setup(this.gender, internController.spriteCollection, internController.stateEmotionMap);
-            }
-        }
-        // Логика по смене роли теперь полностью лежит на HiringManager
-    }
-
-    // --- ОСТАЛЬНЫЕ МЕТОДЫ ---
-
-protected Transform RequestKitchenPoint()
-{
-    // Теперь запрашиваем точку напрямую у реестра
-    if (ScenePointsRegistry.Instance == null) return null;
-    return ScenePointsRegistry.Instance.RequestKitchenPoint();
-}
-
-protected void FreeKitchenPoint(Transform point)
-{
-    // Сообщаем реестру, что точка освободилась
-    if (ScenePointsRegistry.Instance == null) return;
-    ScenePointsRegistry.Instance.FreeKitchenPoint(point);
-}
-
-    protected IEnumerator EnterLimitedZoneAndWaitRoutine(Transform zoneEntrance, float waitDuration)
-    {
-        if (zoneEntrance == null)
-        {
-            Debug.LogError($"{name} не может войти в зону, так как точка входа не задана!");
-            yield break;
-        }
-        LimitedCapacityZone zone = zoneEntrance.GetComponentInParent<LimitedCapacityZone>();
-        if (zone == null)
-        {
-            Debug.LogError($"{name} пытается использовать {zoneEntrance.name} как вход в зону, но на родительском объекте нет компонента LimitedCapacityZone!");
-            yield return new WaitForSeconds(waitDuration);
-            yield break;
-        }
-        zone.JoinQueue(gameObject);
-        yield return new WaitUntil(() => zone.IsFirstInQueue(gameObject));
-        Waypoint insidePoint = null;
-        while (insidePoint == null)
-        {
-            if (this == null || !gameObject.activeInHierarchy) yield break;
-            insidePoint = zone.RequestAndOccupyWaypoint(gameObject);
-            if (insidePoint == null)
-            {
-                yield return new WaitForSeconds(0.5f);
-            }
-        }
-        zone.LeaveQueue(gameObject);
-        agentMover.SetPath(BuildPathTo(insidePoint.transform.position));
-        yield return new WaitUntil(() => !agentMover.IsMoving());
-        yield return new WaitForSeconds(waitDuration);
-        zone.ReleaseWaypoint(insidePoint);
-        if (zone.exitWaypoint != null)
-        {
-            agentMover.SetPath(BuildPathTo(zone.exitWaypoint.transform.position));
-            yield return new WaitUntil(() => !agentMover.IsMoving());
-        }
-    }
 	
-	public void RefreshAIState()
-{
-
-}
+    #endregion
 }

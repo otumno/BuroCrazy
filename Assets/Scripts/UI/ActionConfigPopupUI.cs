@@ -229,8 +229,7 @@ private IEnumerator SaveAndRefreshRoutine()
     // 6. "Пинаем" AI, чтобы он перечитал свои новые задачи
     if (currentStaff != null)
     {
-        currentStaff.RefreshAIState();
-        Debug.Log($"Сохранен новый список из {currentStaff.activeActions.Count} действий для {currentStaff.characterName}.");
+
     }
 
     // 7. Закрываем панель и обновляем общий список команды

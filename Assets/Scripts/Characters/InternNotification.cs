@@ -7,7 +7,7 @@ public class InternNotification : MonoBehaviour
 {
     private InternController parent;
     private TextMeshPro notificationText;
-
+    
     void Start()
     {
         parent = GetComponent<InternController>();
@@ -22,9 +22,8 @@ public class InternNotification : MonoBehaviour
     {
         if (notificationText == null || parent == null) return;
         
-        // Теперь этот вызов будет работать, так как метод GetCurrentState() существует
-        var state = parent.GetCurrentState(); 
-        
+        // --- ИСПРАВЛЕНО: Теперь мы снова вызываем GetCurrentState(), который возвращает правильный enum ---
+        var state = parent.GetCurrentState();
         notificationText.text = GetStateText(state);
         notificationText.color = GetStateColor(state);
     }

@@ -1,5 +1,89 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1131637138173560786
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3202741118275778470}
+  - component: {fileID: 3083405742380818611}
+  m_Layer: 6
+  m_Name: NightLight
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3202741118275778470
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131637138173560786}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6522581963784924959}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3083405742380818611
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1131637138173560786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_ComponentVersion: 2
+  m_LightType: 3
+  m_BlendStyleIndex: 0
+  m_FalloffIntensity: 0.5
+  m_Color: {r: 0.4669811, g: 1, b: 0.7809657, a: 1}
+  m_Intensity: 3
+  m_LightVolumeIntensity: 1
+  m_LightVolumeEnabled: 0
+  m_ApplyToSortingLayers: 00000000d1771a59
+  m_LightCookieSprite: {fileID: 0}
+  m_DeprecatedPointLightCookieSprite: {fileID: 0}
+  m_LightOrder: 0
+  m_AlphaBlendOnOverlap: 0
+  m_OverlapOperation: 0
+  m_NormalMapDistance: 3
+  m_NormalMapQuality: 2
+  m_UseNormalMap: 0
+  m_ShadowsEnabled: 1
+  m_ShadowIntensity: 0.75
+  m_ShadowSoftness: 0.3
+  m_ShadowSoftnessFalloffIntensity: 0.5
+  m_ShadowVolumeIntensityEnabled: 0
+  m_ShadowVolumeIntensity: 0.75
+  m_LocalBounds:
+    m_Center: {x: 0, y: -0.00000011920929, z: 0}
+    m_Extent: {x: 0.9985302, y: 0.99853027, z: 0}
+  m_PointLightInnerAngle: 360
+  m_PointLightOuterAngle: 360
+  m_PointLightInnerRadius: 0
+  m_PointLightOuterRadius: 1
+  m_ShapeLightParametricSides: 5
+  m_ShapeLightParametricAngleOffset: 0
+  m_ShapeLightParametricRadius: 1
+  m_ShapeLightFalloffSize: 0.5
+  m_ShapeLightFalloffOffset: {x: 0, y: 0}
+  m_ShapePath:
+  - {x: -0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: -0.5, z: 0}
+  - {x: 0.5, y: 0.5, z: 0}
+  - {x: -0.5, y: 0.5, z: 0}
 --- !u!1 &1300310410156682885
 GameObject:
   m_ObjectHideFlags: 0
@@ -19,6 +103,7 @@ GameObject:
   - component: {fileID: 7365621211184648416}
   - component: {fileID: 2130437202028965468}
   - component: {fileID: 6508645962072336894}
+  - component: {fileID: 9101693390999189065}
   m_Layer: 6
   m_Name: Universal_Staff_Template
   m_TagString: Clerk
@@ -44,6 +129,7 @@ Transform:
   - {fileID: 3416182549313532167}
   - {fileID: 6204879837612137969}
   - {fileID: 6279665039555831547}
+  - {fileID: 3202741118275778470}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2741279865766227009
@@ -179,10 +265,13 @@ MonoBehaviour:
   moveSpeed: 2
   stoppingDistance: 0.2
   characterSpriteRenderer: {fileID: 2741279865766227009}
-  idleSprite: {fileID: 0}
-  walkSprite1: {fileID: 0}
-  walkSprite2: {fileID: 0}
+  idleSprite: {fileID: 3916294077759095372, guid: 59d77eaf34d13b44498c316a57207c4d, type: 3}
+  walkSprite1: {fileID: 1894015300992715325, guid: 22a93148dcaaea6459ec2aad88f79846, type: 3}
+  walkSprite2: {fileID: -6371035009962811522, guid: 618fb1f9e00240d4889cb3efafedeaf4, type: 3}
   animationSpeed: 0.3
+  dynamicLight: {fileID: 3202741118275778470}
+  lightForwardOffset: 1
+  lightSmoothing: 5
   agent: {fileID: 0}
   rubberBandStrength: 5
   priority: 1
@@ -281,26 +370,8 @@ MonoBehaviour:
   - "\u041E\u0431\u0435\u0434"
   - "\u0414\u0435\u043D\u044C"
   - "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
-  patrolPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  homePoint: {fileID: 0}
-  kitchenPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  staffToiletPoint: {fileID: 0}
-  frustrationPerFailure: 0.1
-  frustrationThreshold: 0.5
-  startShiftSound: {fileID: 0}
-  endShiftSound: {fileID: 0}
+  startShiftSound: {fileID: 8300000, guid: 7df9251a62a0ec148b130536dba1b021, type: 3}
+  endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
   characterName: "\u0421\u0435\u043C\u0451\u043D \u0421\u0435\u043C\u0451\u043D\u044B\u0447
     \u041F\u0435\u0447\u0430\u0442\u043A\u0438\u043D"
   gender: 0
@@ -311,8 +382,27 @@ MonoBehaviour:
   salaryPerPeriod: 15
   isReadyForPromotion: 0
   activeActions: []
+  baseFrustrationGain: 0.1
+  frustrationResistanceSkill: 1
   spriteCollection: {fileID: 11400000, guid: cdab1e82753fc0d4fb395149bfc4e7dc, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 785cfc11f7b6eee47a4deaaf43942ff6, type: 2}
+--- !u!114 &9101693390999189065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300310410156682885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6cccdfa95ca24ad44bf8a8929b6b369c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bodyRenderer: {fileID: 2741279865766227009}
+  faceRenderer: {fileID: 5983634483572980443}
+  nightLight: {fileID: 1131637138173560786}
+  headAttachPoint: {fileID: 6204879837612137969}
+  handAttachPoint: {fileID: 6279665039555831547}
 --- !u!1 &1381716582639190742
 GameObject:
   m_ObjectHideFlags: 0

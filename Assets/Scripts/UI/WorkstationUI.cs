@@ -45,7 +45,6 @@ public class WorkstationUI : MonoBehaviour
     {
         if (Time.timeScale == 0f)
         {
-            // Больше не пишем "Пауза" здесь, чтобы не перезатирать статусы
             return;
         }
 
@@ -55,8 +54,14 @@ public class WorkstationUI : MonoBehaviour
         }
         else if (trackedCharacter != null)
         {
-            if (clerk != null) { UpdateClerkStatus(); }
-            else if (singleGuard != null) { UpdateGuardStatus(singleGuard); }
+            if (clerk != null) 
+            {
+                UpdateClerkStatus();
+            }
+            else if (singleGuard != null) 
+            {
+                UpdateGuardStatus(singleGuard);
+            }
         }
         else
         {
@@ -72,7 +77,8 @@ public class WorkstationUI : MonoBehaviour
             if (trackedGuards[i] != null)
             {
                 sb.Append($"Охранник {i + 1}: ");
-                sb.Append(GetGuardStatusText(trackedGuards[i]));
+                // --- ИСПРАВЛЕНО: Получаем enum и передаем его в helper-метод, который вернет string ---
+                sb.Append(GetGuardStatusText(trackedGuards[i].GetCurrentState()));
                 
                 if (i < trackedGuards.Count - 1)
                 {
@@ -97,12 +103,12 @@ public class WorkstationUI : MonoBehaviour
             case ClerkController.ClerkState.OnBreak: 
                 if (period == "ночь") 
                 { 
-                    statusText.text = "Смена окончена"; 
+                    statusText.text = "Смена окончена";
                     statusText.color = Color.grey;
                 } 
                 else 
                 { 
-                    statusText.text = "Обед"; 
+                    statusText.text = "Обед";
                     statusText.color = Color.yellow; 
                 } 
                 break;
@@ -112,7 +118,7 @@ public class WorkstationUI : MonoBehaviour
                 statusText.color = Color.yellow; 
                 break;
             default: 
-                statusText.text = "Отсутствует"; 
+                statusText.text = "Отсутствует";
                 statusText.color = Color.red; 
                 break;
         }
@@ -120,13 +126,14 @@ public class WorkstationUI : MonoBehaviour
 
     void UpdateGuardStatus(GuardMovement guard)
     {
-        statusText.text = GetGuardStatusText(guard);
-        statusText.color = GetGuardStatusColor(guard.GetCurrentState());
+        // --- ИСПРАВЛЕНО: Получаем enum и передаем его в helper-методы ---
+        var state = guard.GetCurrentState();
+        statusText.text = GetGuardStatusText(state);
+        statusText.color = GetGuardStatusColor(state);
     }
 
-    private string GetGuardStatusText(GuardMovement guard)
+    private string GetGuardStatusText(GuardMovement.GuardState state)
     {
-        var state = guard.GetCurrentState();
         string period = ClientSpawner.CurrentPeriodName?.ToLower().Trim();
 
         switch (state)

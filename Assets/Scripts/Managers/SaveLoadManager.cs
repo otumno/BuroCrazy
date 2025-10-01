@@ -49,7 +49,7 @@ public class SaveLoadManager : MonoBehaviour
             StaffSaveData staffData = new StaffSaveData();
             staffData.characterName = staffMember.gameObject.name;
             staffData.position = staffMember.transform.position;
-            staffData.stressLevel = staffMember.GetStressValue();
+            staffData.stressLevel = staffMember.GetCurrentFrustration();
             data.allStaffData.Add(staffData);
         }
 
@@ -150,7 +150,7 @@ public class SaveLoadManager : MonoBehaviour
                 if (staffMember != null)
                 {
                     staffMember.transform.position = staffData.position;
-                    staffMember.SetStressValue(staffData.stressLevel);
+                    staffMember.SetCurrentFrustration(staffData.stressLevel);
                 }
             }
 

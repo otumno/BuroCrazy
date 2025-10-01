@@ -8,6 +8,7 @@ public class MainMenuActions : MonoBehaviour
     [Header("Панели интерфейса")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject saveLoadPanel;
+	[SerializeField] private Button continueButton;
 
     // --- <<< ИЗМЕНЕНИЕ: Теперь у нас только ОДНА кнопка >>> ---
     [Header("Главная кнопка")]
@@ -46,7 +47,10 @@ public class MainMenuActions : MonoBehaviour
                 primaryActionButtonText.text = "Новая игра";
             }
         }
-        
+        if (continueButton != null)
+    {
+        continueButton.gameObject.SetActive(SaveLoadManager.Instance.DoesAnySaveExist());
+    }
         // Показываем главное меню при старте
         ShowPanel(mainMenuPanel);
     }
@@ -58,6 +62,15 @@ public class MainMenuActions : MonoBehaviour
         // Этот метод теперь вызывается в обоих случаях
         Debug.Log("<b><color=cyan>[MainMenuActions] ==> Открываю панель выбора слотов...</color></b>");
         ShowPanel(saveLoadPanel);
+    }
+
+public void Action_Continue()
+    {
+        int latestSaveSlot = SaveLoadManager.Instance.GetLatestSaveSlotIndex();
+        if (latestSaveSlot != -1)
+        {
+            MainUIManager.Instance.OnSaveSlotClicked(latestSaveSlot);
+        }
     }
 
     public void Action_BackToMainMenu()

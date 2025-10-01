@@ -140,32 +140,30 @@ public class ThoughtBubbleController : MonoBehaviour
         return new Color(1.0f, 0.64f, 0.0f);
     }
 
-    private (string, float) DetermineThoughtParameters()
+private (string, float) DetermineThoughtParameters()
 {
     string key = "";
     float param = 1f;
-
     if (clientPathfinding != null)
     {
-        // ... (логика для клиента без изменений)
+        // ... (client logic remains the same)
     }
     else if (clerkController != null)
     {
-        // ... (логика для клерка без изменений)
+        // ... (clerk logic remains the same)
     }
     else if (guardMovement != null)
     {
-        // ... (логика для охранника без изменений)
+        // ... (guard logic remains the same)
     }
     else if (internController != null)
     {
         // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
         // Используем новый публичный метод для получения состояния
-        var internState = internController.GetCurrentState();
-
-        if (internState == InternController.InternState.HelpingConfused || internState == InternController.InternState.ServingFromQueue)
+        var internState = internController.GetCurrentStateName();
+        if (internState == InternController.InternState.HelpingConfused.ToString() || internState == InternController.InternState.ServingFromQueue.ToString())
              key = "Staff_Action";
-        else if (internState == InternController.InternState.AtToilet || internState == InternController.InternState.OnBreak)
+        else if (internState == InternController.InternState.AtToilet.ToString() || internState == InternController.InternState.OnBreak.ToString())
             key = "Staff_OnBreak";
         else
             key = "Staff_Working";

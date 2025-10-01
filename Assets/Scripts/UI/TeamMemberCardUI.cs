@@ -73,7 +73,7 @@ public class TeamMemberCardUI : MonoBehaviour
 
         if (stressText != null)
         {
-            float currentStress = assignedStaff.GetStressValue();
+            float currentStress = assignedStaff.GetCurrentFrustration();
             stressText.text = $"Стресс: {currentStress:F0}%";
         }
 

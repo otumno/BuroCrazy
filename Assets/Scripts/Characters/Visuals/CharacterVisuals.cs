@@ -25,6 +25,17 @@ public class CharacterVisuals : MonoBehaviour
         }
     }
 
+public void SetupFromRoleData(RoleData data, Gender gender)
+    {
+        if (data == null) return;
+
+        // Вызываем ваш существующий метод Setup с данными из RoleData
+        Setup(gender, data.spriteCollection, data.stateEmotionMap);
+        
+        // Сразу же экипируем аксессуар
+        EquipAccessory(data.accessoryPrefab);
+    }
+
     public void Setup(Gender gender, EmotionSpriteCollection collection, StateEmotionMap emotionMap)
     {
         // Сохраняем полученные данные

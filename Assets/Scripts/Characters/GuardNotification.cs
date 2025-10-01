@@ -12,12 +12,17 @@ public class GuardNotification : MonoBehaviour
     {
         parent = GetComponent<GuardMovement>();
         notificationText = GetComponentInChildren<TextMeshPro>();
-        if (parent == null || notificationText == null) { enabled = false; }
+        if (parent == null || notificationText == null) 
+        { 
+            enabled = false; 
+        }
     }
     
     void Update()
     {
         if (notificationText == null || parent == null) return;
+        
+        // --- ИСПРАВЛЕНО: Теперь мы снова вызываем GetCurrentState(), который возвращает правильный enum ---
         var state = parent.GetCurrentState();
         notificationText.text = GetStateText(state);
         notificationText.color = GetStateColor(state);
@@ -36,12 +41,10 @@ public class GuardNotification : MonoBehaviour
                 return useEmoji ? "🚨" : "#";
             case GuardMovement.GuardState.OnPost:
             case GuardMovement.GuardState.OnBreak:
-            // --- ИЗМЕНЕНИЕ: Добавлено состояние движения на обед ---
             case GuardMovement.GuardState.GoingToBreak:
                 return useEmoji ? "🥪" : "S";
             case GuardMovement.GuardState.GoingToToilet:
             case GuardMovement.GuardState.AtToilet:
-                // --- ИЗМЕНЕНИЕ: Установлен эмодзи 😖 в соответствии с запросом ---
                 return useEmoji ? "😖" : "!";
             case GuardMovement.GuardState.OffDuty: return useEmoji ? "😔" : "*";
             case GuardMovement.GuardState.WaitingAtWaypoint:
