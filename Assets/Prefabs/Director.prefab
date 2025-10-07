@@ -52,6 +52,7 @@ GameObject:
   - component: {fileID: 7754943441221024242}
   - component: {fileID: 1286350224349572312}
   - component: {fileID: 4228081369415377242}
+  - component: {fileID: 6049552469313363215}
   m_Layer: 6
   m_Name: Director
   m_TagString: Clerk
@@ -245,6 +246,9 @@ MonoBehaviour:
   walkSprite1: {fileID: 6859326965049662136, guid: 00e6be823e8fb304ab86be6fc0c6f594, type: 3}
   walkSprite2: {fileID: -5397753365343789046, guid: 34594ad59abd42a45a25ede94167e6e5, type: 3}
   animationSpeed: 0.3
+  dynamicLight: {fileID: 0}
+  lightForwardOffset: 0.5
+  lightSmoothing: 5
   agent: {fileID: 0}
   rubberBandStrength: 5
   priority: 1
@@ -296,6 +300,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   directorChairPoint: {fileID: 0}
+  spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: 18bb2c0b09d19b84ca27c4993ea9a97d, type: 2}
+  gender: 0
 --- !u!114 &4228081369415377242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -313,6 +320,20 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 0
   clickMarkerPrefab: {fileID: 0}
+--- !u!114 &6049552469313363215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2985711966202016409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: eca1e16d28658654b9061cb033a62ebf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  contextButton: {fileID: 0}
+  contextButtonText: {fileID: 0}
 --- !u!1 &3455213251003331974
 GameObject:
   m_ObjectHideFlags: 0

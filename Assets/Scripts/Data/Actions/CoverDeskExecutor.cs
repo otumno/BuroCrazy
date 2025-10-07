@@ -1,0 +1,50 @@
+using UnityEngine;
+using System.Collections;
+using System.Linq;
+
+public class CoverDeskExecutor : ActionExecutor
+{
+    public override bool IsInterruptible => false;
+
+    protected override IEnumerator ActionRoutine()
+{
+    var intern = staff as InternController;
+    if (intern == null) { FinishAction(); yield break; }
+
+    ClerkController.ClerkRole targetRole; // Определяем, кого мы ищем
+
+    // Определяем роль-цель на основе типа запустившего нас действия
+    if (actionData.actionType == ActionType.CoverRegistrar)
+        targetRole = ClerkController.ClerkRole.Registrar;
+    else if (actionData.actionType == ActionType.CoverClerk)
+        targetRole = ClerkController.ClerkRole.Regular;
+    else if (actionData.actionType == ActionType.CoverCashier)
+        targetRole = ClerkController.ClerkRole.Cashier;
+    else
+    {
+        FinishAction(); // Неизвестный тип действия
+        yield break;
+    }
+
+    // Находим сотрудника-цель на перерыве
+    var clerkOnBreak = HiringManager.Instance.AllStaff.OfType<ClerkController>()
+        .FirstOrDefault(c => c.role == targetRole && c.IsOnBreak());
+
+    if (clerkOnBreak == null || clerkOnBreak.assignedServicePoint == null) { FinishAction(); yield break; }
+
+    // ... (остальная часть метода с походом к столу, подменой и возвращением остается БЕЗ ИЗМЕНЕНИЙ) ...
+    var targetPoint = clerkOnBreak.assignedServicePoint;
+    intern.SetState(InternController.InternState.CoveringDesk);
+    intern.thoughtBubble?.ShowPriorityMessage("Подменю!", 2f, Color.cyan);
+    yield return staff.StartCoroutine(intern.MoveToTarget(targetPoint.clerkStandPoint.position, InternController.InternState.CoveringDesk));
+    intern.AssignCoveredWorkstation(targetPoint);
+    ClientSpawner.AssignServiceProviderToDesk(intern, targetPoint.deskId);
+    Debug.Log($"{intern.name} подменяет {clerkOnBreak.name} на посту.");
+    yield return new WaitUntil(() => clerkOnBreak == null || !clerkOnBreak.IsOnBreak());
+    Debug.Log($"{clerkOnBreak.name} вернулся. {intern.name} уходит с поста.");
+    ClientSpawner.UnassignServiceProviderFromDesk(targetPoint.deskId);
+    intern.AssignCoveredWorkstation(null);
+    intern.SetState(InternController.InternState.Patrolling);
+    FinishAction();
+}
+}

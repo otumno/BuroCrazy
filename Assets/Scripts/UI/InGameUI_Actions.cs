@@ -3,6 +3,9 @@ using UnityEngine;
 
 public class InGameUI_Actions : MonoBehaviour
 {
+	[Header("Действия Директора")]
+    public StaffAction directorPrepareSalariesAction;
+	
     public void OnRadioButtonClick()
     {
         MusicPlayer.Instance?.RequestNextTrack();
@@ -27,4 +30,15 @@ public class InGameUI_Actions : MonoBehaviour
         // Находим экземпляр аватара директора и вызываем его метод GoToDesk()
         DirectorAvatarController.Instance?.GoToDesk();
     }
+	
+	public void OnPrepareSalariesButtonClick()
+    {
+        var director = DirectorAvatarController.Instance;
+        if (director != null && directorPrepareSalariesAction != null)
+        {
+            // Принудительно запускаем выполнение действия у Директора
+            director.ExecuteAction(directorPrepareSalariesAction);
+        }
+    }
+	
 }

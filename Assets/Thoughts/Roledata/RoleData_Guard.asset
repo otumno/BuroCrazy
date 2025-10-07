@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roleType: 5
   moveSpeed: 2
-  priority: 3
+  priority: 5
   spriteCollection: {fileID: 11400000, guid: beab52f1c80e8ac4c98dcb2a60a80988, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 2e2b81eb0b087b343a2f80516527a884, type: 2}
   accessoryPrefab: {fileID: 7031139104917970267, guid: 8e705cca1f01d874983ac140cb0a8ac4, type: 3}
@@ -40,3 +40,5 @@ MonoBehaviour:
   worker_maxStress: 100
   worker_stressGainPerMess: 2
   worker_stressReliefRate: 10
+  minIdleWait: 5
+  maxIdleWait: 10

@@ -12,7 +12,6 @@ public class GuardMovement : StaffController
     private GuardState currentState = GuardState.OffDuty;
 
     [Header("Механика Протоколов")]
-    [Tooltip("Количество действий, за которые нужно отчитаться.")]
     public int unwrittenReportPoints = 0;
 
     [Header("Объекты (Prefab)")]
@@ -27,8 +26,56 @@ public class GuardMovement : StaffController
     public float maxStress;
     public float stressGainPerViolator;
     public float stressReliefRate;
+	
+	public float minIdleWait;
+	public float maxIdleWait;
     
-    // Мы удалили отсюда методы Awake() и TryToStartNewAction(), так как они больше не нужны.
+    private StaffAction writeReportAction;
+
+    protected override void Awake()
+    {
+        base.Awake(); 
+
+        writeReportAction = Resources.Load<StaffAction>("Actions/Action_WriteReport");
+        if (writeReportAction == null)
+        {
+            Debug.LogError("Не удалось загрузить Action_WriteReport из папки Resources/Actions!");
+        }
+        
+        var references = GetComponent<StaffPrefabReferences>();
+        if (references != null)
+        {
+            this.nightLight = references.nightLight;
+        }
+    }
+
+    // --- ФИНАЛЬНАЯ ВЕРСИЯ ОСОБОГО "МОЗГА" ОХРАННИКА ---
+    protected override ActionStartResult TryToStartConfiguredAction()
+    {
+        // 1. Сначала пытаемся выполнить все обычные и экстренные действия
+        var baseResult = base.TryToStartConfiguredAction();
+
+        // 2. Если удалось запустить обычное/экстренное действие, то на этом все.
+        if (baseResult == ActionStartResult.Success)
+        {
+            return ActionStartResult.Success;
+        }
+
+        // 3. Если обычные действия не запустились, ПЕРЕД тем как сдаться, проверяем протоколы.
+        if (writeReportAction != null && writeReportAction.AreConditionsMet(this))
+        {
+            // Условия выполнены - запускаем Executor для написания протокола без броска кубиков.
+            if(ExecuteAction(writeReportAction))
+            {
+                return ActionStartResult.Success;
+            }
+        }
+        
+        // 4. Если и протоколы писать не нужно/не удалось, возвращаем исходный результат ("Нет дел" или "Выгорел").
+        return baseResult;
+    }
+
+    // --- Остальные методы класса ---
 
     public void SetState(GuardState newState)
     {
@@ -46,7 +93,7 @@ public class GuardMovement : StaffController
         return currentState;
     }
 
-    public string GetCurrentStateName()
+    public override string GetCurrentStateName()
     {
         return currentState.ToString();
     }
@@ -90,5 +137,9 @@ public class GuardMovement : StaffController
         this.maxStress = data.guard_maxStress;
         this.stressGainPerViolator = data.guard_stressGainPerViolator;
         this.stressReliefRate = data.guard_stressReliefRate;
+		this.minIdleWait = data.minIdleWait;
+		this.maxIdleWait = data.maxIdleWait;
     }
+
+    // Мы удалили отсюда GetIdleActionExecutor, так как эта логика теперь внутри TryToStartConfiguredAction
 }

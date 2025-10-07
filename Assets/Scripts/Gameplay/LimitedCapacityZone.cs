@@ -24,7 +24,7 @@ public class LimitedCapacityZone : MonoBehaviour
     // ------------------
 
     private List<Waypoint> occupiedWaypoints = new List<Waypoint>();
-    private Queue<GameObject> waitingQueue = new Queue<GameObject>();
+    public Queue<GameObject> waitingQueue = new Queue<GameObject>();
     private Dictionary<Waypoint, GameObject> occupiedWaypointOwners = new Dictionary<Waypoint, GameObject>();
 
     public int GetCurrentOccupancy() 

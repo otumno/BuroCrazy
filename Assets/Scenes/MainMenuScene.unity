@@ -428,10 +428,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 846011595}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1386.6, y: -154.862}
-  m_SizeDelta: {x: 745.9722, y: 490.3226}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 533.4, y: 925.138}
+  m_SizeDelta: {x: 745.97217, y: 490.32263}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &331096259
 MonoBehaviour:
@@ -1079,10 +1079,10 @@ RectTransform:
   - {fileID: 1473239701}
   m_Father: {fileID: 846011595}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1386.6, y: -681}
-  m_SizeDelta: {x: 745.951, y: 139.8658}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 533.4, y: 399}
+  m_SizeDelta: {x: 745.9509, y: 139.86578}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1004667239
 MonoBehaviour:
@@ -1237,10 +1237,10 @@ RectTransform:
   - {fileID: 1385932518}
   m_Father: {fileID: 846011595}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1386.6, y: -856.7648}
-  m_SizeDelta: {x: 745.951, y: 139.8658}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 533.4, y: 223.23523}
+  m_SizeDelta: {x: 745.9509, y: 139.86578}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1111867530
 MonoBehaviour:
@@ -1889,10 +1889,10 @@ RectTransform:
   - {fileID: 707032160}
   m_Father: {fileID: 846011595}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -1386.6, y: -505.23523}
-  m_SizeDelta: {x: 745.951, y: 139.8658}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 533.4, y: 574.7648}
+  m_SizeDelta: {x: 745.9509, y: 139.86578}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1483531252
 MonoBehaviour:
@@ -2357,7 +2357,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1864426795
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2973,8 +2973,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: baseCost
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: costPerSkillPoint
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: allRoleData.Array.size
-      value: 6
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: 'allRoleData.Array.data[0]'
@@ -3000,6 +3008,10 @@ PrefabInstance:
       propertyPath: 'allRoleData.Array.data[5]'
       value: 
       objectReference: {fileID: 11400000, guid: 428bc3411e2781d4a853d3f4bf36d803, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'allRoleData.Array.data[6]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 7653fc3164961e644b076e4156d9b0ec, type: 2}
     - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: uiSource
       value: 

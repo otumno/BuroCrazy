@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe30172d6535f3e45ae1a72bb87fc0b2, type: 3}
+  m_Name: Action_EmptyTrashCan
+  m_EditorClassIdentifier: 
+  actionType: 19
+  displayName: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u043C\u0443\u0441\u043E\u0440\u043A\u0443"
+  description: 
+  priority: 50
+  baseSuccessChance: 0.8
+  minSuccessChance: 0.3
+  maxSuccessChance: 0.95
+  primarySkill:
+    skill: 2
+    isPositiveEffect: 1
+    strength: 0.4
+  useSecondarySkill: 1
+  secondarySkill:
+    skill: 1
+    isPositiveEffect: 0
+    strength: 0.2
+  actionDuration: 30
+  patrolPointsToVisit: 3
+  actionCooldown: 60
+  minRankRequired: 1
+  applicableRoles: 06000000
+  isUnique: 0

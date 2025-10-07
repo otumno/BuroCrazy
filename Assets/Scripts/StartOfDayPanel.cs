@@ -16,6 +16,7 @@ public class StartOfDayPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private Button startDayButton;
     [SerializeField] private CanvasGroup canvasGroup;
+	[SerializeField] private TextMeshProUGUI errorRateText;
     
     [Header("Документы Директора")]
     // --- ДОБАВЛЕНО: Ссылка на кнопку счетчика ---
@@ -40,42 +41,66 @@ public class StartOfDayPanel : MonoBehaviour
     }
 
     public void UpdatePanelInfo()
-    {
-        if (dayText != null) dayText.text = $"ДЕНЬ {ClientSpawner.Instance.GetCurrentDay()}";
-        if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
-        if (strikesText != null) strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
-        if (activeOrdersText != null)
-        {
-            var dailyOrders = DirectorManager.Instance.activeOrders.Select(o => o.orderName);
-            var permanentOrders = DirectorManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
-            var allActiveOrders = dailyOrders.Concat(permanentOrders);
-            if (allActiveOrders.Any()) { activeOrdersText.text = "<b>Активные приказы:</b>\n" + string.Join("\n", allActiveOrders); activeOrdersText.gameObject.SetActive(true); }
-            else { activeOrdersText.gameObject.SetActive(false); }
-        }
-        
-        if (startDayButton != null)
-        {
-            startDayButton.interactable = true;
-            var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
-            bool isMidDayPause = Time.timeScale == 0f && ClientSpawner.Instance.GetCurrentPeriod() != null && ClientSpawner.Instance.GetCurrentPeriod().periodName.ToLower() != "ночь";
-            if (isMidDayPause) 
-            { 
-                buttonText.text = "Продолжить день";
-            }
-            else 
-            { 
-                buttonText.text = "Начать день";
-            }
-            startDayButton.onClick.RemoveAllListeners();
-            startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay()); 
-        }
+{
+    if (dayText != null) dayText.text = $"ДЕНЬ {ClientSpawner.Instance.GetCurrentDay()}";
+    if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
+    if (strikesText != null) strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
+    
+	if (errorRateText != null && DocumentQualityManager.Instance != null && DirectorManager.Instance != null)
+{
+    float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
+    float allowedError = DirectorManager.Instance.currentMandates.Any() 
+        ? DirectorManager.Instance.currentMandates[0].allowedDirectorErrorRate 
+        : 1f;
 
-        // --- ДОБАВЛЕНО: Обновляем кнопку при обновлении панели ---
-        if(directorDeskButton != null)
-        {
-            directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+    errorRateText.text = $"Ошибки: {averageError:P0} / Норма: {allowedError:P0}";
+    errorRateText.color = (averageError > allowedError) ? Color.red : Color.white;
+    errorRateText.gameObject.SetActive(true);
+}
+	
+	
+    if (activeOrdersText != null)
+    {
+        var dailyOrders = DirectorManager.Instance.activeOrders.Select(o => o.orderName);
+        var permanentOrders = DirectorManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
+        var allActiveOrders = dailyOrders.Concat(permanentOrders);
+        if (allActiveOrders.Any()) 
+        { 
+            activeOrdersText.text = "<b>Активные приказы:</b>\n" + string.Join("\n", allActiveOrders); 
+            activeOrdersText.gameObject.SetActive(true);
+        }
+        else 
+        { 
+            activeOrdersText.gameObject.SetActive(false);
         }
     }
+    
+    if (startDayButton != null)
+    {
+        startDayButton.interactable = true;
+        var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
+
+        // --- ИЗМЕНЕНИЕ: Вызываем новый метод GetCurrentPeriodPlan() ---
+        var currentPeriodPlan = ClientSpawner.Instance.GetCurrentPeriodPlan();
+        bool isMidDayPause = Time.timeScale == 0f && currentPeriodPlan != null && currentPeriodPlan.periodName.ToLower() != "ночь";
+        
+        if (isMidDayPause) 
+        { 
+            buttonText.text = "Продолжить день";
+        }
+        else 
+        { 
+            buttonText.text = "Начать день";
+        }
+        startDayButton.onClick.RemoveAllListeners();
+        startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay());
+    }
+
+    if(directorDeskButton != null)
+    {
+        directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+    }
+}
 
     public IEnumerator Fade(bool fadeIn, bool interactableAfterFade)
     {

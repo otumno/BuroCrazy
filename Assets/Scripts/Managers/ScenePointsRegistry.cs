@@ -16,11 +16,17 @@ public class ScenePointsRegistry : MonoBehaviour
     public List<Transform> internPatrolPoints;
     public List<Transform> guardPatrolPoints;
     public List<Transform> janitorPatrolPoints;
+	
+	[Header("Базы персонажей")]
+    public Transform janitorHomePoint;
+	public Transform dumpsterPoint;
+	public EnvelopeStack salaryStackPoint;
 
     [Header("Рабочие места и зоны")]
     public List<ServicePoint> allServicePoints;
     public Transform guardPostPoint;
     public ServicePoint guardReportDesk;
+	public ServicePoint bookkeepingDesk;
 
     // --- ДОБАВЛЕНО: Ссылка на уникальный объект сцены ---
     [Header("Уникальные интерактивные объекты")]

@@ -1,4 +1,3 @@
-// Файл: ThoughtBubbleController.cs
 using UnityEngine;
 using System.Collections;
 using TMPro;
@@ -6,13 +5,9 @@ using TMPro;
 public class ThoughtBubbleController : MonoBehaviour
 {
     [Header("Настройки")]
-    [Tooltip("Ссылка на ассет с коллекцией всех мыслей")]
     public ThoughtCollection thoughtCollection;
-    
-    [Header("Ссылки на компоненты (перетащить из иерархии префаба)")]
-    [Tooltip("Объект 'ThoughtBubble', который включает фон и текст")]
+    [Header("Ссылки на компоненты")]
     public GameObject thoughtBubbleObject;
-    [Tooltip("Компонент TextMeshPro для отображения мысли")]
     public TextMeshPro thoughtTextMesh;
     
     [Header("Тайминги")]
@@ -20,156 +15,91 @@ public class ThoughtBubbleController : MonoBehaviour
     public float maxThinkInterval = 20f;
     public float thoughtDuration = 4f;
 
+    // --- ДОБАВЛЕНА ССЫЛКА НА ДИРЕКТОРА ---
+    private DirectorAvatarController directorController;
     private ClientPathfinding clientPathfinding;
     private ClerkController clerkController;
     private GuardMovement guardMovement;
     private InternController internController;
+    private ServiceWorkerController serviceWorkerController; // Добавим и для уборщика на будущее
 
     void Awake()
     {
+        directorController = GetComponent<DirectorAvatarController>();
         clientPathfinding = GetComponent<ClientPathfinding>();
         clerkController = GetComponent<ClerkController>();
         guardMovement = GetComponent<GuardMovement>();
         internController = GetComponent<InternController>();
+        serviceWorkerController = GetComponent<ServiceWorkerController>();
     }
 
     void Start()
     {
         if (thoughtCollection == null || thoughtBubbleObject == null || thoughtTextMesh == null)
         {
-            Debug.LogError($"ThoughtBubbleController на {gameObject.name} не настроен. Отключаю.", gameObject);
             enabled = false;
             return;
         }
         
         thoughtBubbleObject.SetActive(false);
-        StartCoroutine(ThinkLoop()); // Запускаем основной цикл один раз при старте
-    }
-    
-    /// <summary>
-    /// Показывает конкретное сообщение, прерывая любую текущую мысль.
-    /// </summary>
-    /// <param name="message">Текст для отображения</param>
-    /// <param name="duration">Как долго показывать сообщение</param>
-    /// <param name="textColor">Цвет текста</param>
-    public void ShowPriorityMessage(string message, float duration = 3f, Color? textColor = null)
-    {
-        // Останавливаем ВСЕ корутины на этом скрипте
-        // Это гарантирует, что старый цикл мыслей и другие сообщения будут прерваны
-        StopAllCoroutines();
-        
-        // Если цвет не указан, используем черный. Иначе - тот, что передали.
-        Color colorToShow = textColor ?? Color.white;
-        // Запускаем показ нового сообщения
-        StartCoroutine(ShowSingleMessageRoutine(message, duration, colorToShow));
-    }
-
-    /// <summary>
-    /// Корутина, которая показывает одно сообщение, а затем перезапускает основной цикл мыслей.
-    /// </summary>
-    private IEnumerator ShowSingleMessageRoutine(string text, float duration, Color color)
-    {
-        thoughtTextMesh.text = text;
-        thoughtTextMesh.color = color; // Используем переданный цвет
-        thoughtBubbleObject.SetActive(true);
-
-        yield return new WaitForSeconds(duration);
-
-        thoughtBubbleObject.SetActive(false);
-
-        // После того, как приоритетное сообщение было показано, перезапускаем основной цикл
         StartCoroutine(ThinkLoop());
     }
-
-
-    private IEnumerator ThinkLoop()
+    
+    // ... (методы ShowPriorityMessage, ShowSingleMessageRoutine, ThinkLoop, ShowRandomThoughtRoutine, TriggerCriticalThought, StopThinking, GetColorForParameter остаются без изменений) ...
+    public void ShowPriorityMessage(string message, float duration = 3f, Color? textColor = null) { StopAllCoroutines(); Color colorToShow = textColor ?? Color.white; StartCoroutine(ShowSingleMessageRoutine(message, duration, colorToShow)); }
+    private IEnumerator ShowSingleMessageRoutine(string text, float duration, Color color) { thoughtTextMesh.text = text; thoughtTextMesh.color = color; thoughtBubbleObject.SetActive(true); yield return new WaitForSeconds(duration); thoughtBubbleObject.SetActive(false); StartCoroutine(ThinkLoop()); }
+    private IEnumerator ThinkLoop() { while (true) { float waitTime = Random.Range(minThinkInterval, maxThinkInterval); yield return new WaitForSeconds(waitTime); (string activityKey, float parameterValue) = DetermineThoughtParameters(); if (!string.IsNullOrEmpty(activityKey)) { string thoughtText = thoughtCollection.GetRandomThought(activityKey, parameterValue); if (!string.IsNullOrEmpty(thoughtText)) { Color thoughtColor = GetColorForParameter(parameterValue); StartCoroutine(ShowRandomThoughtRoutine(thoughtText, thoughtColor)); } } } }
+    private IEnumerator ShowRandomThoughtRoutine(string text, Color color) { thoughtTextMesh.text = text; thoughtTextMesh.color = color; thoughtBubbleObject.SetActive(true); yield return new WaitForSeconds(thoughtDuration); thoughtBubbleObject.SetActive(false); }
+    public void TriggerCriticalThought(string activityKey) { StopAllCoroutines(); string thoughtText = thoughtCollection.GetRandomThought(activityKey, 0f); if (!string.IsNullOrEmpty(thoughtText)) { StartCoroutine(ShowSingleMessageRoutine(thoughtText.ToUpper(), thoughtDuration, Color.red)); } }
+    public void StopThinking() { StopAllCoroutines(); }
+    private Color GetColorForParameter(float parameterValue) { if (parameterValue >= 0.66f) return Color.green; if (parameterValue >= 0.33f) return Color.yellow; return new Color(1.0f, 0.64f, 0.0f); }
+    
+    // --- ПОЛНОСТЬЮ ПЕРЕПИСАННЫЙ МЕТОД ---
+    private (string, float) DetermineThoughtParameters()
     {
-        while (true)
-        {
-            float waitTime = Random.Range(minThinkInterval, maxThinkInterval);
-            yield return new WaitForSeconds(waitTime);
+        string key = "";
+        float param = 1f; // 1.0 = хорошо, 0.0 = плохо
 
-            (string activityKey, float parameterValue) = DetermineThoughtParameters();
-            if (!string.IsNullOrEmpty(activityKey))
+        if (clientPathfinding != null)
+        {
+            var state = clientPathfinding.stateMachine.GetCurrentState();
+            if (state == ClientState.SittingInWaitingArea || state == ClientState.AtWaitingArea)
             {
-                string thoughtText = thoughtCollection.GetRandomThought(activityKey, parameterValue);
-                if (!string.IsNullOrEmpty(thoughtText))
-                {
-                    Color thoughtColor = GetColorForParameter(parameterValue);
-                    // Запускаем показ как отдельную корутину, которая НЕ перезапускает главный цикл
-                    StartCoroutine(ShowRandomThoughtRoutine(thoughtText, thoughtColor));
-                }
+                key = "Client_Waiting";
+                // Здесь можно будет привязать параметр к реальному терпению клиента
             }
         }
-    }
-
-    /// <summary>
-    /// Корутина для показа ОБЫЧНОЙ мысли. Она не перезапускает главный цикл.
-    /// </summary>
-    private IEnumerator ShowRandomThoughtRoutine(string text, Color color)
-    {
-        thoughtTextMesh.text = text;
-        thoughtTextMesh.color = color;
-        thoughtBubbleObject.SetActive(true);
-
-        yield return new WaitForSeconds(thoughtDuration);
-        
-        thoughtBubbleObject.SetActive(false);
-    }
-    
-    public void TriggerCriticalThought(string activityKey)
-    {
-        StopAllCoroutines();
-        string thoughtText = thoughtCollection.GetRandomThought(activityKey, 0f);
-        if (!string.IsNullOrEmpty(thoughtText))
+        else if (guardMovement != null)
         {
-            // Используем ту же корутину, что и для приоритетных сообщений
-            StartCoroutine(ShowSingleMessageRoutine(thoughtText.ToUpper(), thoughtDuration, Color.red));
+            var state = guardMovement.GetCurrentState();
+            if (state == GuardMovement.GuardState.Chasing || state == GuardMovement.GuardState.Talking)
+            {
+                key = "Staff_Action"; // Ключ для активных действий
+            }
+            else if (state == GuardMovement.GuardState.OnBreak || state == GuardMovement.GuardState.AtToilet)
+            {
+                key = "Staff_OnBreak";
+            }
+            else if(state == GuardMovement.GuardState.Patrolling || state == GuardMovement.GuardState.WritingReport)
+            {
+                key = "Staff_Working";
+            }
+            param = 1f - guardMovement.GetCurrentFrustration(); // Чем выше выгорание, тем хуже мысли
         }
+        else if (directorController != null)
+        {
+            var state = directorController.GetCurrentState();
+            if(state == DirectorAvatarController.DirectorState.AtDesk)
+            {
+                 key = "Director_Working";
+            }
+            else if(state == DirectorAvatarController.DirectorState.Idle || state == DirectorAvatarController.DirectorState.MovingToPoint)
+            {
+                key = "Director_Idle";
+            }
+        }
+        // Добавьте сюда else if для clerkController, internController, serviceWorkerController по аналогии...
+        
+        return (key, param);
     }
-
-    public void StopThinking()
-    {
-        StopAllCoroutines();
-    }
-    
-    private Color GetColorForParameter(float parameterValue)
-    {
-        if (parameterValue >= 0.66f) return Color.green;
-        if (parameterValue >= 0.33f) return Color.yellow;
-        return new Color(1.0f, 0.64f, 0.0f);
-    }
-
-private (string, float) DetermineThoughtParameters()
-{
-    string key = "";
-    float param = 1f;
-    if (clientPathfinding != null)
-    {
-        // ... (client logic remains the same)
-    }
-    else if (clerkController != null)
-    {
-        // ... (clerk logic remains the same)
-    }
-    else if (guardMovement != null)
-    {
-        // ... (guard logic remains the same)
-    }
-    else if (internController != null)
-    {
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-        // Используем новый публичный метод для получения состояния
-        var internState = internController.GetCurrentStateName();
-        if (internState == InternController.InternState.HelpingConfused.ToString() || internState == InternController.InternState.ServingFromQueue.ToString())
-             key = "Staff_Action";
-        else if (internState == InternController.InternState.AtToilet.ToString() || internState == InternController.InternState.OnBreak.ToString())
-            key = "Staff_OnBreak";
-        else
-            key = "Staff_Working";
-        param = Random.Range(0.2f, 1f);
-    }
-    
-    return (key, param);
-}
 }

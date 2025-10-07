@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b282e4fb120dab54e8f5a939d2d62f73, type: 3}
+  m_Name: Action_PrioritizePayTax
+  m_EditorClassIdentifier: 
+  actionType: 0
+  displayName: "\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442: \u041E\u043F\u043B\u0430\u0442\u0430
+    \u0441\u0447\u0435\u0442\u043E\u0432"
+  description: 
+  priority: 70
+  baseSuccessChance: 0.8
+  minSuccessChance: 0.3
+  maxSuccessChance: 0.95
+  primarySkill:
+    skill: 3
+    isPositiveEffect: 1
+    strength: 0.7
+  useSecondarySkill: 1
+  secondarySkill:
+    skill: 2
+    isPositiveEffect: 1
+    strength: 0.3
+  actionDuration: 30
+  patrolPointsToVisit: 3
+  actionCooldown: 60
+  minRankRequired: 0
+  applicableRoles: 02000000
+  isUnique: 0

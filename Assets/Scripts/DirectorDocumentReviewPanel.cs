@@ -174,6 +174,9 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
             Debug.LogWarning($"СТРАЙК! Директор одобрил документ с {errorCount} ошибками ({actualErrorRate:P1}) при норме <= {allowedErrorRate:P1}.");
             DirectorManager.Instance.AddStrike();
         }
+		
+		DocumentQualityManager.Instance?.RegisterProcessedDocument(currentClient.documentQuality); // ПРАВИЛЬНО
+		currentClient.billToPay = currentClient.directorDocumentFee;
 
         currentClient.billToPay = currentClient.directorDocumentFee;
         currentClient.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
@@ -186,7 +189,10 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
     public void OnApproveWithBribeClicked()
     {
         if (currentClient == null) return;
-        if (PlayerWallet.Instance != null) { PlayerWallet.Instance.AddMoney(currentClient.directorDocumentBribe, transform.position); }
+        if (PlayerWallet.Instance != null) 
+{
+    PlayerWallet.Instance.AddMoney(currentClient.directorDocumentBribe, "Взятка за визу Директора", IncomeType.Shadow);
+}
         OnApproveClicked();
     }
 
@@ -202,15 +208,17 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
     }
 
     public void OnReviseClicked()
-    {
-        if (currentClient == null) return;
-        currentClient.hasBeenSentForRevision = true;
-        currentClient.stateMachine.SetGoal(ClientSpawner.Instance.formTable.tableWaypoint);
-        currentClient.stateMachine.SetState(ClientState.MovingToGoal);
-        StartOfDayPanel.Instance.RemoveDocumentIcon(currentClient);
-        ClosePanel();
-        currentClient = null;
-    }
+{
+    if (currentClient == null) return;
+
+    // --- ИЗМЕНЕНИЕ НАЧАЛО ---
+    currentClient.stateMachine.GoGetFormAndReturn();
+    // --- ИЗМЕНЕНИЕ КОНЕЦ ---
+    
+    StartOfDayPanel.Instance.RemoveDocumentIcon(currentClient);
+    ClosePanel();
+    currentClient = null;
+}
 
     public void OnPostponeClicked() 
     {

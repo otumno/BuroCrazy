@@ -23,6 +23,7 @@ public class ClientPathfinding : MonoBehaviour
     private CharacterVisuals visuals;
 	[Tooltip("Набор спрайтов (одежда) для клиентов")]
 	public EmotionSpriteCollection spriteCollection;
+	public StateEmotionMap stateEmotionMap;
 
     [Header("Настройки Терпения")]
     public float totalPatienceTime;
@@ -58,6 +59,7 @@ public class ClientPathfinding : MonoBehaviour
     public int directorDocumentBribe;
     public bool hasBeenSentForRevision = false;
 	public DirectorDocumentLayout directorDocumentLayout;
+	public bool documentChecked = false;
     
     public CharacterVisuals GetVisuals() => visuals;
     
@@ -78,10 +80,7 @@ public class ClientPathfinding : MonoBehaviour
 
     gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
     
-    // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-    // У клиента нет карты эмоций для состояний, поэтому передаем null
-    visuals.Setup(gender, this.spriteCollection, null);
-    // ----------------------
+    visuals.Setup(gender, this.spriteCollection, this.stateEmotionMap);
     
     babushkaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         suetunFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
@@ -120,28 +119,27 @@ public class ClientPathfinding : MonoBehaviour
     }
 
     void OnDestroy()
+{
+    if (ClientQueueManager.Instance != null)
     {
-        if (ClientQueueManager.Instance != null)
-        {
-            ClientQueueManager.Instance.RemoveClientFromQueue(this);
-        }
-        
-        // --- ИЗМЕНЕНИЕ: Сообщаем столу директора, что мы ушли и нашу иконку нужно убрать ---
-        StartOfDayPanel.Instance?.RemoveDocumentIcon(this);
+        ClientQueueManager.Instance.RemoveClientFromQueue(this);
+    }
 
-        if (stateMachine != null)
+    StartOfDayPanel.Instance?.RemoveDocumentIcon(this);
+
+    // --- ИЗМЕНЕНИЕ НАЧАЛО: Более надежное освобождение места ---
+    if (stateMachine != null)
+    {
+        var zone = stateMachine.GetTargetZone();
+        var goal = stateMachine.GetCurrentGoal();
+        if (zone != null && goal != null)
         {
-            Waypoint lastGoal = stateMachine.GetCurrentGoal();
-            if (lastGoal != null)
-            {
-                var zone = lastGoal.GetComponentInParent<LimitedCapacityZone>();
-                if (zone != null)
-                {
-                    zone.ReleaseWaypoint(lastGoal);
-                }
-            }
+            // Используем прямые ссылки из стейт-машины, это надежнее
+            zone.ReleaseWaypoint(goal);
         }
     }
+    // --- ИЗМЕНЕНИЕ КОНЕЦ ---
+}
 
     public void OnClientExit()
     {

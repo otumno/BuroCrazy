@@ -15,7 +15,7 @@ MonoBehaviour:
   actionType: 15
   displayName: "\u041D\u0430\u043F\u0438\u0441\u0430\u0442\u044C \u043F\u0440\u043E\u0442\u043E\u043A\u043E\u043B"
   description: 
-  priority: 5
+  priority: -10
   baseSuccessChance: 0.8
   minSuccessChance: 0.3
   maxSuccessChance: 0.95

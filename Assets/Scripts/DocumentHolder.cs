@@ -33,6 +33,9 @@ public class DocumentHolder : MonoBehaviour
             Destroy(currentDocumentObject);
         }
 
+		GetComponent<ClientPathfinding>().documentChecked = false;
+
+
         currentDocumentType = newType;
         GameObject prefabToSpawn = GetPrefabForType(newType);
         string logMessage = "";

@@ -6,5 +6,6 @@ public enum ClientGoal
     PayTax,
     VisitToilet,
     AskAndLeave,
-    DirectorApproval // Добавлена новая цель
+    DirectorApproval,
+	GetArchiveRecord	// Добавлена новая цель
 }

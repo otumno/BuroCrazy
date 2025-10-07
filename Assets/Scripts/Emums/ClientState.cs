@@ -10,5 +10,6 @@ public enum ClientState
     AtLimitedZoneEntrance, InsideLimitedZone,
     Enraged,
     LeavingUpset,
-    ReturningToRegistrar // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
+    ReturningToRegistrar,
+	WaitingForDocument	// <-- ДОБАВЬТЕ ЭТУ СТРОКУ
 }

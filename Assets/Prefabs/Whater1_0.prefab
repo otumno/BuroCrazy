@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 7897186097892354743}
   - component: {fileID: 2827731852424085366}
   - component: {fileID: 5490098719603813733}
-  m_Layer: 0
+  - component: {fileID: 8474938196501860791}
+  m_Layer: 4
   m_Name: Whater1_0
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -139,3 +140,16 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.42333335
+--- !u!114 &8474938196501860791
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 696781811648093872}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36a5953457c08a943946738ae9bb841a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  slipChance: 0.15

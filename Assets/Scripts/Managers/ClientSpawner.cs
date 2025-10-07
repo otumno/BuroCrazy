@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Managers/ClientSpawner.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,6 +12,7 @@ public class LightingPreset
     [Range(0f, 2f)] public float lightIntensity = 1f;
 }
 
+// Этот класс нужен только конвертеру. После успешной конвертации его можно удалить.
 [System.Serializable]
 public class SpawningPeriod
 {
@@ -29,40 +29,40 @@ public class SpawningPeriod
 
 public class ClientSpawner : MonoBehaviour
 {
+    #region Fields and Properties
+    [Header("Настройки Календаря")]
+    public GameCalendar mainCalendar;
+
     [Header("Основные настройки спавна")]
     public GameObject clientPrefab;
     public Transform spawnPoint;
     public int maxClientsOnScene = 100;
     public float initialSpawnDelay = 5f;
-    [Tooltip("Сколько клиентов с документами для директора должно появиться за день")]
     public int directorClientsPerDay = 1;
-    
+
     [Header("Ссылки на объекты сцены")]
     public GameObject waitingZoneObject;
     public Waypoint exitWaypoint;
     public FormTable formTable;
-    
+
     [Header("ЗОНЫ ОБСЛУЖИВАНИЯ")]
-    public LimitedCapacityZone registrationZone;
-    public LimitedCapacityZone desk1Zone;
-    public LimitedCapacityZone desk2Zone;
-    public LimitedCapacityZone cashierZone;
-    public LimitedCapacityZone toiletZone;
-    [Tooltip("Перетащите сюда зону 'Приемная Директора'")]
-    public LimitedCapacityZone directorReceptionZone;
+	public LimitedCapacityZone registrationZone; // Регистратура остается одна
+	public List<LimitedCapacityZone> category1DeskZones; // Список столов для Справки 1
+	public List<LimitedCapacityZone> category2DeskZones; // Список столов для Справки 2
+	public List<LimitedCapacityZone> cashierZones;       // Список касс
+	public LimitedCapacityZone toiletZone;
+	public LimitedCapacityZone directorReceptionZone;
     
-    [Header("Настройки цикла дня и ночи")]
-    public SpawningPeriod[] periods;
-    [Tooltip("Впишите сюда точные названия периодов, во время которых персонал должен включать фонарики")]
+    [Header("Настройки цикла дня и ночи (Для конвертера)")]
+    public SpawningPeriod[] periods; 
+
+    [Header("Настройки света и UI")]
     public List<string> nightPeriodNames;
     public List<GameObject> allControllableLights;
     public float lightFadeDuration = 0.5f;
     public TextMeshProUGUI timeDisplay;
     public UnityEngine.Rendering.Universal.Light2D globalLight;
-    
-    [Header("UI Элементы")]
     public TextMeshProUGUI dayCounterText;
-
     [Header("Настройки звука толпы")]
     public AudioSource crowdAudioSource;
     public int minClientsForCrowdSound = 3;
@@ -70,15 +70,20 @@ public class ClientSpawner : MonoBehaviour
     
     public static string CurrentPeriodName { get; private set; }
     private int currentPeriodIndex = 0;
-    private SpawningPeriod previousPeriod;
+    private PeriodSettings previousPeriodPlan;
     private float periodTimer;
-    private Coroutine crowdSpawnCoroutine, lightManagementCoroutine, continuousSpawnCoroutine;
-    private int dayCounter = 0;
+    private Coroutine lightManagementCoroutine, continuousSpawnCoroutine;
+    private int dayCounter = 1;
     public static ClientSpawner Instance { get; private set; }
     
     private float globalSpawnRateMultiplier = 1f;
     private List<int> directorClientSpawnPeriods = new List<int>();
 
+    private static Dictionary<int, IServiceProvider> serviceProviderAssignments = new Dictionary<int, IServiceProvider>();
+    #endregion
+
+    #region Unity Lifecycle Methods (Awake, Start, Update)
+    
     void Awake()
     {
         Instance = this;
@@ -86,17 +91,21 @@ public class ClientSpawner : MonoBehaviour
 
     void Start()
     {
-        if (periods == null || periods.Length == 0)
+        if (mainCalendar == null || mainCalendar.periodSettings.Count == 0)
         {
+            Debug.LogError("Календарь (Main Calendar) не назначен или пуст в ClientSpawner! Работа невозможна.", this);
             enabled = false;
             return;
         }
 
+        dayCounter = 1;
         UpdateDayCounterUI();
+        
+        var dayOnePeriods = mainCalendar.periodSettings;
         int nightIndex = -1;
-        for (int i = 0; i < periods.Length; i++)
+        for (int i = 0; i < dayOnePeriods.Count; i++)
         {
-            if (periods[i].periodName.Equals("Ночь", StringComparison.InvariantCultureIgnoreCase))
+            if (dayOnePeriods[i].periodName.Equals("Ночь", StringComparison.InvariantCultureIgnoreCase))
             {
                 nightIndex = i;
                 break;
@@ -106,30 +115,28 @@ public class ClientSpawner : MonoBehaviour
         if (nightIndex != -1)
         {
             currentPeriodIndex = nightIndex;
-            SpawningPeriod nightPeriod = periods[nightIndex];
-            periodTimer = Mathf.Max(0, nightPeriod.durationInSeconds - 10f);
-            int prevIndex = (nightIndex == 0) ? periods.Length - 1 : nightIndex - 1;
-            previousPeriod = periods[prevIndex];
+            PeriodSettings nightPeriodPlan = dayOnePeriods[nightIndex];
+            
+            float duration = nightPeriodPlan.durationInSeconds.Evaluate(dayCounter);
+            periodTimer = Mathf.Max(0, duration - 10f);
+            
+            previousPeriodPlan = nightPeriodPlan; // Инициализируем предыдущий период
+
             if (globalLight != null)
             {
-                globalLight.color = nightPeriod.lightingSettings.lightColor;
-                globalLight.intensity = nightPeriod.lightingSettings.lightIntensity;
+                globalLight.color = nightPeriodPlan.lightingSettings.lightColor;
+                globalLight.intensity = nightPeriodPlan.lightingSettings.lightIntensity;
             }
-            foreach (var lightObj in allControllableLights)
+            foreach (var lightName in nightPeriodPlan.lightsToEnableNames)
             {
-                if (lightObj != null)
-                {
-                    bool shouldBeOn = nightPeriod.lightsToEnable.Contains(lightObj);
-                    lightObj.SetActive(shouldBeOn);
-                    var lightSource = lightObj.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
-                    if(lightSource != null) lightSource.intensity = shouldBeOn ? 1f : 0f;
-                }
+                var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
+                if (lightObj != null) lightObj.SetActive(true);
             }
+            
             StartNewPeriod(false);
         }
         else
         {
-            Debug.LogWarning("Период с именем 'Ночь' не найден. Игра начнется с первого периода в списке.");
             currentPeriodIndex = -1;
             GoToNextPeriod();
         }
@@ -143,45 +150,216 @@ public class ClientSpawner : MonoBehaviour
         UpdateUITimer();
         UpdateLighting();
     
-        if (periods.Length > currentPeriodIndex && periods[currentPeriodIndex] != null && periodTimer >= periods[currentPeriodIndex].durationInSeconds) 
+        var currentPlan = GetCurrentPeriodPlan();
+        if (currentPlan != null && periodTimer >= currentPlan.durationInSeconds.Evaluate(dayCounter)) 
         { 
             GoToNextPeriod();
         }
     
         CheckCrowdDensity();
     }
-    
-    public void GoToNextPeriod()
-{
-    if (periods.Length > 0)
-    {
-        // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
-        // Сначала получаем имя периода, который ЗАКАНЧИВАЕТСЯ
-        string previousPeriodName = periods[currentPeriodIndex].periodName;
-        previousPeriod = periods[currentPeriodIndex];
-        
-        // Уведомляем музыкальный плеер о смене, ПОКА ЕЩЕ активен старый период
-        MusicPlayer.Instance?.OnPeriodChanged();
+    #endregion
 
-        // Теперь безопасно переключаемся на следующий период
-        currentPeriodIndex = (currentPeriodIndex + 1) % periods.Length;
-        periodTimer = 0;
+    #region Period and Spawning Logic
+
+    public void GoToNextPeriod()
+    {
+        string previousPeriodName = "";
+        var todayPeriods = mainCalendar?.periodSettings;
+        if (todayPeriods != null && todayPeriods.Count > 0)
+        {
+            previousPeriodName = todayPeriods[currentPeriodIndex].periodName;
+            previousPeriodPlan = todayPeriods[currentPeriodIndex];
+            MusicPlayer.Instance?.OnPeriodChanged();
+            
+            currentPeriodIndex = (currentPeriodIndex + 1) % todayPeriods.Count;
+            periodTimer = 0;
+        }
         
-        // Проверяем, не начался ли новый день
         if (currentPeriodIndex == 0) 
         { 
             dayCounter++;
+			DirectorManager.Instance?.EvaluateEndOfDayStrikes();
             UpdateDayCounterUI(); 
             ClientQueueManager.Instance.ResetQueueNumber();
             PlanDirectorClientSpawns();
         }
         
-        // Обновляем смены для всего персонала
-        UpdateAllStaffShifts(periods[currentPeriodIndex].periodName, previousPeriodName);
-        // Запускаем логику нового периода
+        if (todayPeriods != null)
+        {
+            UpdateAllStaffShifts(todayPeriods[currentPeriodIndex].periodName, previousPeriodName);
+        }
         StartNewPeriod();
     }
-}
+
+    void StartNewPeriod(bool resetTimer = true)
+    {
+        if (resetTimer) periodTimer = 0;
+        
+        PeriodSettings currentPeriodPlan = GetCurrentPeriodPlan();
+        if (currentPeriodPlan == null) return;
+
+        CurrentPeriodName = currentPeriodPlan.periodName;
+
+        if (continuousSpawnCoroutine != null) StopCoroutine(continuousSpawnCoroutine);
+        
+        string periodNameLower = CurrentPeriodName.ToLower().Trim();
+        bool isNightTime = nightPeriodNames.Any(p => p.Equals(periodNameLower, StringComparison.InvariantCultureIgnoreCase));
+        ToggleStaffLights(isNightTime);
+
+        // FIX: Added the missing ApplyDayEvent method call.
+        ApplyDayEvent(DayEvent.None);
+
+        int clientsForThisPeriod = Mathf.RoundToInt(currentPeriodPlan.clientCount.Evaluate(dayCounter));
+
+        if (clientsForThisPeriod > 0 && !isNightTime)
+        {
+            continuousSpawnCoroutine = StartCoroutine(HandleContinuousSpawning(currentPeriodPlan, clientsForThisPeriod));
+        }
+        
+        if (lightManagementCoroutine != null) StopCoroutine(lightManagementCoroutine);
+        // FIX: Added the missing ManageLocalLightsSmoothly method call.
+        lightManagementCoroutine = StartCoroutine(ManageLocalLightsSmoothly(currentPeriodPlan));
+
+        if (periodNameLower == "ночь")
+        {
+            EvacuateAllClients(true);
+        }
+    }
+    
+    IEnumerator HandleContinuousSpawning(PeriodSettings plan, int clientsToSpawn)
+    {
+        if (clientsToSpawn <= 0) yield break;
+
+        yield return new WaitForSeconds(initialSpawnDelay);
+        
+        float duration = plan.durationInSeconds.Evaluate(dayCounter);
+        if (duration > initialSpawnDelay)
+        {
+            float spawnInterval = (duration - initialSpawnDelay) / clientsToSpawn;
+            spawnInterval /= globalSpawnRateMultiplier;
+
+            for (int i = 0; i < clientsToSpawn; i++)
+            {
+                SpawnClientBatch(1);
+                if (spawnInterval > 0)
+                    yield return new WaitForSeconds(spawnInterval);
+                else
+                    yield return null;
+            }
+        }
+    }
+    
+    #endregion
+	
+	#region Helper and Static Methods
+
+    // FIX: Added missing method.
+    private void ApplyDayEvent(DayEvent dayEvent)
+    {
+        // TODO: Implement logic for special day events like "PensionDay" or "ClownDay".
+        // This could involve changing client prefabs, modifying character stats, etc.
+    }
+    
+    // FIX: Added missing coroutine.
+    private IEnumerator ManageLocalLightsSmoothly(PeriodSettings periodPlan)
+    {
+        // First, create a list of lights that should be ON for this period.
+        var lightsToEnable = new HashSet<GameObject>();
+        foreach (var lightName in periodPlan.lightsToEnableNames)
+        {
+            var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
+            if (lightObj != null)
+            {
+                lightsToEnable.Add(lightObj);
+            }
+        }
+
+        // Now, iterate through all controllable lights.
+        foreach (var lightGO in allControllableLights)
+        {
+            if (lightGO == null) continue;
+
+            bool shouldBeOn = lightsToEnable.Contains(lightGO);
+            bool isCurrentlyOn = lightGO.activeSelf;
+
+            // If the state needs to change, start a fade coroutine.
+            if (shouldBeOn && !isCurrentlyOn)
+            {
+                StartCoroutine(FadeLight(lightGO, true));
+            }
+            else if (!shouldBeOn && isCurrentlyOn)
+            {
+                StartCoroutine(FadeLight(lightGO, false));
+            }
+        }
+        yield return null;
+    }
+
+    private void UpdateUITimer() 
+    { 
+        if (timeDisplay != null) 
+        { 
+            var currentPeriodPlan = GetCurrentPeriodPlan();
+            if (currentPeriodPlan == null) return;
+            float duration = currentPeriodPlan.durationInSeconds.Evaluate(dayCounter);
+            float timeLeft = duration - periodTimer; 
+            string formattedTime = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(timeLeft / 60), Mathf.FloorToInt(timeLeft % 60));
+            timeDisplay.text = $"Период: {currentPeriodPlan.periodName}\nОсталось: {formattedTime}"; 
+        } 
+    }
+    
+    private void UpdateLighting() 
+    { 
+        if (globalLight == null || previousPeriodPlan == null) return;
+        var currentPeriodPlan = GetCurrentPeriodPlan();
+        if(currentPeriodPlan == null) return;
+
+        float duration = currentPeriodPlan.durationInSeconds.Evaluate(dayCounter);
+        if(duration <= 0) return;
+
+        float progress = Mathf.Clamp01(periodTimer / duration);
+        globalLight.color = Color.Lerp(previousPeriodPlan.lightingSettings.lightColor, currentPeriodPlan.lightingSettings.lightColor, progress); 
+        globalLight.intensity = Mathf.Lerp(previousPeriodPlan.lightingSettings.lightIntensity, currentPeriodPlan.lightingSettings.lightIntensity, progress);
+    }
+    
+    public PeriodSettings GetCurrentPeriodPlan()
+    {
+        var todayPeriods = mainCalendar?.periodSettings;
+        if (todayPeriods != null && todayPeriods.Count > currentPeriodIndex && currentPeriodIndex >= 0)
+            return todayPeriods[currentPeriodIndex];
+        return null;
+    }
+    
+    public static IServiceProvider GetServiceProviderAtDesk(int deskId)
+    {
+        if (serviceProviderAssignments.TryGetValue(deskId, out IServiceProvider provider))
+            return provider;
+        return null;
+    }
+    
+    public static void AssignServiceProviderToDesk(IServiceProvider provider, int deskId)
+    {
+        serviceProviderAssignments[deskId] = provider;
+        Debug.Log($"На станцию #{deskId} назначен работник.");
+    }
+    
+    public static void UnassignServiceProviderFromDesk(int deskId)
+    {
+        if (serviceProviderAssignments.ContainsKey(deskId))
+        {
+            serviceProviderAssignments.Remove(deskId);
+            Debug.Log($"Работник снят со станции #{deskId}.");
+        }
+    }
+
+    public static LimitedCapacityZone GetRegistrationZone() => Instance.registrationZone;
+	public static LimitedCapacityZone GetToiletZone() => Instance.toiletZone;
+
+	// Обновленные методы для совместимости со старым кодом
+	public static LimitedCapacityZone GetDesk1Zone() => Instance.category1DeskZones.FirstOrDefault();
+	public static LimitedCapacityZone GetDesk2Zone() => Instance.category2DeskZones.FirstOrDefault();
+	public static LimitedCapacityZone GetCashierZone() => Instance.cashierZones.FirstOrDefault();
 
     private void UpdateAllStaffShifts(string currentPeriodName, string previousPeriodName)
     {
@@ -189,146 +367,56 @@ public class ClientSpawner : MonoBehaviour
         foreach (var staffMember in allStaffOnScene)
         {
             if (staffMember == null) continue;
-    
             bool isScheduledNow = staffMember.workPeriods.Any(p => p.Equals(currentPeriodName, StringComparison.InvariantCultureIgnoreCase));
-            bool wasScheduledBefore = !string.IsNullOrEmpty(previousPeriodName) && staffMember.workPeriods.Any(p => p.Equals(previousPeriodName, StringComparison.InvariantCultureIgnoreCase));
-    
-            if (isScheduledNow && !wasScheduledBefore)
+            
+            if (isScheduledNow && !staffMember.IsOnDuty())
             {
                 staffMember.StartShift();
             }
-            else if (!isScheduledNow && wasScheduledBefore)
+            else if (!isScheduledNow && staffMember.IsOnDuty())
             {
                 staffMember.EndShift();
             }
         }
     }
-
-    void StartNewPeriod(bool resetTimer = true)
-    {
-        if (resetTimer)
-        {
-            periodTimer = 0;
-        }
-        
-        SpawningPeriod newPeriod = periods[currentPeriodIndex];
-        CurrentPeriodName = newPeriod.periodName;
-        
-        if (continuousSpawnCoroutine != null) StopCoroutine(continuousSpawnCoroutine);
-        if (crowdSpawnCoroutine != null) StopCoroutine(crowdSpawnCoroutine);
-
-        string periodNameLower = newPeriod.periodName.ToLower().Trim();
-        bool isNightTime = nightPeriodNames.Any(p => p.Equals(periodNameLower, StringComparison.InvariantCultureIgnoreCase));
-        ToggleStaffLights(isNightTime);
-
-        if (directorClientSpawnPeriods.Contains(currentPeriodIndex))
-        {
-            StartCoroutine(SpawnDirectorClientRoutine());
-            directorClientSpawnPeriods.Remove(currentPeriodIndex); 
-        }
-
-        if (newPeriod.numberOfCrowdsToSpawn > 0 && newPeriod.crowdSpawnCount > 0) 
-        { 
-            crowdSpawnCoroutine = StartCoroutine(SpawnCrowdsDuringPeriod(newPeriod));
-        }
-        
-        bool canSpawnClients = !isNightTime && periodNameLower != "конец дня";
-        if (newPeriod.spawnRate > 0 && canSpawnClients)
-        {
-            float finalSpawnRate = newPeriod.spawnRate * globalSpawnRateMultiplier;
-            if (finalSpawnRate > 0)
-            {
-                continuousSpawnCoroutine = StartCoroutine(HandleContinuousSpawning(newPeriod));
-            }
-        }
-
-        if (periodNameLower == "ночь")
-        {
-            EvacuateAllClients(true);
-        }
-
-        if (lightManagementCoroutine != null) StopCoroutine(lightManagementCoroutine);
-        lightManagementCoroutine = StartCoroutine(ManageLocalLightsSmoothly(newPeriod));
-        if (previousPeriod == null) 
-        { 
-            globalLight.color = newPeriod.lightingSettings.lightColor;
-            globalLight.intensity = newPeriod.lightingSettings.lightIntensity; 
-        }
-    }
-
-    // --- ВОЗВРАЩЕННЫЕ МЕТОДЫ ДЛЯ ДОСТУПА ИЗ ДРУГИХ СКРИПТОВ ---
     
-    void UpdateDayCounterUI() 
+    private void UpdateDayCounterUI() 
     { 
         if (dayCounterText != null) 
-        { 
             dayCounterText.text = $"День: {dayCounter}";
-        } 
     }
-
-    public static LimitedCapacityZone GetRegistrationZone() => Instance.registrationZone;
-    public static LimitedCapacityZone GetDesk1Zone() => Instance.desk1Zone;
-    public static LimitedCapacityZone GetDesk2Zone() => Instance.desk2Zone;
-    public static LimitedCapacityZone GetCashierZone() => Instance.cashierZone;
-    public static LimitedCapacityZone GetToiletZone() => Instance.toiletZone;
-    
-    public static ClerkController GetClerkAtDesk(int deskId) 
-    { 
-        if (Instance == null) return null;
-        var clerks = FindObjectsByType<ClerkController>(FindObjectsSortMode.None); 
-        return clerks.FirstOrDefault(c => c.assignedServicePoint != null && c.assignedServicePoint.deskId == deskId);
-    }
-    
-    public static ClerkController GetAbsentClerk() 
-    { 
-        if (Instance == null) return null; 
-        var clerks = FindObjectsByType<ClerkController>(FindObjectsSortMode.None);
-        return clerks.FirstOrDefault(c => c.IsOnBreak()); 
-    }
-    
-    #region Вспомогательные методы (без изменений)
 
     private void PlanDirectorClientSpawns()
     {
         directorClientSpawnPeriods.Clear();
+        var todayPeriods = mainCalendar?.periodSettings;
+        if (todayPeriods == null) return;
+
         List<int> validPeriodIndices = new List<int>();
-        for (int i = 0; i < periods.Length; i++)
+        for (int i = 0; i < todayPeriods.Count; i++)
         {
-            string nameLower = periods[i].periodName.ToLower().Trim();
+            string nameLower = todayPeriods[i].periodName.ToLower().Trim();
             if (nameLower != "вечер" && nameLower != "ночь")
-            {
                 validPeriodIndices.Add(i);
-            }
         }
 
-        if (validPeriodIndices.Count == 0)
-        {
-            Debug.LogWarning("Нет подходящих дневных периодов для спавна клиентов для Директора!");
-            return;
-        }
+        if (validPeriodIndices.Count == 0) return;
 
         for (int i = 0; i < directorClientsPerDay; i++)
         {
             int randomPeriodIndex = validPeriodIndices[UnityEngine.Random.Range(0, validPeriodIndices.Count)];
             directorClientSpawnPeriods.Add(randomPeriodIndex);
         }
-        Debug.Log($"Запланирован спавн {directorClientsPerDay} клиентов для Директора в периодах: {string.Join(", ", directorClientSpawnPeriods)}");
     }
 
     private IEnumerator SpawnDirectorClientRoutine()
     {
-        yield return new WaitForSeconds(UnityEngine.Random.Range(5f, periods[currentPeriodIndex].durationInSeconds * 0.8f));
-        if (FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length < maxClientsOnScene)
-        {
-            Debug.Log("Спавним клиента с документами для Директора!");
-            GameObject clientGO = Instantiate(clientPrefab, spawnPoint.position, Quaternion.identity);
-            ClientPathfinding client = clientGO.GetComponent<ClientPathfinding>();
-            if (client != null)
-            {
-                client.mainGoal = ClientGoal.DirectorApproval;
-                client.Initialize(Instance.waitingZoneObject, Instance.exitWaypoint);
-            }
-        }
+        var currentPeriodPlan = GetCurrentPeriodPlan();
+        if (currentPeriodPlan == null) yield break;
+
+        float duration = currentPeriodPlan.durationInSeconds.Evaluate(dayCounter);
+        yield return new WaitForSeconds(UnityEngine.Random.Range(5f, duration * 0.8f));
+        SpawnClientBatch(1, true);
     }
 
     void ToggleStaffLights(bool enable)
@@ -337,13 +425,9 @@ public class ClientSpawner : MonoBehaviour
         foreach(var staff in allStaff)
         {
             if (staff is GuardMovement guard && guard.nightLight != null)
-            {
                 guard.nightLight.SetActive(enable);
-            }
             else if (staff is ServiceWorkerController worker && worker.nightLight != null)
-            {
                 worker.nightLight.SetActive(enable);
-            }
         }
     }
 
@@ -360,38 +444,18 @@ public class ClientSpawner : MonoBehaviour
         }
     }
     
-    IEnumerator HandleContinuousSpawning(SpawningPeriod period)
-    {
-        yield return new WaitForSeconds(initialSpawnDelay);
-        while(true)
-        {
-            SpawnClientBatch(period.spawnBatchSize);
-            float finalSpawnRate = period.spawnRate > 0 ? period.spawnRate / globalSpawnRateMultiplier : float.MaxValue;
-            if (finalSpawnRate > 0)
-                yield return new WaitForSeconds(finalSpawnRate);
-            else
-                yield return null; 
-        }
-    }
-    
-    IEnumerator SpawnCrowdsDuringPeriod(SpawningPeriod period) 
+    IEnumerator SpawnCrowdsDuringPeriod(PeriodSettings periodPlan) 
     { 
-        float timeSlice = period.durationInSeconds / (period.numberOfCrowdsToSpawn + 1);
-        for (int i = 1; i <= period.numberOfCrowdsToSpawn; i++) 
+        int crowdCount = Mathf.RoundToInt(periodPlan.numberOfCrowdsToSpawn.Evaluate(dayCounter));
+        if (crowdCount <= 0) yield break;
+
+        float duration = periodPlan.durationInSeconds.Evaluate(dayCounter);
+        float timeSlice = duration / (crowdCount + 1);
+        for (int i = 1; i <= crowdCount; i++) 
         { 
             yield return new WaitForSeconds(timeSlice);
-            SpawnClientBatch(period.crowdSpawnCount);
-        } 
-    }
-    
-    void UpdateUITimer() 
-    { 
-        if (timeDisplay != null) 
-        { 
-            SpawningPeriod currentPeriod = periods[currentPeriodIndex];
-            float timeLeft = currentPeriod.durationInSeconds - periodTimer; 
-            string formattedTime = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(timeLeft / 60), Mathf.FloorToInt(timeLeft % 60));
-            timeDisplay.text = $"Период: {currentPeriod.periodName}\nОсталось: {formattedTime}"; 
+            int batchSize = Mathf.RoundToInt(periodPlan.crowdSpawnCount.Evaluate(dayCounter));
+            SpawnClientBatch(batchSize);
         } 
     }
     
@@ -408,36 +472,6 @@ public class ClientSpawner : MonoBehaviour
         else 
         { 
             if (crowdAudioSource.isPlaying) crowdAudioSource.Stop();
-        } 
-    }
-    
-    void UpdateLighting() 
-    { 
-        if (globalLight == null || previousPeriod == null) return;
-        SpawningPeriod currentPeriod = periods[currentPeriodIndex]; 
-        if(currentPeriod.durationInSeconds > 0)
-        {
-            float progress = Mathf.Clamp01(periodTimer / currentPeriod.durationInSeconds);
-            globalLight.color = Color.Lerp(previousPeriod.lightingSettings.lightColor, currentPeriod.lightingSettings.lightColor, progress); 
-            globalLight.intensity = Mathf.Lerp(previousPeriod.lightingSettings.lightIntensity, currentPeriod.lightingSettings.lightIntensity, progress);
-        }
-    }
-    
-    IEnumerator ManageLocalLightsSmoothly(SpawningPeriod period) 
-    { 
-        var lightsToTurnOn = period.lightsToEnable.Where(l => l != null && !l.activeSelf).ToList();
-        var lightsToTurnOff = allControllableLights.Except(period.lightsToEnable).Where(l => l != null && l.activeSelf).ToList(); 
-        lightsToTurnOn = lightsToTurnOn.OrderBy(l => UnityEngine.Random.value).ToList(); 
-        lightsToTurnOff = lightsToTurnOff.OrderBy(l => UnityEngine.Random.value).ToList();
-        foreach (var lightObject in lightsToTurnOff) 
-        { 
-            if(lightObject != null) StartCoroutine(FadeLight(lightObject, false));
-            yield return new WaitForSeconds(UnityEngine.Random.Range(0.05f, 0.2f));
-        } 
-        foreach (var lightObject in lightsToTurnOn) 
-        { 
-            if(lightObject != null) StartCoroutine(FadeLight(lightObject, true));
-            yield return new WaitForSeconds(UnityEngine.Random.Range(0.05f, 0.2f));
         } 
     }
     
@@ -467,7 +501,7 @@ public class ClientSpawner : MonoBehaviour
         if(!turnOn) { lightObject.SetActive(false); } 
     }
     
-    void SpawnClientBatch(int count)
+    void SpawnClientBatch(int count, bool isDirectorClient = false)
     {
         for (int i = 0; i < count; i++)
         {
@@ -477,6 +511,7 @@ public class ClientSpawner : MonoBehaviour
                 ClientPathfinding client = clientGO.GetComponent<ClientPathfinding>();
                 if (client != null)
                 {
+                    if (isDirectorClient) client.mainGoal = ClientGoal.DirectorApproval;
                     client.Initialize(Instance.waitingZoneObject, Instance.exitWaypoint);
                 }
             }
@@ -488,19 +523,10 @@ public class ClientSpawner : MonoBehaviour
     {
         globalSpawnRateMultiplier = order.clientSpawnRateMultiplier;
     }
-
-    public SpawningPeriod GetCurrentPeriod()
-    {
-        if (periods != null && periods.Length > 0 && currentPeriodIndex >= 0 && currentPeriodIndex < periods.Length)
-        {
-            return periods[currentPeriodIndex];
-        }
-        return null;
-    }
     
-    public SpawningPeriod GetPreviousPeriod()
+    public PeriodSettings GetPreviousPeriodPlan()
     {
-        return previousPeriod;
+        return previousPeriodPlan;
     }
     
     public float GetPeriodTimer()
@@ -524,9 +550,53 @@ public class ClientSpawner : MonoBehaviour
         dayCounter = 0;
         UpdateDayCounterUI();
         if (ClientQueueManager.Instance != null)
-        {
             ClientQueueManager.Instance.ResetQueueNumber();
-        }
     }
+
     #endregion
+	
+	public static LimitedCapacityZone GetZoneByDeskId(int deskId)
+{
+    if (Instance == null) return null;
+    switch (deskId)
+    {
+        case 0: 
+            return Instance.registrationZone;
+        case 1: 
+            // Возвращаем первую зону из списка для столов 1-й категории
+            return Instance.category1DeskZones.FirstOrDefault(); 
+        case 2: 
+            // Возвращаем первую зону из списка для столов 2-й категории
+            return Instance.category2DeskZones.FirstOrDefault();
+        case -1: 
+            // Возвращаем первую зону из списка касс
+            return Instance.cashierZones.FirstOrDefault();
+        default:
+            if (Instance.directorReceptionZone != null && Instance.directorReceptionZone.insideWaypoints.Any(wp => wp.GetComponentInParent<ServicePoint>()?.deskId == deskId))
+            {
+                return Instance.directorReceptionZone;
+            }
+            return null;
+    }
+}
+	
+	/// <summary>
+    /// Находит самую свободную зону из предоставленного списка.
+    /// </summary>
+    public static LimitedCapacityZone GetQuietestZone(List<LimitedCapacityZone> zones)
+    {
+        if (zones == null || zones.Count == 0)
+        {
+            return null;
+        }
+
+        // Используем Linq, чтобы найти зону с наименьшим количеством людей в очереди
+        return zones
+            .Where(z => z != null) // Исключаем пустые элементы списка
+            .OrderBy(z => z.waitingQueue.Count) // Сортируем по размеру очереди
+            .FirstOrDefault(); // Берем первую (самую свободную)
+    }
+
+	
+	
 }

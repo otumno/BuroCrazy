@@ -24,25 +24,28 @@ public class PayrollManager : MonoBehaviour
     }
 
     private void PaySalariesForPeriod(string periodName)
+{
+    var allStaff = HiringManager.Instance.AllStaff; // Получаем список всех сотрудников
+    if (allStaff == null) return;
+
+    int totalDebtAccrued = 0;
+
+    foreach (var staff in allStaff)
     {
-        if (PlayerWallet.Instance == null) return;
+        if (staff == null) continue;
 
-        var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
-        int totalPayroll = 0;
-
-        foreach (var staff in allStaff)
+        // Проверяем, работал ли сотрудник в прошедшем периоде
+        if (staff.workPeriods.Any(p => p.Equals(periodName, System.StringComparison.InvariantCultureIgnoreCase)))
         {
-            // Проверяем, работал ли сотрудник в прошедшем периоде
-            if (staff.workPeriods.Any(p => p.Equals(periodName, System.StringComparison.InvariantCultureIgnoreCase)))
-            {
-                PlayerWallet.Instance.AddMoney(-staff.salaryPerPeriod, staff.transform.position);
-                totalPayroll += staff.salaryPerPeriod;
-            }
-        }
-
-        if (totalPayroll > 0)
-        {
-            Debug.Log($"[Payroll] Выплачена зарплата за период '{periodName}': ${totalPayroll}");
+            // Вместо списания денег, увеличиваем счетчик долга
+            staff.unpaidPeriods++;
+            totalDebtAccrued += staff.salaryPerPeriod;
         }
     }
+
+    if (totalDebtAccrued > 0)
+    {
+        Debug.Log($"[Payroll] Начислен долг по зарплате за период '{periodName}': ${totalDebtAccrued}.");
+    }
+}
 }

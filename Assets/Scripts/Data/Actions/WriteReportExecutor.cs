@@ -31,20 +31,27 @@ public class WriteReportExecutor : ActionExecutor
 
     int pointsAtStart = guard.unwrittenReportPoints;
     for (int i = 0; i < pointsAtStart; i++)
+{
+    if (guard.unwrittenReportPoints <= 0) break;
+
+    float writeTime = Random.Range(1f, 2f);
+    yield return new WaitForSeconds(writeTime);
+
+    // Пытаемся добавить документ и проверяем результат
+    if (reportDesk.documentStack.AddDocumentToStack())
     {
-        // Проверяем, остались ли еще протоколы (на случай, если значение изменится извне)
-        if (guard.unwrittenReportPoints <= 0) break;
-
-        // Тратим 1-2 секунды на один протокол
-        float writeTime = Random.Range(1f, 2f);
-        yield return new WaitForSeconds(writeTime);
-
+        // Если получилось, списываем очко
         guard.unwrittenReportPoints--;
-        reportDesk.documentStack.AddDocumentToStack();
-        
-        // --- ДОБАВЛЕН ЛОГ ---
-        Debug.Log($"Протокол написан за {writeTime:F1} сек. Осталось: {guard.unwrittenReportPoints}. Документ добавлен на стол.");
+        Debug.Log($"Протокол написан. Осталось: {guard.unwrittenReportPoints}. Документ добавлен на стол.");
     }
+    else
+    {
+        // Если стол забит, прерываем действие и выводим сообщение
+        Debug.LogWarning($"Стол для отчетов ({reportDesk.name}) переполнен! {guard.name} не может продолжить.");
+        guard.thoughtBubble?.ShowPriorityMessage("Стол завален!\nНе могу работать.", 3f, Color.red);
+        break; // Выходим из цикла, очки не тратятся
+    }
+}
     
     Debug.Log($"<color=blue>{guard.name} закончил писать протоколы.</color>");
     guard.SetState(GuardMovement.GuardState.Idle);

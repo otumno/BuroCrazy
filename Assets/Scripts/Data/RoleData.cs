@@ -42,7 +42,19 @@ public class RoleData : ScriptableObject
     public float worker_cleaningTimeTrash = 2f;
     public float worker_cleaningTimePuddle = 4f;
     public float worker_cleaningTimePerDirtLevel = 1.5f;
+	public GameObject worker_trashBagPrefab;
     public float worker_maxStress = 100f;
     public float worker_stressGainPerMess = 2f;
     public float worker_stressReliefRate = 10f;
+	
+	[Header("Специфика Кассира (Cashier)")]
+	[Tooltip("Множитель шанса на кражу. 1.0 = стандартный шанс (на основе навыка).")]
+	public float cashier_corruptionChanceMultiplier = 1.0f;
+	[Tooltip("Максимальный процент от суммы, который кассир может украсть за раз (0.0 до 1.0).")]
+	[Range(0f, 1f)]
+	public float cashier_maxSkimAmount = 0.3f; // 30% по умолчанию
+	
+	[Header("Параметры бездействия (Idle)")]
+    public float minIdleWait = 5f;
+    public float maxIdleWait = 10f;
 }

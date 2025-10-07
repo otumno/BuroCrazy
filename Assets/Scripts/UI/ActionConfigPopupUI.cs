@@ -92,35 +92,48 @@ public bool CanAddAction()
 }
     
     private void PopulateActionLists()
+{
+    // Очищаем старые иконки
+    foreach (Transform child in availableActionsContent) { Destroy(child.gameObject); }
+    foreach (Transform child in activeActionsContent) { Destroy(child.gameObject); }
+
+    if (actionDatabase == null || currentStaff == null) return;
+
+    // Определяем, для какой роли мы показываем действия
+    string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
+    StaffController.Role roleToShow = GetRoleEnumFromRussian(selectedRoleName);
+    
+    // --- НАЧАЛО СТАНДАРТНОЙ ЛОГИКИ ФИЛЬТРАЦИИ ---
+
+    // Получаем список всех теоретически доступных действий для выбранной роли, учитывая ранг
+    List<StaffAction> allAvailableActions = actionDatabase.allActions
+        .Where(action => action.minRankRequired <= currentStaff.rank &&
+                         action.applicableRoles.Contains(roleToShow))
+        .ToList();
+
+    // --- КОНЕЦ СТАНДАРТНОЙ ЛОГИКИ ФИЛЬТРАЦИИ ---
+
+    // Создаем иконки для уже активных действий
+    foreach (var activeAction in tempActiveActions)
     {
-        foreach (Transform child in availableActionsContent) { Destroy(child.gameObject); }
-        foreach (Transform child in activeActionsContent) { Destroy(child.gameObject); }
-
-        if (actionDatabase == null || currentStaff == null) return;
-
-        string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
-        StaffController.Role roleToShow = GetRoleEnumFromRussian(selectedRoleName);
-        
-        foreach (var activeAction in tempActiveActions)
+        // Убедимся, что активное действие вообще доступно для этой роли
+        if (allAvailableActions.Contains(activeAction))
         {
             InstantiateActionIcon(activeAction, activeActionsContent);
         }
-
-        List<StaffAction> allAvailableActions = actionDatabase.allActions
-            .Where(action => action.minRankRequired <= currentStaff.rank &&
-                             action.applicableRoles.Contains(roleToShow))
-            .ToList();
-            
-        foreach (var availableAction in allAvailableActions)
-        {
-            if (!tempActiveActions.Contains(availableAction))
-            {
-                InstantiateActionIcon(availableAction, availableActionsContent);
-            }
-        }
-        
-        UpdateUIState();
     }
+
+    // Создаем иконки для остальных доступных, но еще не активных действий
+    foreach (var availableAction in allAvailableActions)
+    {
+        if (!tempActiveActions.Contains(availableAction))
+        {
+            InstantiateActionIcon(availableAction, availableActionsContent);
+        }
+    }
+    
+    UpdateUIState();
+}
     
     private void UpdateUIState()
     {

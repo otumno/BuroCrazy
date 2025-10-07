@@ -62,6 +62,67 @@ public class AgentMover : MonoBehaviour
         baseMoveSpeed = moveSpeed;
     }
 
+	
+	private bool isSlipping = false;
+	
+	public void SlipAndRecover()
+{
+    if (isSlipping) return; // Если уже падаем, ничего не делаем
+    StartCoroutine(SlipAndRecoverRoutine());
+}
+
+private IEnumerator SlipAndRecoverRoutine()
+{
+    isSlipping = true;
+
+    // --- Фаза Падения ---
+    // 1. Запоминаем текущую скорость и останавливаем движение
+    Vector2 lastVelocity = rb.linearVelocity;
+    Stop(); // Останавливаем следование по пути
+    rb.linearVelocity = Vector2.zero; // Резко гасим скорость
+
+    // 2. Визуализация падения
+    Transform characterVisuals = characterSpriteRenderer.transform.parent; // Получаем родительский объект со всеми спрайтами
+    Quaternion originalRotation = characterVisuals.localRotation;
+
+    float fallDirection = (Random.value > 0.5f) ? 1f : -1f; // Выбираем, вправо или влево падать
+    Quaternion targetRotation = Quaternion.Euler(0, 0, 90f * fallDirection);
+
+    // Показываем испуганную эмоцию, если можем
+    var visuals = GetComponent<CharacterVisuals>();
+    visuals?.SetEmotion(Emotion.Scared);
+
+    // Анимация падения
+    float fallDuration = 0.2f;
+    for (float t = 0; t < fallDuration; t += Time.deltaTime)
+    {
+        characterVisuals.localRotation = Quaternion.Lerp(originalRotation, targetRotation, t / fallDuration);
+        yield return null;
+    }
+    characterVisuals.localRotation = targetRotation;
+
+    // --- Фаза "Лежим на полу" ---
+    yield return new WaitForSeconds(Random.Range(1.5f, 2.5f)); // Лежим 1.5-2.5 секунды
+
+    // --- Фаза Подъема ---
+    // Возвращаем нейтральную эмоцию
+    visuals?.SetEmotion(Emotion.Neutral); 
+
+    // Анимация подъема
+    float riseDuration = 0.3f;
+    for (float t = 0; t < riseDuration; t += Time.deltaTime)
+    {
+        characterVisuals.localRotation = Quaternion.Lerp(targetRotation, originalRotation, t / riseDuration);
+        yield return null;
+    }
+    characterVisuals.localRotation = originalRotation;
+
+    // 4. Возобновляем движение
+    isSlipping = false;
+    // Можно добавить небольшое продолжение движения по инерции, если хотите
+    // rb.AddForce(lastVelocity * 0.5f, ForceMode2D.Impulse);
+}
+	
     public void ApplySpeedMultiplier(float multiplier)
     {
         moveSpeed = baseMoveSpeed * multiplier;

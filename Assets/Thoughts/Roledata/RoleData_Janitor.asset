@@ -13,8 +13,35 @@ MonoBehaviour:
   m_Name: RoleData_Janitor
   m_EditorClassIdentifier: 
   roleType: 6
-  moveSpeed: 4
+  moveSpeed: 3
   priority: 3
   spriteCollection: {fileID: 11400000, guid: 0ff7fd45c494db04b9736516405c49cb, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: db98f0986a2f75f4eb6cf346c31aef95, type: 2}
   accessoryPrefab: {fileID: 8227943836967275960, guid: 99186f8a3aace0b438d2e3263ada580c, type: 3}
+  idleSprite: {fileID: -226601393124327381, guid: f5559ef5a7d3fd44fa080b3cb3107053, type: 3}
+  walkSprite1: {fileID: 7060065688670397526, guid: 8997891349f0412428f754a3cf27dcd8, type: 3}
+  walkSprite2: {fileID: -2293665738259474251, guid: 8f6e725240323a340843148628e49087, type: 3}
+  guard_minWaitTime: 1
+  guard_maxWaitTime: 3
+  guard_chaseSpeedMultiplier: 1.5
+  guard_talkTime: 3
+  guard_timeInToilet: 15
+  guard_maxStress: 100
+  guard_stressGainPerViolator: 25
+  guard_stressReliefRate: 10
+  clerk_timeInToilet: 10
+  clerk_clientArrivalTimeout: 16
+  clerk_maxStress: 100
+  clerk_stressGainPerClient: 5
+  clerk_stressReliefRate: 10
+  worker_cleaningTimeTrash: 2
+  worker_cleaningTimePuddle: 4
+  worker_cleaningTimePerDirtLevel: 1.5
+  worker_trashBagPrefab: {fileID: 1232079609685968613, guid: 189a0512aa3d16f4eb7b9a321997109e, type: 3}
+  worker_maxStress: 100
+  worker_stressGainPerMess: 2
+  worker_stressReliefRate: 10
+  cashier_corruptionChanceMultiplier: 1
+  cashier_maxSkimAmount: 0.3
+  minIdleWait: 5
+  maxIdleWait: 10

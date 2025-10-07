@@ -1,4 +1,4 @@
-// Файл: Assets/Scripts/Characters/Controllers/InternController.cs
+// Файл: Assets/Scripts/Characters/Controllers/InternController.cs - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -8,13 +8,13 @@ using System.Linq;
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]
 [RequireComponent(typeof(StackHolder))]
-public class InternController : StaffController
+public class InternController : StaffController, IServiceProvider
 {
     public enum InternState { Patrolling, HelpingConfused, ServingFromQueue, CoveringDesk, GoingToBreak, OnBreak, GoingToToilet, AtToilet, ReturningToPatrol, Inactive, Working, TalkingToConfused, TakingStackToArchive }
     
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;
-    private StackHolder stackHolder;
+    private ServicePoint coveredServicePoint; // Стол, который стажер сейчас подменяет
 
     // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ИСПОЛНИТЕЛЕЙ ---
     public void SetState(InternState newState)
@@ -28,11 +28,34 @@ public class InternController : StaffController
         }
     }
     
-	public InternState GetCurrentState()
-{
-    return currentState;
-}
-	
+    public void AssignCoveredWorkstation(ServicePoint point)
+    {
+        coveredServicePoint = point;
+    }
+    
+    public InternState GetCurrentState()
+    {
+        return currentState;
+    }
+    
+    // Переопределяем метод из базового класса
+    public override IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival)
+    {
+        // Преобразуем строку обратно в enum InternState
+        if (System.Enum.TryParse<InternState>(stateOnArrival, out InternState newState))
+        {
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
+            yield return new WaitUntil(() => !agentMover.IsMoving());
+            SetState(newState);
+        }
+        else // Если состояние не распознано, просто двигаемся
+        {
+             agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
+             yield return new WaitUntil(() => !agentMover.IsMoving());
+        }
+    }
+
+    // Добавляем перегрузку метода для работы с enum напрямую внутри этого класса
     public IEnumerator MoveToTarget(Vector2 targetPosition, InternState stateOnArrival)
     {
         agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
@@ -40,11 +63,10 @@ public class InternController : StaffController
         SetState(stateOnArrival);
     }
 
-public string GetCurrentStateName()
-{
-    // currentState - это уникальная для каждого контроллера переменная состояния (enum)
-    return currentState.ToString();
-}
+    public override string GetCurrentStateName()
+    {
+        return currentState.ToString();
+    }
 
     // --- РЕАЛИЗАЦИЯ БАЗОВЫХ МЕТОДОВ ---
     public override bool IsOnBreak()
@@ -75,4 +97,82 @@ public string GetCurrentStateName()
             visuals.EquipAccessory(data.accessoryPrefab);
         }
     }
+    
+    #region IServiceProvider Implementation
+
+    public bool IsAvailableToServe => GetCurrentState() == InternState.CoveringDesk;
+
+    public Transform GetClientStandPoint()
+    {
+        return coveredServicePoint != null ? coveredServicePoint.clientStandPoint.transform : transform;
+    }
+
+    public ServicePoint GetWorkstation()
+    {
+        return coveredServicePoint;
+    }
+
+    public void AssignClient(ClientPathfinding client)
+    {
+        StartCoroutine(InternServiceRoutine(client));
+    }
+
+    private IEnumerator InternServiceRoutine(ClientPathfinding client)
+    {
+        if (coveredServicePoint == null) yield break;
+
+        int deskId = coveredServicePoint.deskId;
+        thoughtBubble?.ShowPriorityMessage("Попробую помочь...", 2f, Color.yellow);
+        yield return new WaitForSeconds(3f); // Стажер работает медленнее
+
+        if (deskId == 0) // Если подменяем регистратора
+        {
+            Waypoint destination = DetermineCorrectGoalForClient(client);
+            string destName = string.IsNullOrEmpty(destination.friendlyName) ? destination.name : destination.friendlyName;
+
+            float errorChance = 0.4f * (1f - skills.pedantry);
+            if(Random.value < errorChance)
+            {
+                 thoughtBubble?.ShowPriorityMessage("Ой, кажется, вам\nтуда...", 3f, Color.red);
+            }
+            else
+            {
+                 thoughtBubble?.ShowPriorityMessage($"Вам к '{destName}'", 3f, Color.white);
+            }
+
+            if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance.RemoveClientFromQueue(client);
+            client.stateMachine.SetGoal(destination);
+            client.stateMachine.SetState(ClientState.MovingToGoal);
+        }
+        else if (deskId == -1) // Если подменяем кассира
+        {
+            if (client.billToPay > 0)
+            {
+                PlayerWallet.Instance?.AddMoney(client.billToPay, transform.position);
+                if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
+                client.billToPay = 0;
+                coveredServicePoint.documentStack?.AddDocumentToStack();
+                thoughtBubble?.ShowPriorityMessage("Оплачено!", 2f, Color.green);
+            }
+            client.isLeavingSuccessfully = true;
+            client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+            client.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
+            client.stateMachine.SetState(ClientState.Leaving);
+        }
+    }
+
+    private Waypoint DetermineCorrectGoalForClient(ClientPathfinding client)
+    {
+        if (client.billToPay > 0) return ClientSpawner.GetCashierZone()?.waitingWaypoint;
+        switch (client.mainGoal)
+        {
+            case ClientGoal.PayTax: return ClientSpawner.GetCashierZone()?.waitingWaypoint;
+            case ClientGoal.GetCertificate1: return ClientSpawner.GetDesk1Zone()?.waitingWaypoint;
+            case ClientGoal.GetCertificate2: return ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
+            case ClientGoal.VisitToilet: return ClientSpawner.GetToiletZone()?.waitingWaypoint;
+            default: return ClientQueueManager.Instance.ChooseNewGoal(client);
+        }
+    }
+
+    #endregion
 }

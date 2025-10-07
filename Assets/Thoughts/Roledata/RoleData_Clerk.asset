@@ -13,8 +13,32 @@ MonoBehaviour:
   m_Name: RoleData_Clerk
   m_EditorClassIdentifier: 
   roleType: 7
-  moveSpeed: 4
-  priority: 3
+  moveSpeed: 2
+  priority: 2
   spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: eb749ec48a08bef40ae01024a4f27c97, type: 2}
   accessoryPrefab: {fileID: 0}
+  idleSprite: {fileID: 0}
+  walkSprite1: {fileID: 0}
+  walkSprite2: {fileID: 0}
+  guard_minWaitTime: 1
+  guard_maxWaitTime: 3
+  guard_chaseSpeedMultiplier: 1.5
+  guard_talkTime: 3
+  guard_timeInToilet: 15
+  guard_maxStress: 100
+  guard_stressGainPerViolator: 25
+  guard_stressReliefRate: 10
+  clerk_timeInToilet: 10
+  clerk_clientArrivalTimeout: 16
+  clerk_maxStress: 100
+  clerk_stressGainPerClient: 5
+  clerk_stressReliefRate: 10
+  worker_cleaningTimeTrash: 2
+  worker_cleaningTimePuddle: 4
+  worker_cleaningTimePerDirtLevel: 1.5
+  worker_maxStress: 100
+  worker_stressGainPerMess: 2
+  worker_stressReliefRate: 10
+  minIdleWait: 5
+  maxIdleWait: 10

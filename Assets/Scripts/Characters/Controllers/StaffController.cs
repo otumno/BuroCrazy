@@ -23,6 +23,11 @@ public abstract class StaffController : MonoBehaviour
     public int rank = 0;
     public int experiencePoints = 0;
     public int salaryPerPeriod = 15;
+	
+	[Header("Система зарплаты")]
+	public int unpaidPeriods = 0; // Счетчик неоплаченных смен
+	public int missedPaymentCount = 0; // Счетчик промахов с получением зарплаты
+	
     public bool isReadyForPromotion = false;
     public List<StaffAction> activeActions = new List<StaffAction>();
     
@@ -54,6 +59,28 @@ public abstract class StaffController : MonoBehaviour
     public bool IsOnDuty() => isOnDuty;
     public abstract bool IsOnBreak();
     public virtual string GetStatusInfo() => "Статус не определен";
+	
+	public virtual string GetCurrentStateName()
+	{
+		return "Unknown"; // Базовая реализация
+	}
+
+public void ForceInitializeBaseComponents(AgentMover am, CharacterVisuals cv, CharacterStateLogger csl)
+{
+    agentMover = am;
+    visuals = cv;
+    logger = csl;
+    thoughtBubble = GetComponent<ThoughtBubbleController>();
+}
+
+
+	public virtual IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival)
+	{
+		// Эта базовая реализация просто двигает персонажа, не меняя его состояние.
+		// Каждый наследник (Clerk, Intern) должен будет переопределить этот метод.
+		agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
+		yield return new WaitUntil(() => !agentMover.IsMoving());
+	}
 
     public virtual void StartShift()
     {
@@ -116,116 +143,104 @@ public void SetCurrentFrustration(float value)
         StartCoroutine(GoHomeRoutine());
     }
 
-    // --- НОВЫЙ "МОЗГ" ---
+// --- НАЧАЛО ФИНАЛЬНОЙ ВЕРСИИ "МОЗГА" AI ---
+
+    // Новый enum для четкого понимания результата цикла
+    protected enum ActionStartResult { Success, NoActionsAvailable, AllActionsFailed }
+
     private IEnumerator ActionDecisionLoop()
-{
-    Debug.Log($"<color=lime>AI ЗАПУЩЕН</color> для {characterName}");
-    while (isOnDuty)
     {
-        // 1. КАЖДЫЙ ЦИКЛ проверяем, нет ли экстренных дел.
-        StaffAction emergencyAction = FindEmergencyAction();
-
-        if (emergencyAction != null)
+        Debug.Log($"<color=lime>AI ЗАПУЩЕН</color> для {characterName}");
+        while (isOnDuty)
         {
-            // Если есть "пожар", нужно действовать!
-            if (currentExecutor != null) // Если мы сейчас чем-то заняты...
-            {
-                if (currentExecutor.IsInterruptible) // ... и это дело можно прервать...
-                {
-                    Debug.LogWarning($"<color=orange>ПРЕРЫВАНИЕ:</color> '{emergencyAction.displayName}' прерывает текущее действие!");
-                    Destroy(currentExecutor); // ... то мы уничтожаем текущего исполнителя.
-                    currentExecutor = null;
-                }
-                else
-                {
-                    // Если текущее дело нельзя прервать (например, мы уже ловим вора), пропускаем цикл.
-                    yield return new WaitForSeconds(1f);
-                    continue;
-                }
-            }
-
-            // Если мы свободны (или только что освободились), запускаем экстренное действие.
             if (currentExecutor == null)
             {
-                ExecuteAction(emergencyAction);
+                ActionStartResult result = TryToStartConfiguredAction();
+
+                if (result == ActionStartResult.NoActionsAvailable)
+                {
+                    Debug.Log($"<color=gray>{characterName} не имеет доступных задач. Запускаю действие 'Бездействие'.</color>");
+                    currentExecutor = GetIdleActionExecutor();
+                    if (currentExecutor != null) currentExecutor.Execute(this, null);
+                }
+                else if (result == ActionStartResult.AllActionsFailed)
+                {
+                    Debug.Log($"<color=orange>{characterName} провалил все проверки. Запускаю действие 'Выгорание'.</color>");
+                    currentExecutor = GetBurnoutActionExecutor();
+                    if (currentExecutor != null) currentExecutor.Execute(this, null);
+                }
+            }
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    protected virtual ActionStartResult TryToStartConfiguredAction()
+    {
+        if (activeActions == null || !activeActions.Any()) return ActionStartResult.NoActionsAvailable;
+
+        var emergencyActions = activeActions.Where(a => a.priority >= 100).OrderByDescending(a => a.priority);
+        foreach (var action in emergencyActions)
+        {
+            if (action.AreConditionsMet(this))
+            {
+                if (ExecuteAction(action)) return ActionStartResult.Success;
             }
         }
-        else if (currentExecutor == null)
+
+        bool anyActionWasPossible = false;
+        float bonusPerPosition = 0.05f;
+        for (int i = 0; i < activeActions.Count; i++)
         {
-            // 2. Если "пожара" нет и мы свободны, ищем обычную задачу.
-            TryToStartStandardAction();
+            var action = activeActions[i];
+            if (action.priority >= 100) continue;
+            if (actionCooldowns.ContainsKey(action.actionType) && Time.time < actionCooldowns[action.actionType]) continue;
+
+            if (action.AreConditionsMet(this))
+            {
+                anyActionWasPossible = true;
+                if (CheckActionRoll(action, (activeActions.Count - i) * bonusPerPosition))
+                {
+                    if (ExecuteAction(action)) return ActionStartResult.Success;
+                }
+            }
         }
 
-        yield return new WaitForSeconds(1f);
+        if (anyActionWasPossible)
+            return ActionStartResult.AllActionsFailed;
+        else
+            return ActionStartResult.NoActionsAvailable;
     }
-}
 
-private StaffAction FindEmergencyAction()
-{
-    if (activeActions == null) return null;
-
-    var emergencyActions = activeActions
-        .Where(a => a.priority >= 100)
-        .OrderByDescending(a => a.priority);
-
-    foreach (var action in emergencyActions)
+    protected virtual ActionExecutor GetIdleActionExecutor()
     {
-        if (action.AreConditionsMet(this)) // Для экстренных дел не делаем бросок кубиков, они всегда "успешны", если условия выполнены
+        return null;
+    }
+
+    protected virtual ActionExecutor GetBurnoutActionExecutor()
+    {
+        return gameObject.AddComponent<DefaultActionExecutor>();
+    }
+
+    public bool ExecuteAction(StaffAction actionToExecute)
+    {
+        Debug.Log($"<color=green>AI РЕШЕНИЕ:</color> {characterName} будет выполнять '{actionToExecute.displayName}' (Приоритет: {actionToExecute.priority}).");
+        UpdateFrustration(true);
+        
+        System.Type executorType = actionToExecute.GetExecutorType();
+        currentExecutor = gameObject.AddComponent(executorType) as ActionExecutor;
+        
+        if (currentExecutor != null)
         {
-            return action; // Возвращаем первое же найденное экстренное дело.
+            currentExecutor.Execute(this, actionToExecute);
+            actionCooldowns[actionToExecute.actionType] = Time.time + actionToExecute.actionCooldown;
+            return true;
+        }
+        else
+        {
+            Debug.LogError($"Не удалось добавить компонент-исполнитель типа '{executorType.Name}' для действия '{actionToExecute.displayName}'!");
+            return false;
         }
     }
-    return null; // Экстренных дел нет.
-}
-
-    private bool TryToStartStandardAction()
-{
-    if (activeActions == null || !activeActions.Any()) return false;
-
-    float bonusPerPosition = 0.05f;
-
-    for (int i = 0; i < activeActions.Count; i++)
-    {
-        var action = activeActions[i];
-        if (action.priority >= 100) continue;
-
-        if (actionCooldowns.ContainsKey(action.actionType) && Time.time < actionCooldowns[action.actionType])
-        {
-            continue;
-        }
-
-        float positionBonus = (activeActions.Count - i) * bonusPerPosition;
-        if (action.AreConditionsMet(this) && CheckActionRoll(action, positionBonus))
-        {
-            return ExecuteAction(action);
-        }
-    }
-
-    UpdateFrustration(false); // Вызывается только если ни одно стандартное действие не прошло
-    return false;
-}
-
-// --- НОВЫЙ ВСПОМОГАТЕЛЬНЫЙ МЕТОД, ЧТОБЫ НЕ ДУБЛИРОВАТЬ КОД ---
-private bool ExecuteAction(StaffAction actionToExecute)
-{
-    Debug.Log($"<color=green>AI РЕШЕНИЕ:</color> {characterName} будет выполнять '{actionToExecute.displayName}' (Приоритет: {actionToExecute.priority}).");
-    UpdateFrustration(true);
-    
-    System.Type executorType = actionToExecute.GetExecutorType();
-    currentExecutor = gameObject.AddComponent(executorType) as ActionExecutor;
-    
-    if (currentExecutor != null)
-    {
-        currentExecutor.Execute(this, actionToExecute);
-        actionCooldowns[actionToExecute.actionType] = Time.time + actionToExecute.actionCooldown;
-        return true;
-    }
-    else
-    {
-        Debug.LogError($"Не удалось добавить компонент-исполнитель типа '{executorType.Name}' для действия '{actionToExecute.displayName}'!");
-        return false;
-    }
-}
 
     // --- НОВЫЙ ПУБЛИЧНЫЙ МЕТОД, который вызывает "исполнитель" по завершении ---
     public void OnActionFinished()
@@ -242,8 +257,17 @@ private bool ExecuteAction(StaffAction actionToExecute)
     }
 
     #region Служебные методы (без изменений)
-    protected bool CheckActionRoll(StaffAction actionData, float positionBonus) // <-- ИЗМЕНЕНИЕ 4: Переименовали параметр для ясности
+    protected bool CheckActionRoll(StaffAction actionData, float positionBonus)
 {
+    // >>> НАЧАЛО ИЗМЕНЕНИЙ <<<
+    // ОСОБОЕ ПРАВИЛО: Если это Директор, он всегда успешен.
+    if (this is DirectorAvatarController)
+    {
+        Debug.Log($"[ПРОВЕРКА: {actionData.displayName}] Пропускается для Директора. <color=green>АВТО-УСПЕХ</color>");
+        return true;
+    }
+    // >>> КОНЕЦ ИЗМЕНЕНИЙ <<<
+
     if (actionData == null) return false;
     
     float skillModifier = 0f;
@@ -292,16 +316,76 @@ private bool ExecuteAction(StaffAction actionToExecute)
     }
     
     private IEnumerator GoHomeRoutine()
+{
+    // --- НАЧАЛО НОВОЙ ЛОГИКИ ЗАРПЛАТЫ ---
+
+    // 1. Проверяем, есть ли у нас неоплаченные смены
+    if (unpaidPeriods > 0)
     {
-        var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
-        if (homeZone != null)
+        var salaryStack = ScenePointsRegistry.Instance?.salaryStackPoint;
+        if (salaryStack != null)
         {
-            Vector2 targetPos = homeZone.GetRandomPointInside();
-            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPos, this.gameObject));
-            yield return new WaitUntil(() => !agentMover.IsMoving());
-            if (endShiftSound != null) AudioSource.PlayClipAtPoint(endShiftSound, transform.position);
+            // 2. Идем к столу выдачи зарплаты
+            thoughtBubble?.ShowPriorityMessage("За зарплатой...", 3f, Color.yellow);
+            AgentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, salaryStack.transform.position, this.gameObject));
+            yield return new WaitUntil(() => !AgentMover.IsMoving());
+
+            // 3. Пытаемся забрать конверт
+            if (salaryStack.TakeOneEnvelope())
+            {
+                // УСПЕХ! Конверт получен.
+                int salaryToPay = salaryPerPeriod * unpaidPeriods;
+
+                // Проверяем, есть ли у игрока деньги
+                if (PlayerWallet.Instance.GetCurrentMoney() >= salaryToPay)
+                {
+                    PlayerWallet.Instance.AddMoney(-salaryToPay, $"Зарплата: {characterName}");
+                    Debug.Log($"{characterName} получил зарплату: ${salaryToPay} за {unpaidPeriods} смен.");
+                    unpaidPeriods = 0;
+                    missedPaymentCount = 0; // Сбрасываем счетчик промахов
+                    thoughtBubble?.ShowPriorityMessage("Отлично!", 2f, Color.green);
+                }
+                else
+                {
+                    // Денег в кассе нет! Возвращаем конверт, промах засчитан.
+                    salaryStack.AddEnvelope(); 
+                    missedPaymentCount++;
+                    Debug.LogWarning($"{characterName} не смог получить зарплату: в казне нет денег! Промах #{missedPaymentCount}");
+                    thoughtBubble?.ShowPriorityMessage("В казне пусто?!", 3f, Color.red);
+                }
+            }
+            else
+            {
+                // ПРОВАЛ! Конвертов в стопке нет.
+                thoughtBubble?.ShowPriorityMessage("Где мой конверт?!", 4f, Color.red);
+                yield return new WaitForSeconds(10f); // Ждем 10 секунд в гневе
+                missedPaymentCount++;
+                Debug.LogWarning($"{characterName} не нашел свой конверт! Промах #{missedPaymentCount}");
+            }
+
+            // 4. Проверяем, не пора ли увольняться
+            if (missedPaymentCount >= 2)
+            {
+                Debug.LogError($"СОТРУДНИК УВОЛИЛСЯ! {characterName} не получил зарплату два раза подряд. Директор получает страйк!");
+                DirectorManager.Instance?.AddStrike();
+                FireAndGoHome(); // Запускаем увольнение
+                yield break; // Прерываем дальнейшее выполнение
+            }
         }
     }
+
+    // --- КОНЕЦ НОВОЙ ЛОГИКИ ЗАРПЛАТЫ ---
+
+    // 5. Стандартная логика: идем домой
+    var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
+    if (homeZone != null)
+    {
+        Vector2 targetPos = homeZone.GetRandomPointInside();
+        agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPos, this.gameObject));
+        yield return new WaitUntil(() => !agentMover.IsMoving());
+        if (endShiftSound != null) AudioSource.PlayClipAtPoint(endShiftSound, transform.position);
+    }
+}
 	
 	public void FireAndGoHome()
     {

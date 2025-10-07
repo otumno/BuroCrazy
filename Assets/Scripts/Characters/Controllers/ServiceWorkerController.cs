@@ -7,7 +7,7 @@ using System.Linq;
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class ServiceWorkerController : StaffController
 {
-    public enum WorkerState { Idle, SearchingForWork, GoingToMess, Cleaning, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, StressedOut, Patrolling }
+    public enum WorkerState { Idle, SearchingForWork, GoingToMess, Cleaning, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, StressedOut, Patrolling, DeliveringValuables } // <-- Добавьте DeliveringValuables
     
     [Header("Состояние Уборщика")]
     private WorkerState currentState = WorkerState.OffDuty;
@@ -23,7 +23,12 @@ public class ServiceWorkerController : StaffController
     [Header("Объекты (Prefab)")]
     public GameObject nightLight;
     public Transform broomTransform;
+	private GameObject instantiatedTrashBag;
+	public GameObject TrashBagObject => instantiatedTrashBag;
     private Quaternion initialBroomRotation;
+	
+	public float minIdleWait;
+	public float maxIdleWait;
 
     // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ИСПОЛЬЗОВАНИЯ ИСПОЛНИТЕЛЯМИ ---
 
@@ -41,10 +46,21 @@ public class ServiceWorkerController : StaffController
         }
     }
 
-    public string GetCurrentStateName()
+protected override ActionExecutor GetIdleActionExecutor()
+    {
+        // Идти в свою "подсобку"
+        return gameObject.AddComponent<GoToJanitorHomeExecutor>();
+    }
+
+    public override string GetCurrentStateName()
     {
         return currentState.ToString();
     }
+
+protected override ActionExecutor GetBurnoutActionExecutor()
+{
+    return gameObject.AddComponent<ScreamInClosetExecutor>();
+}
 
 public WorkerState GetCurrentState()
 {
@@ -96,6 +112,22 @@ public WorkerState GetCurrentState()
         this.maxStress = data.worker_maxStress;
         this.stressGainPerMess = data.worker_stressGainPerMess;
         this.stressReliefRate = data.worker_stressReliefRate;
+		this.minIdleWait = data.minIdleWait;
+		this.maxIdleWait = data.maxIdleWait;
+		
+		if (data.worker_trashBagPrefab != null)
+    {
+        // Убеждаемся, что у нас есть точка крепления в руках (handAttachPoint)
+        var visuals = GetComponent<CharacterVisuals>();
+        if (visuals != null && visuals.handAttachPoint != null)
+        {
+            // Уничтожаем старый мешок, если он вдруг остался от предыдущей роли
+            if (instantiatedTrashBag != null) { Destroy(instantiatedTrashBag); }
+
+            instantiatedTrashBag = Instantiate(data.worker_trashBagPrefab, visuals.handAttachPoint);
+            instantiatedTrashBag.SetActive(false);
+        }
+    }
     }
 
     // --- МЕТОДЫ UNITY ---
@@ -114,5 +146,6 @@ public WorkerState GetCurrentState()
     {
         initialBroomRotation = broomTransform.localRotation;
     }
+	
 }
 }

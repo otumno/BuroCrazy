@@ -1,0 +1,44 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 602a80440fe6e5e4d89843d878ae7570, type: 3}
+  m_Name: RoleData_Intern
+  m_EditorClassIdentifier: 
+  roleType: 1
+  moveSpeed: 3
+  priority: 1
+  spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: eb749ec48a08bef40ae01024a4f27c97, type: 2}
+  accessoryPrefab: {fileID: 0}
+  idleSprite: {fileID: 3916294077759095372, guid: 59d77eaf34d13b44498c316a57207c4d, type: 3}
+  walkSprite1: {fileID: 1894015300992715325, guid: 22a93148dcaaea6459ec2aad88f79846, type: 3}
+  walkSprite2: {fileID: -6371035009962811522, guid: 618fb1f9e00240d4889cb3efafedeaf4, type: 3}
+  guard_minWaitTime: 1
+  guard_maxWaitTime: 3
+  guard_chaseSpeedMultiplier: 1.5
+  guard_talkTime: 3
+  guard_timeInToilet: 15
+  guard_maxStress: 100
+  guard_stressGainPerViolator: 25
+  guard_stressReliefRate: 10
+  clerk_timeInToilet: 10
+  clerk_clientArrivalTimeout: 16
+  clerk_maxStress: 100
+  clerk_stressGainPerClient: 5
+  clerk_stressReliefRate: 10
+  worker_cleaningTimeTrash: 2
+  worker_cleaningTimePuddle: 4
+  worker_cleaningTimePerDirtLevel: 1.5
+  worker_maxStress: 100
+  worker_stressGainPerMess: 2
+  worker_stressReliefRate: 10
+  minIdleWait: 5
+  maxIdleWait: 10

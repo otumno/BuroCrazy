@@ -17,23 +17,24 @@ public class DocumentStack : MonoBehaviour
     public bool IsFull => CurrentSize >= maxStackSize;
     public bool IsEmpty => CurrentSize == 0;
 
-    public void AddDocumentToStack()
+    public bool AddDocumentToStack() // Изменяем void на bool
+{
+    if (IsFull)
     {
-        if (IsFull)
-        {
-            return;
-        }
-        
-        if (documentVisualPrefab == null)
-        {
-            Debug.LogError($"<color=red>[{name}] НЕ МОЖЕТ создать копию документа, потому что в инспекторе не назначен 'Document Visual Prefab'!</color>");
-            return;
-        }
-
-        Vector3 position = transform.position + new Vector3(0, CurrentSize * stackOffset, 0);
-        GameObject newDoc = Instantiate(documentVisualPrefab, position, transform.rotation, transform);
-        visualStack.Add(newDoc);
+        return false; // Сообщаем о неудаче
     }
+
+    if (documentVisualPrefab == null)
+    {
+        Debug.LogError($"<color=red>[{name}] НЕ МОЖЕТ создать копию документа, потому что в инспекторе не назначен 'Document Visual Prefab'!</color>");
+        return false; // Сообщаем о неудаче
+    }
+
+    Vector3 position = transform.position + new Vector3(0, CurrentSize * stackOffset, 0);
+    GameObject newDoc = Instantiate(documentVisualPrefab, position, transform.rotation, transform);
+    visualStack.Add(newDoc);
+    return true; // Сообщаем об успехе
+}
 
     public int TakeEntireStack()
     {
