@@ -145,10 +145,45 @@ public bool CanAddAction()
     }
 
     private void OnSave()
+{
+    // 1. Сохраняем новое расписание смен
+    currentStaff.workPeriods.Clear();
+    // --- ИСПРАВЛЕНИЕ: Берем периоды из календаря, а не из устаревшего массива ---
+    List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
+    int startIndex = shiftDropdown.value;
+
+    RankData currentRankData = ExperienceManager.Instance.GetRankByXP(currentStaff.experiencePoints);
+    int duration = (currentRankData != null) ? currentRankData.workPeriodsCount : 3;
+
+    for (int i = 0; i < duration; i++)
     {
-        currentStaff.activeActions = new List<StaffAction>(tempActiveActions);
-        StartCoroutine(SaveAndRefreshRoutine());
+        int periodIndex = (startIndex + i) % allPeriods.Count;
+        currentStaff.workPeriods.Add(allPeriods[periodIndex]);
     }
+    Debug.Log($"Сохранено новое расписание для {currentStaff.characterName}: {string.Join(", ", currentStaff.workPeriods)}");
+
+    // 2. Собираем НОВЫЙ список действий из UI
+    List<StaffAction> newActionsToAssign = new List<StaffAction>();
+    foreach (Transform iconTransform in activeActionsContent)
+    {
+        ActionIconUI iconUI = iconTransform.GetComponent<ActionIconUI>();
+        if (iconUI != null)
+        {
+            newActionsToAssign.Add(iconUI.actionData);
+        }
+    }
+
+    // 3. Определяем новую роль
+    string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
+    StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
+
+    // 4. Вызываем синхронный метод смены роли
+    HiringManager.Instance.AssignNewRole_Immediate(currentStaff, newRole, newActionsToAssign);
+
+    // 5. Закрываем панель и обновляем список команды
+    gameObject.SetActive(false);
+    FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+}
 
     private void OnRoleSelectionChanged()
     {
@@ -201,54 +236,6 @@ public bool CanAddAction()
         }
         UpdateShiftInfoText();
     }
-
-private IEnumerator SaveAndRefreshRoutine()
-{
-    // 1. Сохраняем новое расписание смен
-    currentStaff.workPeriods.Clear();
-    List<string> allPeriods = ClientSpawner.Instance.periods.Select(p => p.periodName).ToList();
-    int startIndex = shiftDropdown.value;
-    int duration = currentRank.workPeriodsCount;
-
-    for (int i = 0; i < duration; i++)
-    {
-        int periodIndex = (startIndex + i) % allPeriods.Count;
-        currentStaff.workPeriods.Add(allPeriods[periodIndex]);
-    }
-    Debug.Log($"Сохранено новое расписание для {currentStaff.characterName}: {string.Join(", ", currentStaff.workPeriods)}");
-
-    // 2. Собираем НОВЫЙ список действий из UI в локальную переменную
-    List<StaffAction> newActionsToAssign = new List<StaffAction>();
-    foreach (Transform iconTransform in activeActionsContent)
-    {
-        ActionIconUI iconUI = iconTransform.GetComponent<ActionIconUI>();
-        if (iconUI != null)
-        {
-            newActionsToAssign.Add(iconUI.actionData);
-        }
-    }
-
-    // 3. Определяем новую роль
-    string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
-    StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
-    
-    // 4. Вызываем AssignNewRole, ПЕРЕДАВАЯ новый список дел напрямую
-    // и ждем завершения операции по смене роли
-    yield return HiringManager.Instance.AssignNewRole(currentStaff, newRole, newActionsToAssign);
-    
-    // 5. Обновляем локальную ссылку на случай, если компонент контроллера был заменен
-    currentStaff = HiringManager.Instance.AllStaff.FirstOrDefault(s => s.characterName == currentStaff.characterName);
-    
-    // 6. "Пинаем" AI, чтобы он перечитал свои новые задачи
-    if (currentStaff != null)
-    {
-
-    }
-
-    // 7. Закрываем панель и обновляем общий список команды
-    gameObject.SetActive(false);
-    FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
-}
 
     private void OnCancel()
     {

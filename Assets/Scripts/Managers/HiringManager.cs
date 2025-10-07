@@ -155,38 +155,28 @@ public class HiringManager : MonoBehaviour
         }
     }
 
-    public Coroutine AssignNewRole(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
+    public void AssignNewRole_Immediate(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
+{
+    if (staff == null)
     {
-        if (staff.currentRole == newRole)
-        {
-            staff.activeActions = newActions;
-            return null;
-        }
-        return StartCoroutine(RoleChangeRoutine(staff, newRole, newActions));
+        Debug.LogError("Попытка сменить роль у несуществующего сотрудника (staff is null)!");
+        return;
     }
 
-    // --- ИСПРАВЛЕНО: Полностью обновленная корутина смены роли ---
-    private IEnumerator RoleChangeRoutine(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
-{
-    while (ScenePointsRegistry.Instance == null)
-    {
-        Debug.LogWarning($"HiringManager ждет, пока ScenePointsRegistry будет готов...");
-        yield return null; 
-    }
+    // Проверка, чтобы не запускать смену роли для одного и того же сотрудника дважды
     if (staffBeingModified.Contains(staff))
     {
-        Debug.LogWarning($"<color=orange>ОПЕРАЦИЯ ПРЕРВАНА:</color> Повторный вызов для {staff.characterName}.");
-        yield break;
+        Debug.LogWarning($"<color=orange>ОПЕРАЦИЯ ПРЕРВАНА:</color> Повторный вызов смены роли для {staff.characterName}.");
+        return;
     }
     staffBeingModified.Add(staff);
 
     try
     {
         GameObject staffGO = staff.gameObject;
-        Debug.Log($"<color=yellow>ОПЕРАЦИЯ:</color> Начинаем смену роли для {staff.characterName} с {staff.currentRole} на {newRole}");
+        Debug.Log($"<color=yellow>ОПЕРАЦИЯ (НЕМЕДЛЕННО):</color> Начинаем смену роли для {staff.characterName} с {staff.currentRole} на {newRole}");
 
-        // --- НАЧАЛО ИЗМЕНЕНИЙ: Сохраняем все данные и ссылки ---
-
+        // 1. Сохраняем все данные и ссылки
         string savedName = staff.characterName;
         Gender savedGender = staff.gender;
         CharacterSkills savedSkills = staff.skills;
@@ -194,28 +184,18 @@ public class HiringManager : MonoBehaviour
         int savedXP = staff.experiencePoints;
         int savedSalary = staff.salaryPerPeriod;
         bool savedPromoStatus = staff.isReadyForPromotion;
+        int savedUnpaidPeriods = staff.unpaidPeriods;
+        int savedMissedPayments = staff.missedPaymentCount;
         List<string> savedWorkPeriods = new List<string>(staff.workPeriods);
-
-        // Сохраняем важные ссылки на компоненты, которые не должны меняться
+        
         CharacterVisuals visualsComponent = staffGO.GetComponent<CharacterVisuals>();
         AgentMover agentMoverComponent = staffGO.GetComponent<AgentMover>();
         CharacterStateLogger loggerComponent = staffGO.GetComponent<CharacterStateLogger>();
 
-        // --- КОНЕЦ ИЗМЕНЕНИЙ ---
-
-        // Уничтожаем СТАРЫЙ компонент-контроллер
+        // 2. Уничтожаем СТАРЫЙ компонент-контроллер
         Destroy(staff);
-        yield return null; // Ждем один кадр, чтобы уничтожение полностью завершилось
 
-        // Находим данные для НОВОЙ роли
-        RoleData dataForNewRole = allRoleData.FirstOrDefault(data => data.roleType == newRole);
-        if (dataForNewRole == null)
-        {
-            Debug.LogError($"Не найден RoleData для роли {newRole}! Операция прервана.");
-            yield break;
-        }
-
-        // Добавляем НОВЫЙ компонент-контроллер
+        // 3. Добавляем НОВЫЙ компонент-контроллер
         StaffController newControllerReference = null;
         switch (newRole)
         {
@@ -228,61 +208,64 @@ public class HiringManager : MonoBehaviour
             case StaffController.Role.Intern: newControllerReference = staffGO.AddComponent<InternController>(); break;
         }
 
-        yield return null; // Ждем кадр, чтобы новый компонент добавился
-
-        if (newControllerReference != null)
+        if (newControllerReference == null)
         {
-            // --- НАЧАЛО ИЗМЕНЕНИЙ: Восстанавливаем все данные в новом контроллере ---
-
-            newControllerReference.characterName = savedName;
-            newControllerReference.gender = savedGender;
-            newControllerReference.skills = savedSkills;
-            newControllerReference.rank = savedRank;
-            newControllerReference.experiencePoints = savedXP;
-            newControllerReference.salaryPerPeriod = savedSalary;
-            newControllerReference.isReadyForPromotion = savedPromoStatus;
-            newControllerReference.workPeriods = savedWorkPeriods;
-            newControllerReference.activeActions = newActions;
-
-            // Явно переназначаем ссылки на базовые компоненты
-            newControllerReference.ForceInitializeBaseComponents(agentMoverComponent, visualsComponent, loggerComponent);
-
-            // Инициализируем роль специфичными данными
+            Debug.LogError($"<color=red>КРИТИЧЕСКАЯ ОШИБКА:</color> После смены роли не удалось добавить новый компонент-контроллер для роли {newRole}!");
+            return;
+        }
+        
+        // 4. Восстанавливаем все данные в новом контроллере
+        newControllerReference.characterName = savedName;
+        newControllerReference.gender = savedGender;
+        newControllerReference.skills = savedSkills;
+        newControllerReference.rank = savedRank;
+        newControllerReference.experiencePoints = savedXP;
+        newControllerReference.salaryPerPeriod = savedSalary;
+        newControllerReference.isReadyForPromotion = savedPromoStatus;
+        newControllerReference.unpaidPeriods = savedUnpaidPeriods;
+        newControllerReference.missedPaymentCount = savedMissedPayments;
+        newControllerReference.workPeriods = savedWorkPeriods;
+        newControllerReference.activeActions = newActions;
+        
+        newControllerReference.ForceInitializeBaseComponents(agentMoverComponent, visualsComponent, loggerComponent);
+        
+        RoleData dataForNewRole = allRoleData.FirstOrDefault(data => data.roleType == newRole);
+        if (dataForNewRole != null)
+        {
             newControllerReference.Initialize(dataForNewRole);
 
-            if (newRole == StaffController.Role.Guard) (newControllerReference as GuardMovement)?.InitializeFromData(dataForNewRole);
-            if (newRole == StaffController.Role.Janitor) (newControllerReference as ServiceWorkerController)?.InitializeFromData(dataForNewRole);
-            if (newRole == StaffController.Role.Intern) (newControllerReference as InternController)?.InitializeFromData(dataForNewRole);
-
+            // Инициализация специфичных для роли данных
+            if (newControllerReference is GuardMovement newGuard) newGuard.InitializeFromData(dataForNewRole);
+            if (newControllerReference is ServiceWorkerController newWorker) newWorker.InitializeFromData(dataForNewRole);
+            if (newControllerReference is InternController newIntern) newIntern.InitializeFromData(dataForNewRole);
             if (newControllerReference is ClerkController newClerk)
             {
                 newClerk.InitializeFromData(dataForNewRole);
-                newClerk.allRoleData = this.allRoleData; // Передаем список ролей
+                newClerk.allRoleData = this.allRoleData;
                 if (newRole == StaffController.Role.Registrar) newClerk.role = ClerkController.ClerkRole.Registrar;
                 else if (newRole == StaffController.Role.Cashier) newClerk.role = ClerkController.ClerkRole.Cashier;
                 else if (newRole == StaffController.Role.Archivist) newClerk.role = ClerkController.ClerkRole.Archivist;
                 else newClerk.role = ClerkController.ClerkRole.Regular;
             }
-
-            // --- КОНЕЦ ИЗМЕНЕНИЙ ---
-
-            // Обновляем ссылку в главном списке сотрудников
-            int staffIndex = AllStaff.FindIndex(s => s == null || s.gameObject == staffGO); // Ищем по GameObject, так как старая ссылка мертва
-            if (staffIndex != -1)
-            {
-                AllStaff[staffIndex] = newControllerReference;
-            }
-
-            Debug.Log($"<color=green>ОПЕРАЦИЯ УСПЕШНА:</color> Роль для {newControllerReference.characterName} успешно изменена.");
+        }
+        
+        // 5. Обновляем ссылку в главном списке сотрудников
+        int staffIndex = AllStaff.FindIndex(s => s == null || s.gameObject == staffGO);
+        if (staffIndex != -1)
+        {
+            AllStaff[staffIndex] = newControllerReference;
         }
         else
         {
-            Debug.LogError($"<color=red>КРИТИЧЕСКАЯ ОШИБКА:</color> После смены роли не удалось добавить новый компонент-контроллер!");
+            Debug.LogWarning($"Не удалось найти старую ссылку на {savedName} в списке AllStaff. Возможно, он уже был удален. Добавляем заново.");
+            AllStaff.Add(newControllerReference);
         }
+        
+        Debug.Log($"<color=green>ОПЕРАЦИЯ УСПЕШНА:</color> Роль для {newControllerReference.characterName} успешно изменена.");
     }
     finally
     {
-        // Убираем сотрудника из списка "изменяемых", даже если произошла ошибка
+        // В конце операции убираем сотрудника из списка "изменяемых"
         var staffToRemove = staffBeingModified.FirstOrDefault(s => s?.gameObject == staff.gameObject);
         if (staffToRemove != null)
         {

@@ -9,35 +9,47 @@ public class BookkeepingButtonController : MonoBehaviour
     private Button bookkeepingButton;
     private BookkeepingPanelUI bookkeepingPanel; 
 
-    private void Awake()
+    void Awake()
     {
         bookkeepingButton = GetComponent<Button>();
         bookkeepingButton.onClick.AddListener(OnButtonClick);
     }
 
-    private void Start()
+    void Start()
     {
         // Находим панель один раз при старте (она может быть выключена)
-        bookkeepingPanel = FindObjectOfType<BookkeepingPanelUI>(true);
+        bookkeepingPanel = FindFirstObjectByType<BookkeepingPanelUI>(FindObjectsInactive.Include);
 
-        // Кнопка изначально неактивна (невидима или некликабельна)
-        bookkeepingButton.interactable = false;
+        // Проверяем состояние кнопки при старте
+        UpdateButtonState();
     }
 
     void Update()
-{
-    if (HiringManager.Instance == null) return;
+    {
+        // Проверяем состояние кнопки каждый кадр, чтобы она появилась сразу после назначения действия
+        UpdateButtonState();
+    }
 
-    // Проверяем, есть ли хотя бы один сотрудник с действием "Ведение бухгалтерии"
-    bool isUnlocked = HiringManager.Instance.AllStaff
-        .Any(staff => staff.activeActions.Any(action => action.actionType == ActionType.DoBookkeeping));
+    // --- ГЛАВНЫЙ МЕТОД ПРОВЕРКИ ---
+    void UpdateButtonState()
+    {
+        if (HiringManager.Instance == null) return;
 
-    // Теперь активность кнопки зависит ТОЛЬКО от того, разблокирована ли функция
-    bookkeepingButton.interactable = isUnlocked;
-}
+        // Проверяем, есть ли ХОТЯ БЫ ОДИН сотрудник в общем списке,
+        // у которого в списке активных действий есть "Ведение бухгалтерии".
+        bool isUnlocked = HiringManager.Instance.AllStaff
+            .Any(staff => staff.activeActions.Any(action => action.actionType == ActionType.DoBookkeeping));
+
+        // Включаем или выключаем саму кнопку (ее видимость), если состояние изменилось
+        if (gameObject.activeSelf != isUnlocked)
+        {
+            gameObject.SetActive(isUnlocked);
+        }
+    }
 
     private void OnButtonClick()
     {
+        // При нажатии - показываем панель
         if (bookkeepingPanel != null)
         {
             bookkeepingPanel.Show();
