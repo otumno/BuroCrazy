@@ -16,7 +16,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3202741118275778470
 Transform:
   m_ObjectHideFlags: 0
@@ -380,6 +380,8 @@ MonoBehaviour:
   rank: 0
   experiencePoints: 0
   salaryPerPeriod: 15
+  unpaidPeriods: 0
+  missedPaymentCount: 0
   isReadyForPromotion: 0
   activeActions: []
   baseFrustrationGain: 0.1

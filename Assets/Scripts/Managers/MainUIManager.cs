@@ -15,11 +15,26 @@ public class MainUIManager : MonoBehaviour
     [SerializeField] private string gameSceneName = "GameScene";
     [SerializeField] private string mainMenuSceneName = "MainMenuScene";
     public bool isTransitioning { get; private set; } = false;
+	
 private void Awake()
 {
-    if (Instance == null) { Instance = this; }
-    else if (Instance != this) { Destroy(gameObject); }
+    if (Instance == null)
+    {
+        // Если "главного" еще нет, я им становлюсь.
+        Instance = this;
+        // И говорю своему родительскому объекту [SYSTEMS] стать "бессмертным".
+        // Это гарантирует, что весь префаб сохранится при переходе между сценами.
+        transform.parent.SetParent(null); // Открепляемся, чтобы DontDestroyOnLoad сработал на корневой объект
+        DontDestroyOnLoad(transform.parent.gameObject);
+    }
+    else if (Instance != this)
+    {
+        // Если "главный" уже есть, и это не я, значит я - дубликат, и я уничтожаюсь.
+        // Также уничтожаем родительский объект-дубликат.
+        Destroy(transform.parent.gameObject);
+    }
 }
+
     #endregion
 	
 	void Update()

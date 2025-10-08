@@ -80,6 +80,9 @@ public class ClientSpawner : MonoBehaviour
     private List<int> directorClientSpawnPeriods = new List<int>();
 
     private static Dictionary<int, IServiceProvider> serviceProviderAssignments = new Dictionary<int, IServiceProvider>();
+	// Событие, которое будет срабатывать при смене периода
+public event System.Action OnPeriodChanged;
+// >>> КОНЕЦ ИЗМЕНЕНИЙ <<<
     #endregion
 
     #region Unity Lifecycle Methods (Awake, Start, Update)
@@ -164,7 +167,9 @@ public class ClientSpawner : MonoBehaviour
 
     public void GoToNextPeriod()
     {
-        string previousPeriodName = "";
+        // Сообщаем всем подписчикам (нашим часам), что период вот-вот сменится
+    OnPeriodChanged?.Invoke();
+		string previousPeriodName = "";
         var todayPeriods = mainCalendar?.periodSettings;
         if (todayPeriods != null && todayPeriods.Count > 0)
         {
