@@ -16,6 +16,7 @@ public class ActionConfigPopupUI : MonoBehaviour
     [SerializeField] private Transform activeActionsContent;
     [SerializeField] private Button saveButton;
     [SerializeField] private Button cancelButton;
+	[SerializeField] private TMP_Dropdown workstationDropdown;
     [SerializeField] private TextMeshProUGUI activeActionsHeaderText;
     [SerializeField] private ActionDropZone availableActionsDropZone;
     [SerializeField] private ActionDropZone activeActionsDropZone;
@@ -58,7 +59,8 @@ public class ActionConfigPopupUI : MonoBehaviour
         gameObject.SetActive(true);
 
         PopulateRoleDropdown();
-        PopulateShiftDropdown(); // <-- Метод теперь на своем месте
+        PopulateShiftDropdown();
+		PopulateWorkstationDropdown();		// <-- Метод теперь на своем месте
         PopulateActionLists();
     }
 
@@ -172,6 +174,24 @@ public bool CanAddAction()
             newActionsToAssign.Add(iconUI.actionData);
         }
     }
+	
+	// Сохраняем выбранное рабочее место
+    if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
+    {
+        string selectedOption = workstationDropdown.options[workstationDropdown.value].text;
+        string pointName = selectedOption.Split('(')[0].Trim(); // Отсекаем "(Занят...)"
+
+        var allPoints = ScenePointsRegistry.Instance.allServicePoints;
+        var selectedPoint = allPoints.FirstOrDefault(p => p.name == pointName);
+
+        AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint);
+    }
+    else
+    {
+        // Если выбрано "Не назначено"
+        AssignmentManager.Instance.UnassignStaff(currentStaff);
+    }
+	
 
     // 3. Определяем новую роль
     string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
@@ -304,4 +324,68 @@ public bool CanAddAction()
             default: return StaffController.Role.Unassigned;
         }
     }
+	
+	private void PopulateWorkstationDropdown()
+{
+    workstationDropdown.ClearOptions();
+    workstationDropdown.gameObject.SetActive(false); // Прячем по умолчанию
+
+    var applicableRoles = GetApplicableRolesForDropdown(currentStaff.currentRole);
+    if (!applicableRoles.Any()) return; // Если это роль без стола (Уборщик), выходим
+
+    // Находим все столы, подходящие для этой роли
+    var allPoints = ScenePointsRegistry.Instance.allServicePoints;
+    var suitablePoints = allPoints.Where(p => applicableRoles.Contains(GetRoleForDeskId(p.deskId))).ToList();
+
+    if (!suitablePoints.Any()) return;
+
+    List<string> options = new List<string> { "Не назначено" };
+    foreach (var point in suitablePoints)
+    {
+        var assignedStaff = AssignmentManager.Instance.GetAssignedStaff(point);
+        string optionText = point.name; // Имя стола, например "CashierDesk_ServicePoint"
+
+        if (assignedStaff != null && assignedStaff != currentStaff)
+        {
+            // Формируем красивую строку, кто и когда занял стол
+            string periods = string.Join(", ", assignedStaff.workPeriods);
+            optionText += $" (Занят: {assignedStaff.characterName} - {periods})";
+        }
+        options.Add(optionText);
+    }
+
+    workstationDropdown.AddOptions(options);
+    workstationDropdown.gameObject.SetActive(true);
+
+    // Устанавливаем текущее значение
+    if (currentStaff.assignedWorkstation != null)
+    {
+        int index = suitablePoints.FindIndex(p => p == currentStaff.assignedWorkstation) + 1;
+        workstationDropdown.value = index;
+    }
+    else
+    {
+        workstationDropdown.value = 0;
+    }
+}
+
+// Вспомогательные методы для определения ролей (можно разместить в конце файла)
+private List<StaffController.Role> GetApplicableRolesForDropdown(StaffController.Role role)
+{
+    if (role == StaffController.Role.Registrar || role == StaffController.Role.Cashier || role == StaffController.Role.Clerk || role == StaffController.Role.Archivist)
+    {
+        return new List<StaffController.Role> { StaffController.Role.Registrar, StaffController.Role.Cashier, StaffController.Role.Clerk, StaffController.Role.Archivist };
+    }
+    return new List<StaffController.Role>();
+}
+
+private StaffController.Role GetRoleForDeskId(int deskId)
+{
+    if (deskId == 0) return StaffController.Role.Registrar;
+    if (deskId == -1) return StaffController.Role.Cashier;
+    if (deskId == 1 || deskId == 2) return StaffController.Role.Clerk;
+    if (deskId == 3) return StaffController.Role.Archivist; // Предполагая, что у архивариуса стол №3
+    return StaffController.Role.Unassigned;
+}
+	
 }

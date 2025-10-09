@@ -93,36 +93,51 @@ public event System.Action OnPeriodChanged;
     }
 
     void Start()
+{
+    if (mainCalendar == null || mainCalendar.periodSettings.Count == 0)
     {
-        if (mainCalendar == null || mainCalendar.periodSettings.Count == 0)
-        {
-            Debug.LogError("Календарь (Main Calendar) не назначен или пуст в ClientSpawner! Работа невозможна.", this);
-            enabled = false;
-            return;
-        }
-
-        // --- ФИНАЛЬНАЯ ВЕРСИЯ СТАРТА ---
-
-        // 1. Начинаем с Дня 1.
-        dayCounter = 1;
-        UpdateDayCounterUI();
-
-        // 2. Находим индекс "Ночи" (последнего периода)
-        int nightIndex = mainCalendar.periodSettings.FindIndex(p => p.periodName.Equals("Ночь", System.StringComparison.InvariantCultureIgnoreCase));
-        if (nightIndex == -1) nightIndex = mainCalendar.periodSettings.Count - 1; // Если "Ночь" не найдена, берем просто последний
-
-        // 3. Устанавливаем текущий период на "Ночь" и "предыдущий" тоже на "Ночь"
-        currentPeriodIndex = nightIndex;
-        previousPeriodPlan = mainCalendar.periodSettings[nightIndex];
-
-        // 4. Устанавливаем таймер так, чтобы до конца "Ночи" оставалось 0.1 секунды
-        var nightPlan = mainCalendar.periodSettings[nightIndex];
-        float duration = nightPlan.durationInSeconds.Evaluate(dayCounter);
-        periodTimer = duration - 0.1f;
-
-        // 5. Запускаем "Ночь" без сброса таймера, чтобы через 0.1 сек произошел плавный переход на "Утро"
-        StartNewPeriod(false);
+        Debug.LogError("Календарь (Main Calendar) не назначен или пуст в ClientSpawner! Работа невозможна.", this);
+        enabled = false;
+        return;
     }
+
+    // --- ВОЗВРАЩАЕМ НАДЕЖНУЮ СХЕМУ ЗАПУСКА ---
+
+    // 1. Начинаем с "нулевого" дня. Это технический день, ночь ПЕРЕД первым днем.
+    dayCounter = 0;
+
+    // 2. Находим индекс "Ночи"
+    int nightIndex = mainCalendar.periodSettings.FindIndex(p => p.periodName.Equals("Ночь", System.StringComparison.InvariantCultureIgnoreCase));
+    if (nightIndex == -1) nightIndex = mainCalendar.periodSettings.Count - 1; // Если "Ночь" не найдена, берем просто последний период
+
+    // 3. Устанавливаем текущий период на "Ночь"
+    currentPeriodIndex = nightIndex;
+    PeriodSettings nightPeriodPlan = mainCalendar.periodSettings[nightIndex];
+
+    // 4. Устанавливаем таймер так, чтобы до конца "Ночи" оставалось 10 секунд
+    //    Длительность ночи мы считаем для будущего ДНЯ 1.
+    float duration = nightPeriodPlan.durationInSeconds.Evaluate(1); 
+    periodTimer = Mathf.Max(0, duration - 10f);
+
+    // 5. Инициализируем "предыдущий" период, чтобы был плавный переход от ночи к утру
+    previousPeriodPlan = nightPeriodPlan;
+
+    // 6. Настраиваем начальное освещение вручную, чтобы избежать "скачка" при старте
+    if (globalLight != null)
+    {
+        globalLight.color = nightPeriodPlan.lightingSettings.lightColor;
+        globalLight.intensity = nightPeriodPlan.lightingSettings.lightIntensity;
+    }
+    foreach (var lightName in nightPeriodPlan.lightsToEnableNames)
+    {
+        var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
+        if (lightObj != null) lightObj.SetActive(true);
+    }
+
+    // 7. Запускаем "Ночь" без сброса таймера и обновляем UI
+    UpdateDayCounterUI();
+    StartNewPeriod(false);
+}
 
     void Update()
     {
@@ -145,34 +160,38 @@ public event System.Action OnPeriodChanged;
     #region Period and Spawning Logic
 
     public void GoToNextPeriod()
+{
+    string previousPeriodName = "";
+    var todayPeriods = mainCalendar?.periodSettings;
+
+    if (todayPeriods != null && todayPeriods.Count > 0)
     {
-		string previousPeriodName = "";
-        var todayPeriods = mainCalendar?.periodSettings;
-        if (todayPeriods != null && todayPeriods.Count > 0)
+        if (currentPeriodIndex >= 0 && currentPeriodIndex < todayPeriods.Count)
         {
             previousPeriodName = todayPeriods[currentPeriodIndex].periodName;
             previousPeriodPlan = todayPeriods[currentPeriodIndex];
-            MusicPlayer.Instance?.OnPeriodChanged();
-            
-            currentPeriodIndex = (currentPeriodIndex + 1) % todayPeriods.Count;
-            periodTimer = 0;
         }
-        
-        if (currentPeriodIndex == 0) 
-        { 
-            dayCounter++;
-			DirectorManager.Instance?.EvaluateEndOfDayStrikes();
-            UpdateDayCounterUI(); 
-            ClientQueueManager.Instance.ResetQueueNumber();
-            PlanDirectorClientSpawns();
-        }
-        
-        if (todayPeriods != null)
-        {
-            UpdateAllStaffShifts(todayPeriods[currentPeriodIndex].periodName, previousPeriodName);
-        }
-        StartNewPeriod();
+
+        currentPeriodIndex = (currentPeriodIndex + 1) % todayPeriods.Count;
+        periodTimer = 0;
     }
+
+    // Увеличиваем счетчик дня, ТОЛЬКО КОГДА начинается новый цикл (период с индексом 0 - "Утро")
+    if (currentPeriodIndex == 0)
+    {
+        dayCounter++; // На старте dayCounter был 0, теперь станет 1. В следующий раз станет 2.
+        UpdateDayCounterUI();
+        ClientQueueManager.Instance.ResetQueueNumber();
+        PlanDirectorClientSpawns();
+    }
+
+    if (todayPeriods != null)
+    {
+        UpdateAllStaffShifts(todayPeriods[currentPeriodIndex].periodName, previousPeriodName);
+    }
+
+    StartNewPeriod();
+}
 
     void StartNewPeriod(bool resetTimer = true)
     {
@@ -269,7 +288,7 @@ public event System.Action OnPeriodChanged;
             {
                 // >>> НАЧАЛО ИЗМЕНЕНИЙ: Случайная задержка <<<
                 // Ждем от 0 до 0.5 секунд перед включением
-                yield return new WaitForSeconds(Random.Range(0f, 0.5f));
+                yield return new WaitForSeconds(UnityEngine.Random.Range(0f, 0.5f));
                 // >>> КОНЕЦ ИЗМЕНЕНИЙ <<<
 
                 // Проверяем, не изменилась ли ситуация, пока мы ждали
@@ -369,11 +388,14 @@ public event System.Action OnPeriodChanged;
         }
     }
     
-    private void UpdateDayCounterUI() 
-    { 
-        if (dayCounterText != null) 
-            dayCounterText.text = $"День: {dayCounter}";
+    private void UpdateDayCounterUI()
+{
+    if (dayCounterText != null)
+    {
+        // Используем Mathf.Max, чтобы в UI никогда не отображался день меньше 1
+        dayCounterText.text = $"День: {Mathf.Max(1, dayCounter)}";
     }
+}
 
     private void PlanDirectorClientSpawns()
     {

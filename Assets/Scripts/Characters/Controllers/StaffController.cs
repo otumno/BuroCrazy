@@ -30,6 +30,7 @@ public abstract class StaffController : MonoBehaviour
 	
     public bool isReadyForPromotion = false;
     public List<StaffAction> activeActions = new List<StaffAction>();
+	public ServicePoint assignedWorkstation;
     
     [Header("Настройки Выгорания")]
     [Tooltip("Базовое значение, на которое увеличивается выгорание за успешный рабочий цикл.")]
@@ -133,6 +134,8 @@ public void SetCurrentFrustration(float value)
     {
         if (!isOnDuty) return;
         isOnDuty = false;
+		
+		ClientSpawner.UnassignServiceProviderFromDesk(assignedWorkstation.deskId);
         
         if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
         actionDecisionCoroutine = null;

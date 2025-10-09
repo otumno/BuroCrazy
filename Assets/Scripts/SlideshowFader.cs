@@ -35,27 +35,32 @@ public class SlideshowFader : MonoBehaviour
     }
 
     private void SetupAndStartSlideshow()
-    {
-        // --- Логика случайного порядка ---
-        // 1. Создаем список индексов для всех изображений, кроме первого (индекс 0)
-        imageIndices = Enumerable.Range(1, images.Count - 1).ToList();
-        
-        // 2. Перемешиваем этот список
-        System.Random rng = new System.Random();
-        imageIndices = imageIndices.OrderBy(a => rng.Next()).ToList();
-        
-        // 3. Вставляем индекс 0 в самое начало, чтобы всегда начинать с первой картинки
-        imageIndices.Insert(0, 0);
-        listPosition = 0;
+{
+    // 1. Create a list of indexes for all images (e.g., 0, 1, 2, 3...)
+    imageIndices = Enumerable.Range(0, images.Count).ToList();
 
-        // --- Начальная настройка изображений ---
-        imageA.sprite = images[imageIndices[0]];
-        imageA.canvasRenderer.SetAlpha(1f);
-        imageB.canvasRenderer.SetAlpha(0f);
-        
-        // Запускаем корутину
-        StartCoroutine(SlideshowRoutine());
+    // --- NEW SHUFFLING LOGIC ---
+    // 2. Shuffle the list using UnityEngine.Random
+    for (int i = 0; i < imageIndices.Count; i++) 
+    {
+        int temp = imageIndices[i];
+        int randomIndex = UnityEngine.Random.Range(i, imageIndices.Count);
+        imageIndices[i] = imageIndices[randomIndex];
+        imageIndices[randomIndex] = temp;
     }
+
+    // 3. We no longer need to insert the first image at the start;
+    //    the shuffle already includes it.
+    listPosition = 0;
+
+    // --- Initial setup of images ---
+    imageA.sprite = images[imageIndices[0]];
+    imageA.canvasRenderer.SetAlpha(1f);
+    imageB.canvasRenderer.SetAlpha(0f);
+
+    // Start the coroutine
+    StartCoroutine(SlideshowRoutine());
+}
 
     private IEnumerator SlideshowRoutine()
     {
