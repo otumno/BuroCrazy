@@ -36,6 +36,7 @@ public struct StaffSaveData
     public float pedantry;
     public float softSkills;
     public float corruption;
+	public int assignedWorkstationId;
 }
 
 [System.Serializable]

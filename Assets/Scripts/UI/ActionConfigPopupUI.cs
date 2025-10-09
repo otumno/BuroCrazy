@@ -1,4 +1,3 @@
-// Файл: UI/ActionConfigPopupUI.cs --- АБСОЛЮТНО ПОЛНАЯ ВЕРСИЯ ---
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -16,7 +15,7 @@ public class ActionConfigPopupUI : MonoBehaviour
     [SerializeField] private Transform activeActionsContent;
     [SerializeField] private Button saveButton;
     [SerializeField] private Button cancelButton;
-	[SerializeField] private TMP_Dropdown workstationDropdown;
+    [SerializeField] private TMP_Dropdown workstationDropdown;
     [SerializeField] private TextMeshProUGUI activeActionsHeaderText;
     [SerializeField] private ActionDropZone availableActionsDropZone;
     [SerializeField] private ActionDropZone activeActionsDropZone;
@@ -30,23 +29,19 @@ public class ActionConfigPopupUI : MonoBehaviour
     private List<StaffAction> tempActiveActions = new List<StaffAction>();
 
     private void Awake()
-{
-    // --- НОВАЯ "ЗАЩИТА ОТ ДУБЛИРОВАНИЯ" ---
-    // Перед тем как добавить слушателя, мы удаляем ВСЕ предыдущие.
-    // Это гарантирует, что у нас всегда будет только ОДНА подписка на событие.
-    saveButton.onClick.RemoveAllListeners();
-    saveButton.onClick.AddListener(OnSave);
+    {
+        saveButton.onClick.RemoveAllListeners();
+        saveButton.onClick.AddListener(OnSave);
 
-    cancelButton.onClick.RemoveAllListeners();
-    cancelButton.onClick.AddListener(OnCancel);
+        cancelButton.onClick.RemoveAllListeners();
+        cancelButton.onClick.AddListener(OnCancel);
 
-    shiftDropdown.onValueChanged.RemoveAllListeners();
-    shiftDropdown.onValueChanged.AddListener(delegate { UpdateShiftInfoText(); });
+        shiftDropdown.onValueChanged.RemoveAllListeners();
+        shiftDropdown.onValueChanged.AddListener(delegate { UpdateShiftInfoText(); });
 
-    roleDropdown.onValueChanged.RemoveAllListeners();
-    roleDropdown.onValueChanged.AddListener(delegate { OnRoleSelectionChanged(); });
-    // --- КОНЕЦ ИЗМЕНЕНИЙ ---
-
+        roleDropdown.onValueChanged.RemoveAllListeners();
+        roleDropdown.onValueChanged.AddListener(delegate { OnRoleSelectionChanged(); });
+        
         if (availableActionsDropZone != null) { availableActionsDropZone.popupController = this; availableActionsDropZone.type = ActionDropZone.ZoneType.Available; }
         if (activeActionsDropZone != null) { activeActionsDropZone.popupController = this; activeActionsDropZone.type = ActionDropZone.ZoneType.Active; }
     }
@@ -60,82 +55,67 @@ public class ActionConfigPopupUI : MonoBehaviour
 
         PopulateRoleDropdown();
         PopulateShiftDropdown();
-		PopulateWorkstationDropdown();		// <-- Метод теперь на своем месте
+        PopulateWorkstationDropdown(currentStaff.currentRole);
         PopulateActionLists();
     }
 
-
-public bool CanAddAction()
-{
-    if (currentRank == null) return false;
-    return tempActiveActions.Count < currentRank.maxActions;
-}
+    public bool CanAddAction()
+    {
+        if (currentRank == null) return false;
+        return tempActiveActions.Count < currentRank.maxActions;
+    }
 
     public void OnActionDropped(StaffAction action, ActionDropZone.ZoneType targetZoneType)
-{
-    // 1. Обновляем наш внутренний список-черновик
-    if (targetZoneType == ActionDropZone.ZoneType.Active)
     {
-        if (!tempActiveActions.Contains(action))
+        if (targetZoneType == ActionDropZone.ZoneType.Active)
         {
-            tempActiveActions.Add(action);
+            if (!tempActiveActions.Contains(action))
+            {
+                tempActiveActions.Add(action);
+            }
         }
-    }
-    else 
-    {
-        if (tempActiveActions.Contains(action))
+        else 
         {
-            tempActiveActions.Remove(action);
+            if (tempActiveActions.Contains(action))
+            {
+                tempActiveActions.Remove(action);
+            }
         }
+        UpdateUIState();
     }
-    
-    // 2. Обновляем текст счетчика и состояние кнопки
-    UpdateUIState();
-}
     
     private void PopulateActionLists()
-{
-    // Очищаем старые иконки
-    foreach (Transform child in availableActionsContent) { Destroy(child.gameObject); }
-    foreach (Transform child in activeActionsContent) { Destroy(child.gameObject); }
-
-    if (actionDatabase == null || currentStaff == null) return;
-
-    // Определяем, для какой роли мы показываем действия
-    string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
-    StaffController.Role roleToShow = GetRoleEnumFromRussian(selectedRoleName);
-    
-    // --- НАЧАЛО СТАНДАРТНОЙ ЛОГИКИ ФИЛЬТРАЦИИ ---
-
-    // Получаем список всех теоретически доступных действий для выбранной роли, учитывая ранг
-    List<StaffAction> allAvailableActions = actionDatabase.allActions
-        .Where(action => action.minRankRequired <= currentStaff.rank &&
-                         action.applicableRoles.Contains(roleToShow))
-        .ToList();
-
-    // --- КОНЕЦ СТАНДАРТНОЙ ЛОГИКИ ФИЛЬТРАЦИИ ---
-
-    // Создаем иконки для уже активных действий
-    foreach (var activeAction in tempActiveActions)
     {
-        // Убедимся, что активное действие вообще доступно для этой роли
-        if (allAvailableActions.Contains(activeAction))
-        {
-            InstantiateActionIcon(activeAction, activeActionsContent);
-        }
-    }
+        foreach (Transform child in availableActionsContent) { Destroy(child.gameObject); }
+        foreach (Transform child in activeActionsContent) { Destroy(child.gameObject); }
 
-    // Создаем иконки для остальных доступных, но еще не активных действий
-    foreach (var availableAction in allAvailableActions)
-    {
-        if (!tempActiveActions.Contains(availableAction))
+        if (actionDatabase == null || currentStaff == null) return;
+
+        string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
+        StaffController.Role roleToShow = GetRoleEnumFromRussian(selectedRoleName);
+        
+        List<StaffAction> allAvailableActions = actionDatabase.allActions
+            .Where(action => action.minRankRequired <= currentStaff.rank && action.applicableRoles.Contains(roleToShow))
+            .ToList();
+
+        foreach (var activeAction in tempActiveActions)
         {
-            InstantiateActionIcon(availableAction, availableActionsContent);
+            if (allAvailableActions.Contains(activeAction))
+            {
+                InstantiateActionIcon(activeAction, activeActionsContent);
+            }
         }
+
+        foreach (var availableAction in allAvailableActions)
+        {
+            if (!tempActiveActions.Contains(availableAction))
+            {
+                InstantiateActionIcon(availableAction, availableActionsContent);
+            }
+        }
+        
+        UpdateUIState();
     }
-    
-    UpdateUIState();
-}
     
     private void UpdateUIState()
     {
@@ -147,74 +127,85 @@ public bool CanAddAction()
     }
 
     private void OnSave()
-{
-    // 1. Сохраняем новое расписание смен
-    currentStaff.workPeriods.Clear();
-    // --- ИСПРАВЛЕНИЕ: Берем периоды из календаря, а не из устаревшего массива ---
-    List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
-    int startIndex = shiftDropdown.value;
-
-    RankData currentRankData = ExperienceManager.Instance.GetRankByXP(currentStaff.experiencePoints);
-    int duration = (currentRankData != null) ? currentRankData.workPeriodsCount : 3;
-
-    for (int i = 0; i < duration; i++)
     {
-        int periodIndex = (startIndex + i) % allPeriods.Count;
-        currentStaff.workPeriods.Add(allPeriods[periodIndex]);
-    }
-    Debug.Log($"Сохранено новое расписание для {currentStaff.characterName}: {string.Join(", ", currentStaff.workPeriods)}");
+        // 1. Сохраняем расписание
+        currentStaff.workPeriods.Clear();
+        List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
+        int startIndex = shiftDropdown.value;
+        int duration = (currentRank != null) ? currentRank.workPeriodsCount : 3;
 
-    // 2. Собираем НОВЫЙ список действий из UI
-    List<StaffAction> newActionsToAssign = new List<StaffAction>();
-    foreach (Transform iconTransform in activeActionsContent)
-    {
-        ActionIconUI iconUI = iconTransform.GetComponent<ActionIconUI>();
-        if (iconUI != null)
+        for (int i = 0; i < duration; i++)
         {
-            newActionsToAssign.Add(iconUI.actionData);
+            int periodIndex = (startIndex + i) % allPeriods.Count;
+            currentStaff.workPeriods.Add(allPeriods[periodIndex]);
         }
-    }
-	
-	// Сохраняем выбранное рабочее место
-    if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
+        
+        // 2. Определяем новую роль
+        string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
+        StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
+
+        // 3. Save the assigned workstation
+if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
+{
+    string selectedOptionText = workstationDropdown.options[workstationDropdown.value].text;
+    string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
+
+    // --- CORRECTED LOGIC ---
+    // Find the service point by comparing its FRIENDLY NAME, not its GameObject name
+    var selectedPoint = ScenePointsRegistry.Instance.allServicePoints
+        .FirstOrDefault(p => GetWorkstationFriendlyName(p) == friendlyNameFromDropdown);
+
+    if (selectedPoint != null)
     {
-        string selectedOption = workstationDropdown.options[workstationDropdown.value].text;
-        string pointName = selectedOption.Split('(')[0].Trim(); // Отсекаем "(Занят...)"
-
-        var allPoints = ScenePointsRegistry.Instance.allServicePoints;
-        var selectedPoint = allPoints.FirstOrDefault(p => p.name == pointName);
-
         AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint);
     }
     else
     {
-        // Если выбрано "Не назначено"
+        Debug.LogError($"Could not find ServicePoint with friendly name '{friendlyNameFromDropdown}' when saving!");
         AssignmentManager.Instance.UnassignStaff(currentStaff);
     }
-	
-
-    // 3. Определяем новую роль
-    string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
-    StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
-
-    // 4. Вызываем синхронный метод смены роли
-    HiringManager.Instance.AssignNewRole_Immediate(currentStaff, newRole, newActionsToAssign);
-
-    // 5. Закрываем панель и обновляем список команды
-    gameObject.SetActive(false);
-    FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+    // --- END OF CORRECTION ---
+}
+else
+{
+    // If "Not Assigned" is selected
+    AssignmentManager.Instance.UnassignStaff(currentStaff);
 }
 
+        // 4. Собираем и назначаем действия и роль
+        List<StaffAction> newActionsToAssign = new List<StaffAction>();
+        foreach (Transform iconTransform in activeActionsContent)
+        {
+            ActionIconUI iconUI = iconTransform.GetComponent<ActionIconUI>();
+            if (iconUI != null) { newActionsToAssign.Add(iconUI.actionData); }
+        }
+        
+        HiringManager.Instance.AssignNewRole_Immediate(currentStaff, newRole, newActionsToAssign);
+
+        // 5. Закрываем панель, обновляем списки и проверяем смены
+        gameObject.SetActive(false);
+        FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+        HiringManager.Instance?.CheckAllStaffShiftsImmediately();
+    }
+
+    private void OnCancel()
+    {
+        gameObject.SetActive(false);
+    }
+    
     private void OnRoleSelectionChanged()
     {
+        string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
+        StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
+
         tempActiveActions.Clear();
         PopulateActionLists();
+        PopulateWorkstationDropdown(newRole);
     }
     
     private void PopulateRoleDropdown()
     {
         roleDropdown.ClearOptions();
-        
         List<StaffController.Role> allPossibleRoles = System.Enum.GetValues(typeof(StaffController.Role))
             .Cast<StaffController.Role>()
             .Where(role => role != StaffController.Role.Unassigned)
@@ -228,22 +219,16 @@ public bool CanAddAction()
         {
             roleDropdown.SetValueWithoutNotify(currentIndex);
         }
-
         roleDropdown.interactable = currentStaff.rank > 0;
     }
 
     private void PopulateShiftDropdown()
     {
         shiftDropdown.ClearOptions();
-        if (ClientSpawner.Instance == null || ClientSpawner.Instance.periods.Length == 0) return;
+        if (ClientSpawner.Instance == null || ClientSpawner.Instance.mainCalendar == null) return;
 
-        List<string> periodNames = ClientSpawner.Instance.periods.Select(p => p.periodName).ToList();
-        var optionDataList = new List<TMP_Dropdown.OptionData>();
-        foreach (var name in periodNames)
-        {
-            optionDataList.Add(new TMP_Dropdown.OptionData(name));
-        }
-        shiftDropdown.options = optionDataList;
+        List<string> periodNames = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
+        shiftDropdown.AddOptions(periodNames);
 
         if (currentStaff.workPeriods.Any())
         {
@@ -257,11 +242,57 @@ public bool CanAddAction()
         UpdateShiftInfoText();
     }
 
-    private void OnCancel()
+    private void PopulateWorkstationDropdown(StaffController.Role role)
     {
-        gameObject.SetActive(false);
+        workstationDropdown.ClearOptions();
+        List<string> options = new List<string>();
+
+        // Находим все столы, которые подходят ТОЛЬКО для выбранной роли
+        var allPoints = ScenePointsRegistry.Instance.allServicePoints;
+        var suitablePoints = allPoints.Where(p => GetRoleForDeskId(p.deskId) == role).ToList();
+
+        if (suitablePoints.Any())
+        {
+            workstationDropdown.gameObject.SetActive(true);
+            options.Add("Не назначено");
+
+            foreach (var point in suitablePoints)
+            {
+                var assignedStaff = AssignmentManager.Instance.GetAssignedStaff(point);
+                string optionText = GetWorkstationFriendlyName(point);
+
+                if (assignedStaff != null && assignedStaff != currentStaff)
+                {
+                    string periods = string.Join(", ", assignedStaff.workPeriods);
+                    optionText += $" (Занят: {assignedStaff.characterName} - {periods})";
+                }
+                options.Add(optionText);
+            }
+
+            workstationDropdown.AddOptions(options);
+
+            if (currentStaff.assignedWorkstation != null && suitablePoints.Contains(currentStaff.assignedWorkstation))
+            {
+                int index = suitablePoints.FindIndex(p => p == currentStaff.assignedWorkstation) + 1;
+                if (index > 0)
+                {
+                    workstationDropdown.SetValueWithoutNotify(index);
+                }
+            }
+            else
+            {
+                workstationDropdown.SetValueWithoutNotify(0);
+            }
+        }
+        else
+        {
+            workstationDropdown.gameObject.SetActive(true);
+            options.Add("Работа в зале");
+            workstationDropdown.AddOptions(options);
+            workstationDropdown.SetValueWithoutNotify(0);
+        }
     }
-    
+
     private void InstantiateActionIcon(StaffAction action, Transform parent)
     {
         if (actionIconPrefab == null) return;
@@ -275,17 +306,12 @@ public bool CanAddAction()
 
     private void UpdateShiftInfoText()
     {
-        if (ClientSpawner.Instance == null || ClientSpawner.Instance.periods.Length == 0 || ExperienceManager.Instance == null || currentStaff == null) return;
+        if (ClientSpawner.Instance == null || ClientSpawner.Instance.mainCalendar == null || ExperienceManager.Instance == null || currentStaff == null) return;
 
         RankData currentRankData = ExperienceManager.Instance.GetRankByXP(currentStaff.experiencePoints);
-        int duration = 3; 
+        int duration = (currentRankData != null) ? currentRankData.workPeriodsCount : 3;
 
-        if (currentRankData != null)
-        {
-            duration = currentRankData.workPeriodsCount;
-        }
-
-        List<string> allPeriods = ClientSpawner.Instance.periods.Select(p => p.periodName).ToList();
+        List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
         int startIndex = shiftDropdown.value;
         
         string startPeriodName = allPeriods[startIndex];
@@ -324,68 +350,39 @@ public bool CanAddAction()
             default: return StaffController.Role.Unassigned;
         }
     }
-	
-	private void PopulateWorkstationDropdown()
-{
-    workstationDropdown.ClearOptions();
-    workstationDropdown.gameObject.SetActive(false); // Прячем по умолчанию
 
-    var applicableRoles = GetApplicableRolesForDropdown(currentStaff.currentRole);
-    if (!applicableRoles.Any()) return; // Если это роль без стола (Уборщик), выходим
-
-    // Находим все столы, подходящие для этой роли
-    var allPoints = ScenePointsRegistry.Instance.allServicePoints;
-    var suitablePoints = allPoints.Where(p => applicableRoles.Contains(GetRoleForDeskId(p.deskId))).ToList();
-
-    if (!suitablePoints.Any()) return;
-
-    List<string> options = new List<string> { "Не назначено" };
-    foreach (var point in suitablePoints)
+    private string GetWorkstationFriendlyName(ServicePoint point)
     {
-        var assignedStaff = AssignmentManager.Instance.GetAssignedStaff(point);
-        string optionText = point.name; // Имя стола, например "CashierDesk_ServicePoint"
+        if (point == null) return "Неизвестно";
+        if (!string.IsNullOrEmpty(point.friendlyName)) return point.friendlyName;
 
-        if (assignedStaff != null && assignedStaff != currentStaff)
+        string name = point.name.ToLower();
+        if (name.Contains("registrar")) return "Регистратура";
+        if (name.Contains("cashier")) return "Касса";
+        if (name.Contains("desk1")) return "Офисный стол 1";
+        if (name.Contains("desk2")) return "Офисный стол 2";
+        if (name.Contains("archive")) return "Стол Архивариуса";
+        if (name.Contains("bookkeeping")) return "Стол Бухгалтера";
+        
+        return point.name;
+    }
+
+    private List<StaffController.Role> GetApplicableRolesForDropdown(StaffController.Role role)
+    {
+        if (role == StaffController.Role.Registrar || role == StaffController.Role.Cashier || role == StaffController.Role.Clerk || role == StaffController.Role.Archivist)
         {
-            // Формируем красивую строку, кто и когда занял стол
-            string periods = string.Join(", ", assignedStaff.workPeriods);
-            optionText += $" (Занят: {assignedStaff.characterName} - {periods})";
+            return new List<StaffController.Role> { StaffController.Role.Registrar, StaffController.Role.Cashier, StaffController.Role.Clerk, StaffController.Role.Archivist };
         }
-        options.Add(optionText);
+        return new List<StaffController.Role>();
     }
 
-    workstationDropdown.AddOptions(options);
-    workstationDropdown.gameObject.SetActive(true);
-
-    // Устанавливаем текущее значение
-    if (currentStaff.assignedWorkstation != null)
+    private StaffController.Role GetRoleForDeskId(int deskId)
     {
-        int index = suitablePoints.FindIndex(p => p == currentStaff.assignedWorkstation) + 1;
-        workstationDropdown.value = index;
+        if (deskId == 0) return StaffController.Role.Registrar;
+        if (deskId == -1) return StaffController.Role.Cashier;
+        if (deskId == 1 || deskId == 2) return StaffController.Role.Clerk;
+        if (deskId == 3) return StaffController.Role.Archivist;
+        if (deskId == 4) return StaffController.Role.Cashier; // Стол бухгалтера тоже относится к кассиру
+        return StaffController.Role.Unassigned;
     }
-    else
-    {
-        workstationDropdown.value = 0;
-    }
-}
-
-// Вспомогательные методы для определения ролей (можно разместить в конце файла)
-private List<StaffController.Role> GetApplicableRolesForDropdown(StaffController.Role role)
-{
-    if (role == StaffController.Role.Registrar || role == StaffController.Role.Cashier || role == StaffController.Role.Clerk || role == StaffController.Role.Archivist)
-    {
-        return new List<StaffController.Role> { StaffController.Role.Registrar, StaffController.Role.Cashier, StaffController.Role.Clerk, StaffController.Role.Archivist };
-    }
-    return new List<StaffController.Role>();
-}
-
-private StaffController.Role GetRoleForDeskId(int deskId)
-{
-    if (deskId == 0) return StaffController.Role.Registrar;
-    if (deskId == -1) return StaffController.Role.Cashier;
-    if (deskId == 1 || deskId == 2) return StaffController.Role.Clerk;
-    if (deskId == 3) return StaffController.Role.Archivist; // Предполагая, что у архивариуса стол №3
-    return StaffController.Role.Unassigned;
-}
-	
 }

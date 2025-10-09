@@ -46,23 +46,26 @@ public class HiringManager : MonoBehaviour
         else if (Instance != this) { Destroy(gameObject); }
     }
 
-// --- НОВЫЙ МЕТОД ДЛЯ ЗАПУСКА AI ---
-    public void ActivateAllScheduledStaff()
+
+
+	/// <summary>
+/// Принудительно активирует AI для всех сотрудников, чья смена уже идет.
+/// </summary>
+public void ActivateAllScheduledStaff()
+{
+    string currentPeriod = ClientSpawner.CurrentPeriodName;
+    if (string.IsNullOrEmpty(currentPeriod)) return;
+
+    Debug.Log($"<color=orange>ЗАПУСК AI:</color> Активация всех сотрудников, работающих в период '{currentPeriod}'...");
+    foreach (var staff in AllStaff)
     {
-        string currentPeriod = ClientSpawner.CurrentPeriodName;
-        if (string.IsNullOrEmpty(currentPeriod)) return;
-
-        Debug.Log($"<color=orange>ЗАПУСК AI:</color> Активация всех сотрудников, работающих в период '{currentPeriod}'...");
-
-        foreach (var staff in AllStaff)
+        // Проверяем, должен ли сотрудник работать сейчас и не работает ли он уже
+        if (staff.workPeriods.Contains(currentPeriod) && !staff.IsOnDuty())
         {
-            // Проверяем, должен ли сотрудник работать сейчас и не работает ли он уже
-            if (staff.workPeriods.Contains(currentPeriod) && !staff.IsOnDuty())
-            {
-                staff.StartShift();
-            }
+            staff.StartShift();
         }
     }
+}
 
 
     void OnDestroy()
@@ -355,6 +358,22 @@ public class HiringManager : MonoBehaviour
             internController.gender = candidate.Gender;
             
             internController.Initialize(internRoleData);
+			
+			if (internController.currentRole != StaffController.Role.Intern)
+        {
+            // Find a free service point that matches the new employee's role
+            var freeWorkstation = ScenePointsRegistry.Instance.allServicePoints
+                .FirstOrDefault(p => 
+                    GetRoleForDeskId(p.deskId) == internController.currentRole && 
+                    AssignmentManager.Instance.GetAssignedStaff(p) == null);
+
+            if (freeWorkstation != null)
+            {
+                // If we found one, assign it!
+                AssignmentManager.Instance.AssignStaffToWorkstation(internController, freeWorkstation);
+            }
+        }
+			
             
             AllStaff.Add(internController);
             UnassignedStaff.Add(internController);
@@ -372,6 +391,16 @@ public class HiringManager : MonoBehaviour
         PlayerWallet.Instance.AddMoney(candidate.HiringCost, Vector3.zero);
         return false;
     }
+	
+	private StaffController.Role GetRoleForDeskId(int deskId)
+{
+    if (deskId == 0) return StaffController.Role.Registrar;
+    if (deskId == -1) return StaffController.Role.Cashier;
+    if (deskId == 1 || deskId == 2) return StaffController.Role.Clerk;
+    if (deskId == 3) return StaffController.Role.Archivist;
+    if (deskId == 4) return StaffController.Role.Cashier; // Bookkeeper desk
+    return StaffController.Role.Unassigned;
+}
 
     public void FireStaff(StaffController staffToFire)
     {
@@ -392,4 +421,31 @@ public class HiringManager : MonoBehaviour
         
         staffToFire.FireAndGoHome();
     }
+	
+	/// <summary>
+/// Немедленно проверяет смены всех сотрудников и отправляет домой тех, кто больше не должен работать.
+/// </summary>
+public void CheckAllStaffShiftsImmediately()
+{
+    string currentPeriod = ClientSpawner.CurrentPeriodName;
+    if (string.IsNullOrEmpty(currentPeriod)) return;
+
+    Debug.Log($"<color=orange>ПРОВЕРКА СМЕН:</color> Проверка расписания для периода '{currentPeriod}'...");
+    foreach (var staff in AllStaff)
+    {
+        if (staff == null) continue;
+
+        bool isScheduledNow = staff.workPeriods.Contains(currentPeriod);
+        bool isOnDuty = staff.IsOnDuty();
+
+        // Если сотрудник сейчас на смене, но по новому расписанию его смена уже закончилась
+        if (!isScheduledNow && isOnDuty)
+        {
+            Debug.Log($"{staff.characterName} больше не числится в смене. Отправляем домой.");
+            staff.EndShift(); // Отправляем сотрудника домой
+        }
+        // Логику для начала смены мы оставим в ClientSpawner, чтобы избежать путаницы
+    }
+}
+	
 }

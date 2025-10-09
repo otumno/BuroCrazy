@@ -50,6 +50,9 @@ public class SaveLoadManager : MonoBehaviour
             staffData.characterName = staffMember.gameObject.name;
             staffData.position = staffMember.transform.position;
             staffData.stressLevel = staffMember.GetCurrentFrustration();
+			
+			staffData.assignedWorkstationId = staffMember.assignedWorkstation != null ? staffMember.assignedWorkstation.deskId : -999;
+			
             data.allStaffData.Add(staffData);
         }
 
@@ -151,6 +154,16 @@ public class SaveLoadManager : MonoBehaviour
                 {
                     staffMember.transform.position = staffData.position;
                     staffMember.SetCurrentFrustration(staffData.stressLevel);
+					
+					if (staffData.assignedWorkstationId != -999)
+        {
+            var workstation = ScenePointsRegistry.Instance.GetServicePointByID(staffData.assignedWorkstationId);
+            if (workstation != null)
+            {
+                AssignmentManager.Instance.AssignStaffToWorkstation(staffMember, workstation);
+            }
+        }
+					
                 }
             }
 

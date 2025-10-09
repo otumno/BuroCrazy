@@ -117,36 +117,56 @@ private void Awake()
     // ... (UnveilSequence и все остальные методы остаются без изменений) ...
     #region Остальные методы (без изменений)
     private IEnumerator UnveilSequence(StartOfDayPanel startOfDayPanel, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController)
+{
+    PauseGame(true);
+
+    // 1. Сначала загружаем или сбрасываем игру. ClientSpawner получает информацию о дне.
+    if (SaveLoadManager.Instance.isNewGame) { DirectorManager.Instance.ResetState(); } else { SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot()); }
+
+    DirectorManager.Instance.PrepareDay();
+
+    DirectorAvatarController directorController = FindFirstObjectByType<DirectorAvatarController>();
+    if (directorController != null && directorController.directorChairPoint != null)
     {
-        PauseGame(true);
-        if (SaveLoadManager.Instance.isNewGame) { DirectorManager.Instance.ResetState(); } else { SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot()); }
-        DirectorManager.Instance.PrepareDay();
-        DirectorAvatarController directorController = FindFirstObjectByType<DirectorAvatarController>();
-        if (directorController != null && directorController.directorChairPoint != null)
-        {
-            directorController.TeleportTo(directorController.directorChairPoint.position);
-            directorController.ForceSetAtDeskState(true);
-        }
-        if (orderSelectionUI != null)
-        {
-            orderSelectionUI.gameObject.SetActive(true);
-            orderSelectionUI.Setup();
-            var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
-            orderCG.alpha = 1f;
-            orderCG.interactable = false;
-            orderCG.blocksRaycasts = false;
-        }
-        if (daySplashScreenController != null)
-        {
-            daySplashScreenController.gameObject.SetActive(true);
-            daySplashScreenController.Setup(ClientSpawner.Instance.GetCurrentDay());
-            daySplashScreenController.GetComponent<CanvasGroup>().alpha = 1f;
-        }
-        yield return new WaitForSecondsRealtime(splashScreenDwellTime);
-        if (daySplashScreenController != null) { yield return daySplashScreenController.Fade(false); }
-        if (orderSelectionUI != null) { var orderCG = orderSelectionUI.GetComponent<CanvasGroup>(); orderCG.interactable = true; orderCG.blocksRaycasts = true; }
-        isTransitioning = false;
+        directorController.TeleportTo(directorController.directorChairPoint.position);
+        directorController.ForceSetAtDeskState(true);
     }
+
+    // --- НАЧАЛО ИСПРАВЛЕНИЙ ---
+
+    // 2. Только ТЕПЕРЬ, когда мы точно знаем номер дня, настраиваем и показываем заставку
+    if (daySplashScreenController != null)
+    {
+        daySplashScreenController.gameObject.SetActive(true);
+        daySplashScreenController.Setup(ClientSpawner.Instance.GetCurrentDay()); // <-- Передаем актуальный номер дня
+        daySplashScreenController.GetComponent<CanvasGroup>().alpha = 1f;
+    }
+
+    // 3. Настраиваем, но пока НЕ ПОКАЗЫВАЕМ панель приказов
+    if (orderSelectionUI != null)
+    {
+        orderSelectionUI.gameObject.SetActive(true);
+        orderSelectionUI.Setup();
+        var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
+        orderCG.alpha = 1f;
+        orderCG.interactable = false;
+        orderCG.blocksRaycasts = false;
+    }
+
+    // --- КОНЕЦ ИСПРАВЛЕНИЙ ---
+
+    yield return new WaitForSecondsRealtime(splashScreenDwellTime);
+
+    if (daySplashScreenController != null) { yield return daySplashScreenController.Fade(false); }
+
+    if (orderSelectionUI != null) {
+        var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
+        orderCG.interactable = true;
+        orderCG.blocksRaycasts = true;
+    }
+
+    isTransitioning = false;
+}
     public void OnSaveSlotClicked(int slotIndex)
     {
         if (isTransitioning) return;
