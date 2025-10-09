@@ -101,50 +101,29 @@ public event System.Action OnPeriodChanged;
             return;
         }
 
+        // --- ФИНАЛЬНАЯ ВЕРСИЯ СТАРТА ---
+
+        // 1. Начинаем с Дня 1.
         dayCounter = 1;
         UpdateDayCounterUI();
-        
-        var dayOnePeriods = mainCalendar.periodSettings;
-        int nightIndex = -1;
-        for (int i = 0; i < dayOnePeriods.Count; i++)
-        {
-            if (dayOnePeriods[i].periodName.Equals("Ночь", StringComparison.InvariantCultureIgnoreCase))
-            {
-                nightIndex = i;
-                break;
-            }
-        }
 
-        if (nightIndex != -1)
-        {
-            currentPeriodIndex = nightIndex;
-            PeriodSettings nightPeriodPlan = dayOnePeriods[nightIndex];
-            
-            float duration = nightPeriodPlan.durationInSeconds.Evaluate(dayCounter);
-            periodTimer = Mathf.Max(0, duration - 10f);
-            
-            previousPeriodPlan = nightPeriodPlan; // Инициализируем предыдущий период
+        // 2. Находим индекс "Ночи" (последнего периода)
+        int nightIndex = mainCalendar.periodSettings.FindIndex(p => p.periodName.Equals("Ночь", System.StringComparison.InvariantCultureIgnoreCase));
+        if (nightIndex == -1) nightIndex = mainCalendar.periodSettings.Count - 1; // Если "Ночь" не найдена, берем просто последний
 
-            if (globalLight != null)
-            {
-                globalLight.color = nightPeriodPlan.lightingSettings.lightColor;
-                globalLight.intensity = nightPeriodPlan.lightingSettings.lightIntensity;
-            }
-            foreach (var lightName in nightPeriodPlan.lightsToEnableNames)
-            {
-                var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
-                if (lightObj != null) lightObj.SetActive(true);
-            }
-            
-            StartNewPeriod(false);
-        }
-        else
-        {
-            currentPeriodIndex = -1;
-            GoToNextPeriod();
-        }
+        // 3. Устанавливаем текущий период на "Ночь" и "предыдущий" тоже на "Ночь"
+        currentPeriodIndex = nightIndex;
+        previousPeriodPlan = mainCalendar.periodSettings[nightIndex];
+
+        // 4. Устанавливаем таймер так, чтобы до конца "Ночи" оставалось 0.1 секунды
+        var nightPlan = mainCalendar.periodSettings[nightIndex];
+        float duration = nightPlan.durationInSeconds.Evaluate(dayCounter);
+        periodTimer = duration - 0.1f;
+
+        // 5. Запускаем "Ночь" без сброса таймера, чтобы через 0.1 сек произошел плавный переход на "Утро"
+        StartNewPeriod(false);
     }
-    
+
     void Update()
     {
         if (Time.timeScale == 0f) return;
@@ -167,8 +146,6 @@ public event System.Action OnPeriodChanged;
 
     public void GoToNextPeriod()
     {
-        // Сообщаем всем подписчикам (нашим часам), что период вот-вот сменится
-    OnPeriodChanged?.Invoke();
 		string previousPeriodName = "";
         var todayPeriods = mainCalendar?.periodSettings;
         if (todayPeriods != null && todayPeriods.Count > 0)
@@ -230,6 +207,8 @@ public event System.Action OnPeriodChanged;
         {
             EvacuateAllClients(true);
         }
+        // Сообщаем всем подписчикам (нашим часам), что период вот-вот сменится
+        OnPeriodChanged?.Invoke();
     }
     
     IEnumerator HandleContinuousSpawning(PeriodSettings plan, int clientsToSpawn)
@@ -265,11 +244,10 @@ public event System.Action OnPeriodChanged;
         // TODO: Implement logic for special day events like "PensionDay" or "ClownDay".
         // This could involve changing client prefabs, modifying character stats, etc.
     }
-    
+
     // FIX: Added missing coroutine.
     private IEnumerator ManageLocalLightsSmoothly(PeriodSettings periodPlan)
     {
-        // First, create a list of lights that should be ON for this period.
         var lightsToEnable = new HashSet<GameObject>();
         foreach (var lightName in periodPlan.lightsToEnableNames)
         {
@@ -280,7 +258,6 @@ public event System.Action OnPeriodChanged;
             }
         }
 
-        // Now, iterate through all controllable lights.
         foreach (var lightGO in allControllableLights)
         {
             if (lightGO == null) continue;
@@ -288,17 +265,24 @@ public event System.Action OnPeriodChanged;
             bool shouldBeOn = lightsToEnable.Contains(lightGO);
             bool isCurrentlyOn = lightGO.activeSelf;
 
-            // If the state needs to change, start a fade coroutine.
             if (shouldBeOn && !isCurrentlyOn)
             {
-                StartCoroutine(FadeLight(lightGO, true));
+                // >>> НАЧАЛО ИЗМЕНЕНИЙ: Случайная задержка <<<
+                // Ждем от 0 до 0.5 секунд перед включением
+                yield return new WaitForSeconds(Random.Range(0f, 0.5f));
+                // >>> КОНЕЦ ИЗМЕНЕНИЙ <<<
+
+                // Проверяем, не изменилась ли ситуация, пока мы ждали
+                if (GetCurrentPeriodPlan() == periodPlan)
+                {
+                    StartCoroutine(FadeLight(lightGO, true));
+                }
             }
             else if (!shouldBeOn && isCurrentlyOn)
             {
                 StartCoroutine(FadeLight(lightGO, false));
             }
         }
-        yield return null;
     }
 
     private void UpdateUITimer() 
@@ -310,7 +294,7 @@ public event System.Action OnPeriodChanged;
             float duration = currentPeriodPlan.durationInSeconds.Evaluate(dayCounter);
             float timeLeft = duration - periodTimer; 
             string formattedTime = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(timeLeft / 60), Mathf.FloorToInt(timeLeft % 60));
-            timeDisplay.text = $"Период: {currentPeriodPlan.periodName}\nОсталось: {formattedTime}"; 
+            timeDisplay.text = formattedTime;
         } 
     }
     
