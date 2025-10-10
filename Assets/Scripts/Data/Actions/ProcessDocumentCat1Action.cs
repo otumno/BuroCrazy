@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat1Action.cs
 using UnityEngine;
 using System.Linq;
 
@@ -17,7 +18,7 @@ public class ProcessDocumentCat1Action : StaffAction
 
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
         if (client == null) return false;
-
+        
         // --- ГЛАВНОЕ УСЛОВИЕ ---
         // Действие доступно, ТОЛЬКО ЕСЛИ документ клиента уже прошел проверку.
         return client.documentChecked == true;

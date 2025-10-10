@@ -1,17 +1,10 @@
 {
   "last_folders": [
-    "C:/Users/OTU/BuroCrazy/Assets",
-    "C:/Users/OTU/BuroCrazy/Assets/Editor",
-    "C:/Users/OTU/BuroCrazy/Assets/Data",
-    "C:/Users/OTU/BuroCrazy/Assets/Thoughts"
+    "Assets"
   ],
   "last_save_dir": "C:/Users/OTU/Documents",
   "selected_extensions": [
-    ".asset",
     ".cs"
   ],
-  "blacklist_folders": [
-    "TextMesh Pro",
-    "Sprites"
-  ]
+  "blacklist_folders": []
 }

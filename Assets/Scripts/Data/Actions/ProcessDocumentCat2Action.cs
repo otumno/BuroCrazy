@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat2Action.cs
 using UnityEngine;
 using System.Linq;
 
@@ -19,7 +20,7 @@ public class ProcessDocumentCat2Action : StaffAction
 
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
         if (zone == null) return false;
-
+        
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
         if (client == null) return false;
         

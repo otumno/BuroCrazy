@@ -19,7 +19,6 @@ public class ActionConfigPopupUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI activeActionsHeaderText;
     [SerializeField] private ActionDropZone availableActionsDropZone;
     [SerializeField] private ActionDropZone activeActionsDropZone;
-
     [Header("Префабы и данные")]
     [SerializeField] private GameObject actionIconPrefab;
     [SerializeField] private ActionDatabase actionDatabase;
@@ -41,9 +40,10 @@ public class ActionConfigPopupUI : MonoBehaviour
 
         roleDropdown.onValueChanged.RemoveAllListeners();
         roleDropdown.onValueChanged.AddListener(delegate { OnRoleSelectionChanged(); });
-        
-        if (availableActionsDropZone != null) { availableActionsDropZone.popupController = this; availableActionsDropZone.type = ActionDropZone.ZoneType.Available; }
-        if (activeActionsDropZone != null) { activeActionsDropZone.popupController = this; activeActionsDropZone.type = ActionDropZone.ZoneType.Active; }
+        if (availableActionsDropZone != null) { availableActionsDropZone.popupController = this; availableActionsDropZone.type = ActionDropZone.ZoneType.Available;
+        }
+        if (activeActionsDropZone != null) { activeActionsDropZone.popupController = this; activeActionsDropZone.type = ActionDropZone.ZoneType.Active;
+        }
     }
 
     public void OpenForStaff(StaffController staff)
@@ -86,18 +86,18 @@ public class ActionConfigPopupUI : MonoBehaviour
     
     private void PopulateActionLists()
     {
-        foreach (Transform child in availableActionsContent) { Destroy(child.gameObject); }
-        foreach (Transform child in activeActionsContent) { Destroy(child.gameObject); }
+        foreach (Transform child in availableActionsContent) { Destroy(child.gameObject);
+        }
+        foreach (Transform child in activeActionsContent) { Destroy(child.gameObject);
+        }
 
         if (actionDatabase == null || currentStaff == null) return;
-
         string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
         StaffController.Role roleToShow = GetRoleEnumFromRussian(selectedRoleName);
         
         List<StaffAction> allAvailableActions = actionDatabase.allActions
             .Where(action => action.minRankRequired <= currentStaff.rank && action.applicableRoles.Contains(roleToShow))
             .ToList();
-
         foreach (var activeAction in tempActiveActions)
         {
             if (allAvailableActions.Contains(activeAction))
@@ -133,7 +133,6 @@ public class ActionConfigPopupUI : MonoBehaviour
         List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
         int startIndex = shiftDropdown.value;
         int duration = (currentRank != null) ? currentRank.workPeriodsCount : 3;
-
         for (int i = 0; i < duration; i++)
         {
             int periodIndex = (startIndex + i) % allPeriods.Count;
@@ -145,32 +144,33 @@ public class ActionConfigPopupUI : MonoBehaviour
         StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
 
         // 3. Save the assigned workstation
-if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
-{
-    string selectedOptionText = workstationDropdown.options[workstationDropdown.value].text;
-    string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
+        if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
+        {
+            string selectedOptionText = workstationDropdown.options[workstationDropdown.value].text;
+            string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
 
-    // --- CORRECTED LOGIC ---
-    // Find the service point by comparing its FRIENDLY NAME, not its GameObject name
-    var selectedPoint = ScenePointsRegistry.Instance.allServicePoints
-        .FirstOrDefault(p => GetWorkstationFriendlyName(p) == friendlyNameFromDropdown);
+            // --- CORRECTED LOGIC ---
+            // Find the service point by comparing its FRIENDLY NAME, not its GameObject name
+            var selectedPoint = ScenePointsRegistry.Instance.allServicePoints
+                .FirstOrDefault(p => GetWorkstationFriendlyName(p) == friendlyNameFromDropdown);
 
-    if (selectedPoint != null)
-    {
-        AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint);
-    }
-    else
-    {
-        Debug.LogError($"Could not find ServicePoint with friendly name '{friendlyNameFromDropdown}' when saving!");
-        AssignmentManager.Instance.UnassignStaff(currentStaff);
-    }
-    // --- END OF CORRECTION ---
-}
-else
-{
-    // If "Not Assigned" is selected
-    AssignmentManager.Instance.UnassignStaff(currentStaff);
-}
+            if (selectedPoint != null)
+            {
+                AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint);
+            }
+            else
+            {
+                Debug.LogError($"Could not find ServicePoint with friendly name '{friendlyNameFromDropdown}' when saving!");
+    
+                AssignmentManager.Instance.UnassignStaff(currentStaff);
+            }
+            // --- END OF CORRECTION ---
+        }
+        else
+        {
+            // If "Not Assigned" is selected
+            AssignmentManager.Instance.UnassignStaff(currentStaff);
+        }
 
         // 4. Собираем и назначаем действия и роль
         List<StaffAction> newActionsToAssign = new List<StaffAction>();
@@ -181,7 +181,6 @@ else
         }
         
         HiringManager.Instance.AssignNewRole_Immediate(currentStaff, newRole, newActionsToAssign);
-
         // 5. Закрываем панель, обновляем списки и проверяем смены
         gameObject.SetActive(false);
         FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
@@ -210,7 +209,6 @@ else
             .Cast<StaffController.Role>()
             .Where(role => role != StaffController.Role.Unassigned)
             .ToList();
-        
         List<string> roleNames = allPossibleRoles.Select(role => GetRoleNameInRussian(role)).ToList();
         roleDropdown.AddOptions(roleNames);
 
@@ -229,7 +227,6 @@ else
 
         List<string> periodNames = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
         shiftDropdown.AddOptions(periodNames);
-
         if (currentStaff.workPeriods.Any())
         {
             int currentIndex = periodNames.IndexOf(currentStaff.workPeriods.First());
@@ -270,7 +267,6 @@ else
             }
 
             workstationDropdown.AddOptions(options);
-
             if (currentStaff.assignedWorkstation != null && suitablePoints.Contains(currentStaff.assignedWorkstation))
             {
                 int index = suitablePoints.FindIndex(p => p == currentStaff.assignedWorkstation) + 1;
@@ -307,7 +303,6 @@ else
     private void UpdateShiftInfoText()
     {
         if (ClientSpawner.Instance == null || ClientSpawner.Instance.mainCalendar == null || ExperienceManager.Instance == null || currentStaff == null) return;
-
         RankData currentRankData = ExperienceManager.Instance.GetRankByXP(currentStaff.experiencePoints);
         int duration = (currentRankData != null) ? currentRankData.workPeriodsCount : 3;
 

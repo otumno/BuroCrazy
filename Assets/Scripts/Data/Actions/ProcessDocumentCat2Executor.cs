@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat2Executor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -5,7 +6,7 @@ using System.Linq;
 public class ProcessDocumentCat2Executor : ActionExecutor
 {
     public override bool IsInterruptible => false;
-
+    
     protected override IEnumerator ActionRoutine()
     {
         if (!(staff is ClerkController clerk) || clerk.assignedServicePoint == null)
@@ -15,7 +16,8 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         }
 
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
-        if (zone == null) { FinishAction(); yield break; }
+        if (zone == null) { FinishAction();
+            yield break; }
 
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
         if (client == null || !client.documentChecked)
@@ -65,7 +67,6 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         }
 
         client.documentChecked = false;
-        
         clerk.thoughtBubble?.ShowPriorityMessage("Готово!\nПройдите в кассу.", 3f, Color.green);
         client.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
         client.stateMachine.SetState(ClientState.MovingToGoal);

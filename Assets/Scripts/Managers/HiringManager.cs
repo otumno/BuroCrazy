@@ -191,6 +191,8 @@ public void ActivateAllScheduledStaff()
         int savedMissedPayments = staff.missedPaymentCount;
         List<string> savedWorkPeriods = new List<string>(staff.workPeriods);
         
+		ServicePoint savedWorkstation = staff.assignedWorkstation;
+		
         CharacterVisuals visualsComponent = staffGO.GetComponent<CharacterVisuals>();
         AgentMover agentMoverComponent = staffGO.GetComponent<AgentMover>();
         CharacterStateLogger loggerComponent = staffGO.GetComponent<CharacterStateLogger>();
@@ -230,6 +232,14 @@ public void ActivateAllScheduledStaff()
         newControllerReference.workPeriods = savedWorkPeriods;
         newControllerReference.activeActions = newActions;
         
+		if (savedWorkstation != null)
+        {
+            // Мы не можем просто присвоить поле, нужно использовать менеджер,
+            // чтобы обновить и его внутренние записи.
+            AssignmentManager.Instance.AssignStaffToWorkstation(newControllerReference, savedWorkstation);
+        }
+		
+		
         newControllerReference.ForceInitializeBaseComponents(agentMoverComponent, visualsComponent, loggerComponent);
         
         RoleData dataForNewRole = allRoleData.FirstOrDefault(data => data.roleType == newRole);
