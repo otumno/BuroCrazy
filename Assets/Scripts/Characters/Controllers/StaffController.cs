@@ -84,14 +84,59 @@ public void ForceInitializeBaseComponents(AgentMover am, CharacterVisuals cv, Ch
 	}
 
     public virtual void StartShift()
+{
+    if (isOnDuty) return;
+    isOnDuty = true;
+    if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
+
+    // --- НАЧАЛО ИЗМЕНЕНИЙ: НОВАЯ ЛОГИКА НАЧАЛА СМЕНЫ ---
+
+    // Останавливаем все предыдущие "мозговые" корутины
+    if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
+
+    // Запускаем новую главную корутину смены
+    actionDecisionCoroutine = StartCoroutine(ShiftRoutine());
+}
+
+/// <summary>
+/// Новая главная корутина, управляющая всей сменой сотрудника.
+/// </summary>
+private IEnumerator ShiftRoutine()
+{
+    // 1. ПЕРВЫЙ ЭТАП: Идти на назначенное рабочее место (если оно есть)
+    if (assignedWorkstation != null)
     {
-        if (isOnDuty) return;
-        isOnDuty = true;
-        if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
-        
-        if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
-        actionDecisionCoroutine = StartCoroutine(ActionDecisionLoop());
+        // Используем уже существующий исполнитель, но вызываем его напрямую
+        var goToWorkExecutor = gameObject.AddComponent<GoToWorkstationExecutor>();
+        goToWorkExecutor.Execute(this, null);
+
+        // Ждем, пока исполнитель не самоуничтожится (т.е. пока сотрудник не дойдет до места)
+        yield return new WaitUntil(() => goToWorkExecutor == null);
     }
+
+    // 2. ВТОРОЙ ЭТАП: Запускаем стандартный цикл принятия решений ("мозг")
+    // Этот код мы перенесли из старого ActionDecisionLoop
+    Debug.Log($"<color=lime>AI ЗАПУЩЕН</color> для {characterName}");
+    while (isOnDuty)
+    {
+        if (currentExecutor == null)
+        {
+            ActionStartResult result = TryToStartConfiguredAction();
+            if (result == ActionStartResult.NoActionsAvailable)
+            {
+                currentExecutor = GetIdleActionExecutor();
+                if (currentExecutor != null) currentExecutor.Execute(this, null);
+            }
+            else if (result == ActionStartResult.AllActionsFailed)
+            {
+                currentExecutor = GetBurnoutActionExecutor();
+                if (currentExecutor != null) currentExecutor.Execute(this, null);
+            }
+        }
+        yield return new WaitForSeconds(1f);
+    }
+}
+
 
 public float GetCurrentFrustration()
 {
@@ -131,20 +176,34 @@ public void SetCurrentFrustration(float value)
 }
 
     public virtual void EndShift()
-    {
-        if (!isOnDuty) return;
-        isOnDuty = false;
-		
-		ClientSpawner.UnassignServiceProviderFromDesk(assignedWorkstation.deskId);
-        
-        if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
-        actionDecisionCoroutine = null;
+{
+    if (!isOnDuty) return;
+    Debug.Log($"<color=orange>КОНЕЦ СМЕНЫ:</color> Запущена процедура для {characterName}.");
+    isOnDuty = false;
 
-        if (currentExecutor != null) Destroy(currentExecutor);
-        currentExecutor = null;
-        
-        StartCoroutine(GoHomeRoutine());
+    // --- НАЧАЛО ИЗМЕНЕНИЙ: Принудительное прерывание ---
+
+    // 1. Немедленно останавливаем "мозг", чтобы он не начал новое действие.
+    if (actionDecisionCoroutine != null)
+    {
+        StopCoroutine(actionDecisionCoroutine);
+        actionDecisionCoroutine = null;
     }
+
+    // 2. Если сотрудник сейчас чем-то занят (currentExecutor существует),
+    //    мы принудительно уничтожаем этот компонент-исполнитель.
+    if (currentExecutor != null)
+    {
+        Debug.LogWarning($"{characterName} был занят '{currentExecutor.GetType().Name}', но его смена закончилась. Действие принудительно прервано.");
+        Destroy(currentExecutor);
+        currentExecutor = null;
+    }
+
+    // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+    // 3. Теперь, когда сотрудник гарантированно ничем не занят, отправляем его домой.
+    StartCoroutine(GoHomeRoutine());
+}
 
 // --- НАЧАЛО ФИНАЛЬНОЙ ВЕРСИИ "МОЗГА" AI ---
 

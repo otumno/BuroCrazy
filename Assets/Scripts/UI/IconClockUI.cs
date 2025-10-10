@@ -3,11 +3,10 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
 
-// Эта структура поможет нам в инспекторе связать имя периода, иконку и звук.
 [System.Serializable]
 public class PeriodVisual
 {
-    public string periodName; // Например, "Утро", "День"
+    public string periodName;
     public Sprite icon;
     public AudioClip transitionSound;
 }
@@ -16,13 +15,16 @@ public class PeriodVisual
 public class IconClockUI : MonoBehaviour
 {
     [Header("Визуальные элементы периодов")]
-    [Tooltip("Заполните этот список для каждого периода в игре")]
     public List<PeriodVisual> periodVisuals;
 
     [Header("Ссылки")]
-    [Tooltip("AudioSource для проигрывания звуков. Если пусто, будет искаться на этом же объекте.")]
     [SerializeField] private AudioSource audioSource;
     private Image clockImage;
+
+    // --- НАЧАЛО ИЗМЕНЕНИЙ ---
+    // Переменная для хранения имени ПОСЛЕДНЕГО отображенного периода
+    private string lastShownPeriodName = null;
+    // --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
     private void Awake()
     {
@@ -35,7 +37,6 @@ public class IconClockUI : MonoBehaviour
 
     private void OnEnable()
     {
-        // Подписываемся на событие смены периода
         if (ClientSpawner.Instance != null)
         {
             ClientSpawner.Instance.OnPeriodChanged += UpdateClock;
@@ -46,16 +47,12 @@ public class IconClockUI : MonoBehaviour
 
     private void OnDisable()
     {
-        // ОБЯЗАТЕЛЬНО отписываемся от события при выключении, чтобы избежать ошибок
         if (ClientSpawner.Instance != null)
         {
             ClientSpawner.Instance.OnPeriodChanged -= UpdateClock;
         }
     }
 
-    /// <summary>
-    /// Главный метод, который обновляет иконку и проигрывает звук.
-    /// </summary>
     private void UpdateClock()
     {
         if (ClientSpawner.Instance == null) return;
@@ -63,22 +60,31 @@ public class IconClockUI : MonoBehaviour
         string currentPeriodName = ClientSpawner.CurrentPeriodName;
         if (string.IsNullOrEmpty(currentPeriodName)) return;
 
-        // Ищем в нашем списке настройку для текущего периода
+        // --- НАЧАЛО НОВОЙ ЛОГИКИ ---
+
+        // Если текущий период уже отображается, ничего не делаем
+        if (currentPeriodName == lastShownPeriodName) return;
+
+        // Ищем настройку для нового периода
         PeriodVisual currentVisual = periodVisuals.FirstOrDefault(v => v.periodName.Equals(currentPeriodName, System.StringComparison.InvariantCultureIgnoreCase));
 
         if (currentVisual != null)
         {
-            // Если нашли - обновляем спрайт
+            // Обновляем иконку
             if (currentVisual.icon != null)
             {
                 clockImage.sprite = currentVisual.icon;
             }
 
-            // и проигрываем звук (если он есть и источник звука доступен)
-            if (currentVisual.transitionSound != null && audioSource != null)
+            // Проигрываем звук, ТОЛЬКО ЕСЛИ это не первый запуск (lastShownPeriodName уже был установлен)
+            if (currentVisual.transitionSound != null && audioSource != null && lastShownPeriodName != null)
             {
                 audioSource.PlayOneShot(currentVisual.transitionSound);
             }
         }
+
+        // Запоминаем, какой период мы только что показали
+        lastShownPeriodName = currentPeriodName;
+        // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
     }
 }
