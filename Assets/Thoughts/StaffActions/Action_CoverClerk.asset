@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1354cec4a6577b346b9ec8cf947f7895, type: 3}
   m_Name: Action_CoverClerk
   m_EditorClassIdentifier: 
-  actionType: 21
+  actionType: 33
   displayName: "\u041F\u043E\u0434\u043C\u0435\u043D\u0430 \u043A\u043B\u0435\u0440\u043A\u0430"
   description: 
   priority: 30

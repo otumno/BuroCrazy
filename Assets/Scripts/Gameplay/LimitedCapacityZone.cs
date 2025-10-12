@@ -129,4 +129,17 @@ public class LimitedCapacityZone : MonoBehaviour
     { 
         return occupiedWaypointOwners.ContainsValue(character);
     }
+	
+	public void ManuallyOccupyWaypoint(Waypoint wp, GameObject occupier)
+{
+    if (wp == null || occupier == null) return;
+
+    if (!occupiedWaypoints.Contains(wp))
+    {
+        occupiedWaypoints.Add(wp);
+    }
+    occupiedWaypointOwners[wp] = occupier;
+    Debug.Log($"[LimitedCapacityZone] {occupier.name} вручную занял точку {wp.name} в зоне {this.name}.");
+}
+	
 }

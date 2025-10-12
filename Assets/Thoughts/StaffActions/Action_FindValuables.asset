@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85fe90a6ba2636149b16323ead94f760, type: 3}
   m_Name: Action_FindValuables
   m_EditorClassIdentifier: 
-  actionType: 17
+  actionType: 25
   displayName: "\u041D\u0430\u0439\u0442\u0438 \u0446\u0435\u043D\u043D\u043E\u0441\u0442\u0438
     \u0432 \u043C\u0443\u0441\u043E\u0440\u0435"
   description: 

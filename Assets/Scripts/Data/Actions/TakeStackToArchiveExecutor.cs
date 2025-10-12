@@ -3,62 +3,54 @@ using System.Collections;
 
 public class TakeStackToArchiveExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => false; // Нельзя прерывать сотрудника, несущего важные документы!
+    public override bool IsInterruptible => false;
 
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is ClerkController clerk) || clerk.assignedServicePoint == null)
+        if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null)
         {
             FinishAction();
             yield break;
         }
 
-        // --- Шаг 1: Подготовка ---
-        var deskStack = clerk.assignedServicePoint.documentStack;
+        var deskStack = clerk.assignedWorkstation.documentStack;
         if (deskStack == null || deskStack.IsEmpty)
         {
-            FinishAction(); // Если стопка уже пуста, выходим
+            FinishAction();
             yield break;
         }
         
-        // Меняем состояние клерка (и его эмоцию, если настроено в StateEmotionMap!)
         clerk.SetState(ClerkController.ClerkState.GoingToArchive);
         clerk.thoughtBubble?.ShowPriorityMessage("Стол завален!\nНесу в архив...", 3f, new Color(1f, 0.5f, 0f));
 
-        // --- Шаг 2: Забираем документы со стола ---
-        int docCount = deskStack.TakeEntireStack(); // Забираем все документы
-        
-        // Показываем стопку в руках у клерка
+        int docCount = deskStack.TakeEntireStack();
         var stackHolder = staff.GetComponent<StackHolder>();
         stackHolder?.ShowStack(docCount, deskStack.maxStackSize);
 
-        // --- Шаг 3: Идем в архив ---
         Transform archivePoint = ArchiveManager.Instance.RequestDropOffPoint();
         if (archivePoint == null)
         {
             Debug.LogError($"{staff.name} не может отнести документы: в архиве нет места!");
-            // В будущем здесь можно реализовать состояние "В панике, не знает, куда деть документы"
             FinishAction();
             yield break;
         }
 
-        yield return staff.StartCoroutine(clerk.MoveToTarget(archivePoint.position, ClerkController.ClerkState.AtArchive));
-
-        // --- Шаг 4: Складываем документы ---
+        // ----- THE FIX IS HERE -----
+        yield return staff.StartCoroutine(clerk.MoveToTarget(archivePoint.position, ClerkController.ClerkState.AtArchive.ToString()));
+        
         clerk.thoughtBubble?.ShowPriorityMessage("Складываю...", 2f, Color.gray);
-        yield return new WaitForSeconds(2f); // Имитация раскладки
+        yield return new WaitForSeconds(2f);
 
-        // Добавляем документы в главную стопку архива
         for (int i = 0; i < docCount; i++)
         {
             ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
         }
-        stackHolder?.HideStack(); // Прячем стопку из рук
-        ArchiveManager.Instance.FreeOverflowPoint(archivePoint); // Освобождаем точку, если занимали дополнительную
+        stackHolder?.HideStack();
+        ArchiveManager.Instance.FreeOverflowPoint(archivePoint);
 
-        // --- Шаг 5: Возвращаемся на рабочее место ---
         clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-        yield return staff.StartCoroutine(clerk.MoveToTarget(clerk.assignedServicePoint.clerkStandPoint.position, ClerkController.ClerkState.Working));
+        // ----- THE FIX IS HERE -----
+        yield return staff.StartCoroutine(clerk.MoveToTarget(clerk.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
         
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         FinishAction();

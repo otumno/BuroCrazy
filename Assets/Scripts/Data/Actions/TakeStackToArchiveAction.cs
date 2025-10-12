@@ -10,15 +10,12 @@ public class TakeStackToArchiveAction : StaffAction
             return false;
         }
 
-        // Проверяем, что у клерка есть стол и на нем есть стопка документов
-        if (clerk.assignedServicePoint == null || clerk.assignedServicePoint.documentStack == null)
+        if (clerk.assignedWorkstation == null || clerk.assignedWorkstation.documentStack == null)
         {
             return false;
         }
 
-        // --- ГЛАВНОЕ УСЛОВИЕ ---
-        // Действие доступно, ТОЛЬКО ЕСЛИ стопка на столе клерка ПОЛНА.
-        return clerk.assignedServicePoint.documentStack.IsFull;
+        return clerk.assignedWorkstation.documentStack.IsFull;
     }
 
     public override System.Type GetExecutorType()

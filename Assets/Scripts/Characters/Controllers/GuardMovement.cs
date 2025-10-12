@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Characters/Controllers/GuardMovement.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,13 +11,11 @@ public class GuardMovement : StaffController
     
     [Header("Состояние Охранника")]
     private GuardState currentState = GuardState.OffDuty;
-
     [Header("Механика Протоколов")]
     public int unwrittenReportPoints = 0;
 
     [Header("Объекты (Prefab)")]
     public GameObject nightLight;
-
     [Header("Уникальные параметры Охранника")]
     public float minWaitTime;
     public float maxWaitTime;
@@ -29,13 +28,11 @@ public class GuardMovement : StaffController
 	
 	public float minIdleWait;
 	public float maxIdleWait;
-    
     private StaffAction writeReportAction;
 
     protected override void Awake()
     {
-        base.Awake(); 
-
+        base.Awake();
         writeReportAction = Resources.Load<StaffAction>("Actions/Action_WriteReport");
         if (writeReportAction == null)
         {
@@ -49,31 +46,7 @@ public class GuardMovement : StaffController
         }
     }
 
-    // --- ФИНАЛЬНАЯ ВЕРСИЯ ОСОБОГО "МОЗГА" ОХРАННИКА ---
-    protected override ActionStartResult TryToStartConfiguredAction()
-    {
-        // 1. Сначала пытаемся выполнить все обычные и экстренные действия
-        var baseResult = base.TryToStartConfiguredAction();
-
-        // 2. Если удалось запустить обычное/экстренное действие, то на этом все.
-        if (baseResult == ActionStartResult.Success)
-        {
-            return ActionStartResult.Success;
-        }
-
-        // 3. Если обычные действия не запустились, ПЕРЕД тем как сдаться, проверяем протоколы.
-        if (writeReportAction != null && writeReportAction.AreConditionsMet(this))
-        {
-            // Условия выполнены - запускаем Executor для написания протокола без броска кубиков.
-            if(ExecuteAction(writeReportAction))
-            {
-                return ActionStartResult.Success;
-            }
-        }
-        
-        // 4. Если и протоколы писать не нужно/не удалось, возвращаем исходный результат ("Нет дел" или "Выгорел").
-        return baseResult;
-    }
+    // --- УСТАРЕВШИЙ МЕТОД TryToStartConfiguredAction() БЫЛ ПОЛНОСТЬЮ УДАЛЕН ---
 
     // --- Остальные методы класса ---
 
@@ -140,6 +113,4 @@ public class GuardMovement : StaffController
 		this.minIdleWait = data.minIdleWait;
 		this.maxIdleWait = data.maxIdleWait;
     }
-
-    // Мы удалили отсюда GetIdleActionExecutor, так как эта логика теперь внутри TryToStartConfiguredAction
 }

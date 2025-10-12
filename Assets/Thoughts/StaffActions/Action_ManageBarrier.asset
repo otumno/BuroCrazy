@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f373960eb34fc9d44be6325a39b2e9af, type: 3}
   m_Name: Action_ManageBarrier
   m_EditorClassIdentifier: 
-  actionType: 13
+  actionType: 39
   displayName: "\u041E\u0442\u043A\u0440\u044B\u0442\u044C/\u0437\u0430\u043A\u0440\u044B\u0442\u044C
     \u0413\u043B\u0430\u0432\u043D\u044B\u0435 \u0434\u0432\u0435\u0440\u0438"
   description: "\u0422\u0430\u043A\u043E\u0435 \u0434\u043E\u0432\u0435\u0440\u044F\u044E\u0442

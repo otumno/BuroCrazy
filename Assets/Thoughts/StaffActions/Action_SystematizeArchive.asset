@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d71e7bd41c07d04e9024fa36455d2b8, type: 3}
   m_Name: Action_SystematizeArchive
   m_EditorClassIdentifier: 
-  actionType: 29
+  actionType: 41
   displayName: "\u0421\u0438\u0441\u0442\u0435\u043C\u0430\u0442\u0438\u0437\u0438\u0440\u043E\u0432\u0430\u0442\u044C
     \u0430\u0440\u0445\u0438\u0432"
   description: 

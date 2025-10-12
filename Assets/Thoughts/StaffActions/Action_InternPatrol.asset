@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 57bc9c1c67ab3844dad0edac3b329287, type: 3}
   m_Name: Action_InternPatrol
   m_EditorClassIdentifier: 
-  actionType: 23
+  actionType: 35
   displayName: "\u041E\u0431\u0445\u043E\u0434 \u0437\u0430\u043B\u0430"
   description: 
   priority: 1

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 622f7364979067448b49453f8f80ed0e, type: 3}
   m_Name: Action_HandleSituation
   m_EditorClassIdentifier: 
-  actionType: 3
+  actionType: 6
   displayName: "\u0420\u0430\u0437\u043E\u0431\u0440\u0430\u0442\u044C\u0441\u044F
     \u0441 \u0441\u0438\u0442\u0443\u0430\u0446\u0438\u0435\u0439"
   description: "\u041F\u043E\u043C\u043E\u0447\u044C \u043F\u043E\u0442\u0435\u0440\u044F\u0432\u0448\u0435\u043C\u0443\u0441\u044F

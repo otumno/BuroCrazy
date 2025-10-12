@@ -2,27 +2,30 @@
 
 public enum ActionType
 {
-    // --- НОВЫЕ ДЕЙСТВИЯ КЛЕРКА ---
-    ProcessDocumentCat1,    // Обработать документ 1 категории
-    ProcessDocumentCat2,    // Обработать документ 2 категории
-    CheckDocument,          // Проверить документ на ошибки
-    HandleSituation,        // Разобраться с ситуацией (перенаправить клиента)
-    ClientOrientedService,  // Поболтать с клиентом (снизить нетерпение)
-    SortPapers,             // Разобрать бумаги на столе (снизить стресс)
-    
-    // --- ОБЩЕЕ ДЕЙСТВИЕ ДЛЯ КЛЕРКА, РЕГИСТРАТОРА, КАССИРА ---
-    TakeStackToArchive,     // Отнести стопку документов в архив
+    // --- НОВЫЕ ДЕЙСТВИЯ ОБСЛУЖИВАНИЯ ---
+    ServiceAtRegistration,    // Обслуживание в регистратуре
+    ServiceAtCashier,         // Обслуживание в кассе
+    ServiceAtOfficeDesk,      // Обслуживание за офисным столом
 
-    // --- НОВОЕ ДЕЙСТВИЕ РЕГИСТРАТОРА ---
-    GiveConsultation,       // Дать быструю консультацию (для клиентов AskAndLeave)
-	PrioritizeConsultation,   // Приоритет: Устная справка
-	PrioritizeDirectorDoc,    // Приоритет: Документы Директора
-	PrioritizePayment,        // Приоритет: Оплата
+    // --- СТАРЫЕ ДЕЙСТВИЯ КЛЕРКА (некоторые теперь не нужны) ---
+    ProcessDocumentCat1,
+    ProcessDocumentCat2,
+    CheckDocument,
+    HandleSituation,
+    ClientOrientedService,
+    SortPapers,
+    TakeStackToArchive,
+    
+    // --- ДЕЙСТВИЯ РЕГИСТРАТОРА ---
+    GiveConsultation,
+	PrioritizeConsultation,
+	PrioritizeDirectorDoc,
+	PrioritizePayment,
 	ChairPatrol,
 	MakeArchiveRequest,
-
-    // --- СТАРЫЕ ДЕЙСТВИЯ (оставляем для других ролей) ---
-    ArchiveDocument,        // Архивирование документа (для Архивариуса)
+    
+    // --- ДЕЙСТВИЯ АРХИВАРИУСА И БУХГАЛТЕРА ---
+    ArchiveDocument,
 	CorrectDocument,
 	RetrieveDocument,
 	DoBookkeeping,
@@ -30,32 +33,28 @@ public enum ActionType
 	DirectorPrepareSalaries,
 
     // Действия Уборщика
-    CleanTrash,             // Уборка мусора
-    CleanPuddle,            // Уборка лужи
-    CleanDirt,				// Уборка грязи
+    CleanTrash,
+    CleanPuddle,
+    CleanDirt,
 	FindValuablesInTrash,
 	JanitorPatrol,
 	EmptyTrashCan,	
 
     // Действия Стажера
-    HelpConfusedClient,     // Помощь потерявшемуся клиенту
-    ServeFromQueue,         // Обслуживание клиента из общей очереди
-    DeliverDocuments,       // Доставка пачки документов в архив
-    CoverDesk,              // Подмена сотрудника на рабочем месте
+    HelpConfusedClient,
+    ServeFromQueue,     
+    DeliverDocuments,
+    CoverDesk,
 	CoverRegistrar,
 	CoverClerk,
 	CoverCashier,
 	InternPatrol,
 
     // Действия Охранника
-    PatrolWaypoint,         // Достижение одной точки патрулирования
-    CatchThief,             // Успешная поимка воришки
-    CalmDownViolator,       // Успешное усмирение нарушителя
+    PatrolWaypoint,
+    CatchThief,
+    CalmDownViolator,
     OperateBarrier, 
     EvictClient,
     None,
-
-    // Старое действие ProcessDocument можно удалить или закомментировать,
-    // так как мы заменили его на более конкретные ProcessDocumentCat1 и ProcessDocumentCat2
-    // ProcessDocument,    
 }

@@ -5,22 +5,20 @@ using System.Linq;
 public class ChairPatrolAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
-{
-    if (!(staff is ClerkController clerk) || clerk.IsOnBreak())
     {
-        return false;
-    }
+        if (!(staff is ClerkController clerk) || clerk.IsOnBreak())
+        {
+            return false;
+        }
 
-    // >>> ИЗМЕНЕНИЕ: Разрешаем действие и для Регистратора, и для Кассира <<<
-    if (clerk.role != ClerkController.ClerkRole.Registrar && clerk.role != ClerkController.ClerkRole.Cashier)
-    {
-        return false;
+        if (clerk.role != ClerkController.ClerkRole.Registrar && clerk.role != ClerkController.ClerkRole.Cashier)
+        {
+            return false;
+        }
+        
+        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        return zone != null && zone.GetOccupyingClients().FirstOrDefault() == null;
     }
-
-    // Условие: Сотрудник на рабочем месте и перед ним НЕТ клиента.
-    var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
-    return zone != null && zone.GetOccupyingClients().FirstOrDefault() == null;
-}
 
     public override System.Type GetExecutorType()
     {

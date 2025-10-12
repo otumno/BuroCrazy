@@ -11,12 +11,9 @@ public class SortPapersAction : StaffAction
             return false;
         }
 
-        // Находим зону, чтобы проверить, есть ли в ней клиенты
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
+        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         if (zone == null) return false;
 
-        // --- ГЛАВНОЕ УСЛОВИЕ ДЛЯ РУТИНЫ ---
-        // Действие доступно, ТОЛЬКО ЕСЛИ у стойки НЕТ клиента.
         return zone.GetOccupyingClients().FirstOrDefault() == null;
     }
 

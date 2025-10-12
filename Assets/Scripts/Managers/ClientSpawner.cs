@@ -568,27 +568,30 @@ public event System.Action OnPeriodChanged;
 	
 	public static LimitedCapacityZone GetZoneByDeskId(int deskId)
 {
-    if (Instance == null) return null;
-    switch (deskId)
+    if (Instance == null || ScenePointsRegistry.Instance == null || ScenePointsRegistry.Instance.allServicePoints == null)
     {
-        case 0: 
-            return Instance.registrationZone;
-        case 1: 
-            // Возвращаем первую зону из списка для столов 1-й категории
-            return Instance.category1DeskZones.FirstOrDefault(); 
-        case 2: 
-            // Возвращаем первую зону из списка для столов 2-й категории
-            return Instance.category2DeskZones.FirstOrDefault();
-        case -1: 
-            // Возвращаем первую зону из списка касс
-            return Instance.cashierZones.FirstOrDefault();
-        default:
-            if (Instance.directorReceptionZone != null && Instance.directorReceptionZone.insideWaypoints.Any(wp => wp.GetComponentInParent<ServicePoint>()?.deskId == deskId))
-            {
-                return Instance.directorReceptionZone;
-            }
-            return null;
+        return null;
     }
+
+    // 1. Находим нужный ServicePoint по его ID во всем реестре точек на сцене.
+    ServicePoint targetPoint = ScenePointsRegistry.Instance.GetServicePointByID(deskId);
+
+    if (targetPoint == null)
+    {
+        // Если такой ServicePoint вообще не зарегистрирован, возвращаем null.
+        return null;
+    }
+
+    // 2. Получаем компонент LimitedCapacityZone, который является "родителем" для этого ServicePoint.
+    // Это гарантирует, что мы всегда найдем правильную зону, независимо от ее типа.
+    LimitedCapacityZone foundZone = targetPoint.GetComponentInParent<LimitedCapacityZone>();
+
+    if (foundZone == null)
+    {
+        Debug.LogError($"[ClientSpawner] ServicePoint '{targetPoint.name}' с deskId {deskId} найден, но он не находится внутри объекта с компонентом LimitedCapacityZone!", targetPoint);
+    }
+
+    return foundZone;
 }
 	
 	/// <summary>

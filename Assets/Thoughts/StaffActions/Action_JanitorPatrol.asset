@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b6c0d5fa9696dea449d307c2e98eb934, type: 3}
   m_Name: Action_JanitorPatrol
   m_EditorClassIdentifier: 
-  actionType: 18
+  actionType: 26
   displayName: "\u041E\u0441\u043C\u043E\u0442\u0440 \u043F\u043E\u043C\u0435\u0449\u0435\u043D\u0438\u0439"
   description: 
   priority: 1

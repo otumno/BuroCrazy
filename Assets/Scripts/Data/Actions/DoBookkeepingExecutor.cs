@@ -7,25 +7,22 @@ public class DoBookkeepingExecutor : ActionExecutor
     private ClerkController bookkeeper;
 
     protected override IEnumerator ActionRoutine()
-{
-    bookkeeper = staff as ClerkController;
-    var bookkeepingDesk = ScenePointsRegistry.Instance?.bookkeepingDesk;
-    if (bookkeeper == null || bookkeepingDesk == null) { FinishAction(); yield break; }
+    {
+        bookkeeper = staff as ClerkController;
+        var bookkeepingDesk = ScenePointsRegistry.Instance?.bookkeepingDesk;
+        if (bookkeeper == null || bookkeepingDesk == null) { FinishAction(); yield break; }
 
-    // --- НОВАЯ ЛОГИКА: Идем к столу бухгалтера ---
-    yield return staff.StartCoroutine(bookkeeper.MoveToTarget(bookkeepingDesk.clerkStandPoint.position, ClerkController.ClerkState.Working));
-
-    // Устанавливаем флаг, который сможет прочитать UI
-    bookkeeper.IsDoingBooks = true;
-        bookkeeper.SetState(ClerkController.ClerkState.Working); // или можно добавить новое состояние Bookkeeping
+        // ----- THE FIX IS HERE -----
+        yield return staff.StartCoroutine(bookkeeper.MoveToTarget(bookkeepingDesk.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
+        
+        bookkeeper.IsDoingBooks = true;
+        bookkeeper.SetState(ClerkController.ClerkState.Working);
         bookkeeper.thoughtBubble?.ShowPriorityMessage("Свожу дебет с кредитом...", 10f, Color.gray);
-
-        // "Вечное" действие, пока не прервут
+        
         while (true)
         {
-            // Каждые 15 секунд есть шанс найти "лишние" деньги
             yield return new WaitForSeconds(15f);
-            if (Random.value < 0.1f) // 10% шанс
+            if (Random.value < 0.1f)
             {
                 int bonus = Random.Range(20, 101);
                 PlayerWallet.Instance?.AddMoney(bonus, staff.transform.position);
@@ -37,7 +34,6 @@ public class DoBookkeepingExecutor : ActionExecutor
 
     private void OnDestroy()
     {
-        // Когда действие прерывается, ОБЯЗАТЕЛЬНО сбрасываем флаг
         if (bookkeeper != null)
         {
             bookkeeper.IsDoingBooks = false;

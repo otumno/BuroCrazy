@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat2Action.cs
 using UnityEngine;
 using System.Linq;
 
@@ -7,7 +6,6 @@ public class ProcessDocumentCat2Action : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        // --- НОВОЕ УСЛОВИЕ: Проверяем, что ранг сотрудника достаточен ---
         if (staff.rank < minRankRequired)
         {
             return false;
@@ -18,13 +16,12 @@ public class ProcessDocumentCat2Action : StaffAction
             return false;
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
+        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         if (zone == null) return false;
         
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
         if (client == null) return false;
         
-        // Условие то же: документ должен быть проверен.
         return client.documentChecked == true;
     }
 

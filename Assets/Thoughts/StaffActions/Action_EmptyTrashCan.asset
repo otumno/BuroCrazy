@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe30172d6535f3e45ae1a72bb87fc0b2, type: 3}
   m_Name: Action_EmptyTrashCan
   m_EditorClassIdentifier: 
-  actionType: 19
+  actionType: 27
   displayName: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u043C\u0443\u0441\u043E\u0440\u043A\u0443"
   description: 
   priority: 50

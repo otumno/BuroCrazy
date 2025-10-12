@@ -1,4 +1,4 @@
-// Файл: Assets/Scripts/Data/Actions/ProcessDocumentAction.cs
+// File: Assets/Scripts/Data/Actions/ProcessDocumentAction.cs
 using UnityEngine;
 using System.Linq;
 
@@ -7,26 +7,25 @@ public class ProcessDocumentAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        // 1. Проверяем, что это Клерк и он не на перерыве
-        if (!(staff is ClerkController clerk) || clerk.IsOnBreak() || clerk.assignedServicePoint == null)
+        // 1. Check if it's a Clerk and not on break, with a workstation assigned
+        if (!(staff is ClerkController clerk) || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
         {
             return false;
         }
 
-        // 2. Ищем, есть ли клиенты, которые уже находятся внутри зоны обслуживания этого клерка
-        LimitedCapacityZone myZone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
+        // 2. Find clients within the clerk's service zone
+        LimitedCapacityZone myZone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         if (myZone == null)
         {
             return false;
         }
 
-        // 3. Условие выполнено, если в зоне есть хотя бы один клиент, ожидающий обслуживания
+        // 3. The condition is met if there's at least one client waiting
         return myZone.GetOccupyingClients().Any();
     }
 
     public override System.Type GetExecutorType()
     {
-        // Это действие будет выполняться скриптом ProcessDocumentExecutor
         return typeof(ProcessDocumentExecutor);
     }
 }

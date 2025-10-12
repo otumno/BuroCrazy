@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat2Executor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -6,18 +5,17 @@ using System.Linq;
 public class ProcessDocumentCat2Executor : ActionExecutor
 {
     public override bool IsInterruptible => false;
-    
+
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is ClerkController clerk) || clerk.assignedServicePoint == null)
+        if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null)
         {
             FinishAction();
             yield break;
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
-        if (zone == null) { FinishAction();
-            yield break; }
+        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        if (zone == null) { FinishAction(); yield break; }
 
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
         if (client == null || !client.documentChecked)
@@ -26,7 +24,7 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             yield break;
         }
 
-        clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 2)...", 3f, Color.white);
+        clerk.thoughtBubble?.ShowPriorityMessage("Processing (Cat. 2)...", 3f, Color.white);
         
         DocumentType docTypeInHand = client.docHolder.GetCurrentDocumentType();
         GameObject prefabToFly = client.docHolder.GetPrefabForType(docTypeInHand); 
@@ -39,23 +37,22 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             DocumentMover mover = flyingDoc.GetComponent<DocumentMover>(); 
             if (mover != null) 
             {
-                mover.StartMove(clerk.assignedServicePoint.documentPointOnDesk, () => { transferToClerkComplete = true; if (flyingDoc != null) Destroy(flyingDoc); });
+                mover.StartMove(clerk.assignedWorkstation.documentPointOnDesk, () => { transferToClerkComplete = true; if (flyingDoc != null) Destroy(flyingDoc); });
                 yield return new WaitUntil(() => transferToClerkComplete);
             } 
         }
 
-        yield return new WaitForSeconds(Random.Range(3f, 5f)); // Документы 2-й категории обрабатываются дольше
+        yield return new WaitForSeconds(Random.Range(3f, 5f));
         
-        // --- ГЛАВНОЕ ОТЛИЧИЕ: Выдаем Сертификат 2 ---
         DocumentType newDocType = DocumentType.Certificate2;
-        client.billToPay += 250; // И услуга стоит дороже
+        client.billToPay += 250;
 
         GameObject newDocPrefab = client.docHolder.GetPrefabForType(newDocType);
         bool transferToClientComplete = false; 
         if (newDocPrefab != null) 
         { 
-            GameObject newDocOnDesk = Instantiate(newDocPrefab, clerk.assignedServicePoint.documentPointOnDesk.position, Quaternion.identity);
-            if (client.stampSound != null) { AudioSource.PlayClipAtPoint(client.stampSound, clerk.assignedServicePoint.documentPointOnDesk.position); } 
+            GameObject newDocOnDesk = Instantiate(newDocPrefab, clerk.assignedWorkstation.documentPointOnDesk.position, Quaternion.identity);
+            if (client.stampSound != null) { AudioSource.PlayClipAtPoint(client.stampSound, clerk.assignedWorkstation.documentPointOnDesk.position); } 
             yield return new WaitForSeconds(1.5f);
             
             DocumentMover mover = newDocOnDesk.GetComponent<DocumentMover>(); 
@@ -67,7 +64,7 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         }
 
         client.documentChecked = false;
-        clerk.thoughtBubble?.ShowPriorityMessage("Готово!\nПройдите в кассу.", 3f, Color.green);
+        clerk.thoughtBubble?.ShowPriorityMessage("Done! Please go to the cashier.", 3f, Color.green);
         client.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
         client.stateMachine.SetState(ClientState.MovingToGoal);
         

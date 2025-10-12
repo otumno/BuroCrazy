@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca3653e934e56a543a35d0d45bd40cdb, type: 3}
   m_Name: Action_Guard_CalmDownViolator_NEW
   m_EditorClassIdentifier: 
-  actionType: 12
+  actionType: 38
   displayName: "\u0423\u0441\u043F\u043E\u043A\u043E\u0438\u0442\u044C \u0433\u0440\u0443\u0431\u0438\u044F\u043D\u0430"
   description: 
   priority: 100

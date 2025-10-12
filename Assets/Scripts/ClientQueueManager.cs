@@ -43,31 +43,52 @@ public class ClientQueueManager : MonoBehaviour
     }
     
     private void ProcessNextClientCall()
+{
+    IServiceProvider registrar = ClientSpawner.GetServiceProviderAtDesk(0);
+    if (registrar == null || !registrar.IsAvailableToServe) return;
+    
+    var nextInQueue = queue
+        .Where(c => c.Key != null && !currentlyCalledNumbers.Contains(c.Value))
+        .OrderBy(kvp => kvp.Value)
+        .FirstOrDefault();
+    
+    ClientPathfinding nextClient = nextInQueue.Key;
+
+    if (nextClient != null)
     {
-        IServiceProvider registrar = ClientSpawner.GetServiceProviderAtDesk(0);
-        if (registrar == null || !registrar.IsAvailableToServe) return;
-        
-        var nextInQueue = queue
-            .Where(c => c.Key != null && !currentlyCalledNumbers.Contains(c.Value))
-            .OrderBy(kvp => kvp.Value)
-            .FirstOrDefault();
+        // ----- НАЧАЛО ИЗМЕНЕНИЙ: БОЛЕЕ НАДЕЖНОЕ ПОЛУЧЕНИЕ ТОЧКИ НАЗНАЧЕНИЯ -----
 
-        ClientPathfinding nextClient = nextInQueue.Key;
-
-        if (nextClient != null)
+        // 1. Сначала получаем рабочее место (ServicePoint) регистратора.
+        ServicePoint workstation = registrar.GetWorkstation();
+        if (workstation == null)
         {
-            lastCallTime = Time.time;
-            if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, (registrar as MonoBehaviour).transform.position);
-            
-            int calledNumber = nextInQueue.Value;
-            currentlyCalledNumbers.Add(calledNumber);
-            clientsAwaitingResponse.Add(calledNumber, Time.time);
-            
-            Debug.Log($"<color=yellow>ОЧЕРЕДЬ:</color> Работник {(registrar as MonoBehaviour).name} вызывает клиента #{calledNumber} ({nextClient.name})");
-
-            nextClient.stateMachine.GetCalledToSpecificDesk(registrar.GetClientStandPoint().GetComponent<Waypoint>(), calledNumber, registrar);
+            Debug.LogError($"[ClientQueueManager] Регистратор {((MonoBehaviour)registrar).name} доступен, но у него не назначено рабочее место (GetWorkstation вернул null)!", (MonoBehaviour)registrar);
+            return;
         }
+
+        // 2. Затем получаем точку назначения (Waypoint) с этого рабочего места.
+        Waypoint destination = workstation.clientStandPoint;
+        if (destination == null)
+        {
+            Debug.LogError($"[ClientQueueManager] У рабочего места {workstation.name} не назначена точка для клиента (clientStandPoint)!", workstation);
+            return;
+        }
+        
+        // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
+
+        lastCallTime = Time.time;
+        if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, ((MonoBehaviour)registrar).transform.position);
+        
+        int calledNumber = nextInQueue.Value;
+        currentlyCalledNumbers.Add(calledNumber);
+        clientsAwaitingResponse.Add(calledNumber, Time.time);
+        
+        Debug.Log($"<color=yellow>ОЧЕРЕДЬ:</color> Работник {((MonoBehaviour)registrar).name} вызывает клиента #{calledNumber} ({nextClient.name})");
+
+        // 3. Передаем клиенту гарантированно существующую точку назначения.
+        nextClient.stateMachine.GetCalledToSpecificDesk(destination, calledNumber, registrar);
     }
+}
     
     private bool CanCallClient()
     {

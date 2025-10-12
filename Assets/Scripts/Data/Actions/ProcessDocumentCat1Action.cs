@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat1Action.cs
 using UnityEngine;
 using System.Linq;
 
@@ -12,21 +11,17 @@ public class ProcessDocumentCat1Action : StaffAction
             return false;
         }
 
-        // Находим клиента, которого обслуживает клерк
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedServicePoint.deskId);
+        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         if (zone == null) return false;
 
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
         if (client == null) return false;
         
-        // --- ГЛАВНОЕ УСЛОВИЕ ---
-        // Действие доступно, ТОЛЬКО ЕСЛИ документ клиента уже прошел проверку.
         return client.documentChecked == true;
     }
 
     public override System.Type GetExecutorType()
     {
-        // Исполнитель для этого действия
         return typeof(ProcessDocumentCat1Executor);
     }
 }

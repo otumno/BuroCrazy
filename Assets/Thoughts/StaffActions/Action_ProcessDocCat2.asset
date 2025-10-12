@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d8e900cc20ad804ea5930a408d152f9, type: 3}
   m_Name: Action_ProcessDocCat2
   m_EditorClassIdentifier: 
-  actionType: 1
+  actionType: 4
   displayName: "\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u0430\u0442\u044C \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442
     (\u041A\u0430\u0442. 2)"
   description: "\u041E\u0431\u0440\u0430\u0431\u043E\u0442\u043A\u0430 \u0441\u043B\u043E\u0436\u043D\u044B\u0445
