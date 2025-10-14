@@ -53,7 +53,7 @@ public class ClerkController : StaffController, IServiceProvider
 
     public void ServiceComplete()
     {
-        currentFrustration += 0.05f;
+        frustration += 0.05f; 
         if (assignedWorkstation != null && assignedWorkstation.documentStack != null)
         {
             assignedWorkstation.documentStack.AddDocumentToStack();

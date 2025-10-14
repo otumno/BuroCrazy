@@ -34,10 +34,10 @@ public class ClientQueueManager : MonoBehaviour
     void Update()
     {
         // --- НОВАЯ ПРОАКТИВНАЯ ЛОГИКА ВЫЗОВА ---
-        if (Time.time > lastCallTime + callCooldown && CanCallClient())
-        {
-            ProcessNextClientCall();
-        }
+        //if (Time.time > lastCallTime + callCooldown && CanCallClient())
+        //{
+        //    ProcessNextClientCall();
+        //}
         
         HandleTimedOutClients();
     }

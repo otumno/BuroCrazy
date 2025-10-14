@@ -384,8 +384,14 @@ MonoBehaviour:
   missedPaymentCount: 0
   isReadyForPromotion: 0
   activeActions: []
+  systemActionDatabase: {fileID: 11400000, guid: c7b8428fcc6cc6249ace94ab953910d3, type: 2}
+  assignedWorkstation: {fileID: 0}
   baseFrustrationGain: 0.1
   frustrationResistanceSkill: 1
+  frustration: 0
+  bladder: 0
+  energy: 1
+  morale: 1
   spriteCollection: {fileID: 11400000, guid: cdab1e82753fc0d4fb395149bfc4e7dc, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 785cfc11f7b6eee47a4deaaf43942ff6, type: 2}
 --- !u!114 &9101693390999189065

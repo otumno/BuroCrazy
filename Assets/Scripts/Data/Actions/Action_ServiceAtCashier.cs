@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Data/Actions/Action_ServiceAtCashier.cs
 using UnityEngine;
 using System.Linq;
 
@@ -12,7 +13,10 @@ public class Action_ServiceAtCashier : StaffAction
         }
         
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-        return zone != null && zone.GetOccupyingClients().Any(c => c.billToPay > 0);
+        
+        // ----- ГЛАВНОЕ ИЗМЕНЕНИЕ -----
+        // Условие теперь: "В зоне есть клиент, у которого ЕСТЬ счет ИЛИ его цель - оплатить налог".
+        return zone != null && zone.GetOccupyingClients().Any(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
     }
 
     public override System.Type GetExecutorType()

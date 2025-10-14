@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: "\u041F\u0440\u0438\u043E\u0440\u0438\u0442\u0435\u0442: \u0423\u0441\u0442\u043D\u0430\u044F
     \u0441\u043F\u0440\u0430\u0432\u043A\u0430"
   description: 
+  category: 0
   priority: 70
   baseSuccessChance: 0.8
   minSuccessChance: 0.3

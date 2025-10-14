@@ -57,4 +57,7 @@ public enum ActionType
     OperateBarrier, 
     EvictClient,
     None,
+	GoToToilet,
+    GoToBreak,
+    GoToCooler
 }

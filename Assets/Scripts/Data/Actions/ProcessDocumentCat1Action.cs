@@ -4,24 +4,15 @@ using System.Linq;
 [CreateAssetMenu(fileName = "Action_ProcessDocCat1", menuName = "Bureau/Actions/ProcessDocumentCat1")]
 public class ProcessDocumentCat1Action : StaffAction
 {
+    // Это действие теперь является "навыком", а не самостоятельной задачей.
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is ClerkController clerk) || clerk.IsOnBreak() || clerk.GetCurrentState() != ClerkController.ClerkState.Working)
-        {
-            return false;
-        }
-
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-        if (zone == null) return false;
-
-        ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
-        if (client == null) return false;
-        
-        return client.documentChecked == true;
+        return false;
     }
 
     public override System.Type GetExecutorType()
     {
+        // Исполнитель все еще нужен, но он будет вызываться из ServiceAtOfficeDeskExecutor
         return typeof(ProcessDocumentCat1Executor);
     }
 }

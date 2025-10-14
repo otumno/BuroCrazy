@@ -1,13 +1,16 @@
+// Файл: Assets/Scripts/UI/BookkeepingButtonController.cs
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
+using System.Text; // Добавлено для логов
 
-// Этот скрипт нужно повесить на саму кнопку "Бухгалтерия"
 [RequireComponent(typeof(Button))]
 public class BookkeepingButtonController : MonoBehaviour
 {
     private Button bookkeepingButton;
     private BookkeepingPanelUI bookkeepingPanel; 
+    private float logTimer = 0f;
+    private const float LOG_INTERVAL = 2f; // Логируем раз в 2 секунды, чтобы не спамить
 
     void Awake()
     {
@@ -17,30 +20,57 @@ public class BookkeepingButtonController : MonoBehaviour
 
     void Start()
     {
-        // Находим панель один раз при старте (она может быть выключена)
         bookkeepingPanel = FindFirstObjectByType<BookkeepingPanelUI>(FindObjectsInactive.Include);
-
-        // Проверяем состояние кнопки при старте
-        UpdateButtonState();
+        UpdateButtonState(true); // Первичная проверка при старте
     }
 
     void Update()
     {
-        // Проверяем состояние кнопки каждый кадр, чтобы она появилась сразу после назначения действия
-        UpdateButtonState();
+        // ----- НАЧАЛО ИЗМЕНЕНИЙ: ЛОГИРОВАНИЕ С ИНТЕРВАЛОМ -----
+        logTimer += Time.deltaTime;
+        if (logTimer >= LOG_INTERVAL)
+        {
+            logTimer = 0f;
+            UpdateButtonState(true); // Вызываем проверку с логированием
+        }
+        else
+        {
+            UpdateButtonState(false); // Обычная проверка без логирования
+        }
+        // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
     }
-
-    // --- ГЛАВНЫЙ МЕТОД ПРОВЕРКИ ---
-    void UpdateButtonState()
+    
+    void UpdateButtonState(bool withLog)
     {
         if (HiringManager.Instance == null) return;
+        
+        bool isUnlocked = false;
+        StringBuilder logBuilder = withLog ? new StringBuilder() : null;
+        if(withLog) logBuilder.AppendLine("<b><color=orange>--- Проверка кнопки Бухгалтерии ---</color></b>");
 
-        // Проверяем, есть ли ХОТЯ БЫ ОДИН сотрудник в общем списке,
-        // у которого в списке активных действий есть "Ведение бухгалтерии".
-        bool isUnlocked = HiringManager.Instance.AllStaff
-            .Any(staff => staff.activeActions.Any(action => action.actionType == ActionType.DoBookkeeping));
+        foreach(var staff in HiringManager.Instance.AllStaff)
+        {
+            if (staff == null) continue;
 
-        // Включаем или выключаем саму кнопку (ее видимость), если состояние изменилось
+            bool staffHasAction = staff.activeActions.Any(action => action.actionType == ActionType.DoBookkeeping);
+            if (withLog)
+            {
+                var actionNames = staff.activeActions.Select(a => a.actionType.ToString());
+                logBuilder.AppendLine($"  - Сотрудник: {staff.characterName} | Роль: {staff.currentRole} | Имеет 'DoBookkeeping': <color={(staffHasAction ? "green" : "red")}>{staffHasAction}</color> | Список действий: [{string.Join(", ", actionNames)}]");
+            }
+            
+            if (staffHasAction)
+            {
+                isUnlocked = true;
+            }
+        }
+        
+        if (withLog)
+        {
+            logBuilder.AppendLine($"<b>ИТОГ: Кнопка должна быть активна: <color={(isUnlocked ? "green" : "red")}>{isUnlocked}</color></b>");
+            Debug.Log(logBuilder.ToString());
+        }
+
         if (gameObject.activeSelf != isUnlocked)
         {
             gameObject.SetActive(isUnlocked);
@@ -49,7 +79,6 @@ public class BookkeepingButtonController : MonoBehaviour
 
     private void OnButtonClick()
     {
-        // При нажатии - показываем панель
         if (bookkeepingPanel != null)
         {
             bookkeepingPanel.Show();

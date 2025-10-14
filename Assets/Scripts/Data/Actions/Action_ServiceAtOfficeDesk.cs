@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Data/Actions/Action_ServiceAtOfficeDesk.cs
 using UnityEngine;
 using System.Linq;
 
@@ -12,6 +13,7 @@ public class Action_ServiceAtOfficeDesk : StaffAction
         }
         
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        // Условие простое: "Есть ли в моей зоне ХОТЯ БЫ ОДИН клиент?"
         return zone != null && zone.GetOccupyingClients().Any();
     }
 
