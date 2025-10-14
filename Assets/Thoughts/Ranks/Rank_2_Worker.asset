@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rankLevel: 1
   rankName: "\u0421\u043E\u0442\u0440\u0443\u0434\u043D\u0438\u043A"
-  experienceRequired: 500
-  promotionCost: 300
+  experienceRequired: 2000
+  promotionCost: 1000
   workPeriodsCount: 5
   salaryMultiplier: 1.5
   maxActions: 4

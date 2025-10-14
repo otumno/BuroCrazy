@@ -14,32 +14,92 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   xpEntries:
   - actionType: 0
-    xpGranted: 10
+    xpGranted: 15
   - actionType: 1
-    xpGranted: 10
+    xpGranted: 15
   - actionType: 2
-    xpGranted: 10
+    xpGranted: 20
   - actionType: 3
-    xpGranted: 10
+    xpGranted: 20
   - actionType: 4
-    xpGranted: 10
+    xpGranted: 35
   - actionType: 5
-    xpGranted: 10
+    xpGranted: 5
   - actionType: 6
-    xpGranted: 10
+    xpGranted: 20
   - actionType: 7
-    xpGranted: 10
+    xpGranted: 5
   - actionType: 8
-    xpGranted: 10
+    xpGranted: 2
   - actionType: 9
     xpGranted: 10
   - actionType: 10
     xpGranted: 10
   - actionType: 11
-    xpGranted: 10
+    xpGranted: 1
   - actionType: 12
-    xpGranted: 10
+    xpGranted: 1
   - actionType: 13
+    xpGranted: 1
+  - actionType: 14
+    xpGranted: 1
+  - actionType: 15
+    xpGranted: 5
+  - actionType: 16
+    xpGranted: 15
+  - actionType: 17
+    xpGranted: 25
+  - actionType: 18
+    xpGranted: 50
+  - actionType: 19
+    xpGranted: 5
+  - actionType: 20
+    xpGranted: 75
+  - actionType: 21
+    xpGranted: 0
+  - actionType: 22
     xpGranted: 10
-  - actionType: 10
+  - actionType: 23
+    xpGranted: 12
+  - actionType: 24
+    xpGranted: 15
+  - actionType: 25
+    xpGranted: 5
+  - actionType: 26
+    xpGranted: 2
+  - actionType: 27
+    xpGranted: 25
+  - actionType: 28
+    xpGranted: 25
+  - actionType: 29
+    xpGranted: 10
+  - actionType: 30
+    xpGranted: 25
+  - actionType: 31
+    xpGranted: 30
+  - actionType: 32
+    xpGranted: 30
+  - actionType: 33
+    xpGranted: 30
+  - actionType: 34
+    xpGranted: 30
+  - actionType: 35
+    xpGranted: 2
+  - actionType: 36
+    xpGranted: 3
+  - actionType: 37
+    xpGranted: 75
+  - actionType: 38
+    xpGranted: 50
+  - actionType: 39
+    xpGranted: 5
+  - actionType: 40
+    xpGranted: 20
+  - actionType: 41
+    xpGranted: 0
+  - actionType: 42
+    xpGranted: 0
+  - actionType: 43
+    xpGranted: 0
+  - actionType: 44
     xpGranted: 0

@@ -7,11 +7,10 @@ using System.Linq;
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class ServiceWorkerController : StaffController
 {
-    public enum WorkerState { Idle, SearchingForWork, GoingToMess, Cleaning, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, StressedOut, Patrolling, DeliveringValuables } // <-- Добавьте DeliveringValuables
+    public enum WorkerState { Idle, SearchingForWork, GoingToMess, Cleaning, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, StressedOut, Patrolling, DeliveringValuables }
     
     [Header("Состояние Уборщика")]
     private WorkerState currentState = WorkerState.OffDuty;
-
     [Header("Уникальные параметры Уборщика")]
     public float cleaningTimeTrash;
     public float cleaningTimePuddle;
@@ -30,8 +29,6 @@ public class ServiceWorkerController : StaffController
 	public float minIdleWait;
 	public float maxIdleWait;
 
-    // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ ИСПОЛЬЗОВАНИЯ ИСПОЛНИТЕЛЯМИ ---
-
     public void SetState(WorkerState newState)
     {
         if (currentState == newState) return;
@@ -46,9 +43,8 @@ public class ServiceWorkerController : StaffController
         }
     }
 
-protected override ActionExecutor GetIdleActionExecutor()
+    protected override ActionExecutor GetIdleActionExecutor()
     {
-        // Идти в свою "подсобку"
         return gameObject.AddComponent<GoToJanitorHomeExecutor>();
     }
 
@@ -57,15 +53,15 @@ protected override ActionExecutor GetIdleActionExecutor()
         return currentState.ToString();
     }
 
-protected override ActionExecutor GetBurnoutActionExecutor()
-{
-    return gameObject.AddComponent<ScreamInClosetExecutor>();
-}
+    protected override ActionExecutor GetBurnoutActionExecutor()
+    {
+        return gameObject.AddComponent<ScreamInClosetExecutor>();
+    }
 
-public WorkerState GetCurrentState()
-{
-    return currentState;
-}
+    public WorkerState GetCurrentState()
+    {
+        return currentState;
+    }
 
     public IEnumerator MoveToTarget(Vector2 targetPosition, WorkerState stateOnArrival)
     {
@@ -74,8 +70,6 @@ public WorkerState GetCurrentState()
         SetState(stateOnArrival);
     }
     
-    // --- РЕАЛИЗАЦИЯ БАЗОВЫХ МЕТОДОВ ---
-
     public override bool IsOnBreak()
     {
         return currentState == WorkerState.OnBreak ||
@@ -90,7 +84,6 @@ public WorkerState GetCurrentState()
         return currentState.ToString();
     }
 
-    // --- УНИКАЛЬНЫЙ МЕТОД ИНИЦИАЛИЗАЦИИ ДЛЯ УБОРЩИКА ---
     public void InitializeFromData(RoleData data)
     {
         if (agentMover != null)
@@ -114,38 +107,40 @@ public WorkerState GetCurrentState()
         this.stressReliefRate = data.worker_stressReliefRate;
 		this.minIdleWait = data.minIdleWait;
 		this.maxIdleWait = data.maxIdleWait;
-		
-		if (data.worker_trashBagPrefab != null)
-    {
-        // Убеждаемся, что у нас есть точка крепления в руках (handAttachPoint)
-        var visuals = GetComponent<CharacterVisuals>();
-        if (visuals != null && visuals.handAttachPoint != null)
+        
+        // ----- НАЧАЛО ИЗМЕНЕНИЙ: Используем новый метод GetAttachPoint -----
+        if (data.worker_trashBagPrefab != null)
         {
-            // Уничтожаем старый мешок, если он вдруг остался от предыдущей роли
-            if (instantiatedTrashBag != null) { Destroy(instantiatedTrashBag); }
+            var visuals = GetComponent<CharacterVisuals>();
+            if (visuals != null)
+            {
+                // Запрашиваем точку крепления в руке
+                Transform handPoint = visuals.GetAttachPoint(CharacterVisuals.AttachPointType.Hand);
+                if (handPoint != null)
+                {
+                    if (instantiatedTrashBag != null) { Destroy(instantiatedTrashBag); }
 
-            instantiatedTrashBag = Instantiate(data.worker_trashBagPrefab, visuals.handAttachPoint);
-            instantiatedTrashBag.SetActive(false);
+                    instantiatedTrashBag = Instantiate(data.worker_trashBagPrefab, handPoint);
+                    instantiatedTrashBag.SetActive(false);
+                }
+            }
         }
+        // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
     }
-    }
-
-    // --- МЕТОДЫ UNITY ---
 
     protected override void Awake()
-{
-    base.Awake(); // Вызываем Awake базового класса
-    
-    var references = GetComponent<StaffPrefabReferences>();
-    if (references != null)
     {
-        this.nightLight = references.nightLight;
+        base.Awake();
+        
+        var references = GetComponent<StaffPrefabReferences>();
+        if (references != null)
+        {
+            this.nightLight = references.nightLight;
+        }
+        
+        if (broomTransform != null)
+        {
+            initialBroomRotation = broomTransform.localRotation;
+        }
     }
-    
-    if (broomTransform != null)
-    {
-        initialBroomRotation = broomTransform.localRotation;
-    }
-	
-}
 }

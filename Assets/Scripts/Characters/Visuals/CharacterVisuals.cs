@@ -1,15 +1,15 @@
-// Файл: CharacterVisuals.cs
+// Файл: Assets/Scripts/Characters/Visuals/CharacterVisuals.cs
 using UnityEngine;
 
 public class CharacterVisuals : MonoBehaviour
 {
-    [Header("Ссылки на компоненты")]
-    public SpriteRenderer bodyRenderer;
-    public SpriteRenderer faceRenderer;
-	
-	[Header("Точки крепления")]
-    public Transform headAttachPoint;
-    public Transform handAttachPoint;
+    // Новый enum для запроса точек
+    public enum AttachPointType { Head, Hand }
+
+    private SpriteRenderer bodyRenderer;
+    private SpriteRenderer faceRenderer;
+    private Transform headAttachPoint;
+    private Transform handAttachPoint;
 
     private EmotionSpriteCollection currentSpriteCollection;
     private StateEmotionMap currentStateEmotionMap;
@@ -18,55 +18,65 @@ public class CharacterVisuals : MonoBehaviour
 
     void Awake()
     {
-        clientNotification = GetComponent<ClientNotification>();
-        if (clientNotification != null)
+        StaffPrefabReferences references = GetComponent<StaffPrefabReferences>();
+        if (references != null)
         {
-            clientNotification.enabled = false;
+            this.bodyRenderer = references.bodyRenderer;
+            this.faceRenderer = references.faceRenderer;
+            this.headAttachPoint = references.headAttachPoint;
+            this.handAttachPoint = references.handAttachPoint;
         }
     }
 
-public void SetupFromRoleData(RoleData data, Gender gender)
+    // ----- НОВЫЙ ПУБЛИЧНЫЙ МЕТОД -----
+    /// <summary>
+    /// Возвращает Transform указанной точки крепления.
+    /// </summary>
+    public Transform GetAttachPoint(AttachPointType type)
+    {
+        switch (type)
+        {
+            case AttachPointType.Head:
+                return headAttachPoint;
+            case AttachPointType.Hand:
+                return handAttachPoint;
+            default:
+                return null;
+        }
+    }
+    // ----- КОНЕЦ НОВОГО МЕТОДА -----
+
+
+    // ... (остальная часть скрипта остается без изменений) ...
+    public void SetupFromRoleData(RoleData data, Gender gender)
     {
         if (data == null) return;
-
-        // Вызываем ваш существующий метод Setup с данными из RoleData
         Setup(gender, data.spriteCollection, data.stateEmotionMap);
-        
-        // Сразу же экипируем аксессуар
         EquipAccessory(data.accessoryPrefab);
     }
 
     public void Setup(Gender gender, EmotionSpriteCollection collection, StateEmotionMap emotionMap)
     {
-        // Сохраняем полученные данные
         this.characterGender = gender;
         this.currentSpriteCollection = collection;
         this.currentStateEmotionMap = emotionMap;
 
-        if (currentSpriteCollection == null)
-        {
-            Debug.LogError("Sprite Collection не был передан в CharacterVisuals!", gameObject);
-            return;
-        }
+        if (currentSpriteCollection == null) return;
+        if (bodyRenderer == null) { return; } 
         
-        // Устанавливаем тело и нейтральное лицо
         bodyRenderer.sprite = currentSpriteCollection.GetBodySprite(gender);
         SetEmotion(Emotion.Neutral);
     }
 
-    // Старый метод для прямой установки эмоции
     public void SetEmotion(Emotion emotion)
     {
-        if (currentSpriteCollection == null) return;
+        if (currentSpriteCollection == null || faceRenderer == null) return;
         faceRenderer.sprite = currentSpriteCollection.GetFaceSprite(emotion, characterGender);
     }
 
-    // Новый метод: Устанавливает эмоцию на основе состояния из карты
     public void SetEmotionForState(System.Enum state)
     {
-        // Используем сохраненную карту эмоций
         if (currentStateEmotionMap == null) return;
-        
         if (currentStateEmotionMap.TryGetEmotionForState(state.ToString(), out Emotion emotionToShow))
         {
             SetEmotion(emotionToShow);
@@ -79,21 +89,18 @@ public void SetupFromRoleData(RoleData data, Gender gender)
 	
 	public void EquipAccessory(GameObject newAccessoryPrefab)
     {
-        // Шаг 1: Удаляем все старые аксессуары
+        if (headAttachPoint == null || handAttachPoint == null)
+        {
+            return;
+        }
         foreach (Transform child in headAttachPoint) { Destroy(child.gameObject); }
         foreach (Transform child in handAttachPoint) { Destroy(child.gameObject); }
-
-        // Шаг 2: Если нового аксессуара нет, выходим
         if (newAccessoryPrefab == null) return;
-
-        // Шаг 3: Определяем, куда крепить новый аксессуар
-        Transform targetAttachPoint = handAttachPoint; // По умолчанию крепим в руку
+        Transform targetAttachPoint = handAttachPoint;
         if (newAccessoryPrefab.name.ToLower().Contains("cap") || newAccessoryPrefab.name.ToLower().Contains("hat"))
         {
-            targetAttachPoint = headAttachPoint; // Если в имени есть "cap" или "hat", крепим на голову
+            targetAttachPoint = headAttachPoint;
         }
-
-        // Шаг 4: Создаем и прикрепляем аксессуар
         GameObject accessoryInstance = Instantiate(newAccessoryPrefab, targetAttachPoint);
         accessoryInstance.transform.localPosition = Vector3.zero;
         accessoryInstance.transform.localRotation = Quaternion.identity;

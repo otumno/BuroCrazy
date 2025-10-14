@@ -11,10 +11,8 @@ public class HiringManager : MonoBehaviour
     public static HiringManager Instance { get; set; }
 
     [Header("Префабы сотрудников")]
-    [Tooltip("Перетащите сюда универсальный префаб Стажёра (internPrefab)")]
     public GameObject internPrefab;
     [Header("Базы данных")]
-	[Tooltip("Перетащите сюда все созданные ассеты RoleData")]
 	public List<RoleData> allRoleData;
 	
     public List<StaffController> AllStaff = new List<StaffController>();
@@ -48,14 +46,44 @@ public class HiringManager : MonoBehaviour
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
-
+    
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (scene.name == "GameScene")
         {
             FindSceneSpecificReferences();
-            RegisterExistingStaff();
+            StartCoroutine(RegisterExistingStaffAndAssignDatabases());
         }
+    }
+
+    private IEnumerator RegisterExistingStaffAndAssignDatabases()
+    {
+        yield return new WaitForEndOfFrame(); 
+        
+        Debug.Log("[HiringManager] Запущена регистрация и назначение баз данных...");
+        AllStaff.Clear();
+        StaffController[] existingStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
+
+        ActionDatabase systemActions = null;
+        var firstStaff = existingStaff.FirstOrDefault(s => s != null && !(s is DirectorAvatarController));
+        if (firstStaff != null)
+        {
+            systemActions = firstStaff.systemActionDatabase;
+        }
+
+        foreach (var staffMember in existingStaff)
+        {
+            if (staffMember is DirectorAvatarController) continue;
+            
+            AllStaff.Add(staffMember);
+            
+            if (staffMember.systemActionDatabase == null && systemActions != null)
+            {
+                staffMember.systemActionDatabase = systemActions;
+                Debug.Log($"Назначена база системных действий для {staffMember.characterName}");
+            }
+        }
+        Debug.Log($"[HiringManager] Регистрация завершена. Найдено и учтено: {AllStaff.Count} сотрудников.");
     }
 
     public void AssignNewRole_Immediate(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
@@ -64,16 +92,13 @@ public class HiringManager : MonoBehaviour
         
         Debug.Log($"<color=yellow>ОПЕРАЦИЯ:</color> Начинаем смену роли для {staff.characterName} с {staff.currentRole} на {newRole}");
 
-        // Сначала просто обновляем действия на существующем контроллере.
         staff.activeActions = newActions;
         
-        // Теперь проверяем, нужно ли менять сам ТИП контроллера.
         System.Type requiredControllerType = GetControllerTypeForRole(newRole);
         System.Type currentControllerType = staff.GetType();
 
         if (requiredControllerType == currentControllerType)
         {
-            // Если тип контроллера тот же (например, Клерк -> Кассир), просто обновляем внутреннюю роль.
             staff.currentRole = newRole;
             if (staff is ClerkController clerk)
             {
@@ -83,7 +108,6 @@ public class HiringManager : MonoBehaviour
         }
         else
         {
-            // Если тип контроллера ДРУГОЙ (например, Стажер -> Охранник), то мы должны пересоздать компонент.
             StartCoroutine(RebuildControllerComponent(staff, newRole, newActions));
         }
     }
@@ -101,7 +125,6 @@ public class HiringManager : MonoBehaviour
             GameObject staffGO = staff.gameObject;
             Debug.Log($"<color=orange>ПЕРЕСБОРКА КОМПОНЕНТА:</color> для {staff.characterName}");
             
-            // Сохраняем данные
             string savedName = staff.characterName;
             Gender savedGender = staff.gender;
             CharacterSkills savedSkills = staff.skills;
@@ -114,13 +137,10 @@ public class HiringManager : MonoBehaviour
             List<string> savedWorkPeriods = new List<string>(staff.workPeriods);
             ServicePoint savedWorkstation = staff.assignedWorkstation;
             
-            // Ждем конца кадра, чтобы избежать проблем с уничтожением компонентов во время Update.
             yield return new WaitForEndOfFrame();
 
-            // Уничтожаем старый контроллер
             Destroy(staff);
 
-            // Добавляем новый контроллер
             StaffController newControllerReference = null;
             System.Type newControllerType = GetControllerTypeForRole(newRole);
             if(newControllerType != null)
@@ -134,7 +154,6 @@ public class HiringManager : MonoBehaviour
                 yield break;
             }
             
-            // Восстанавливаем данные
             newControllerReference.characterName = savedName;
             newControllerReference.gender = savedGender;
             newControllerReference.skills = savedSkills;
@@ -145,13 +164,12 @@ public class HiringManager : MonoBehaviour
             newControllerReference.unpaidPeriods = savedUnpaidPeriods;
             newControllerReference.missedPaymentCount = savedMissedPayments;
             newControllerReference.workPeriods = savedWorkPeriods;
-            newControllerReference.activeActions = newActions; // Назначаем новые действия
+            newControllerReference.activeActions = newActions;
             if (savedWorkstation != null)
             {
                 AssignmentManager.Instance.AssignStaffToWorkstation(newControllerReference, savedWorkstation);
             }
 
-            // Инициализируем компоненты и данные для конкретной роли
             newControllerReference.ForceInitializeBaseComponents(staffGO.GetComponent<AgentMover>(), staffGO.GetComponent<CharacterVisuals>(), staffGO.GetComponent<CharacterStateLogger>());
             RoleData dataForNewRole = allRoleData.FirstOrDefault(data => data.roleType == newRole);
             if (dataForNewRole != null)
@@ -167,7 +185,6 @@ public class HiringManager : MonoBehaviour
                 }
             }
             
-            // Обновляем ссылку в главном списке сотрудников
             int staffIndex = AllStaff.FindIndex(s => s == null || s.gameObject == staffGO);
             if (staffIndex != -1)
             {
@@ -224,51 +241,18 @@ public class HiringManager : MonoBehaviour
 
     public void PromoteStaff(StaffController staff)
     {
-        if (staff == null || !staff.isReadyForPromotion)
-        {
-            Debug.LogWarning($"Попытка повысить сотрудника {staff?.characterName}, который не готов к повышению.");
-            return;
-        }
+        if (staff == null || !staff.isReadyForPromotion) return;
 
         RankData nextRankData = ExperienceManager.Instance.rankDatabase
             .FirstOrDefault(r => r.rankLevel == staff.rank + 1);
-        if (nextRankData == null)
-        {
-            Debug.LogWarning($"Не найдены данные для следующего ранга после {staff.rank}. Возможно, сотрудник уже достиг максимума.");
-            return;
-        }
+        if (nextRankData == null) return;
     
-        if (PlayerWallet.Instance.GetCurrentMoney() < nextRankData.promotionCost)
-        {
-            Debug.Log($"Недостаточно денег для повышения. Нужно: ${nextRankData.promotionCost}");
-            return;
-        }
+        if (PlayerWallet.Instance.GetCurrentMoney() < nextRankData.promotionCost) return;
 
         PlayerWallet.Instance.AddMoney(-nextRankData.promotionCost, Vector3.zero);
         staff.rank = nextRankData.rankLevel;
         staff.salaryPerPeriod = (int)(staff.salaryPerPeriod * nextRankData.salaryMultiplier);
         staff.isReadyForPromotion = false;
-
-        Debug.Log($"<color=green>Сотрудник {staff.characterName} повышен до ранга '{nextRankData.rankName}'! Новая З/П: ${staff.salaryPerPeriod}</color>");
-    }
-
-    private void RegisterExistingStaff()
-    {
-        Debug.Log("[HiringManager] Запущена регистрация существующих сотрудников...");
-        AllStaff.Clear();
-        StaffController[] existingStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
-        if (existingStaff.Length > 0)
-        {
-            foreach (var staffMember in existingStaff)
-            {
-                if (staffMember is DirectorAvatarController)
-                {
-                    continue;
-                }
-                AllStaff.Add(staffMember);
-            }
-        }
-        Debug.Log($"[HiringManager] Регистрация завершена. Найдено и учтено: {AllStaff.Count} сотрудников.");
     }
 
     public void ResetState()
@@ -277,7 +261,6 @@ public class HiringManager : MonoBehaviour
         occupiedPoints.Clear();
         UnassignedStaff.Clear();
         AllStaff.Clear();
-        Debug.Log("[HiringManager] Состояние сброшено для новой игры.");
     }
 
     private void FindSceneSpecificReferences()
@@ -292,7 +275,7 @@ public class HiringManager : MonoBehaviour
         }
         else
         {
-            Debug.LogError("[HiringManager] НЕ УДАЛОСЬ найти InternPointsRegistry на сцене GameScene! Наем новых сотрудников не будет работать.");
+            Debug.LogError("[HiringManager] НЕ УДАЛОСЬ найти InternPointsRegistry на сцене GameScene!");
         }
     }
 
@@ -344,30 +327,19 @@ public class HiringManager : MonoBehaviour
 
     public bool HireCandidate(Candidate candidate)
     {
-        if (PlayerWallet.Instance.GetCurrentMoney() < candidate.HiringCost)
-        {
-            Debug.Log("Недостаточно средств для найма!");
-            return false;
-        }
-
+        if (PlayerWallet.Instance.GetCurrentMoney() < candidate.HiringCost) return false;
+        
         Transform freePoint = unassignedStaffPoints.FirstOrDefault(p => !occupiedPoints.ContainsKey(p));
-        if (freePoint == null)
-        {
-            Debug.Log("Нет свободных мест в кабинете директора для новых стажеров!");
-            return false;
-        }
+        if (freePoint == null) return false;
 
         RoleData internRoleData = allRoleData.FirstOrDefault(data => data.roleType == StaffController.Role.Intern);
-        if (internRoleData == null)
-        {
-            Debug.LogError("В HiringManager не найден RoleData для роли Intern! Найм невозможен.");
-            return false;
-        }
+        if (internRoleData == null) return false;
 
         PlayerWallet.Instance.AddMoney(-candidate.HiringCost, $"Найм: {candidate.Name}");
         
         GameObject newStaffGO = Instantiate(internPrefab, freePoint.position, Quaternion.identity);
         InternController internController = newStaffGO.GetComponent<InternController>();
+
         if (internController != null)
         {
             internController.characterName = candidate.Name;
@@ -375,20 +347,20 @@ public class HiringManager : MonoBehaviour
             internController.gender = candidate.Gender;
             
             internController.Initialize(internRoleData);
-			
-			if (internController.currentRole != StaffController.Role.Intern)
-            {
-                var freeWorkstation = ScenePointsRegistry.Instance.allServicePoints
-                    .FirstOrDefault(p => 
-                        GetRoleForDeskId(p.deskId) == internController.currentRole && 
-                        AssignmentManager.Instance.GetAssignedStaff(p) == null);
 
-                if (freeWorkstation != null)
-                {
-                    AssignmentManager.Instance.AssignStaffToWorkstation(internController, freeWorkstation);
-                }
+            // 1. Копируем ссылку на базу системных действий от первого попавшегося сотрудника на сцене.
+            var existingStaff = AllStaff.FirstOrDefault(s => s != null && s.systemActionDatabase != null);
+            if (existingStaff != null)
+            {
+                internController.systemActionDatabase = existingStaff.systemActionDatabase;
             }
-			
+
+            // 2. Назначаем расписание на все периоды по умолчанию
+            if (ClientSpawner.Instance != null && ClientSpawner.Instance.mainCalendar != null)
+            {
+                internController.workPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
+            }
+
             AllStaff.Add(internController);
             UnassignedStaff.Add(internController);
             newStaffGO.name = candidate.Name;
@@ -397,7 +369,7 @@ public class HiringManager : MonoBehaviour
             
             internController.StartShift();
             
-            Debug.Log($"Нанят сотрудник {candidate.Name} за ${candidate.HiringCost}. Он немедленно приступает к работе.");
+            Debug.Log($"Нанят сотрудник {candidate.Name}. Он немедленно приступает к работе.");
             return true;
         }
 
@@ -440,7 +412,7 @@ public class HiringManager : MonoBehaviour
         string currentPeriod = ClientSpawner.CurrentPeriodName;
         if (string.IsNullOrEmpty(currentPeriod)) return;
         Debug.Log($"<color=orange>ПРОВЕРКА СМЕН:</color> Проверка расписания для периода '{currentPeriod}'...");
-        foreach (var staff in AllStaff)
+        foreach (var staff in AllStaff.ToList()) // ToList() creates a copy to allow modification during iteration
         {
             if (staff == null) continue;
             bool isScheduledNow = staff.workPeriods.Contains(currentPeriod);
