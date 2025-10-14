@@ -14,6 +14,11 @@ public class InternPatrolAction : StaffAction
         return true;
     }
 
+	public InternPatrolAction()
+    {
+        category = ActionCategory.System; // Добавить эту строку
+    }
+
     public override System.Type GetExecutorType()
     {
         return typeof(InternPatrolExecutor);

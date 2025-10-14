@@ -31,7 +31,7 @@ MonoBehaviour:
     strength: 0.5
   actionDuration: 30
   patrolPointsToVisit: 3
-  actionCooldown: 60
+  actionCooldown: 1
   minRankRequired: 0
   applicableRoles: 01000000
   isUnique: 0

@@ -22,7 +22,19 @@ public class HandleSituationAction : StaffAction
         {
             return false; // Если таких клиентов нет, действие невозможно
         }
+		
+		// Проверяем, не назначен ли этот клиент уже другому сотруднику
+    if (confusedClient.assignedHelper != null && confusedClient.assignedHelper != staff)
+    {
+        return false; // Не можем помочь, если кто-то другой уже назначен
+    }
 
+    // Если мы первый, кто нашел этого клиента, назначаем себя
+    if (confusedClient.assignedHelper == null)
+    {
+        confusedClient.assignedHelper = staff;
+    }
+		
         // ----- НОВАЯ ЛОГИКА: Проверка роли -----
         // Если это регистратор, применяем особое правило
         if (staff is ClerkController clerk && clerk.role == ClerkController.ClerkRole.Registrar)

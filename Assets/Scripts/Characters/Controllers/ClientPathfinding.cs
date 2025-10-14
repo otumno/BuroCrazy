@@ -17,6 +17,8 @@ public class ClientPathfinding : MonoBehaviour
     [Range(0f, 1f)] public float babushkaFactor;
     [Range(0f, 1f)] public float suetunFactor;
     [Range(0f, 1f)] public float prolazaFactor;
+	
+	public StaffController assignedHelper = null; // Кто назначен помочь этому клиенту
     
     [Header("Внешний вид")]
     public Gender gender;

@@ -18,6 +18,7 @@ MonoBehaviour:
   description: "\u041F\u043E\u043C\u043E\u0447\u044C \u043F\u043E\u0442\u0435\u0440\u044F\u0432\u0448\u0435\u043C\u0443\u0441\u044F
     \u043A\u043B\u0438\u0435\u043D\u0442\u0443 \u043D\u0430\u0439\u0442\u0438 \u0434\u043E\u0440\u043E\u0433\u0443.
     \u0421\u043D\u0438\u0436\u0430\u0435\u0442 \u0445\u0430\u043E\u0441 \u0432 \u0443\u0447\u0440\u0435\u0436\u0434\u0435\u043D\u0438\u0438."
+  category: 0
   priority: 100
   baseSuccessChance: 0.8
   minSuccessChance: 0.3
@@ -33,7 +34,8 @@ MonoBehaviour:
     strength: 0.5
   actionDuration: 30
   patrolPointsToVisit: 3
-  actionCooldown: 60
+  actionCooldown: 2
   minRankRequired: 0
   applicableRoles: 010000000200000007000000
   isUnique: 0
+  remoteHelpRadius: 3

@@ -60,7 +60,13 @@ public class HandleSituationExecutor : ActionExecutor
     clientToHelp.stateMachine.GetHelpFromIntern(goal);
 
     ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
+    if (clientToHelp != null)
+    {
+        clientToHelp.assignedHelper = null; // Освобождаем клиента
+    }
+
     FinishAction();
+    yield break;
 }
 
     // Вспомогательный метод для определения, куда на самом деле нужно клиенту
