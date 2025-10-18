@@ -11,26 +11,72 @@ public class HiringManager : MonoBehaviour
     public static HiringManager Instance { get; set; }
 
     [Header("Префабы сотрудников")]
-    public GameObject internPrefab;
+    [Tooltip("Пока используется только один префаб для всех ролей. В будущем можно будет расширить.")]
+    public GameObject internPrefab; // TODO: Заменить на список префабов для каждой роли
+    
     [Header("Базы данных")]
+	[Tooltip("Перетащите сюда все ассеты RoleData")]
 	public List<RoleData> allRoleData;
+    [Tooltip("Перетащите сюда ассет RankDatabase")]
+    public List<RankData> rankDatabase;
 	
     public List<StaffController> AllStaff = new List<StaffController>();
     public List<StaffController> UnassignedStaff = new List<StaffController>();
 
     private List<Transform> unassignedStaffPoints = new List<Transform>();
     private Dictionary<Transform, StaffController> occupiedPoints = new Dictionary<Transform, StaffController>();
-    [Header("Настройки генерации")]
-    public int minCandidatesPerDay = 2;
-    public int maxCandidatesPerDay = 4;
+    
+    [Header("Настройки генерации кандидатов")]
+    [Tooltip("Кривая, определяющая КОЛИЧЕСТВО стажеров в зависимости от дня. Ось X - день, Y - количество.")]
+    public AnimationCurve internCountOverTime = new AnimationCurve(new Keyframe(1, 4), new Keyframe(30, 1));
+    
+    [Tooltip("Кривая, определяющая КОЛИЧЕСТВО специалистов в зависимости от дня.")]
+    public AnimationCurve specialistCountOverTime = new AnimationCurve(new Keyframe(1, 0), new Keyframe(10, 1), new Keyframe(30, 3));
+    
+    [Tooltip("Кривая, определяющая ШАНС (0-1) появления опытного стажера (2-го или 3-го разряда) в зависимости от дня.")]
+    public AnimationCurve experiencedInternChance = new AnimationCurve(new Keyframe(1, 0), new Keyframe(5, 0.1f), new Keyframe(30, 0.5f));
+
+    [Header("Стоимость найма")]
     public int baseCost = 100;
     public int costPerSkillPoint = 150;
 
-    private List<string> firstNamesMale = new List<string> { "Виктор", "Иван", "Петр", "Семён", "Аркадий", "Борис", "Геннадий" };
-    private List<string> firstNamesFemale = new List<string> { "Анна", "Мария", "Ольга", "Светлана", "Ирина", "Валентина", "Галина" };
-    private List<string> lastNames = new List<string> { "Скрепкин", "Бланков", "Циркуляров", "Печаткин", "Архивариусов", "Формуляров" };
-    private List<string> patronymicsMale = new List<string> { "Радеонович", "Петрович", "Иванович", "Семёнович", "Аркадьевич", "Борисович", "Геннадьевич" };
-    private List<string> patronymicsFemale = new List<string> { "Радеоновна", "Петровна", "Ивановна", "Семёновна", "Аркадьевна", "Борисовна", "Геннадьевна" };
+    // --- РАСШИРЕННЫЕ СПИСКИ ИМЕН ---
+    private List<string> firstNamesMale = new List<string> 
+    { 
+        "Аркадий", "Иннокентий", "Пантелеймон", "Акакий", "Евграф", "Порфирий", 
+        "Лука", "Фома", "Прохор", "Варфоломей", "Ипполит", "Модест",
+        "Савва", "Корней", "Никанор", "Афанасий", "Ефим", "Игнат",
+        "Аполлон", "Власий", "Захар", "Климент", "Лаврентий", "Макар", "Поликарп"
+    };
+    private List<string> firstNamesFemale = new List<string> 
+    { 
+        "Аглая", "Евпраксия", "Пелагея", "Серафима", "Фёкла", "Глафира", 
+        "Агриппина", "Василиса", "Ефросинья", "Ираида", "Марфа", "Прасковья",
+        "Акулина", "Матрёна", "Степанида", "Анфиса", "Зинаида", "Варвара",
+        "Авдотья", "Евдокия", "Изольда", "Олимпиада", "Пульхерия", "Феврония"
+    };
+    private List<string> lastNames = new List<string> 
+    { 
+        "Перепискин", "Протоколов", "Архивариусов", "Гербовый", "Подшивайлов", "Нумеров", 
+        "Формуляров", "Циркуляров", "Бланков", "Скрепкин", "Печаткин", "Резолюцин",
+        "Визируйко", "Канцелярский", "Копиркин", "Чернилов", "Аттестатов", "Докладов",
+        "Входящий", "Исходящий", "Журналов", "Приказов", "Указов", "Описин"
+    };
+    private List<string> patronymicsMale = new List<string> 
+    { 
+        "Аркадьевич", "Иннокентьевич", "Пантелеймонович", "Акакиевич", "Евграфович", "Порфирьевич",
+        "Лукич", "Фомич", "Прохорович", "Варфоломеевич", "Ипполитович", "Модестович",
+        "Саввич", "Корнеевич", "Никанорович", "Афанасьевич", "Ефимович", "Игнатьевич",
+        "Аполлонович", "Власьевич", "Захарович", "Климентович", "Лаврентьевич", "Макарович"
+    };
+    private List<string> patronymicsFemale = new List<string> 
+    { 
+        "Аркадьевна", "Иннокентьевна", "Пантелеймоновна", "Акакиевна", "Евграфовна", "Порфирьевна",
+        "Лукинична", "Фоминична", "Прохоровна", "Варфоломеевна", "Ипполитовна", "Модестовна",
+        "Саввична", "Корнеевна", "Никаноровна", "Афанасьевна", "Ефимовна", "Игнатьевна",
+        "Аполлоновна", "Власьевна", "Захаровна", "Климентовна", "Лаврентьевна", "Макаровна"
+    };
+    // --- КОНЕЦ СПИСКОВ ИМЕН ---
 
     public List<Candidate> AvailableCandidates { get; private set; } = new List<Candidate>();
 	
@@ -128,10 +174,9 @@ public class HiringManager : MonoBehaviour
             string savedName = staff.characterName;
             Gender savedGender = staff.gender;
             CharacterSkills savedSkills = staff.skills;
-            int savedRank = staff.rank;
+            RankData savedRank = staff.currentRank; 
             int savedXP = staff.experiencePoints;
             int savedSalary = staff.salaryPerPeriod;
-            bool savedPromoStatus = staff.isReadyForPromotion;
             int savedUnpaidPeriods = staff.unpaidPeriods;
             int savedMissedPayments = staff.missedPaymentCount;
             List<string> savedWorkPeriods = new List<string>(staff.workPeriods);
@@ -157,10 +202,9 @@ public class HiringManager : MonoBehaviour
             newControllerReference.characterName = savedName;
             newControllerReference.gender = savedGender;
             newControllerReference.skills = savedSkills;
-            newControllerReference.rank = savedRank;
+            newControllerReference.currentRank = savedRank;
             newControllerReference.experiencePoints = savedXP;
             newControllerReference.salaryPerPeriod = savedSalary;
-            newControllerReference.isReadyForPromotion = savedPromoStatus;
             newControllerReference.unpaidPeriods = savedUnpaidPeriods;
             newControllerReference.missedPaymentCount = savedMissedPayments;
             newControllerReference.workPeriods = savedWorkPeriods;
@@ -195,7 +239,7 @@ public class HiringManager : MonoBehaviour
         }
         finally
         {
-            staffBeingModified.Remove(staff);
+            staffBeingModified.RemoveAll(s => s == null || s.gameObject == staff.gameObject);
         }
     }
 
@@ -238,21 +282,34 @@ public class HiringManager : MonoBehaviour
             }
         }
     }
-
-    public void PromoteStaff(StaffController staff)
-    {
-        if (staff == null || !staff.isReadyForPromotion) return;
-
-        RankData nextRankData = ExperienceManager.Instance.rankDatabase
-            .FirstOrDefault(r => r.rankLevel == staff.rank + 1);
-        if (nextRankData == null) return;
     
-        if (PlayerWallet.Instance.GetCurrentMoney() < nextRankData.promotionCost) return;
+    public void PromoteStaff(StaffController staff, RankData newRankData)
+    {
+        if (staff == null || newRankData == null) return;
+        
+        if (staff.experiencePoints < newRankData.experienceRequired) return;
+        if (PlayerWallet.Instance.GetCurrentMoney() < newRankData.promotionCost) return;
 
-        PlayerWallet.Instance.AddMoney(-nextRankData.promotionCost, Vector3.zero);
-        staff.rank = nextRankData.rankLevel;
-        staff.salaryPerPeriod = (int)(staff.salaryPerPeriod * nextRankData.salaryMultiplier);
-        staff.isReadyForPromotion = false;
+        PlayerWallet.Instance.AddMoney(-newRankData.promotionCost, $"Повышение: {staff.characterName}");
+
+        staff.currentRank = newRankData;
+        staff.salaryPerPeriod = (int)(staff.salaryPerPeriod * newRankData.salaryMultiplier);
+
+        if (newRankData.unlockedActions != null)
+        {
+            foreach (var action in newRankData.unlockedActions)
+            {
+                if (!staff.activeActions.Contains(action))
+                {
+                    staff.activeActions.Add(action);
+                }
+            }
+        }
+
+        if (staff.currentRole != newRankData.associatedRole)
+        {
+            AssignNewRole_Immediate(staff, newRankData.associatedRole, staff.activeActions);
+        }
     }
 
     public void ResetState()
@@ -282,17 +339,35 @@ public class HiringManager : MonoBehaviour
     public void GenerateNewCandidates()
     {
         AvailableCandidates.Clear();
-        int count = Random.Range(minCandidatesPerDay, maxCandidatesPerDay + 1);
-        for (int i = 0; i < count; i++)
+        int currentDay = ClientSpawner.Instance.GetCurrentDay();
+
+        int internsToCreate = Mathf.RoundToInt(internCountOverTime.Evaluate(currentDay));
+        int specialistsToCreate = Mathf.RoundToInt(specialistCountOverTime.Evaluate(currentDay));
+        float experiencedChance = experiencedInternChance.Evaluate(currentDay);
+
+        for (int i = 0; i < internsToCreate; i++)
         {
-            AvailableCandidates.Add(CreateRandomCandidate());
+            AvailableCandidates.Add(CreateRandomCandidate(StaffController.Role.Intern, experiencedChance));
         }
-        Debug.Log($"[HiringManager] Сгенерировано {AvailableCandidates.Count} новых кандидатов.");
+
+        for (int i = 0; i < specialistsToCreate; i++)
+        {
+            var specialistRoles = System.Enum.GetValues(typeof(StaffController.Role))
+                .Cast<StaffController.Role>()
+                .Where(r => r != StaffController.Role.Intern && r != StaffController.Role.Unassigned)
+                .ToList();
+            
+            StaffController.Role randomRole = specialistRoles[Random.Range(0, specialistRoles.Count)];
+            AvailableCandidates.Add(CreateRandomCandidate(randomRole, 0));
+        }
+        
+        Debug.Log($"[HiringManager] Сгенерировано {AvailableCandidates.Count} новых кандидатов ({internsToCreate} стажеров, {specialistsToCreate} специалистов).");
     }
 
-    private Candidate CreateRandomCandidate()
+    private Candidate CreateRandomCandidate(StaffController.Role role, float experiencedChance)
     {
         Candidate candidate = new Candidate();
+        candidate.Role = role;
         candidate.Gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
         
         if (candidate.Gender == Gender.Male)
@@ -311,17 +386,35 @@ public class HiringManager : MonoBehaviour
         candidate.Skills.pedantry = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         candidate.Skills.softSkills = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         candidate.Skills.corruption = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
+        
+        if (rankDatabase == null) 
+        {
+            Debug.LogError("RankDatabase не назначен в HiringManager!");
+            return null;
+        }
 
+        if (role == StaffController.Role.Intern && Random.value < experiencedChance)
+        {
+            int targetRankLevel = Random.Range(1, 3); // 1 = Стажер 2-го разряда, 2 = Опытный стажер
+            candidate.Rank = rankDatabase.FirstOrDefault(r => r.associatedRole == StaffController.Role.Intern && r.rankLevel == targetRankLevel);
+        }
+        else
+        {
+            // Находим ранг 0-го уровня для этой роли
+            candidate.Rank = rankDatabase.FirstOrDefault(r => r.associatedRole == role && r.rankLevel == 0);
+        }
+
+        if (candidate.Rank != null)
+        {
+            candidate.Experience = candidate.Rank.experienceRequired;
+        }
+        
         float totalSkillPoints = candidate.Skills.paperworkMastery + candidate.Skills.sedentaryResilience +
                                  candidate.Skills.pedantry + candidate.Skills.softSkills;
         candidate.HiringCost = baseCost + (int)(totalSkillPoints * costPerSkillPoint);
-		
-        candidate.Bio = ResumeGenerator.GenerateBio();
-        if (Random.value < 0.2f)
-        {
-            Debug.Log($"Сгенерирован кандидат {candidate.Name} с потенциальным уникальным навыком!");
-        }
+        if (candidate.Rank != null) candidate.HiringCost += candidate.Rank.promotionCost; // Добавляем стоимость "обучения"
 
+        candidate.Bio = ResumeGenerator.GenerateBio();
         return candidate;
     }
 
@@ -332,43 +425,63 @@ public class HiringManager : MonoBehaviour
         Transform freePoint = unassignedStaffPoints.FirstOrDefault(p => !occupiedPoints.ContainsKey(p));
         if (freePoint == null) return false;
 
-        RoleData internRoleData = allRoleData.FirstOrDefault(data => data.roleType == StaffController.Role.Intern);
-        if (internRoleData == null) return false;
+        RoleData roleData = allRoleData.FirstOrDefault(data => data.roleType == candidate.Role);
+        GameObject prefabToSpawn = GetPrefabForRole(candidate.Role); // Используем хелпер
 
-        PlayerWallet.Instance.AddMoney(-candidate.HiringCost, $"Найм: {candidate.Name}");
-        
-        GameObject newStaffGO = Instantiate(internPrefab, freePoint.position, Quaternion.identity);
-        InternController internController = newStaffGO.GetComponent<InternController>();
-
-        if (internController != null)
+        if (roleData == null || prefabToSpawn == null) 
         {
-            internController.characterName = candidate.Name;
-            internController.skills = candidate.Skills;
-            internController.gender = candidate.Gender;
-            
-            internController.Initialize(internRoleData);
+            Debug.LogError($"Не найдены данные или префаб для роли {candidate.Role}!");
+            return false;
+        }
+        
+        GameObject newStaffGO = Instantiate(prefabToSpawn, freePoint.position, Quaternion.identity);
+        StaffController staffController = newStaffGO.GetComponent<StaffController>(); // Получаем базовый контроллер
 
-            // 1. Копируем ссылку на базу системных действий от первого попавшегося сотрудника на сцене.
+        if (staffController != null)
+        {
+            staffController.characterName = candidate.Name;
+            staffController.skills = candidate.Skills;
+            staffController.gender = candidate.Gender;
+            staffController.currentRank = candidate.Rank;
+            staffController.experiencePoints = candidate.Experience;
+			
+			if (staffController.currentRank != null && staffController.currentRank.unlockedActions != null)
+{
+    // Назначаем действия, разблокированные начальным рангом
+    staffController.activeActions = new List<StaffAction>(
+        staffController.currentRank.unlockedActions
+            .Where(action => action != null && action.category == ActionCategory.Tactic) // Убедимся, что добавляются только тактические действия
+    );
+    Debug.Log($"Назначено {staffController.activeActions.Count} стартовых действий для {staffController.characterName} на основе Ранга {staffController.currentRank.rankLevel} ({staffController.currentRank.rankName}).");
+}
+else
+{
+    staffController.activeActions = new List<StaffAction>(); // Убедимся, что список существует, даже если пуст
+    Debug.LogWarning($"Стартовый ранг или его действия были null для {staffController.characterName}. Стартовые действия не назначены.");
+}
+
+            staffController.Initialize(roleData);
+            
+            // Назначаем системные действия
             var existingStaff = AllStaff.FirstOrDefault(s => s != null && s.systemActionDatabase != null);
             if (existingStaff != null)
             {
-                internController.systemActionDatabase = existingStaff.systemActionDatabase;
+                staffController.systemActionDatabase = existingStaff.systemActionDatabase;
             }
 
-            // 2. Назначаем расписание на все периоды по умолчанию
+            // Назначаем расписание по умолчанию
             if (ClientSpawner.Instance != null && ClientSpawner.Instance.mainCalendar != null)
             {
-                internController.workPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
+                staffController.workPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
             }
 
-            AllStaff.Add(internController);
-            UnassignedStaff.Add(internController);
+            AllStaff.Add(staffController);
+            UnassignedStaff.Add(staffController);
             newStaffGO.name = candidate.Name;
-            occupiedPoints.Add(freePoint, internController);
+            occupiedPoints.Add(freePoint, staffController);
             AvailableCandidates.Remove(candidate);
             
-            internController.StartShift();
-            
+            staffController.StartShift();
             Debug.Log($"Нанят сотрудник {candidate.Name}. Он немедленно приступает к работе.");
             return true;
         }
@@ -377,8 +490,15 @@ public class HiringManager : MonoBehaviour
         PlayerWallet.Instance.AddMoney(candidate.HiringCost, Vector3.zero);
         return false;
     }
+    
+    private GameObject GetPrefabForRole(StaffController.Role role)
+    {
+        // TODO: В будущем здесь будет switch-case, возвращающий разные префабы
+        // для охранника, уборщика и т.д. Пока все создаются из "универсального".
+        return internPrefab;
+    }
 	
-	private StaffController.Role GetRoleForDeskId(int deskId)
+	public StaffController.Role GetRoleForDeskId(int deskId)
     {
         if (deskId == 0) return StaffController.Role.Registrar;
         if (deskId == -1) return StaffController.Role.Cashier;
@@ -391,8 +511,7 @@ public class HiringManager : MonoBehaviour
     public void FireStaff(StaffController staffToFire)
     {
         if (staffToFire == null) return;
-        Debug.Log($"Отдана команда на увольнение сотрудника {staffToFire.characterName}!");
-
+        
         if(AllStaff.Contains(staffToFire)) AllStaff.Remove(staffToFire);
         if(UnassignedStaff.Contains(staffToFire)) UnassignedStaff.Remove(staffToFire);
         if (occupiedPoints.ContainsValue(staffToFire))
@@ -412,7 +531,7 @@ public class HiringManager : MonoBehaviour
         string currentPeriod = ClientSpawner.CurrentPeriodName;
         if (string.IsNullOrEmpty(currentPeriod)) return;
         Debug.Log($"<color=orange>ПРОВЕРКА СМЕН:</color> Проверка расписания для периода '{currentPeriod}'...");
-        foreach (var staff in AllStaff.ToList()) // ToList() creates a copy to allow modification during iteration
+        foreach (var staff in AllStaff.ToList())
         {
             if (staff == null) continue;
             bool isScheduledNow = staff.workPeriods.Contains(currentPeriod);

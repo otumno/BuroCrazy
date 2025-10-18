@@ -10,12 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: da71029bba7bc5443be40737c2c47fe9, type: 3}
-  m_Name: Rank_1_Junior
+  m_Name: Rank_1_Guard_1
   m_EditorClassIdentifier: 
   rankLevel: 1
-  rankName: "\u041C\u043B\u0430\u0434\u0448\u0438\u0439 \u0421\u043E\u0442\u0440\u0443\u0434\u043D\u0438\u043A"
+  rankName: "\u0420\u044F\u0434\u043E\u0432\u043E\u0439 \u041E\u0445\u0440\u0430\u043D\u043D\u0438\u043A"
   experienceRequired: 1000
   promotionCost: 300
+  salaryMultiplier: 1.4
+  maxActions: 1
   workPeriodsCount: 4
-  salaryMultiplier: 1.3
-  maxActions: 3
+  associatedRole: 5
+  unlockedActions:
+  - {fileID: 11400000, guid: dbc0878d1dbb735448fe640cc2aca6d8, type: 2}
+  - {fileID: 11400000, guid: 1426bd41c8aeda743b18fe9589637f49, type: 2}
+  possiblePromotions:
+  - {fileID: 11400000, guid: 7b13b1d77d932c1478f7a0bfb2ac3095, type: 2}

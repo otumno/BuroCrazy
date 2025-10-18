@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Data/Actions/CoverDeskExecutor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -9,7 +8,7 @@ public class CoverDeskExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var intern = staff as InternController;
-        if (intern == null) { FinishAction(); yield break; }
+        if (intern == null) { FinishAction(false); yield break; }
 
         ClerkController.ClerkRole targetRole;
 
@@ -21,26 +20,27 @@ public class CoverDeskExecutor : ActionExecutor
             targetRole = ClerkController.ClerkRole.Cashier;
         else
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
         var clerkOnBreak = HiringManager.Instance.AllStaff.OfType<ClerkController>()
             .FirstOrDefault(c => c.role == targetRole && c.IsOnBreak());
-        if (clerkOnBreak == null || clerkOnBreak.assignedWorkstation == null) { FinishAction(); yield break; }
+        if (clerkOnBreak == null || clerkOnBreak.assignedWorkstation == null) { FinishAction(false); yield break; }
 
         var targetPoint = clerkOnBreak.assignedWorkstation;
         intern.SetState(InternController.InternState.CoveringDesk);
         intern.thoughtBubble?.ShowPriorityMessage("Подменю!", 2f, Color.cyan);
         yield return staff.StartCoroutine(intern.MoveToTarget(targetPoint.clerkStandPoint.position, InternController.InternState.CoveringDesk));
+        
         intern.AssignCoveredWorkstation(targetPoint);
         ClientSpawner.AssignServiceProviderToDesk(intern, targetPoint.deskId);
-        Debug.Log($"{intern.name} подменяет {clerkOnBreak.name} на посту.");
+        
         yield return new WaitUntil(() => clerkOnBreak == null || !clerkOnBreak.IsOnBreak());
-        Debug.Log($"{clerkOnBreak.name} вернулся. {intern.name} уходит с поста.");
+        
         ClientSpawner.UnassignServiceProviderFromDesk(targetPoint.deskId);
         intern.AssignCoveredWorkstation(null);
         intern.SetState(InternController.InternState.Patrolling);
-        FinishAction();
+        FinishAction(true);
     }
 }

@@ -4,15 +4,12 @@ using System.Collections;
 public class GoToJanitorHomeExecutor : ActionExecutor
 {
     public override bool IsInterruptible => true;
-
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is ServiceWorkerController worker)) { FinishAction(); yield break; }
+        if (!(staff is ServiceWorkerController worker)) { FinishAction(false); yield break; }
         
-        // Расчет времени ожидания по вашей формуле
         float actualMaxWait = worker.maxIdleWait * (1f - worker.skills.pedantry);
         float waitTime = Random.Range(worker.minIdleWait, actualMaxWait);
-        Debug.Log($"{worker.name} будет бездействовать {waitTime:F1} секунд (Педантичность: {worker.skills.pedantry:P0}).");
 
         Transform homePoint = ScenePointsRegistry.Instance?.janitorHomePoint;
         if (homePoint != null)
@@ -22,8 +19,6 @@ public class GoToJanitorHomeExecutor : ActionExecutor
         }
 
         yield return new WaitForSeconds(waitTime);
-        
-        // Завершаем действие, чтобы AI мог начать новый цикл
-        FinishAction();
+        FinishAction(true);
     }
 }

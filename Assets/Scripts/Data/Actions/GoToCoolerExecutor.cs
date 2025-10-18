@@ -1,19 +1,16 @@
-// Файл: Assets/Scripts/Data/Actions/GoToCoolerExecutor.cs
 using UnityEngine;
 using System.Collections;
 
 public class GoToCoolerExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => true; // Разговор у кулера можно прервать
+    public override bool IsInterruptible => true;
 
     protected override IEnumerator ActionRoutine()
     {
-        // Предполагаем, что у вас будет точка для кулера в ScenePointsRegistry
-        // Если нет, можно использовать любую другую точку отдыха, например, кухню
         Transform coolerPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
         if (coolerPoint == null)
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
@@ -21,19 +18,16 @@ public class GoToCoolerExecutor : ActionExecutor
         
         if (staff is ClerkController clerk)
         {
-            clerk.SetState(ClerkController.ClerkState.GoingToBreak); // Используем общее состояние
+            clerk.SetState(ClerkController.ClerkState.GoingToBreak);
             yield return staff.StartCoroutine(staff.MoveToTarget(coolerPoint.position, ClerkController.ClerkState.OnBreak.ToString()));
         }
-        // ... здесь можно добавить логику для других типов сотрудников ...
-
+        
         yield return new WaitForSeconds(Random.Range(10f, 20f));
 
-        // Эффекты: повышает мораль, но и потребность сходить в туалет
         staff.morale = 1f;
-        staff.bladder = Mathf.Clamp01(staff.bladder + 0.3f); // +30% к bladder
+        staff.bladder = Mathf.Clamp01(staff.bladder + 0.3f);
         
         ScenePointsRegistry.Instance.FreeKitchenPoint(coolerPoint);
-        Debug.Log($"[AI Needs] {staff.name} пообщался у кулера. Мораль восстановлена.");
-        FinishAction();
+        FinishAction(true);
     }
 }

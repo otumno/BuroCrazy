@@ -92,19 +92,16 @@ public class HiringPanelUI : MonoBehaviour
         switch (currentSortMode)
         {
             case SortMode.ByName:
-                allStaff = isSortAscending 
-                    ? allStaff.OrderBy(staff => staff.characterName).ToList() 
-                    : allStaff.OrderByDescending(staff => staff.characterName).ToList();
+                allStaff = isSortAscending ? allStaff.OrderBy(s => s.characterName).ToList() : allStaff.OrderByDescending(s => s.characterName).ToList();
                 break;
             case SortMode.ByRole:
-                allStaff = isSortAscending 
-                    ? allStaff.OrderBy(staff => staff.currentRole.ToString()).ToList() 
-                    : allStaff.OrderByDescending(staff => staff.currentRole.ToString()).ToList();
+                allStaff = isSortAscending ? allStaff.OrderBy(s => s.currentRole.ToString()).ToList() : allStaff.OrderByDescending(s => s.currentRole.ToString()).ToList();
                 break;
             case SortMode.ByRank:
+                // Сортируем по уровню ранга, если он есть
                 allStaff = isSortAscending 
-                    ? allStaff.OrderBy(staff => staff.rank).ToList() 
-                    : allStaff.OrderByDescending(staff => staff.rank).ToList();
+                    ? allStaff.OrderBy(s => s.currentRank != null ? s.currentRank.rankLevel : -1).ToList() 
+                    : allStaff.OrderByDescending(s => s.currentRank != null ? s.currentRank.rankLevel : -1).ToList();
                 break;
         }
 

@@ -265,7 +265,7 @@ public class ClientStateMachine : MonoBehaviour
         if (zonePatienceCoroutine != null) StopCoroutine(zonePatienceCoroutine);
         zonePatienceCoroutine = null;
         SetGoal(freeSpot);
-        SetState(ClientState.InsideLimitedZone);
+        SetState(ClientState.MovingToGoal);
         if (parent.mainGoal == ClientGoal.DirectorApproval && targetZone == ClientSpawner.Instance.directorReceptionZone)
         {
             StartOfDayPanel directorsDesk = StartOfDayPanel.Instance;
@@ -317,54 +317,58 @@ public class ClientStateMachine : MonoBehaviour
     
     // ----- ИЗМЕНЕНИЕ: Этот метод теперь вызывается, когда мы подходим к любой точке назначения -----
     private void HandleArrivalAfterMove()
-    {
-        Waypoint dest = GetCurrentGoal();
-        if (dest == null) { SetState(ClientState.Confused); return; }
+{
+    Waypoint dest = GetCurrentGoal();
+    if (dest == null) { SetState(ClientState.Confused); return; }
 
-        // Если мы прибыли к стойке обслуживания (неважно какой)
-        if (myServiceProvider != null && myServiceProvider.GetWorkstation() != null && dest == myServiceProvider.GetWorkstation().clientStandPoint)
+    // --- НОВАЯ УНИВЕРСАЛЬНАЯ ПРОВЕРКА ---
+    // Проверяем, является ли точка, куда мы пришли, местом обслуживания (например, стул у стола клерка)
+    if (dest.isServicePoint)
+    {
+        // Находим зону, к которой относится эта точка
+        var owningZone = dest.GetComponentInParent<LimitedCapacityZone>();
+        if (owningZone != null)
         {
-            ClientQueueManager.Instance.ClientArrivedAtDesk(myQueueNumber);
-            int deskId = myServiceProvider.GetWorkstation().deskId;
-            targetZone = ClientSpawner.GetZoneByDeskId(deskId); 
+            // "Прописываемся" в этой зоне на этом конкретном месте
+            owningZone.ManuallyOccupyWaypoint(dest, parent.gameObject);
             
-            if (targetZone == null)
-            {
-                Debug.LogError($"[ClientStateMachine] Не удалось найти LimitedCapacityZone для deskId {deskId}! Клиент {parent.name} переведен в Confused.", parent.gameObject);
-                SetState(ClientState.Confused);
-                return;
-            }
-			
-			targetZone.ManuallyOccupyWaypoint(dest, parent.gameObject);
-			
-            // Меняем состояние на "Внутри зоны", где мы будем пассивно ждать
+            // Запоминаем, в какой зоне мы теперь находимся
+            targetZone = owningZone;
+            
+            // Теперь мы внутри и готовы к обслуживанию
             SetState(ClientState.InsideLimitedZone);
             return;
         }
-        
-        // --- Логика прибытия в другие места остается без изменений ---
-        targetZone = FindObjectsByType<LimitedCapacityZone>(FindObjectsSortMode.None).FirstOrDefault(z => z.waitingWaypoint == dest);
-        if (targetZone != null)
-        {
-            SetState(ClientState.AtLimitedZoneEntrance);
-            return;
-        }
-        if (ClientQueueManager.Instance.IsWaypointInWaitingZone(dest))
-        {
-            ClientQueueManager.Instance.JoinQueue(parent);
-            Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
-            if (seat != null) { GoToSeat(seat); } else { SetState(ClientState.AtWaitingArea); }
-            return;
-        }
-        if (ClientSpawner.Instance.formTable != null && dest == ClientSpawner.Instance.formTable.tableWaypoint)
-        {
-            StartCoroutine(GetFormFromTableRoutine());
-            return;
-        }
-        
-        Debug.LogWarning($"{name} arrived at {dest.name}, but doesn't know what to do next.");
-        SetState(ClientState.Confused);
     }
+    // --- КОНЕЦ НОВОЙ ПРОВЕРКИ ---
+
+    // Проверяем, не прибыли ли мы ко входу в очередь зоны
+    var newTargetZone = FindObjectsByType<LimitedCapacityZone>(FindObjectsSortMode.None).FirstOrDefault(z => z.waitingWaypoint == dest);
+    if (newTargetZone != null)
+    {
+        targetZone = newTargetZone;
+        SetState(ClientState.AtLimitedZoneEntrance);
+        return;
+    }
+    
+    // (Остальная часть метода для сидений, стола с бланками и т.д. остается без изменений)
+    if (ClientQueueManager.Instance.IsWaypointInWaitingZone(dest))
+    {
+        ClientQueueManager.Instance.JoinQueue(parent);
+        Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
+        if (seat != null) { GoToSeat(seat); } else { SetState(ClientState.AtWaitingArea); }
+        return;
+    }
+    
+    if (ClientSpawner.Instance.formTable != null && dest == ClientSpawner.Instance.formTable.tableWaypoint)
+    {
+        StartCoroutine(GetFormFromTableRoutine());
+        return;
+    }
+    
+    Debug.LogWarning($"{name} прибыл в {dest.name}, но не знает, что делать дальше.");
+    SetState(ClientState.Confused);
+}
     public void SetState(ClientState newState)
     {
         if (newState == currentState) return;

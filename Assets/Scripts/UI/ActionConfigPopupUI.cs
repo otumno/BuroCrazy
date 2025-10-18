@@ -22,7 +22,7 @@ public class ActionConfigPopupUI : MonoBehaviour
     [SerializeField] private ActionDropZone activeActionsDropZone;
     [Header("Префабы и данные")]
     [SerializeField] private GameObject actionIconPrefab;
-    [SerializeField] private ActionDatabase actionDatabase;
+    [SerializeField] private ActionDatabase actionDatabase; // Оставляем на случай, если он нужен для чего-то еще
     
     private StaffController currentStaff;
     private RankData currentRank;
@@ -41,7 +41,7 @@ public class ActionConfigPopupUI : MonoBehaviour
     public void OpenForStaff(StaffController staff)
     {
         this.currentStaff = staff;
-        this.currentRank = ExperienceManager.Instance.GetRankByXP(staff.experiencePoints);
+        this.currentRank = staff.currentRank; 
         this.tempActiveActions = new List<StaffAction>(staff.activeActions);
         gameObject.SetActive(true);
 
@@ -51,77 +51,76 @@ public class ActionConfigPopupUI : MonoBehaviour
         PopulateActionLists();
     }
 
+    // ----- ГЛАВНОЕ ИЗМЕНЕНИЕ ЗДЕСЬ -----
     private void PopulateActionLists()
     {
         foreach (Transform child in availableActionsContent) { Destroy(child.gameObject); }
         foreach (Transform child in activeActionsContent) { Destroy(child.gameObject); }
 
-        if (actionDatabase == null || currentStaff == null) return;
+        if (currentStaff == null || currentRank == null || ExperienceManager.Instance == null) 
+        {
+            UpdateUIState();
+            return;
+        }
+        
+        // 1. Берем роль, выбранную в DROPDOWN
         string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
         StaffController.Role roleToShow = GetRoleEnumFromRussian(selectedRoleName);
-        
-        // ----- ИЗМЕНЕНИЕ ЗДЕСЬ -----
-        // Теперь мы выбираем только действия с категорией Tactic
-        List<StaffAction> allAvailableActions = actionDatabase.allActions
-            .Where(action => action.category == ActionCategory.Tactic && // <--- ВОТ НОВЫЙ ФИЛЬТР
-                             action.minRankRequired <= currentStaff.rank && 
-                             action.applicableRoles.Contains(roleToShow))
-            .ToList();
-        
-        foreach (var activeAction in tempActiveActions)
-        {
-            if (allAvailableActions.Contains(activeAction))
-            {
-                InstantiateActionIcon(activeAction, activeActionsContent);
-            }
-        }
 
-        foreach (var availableAction in allAvailableActions)
+        // 2. Берем ТЕКУЩИЙ ранг сотрудника
+        int currentLevel = currentStaff.currentRank.rankLevel;
+        StaffController.Role staffsActualRole = currentStaff.currentRole;
+
+        List<StaffAction> allAvailableActions = new List<StaffAction>();
+
+        // 3. Если роль в дропдауне - это текущая роль сотрудника, показываем его реальный прогресс
+        if (roleToShow == staffsActualRole)
         {
-            if (!tempActiveActions.Contains(availableAction))
+            allAvailableActions = ExperienceManager.Instance.rankDatabase
+                .Where(rank => rank.associatedRole == staffsActualRole && // Совпадает ветка роли
+                               rank.rankLevel <= currentLevel)     // Ранг ниже или равен текущему
+                .SelectMany(rank => rank.unlockedActions) // Берем списки действий из ВСЕХ этих рангов
+                .Where(action => action != null && action.category == ActionCategory.Tactic) // Только тактические
+                .Distinct() // Убираем дубликаты
+                .ToList();
+        }
+        // 4. Если игрок выбрал в дропдауне ДРУГУЮ роль (для просмотра)
+        else
+        {
+            // Находим *базовый* ранг (уровень 0) для этой НОВОЙ роли
+            RankData baseRankForNewRole = ExperienceManager.Instance.rankDatabase
+                .FirstOrDefault(rank => rank.associatedRole == roleToShow && rank.rankLevel == 0);
+            
+            if (baseRankForNewRole != null)
             {
-                InstantiateActionIcon(availableAction, availableActionsContent);
+                // Показываем только те действия, которые даются на 1-м уровне этой новой роли
+                allAvailableActions = baseRankForNewRole.unlockedActions
+                    .Where(action => action != null && action.category == ActionCategory.Tactic)
+                    .Distinct()
+                    .ToList();
+            }
+            // Если базового ранга нет, 'allAvailableActions' останется пустым, что корректно
+        }
+        
+        // 5. Очищаем временный список от действий, которые больше не доступны (из-за смены роли)
+        tempActiveActions.RemoveAll(action => !allAvailableActions.Contains(action));
+
+        // 6. Размещаем иконки в правильные списки
+        foreach (var action in allAvailableActions)
+        {
+            if(tempActiveActions.Contains(action))
+            {
+                 InstantiateActionIcon(action, activeActionsContent);
+            }
+            else
+            {
+                InstantiateActionIcon(action, availableActionsContent);
             }
         }
         
         UpdateUIState();
     }
-
-    // (Остальная часть скрипта остается без изменений)
-    #region Unchanged Methods
-    public bool CanAddAction()
-    {
-        if (currentRank == null) return false;
-        return tempActiveActions.Count < currentRank.maxActions;
-    }
-
-    public void OnActionDropped(StaffAction action, ActionDropZone.ZoneType targetZoneType)
-    {
-        if (targetZoneType == ActionDropZone.ZoneType.Active)
-        {
-            if (!tempActiveActions.Contains(action))
-            {
-                tempActiveActions.Add(action);
-            }
-        }
-        else 
-        {
-            if (tempActiveActions.Contains(action))
-            {
-                tempActiveActions.Remove(action);
-            }
-        }
-        UpdateUIState();
-    }
-    
-    private void UpdateUIState()
-    {
-        if (currentRank != null && activeActionsHeaderText != null)
-        {
-            activeActionsHeaderText.text = $"Активные действия ({tempActiveActions.Count}/{currentRank.maxActions})";
-        }
-        saveButton.interactable = tempActiveActions.Count > 0;
-    }
+    // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
 
     private void OnSave()
     {
@@ -142,10 +141,8 @@ public class ActionConfigPopupUI : MonoBehaviour
         {
             string selectedOptionText = workstationDropdown.options[workstationDropdown.value].text;
             string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
-
             var selectedPoint = ScenePointsRegistry.Instance.allServicePoints
                 .FirstOrDefault(p => GetWorkstationFriendlyName(p) == friendlyNameFromDropdown);
-
             if (selectedPoint != null)
             {
                 AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint);
@@ -159,30 +156,51 @@ public class ActionConfigPopupUI : MonoBehaviour
         {
             AssignmentManager.Instance.UnassignStaff(currentStaff);
         }
-
-        List<StaffAction> newActionsToAssign = new List<StaffAction>();
-    foreach (Transform iconTransform in activeActionsContent)
-    {
-        ActionIconUI iconUI = iconTransform.GetComponent<ActionIconUI>();
-        if (iconUI != null) { newActionsToAssign.Add(iconUI.actionData); }
-    }
-
-    // ВЫВОДИМ В КОНСОЛЬ РЕЗУЛЬТАТ СБОРА ДЕЙСТВИЙ
-    var actionNames = newActionsToAssign.Select(a => a.actionType.ToString());
-    Debug.Log($"<color=cyan>[ActionConfigPopupUI.OnSave]</color> Сохраняем для '{currentStaff.characterName}' следующие тактические действия: [{string.Join(", ", actionNames)}]");
-    
-    // Проверяем, есть ли среди них искомое действие
-    bool hasBookkeeping = newActionsToAssign.Any(a => a.actionType == ActionType.DoBookkeeping);
-    Debug.Log($"<color={(hasBookkeeping ? "green" : "red")}>[ActionConfigPopupUI.OnSave]</color> Наличие действия 'DoBookkeeping' в списке: {hasBookkeeping}");
-
-    // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
         
-        HiringManager.Instance.AssignNewRole_Immediate(currentStaff, newRole, newActionsToAssign);
+        var actionNames = tempActiveActions.Select(a => a.actionType.ToString());
+        Debug.Log($"<color=cyan>[ActionConfigPopupUI.OnSave]</color> Сохраняем для '{currentStaff.characterName}' следующие тактические действия: [{string.Join(", ", actionNames)}]");
+
+        HiringManager.Instance.AssignNewRole_Immediate(currentStaff, newRole, new List<StaffAction>(tempActiveActions));
+        
         gameObject.SetActive(false);
         FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
         HiringManager.Instance?.CheckAllStaffShiftsImmediately();
     }
+    
+    public bool CanAddAction()
+    {
+        if (currentRank == null) return false;
+        return tempActiveActions.Count < currentRank.maxActions;
+    }
 
+    public void OnActionDropped(StaffAction action, ActionDropZone.ZoneType targetZoneType)
+    {
+        if (targetZoneType == ActionDropZone.ZoneType.Active)
+        {
+            if (!tempActiveActions.Contains(action) && CanAddAction())
+            {
+                tempActiveActions.Add(action);
+            }
+        }
+        else 
+        {
+            if (tempActiveActions.Contains(action))
+            {
+                tempActiveActions.Remove(action);
+            }
+        }
+        PopulateActionLists();
+    }
+    
+    private void UpdateUIState()
+    {
+        if (currentRank != null && activeActionsHeaderText != null)
+        {
+            activeActionsHeaderText.text = $"Тактические действия ({tempActiveActions.Count}/{currentRank.maxActions})";
+        }
+        saveButton.interactable = true;
+    }
+    
     private void OnCancel()
     {
         gameObject.SetActive(false);
@@ -190,11 +208,11 @@ public class ActionConfigPopupUI : MonoBehaviour
     
     private void OnRoleSelectionChanged()
     {
-        string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
-        StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
-
         tempActiveActions.Clear();
         PopulateActionLists();
+        
+        string selectedRoleName = roleDropdown.options[roleDropdown.value].text;
+        StaffController.Role newRole = GetRoleEnumFromRussian(selectedRoleName);
         PopulateWorkstationDropdown(newRole);
     }
     
@@ -213,7 +231,7 @@ public class ActionConfigPopupUI : MonoBehaviour
         {
             roleDropdown.SetValueWithoutNotify(currentIndex);
         }
-        roleDropdown.interactable = currentStaff.rank > 0;
+        roleDropdown.interactable = currentStaff.currentRank != null;
     }
 
     private void PopulateShiftDropdown()
@@ -235,6 +253,21 @@ public class ActionConfigPopupUI : MonoBehaviour
         UpdateShiftInfoText();
     }
 
+    private void UpdateShiftInfoText()
+    {
+        if (currentStaff == null || currentStaff.currentRank == null) return;
+        
+        int duration = currentRank.workPeriodsCount;
+        List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
+        int startIndex = shiftDropdown.value;
+        
+        string startPeriodName = allPeriods[startIndex];
+        int endIndex = (startIndex + duration - 1) % allPeriods.Count;
+        string endPeriodName = allPeriods[endIndex];
+        
+        shiftDurationText.text = $"Периодов: {duration}. С {startPeriodName} по {endPeriodName}";
+    }
+    
     private void PopulateWorkstationDropdown(StaffController.Role role)
     {
         workstationDropdown.ClearOptions();
@@ -246,12 +279,10 @@ public class ActionConfigPopupUI : MonoBehaviour
         if (suitablePoints.Any())
         {
             workstationDropdown.gameObject.SetActive(true);
-
             foreach (var point in suitablePoints)
             {
                 var assignedStaff = AssignmentManager.Instance.GetAssignedStaff(point);
                 string optionText = GetWorkstationFriendlyName(point);
-
                 if (assignedStaff != null && assignedStaff != currentStaff)
                 {
                     string periods = string.Join(", ", assignedStaff.workPeriods);
@@ -290,22 +321,6 @@ public class ActionConfigPopupUI : MonoBehaviour
         {
             iconUI.Setup(action);
         }
-    }
-
-    private void UpdateShiftInfoText()
-    {
-        if (ClientSpawner.Instance == null || ClientSpawner.Instance.mainCalendar == null || ExperienceManager.Instance == null || currentStaff == null) return;
-        RankData currentRankData = ExperienceManager.Instance.GetRankByXP(currentStaff.experiencePoints);
-        int duration = (currentRankData != null) ? currentRankData.workPeriodsCount : 3;
-
-        List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).ToList();
-        int startIndex = shiftDropdown.value;
-        
-        string startPeriodName = allPeriods[startIndex];
-        int endIndex = (startIndex + duration - 1) % allPeriods.Count;
-        string endPeriodName = allPeriods[endIndex];
-        
-        shiftDurationText.text = $"Периодов: {duration}. С {startPeriodName} по {endPeriodName}";
     }
     
     private string GetRoleNameInRussian(StaffController.Role role)
@@ -348,11 +363,9 @@ public class ActionConfigPopupUI : MonoBehaviour
     private StaffController.Role GetRoleForDeskId(int deskId)
     {
         if (deskId == 0) return StaffController.Role.Registrar;
-        if (deskId == -1) return StaffController.Role.Cashier;
         if (deskId == 1 || deskId == 2) return StaffController.Role.Clerk;
         if (deskId == 3) return StaffController.Role.Archivist;
-        if (deskId == 4) return StaffController.Role.Cashier;
+        if (deskId == -1 || deskId == 4) return StaffController.Role.Cashier;
         return StaffController.Role.Unassigned;
     }
-    #endregion
 }

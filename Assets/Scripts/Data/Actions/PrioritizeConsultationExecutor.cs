@@ -3,24 +3,29 @@ using System.Collections;
 
 public class PrioritizeConsultationExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => false;
+    public override bool IsInterruptible => false; // Это быстрое действие, прерывать нет смысла
 
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is ClerkController registrar)) { FinishAction(); yield break; }
+        // Проверяем, что сотрудник может оказывать услуги (является IServiceProvider)
+        if (!(staff is IServiceProvider provider)) 
+        { 
+            FinishAction(false); 
+            yield break; 
+        }
 
-        registrar.thoughtBubble?.ShowPriorityMessage("Следующий, кто просто спросить!", 2f, Color.green);
-
-        // Вызываем наш новый метод в менеджере очереди
-        bool success = ClientQueueManager.Instance.CallClientWithSpecificGoal(ClientGoal.AskAndLeave, registrar);
-
+        staff.thoughtBubble?.ShowPriorityMessage("Кто просто спросить?", 2f, Color.green);
+        
+        // Вызываем метод в менеджере очереди, чтобы он нашел и позвал нужного клиента
+        bool success = ClientQueueManager.Instance.CallClientWithSpecificGoal(ClientGoal.AskAndLeave, provider);
+        
         if (success)
         {
             ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         }
 
-        // Это "мгновенное" действие, оно не занимает много времени
+        // Это "мгновенное" действие, даем небольшую паузу и завершаем
         yield return new WaitForSeconds(1f);
-        FinishAction();
+        FinishAction(success);
     }
 }

@@ -118,48 +118,96 @@ public class InternController : StaffController, IServiceProvider
     }
 
     private IEnumerator InternServiceRoutine(ClientPathfinding client)
-    {
-        if (coveredServicePoint == null) yield break;
+{
+    if (coveredServicePoint == null) yield break;
+    int deskId = coveredServicePoint.deskId;
 
-        int deskId = coveredServicePoint.deskId;
+    if (deskId == 0) // Если подменяем регистратора
+    {
         thoughtBubble?.ShowPriorityMessage("Попробую помочь...", 2f, Color.yellow);
         yield return new WaitForSeconds(3f); // Стажер работает медленнее
 
-        if (deskId == 0) // Если подменяем регистратора
+        Waypoint destination = DetermineCorrectGoalForClient(client);
+        string destName = string.IsNullOrEmpty(destination.friendlyName) ? destination.name : destination.friendlyName;
+
+        float errorChance = 0.4f * (1f - skills.pedantry);
+        if(Random.value < errorChance)
         {
-            Waypoint destination = DetermineCorrectGoalForClient(client);
-            string destName = string.IsNullOrEmpty(destination.friendlyName) ? destination.name : destination.friendlyName;
-
-            float errorChance = 0.4f * (1f - skills.pedantry);
-            if(Random.value < errorChance)
-            {
-                 thoughtBubble?.ShowPriorityMessage("Ой, кажется, вам\nтуда...", 3f, Color.red);
-            }
-            else
-            {
-                 thoughtBubble?.ShowPriorityMessage($"Вам к '{destName}'", 3f, Color.white);
-            }
-
-            if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance.RemoveClientFromQueue(client);
-            client.stateMachine.SetGoal(destination);
-            client.stateMachine.SetState(ClientState.MovingToGoal);
+             thoughtBubble?.ShowPriorityMessage("Ой, кажется, вам\nтуда...", 3f, Color.red);
         }
-        else if (deskId == -1) // Если подменяем кассира
+        else
         {
-            if (client.billToPay > 0)
-            {
-                PlayerWallet.Instance?.AddMoney(client.billToPay, transform.position);
-                if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
-                client.billToPay = 0;
-                coveredServicePoint.documentStack?.AddDocumentToStack();
-                thoughtBubble?.ShowPriorityMessage("Оплачено!", 2f, Color.green);
-            }
-            client.isLeavingSuccessfully = true;
-            client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-            client.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
-            client.stateMachine.SetState(ClientState.Leaving);
+             thoughtBubble?.ShowPriorityMessage($"Вам к '{destName}'", 3f, Color.white);
+        }
+
+        if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance.RemoveClientFromQueue(client);
+        client.stateMachine.SetGoal(destination);
+        client.stateMachine.SetState(ClientState.MovingToGoal);
+    }
+    else if (deskId == -1) // Если подменяем кассира
+    {
+        thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
+        yield return new WaitForSeconds(3f);
+
+        if (client.billToPay > 0)
+        {
+            PlayerWallet.Instance?.AddMoney(client.billToPay, transform.position);
+            if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
+            client.billToPay = 0;
+            coveredServicePoint.documentStack?.AddDocumentToStack();
+            thoughtBubble?.ShowPriorityMessage("Оплачено!", 2f, Color.green);
+        }
+        client.isLeavingSuccessfully = true;
+        client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+        client.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
+        client.stateMachine.SetState(ClientState.Leaving);
+    }
+    // --- НАЧАЛО НОВОЙ ЛОГИКИ ДЛЯ КЛЕРКА ---
+    else if (deskId == 1 || deskId == 2) // Если подменяем клерка
+    {
+        thoughtBubble?.ShowPriorityMessage("Так... посмотрим...", 2f, Color.yellow);
+        yield return new WaitForSeconds(1.5f); // Задержка на "оценку ситуации"
+
+        DocumentType requiredDoc = (deskId == 1) ? DocumentType.Form1 : DocumentType.Form2;
+        
+        // Проверяем, есть ли у клиента нужный документ
+        if (client.docHolder.GetCurrentDocumentType() != requiredDoc)
+        {
+            thoughtBubble?.ShowPriorityMessage("У вас бланк не тот!\nВозьмите другой.", 3f, Color.red);
+            yield return new WaitForSeconds(2f);
+            client.stateMachine.GoGetFormAndReturn();
+        }
+        else
+        {
+            // Документ правильный, начинаем "обработку"
+            thoughtBubble?.ShowPriorityMessage("Это займет чуть\nбольше времени...", 4f, Color.gray);
+            
+            // Стажер работает дольше клерка. Время также зависит от навыка "Бюрократия".
+            float processingTime = Random.Range(5f, 8f) * (1f + (1f - skills.paperworkMastery)); 
+            yield return new WaitForSeconds(processingTime);
+
+            // Забираем старый документ, выдаем новый
+            client.docHolder.SetDocument(DocumentType.None);
+            if (client.stampSound != null) AudioSource.PlayClipAtPoint(client.stampSound, transform.position);
+            yield return new WaitForSeconds(1f);
+            
+            DocumentType newDocType = (deskId == 1) ? DocumentType.Certificate1 : DocumentType.Certificate2;
+            client.docHolder.SetDocument(newDocType);
+            
+            // Выставляем счет
+            client.billToPay += (deskId == 1) ? 100 : 250;
+            
+            // Отправляем в кассу
+            thoughtBubble?.ShowPriorityMessage("Готово! Теперь в кассу.", 3f, Color.green);
+            client.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
+            client.stateMachine.SetState(ClientState.MovingToGoal);
+            
+            // Засчитываем выполненную работу (добавляем документ в стопку на столе)
+            coveredServicePoint.documentStack?.AddDocumentToStack();
         }
     }
+    // --- КОНЕЦ НОВОЙ ЛОГИКИ ---
+}
 
     private Waypoint DetermineCorrectGoalForClient(ClientPathfinding client)
     {

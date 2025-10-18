@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Characters/Controllers/Actions/ChairPatrolExecutor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -11,7 +10,11 @@ public class ChairPatrolExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         registrar = staff as ClerkController;
-        if (registrar == null || registrar.assignedWorkstation == null) { FinishAction(); yield break; }
+        if (registrar == null || registrar.assignedWorkstation == null) 
+        { 
+            FinishAction(false); 
+            yield break; 
+        }
 
         registrar.SetState(ClerkController.ClerkState.ChairPatrol);
         registrar.redirectionBonus = 0.25f;
@@ -23,14 +26,12 @@ public class ChairPatrolExecutor : ActionExecutor
             
             if (zone != null && zone.GetOccupyingClients().Any())
             {
-                Debug.Log($"[ChairPatrol] {registrar.name} увидел клиента и завершает патруль, чтобы начать обслуживание.");
                 break;
             }
-
             yield return new WaitForSeconds(1f);
         }
         
-        FinishAction();
+        FinishAction(true);
     }
 
     private void OnDestroy()

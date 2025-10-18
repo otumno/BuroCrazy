@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da71029bba7bc5443be40737c2c47fe9, type: 3}
+  m_Name: Rank_1_Archivist_3
+  m_EditorClassIdentifier: 
+  rankLevel: 1
+  rankName: "\u0425\u0440\u0430\u043D\u0438\u0442\u0435\u043B\u044C \u0444\u043E\u043D\u0434\u0430"
+  experienceRequired: 4000
+  promotionCost: 300
+  salaryMultiplier: 1.7
+  maxActions: 3
+  workPeriodsCount: 5
+  associatedRole: 4
+  unlockedActions:
+  - {fileID: 11400000, guid: e0bbda31d51f03a44a59e9396cf050f5, type: 2}
+  - {fileID: 11400000, guid: 2046a360c4f69c6448d74001423ea5f2, type: 2}
+  - {fileID: 11400000, guid: b786d69534707a84684459ac84a7f206, type: 2}
+  possiblePromotions: []

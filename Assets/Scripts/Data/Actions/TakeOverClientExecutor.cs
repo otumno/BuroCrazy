@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Data/Actions/TakeOverClientExecutor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -9,7 +8,7 @@ public class TakeOverClientExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var registrar = staff as ClerkController;
-        if (registrar == null) { FinishAction(); yield break; }
+        if (registrar == null) { FinishAction(false); yield break; }
 
         var stuckClient = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
             .Where(c => c.stateMachine.GetCurrentState() == ClientState.AtRegistration && 
@@ -20,7 +19,7 @@ public class TakeOverClientExecutor : ActionExecutor
             
         if (stuckClient == null)
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
         
@@ -29,9 +28,8 @@ public class TakeOverClientExecutor : ActionExecutor
 
         var newDestination = registrar.assignedWorkstation.clientStandPoint;
         stuckClient.stateMachine.GetCalledToSpecificDesk(newDestination, stuckClient.stateMachine.MyQueueNumber, registrar);
-        Debug.Log($"{registrar.name} перехватил клиента {stuckClient.name} от другого окна.");
 
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction();
+        FinishAction(true);
     }
 }

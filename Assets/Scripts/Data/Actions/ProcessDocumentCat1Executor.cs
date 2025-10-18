@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat1Executor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -8,75 +9,54 @@ public class ProcessDocumentCat1Executor : ActionExecutor
 
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null)
-        {
-            FinishAction();
-            yield break;
-        }
+        var clerk = staff as ClerkController;
+        if (clerk == null || clerk.assignedWorkstation == null) { FinishAction(false); yield break; }
 
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-        if (zone == null) { FinishAction(); yield break; }
+        var client = zone?.GetOccupyingClients().FirstOrDefault();
 
-        ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
-        if (client == null || !client.documentChecked)
+        if (client == null) { FinishAction(false); yield break; }
+
+        clerk.SetState(ClerkController.ClerkState.Working);
+        
+        // 1. Проверяем, правильный ли бланк у клиента
+        if (client.docHolder.GetCurrentDocumentType() != DocumentType.Form1)
         {
-            FinishAction();
+            clerk.thoughtBubble?.ShowPriorityMessage("Это не тот бланк,\nвозьмите другой.", 3f, Color.yellow);
+            client.stateMachine.GoGetFormAndReturn();
+            FinishAction(true); // Задача выполнена (клиент отправлен)
             yield break;
         }
-
-        clerk.thoughtBubble?.ShowPriorityMessage("Processing...", 3f, Color.white);
         
-        DocumentType docTypeInHand = client.docHolder.GetCurrentDocumentType();
-        GameObject prefabToFly = client.docHolder.GetPrefabForType(docTypeInHand); 
-        client.docHolder.SetDocument(DocumentType.None);
-        
-        bool transferToClerkComplete = false;
-        if (prefabToFly != null) 
-        { 
-            GameObject flyingDoc = Instantiate(prefabToFly, client.docHolder.handPoint.position, Quaternion.identity);
-            DocumentMover mover = flyingDoc.GetComponent<DocumentMover>(); 
-            if (mover != null) 
+        // 2. Проверяем документ на ошибки (если клерк умеет)
+        bool canCheckDocuments = clerk.activeActions.Any(a => a.actionType == ActionType.CheckDocument);
+        if (canCheckDocuments)
+        {
+            clerk.thoughtBubble?.ShowPriorityMessage("Проверяю...", 2f, Color.yellow);
+            yield return new WaitForSeconds(Random.Range(1f, 3f));
+            if (Random.value < (1f - client.documentQuality) && Random.value < clerk.skills.pedantry)
             {
-                mover.StartMove(clerk.assignedWorkstation.documentPointOnDesk, () => 
-                { 
-                    transferToClerkComplete = true; 
-                    if (flyingDoc != null) Destroy(flyingDoc); 
-                });
-                yield return new WaitUntil(() => transferToClerkComplete);
-            } 
+                clerk.thoughtBubble?.ShowPriorityMessage("Здесь ошибка!\nНужно переделать.", 3f, Color.red);
+                yield return new WaitForSeconds(2f);
+                client.stateMachine.GoGetFormAndReturn();
+                FinishAction(true); // Задача выполнена (ошибка найдена)
+                yield break;
+            }
         }
-
+        
+        // 3. Обрабатываем документ
+        clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 1)...", 3f, Color.white);
         yield return new WaitForSeconds(Random.Range(2f, 4f));
         
-        DocumentType newDocType = DocumentType.Certificate1;
+        client.docHolder.SetDocument(DocumentType.Certificate1);
         client.billToPay += 100;
 
-        GameObject newDocPrefab = client.docHolder.GetPrefabForType(newDocType);
-        bool transferToClientComplete = false; 
-        if (newDocPrefab != null) 
-        { 
-            GameObject newDocOnDesk = Instantiate(newDocPrefab, clerk.assignedWorkstation.documentPointOnDesk.position, Quaternion.identity);
-            if (client.stampSound != null) { AudioSource.PlayClipAtPoint(client.stampSound, clerk.assignedWorkstation.documentPointOnDesk.position); } 
-            yield return new WaitForSeconds(1.5f);
-            
-            DocumentMover mover = newDocOnDesk.GetComponent<DocumentMover>(); 
-            if (mover != null) 
-            {
-                mover.StartMove(client.docHolder.handPoint, () => 
-                { 
-                    client.docHolder.ReceiveTransferredDocument(newDocType, newDocOnDesk); 
-                    transferToClientComplete = true; 
-                });
-                yield return new WaitUntil(() => transferToClientComplete);
-            } 
-        }
-
-        client.documentChecked = false;
-        clerk.thoughtBubble?.ShowPriorityMessage("Done! Please go to the cashier.", 3f, Color.green);
+        clerk.thoughtBubble?.ShowPriorityMessage("Готово! Пройдите в кассу.", 3f, Color.green);
         client.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
         client.stateMachine.SetState(ClientState.MovingToGoal);
         
+        clerk.ServiceComplete();
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction();
+        FinishAction(true);
     }
 }

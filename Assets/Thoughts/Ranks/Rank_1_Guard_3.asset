@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da71029bba7bc5443be40737c2c47fe9, type: 3}
+  m_Name: Rank_1_Guard_3
+  m_EditorClassIdentifier: 
+  rankLevel: 1
+  rankName: "\u0421\u0442\u0430\u0440\u0448\u0438\u0439 \u043E\u0444\u0438\u0446\u0435\u0440
+    \u041E\u0445\u0440\u0430\u043D\u044B"
+  experienceRequired: 4000
+  promotionCost: 500
+  salaryMultiplier: 1.7
+  maxActions: 3
+  workPeriodsCount: 5
+  associatedRole: 5
+  unlockedActions:
+  - {fileID: 11400000, guid: dbc0878d1dbb735448fe640cc2aca6d8, type: 2}
+  - {fileID: 11400000, guid: 87e9e5a1b96493946a38295aac0288f8, type: 2}
+  - {fileID: 11400000, guid: 1426bd41c8aeda743b18fe9589637f49, type: 2}
+  possiblePromotions: []

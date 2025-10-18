@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Data/Actions/Action_ServiceAtRegistration.cs
 using UnityEngine;
 using System.Linq;
 
@@ -11,12 +12,13 @@ public class Action_ServiceAtRegistration : StaffAction
     
     public override bool AreConditionsMet(StaffController staff)
     {
-        // THE FIX IS HERE: We now compare ClerkController.ClerkRole with ClerkController.ClerkRole
         if (!(staff is ClerkController clerk) || clerk.role != ClerkController.ClerkRole.Registrar || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
         {
             return false;
         }
         
+        // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
+        // Условие теперь: "Есть ли на моем рабочем месте клиент, ожидающий обслуживания?"
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         return zone != null && zone.GetOccupyingClients().Any();
     }

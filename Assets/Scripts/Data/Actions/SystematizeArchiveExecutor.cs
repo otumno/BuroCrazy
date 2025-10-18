@@ -5,17 +5,15 @@ using System.Linq;
 public class SystematizeArchiveExecutor : ActionExecutor
 {
     public override bool IsInterruptible => true;
-
     protected override IEnumerator ActionRoutine()
     {
         var archivist = staff;
         var cabinets = ArchiveManager.Instance.cabinets;
-        if (archivist == null || !cabinets.Any()) { FinishAction(); yield break; }
+        if (archivist == null || !cabinets.Any()) { FinishAction(false); yield break; }
 
         archivist.thoughtBubble?.ShowPriorityMessage("Навожу порядок...", 5f, Color.gray);
-
-        // Просто ходим между 2-3 случайными шкафами
-        int pointsToVisit = 2; 
+        
+        int pointsToVisit = 2;
         for (int i = 0; i < pointsToVisit; i++)
         {
             var randomCabinet = cabinets[Random.Range(0, cabinets.Count)];
@@ -24,6 +22,6 @@ public class SystematizeArchiveExecutor : ActionExecutor
             yield return new WaitForSeconds(Random.Range(3f, 6f));
         }
 
-        FinishAction();
+        FinishAction(true);
     }
 }

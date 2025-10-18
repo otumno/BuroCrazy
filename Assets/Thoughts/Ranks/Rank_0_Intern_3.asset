@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da71029bba7bc5443be40737c2c47fe9, type: 3}
+  m_Name: Rank_0_Intern_3
+  m_EditorClassIdentifier: 
+  rankLevel: 0
+  rankName: "\u041E\u043F\u044B\u0442\u043D\u044B\u0439 \u0421\u0442\u0430\u0436\u0435\u0440"
+  experienceRequired: 300
+  promotionCost: 250
+  salaryMultiplier: 1.2
+  maxActions: 2
+  workPeriodsCount: 3
+  associatedRole: 1
+  unlockedActions:
+  - {fileID: 11400000, guid: d3055310c1af5b645ba57f8e0ad39c93, type: 2}
+  - {fileID: 11400000, guid: 481499db542d3cf4abd9ffaaf739a86d, type: 2}
+  - {fileID: 11400000, guid: dddaf4026f8b51748af11d47c04d3acd, type: 2}
+  - {fileID: 11400000, guid: ca1c4ccd5bbcdf5468491e669a55fead, type: 2}
+  - {fileID: 11400000, guid: 6a813549a3731e2409ff7bfa8d05341a, type: 2}
+  possiblePromotions:
+  - {fileID: 11400000, guid: 7c8e9e1fe8c503a4796dcf4fdac55e48, type: 2}
+  - {fileID: 11400000, guid: b6ee752473f48294f9fc2c503e7e6fd6, type: 2}
+  - {fileID: 11400000, guid: 144c3721997bf5847be805ded5524331, type: 2}
+  - {fileID: 11400000, guid: 55cccee074d1f7a48b747fc5f6ee0536, type: 2}
+  - {fileID: 11400000, guid: 8acfa984aee5f274099d5caddd1d3c8d, type: 2}
+  - {fileID: 11400000, guid: bddd0bc8a1605514590bae2395612348, type: 2}

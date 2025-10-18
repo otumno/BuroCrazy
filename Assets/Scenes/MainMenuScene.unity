@@ -1628,6 +1628,7 @@ GameObject:
   - component: {fileID: 1389421142}
   - component: {fileID: 1389421141}
   - component: {fileID: 1389421144}
+  - component: {fileID: 1389421145}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -1753,6 +1754,22 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
+--- !u!114 &1389421145
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1389421140}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56666c5a40171f54783dd416a44f42bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EventMask:
+    serializedVersion: 2
+    m_Bits: 2048
+  m_MaxRayIntersections: 1
 --- !u!224 &1391600432 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1017815716582615007, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -3021,12 +3038,20 @@ PrefabInstance:
       value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: internPrefab
+      value: 
+      objectReference: {fileID: 1300310410156682885, guid: dc5452fe473b85b418fb4d56c7e54cf0, type: 3}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: costPerSkillPoint
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: allRoleData.Array.size
       value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: rankDatabase.Array.size
+      value: 21
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: 'allRoleData.Array.data[0]'
@@ -3056,6 +3081,130 @@ PrefabInstance:
       propertyPath: 'allRoleData.Array.data[6]'
       value: 
       objectReference: {fileID: 11400000, guid: 7653fc3164961e644b076e4156d9b0ec, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 1b4af9197077c4e4b990705035f383a6, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 377258fa17bd39f4a92e68869a6023b1, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 71048ad763cfc734884f9aba9d67ccda, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 7c8e9e1fe8c503a4796dcf4fdac55e48, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: b13adfca6a7fd334285b61a8006c3ccc, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[5]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 402ea1cda9da54847baef351d254e7d2, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[6]'
+      value: 
+      objectReference: {fileID: 11400000, guid: b6ee752473f48294f9fc2c503e7e6fd6, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[7]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 1106034a65c45464ab0e31d0a701b5e3, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[8]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 9d884aa4095664c4cbdc4d67a70b4c29, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[9]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 144c3721997bf5847be805ded5524331, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[10]'
+      value: 
+      objectReference: {fileID: 11400000, guid: d5ec5b1ba33822c4fa7e8ea109e32575, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[11]'
+      value: 
+      objectReference: {fileID: 11400000, guid: e521506350ba61f46a7e97efafc16225, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[12]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 55cccee074d1f7a48b747fc5f6ee0536, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[13]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 7b13b1d77d932c1478f7a0bfb2ac3095, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[14]'
+      value: 
+      objectReference: {fileID: 11400000, guid: aebc011ac958fa34cb5213eca0a203f9, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[15]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 8acfa984aee5f274099d5caddd1d3c8d, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[16]'
+      value: 
+      objectReference: {fileID: 11400000, guid: d556b203e26d4474d90db5e8c395b17c, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[17]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 55426c7c341be7a4793f5999d52eb34e, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[18]'
+      value: 
+      objectReference: {fileID: 11400000, guid: bddd0bc8a1605514590bae2395612348, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[19]'
+      value: 
+      objectReference: {fileID: 11400000, guid: fe7fbb9fad458ac4283716ab1b960fdc, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[20]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 80f5eb9976a116c4982b313fc64008ef, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[21]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 80f5eb9976a116c4982b313fc64008ef, type: 2}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: experiencedInternChance.m_Curve.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: experiencedInternChance.m_Curve.Array.data[0].time
+      value: 1.229248
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: experiencedInternChance.m_Curve.Array.data[1].time
+      value: 30.218435
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: specialistCountOverTime.m_Curve.Array.data[0].time
+      value: 1.028656
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: specialistCountOverTime.m_Curve.Array.data[1].time
+      value: 10.14328
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: experiencedInternChance.m_Curve.Array.data[0].value
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: experiencedInternChance.m_Curve.Array.data[1].value
+      value: 2.002165
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: specialistCountOverTime.m_Curve.Array.data[0].value
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: specialistCountOverTime.m_Curve.Array.data[1].value
+      value: 2.4151
+      objectReference: {fileID: 0}
     - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: uiSource
       value: 

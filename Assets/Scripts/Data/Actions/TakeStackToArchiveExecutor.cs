@@ -9,14 +9,14 @@ public class TakeStackToArchiveExecutor : ActionExecutor
     {
         if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null)
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
         var deskStack = clerk.assignedWorkstation.documentStack;
         if (deskStack == null || deskStack.IsEmpty)
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
         
@@ -30,12 +30,10 @@ public class TakeStackToArchiveExecutor : ActionExecutor
         Transform archivePoint = ArchiveManager.Instance.RequestDropOffPoint();
         if (archivePoint == null)
         {
-            Debug.LogError($"{staff.name} не может отнести документы: в архиве нет места!");
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
-        // ----- THE FIX IS HERE -----
         yield return staff.StartCoroutine(clerk.MoveToTarget(archivePoint.position, ClerkController.ClerkState.AtArchive.ToString()));
         
         clerk.thoughtBubble?.ShowPriorityMessage("Складываю...", 2f, Color.gray);
@@ -49,10 +47,9 @@ public class TakeStackToArchiveExecutor : ActionExecutor
         ArchiveManager.Instance.FreeOverflowPoint(archivePoint);
 
         clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-        // ----- THE FIX IS HERE -----
         yield return staff.StartCoroutine(clerk.MoveToTarget(clerk.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
         
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction();
+        FinishAction(true);
     }
 }

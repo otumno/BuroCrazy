@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
-using System.Text; // Добавлено для логов
+using System.Text;
 
 [RequireComponent(typeof(Button))]
 public class BookkeepingButtonController : MonoBehaviour
@@ -10,7 +10,7 @@ public class BookkeepingButtonController : MonoBehaviour
     private Button bookkeepingButton;
     private BookkeepingPanelUI bookkeepingPanel; 
     private float logTimer = 0f;
-    private const float LOG_INTERVAL = 2f; // Логируем раз в 2 секунды, чтобы не спамить
+    private const float LOG_INTERVAL = 2f; // Логируем раз в 2 секунды
 
     void Awake()
     {
@@ -21,23 +21,21 @@ public class BookkeepingButtonController : MonoBehaviour
     void Start()
     {
         bookkeepingPanel = FindFirstObjectByType<BookkeepingPanelUI>(FindObjectsInactive.Include);
-        UpdateButtonState(true); // Первичная проверка при старте
+        UpdateButtonState(true); // Первичная проверка при старте с логом
     }
 
     void Update()
     {
-        // ----- НАЧАЛО ИЗМЕНЕНИЙ: ЛОГИРОВАНИЕ С ИНТЕРВАЛОМ -----
         logTimer += Time.deltaTime;
         if (logTimer >= LOG_INTERVAL)
         {
             logTimer = 0f;
-            UpdateButtonState(true); // Вызываем проверку с логированием
+            UpdateButtonState(true); // Проверка с логированием
         }
         else
         {
-            UpdateButtonState(false); // Обычная проверка без логирования
+            UpdateButtonState(false); // Быстрая проверка без лога
         }
-        // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
     }
     
     void UpdateButtonState(bool withLog)

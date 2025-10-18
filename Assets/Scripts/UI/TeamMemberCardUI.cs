@@ -65,87 +65,49 @@ public class TeamMemberCardUI : MonoBehaviour
             return;
         }
 
-        if (nameText != null) 
-            nameText.text = assignedStaff.characterName;
-        
-        if (roleText != null) 
-            roleText.text = GetRoleNameInRussian(assignedStaff.currentRole);
+        if (nameText != null) nameText.text = assignedStaff.characterName;
+        if (roleText != null) roleText.text = GetRoleNameInRussian(assignedStaff.currentRole);
+        if (stressText != null) stressText.text = $"Стресс: {assignedStaff.frustration:P0}";
+        if (salaryText != null) salaryText.text = $"З/П: ${assignedStaff.salaryPerPeriod} / период";
+        if (genderText != null) genderText.text = assignedStaff.gender == Gender.Male ? "Пол: М" : "Пол: Ж";
+        if (skillsText != null && assignedStaff.skills != null) { /* ... */ }
 
-        if (stressText != null)
+        if (assignedStaff.currentRank != null)
         {
-            float currentStress = assignedStaff.GetCurrentFrustration();
-            stressText.text = $"Стресс: {currentStress:F0}%";
-        }
+            if (rankText != null) rankText.text = assignedStaff.currentRank.rankName;
 
-        if (salaryText != null)
-            salaryText.text = $"З/П: ${assignedStaff.salaryPerPeriod} / период";
-
-        if (genderText != null)
-            genderText.text = assignedStaff.gender == Gender.Male ? "Пол: М" : "Пол: Ж";
-
-        if (skillsText != null && assignedStaff.skills != null)
-        {
-            var skills = assignedStaff.skills;
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine($"Бюрократия: {skills.paperworkMastery:P0}");
-            sb.AppendLine($"Усидчивость: {skills.sedentaryResilience:P0}");
-            sb.AppendLine($"Педантичность: {skills.pedantry:P0}");
-            sb.AppendLine($"Коммуникация: {skills.softSkills:P0}");
-            skillsText.text = sb.ToString();
-        }
-
-        if (ExperienceManager.Instance != null)
-        {
-            RankData currentRank = ExperienceManager.Instance.GetRankByXP(assignedStaff.experiencePoints);
-            if (currentRank != null)
+            RankData nextRankData = assignedStaff.currentRank.possiblePromotions.FirstOrDefault();
+            if (nextRankData != null)
             {
-                if (rankText != null) 
-                    rankText.text = currentRank.rankName;
-
-                RankData nextRankData = ExperienceManager.Instance.rankDatabase
-                    .FirstOrDefault(r => r.rankLevel == currentRank.rankLevel + 1);
-
-                if (nextRankData != null)
-                {
-                    int xpForCurrentRank = currentRank.experienceRequired;
-                    int xpForNextRank = nextRankData.experienceRequired;
-                    int totalXpForLevel = xpForNextRank - xpForCurrentRank;
-                    int currentXpInLevel = assignedStaff.experiencePoints - xpForCurrentRank;
-                    
-                    if (xpBarFill != null)
-                        xpBarFill.fillAmount = totalXpForLevel > 0 ? (float)currentXpInLevel / totalXpForLevel : 1f;
-                    if (xpText != null)
-                        xpText.text = $"XP: {currentXpInLevel} / {totalXpForLevel}";
-                }
-                else
-                {
-                    if (xpBarFill != null)
-                        xpBarFill.fillAmount = 1f;
-                    if (xpText != null)
-                        xpText.text = "МАКС. РАНГ";
-                }
+                int xpForCurrentRank = assignedStaff.currentRank.experienceRequired;
+                int xpForNextRank = nextRankData.experienceRequired;
+                int totalXpForLevel = xpForNextRank - xpForCurrentRank;
+                int currentXpInLevel = assignedStaff.experiencePoints - xpForCurrentRank;
+                if (xpBarFill != null) xpBarFill.fillAmount = totalXpForLevel > 0 ? (float)currentXpInLevel / totalXpForLevel : 1f;
+                if (xpText != null) xpText.text = $"XP: {currentXpInLevel} / {totalXpForLevel}";
             }
             else
             {
-                if (rankText != null) 
-                    rankText.text = "Без ранга";
+                if (xpBarFill != null) xpBarFill.fillAmount = 1f;
+                if (xpText != null) xpText.text = "МАКС. РАНГ";
             }
         }
-
-        if (promoteButton != null)
+        else
         {
-            promoteButton.gameObject.SetActive(assignedStaff.isReadyForPromotion);
-        }
-        if (changeRoleButton != null)
-        {
-            changeRoleButton.gameObject.SetActive(true);
+            if (rankText != null) rankText.text = "Без ранга";
         }
         
-        if (background != null)
+        if (promoteButton != null)
         {
-            background.sprite = GetBackgroundForRole(assignedStaff.currentRole);
-            background.color = Color.white;
+            bool canBePromoted = false;
+            if (assignedStaff.currentRank != null && assignedStaff.currentRank.possiblePromotions.Any())
+            {
+                canBePromoted = assignedStaff.currentRank.possiblePromotions.Any(rank => assignedStaff.experiencePoints >= rank.experienceRequired);
+            }
+            promoteButton.gameObject.SetActive(canBePromoted);
         }
+        
+        if (background != null) background.sprite = GetBackgroundForRole(assignedStaff.currentRole);
     }
     
     private Sprite GetBackgroundForRole(StaffController.Role role)
@@ -178,13 +140,13 @@ public class TeamMemberCardUI : MonoBehaviour
     }
 
     private void OnPromoteButtonClicked()
+{
+    if (assignedStaff != null)
     {
-        if (assignedStaff != null && HiringManager.Instance != null)
-        {
-            HiringManager.Instance.PromoteStaff(assignedStaff);
-            UpdateCard();
-        }
+        // THE FIX: Instead of promoting directly, we open the selection panel.
+        PromotionPanelUI.Instance.ShowForStaff(assignedStaff);
     }
+}
 
     private void OnChangeRoleButtonClicked()
     {

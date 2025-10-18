@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da71029bba7bc5443be40737c2c47fe9, type: 3}
+  m_Name: Rank_0_Intern_2
+  m_EditorClassIdentifier: 
+  rankLevel: 0
+  rankName: "\u041E\u0431\u0443\u0447\u0435\u043D\u043D\u044B\u0439 \u0421\u0442\u0430\u0436\u0435\u0440"
+  experienceRequired: 100
+  promotionCost: 200
+  salaryMultiplier: 1.1
+  maxActions: 1
+  workPeriodsCount: 3
+  associatedRole: 1
+  unlockedActions:
+  - {fileID: 11400000, guid: d3055310c1af5b645ba57f8e0ad39c93, type: 2}
+  - {fileID: 11400000, guid: 481499db542d3cf4abd9ffaaf739a86d, type: 2}
+  - {fileID: 11400000, guid: dddaf4026f8b51748af11d47c04d3acd, type: 2}
+  possiblePromotions:
+  - {fileID: 11400000, guid: 71048ad763cfc734884f9aba9d67ccda, type: 2}

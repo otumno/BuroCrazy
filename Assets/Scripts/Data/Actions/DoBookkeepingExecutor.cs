@@ -10,9 +10,12 @@ public class DoBookkeepingExecutor : ActionExecutor
     {
         bookkeeper = staff as ClerkController;
         var bookkeepingDesk = ScenePointsRegistry.Instance?.bookkeepingDesk;
-        if (bookkeeper == null || bookkeepingDesk == null) { FinishAction(); yield break; }
+        if (bookkeeper == null || bookkeepingDesk == null) 
+        {
+            FinishAction(false); 
+            yield break; 
+        }
 
-        // ----- THE FIX IS HERE -----
         yield return staff.StartCoroutine(bookkeeper.MoveToTarget(bookkeepingDesk.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
         
         bookkeeper.IsDoingBooks = true;
@@ -27,7 +30,6 @@ public class DoBookkeepingExecutor : ActionExecutor
                 int bonus = Random.Range(20, 101);
                 PlayerWallet.Instance?.AddMoney(bonus, staff.transform.position);
                 bookkeeper.thoughtBubble?.ShowPriorityMessage($"Нашел лишние {bonus}$!", 4f, Color.green);
-                Debug.Log($"{staff.name} нашел финансовую нестыковку на {bonus}$ в пользу заведения.");
             }
         }
     }

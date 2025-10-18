@@ -9,24 +9,28 @@ public class ServiceAtCashierExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var cashier = staff as ClerkController;
-        // Используем 'assignedWorkstation'
-        if (cashier == null || cashier.assignedWorkstation == null)
+        if (cashier == null || cashier.assignedWorkstation == null) 
         {
-            FinishAction();
+            FinishAction(false); 
             yield break;
         }
 
-        // Используем 'assignedWorkstation'
         var zone = ClientSpawner.GetZoneByDeskId(cashier.assignedWorkstation.deskId);
-        var client = zone?.GetOccupyingClients().FirstOrDefault(c => c.billToPay > 0);
+        var client = zone?.GetOccupyingClients().FirstOrDefault(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
 
-        if (client == null)
+        if (client == null) 
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
         cashier.SetState(ClerkController.ClerkState.Working);
+        
+        if (client.billToPay == 0 && client.mainGoal == ClientGoal.PayTax)
+        {
+            client.billToPay = Random.Range(20, 121);
+        }
+
         cashier.thoughtBubble?.ShowPriorityMessage($"К оплате: ${client.billToPay}", 3f, Color.white);
         yield return new WaitForSeconds(Random.Range(2f, 4f));
 
@@ -72,6 +76,6 @@ public class ServiceAtCashierExecutor : ActionExecutor
         
         cashier.ServiceComplete();
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction();
+        FinishAction(true);
     }
 }

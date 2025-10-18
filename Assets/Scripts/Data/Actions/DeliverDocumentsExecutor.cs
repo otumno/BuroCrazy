@@ -4,60 +4,53 @@ using System.Linq;
 
 public class DeliverDocumentsExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => true; // Можно прервать, если появится более важная задача
+    public override bool IsInterruptible => true;
 
     protected override IEnumerator ActionRoutine()
     {
         var intern = staff as InternController;
-        if (intern == null) { FinishAction(); yield break; }
+        if (intern == null) { FinishAction(false); yield break; }
 
-        // --- Шаг 1: Найти самую полную стопку ---
         var targetStack = Object.FindObjectsByType<DocumentStack>(FindObjectsSortMode.None)
-            .Where(s => s != ArchiveManager.Instance.mainDocumentStack && !s.IsEmpty) // Исключаем архивную и пустые стопки
-            .OrderByDescending(s => s.CurrentSize) // Сортируем по убыванию размера
-            .FirstOrDefault(); // Берем самую большую
+            .Where(s => s != ArchiveManager.Instance.mainDocumentStack && !s.IsEmpty)
+            .OrderByDescending(s => s.CurrentSize)
+            .FirstOrDefault();
 
         if (targetStack == null)
         {
-            FinishAction(); // Пока собирались, документы уже унесли
+            FinishAction(false);
             yield break;
         }
 
-        // Находим ServicePoint, к которому относится эта стопка
         var servicePoint = ScenePointsRegistry.Instance.allServicePoints.FirstOrDefault(sp => sp.documentStack == targetStack);
         if (servicePoint == null || servicePoint.internCollectionPoint == null)
         {
-            Debug.LogError($"Для стопки {targetStack.name} не найден ServicePoint или точка для стажера (internCollectionPoint)!");
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
-        // --- Шаг 2: Идем к столу за документами ---
         intern.SetState(InternController.InternState.TakingStackToArchive);
         intern.thoughtBubble?.ShowPriorityMessage("Заберу документы...", 3f, Color.gray);
 
         yield return staff.StartCoroutine(intern.MoveToTarget(servicePoint.internCollectionPoint.position, intern.GetCurrentState()));
 
-        // --- Шаг 3: Забираем документы ---
-        if (targetStack == null) { FinishAction(); yield break; } // Проверка на случай, если стопку удалили
+        if (targetStack == null) { FinishAction(false); yield break; }
 
         int docCount = targetStack.TakeEntireStack();
         var stackHolder = staff.GetComponent<StackHolder>();
         stackHolder?.ShowStack(docCount, targetStack.maxStackSize);
 
-        // --- Шаг 4: Несем в архив ---
         Transform archivePoint = ArchiveManager.Instance.RequestDropOffPoint();
-        if (archivePoint == null) { FinishAction(); yield break; }
+        if (archivePoint == null) { FinishAction(false); yield break; }
 
         yield return staff.StartCoroutine(intern.MoveToTarget(archivePoint.position, intern.GetCurrentState()));
-
-        // --- Шаг 5: Складываем и возвращаемся к делам ---
+        
         for (int i = 0; i < docCount; i++) { ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack(); }
         stackHolder?.HideStack();
         ArchiveManager.Instance.FreeOverflowPoint(archivePoint);
 
-        intern.SetState(InternController.InternState.Patrolling); // Возвращаемся в состояние патрулирования
+        intern.SetState(InternController.InternState.Patrolling);
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction();
+        FinishAction(true);
     }
 }

@@ -43,19 +43,11 @@ public class ServiceWorkerController : StaffController
         }
     }
 
-    protected override ActionExecutor GetIdleActionExecutor()
-    {
-        return gameObject.AddComponent<GoToJanitorHomeExecutor>();
-    }
+    // ----- УДАЛЕНЫ УСТАРЕВШИЕ МЕТОДЫ GetIdleActionExecutor и GetBurnoutActionExecutor -----
 
     public override string GetCurrentStateName()
     {
         return currentState.ToString();
-    }
-
-    protected override ActionExecutor GetBurnoutActionExecutor()
-    {
-        return gameObject.AddComponent<ScreamInClosetExecutor>();
     }
 
     public WorkerState GetCurrentState()
@@ -108,13 +100,11 @@ public class ServiceWorkerController : StaffController
 		this.minIdleWait = data.minIdleWait;
 		this.maxIdleWait = data.maxIdleWait;
         
-        // ----- НАЧАЛО ИЗМЕНЕНИЙ: Используем новый метод GetAttachPoint -----
         if (data.worker_trashBagPrefab != null)
         {
             var visuals = GetComponent<CharacterVisuals>();
             if (visuals != null)
             {
-                // Запрашиваем точку крепления в руке
                 Transform handPoint = visuals.GetAttachPoint(CharacterVisuals.AttachPointType.Hand);
                 if (handPoint != null)
                 {
@@ -125,7 +115,6 @@ public class ServiceWorkerController : StaffController
                 }
             }
         }
-        // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
     }
 
     protected override void Awake()

@@ -1,4 +1,4 @@
-// Файл: Assets/Scripts/Characters/Controllers/StaffController.cs - ФИНАЛЬНАЯ ВЕРСИЯ С UTILITY AI
+// Файл: Assets/Scripts/Characters/Controllers/StaffController.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,56 +10,55 @@ public abstract class StaffController : MonoBehaviour
     #region Fields
     public enum Role { Unassigned, Intern, Registrar, Cashier, Archivist, Guard, Janitor, Clerk }
 
-    [Header("График работы")]
-    public List<string> workPeriods = new List<string>();
-    [Header("Звуки смены")]
-    public AudioClip startShiftSound;
-    public AudioClip endShiftSound;
     [Header("Прогрессия и Роль")]
     public string characterName = "Безымянный";
+    public RankData currentRank;
+    public Role currentRole = Role.Intern;
+    public int experiencePoints = 0;
     public Gender gender;
     public CharacterSkills skills;
-    public Role currentRole = Role.Intern;
-    public int rank = 0;
-    public int experiencePoints = 0;
+    
+    [Header("График и Зарплата")]
+    public List<string> workPeriods = new List<string>();
     public int salaryPerPeriod = 15;
-    [Header("Система зарплаты")]
-    public int unpaidPeriods = 0;
-    public int missedPaymentCount = 0;
+	public int unpaidPeriods = 0;
+	public int missedPaymentCount = 0;
     
-    public bool isReadyForPromotion = false;
-
     [Header("Базы данных действий")]
-    [Tooltip("Тактические действия, назначаемые игроком в UI.")]
     public List<StaffAction> activeActions = new List<StaffAction>();
-    [Tooltip("База данных ВСЕХ системных действий (потребности, патрули).")]
-    public ActionDatabase systemActionDatabase; // Новое поле!
+    public ActionDatabase systemActionDatabase;
 
+    [Header("Рабочее место")]
     public ServicePoint assignedWorkstation;
-    
-    [Header("Настройки Выгорания")]
-    [SerializeField] private float baseFrustrationGain = 0.1f;
-    [SerializeField] private SkillType frustrationResistanceSkill = SkillType.SedentaryResilience;
     
     [Header("Состояние потребностей (от 0.0 до 1.0)")]
     [Range(0f, 1f)] public float frustration = 0f;
     [Range(0f, 1f)] public float bladder = 0f;
     [Range(0f, 1f)] public float energy = 1f;
     [Range(0f, 1f)] public float morale = 1f;
-    private Coroutine needsUpdateCoroutine;
+    
+    [Header("Настройки Выгорания")]
+    [SerializeField] private float baseFrustrationGain = 0.1f;
+    [SerializeField] private SkillType frustrationResistanceSkill = SkillType.SedentaryResilience;
 
-    protected Dictionary<ActionType, float> actionCooldowns = new Dictionary<ActionType, float>();
+    [Header("Звуки смены")]
+    public AudioClip startShiftSound;
+    public AudioClip endShiftSound;
 
+    // Ссылки на компоненты
     public EmotionSpriteCollection spriteCollection;
     public StateEmotionMap stateEmotionMap;
-    protected bool isOnDuty = false;
     protected AgentMover agentMover;
 	public AgentMover AgentMover => agentMover;
     protected CharacterStateLogger logger;
     protected CharacterVisuals visuals;
     public ThoughtBubbleController thoughtBubble { get; private set; }
-
     public ActionExecutor currentExecutor { get; private set; }
+    
+    // Внутренние переменные
+    protected Dictionary<ActionType, float> actionCooldowns = new Dictionary<ActionType, float>();
+    protected bool isOnDuty = false;
+    private Coroutine needsUpdateCoroutine;
     private Coroutine actionDecisionCoroutine;
     #endregion
 
@@ -75,47 +74,50 @@ public abstract class StaffController : MonoBehaviour
             yield return new WaitUntil(() => goToWorkExecutor == null);
         }
 
-        Debug.Log($"<color=lime>AI ЗАПУЩЕН</color> для {characterName} с новой системой Utility AI.");
         while (isOnDuty)
         {
             StaffAction bestAction = FindBestActionToPerform();
 
-            bool shouldSwitch = false;
             if (currentExecutor == null)
             {
-                shouldSwitch = (bestAction != null);
-            }
-            else
-            {
-                // Прерываем, если новое действие ВАЖНЕЕ (приоритет выше) и текущее можно прервать
-                if (bestAction != null && bestAction.priority > currentExecutor.actionData.priority && currentExecutor.IsInterruptible)
+                if (bestAction != null)
                 {
-                    shouldSwitch = true;
-                    Debug.Log($"<color=orange>[AI Brain - {characterName}]</color> ПРЕРЫВАНИЕ! Новое действие '{bestAction.displayName}' ({bestAction.priority}) важнее, чем '{currentExecutor.actionData.displayName}' ({currentExecutor.actionData.priority}).");
+                    if (CheckActionRoll(bestAction))
+                    {
+                        ExecuteAction(bestAction);
+                    }
+                    else
+                    {
+                        thoughtBubble?.ShowPriorityMessage("Эх, не вышло...", 2f, Color.red);
+                        SetActionCooldown(bestAction.actionType, 10f);
+                    }
                 }
             }
+            else 
+            {
+                if (bestAction != null && bestAction.priority > currentExecutor.actionData.priority)
+                {
+                    if (currentExecutor.IsInterruptible)
+                    {
+                        Debug.Log($"<color=orange>[AI Brain - {characterName}]</color> ПРЕРЫВАНИЕ! Новое действие '{bestAction.displayName}' ({bestAction.priority}) важнее, чем '{currentExecutor.actionData.displayName}' ({currentExecutor.actionData.priority}).");
+                        
+                        Destroy(currentExecutor);
+                        currentExecutor = null;
 
-            if (shouldSwitch)
-            {
-                if (currentExecutor != null)
-                {
-                    Destroy(currentExecutor);
-                    currentExecutor = null;
+                        ExecuteAction(bestAction);
+                    }
                 }
-                ExecuteAction(bestAction);
             }
             
             yield return new WaitForSeconds(1f);
         }
     }
 
-    // ----- ГЛАВНОЕ ИЗМЕНЕНИЕ: ПОЛНОЦЕННЫЙ UTILITY AI "МОЗГ" -----
     private StaffAction FindBestActionToPerform()
     {
         StringBuilder logBuilder = new StringBuilder();
         logBuilder.AppendLine($"<b><color=yellow>--- AI SCORE SHEET: {characterName} ({currentRole}) ---</color></b>");
         
-        // 1. Собираем единый список всех возможных действий
         List<StaffAction> allPossibleActions = new List<StaffAction>();
         if(activeActions != null) allPossibleActions.AddRange(activeActions);
         if(systemActionDatabase != null) allPossibleActions.AddRange(systemActionDatabase.allActions);
@@ -123,8 +125,7 @@ public abstract class StaffController : MonoBehaviour
         StaffAction bestAction = null;
         float bestScore = -1f;
 
-        // 2. Оцениваем каждое действие
-        foreach (var action in allPossibleActions)
+        foreach (var action in allPossibleActions.Distinct())
         {
             if (action == null || !action.applicableRoles.Contains(this.currentRole)) continue;
 
@@ -137,21 +138,20 @@ public abstract class StaffController : MonoBehaviour
 
             if (!action.AreConditionsMet(this))
             {
-                logBuilder.AppendLine($"  - {action.displayName} | <color=red>УСЛОВИЯ НЕ ВЫПОЛНЕНЫ</color>");
+                logBuilder.AppendLine($"  - {action.displayName} ({action.category}) | <color=red>УСЛОВИЯ НЕ ВЫПОЛНЕНЫ</color>");
                 continue;
             }
 
-            // 3. Расчет "полезности" (Score)
-            float currentScore = action.priority; // Начинаем с базового приоритета
-
-            // Добавляем бонусы от потребностей
-            if (action.actionType == ActionType.GoToToilet) currentScore += this.bladder * 100f; // Чем сильнее хочется, тем выше бонус
-            if (action.actionType == ActionType.GoToBreak) currentScore += (1f - this.energy) * 100f; // Чем меньше энергии, тем выше бонус
-            if (action.actionType == ActionType.GoToCooler) currentScore += (1f - this.morale) * 100f; // Чем ниже мораль, тем выше бонус
+            float currentScore = action.priority;
+            if (action.category == ActionCategory.System)
+            {
+                if (action.actionType == ActionType.GoToToilet) currentScore += this.bladder * 100f;
+                if (action.actionType == ActionType.GoToBreak) currentScore += (1f - this.energy) * 100f;
+                if (action.actionType == ActionType.GoToCooler) currentScore += (1f - this.morale) * 100f;
+            }
             
-            logBuilder.AppendLine($"  - {action.displayName} | Приоритет: {action.priority} | Бонус: {(currentScore - action.priority):F0} | <b>Итоговый счет: {currentScore:F0}</b> | <color=green>ДОСТУПНО</color>");
+            logBuilder.AppendLine($"  - {action.displayName} ({action.category}) | Приоритет: {action.priority} | Бонус: {(currentScore - action.priority):F0} | <b>Итоговый счет: {currentScore:F0}</b> | <color=green>ДОСТУПНО</color>");
 
-            // 4. Выбираем действие с максимальным счетом
             if (currentScore > bestScore)
             {
                 bestScore = currentScore;
@@ -171,10 +171,38 @@ public abstract class StaffController : MonoBehaviour
         Debug.Log(logBuilder.ToString());
         return bestAction;
     }
+
+    protected bool CheckActionRoll(StaffAction actionData)
+    {
+        if (this is DirectorAvatarController) return true;
+        if (actionData == null) return false;
+
+        if (actionData.category == ActionCategory.System) return true;
+
+        float rankBonus = 0f;
+        if (currentRank != null)
+        {
+            rankBonus = currentRank.rankLevel * 0.02f;
+        }
+
+        float skillModifier = 0f;
+        if(skills != null && actionData.primarySkill != null)
+        {
+            skillModifier = skills.GetSkillValue(actionData.primarySkill.skill) * actionData.primarySkill.strength;
+            if (actionData.useSecondarySkill && actionData.secondarySkill != null)
+            {
+                skillModifier += skills.GetSkillValue(actionData.secondarySkill.skill) * actionData.secondarySkill.strength;
+            }
+        }
+        
+        float initialChance = actionData.baseSuccessChance + skillModifier + rankBonus - frustration;
+        float finalChance = Mathf.Clamp(initialChance, actionData.minSuccessChance, actionData.maxSuccessChance);
+        
+        return Random.value <= finalChance;
+    }
     #endregion
     
     #region Abstract and Virtual Methods
-    // ... (Этот раздел без изменений) ...
     public abstract bool IsOnBreak();
     public virtual string GetStatusInfo() => "Статус не определен";
     public virtual string GetCurrentStateName() => "Unknown";
@@ -187,12 +215,8 @@ public abstract class StaffController : MonoBehaviour
     {
         if (visuals == null) visuals = GetComponent<CharacterVisuals>();
         if (agentMover == null) agentMover = GetComponent<AgentMover>();
-
         this.currentRole = data.roleType;
-        if (visuals != null)
-        {
-            visuals.SetupFromRoleData(data, this.gender);
-        }
+        if (visuals != null) visuals.SetupFromRoleData(data, this.gender);
         if (agentMover != null)
         {
             agentMover.SetAnimationSprites(data.idleSprite, data.walkSprite1, data.walkSprite2);
@@ -203,7 +227,6 @@ public abstract class StaffController : MonoBehaviour
     #endregion
 
     #region Standard Methods
-    // ... (Этот раздел без изменений, но убедитесь, что UpdateFrustration использует 'frustration') ...
     public bool IsOnDuty() => isOnDuty;
     public float GetCurrentFrustration() => frustration;
     public void SetCurrentFrustration(float value) => frustration = Mathf.Clamp01(value);
@@ -214,11 +237,6 @@ public abstract class StaffController : MonoBehaviour
         visuals = cv;
         logger = csl;
         thoughtBubble = GetComponent<ThoughtBubbleController>();
-    }
-	
-	public void SetActionCooldown(ActionType type, float duration)
-    {
-        actionCooldowns[type] = Time.time + duration;
     }
 
     public virtual void StartShift()
@@ -262,11 +280,6 @@ public abstract class StaffController : MonoBehaviour
     
     public bool ExecuteAction(StaffAction actionToExecute)
     {
-        if(actionToExecute.category == ActionCategory.Tactic)
-        {
-            UpdateFrustration(true);
-        }
-        
         System.Type executorType = actionToExecute.GetExecutorType();
         if (executorType == null) return false;
         
@@ -274,7 +287,7 @@ public abstract class StaffController : MonoBehaviour
         if (currentExecutor != null)
         {
             currentExecutor.Execute(this, actionToExecute);
-            actionCooldowns[actionToExecute.actionType] = Time.time + actionToExecute.actionCooldown;
+            SetActionCooldown(actionToExecute.actionType, actionToExecute.actionCooldown);
             return true;
         }
         return false;
@@ -282,17 +295,26 @@ public abstract class StaffController : MonoBehaviour
 
     public void OnActionFinished()
     {
+        if(currentExecutor != null && currentExecutor.actionData.category == ActionCategory.Tactic)
+        {
+            UpdateFrustration(true);
+        }
         this.currentExecutor = null;
     }
     
-    protected virtual ActionExecutor GetIdleActionExecutor() => null;
-    protected virtual ActionExecutor GetBurnoutActionExecutor() => gameObject.AddComponent<DefaultActionExecutor>();
-    
+    public void SetActionCooldown(ActionType type, float duration)
+    {
+        if (duration > 0)
+        {
+            actionCooldowns[type] = Time.time + duration;
+        }
+    }
+
     protected void UpdateFrustration(bool wasCycleSuccessful)
     {
         if (wasCycleSuccessful)
         {
-            float resistance = skills.GetSkillValue(frustrationResistanceSkill);
+            float resistance = (skills != null) ? skills.GetSkillValue(frustrationResistanceSkill) : 0f;
             float frustrationGain = baseFrustrationGain * (1f - resistance * 0.5f);
             frustration = Mathf.Clamp01(frustration + frustrationGain);
         }
@@ -304,24 +326,18 @@ public abstract class StaffController : MonoBehaviour
         while (isOnDuty)
         {
             yield return new WaitForSeconds(10f);
-
-            if (currentExecutor != null && !currentExecutor.IsInterruptible)
-            {
-                continue;
-            }
-
-            float bladderGain = 0.05f;
-            bladder = Mathf.Clamp01(bladder + bladderGain);
-
-            float energyLoss = 0.02f * (1f - skills.sedentaryResilience * 0.5f);
-            energy = Mathf.Clamp01(energy - energyLoss);
+            if (currentExecutor != null && !currentExecutor.IsInterruptible) continue;
             
-            float moraleLoss = 0.03f * (1f - skills.pedantry);
-            morale = Mathf.Clamp01(morale - moraleLoss);
+            bladder = Mathf.Clamp01(bladder + 0.05f);
+            if (skills != null)
+            {
+                energy = Mathf.Clamp01(energy - (0.02f * (1f - skills.sedentaryResilience * 0.5f)));
+                morale = Mathf.Clamp01(morale - (0.03f * (1f - skills.pedantry)));
+            }
         }
     }
 
-    #region Unchanged Utility Methods
+    #region Utility Methods
     private IEnumerator GoHomeRoutine()
     {
         if (unpaidPeriods > 0)
@@ -329,6 +345,7 @@ public abstract class StaffController : MonoBehaviour
             var salaryStack = ScenePointsRegistry.Instance?.salaryStackPoint;
             if (salaryStack != null)
             {
+                thoughtBubble?.ShowPriorityMessage("За зарплатой...", 3f, Color.yellow);
                 AgentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, salaryStack.transform.position, this.gameObject));
                 yield return new WaitUntil(() => !AgentMover.IsMoving());
 
@@ -340,15 +357,18 @@ public abstract class StaffController : MonoBehaviour
                         PlayerWallet.Instance.AddMoney(-salaryToPay, $"Зарплата: {characterName}");
                         unpaidPeriods = 0;
                         missedPaymentCount = 0;
+                        thoughtBubble?.ShowPriorityMessage("Отлично!", 2f, Color.green);
                     }
                     else
                     {
                         salaryStack.AddEnvelope(); 
                         missedPaymentCount++;
+                        thoughtBubble?.ShowPriorityMessage("В казне пусто?!", 3f, Color.red);
                     }
                 }
                 else
                 {
+                    thoughtBubble?.ShowPriorityMessage("Где мой конверт?!", 4f, Color.red);
                     yield return new WaitForSeconds(10f);
                     missedPaymentCount++;
                 }

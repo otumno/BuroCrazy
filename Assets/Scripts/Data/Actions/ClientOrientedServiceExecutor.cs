@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Characters/Controllers/Actions/ClientOrientedServiceExecutor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
@@ -11,17 +10,17 @@ public class ClientOrientedServiceExecutor : ActionExecutor
     {
         if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null)
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-        if (zone == null) { FinishAction(); yield break; }
+        if (zone == null) { FinishAction(false); yield break; }
 
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
         if (client == null)
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
@@ -30,9 +29,8 @@ public class ClientOrientedServiceExecutor : ActionExecutor
 
         float patienceBonus = 30f;
         client.totalPatienceTime += patienceBonus;
-        Debug.Log($"{staff.name} применил клиентоориентированность к {client.name}. Терпение увеличено на {patienceBonus} сек.");
         
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction();
+        FinishAction(true);
     }
 }

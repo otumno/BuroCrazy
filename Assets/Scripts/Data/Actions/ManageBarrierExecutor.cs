@@ -7,14 +7,14 @@ public class ManageBarrierExecutor : ActionExecutor
     {
         if (!(staff is GuardMovement guard))
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
         var barrier = GuardManager.Instance.securityBarrier;
         if (barrier == null || barrier.guardInteractionPoint == null)
         {
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
         
@@ -33,6 +33,6 @@ public class ManageBarrierExecutor : ActionExecutor
         }
 
         guard.SetState(GuardMovement.GuardState.Idle);
-        FinishAction();
+        FinishAction(true);
     }
 }

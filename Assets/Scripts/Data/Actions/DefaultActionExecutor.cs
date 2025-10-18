@@ -14,7 +14,7 @@ public class DefaultActionExecutor : ActionExecutor
             Transform post = ScenePointsRegistry.Instance?.guardPostPoint;
             if (post != null)
             {
-                yield return staff.StartCoroutine(guard.MoveToTarget(post.position, GuardMovement.GuardState.OnPost));
+                yield return staff.StartCoroutine(guard.MoveToTarget(post.position, GuardMovement.GuardState.OnPost.ToString()));
                 yield return new WaitForSeconds(15f);
             }
         }
@@ -24,7 +24,7 @@ public class DefaultActionExecutor : ActionExecutor
             RectZone homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
             if (homeZone != null)
             {
-                yield return staff.StartCoroutine(worker.MoveToTarget(homeZone.GetRandomPointInside(), ServiceWorkerController.WorkerState.Idle));
+                yield return staff.StartCoroutine(worker.MoveToTarget(homeZone.GetRandomPointInside(), ServiceWorkerController.WorkerState.Idle.ToString()));
                 yield return new WaitForSeconds(15f);
             }
         }
@@ -34,7 +34,6 @@ public class DefaultActionExecutor : ActionExecutor
             Transform breakPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
             if (breakPoint != null)
             {
-                // ----- THE FIX IS HERE -----
                 yield return staff.StartCoroutine(clerk.MoveToTarget(breakPoint.position, ClerkController.ClerkState.OnBreak.ToString()));
                 yield return new WaitForSeconds(15f);
                 ScenePointsRegistry.Instance.FreeKitchenPoint(breakPoint);
@@ -45,6 +44,6 @@ public class DefaultActionExecutor : ActionExecutor
             yield return new WaitForSeconds(10f);
         }
 
-        FinishAction();
+        FinishAction(true);
     }
 }

@@ -6,16 +6,8 @@ public abstract class ActionExecutor : MonoBehaviour
 {
     public virtual bool IsInterruptible => true;
     protected StaffController staff;
-
-    // ----- НАЧАЛО ИЗМЕНЕНИЙ -----
-    // Поле 'actionData' было 'protected StaffAction actionData;'
-    // Теперь это публичное свойство с приватным сеттером.
-    // Это позволяет другим скриптам (например, StaffController) ЧИТАТЬ его значение,
-    // но только сам ActionExecutor может его ЗАПИСЫВАТЬ.
     public StaffAction actionData { get; private set; }
-    // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
 
-    // Главный метод, который будет запускать "мозг"
     public void Execute(StaffController staff, StaffAction actionData)
     {
         this.staff = staff;
@@ -23,18 +15,31 @@ public abstract class ActionExecutor : MonoBehaviour
         StartCoroutine(ActionRoutine());
     }
 
-    // В этой корутине будет жить вся логика действия
     protected abstract IEnumerator ActionRoutine();
     
-    // В конце каждого действия мы будем вызывать этот метод
-    protected void FinishAction()
+    // ----- НОВЫЙ МЕТОД ЗАВЕРШЕНИЯ -----
+    protected void FinishAction(bool success)
     {
+        OnActionCompleted(success); // Вызываем новый метод для обратной связи
+
         if (staff != null)
         {
-            // Сообщаем "мозгу", что мы свободны
             staff.OnActionFinished();
         }
-        // Самоуничтожаемся
         Destroy(this);
+    }
+
+    // ----- НОВЫЙ ВИРТУАЛЬНЫЙ МЕТОД ДЛЯ ОБРАТНОЙ СВЯЗИ -----
+    protected virtual void OnActionCompleted(bool success)
+    {
+        // Базовая реализация: просто показывает мысль об успехе/провале
+        if (success)
+        {
+            staff.thoughtBubble?.ShowPriorityMessage("Готово!", 2f, Color.green);
+        }
+        else
+        {
+            staff.thoughtBubble?.ShowPriorityMessage("Эх, не вышло...", 2f, Color.red);
+        }
     }
 }

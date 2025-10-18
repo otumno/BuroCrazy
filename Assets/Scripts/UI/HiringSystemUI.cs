@@ -24,17 +24,27 @@ public class HiringSystemUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI detailedUniqueSkillText;
     [SerializeField] private Button hireButton;
     [SerializeField] private Button closeButton;
-
+    
     private Candidate currentlyViewedCandidate;
-    private GameObject currentlyViewedPin; // Ссылка на "листок", который мы просматриваем
+    private GameObject currentlyViewedPin;
+    private int lastGeneratedDay = -1;
+
+    // Словарь для хранения связи "кандидат -> его листок на доске"
+    private Dictionary<Candidate, GameObject> candidatePins = new Dictionary<Candidate, GameObject>();
 
     // OnEnable вызывается каждый раз, когда панель становится активной
     private void OnEnable()
     {
-        RefreshCandidates();
-        detailedViewPanel.SetActive(false); // Убеждаемся, что детальная панель всегда скрыта при открытии
-        
-        // Назначаем слушателей на кнопки
+        int currentDay = ClientSpawner.Instance != null ? ClientSpawner.Instance.GetCurrentDay() : 1;
+    
+        // Генерируем новых кандидатов ТОЛЬКО если это новый день
+        if (currentDay != lastGeneratedDay)
+        {
+            RefreshCandidates();
+            lastGeneratedDay = currentDay;
+        }
+    
+        detailedViewPanel.SetActive(false);
         closeButton.onClick.AddListener(CloseDetailedView);
         hireButton.onClick.AddListener(OnHire);
     }
@@ -57,15 +67,15 @@ public class HiringSystemUI : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+        candidatePins.Clear(); // Очищаем словарь
 
         if (HiringManager.Instance == null) return;
-        HiringManager.Instance.GenerateNewCandidates(); // Просим сгенерировать свежий список
+        HiringManager.Instance.GenerateNewCandidates();
 
         // Создаем и размещаем новые "листки"
         foreach (var candidate in HiringManager.Instance.AvailableCandidates)
         {
             GameObject pinGO = Instantiate(resumePinPrefab, pinContainer);
-            
             RectTransform pinRect = pinGO.GetComponent<RectTransform>();
             if (pinRect != null)
             {
@@ -73,13 +83,15 @@ public class HiringSystemUI : MonoBehaviour
                 float randomX = Random.Range(-pinContainer.rect.width / 2, pinContainer.rect.width / 2);
                 float randomY = Random.Range(-pinContainer.rect.height / 2, pinContainer.rect.height / 2);
                 pinRect.anchoredPosition = new Vector2(randomX, randomY);
-
                 // Задаем случайный поворот для "живости"
                 pinRect.localRotation = Quaternion.Euler(0, 0, Random.Range(-15f, 15f));
             }
 
             // Настраиваем сам "листок"
             pinGO.GetComponent<ResumePin>()?.Setup(candidate, this);
+            
+            // Запоминаем, какой листок соответствует какому кандидату
+            candidatePins[candidate] = pinGO;
         }
     }
 
@@ -95,7 +107,7 @@ public class HiringSystemUI : MonoBehaviour
         detailedNameText.text = candidate.Name;
         detailedBioText.text = candidate.Bio;
         detailedCostText.text = $"Стоимость: ${candidate.HiringCost}";
-        DisplaySkills(candidate.Skills); // Отображаем навыки по "скрытой" логике
+        DisplaySkills(candidate.Skills);
 
         // Показываем уникальный навык, если он есть
         if (candidate.UniqueActionsPool.Any())
@@ -148,7 +160,7 @@ public class HiringSystemUI : MonoBehaviour
         detailedViewPanel.SetActive(false);
         if (currentlyViewedPin != null)
         {
-            currentlyViewedPin.SetActive(true); // Показываем "листок" обратно на доску
+            currentlyViewedPin.SetActive(true);
         }
     }
 
@@ -171,13 +183,19 @@ public class HiringSystemUI : MonoBehaviour
         {
             Debug.Log($"Успешно нанят: {candidate.Name}");
             CloseDetailedView();
-            RefreshCandidates(); // Обновляем доску (чтобы убрать нанятого)
-            FindFirstObjectByType<HiringPanelUI>()?.RefreshTeamList(); // Обновляем список команды
+            
+            // Удаляем только что нанятого кандидата с доски
+            if (candidatePins.ContainsKey(candidate))
+            {
+                Destroy(candidatePins[candidate]); // Уничтожаем конкретный листок
+                candidatePins.Remove(candidate);   // Удаляем из словаря
+            }
+            
+            FindFirstObjectByType<HiringPanelUI>()?.RefreshTeamList();
         }
         else
         {
             Debug.LogWarning($"Не удалось нанять {candidate.Name}.");
-            // Здесь можно показать игроку всплывающее сообщение
         }
     }
 }

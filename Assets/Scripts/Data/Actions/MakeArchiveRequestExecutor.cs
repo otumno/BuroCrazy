@@ -5,33 +5,31 @@ using System.Linq;
 public class MakeArchiveRequestExecutor : ActionExecutor
 {
     public override bool IsInterruptible => false;
-
     protected override IEnumerator ActionRoutine()
     {
         var registrar = staff as ClerkController;
         var zone = ClientSpawner.GetZoneByDeskId(registrar.assignedWorkstation.deskId);
         var client = zone.GetOccupyingClients().FirstOrDefault(c => c.mainGoal == ClientGoal.GetArchiveRecord);
 
-        if (registrar == null || client == null) { FinishAction(); yield break; }
-
+        if (registrar == null || client == null) { FinishAction(false); yield break; }
+        
+        var request = new ArchiveRequest { RequestingRegistrar = registrar, WaitingClient = client };
         ArchiveRequestManager.Instance.CreateRequest(registrar, client);
 
         registrar.SetState(ClerkController.ClerkState.WaitingForArchive);
         client.stateMachine.SetState(ClientState.WaitingForDocument);
 
         var archivistDesk = ScenePointsRegistry.Instance.GetServicePointByID(3); 
-        if (archivistDesk == null) { FinishAction(); yield break; }
+        if (archivistDesk == null) { FinishAction(false); yield break; }
 
-        // ----- THE FIX IS HERE -----
         yield return staff.StartCoroutine(registrar.MoveToTarget(archivistDesk.clerkStandPoint.position, ClerkController.ClerkState.WaitingForArchive.ToString()));
 
         float waitTimer = 0f;
         float maxWaitTime = 60f;
         bool requestFulfilled = false;
-        var request = ArchiveRequestManager.Instance.GetNextRequest(); // Assuming this gets the correct request back
         while(waitTimer < maxWaitTime)
         {
-            if (request != null && request.IsFulfilled)
+            if (request.IsFulfilled)
             {
                 requestFulfilled = true;
                 break;
@@ -44,9 +42,7 @@ public class MakeArchiveRequestExecutor : ActionExecutor
         {
             registrar.GetComponent<StackHolder>().ShowSingleDocumentSprite(); 
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
-            // ----- THE FIX IS HERE -----
             yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
-            
             registrar.GetComponent<StackHolder>().HideStack();
 
             client.billToPay += 150; 
@@ -55,19 +51,16 @@ public class MakeArchiveRequestExecutor : ActionExecutor
         }
         else
         {
-            Debug.LogWarning($"Регистратор {registrar.name} не дождался Архивариуса и отменил запрос.");
             registrar.thoughtBubble?.ShowPriorityMessage("Архив не отвечает...\nИзвините.", 3f, Color.red);
-
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
-            // ----- THE FIX IS HERE -----
             yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
-
+            
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
             client.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
             client.stateMachine.SetState(ClientState.LeavingUpset);
         }
-
+        
         registrar.ServiceComplete();
-        FinishAction();
+        FinishAction(true);
     }
 }

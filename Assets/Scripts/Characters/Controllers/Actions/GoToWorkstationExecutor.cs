@@ -11,7 +11,7 @@ public class GoToWorkstationExecutor : ActionExecutor
         { 
             staff.thoughtBubble?.ShowPriorityMessage("Мне не назначили\nрабочее место!", 4f, Color.red);
             yield return new WaitForSeconds(5f);
-            FinishAction();
+            FinishAction(false);
             yield break;
         }
 
@@ -23,8 +23,7 @@ public class GoToWorkstationExecutor : ActionExecutor
         if (staff is ClerkController clerk)
         {
             clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-            // ----- ИЗМЕНЕНИЕ: Передаем состояние как строку -----
-            yield return staff.StartCoroutine(clerk.MoveToTarget(staff.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
+            yield return staff.StartCoroutine(staff.MoveToTarget(staff.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
         }
         else
         {
@@ -32,6 +31,6 @@ public class GoToWorkstationExecutor : ActionExecutor
         }
 
         Debug.Log($"[GoToWorkstationExecutor] {staff.name} прибыл на рабочее место. Освобождаю AI для принятия решений.");
-        FinishAction();
+        FinishAction(true);
     }
 }
