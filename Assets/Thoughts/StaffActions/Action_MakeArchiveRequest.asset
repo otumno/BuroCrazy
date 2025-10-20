@@ -22,6 +22,7 @@ MonoBehaviour:
     \u043A \u0430\u0440\u0445\u0438\u0432\u0443 \u0438 \u0431\u0443\u0434\u0435\u0442
     \u0436\u0434\u0430\u0442\u044C \u0432\u044B\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F
     \u0437\u0430\u043F\u0440\u043E\u0441\u0430."
+  category: 1
   priority: 75
   baseSuccessChance: 0.8
   minSuccessChance: 0.3
@@ -38,6 +39,6 @@ MonoBehaviour:
   actionDuration: 30
   patrolPointsToVisit: 3
   actionCooldown: 60
-  minRankRequired: 1
+  minRankRequired: 0
   applicableRoles: 02000000
   isUnique: 0

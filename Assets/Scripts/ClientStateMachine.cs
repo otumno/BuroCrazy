@@ -222,59 +222,121 @@ public class ClientStateMachine : MonoBehaviour
         }
         SetState(ClientState.MovingToGoal);
     }
+	
+	
     private IEnumerator EnterZoneRoutine()
     {
-        if (targetZone == null) { SetState(ClientState.Confused); yield break; }
+        // 1. Check if a target zone is set. If not, the client gets confused.
+        if (targetZone == null)
+        {
+            SetState(ClientState.Confused);
+            yield break; // Exit the coroutine
+        }
+
+        // 2. Stop any current movement.
         agentMover.Stop();
 
+        // 3. Handle queue joining or jumping.
+        // If the client was sent back for revision, they jump to the front.
         if (parent.hasBeenSentForRevision)
         {
             targetZone.JumpQueue(parent.gameObject);
-            parent.hasBeenSentForRevision = false;
+            parent.hasBeenSentForRevision = false; // Reset the flag
         }
-        else
+        else // Otherwise, join the regular queue.
         {
             targetZone.JoinQueue(parent.gameObject);
         }
 
+        // 4. Start monitoring patience for this zone.
         zonePatienceCoroutine = StartCoroutine(PatienceMonitorForZone(targetZone));
+
+        // 5. Wait until this client is the first in the queue.
         yield return new WaitUntil(() => targetZone.IsFirstInQueue(parent.gameObject));
+
+        // 6. Loop until a free spot inside the zone is found and occupied.
         Waypoint freeSpot = null;
         while (freeSpot == null)
         {
-            if (currentState != ClientState.AtLimitedZoneEntrance) yield break;
-            
-            int deskId = GetDeskIdFromZone(targetZone);
-            IServiceProvider provider = null;
-            if (deskId != int.MinValue)
+            // Check if the client's state changed while waiting (e.g., got confused, left).
+            if (currentState != ClientState.AtLimitedZoneEntrance)
             {
-                provider = ClientSpawner.GetServiceProviderAtDesk(deskId);
-            }
-            
-            if (provider != null && provider.IsAvailableToServe)
-            {
-                freeSpot = targetZone.RequestAndOccupyWaypoint(parent.gameObject);
+                // If state changed, ensure the patience monitor is stopped if it's still running.
+                if (zonePatienceCoroutine != null)
+                {
+                    StopCoroutine(zonePatienceCoroutine);
+                    zonePatienceCoroutine = null;
+                }
+                yield break; // Exit the coroutine
             }
 
+
+            // Determine the desk ID associated with this zone.
+            int deskId = GetDeskIdFromZone(targetZone);
+            bool canEnterDirectly = false; // Flag to allow entry
+
+            // Check if entry is allowed:
+            // - If the zone has no ID (like a toilet), entry is allowed if space permits.
+            // - If the zone has an ID, check if the corresponding service provider is available.
+            if (deskId == int.MinValue) // Zone without a specific service provider (e.g., toilet)
+            {
+                canEnterDirectly = true; // Allow entry if space is available
+            }
+            else // Zone with a service provider (desk, cashier)
+            {
+                IServiceProvider provider = ClientSpawner.GetServiceProviderAtDesk(deskId);
+                // Allow entry if a provider exists and is available.
+                if (provider != null && provider.IsAvailableToServe)
+                {
+                    canEnterDirectly = true;
+                }
+            }
+
+            // If entry is allowed (based on the checks above), try to request and occupy a spot.
+            if (canEnterDirectly)
+            {
+                // Attempt to get a free waypoint inside the zone.
+                freeSpot = targetZone.RequestAndOccupyWaypoint(parent.gameObject);
+                if (freeSpot != null)
+                {
+                     // Successfully got a spot! Log it.
+                    Debug.Log($"<color=lightblue>[EnterZone]</color> {parent.name} входит в зону '{targetZone.name}' (Место: {freeSpot.name}).");
+                }
+            }
+
+            // If a spot was NOT found (either entry not allowed yet, or zone is full)
             if (freeSpot == null)
             {
+                // Wait briefly before checking again.
                 yield return new WaitForSeconds(0.5f);
             }
-        }
+        } // End of the while loop (spot has been found)
+
+        // 7. Spot found! Clean up: leave the waiting queue and stop the patience monitor.
         targetZone.LeaveQueue(parent.gameObject);
-        if (zonePatienceCoroutine != null) StopCoroutine(zonePatienceCoroutine);
-        zonePatienceCoroutine = null;
+        if (zonePatienceCoroutine != null)
+        {
+            StopCoroutine(zonePatienceCoroutine);
+            zonePatienceCoroutine = null; // Reset coroutine reference
+        }
+
+        // 8. Set the occupied spot as the client's next goal and change state to move towards it.
         SetGoal(freeSpot);
         SetState(ClientState.MovingToGoal);
+
+        // 9. Special logic for Director Approval goal when entering the reception zone.
         if (parent.mainGoal == ClientGoal.DirectorApproval && targetZone == ClientSpawner.Instance.directorReceptionZone)
         {
             StartOfDayPanel directorsDesk = StartOfDayPanel.Instance;
             if (directorsDesk != null)
             {
+                // Register the document with the director's desk UI.
                 directorsDesk.RegisterDirectorDocument(parent);
             }
         }
-    }
+    } // End of EnterZoneRoutine
+	
+	
     private IEnumerator HandleImpoliteArrival() { agentMover.Stop(); ClientQueueManager.Instance.JoinQueue(parent); SetGoal(ClientQueueManager.Instance.ChooseNewGoal(parent)); SetState(ClientState.MovingToGoal); yield return null;
     }
     private IEnumerator ConfusedRoutine() { agentMover.Stop(); isBeingHelped = false;

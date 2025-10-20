@@ -3175,11 +3175,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: experiencedInternChance.m_Curve.Array.data[0].time
-      value: 1.229248
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: experiencedInternChance.m_Curve.Array.data[1].time
-      value: 30.218435
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: specialistCountOverTime.m_Curve.Array.data[0].time
@@ -3191,11 +3191,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: experiencedInternChance.m_Curve.Array.data[0].value
-      value: 1
+      value: 0.15
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: experiencedInternChance.m_Curve.Array.data[1].value
-      value: 2.002165
+      value: 0.9
       objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: specialistCountOverTime.m_Curve.Array.data[0].value
@@ -3301,6 +3301,94 @@ PrefabInstance:
       propertyPath: m_Name
       value: '[SYSTEMS]'
       objectReference: {fileID: 0}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: rankDatabase.Array.size
+      value: 21
+      objectReference: {fileID: 0}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[0]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 1b4af9197077c4e4b990705035f383a6, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[1]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 377258fa17bd39f4a92e68869a6023b1, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 71048ad763cfc734884f9aba9d67ccda, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[3]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 7c8e9e1fe8c503a4796dcf4fdac55e48, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[4]'
+      value: 
+      objectReference: {fileID: 11400000, guid: b13adfca6a7fd334285b61a8006c3ccc, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[5]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 402ea1cda9da54847baef351d254e7d2, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[6]'
+      value: 
+      objectReference: {fileID: 11400000, guid: b6ee752473f48294f9fc2c503e7e6fd6, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[7]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 1106034a65c45464ab0e31d0a701b5e3, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[8]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 9d884aa4095664c4cbdc4d67a70b4c29, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[9]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 144c3721997bf5847be805ded5524331, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[10]'
+      value: 
+      objectReference: {fileID: 11400000, guid: d5ec5b1ba33822c4fa7e8ea109e32575, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[11]'
+      value: 
+      objectReference: {fileID: 11400000, guid: e521506350ba61f46a7e97efafc16225, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[12]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 55cccee074d1f7a48b747fc5f6ee0536, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[13]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 7b13b1d77d932c1478f7a0bfb2ac3095, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[14]'
+      value: 
+      objectReference: {fileID: 11400000, guid: aebc011ac958fa34cb5213eca0a203f9, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[15]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 8acfa984aee5f274099d5caddd1d3c8d, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[16]'
+      value: 
+      objectReference: {fileID: 11400000, guid: d556b203e26d4474d90db5e8c395b17c, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[17]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 55426c7c341be7a4793f5999d52eb34e, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[18]'
+      value: 
+      objectReference: {fileID: 11400000, guid: bddd0bc8a1605514590bae2395612348, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[19]'
+      value: 
+      objectReference: {fileID: 11400000, guid: fe7fbb9fad458ac4283716ab1b960fdc, type: 2}
+    - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'rankDatabase.Array.data[20]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 80f5eb9976a116c4982b313fc64008ef, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects:
     - {fileID: 6644877851020064264, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}

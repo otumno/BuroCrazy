@@ -21,7 +21,6 @@ MonoBehaviour:
   workPeriodsCount: 4
   associatedRole: 7
   unlockedActions:
-  - {fileID: 11400000, guid: 4f8e890b134e9314fa22fc55049a8b0b, type: 2}
   - {fileID: 11400000, guid: 3cb5b5d058a349c4bb8508f33178ca5f, type: 2}
   - {fileID: 11400000, guid: 5d4b44268e9495840983f71988ce11f2, type: 2}
   possiblePromotions:

@@ -57,4 +57,7 @@ public class RoleData : ScriptableObject
 	[Header("Параметры бездействия (Idle)")]
     public float minIdleWait = 5f;
     public float maxIdleWait = 10f;
+	
+	[Tooltip("Базовая стоимость найма для этой роли (без учета навыков и ранга)")]
+	public int baseHiringCost = 100;
 }

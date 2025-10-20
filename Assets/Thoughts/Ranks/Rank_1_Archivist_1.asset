@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da71029bba7bc5443be40737c2c47fe9, type: 3}
   m_Name: Rank_1_Archivist_1
   m_EditorClassIdentifier: 
-  rankLevel: 1
+  rankLevel: 0
   rankName: "\u041C\u043B\u0430\u0434\u0448\u0438\u0439 \u0430\u0440\u0445\u0438\u0432\u0430\u0440\u0438\u0443\u0441"
   experienceRequired: 1000
   promotionCost: 300

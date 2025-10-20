@@ -10,6 +10,9 @@ public class PlayerInputController : MonoBehaviour
     public Camera mainCamera;
     public LayerMask movementLayerMask;
     public GameObject clickMarkerPrefab;
+	
+	[Tooltip("Слой(и), на котором находятся коллайдеры персонала для взаимодействия (правый клик)")]
+    public LayerMask staffInteractionLayerMask;
 
     // --- НАЧАЛО ИЗМЕНЕНИЙ ---
     [Header("Ссылки для взаимодействия")]
@@ -28,7 +31,16 @@ public class PlayerInputController : MonoBehaviour
 
     void Update()
     {
-        // --- ЛЕВЫЙ КЛИК (передвижение) ---
+        DirectorAvatarController director = DirectorAvatarController.Instance;
+    AgentMover directorMover = director?.GetComponent<AgentMover>(); // Безопасно получаем AgentMover
+
+    // Если директор существует, у него есть AgentMover и он сейчас скользит/лежит - игнорируем ввод
+    if (directorMover != null && directorMover.IsSlipping)
+    {
+        return; // Выходим из Update, не обрабатывая клики
+    }
+		
+		// --- ЛЕВЫЙ КЛИК (передвижение) ---
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;
@@ -57,7 +69,12 @@ public class PlayerInputController : MonoBehaviour
             if (EventSystem.current.IsPointerOverGameObject()) return;
             if(DirectorAvatarController.Instance != null && DirectorAvatarController.Instance.IsInUninterruptibleAction) return;
             
-            RaycastHit2D hit = Physics2D.Raycast(mainCamera.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
+            RaycastHit2D hit = Physics2D.Raycast(
+                mainCamera.ScreenToWorldPoint(Input.mousePosition),
+                Vector2.zero,
+                Mathf.Infinity, // Длина луча (не важна для Raycast с Vector2.zero)
+                staffInteractionLayerMask // <<<< ИСПОЛЬЗУЕМ МАСКУ
+            );
             if (hit.collider != null)
             {
                 StaffController clickedStaff = hit.collider.GetComponentInParent<StaffController>();

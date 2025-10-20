@@ -15,17 +15,17 @@ public class Puddle : MonoBehaviour
     }
 
     private void OnTriggerEnter2D(Collider2D other)
+{
+    Debug.Log($"[Puddle Trigger] Вошел: {other.name}, Тег: {other.tag}, Слой: {LayerMask.LayerToName(other.gameObject.layer)}");
+    AgentMover mover = other.GetComponent<AgentMover>();
+    if (mover != null)
     {
-        // Проверяем, есть ли у вошедшего объекта компонент AgentMover (т.е. это наш персонаж)
-        AgentMover mover = other.GetComponent<AgentMover>();
-        if (mover != null)
+        Debug.Log($"Найден AgentMover на {other.name}. Шанс поскользнуться: {slipChance}"); // <<<< Добавь эту строку
+        if (Random.value < slipChance)
         {
-            // Бросаем кубик!
-            if (Random.value < slipChance)
-            {
-                // Если не повезло, вызываем у персонажа метод "Поскользнуться"
-                mover.SlipAndRecover();
-            }
+            Debug.Log($"ПОСКОЛЬЗНУЛСЯ! Вызов SlipAndRecover для {other.name}"); // <<<< Добавь эту строку
+            mover.SlipAndRecover();
         }
     }
+}
 }

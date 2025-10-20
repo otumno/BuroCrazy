@@ -36,6 +36,6 @@ MonoBehaviour:
   actionDuration: 30
   patrolPointsToVisit: 3
   actionCooldown: 60
-  minRankRequired: 1
+  minRankRequired: 0
   applicableRoles: 02000000
   isUnique: 0

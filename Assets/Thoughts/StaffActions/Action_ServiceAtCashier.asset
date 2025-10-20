@@ -16,6 +16,7 @@ MonoBehaviour:
   displayName: "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435
     \u0432 \u043A\u0430\u0441\u0441\u0435"
   description: 
+  category: 0
   priority: 70
   baseSuccessChance: 1
   minSuccessChance: 1
@@ -32,6 +33,6 @@ MonoBehaviour:
   actionDuration: 0
   patrolPointsToVisit: 0
   actionCooldown: 1
-  minRankRequired: 1
+  minRankRequired: 0
   applicableRoles: 03000000
   isUnique: 0

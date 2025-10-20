@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da71029bba7bc5443be40737c2c47fe9, type: 3}
   m_Name: Rank_1_Guard_3
   m_EditorClassIdentifier: 
-  rankLevel: 1
+  rankLevel: 2
   rankName: "\u0421\u0442\u0430\u0440\u0448\u0438\u0439 \u043E\u0444\u0438\u0446\u0435\u0440
     \u041E\u0445\u0440\u0430\u043D\u044B"
   experienceRequired: 4000
