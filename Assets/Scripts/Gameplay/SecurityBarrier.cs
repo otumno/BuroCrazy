@@ -47,6 +47,7 @@ public class SecurityBarrier : MonoBehaviour
             if (deactivateSound != null) AudioSource.PlayClipAtPoint(deactivateSound, transform.position);
             if (lockIcon != null) lockIcon.SetActive(false);
             Debug.Log("Защитный барьер ДЕАКТИВИРОВАН.");
+			AchievementManager.Instance?.UnlockAchievement("OPEN_FIRST_DOOR");
         }
     }
     

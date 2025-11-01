@@ -17,6 +17,7 @@ public abstract class StaffController : MonoBehaviour
     public int experiencePoints = 0;
     public Gender gender;
     public CharacterSkills skills;
+	public bool promotionAvailableNotificationPlayed = false;
     
     [Header("График и Зарплата")]
     public List<string> workPeriods = new List<string>();
@@ -213,16 +214,45 @@ public abstract class StaffController : MonoBehaviour
     }
     public virtual void Initialize(RoleData data)
     {
+        // Получаем ссылки, если еще не получены
         if (visuals == null) visuals = GetComponent<CharacterVisuals>();
         if (agentMover == null) agentMover = GetComponent<AgentMover>();
-        this.currentRole = data.roleType;
-        if (visuals != null) visuals.SetupFromRoleData(data, this.gender);
+
+        // Проверки на null для надежности
+        if (data == null) {
+            Debug.LogError($"Initialize вызван с null RoleData для {gameObject.name}!");
+            return;
+        }
+        if (visuals == null) {
+             Debug.LogError($"CharacterVisuals не найден на {gameObject.name} во время Initialize!");
+             // Можно решить, продолжать ли инициализацию без визуала
+        }
+        if (agentMover == null) {
+            Debug.LogError($"AgentMover не найден на {gameObject.name} во время Initialize!");
+            // Можно решить, продолжать ли инициализацию без движения
+        }
+
+
+        this.currentRole = data.roleType; // Устанавливаем роль
+
+        // Настраиваем внешний вид через CharacterVisuals, передавая RoleData
+        // Этот вызов УЖЕ настроит и спрайт тела, и спрайты анимации в AgentMover
+        visuals?.SetupFromRoleData(data, this.gender);
+
+        // Настраиваем параметры движения из RoleData
         if (agentMover != null)
         {
-            agentMover.SetAnimationSprites(data.idleSprite, data.walkSprite1, data.walkSprite2);
+            // --- ИЗМЕНЕНИЕ НАЧАЛО: Удаляем устаревший вызов SetAnimationSprites ---
+            // agentMover.SetAnimationSprites(data.idleSprite, data.walkSprite1, data.walkSprite2); // <<<< УДАЛИТЬ ЭТУ СТРОКУ
+            // --- ИЗМЕНЕНИЕ КОНЕЦ ---
+
+            // Устанавливаем скорость и приоритет из RoleData
             agentMover.moveSpeed = data.moveSpeed;
             agentMover.priority = data.priority;
+            // Обновляем базовую скорость на случай, если moveSpeed изменился
+            agentMover.ApplySpeedMultiplier(1f); // Вызовем с множителем 1, чтобы обновить baseMoveSpeed, если нужно
         }
+         // Дополнительные инициализации (если нужны для ВСЕХ StaffController) можно добавить здесь
     }
     #endregion
 
@@ -408,4 +438,56 @@ public abstract class StaffController : MonoBehaviour
         Destroy(gameObject);
     }
     #endregion
+	
+	/// <summary>
+    /// Начисляет опыт сотруднику и немедленно проверяет, доступно ли повышение.
+    /// Если повышение стало доступно ТОЛЬКО ЧТО, проигрывает эффект.
+    /// </summary>
+    public void AddExperienceAndCheckForPromotion(int xpGained)
+    {
+        if (xpGained <= 0) return; 
+
+        // Если мы уже показали уведомление об этом уровне, не повторяем
+        if (promotionAvailableNotificationPlayed) return; 
+
+        if (currentRank == null || currentRank.possiblePromotions == null || !currentRank.possiblePromotions.Any())
+        {
+            this.experiencePoints += xpGained;
+            return;
+        }
+
+        // 1. Запоминаем, мог ли он повыситься ДО начисления опыта
+        bool couldBePromotedBefore = currentRank.possiblePromotions
+            .Any(rank => this.experiencePoints >= rank.experienceRequired);
+
+        // 2. Начисляем опыт
+        this.experiencePoints += xpGained;
+
+        // 3. Проверяем, может ли он повыситься СЕЙЧАС
+        bool canBePromotedNow = currentRank.possiblePromotions
+            .Any(rank => this.experiencePoints >= rank.experienceRequired);
+
+        // 4. Если раньше не мог, а теперь может — ВРЕМЯ ЭФФЕКТА!
+        if (canBePromotedNow && !couldBePromotedBefore)
+        {
+            // <<< ВОТ ЗАПРОШЕННЫЙ ЛОГ >>>
+            Debug.Log($"<color=yellow>[Level Up!] Сотрудник {characterName} (ID: {this.gameObject.GetInstanceID()}) ГОТОВ К ПОВЫШЕНИЮ. (Опыт: {this.experiencePoints}).</color>", this.gameObject);
+            
+            // <<< ДОБАВИМ ЛОГИ ДЛЯ ПРОВЕРКИ VISUALS >>>
+            if (visuals == null)
+            {
+                Debug.LogError($"[Level Up!] ОШИБКА: 'visuals' (CharacterVisuals) равен NULL для {characterName}. Не могу проиграть эффект.", this.gameObject);
+            }
+            else
+            {
+                Debug.Log($"[Level Up!] 'visuals' НАЙДЕН. Вызов PlayLevelUpEffect() для {characterName}...", this.gameObject);
+                visuals?.PlayLevelUpEffect(); // [cite: 596]
+            }
+            // <<< КОНЕЦ ДОПОЛНИТЕЛЬНЫХ ЛОГОВ >>>
+            
+            // Устанавливаем флаг, чтобы больше не спамить эффектом
+            promotionAvailableNotificationPlayed = true;
+        }
+    }
+	
 }

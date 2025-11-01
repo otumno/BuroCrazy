@@ -123,11 +123,20 @@ public class DirectorAvatarController : StaffController, IServiceProvider
          }
         // Если директор вручную работает на станции или обслуживает клиента, останавливаем это
         if (currentState == DirectorState.WorkingAtStation || currentState == DirectorState.ServingClient)
-        {
+         {
             StopManualWork(false); // Останавливаем работу, но не отходим от стола автоматически
         }
         StopAllCoroutines(); // Прерываем все текущие корутины (включая предыдущее движение)
-        StartCoroutine(MoveToTargetRoutine(targetWaypoint.transform.position, DirectorState.Idle)); // Запускаем движение к новой цели
+        StartCoroutine(MoveToTargetAndSetState(targetWaypoint.transform.position, DirectorState.Idle)); // Запускаем движение к новой цели
+    }
+
+     /// <summary>
+    /// Новая корутина-обертка для установки состояния ПОСЛЕ движения.
+    /// </summary>
+    private IEnumerator MoveToTargetAndSetState(Vector2 targetPosition, DirectorState stateAfterArrival)
+    {
+        yield return StartCoroutine(MoveToTargetRoutine(targetPosition)); // Ждем завершения движения
+        SetState(stateAfterArrival); // Устанавливаем состояние после
     }
 
     /// <summary>
@@ -178,7 +187,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             if (moveAway && currentWorkstation.clerkStandPoint != null) // Добавлена проверка на null
             {
                 // Запускаем корутину движения на небольшое расстояние от стола
-                StartCoroutine(MoveToTargetRoutine((Vector2)currentWorkstation.clerkStandPoint.position + Vector2.down * 0.5f, DirectorState.Idle));
+                StartCoroutine(MoveToTargetAndSetState((Vector2)currentWorkstation.clerkStandPoint.position + Vector2.down * 0.5f, DirectorState.Idle));
             }
             currentWorkstation = null; // Сбрасываем ссылку на рабочее место
         }
@@ -225,7 +234,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
          }
         // Не выполняем, если Директор не свободен (не Idle и не AtDesk) или стопка пуста
         if ((currentState != DirectorState.Idle && currentState != DirectorState.AtDesk) || stack.IsEmpty)
-        {
+         {
              string reason = "";
              if (currentState != DirectorState.Idle && currentState != DirectorState.AtDesk) reason = $"Неподходящее состояние ({currentState})";
              else if (stack.IsEmpty) reason = "Стопка пуста";
@@ -247,11 +256,11 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             var wp = FindNearestWaypointTo(directorChairPoint.position);
             if (wp != null)
             {
-                MoveToWaypoint(wp); // Используем стандартный метод движения к точке
+                 MoveToWaypoint(wp); // Используем стандартный метод движения к точке
             } else {
                  Debug.LogError("Не найдена путевая точка рядом с directorChairPoint!");
                  // Можно попробовать двигаться напрямую к креслу, но это может вызвать проблемы с навигацией
-                 // StartCoroutine(MoveToTargetRoutine(directorChairPoint.position, DirectorState.AtDesk));
+                 // StartCoroutine(MoveToTargetAndSetState(directorChairPoint.position, DirectorState.AtDesk));
             }
         } else {
              Debug.LogError("DirectorChairPoint не назначен! Невозможно отправить директора к столу.");
@@ -280,7 +289,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         IsAtDesk = atDesk;
         if (atDesk)
         {
-             // Устанавливаем AtDesk, только если не заняты важной работой
+           // Устанавливаем AtDesk, только если не заняты важной работой
             if (currentState != DirectorState.WorkingAtStation && currentState != DirectorState.ServingClient &&
                 currentState != DirectorState.CarryingDocuments && currentState != DirectorState.GoingForDocuments)
             {
@@ -296,6 +305,48 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             }
         }
     }
+
+    public IEnumerator GoAndViewBookkeeping(Vector2 targetPosition, BookkeepingPanelUI bookkeepingPanelToShow)
+{
+    // 1. Проверка на непрерываемое действие (падение и т.д.)
+    if (IsInUninterruptibleAction)
+    {
+         thoughtBubble?.ShowPriorityMessage("Я сейчас занят!", 2f, Color.yellow);
+         Debug.Log("[Director] Не могу идти к бухгалтерии, занят непрерываемым действием.");
+         yield break;
+    }
+
+    // 2. Прерываем ТЕКУЩУЮ РУЧНУЮ РАБОТУ, если она была.
+    // НЕ вызываем StopAllCoroutines() здесь, чтобы не прервать саму себя.
+    if (currentState == DirectorState.WorkingAtStation || currentState == DirectorState.ServingClient)
+    {
+        Debug.Log("[Director] Прерываю ручную работу...");
+        StopManualWork(false); // Останавливаем работу, но не отходим
+        // Ждем один кадр, чтобы StopManualWork успел отработать, если он запускает корутины
+        yield return null;
+    }
+
+    Debug.Log($"[Director] Получена команда идти к столу бухгалтерии ({targetPosition}).");
+
+    // 3. Запускаем движение
+    Debug.Log("[Director] Начинаю движение к столу бухгалтерии...");
+    yield return StartCoroutine(MoveToTargetRoutine(targetPosition)); // Ждем завершения движения
+
+    // 4. Устанавливаем состояние Idle ПОСЛЕ движения
+    SetState(DirectorState.Idle);
+    Debug.Log("[Director] Прибыл к столу бухгалтерии и установил состояние Idle.");
+
+    // 5. Открываем панель
+    if (bookkeepingPanelToShow != null)
+    {
+        Debug.Log("[Director] Вызов bookkeepingPanelToShow.Show()...");
+        bookkeepingPanelToShow.Show();
+    }
+    else
+    {
+        Debug.LogError("Панель бухгалтерии (BookkeepingPanelUI) не была передана в корутину GoAndViewBookkeeping!");
+    }
+}
     #endregion
 
     #region Private Coroutines & Methods
@@ -319,7 +370,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
 
         // Двигаемся к точке ожидания сотрудника на этой станции
         if (workstation.clerkStandPoint != null) {
-            yield return StartCoroutine(MoveToTargetRoutine(workstation.clerkStandPoint.position, DirectorState.MovingToPoint));
+            yield return StartCoroutine(MoveToTargetRoutine(workstation.clerkStandPoint.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
         } else {
              Debug.LogError($"У workstation {workstation.name} не назначен clerkStandPoint!");
              StopManualWork(false); // Отменяем работу, если точка не найдена
@@ -343,7 +394,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             if (clientToServe != null && clientBeingServed == null)
             {
                  // Проверяем, что клиент действительно ждет обслуживания в этой зоне
-                 if (clientToServe.stateMachine != null && clientToServe.stateMachine.GetTargetZone() == zone) {
+                  if (clientToServe.stateMachine != null && clientToServe.stateMachine.GetTargetZone() == zone) {
                     // Запускаем корутину обслуживания этого клиента
                     yield return StartCoroutine(DirectorServiceRoutine(clientToServe));
                  } else {
@@ -362,28 +413,26 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     /// <summary>
     /// Корутина для перемещения Директора к цели с использованием PathfindingUtility.
     /// </summary>
-    private IEnumerator MoveToTargetRoutine(Vector2 targetPosition, DirectorState stateAfterArrival)
+    // <<< ИЗМЕНЕНИЕ: Убран stateAfterArrival >>>
+    private IEnumerator MoveToTargetRoutine(Vector2 targetPosition)
     {
         SetState(DirectorState.MovingToPoint); // Устанавливаем состояние "Движется к точке"
-        // Строим путь
         Queue<Waypoint> path = PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject);
-        // Если путь найден и он не пустой
         if (path != null && path.Count > 0)
         {
             if (agentMover != null)
             {
-                agentMover.SetPath(path); // Передаем путь компоненту движения
-                // Ждем, пока компонент движения не сообщит об окончании движения
+                agentMover.SetPath(path);
+                Debug.Log($"[MoveToTargetRoutine] Движение начато к {targetPosition}. Ожидание завершения..."); // <<< ДОБАВЛЕН ЛОГ
                 yield return new WaitUntil(() => agentMover == null || !agentMover.IsMoving());
+                Debug.Log($"[MoveToTargetRoutine] Движение к {targetPosition} завершено."); // <<< ДОБАВЛЕН ЛОГ
             } else {
                  Debug.LogError($"AgentMover не найден на {gameObject.name}! Невозможно двигаться.");
             }
         } else {
              Debug.LogWarning($"Не удалось построить путь для {characterName} к {targetPosition}. Возможно, цель недостижима.");
-             // Можно добавить телепортацию или другую логику обработки недостижимой цели
         }
-        // Устанавливаем финальное состояние после прибытия (или неудачи)
-        SetState(stateAfterArrival);
+        // <<< ИЗМЕНЕНИЕ: УДАЛЕНА УСТАНОВКА СОСТОЯНИЯ >>>
     }
 
     /// <summary>
@@ -414,7 +463,8 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         }
 
         // Двигаемся к точке взаимодействия
-        yield return StartCoroutine(MoveToTargetRoutine(barrier.guardInteractionPoint.position, DirectorState.MovingToPoint));
+        yield return StartCoroutine(MoveToTargetRoutine(barrier.guardInteractionPoint.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
+        SetState(DirectorState.MovingToPoint); // Устанавливаем состояние после движения
 
         // Небольшая пауза для имитации действия
         yield return new WaitForSeconds(1.5f);
@@ -438,7 +488,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
          if (ArchiveManager.Instance == null) {
               Debug.LogError("CollectAndDeliverRoutine: ArchiveManager не найден!");
               yield break;
-         }
+        }
 
 
         SetUninterruptible(true); // Блокируем другие действия
@@ -446,11 +496,12 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         Debug.Log($"[DirectorController] {characterName} идет за документами к {stack.name}.");
 
         // Двигаемся к стопке документов
-        yield return StartCoroutine(MoveToTargetRoutine(stack.transform.position, DirectorState.GoingForDocuments));
+        yield return StartCoroutine(MoveToTargetRoutine(stack.transform.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
+        // Состояние GoingForDocuments остается
 
         // Проверяем стопку еще раз после прибытия
          if (stack == null) { // Могла быть уничтожена, пока шли
-              Debug.LogWarning($"Стопка {stack?.name} исчезла, пока {characterName} шел.");
+             Debug.LogWarning($"Стопка {stack?.name} исчезла, пока {characterName} шел.");
               SetState(DirectorState.Idle);
               SetUninterruptible(false);
               yield break;
@@ -473,7 +524,8 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             {
                  Debug.Log($" -> Идем к точке архива: {archivePoint.name}.");
                 // Двигаемся к точке архива
-                yield return StartCoroutine(MoveToTargetRoutine(archivePoint.position, DirectorState.CarryingDocuments));
+                 yield return StartCoroutine(MoveToTargetRoutine(archivePoint.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
+                 // Состояние CarryingDocuments остается
 
                 // Добавляем документы в главную стопку архива
                  if (ArchiveManager.Instance.mainDocumentStack != null) {
@@ -484,7 +536,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                       Debug.Log($" -> {docCount} документов добавлено в mainDocumentStack.");
                  } else {
                       Debug.LogError("mainDocumentStack в ArchiveManager не найден! Документы потеряны.");
-                 }
+                }
 
                 // Прячем стопку в руках
                 stackHolder?.HideStack();
@@ -585,7 +637,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             // Определяем нужный тип бланка и сертификата для этого стола
             DocumentType requiredDocType = (deskId == 1) ? DocumentType.Form1 : DocumentType.Form2;
             GameObject requiredPrefab = (deskId == 1) ? form1Prefab : form2Prefab; // Не используется напрямую, но для справки
-            GameObject certificatePrefab = (deskId == 1) ? certificate1Prefab : certificate2Prefab;
+             GameObject certificatePrefab = (deskId == 1) ? certificate1Prefab : certificate2Prefab;
             DocumentType certificateType = (deskId == 1) ? DocumentType.Certificate1 : DocumentType.Certificate2;
             int serviceCost = (deskId == 1) ? 100 : 250;
 
@@ -593,7 +645,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             if (client.docHolder == null) { // Доп. проверка
                  Debug.LogError($"У клиента {client.name} отсутствует DocumentHolder!");
             }
-            else if (client.docHolder.GetCurrentDocumentType() != requiredDocType)
+             else if (client.docHolder.GetCurrentDocumentType() != requiredDocType)
             {
                 // Не тот бланк - отправляем клиента за новым
                 thoughtBubble?.ShowPriorityMessage("У вас бланк не тот!\nВозьмите другой.", 3f, Color.red);
@@ -612,14 +664,14 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                 GameObject currentClientDocObject = (clientHand != null && clientHand.childCount > 0) ? clientHand.GetChild(0).gameObject : null;
 
                 if (currentClientDocObject != null && deskPoint != null)
-                {
+                 {
                     clientDocHolder.SetDocument(DocumentType.None); // Убираем документ из данных
                     DocumentMover mover = currentClientDocObject.AddComponent<DocumentMover>();
                     bool arrived = false;
                     mover.StartMove(deskPoint, () => { arrived = true; });
                     yield return new WaitUntil(() => arrived);
                     flyingDoc = currentClientDocObject; // Запоминаем документ на столе
-                     // Проверка, что объект еще существует
+                      // Проверка, что объект еще существует
                      if (flyingDoc != null) {
                          flyingDoc.transform.SetParent(deskPoint);
                          flyingDoc.transform.localPosition = Vector3.zero;
@@ -631,7 +683,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                 } else {
                       Debug.LogWarning($" -> Не удалось анимировать забор документа у {client.name} (объект/точки не найдены).");
                 }
-                // --- Конец анимации забора ---
+                 // --- Конец анимации забора ---
 
                 thoughtBubble?.ShowPriorityMessage("Обрабатываю...", 3f, Color.white);
                 yield return new WaitForSeconds(Random.Range(2.5f, 4.0f)); // Время обработки
@@ -658,12 +710,12 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                               // Проверяем клиента еще раз перед передачей
                               if (client != null && client.docHolder != null) {
                                  client.docHolder.ReceiveTransferredDocument(certificateType, newCertGO);
-                                  Debug.Log($" -> Сертификат {newCertGO.name} передан клиенту {client.name}.");
+                                 Debug.Log($" -> Сертификат {newCertGO.name} передан клиенту {client.name}.");
                               } else {
                                    Debug.LogWarning($" -> Клиент {client?.name} исчез перед получением сертификата. Уничтожаем сертификат.");
                                    Destroy(newCertGO); // Уничтожаем, если клиент ушел
                               }
-                             arrived = true;
+                              arrived = true;
                          });
                          yield return new WaitUntil(() => arrived);
                      } else {
@@ -686,7 +738,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                  }
             }
         }
-        // --- Логика для Регистратуры (ID 0) ---
+         // --- Логика для Регистратуры (ID 0) ---
         else if (deskId == 0)
         {
             thoughtBubble?.ShowPriorityMessage("Смотрю, куда вас направить...", 2f, Color.cyan);
@@ -734,7 +786,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                      // Снимаем с очереди
                      if (client.stateMachine.MyQueueNumber != -1) { ClientQueueManager.Instance?.RemoveClientFromQueue(client); }
 
-                      // Устанавливаем цель и состояние
+                     // Устанавливаем цель и состояние
                      client.stateMachine.SetGoal(destination);
                       client.stateMachine.SetState(leavingUpset ? ClientState.LeavingUpset : ClientState.MovingToGoal);
                       Debug.Log($" -> Клиент {client.name} отправлен к {destinationName} (Состояние: {(leavingUpset ? ClientState.LeavingUpset : ClientState.MovingToGoal)}).");
@@ -762,7 +814,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                   Debug.LogWarning("Клиент исчез во время ожидания оплаты.");
                   jobDone = false;
               } else {
-                 // Назначаем счет за налог, если нужно
+                  // Назначаем счет за налог, если нужно
                  if (client.billToPay == 0 && client.mainGoal == ClientGoal.PayTax)
                  {
                      client.billToPay = Random.Range(20, 121);

@@ -271,6 +271,13 @@ MonoBehaviour:
   walkSprite1: {fileID: 1894015300992715325, guid: 22a93148dcaaea6459ec2aad88f79846, type: 3}
   walkSprite2: {fileID: -6371035009962811522, guid: 618fb1f9e00240d4889cb3efafedeaf4, type: 3}
   animationSpeed: 1
+  dynamicLight: {fileID: 3202741118275778470}
+  lightForwardOffset: 1
+  lightSmoothing: 5
+  rubberBandStrength: 5
+  priority: 1
+  slowingDistance: 2
+  movementSmoothing: 5
   footstepSounds:
   - {fileID: 8300000, guid: 291d7d99a67bca44180c052111af35d8, type: 3}
   - {fileID: 8300000, guid: 3d1c5942220c8684da4f550822904ba5, type: 3}
@@ -278,19 +285,11 @@ MonoBehaviour:
   - {fileID: 8300000, guid: f0b84a659a1d81a48ab3498d797281c8, type: 3}
   - {fileID: 8300000, guid: d10e7aa0fcbf8924ba231be4ab5eebd5, type: 3}
   - {fileID: 8300000, guid: b00f517858af65f4ba4387e3e85a3bc7, type: 3}
-  fallPivotPoint: {fileID: 2845233907620649575}
-  fallSound: {fileID: 8300000, guid: a174e93b6cac6b04cb39ec648059d50c, type: 3}
   footstepAudioSource: {fileID: 2373439032493062296}
   minSpeedForFootsteps: 0.2
   distanceBetweenSteps: 0.7
-  dynamicLight: {fileID: 3202741118275778470}
-  lightForwardOffset: 1
-  lightSmoothing: 5
-  agent: {fileID: 0}
-  rubberBandStrength: 5
-  priority: 1
-  slowingDistance: 2
-  movementSmoothing: 5
+  fallPivotPoint: {fileID: 2845233907620649575}
+  fallSound: {fileID: 8300000, guid: a174e93b6cac6b04cb39ec648059d50c, type: 3}
 --- !u!114 &5169328783431324986
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -383,6 +382,7 @@ MonoBehaviour:
   experiencePoints: 0
   gender: 0
   skills: {fileID: 11400000, guid: 05796c8f594ceed43a520c44f439c320, type: 2}
+  promotionAvailableNotificationPlayed: 0
   workPeriods:
   - "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
   - "\u041E\u0431\u0435\u0434"
@@ -416,7 +416,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6cccdfa95ca24ad44bf8a8929b6b369c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bodyRenderer: {fileID: 2741279865766227009}
+  bodyRenderer: {fileID: 6987943344844722921}
   faceRenderer: {fileID: 5983634483572980443}
   nightLight: {fileID: 1131637138173560786}
   levelUpEffectRenderer: {fileID: 1217661946767318054}
@@ -592,7 +592,7 @@ Transform:
   m_GameObject: {fileID: 2020952804384732130}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.53508586, y: -0.65645075, z: -0.0002773378}
+  m_LocalPosition: {x: -0.156, y: -0.248, z: -0.0002773378}
   m_LocalScale: {x: 0.024999999, y: 0.024999999, z: 0.024999999}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -682,7 +682,7 @@ Transform:
   m_GameObject: {fileID: 2753680463401067348}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.37608585, y: -0.46245077, z: -0.0002773378}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.719, y: 1.0263, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -932,7 +932,7 @@ Transform:
   m_GameObject: {fileID: 3264136995835498379}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.5940858, y: -0.66645074, z: -0.0002773378}
+  m_LocalPosition: {x: -0.195, y: -0.283, z: -0.0002773378}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -995,7 +995,7 @@ Transform:
   m_GameObject: {fileID: 4107685451944074410}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.37608585, y: -0.46773076, z: -0.0002773378}
+  m_LocalPosition: {x: 0, y: -0.005, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1082,7 +1082,7 @@ Transform:
   m_GameObject: {fileID: 5612387860424236372}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.37408584, y: -0.47645077, z: -0.0002773378}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1.08, y: 1.08, z: 1.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1168,7 +1168,7 @@ Transform:
   m_GameObject: {fileID: 5620403833691285775}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.37608585, y: 0.46245077, z: 0.0002773378}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1501,7 +1501,7 @@ Transform:
   m_GameObject: {fileID: 7274132861935507911}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.37608585, y: -0.21745077, z: -0.0002773378}
+  m_LocalPosition: {x: 0, y: 0.245, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1523,7 +1523,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &4552738779295589025
 Transform:
   m_ObjectHideFlags: 0
@@ -1580,9 +1580,9 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingLayerID: 1494906833
+  m_SortingLayer: 1
+  m_SortingOrder: 2
   m_Sprite: {fileID: 3604938701637265070, guid: 0d8c5813ba8deff4c8f36511cb34150c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -1620,7 +1620,7 @@ Transform:
   m_GameObject: {fileID: 8798333718552723363}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.37608585, y: -0.46245077, z: -0.0002773378}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

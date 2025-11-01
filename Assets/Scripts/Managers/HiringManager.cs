@@ -578,6 +578,8 @@ public class HiringManager : MonoBehaviour
         // Play visual/audio feedback
         CharacterVisuals visuals = staff.GetComponent<CharacterVisuals>();
         visuals?.PlayLevelUpEffect(); // Play the visual effect
+		
+		staff.promotionAvailableNotificationPlayed = false;
 
         // Add newly unlocked tactical actions
         int actionsAdded = 0;

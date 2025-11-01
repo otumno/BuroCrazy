@@ -20,11 +20,16 @@ public class ExperienceManager : MonoBehaviour
     public void GrantXP(StaffController staff, ActionType actionType)
     {
         if (xpDatabase == null || staff == null) return;
-        int xpGained = xpDatabase.GetXpForAction(actionType);
+        
+        int xpGained = xpDatabase.GetXpForAction(actionType); // [cite: 609]
+        
         if (xpGained > 0)
         {
-            staff.experiencePoints += xpGained;
-            // Логика проверки повышения теперь находится в UI, здесь она больше не нужна
+            // <<< ИЗМЕНЕНИЕ: ВЫЗЫВАЕМ НОВЫЙ МЕТОД ВМЕСТО ПРЯМОГО ПРИСВОЕНИЯ >>>
+            staff.AddExperienceAndCheckForPromotion(xpGained);
+            
+            // <<< СТАРАЯ СТРОКА (удалить или закомментировать) >>>
+            // staff.experiencePoints += xpGained; 
         }
     }
 

@@ -34,6 +34,7 @@ public class ClientStateMachine : MonoBehaviour
     private Transform seatTarget;
     private bool isBeingHelped = false;
     private LimitedCapacityZone targetZone;
+	private Waypoint occupiedWaypoint = null;
 
     public void Initialize(ClientPathfinding p) 
     { 
@@ -396,6 +397,8 @@ public class ClientStateMachine : MonoBehaviour
             
             // Запоминаем, в какой зоне мы теперь находимся
             targetZone = owningZone;
+			
+			occupiedWaypoint = dest; // Запоминаем, что мы заняли эту точку
             
             // Теперь мы внутри и готовы к обслуживанию
             SetState(ClientState.InsideLimitedZone);
@@ -441,7 +444,9 @@ public class ClientStateMachine : MonoBehaviour
             if (targetZone != null)
             {
                 targetZone.LeaveQueue(parent.gameObject);
-                targetZone.ReleaseWaypoint(GetCurrentGoal());
+                // targetZone.ReleaseWaypoint(GetCurrentGoal());
+				targetZone.ReleaseWaypoint(occupiedWaypoint);
+				occupiedWaypoint = null;
                 Debug.Log($"<color=orange>[StateMachine Cleanup]</color> Client {parent.name} left zone '{targetZone.name}' from state '{currentState}'. Waypoint released.");
             }
         }

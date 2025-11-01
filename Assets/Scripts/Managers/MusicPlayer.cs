@@ -17,6 +17,7 @@ public class MusicPlayer : MonoBehaviour
     public AudioClip menuTheme;
     public AudioClip directorsOfficeTheme;
     public AudioClip pauseTheme;
+	public AudioClip archiveTheme;
     [Header("Внутри-игровые плейлисты")]
     public AudioClip[] dayTracks;
     public AudioClip nightTrack;
@@ -213,6 +214,13 @@ public class MusicPlayer : MonoBehaviour
         isGameplayMusicActive = false;
         if (gameplaySource) gameplaySource.Stop();
         PlayUiTrack(directorsOfficeTheme);
+    }
+	
+	public void PlayArchiveTheme()
+    {
+        isGameplayMusicActive = false;
+        if (gameplaySource) gameplaySource.Stop();
+        PlayUiTrack(archiveTheme);
     }
 
     public void SetMuffled(bool isMuffled)

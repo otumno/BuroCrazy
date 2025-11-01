@@ -119,9 +119,19 @@ public class HiringPanelUI : MonoBehaviour
         }
         
         // Шаг 5: Добавляем "папку-замыкающий" в конец
-        if (folderBottomPrefab != null && allStaff.Any())
+        if (folderBottomPrefab != null /* && allStaff.Any() */)
         {
-            Instantiate(folderBottomPrefab, teamListContent);
+            // Убедимся, что добавляем только один раз, если вдруг RefreshTeamList вызовется несколько раз подряд без очистки
+            bool alreadyHasFolder = false;
+            foreach (Transform child in teamListContent) {
+                if (child.gameObject.name.StartsWith(folderBottomPrefab.name)) { // Проверяем по имени префаба
+                    alreadyHasFolder = true;
+                    break;
+                }
+            }
+            if (!alreadyHasFolder) {
+                Instantiate(folderBottomPrefab, teamListContent);
+            }
         }
     }
     

@@ -17,23 +17,21 @@ public class MainUIManager : MonoBehaviour
     public bool isTransitioning { get; private set; } = false;
 	
 private void Awake()
-{
-    if (Instance == null)
     {
-        // Если "главного" еще нет, я им становлюсь.
-        Instance = this;
-        // И говорю своему родительскому объекту [SYSTEMS] стать "бессмертным".
-        // Это гарантирует, что весь префаб сохранится при переходе между сценами.
-        transform.parent.SetParent(null); // Открепляемся, чтобы DontDestroyOnLoad сработал на корневой объект
-        DontDestroyOnLoad(transform.parent.gameObject);
+        if (Instance == null)
+        {
+            // Если "главного" еще нет, я им становлюсь.
+            Instance = this;
+            // Мы НЕ вызываем DontDestroyOnLoad.
+            // Мы полагаемся, что HiringManager сделает нашего родителя [SYSTEMS] бессмертным.
+        }
+        else if (Instance != this)
+        {
+            // Мы - дубликат из новой сцены, самоуничтожаемся.
+            // Уничтожаем только этот компонент (gameObject), а не всего родителя.
+            Destroy(gameObject);
+        }
     }
-    else if (Instance != this)
-    {
-        // Если "главный" уже есть, и это не я, значит я - дубликат, и я уничтожаюсь.
-        // Также уничтожаем родительский объект-дубликат.
-        Destroy(transform.parent.gameObject);
-    }
-}
 
     #endregion
 	
@@ -242,6 +240,22 @@ private IEnumerator StartGameplaySequence()
     {
         if (isTransitioning) return;
         ResumeGame();
+		
+		if (SceneManager.GetActiveScene().name == gameSceneName && 
+            SaveLoadManager.Instance != null && 
+            !SaveLoadManager.Instance.isNewGame) // Не сохраняем, если мы еще в процессе создания новой игры
+        {
+            try
+            {
+                Debug.Log($"[MainUIManager] Автосохранение в слот {SaveLoadManager.Instance.GetCurrentSlot()} перед выходом в меню...");
+                SaveLoadManager.Instance.SaveGame(SaveLoadManager.Instance.GetCurrentSlot());
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[MainUIManager] Ошибка автосохранения при выходе в меню: {e.Message}");
+            }
+        }
+		
         StartCoroutine(LoadSceneRoutine(mainMenuSceneName));
     }
     public void TriggerNextDayTransition()

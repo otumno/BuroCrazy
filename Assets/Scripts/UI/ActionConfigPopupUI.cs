@@ -242,7 +242,7 @@ public class ActionConfigPopupUI : MonoBehaviour
     }
 
 
-    private void OnCancel()
+    public void OnCancel()
     {
         gameObject.SetActive(false);
         // При отмене не нужно обновлять HiringPanelUI, так как изменения не применяются

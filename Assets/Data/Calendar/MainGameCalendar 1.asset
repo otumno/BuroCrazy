@@ -19,7 +19,16 @@ MonoBehaviour:
       m_Curve:
       - serializedVersion: 3
         time: 1
-        value: 6
+        value: 10
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      - serializedVersion: 3
+        time: 30
+        value: 50
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -86,6 +95,15 @@ MonoBehaviour:
         weightedMode: 0
         inWeight: 0
         outWeight: 0
+      - serializedVersion: 3
+        time: 30
+        value: 20
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
@@ -107,7 +125,7 @@ MonoBehaviour:
     lightingSettings:
       lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
       lightIntensity: 0.8
-    panelColor: {r: 1, g: 1, b: 1, a: 0}
+    panelColor: {r: 0.17238295, g: 0.16197936, b: 0.3773585, a: 0}
     lightsToEnableNames:
     - LAMP REGIS
     - LAMP HALL (1)
@@ -134,7 +152,7 @@ MonoBehaviour:
       m_Curve:
       - serializedVersion: 3
         time: 1
-        value: 0
+        value: 20
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -194,7 +212,7 @@ MonoBehaviour:
       m_Curve:
       - serializedVersion: 3
         time: 1
-        value: 0
+        value: 20
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -209,7 +227,7 @@ MonoBehaviour:
       m_Curve:
       - serializedVersion: 3
         time: 1
-        value: 0
+        value: 2
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -222,7 +240,7 @@ MonoBehaviour:
     lightingSettings:
       lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
       lightIntensity: 1
-    panelColor: {r: 1, g: 1, b: 1, a: 0}
+    panelColor: {r: 0.7169812, g: 0.65845275, b: 0.40922037, a: 0}
     lightsToEnableNames:
     - DAY (1)
     - DAY (2)
@@ -339,7 +357,7 @@ MonoBehaviour:
     lightingSettings:
       lightColor: {r: 1, g: 1, b: 1, a: 1}
       lightIntensity: 1.1
-    panelColor: {r: 1, g: 1, b: 1, a: 0}
+    panelColor: {r: 0.9150943, g: 0.8139122, b: 0.44459772, a: 0}
     lightsToEnableNames:
     - DAY (1)
     - DAY (2)
@@ -456,7 +474,7 @@ MonoBehaviour:
     lightingSettings:
       lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
       lightIntensity: 1.45
-    panelColor: {r: 1, g: 1, b: 1, a: 0}
+    panelColor: {r: 1, g: 0.8174603, b: 0, a: 0}
     lightsToEnableNames:
     - DAY (1)
     - DAY (2)
@@ -573,7 +591,7 @@ MonoBehaviour:
     lightingSettings:
       lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
       lightIntensity: 0.85
-    panelColor: {r: 1, g: 1, b: 1, a: 0}
+    panelColor: {r: 0.6226415, g: 0.5520869, b: 0.41411534, a: 0}
     lightsToEnableNames:
     - Office2
     - Office1
@@ -685,7 +703,7 @@ MonoBehaviour:
     lightingSettings:
       lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
       lightIntensity: 0.85
-    panelColor: {r: 1, g: 1, b: 1, a: 0}
+    panelColor: {r: 0.40610537, g: 0.67084485, b: 0.735849, a: 0}
     lightsToEnableNames:
     - LAMP REGIS
     - LAMP HALL (1)
@@ -799,7 +817,7 @@ MonoBehaviour:
     lightingSettings:
       lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
       lightIntensity: 0.2
-    panelColor: {r: 1, g: 1, b: 1, a: 0}
+    panelColor: {r: 0.115656935, g: 0.09438412, b: 0.1981132, a: 0}
     lightsToEnableNames:
     - LAMP HALL Post
     - NIGHT (6)

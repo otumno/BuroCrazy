@@ -18,10 +18,14 @@ public class SaveLoadManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // НЕ ИСПОЛЬЗУЙ DONTDESTROYONLOAD(GAMEOBJECT)
+            // Мы полагаемся на то, что MainUIManager или другой скрипт
+            // сделает родительский объект [SYSTEMS] бессмертным.
         }
-        else
+        else if (Instance != this)
         {
+            // Если мы - дубликат, мы должны быть уничтожены
+            // (но не трогаем родителя, т.к. мы на нем)
             Destroy(gameObject);
         }
     }

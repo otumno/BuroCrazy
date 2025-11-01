@@ -12,16 +12,32 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18ff03ae229417b478bc87d5d7529885, type: 3}
   m_Name: ClientEmotion
   m_EditorClassIdentifier: 
-  maleBaseBodies:
-  - {fileID: 8415137596240541537, guid: fddc97e1c4e72b849acb3736b78ee747, type: 3}
-  - {fileID: -1247258581826259589, guid: 1990567735561734caf3f2231cf480e6, type: 3}
-  - {fileID: -4393284066140544444, guid: fb0686da553a0f14f8df4f106f029049, type: 3}
-  - {fileID: -4751312954425291882, guid: fdac307e41651e041a30c69eb0b75d02, type: 3}
-  femaleBaseBodies:
-  - {fileID: -4351748048710947640, guid: af4c4b0fb36acbc4ab94a6f1563e65f0, type: 3}
-  - {fileID: 2969153215016751222, guid: 210d9f903b28814489e09f61471d0821, type: 3}
-  - {fileID: -891886552788939820, guid: ec2809cdede9d1a43bf385e439d1af37, type: 3}
-  - {fileID: -2907876690653389275, guid: b5db1ec43cfeeef4b8536b321aed15eb, type: 3}
+  maleBodySets:
+  - idleBody: {fileID: 8415137596240541537, guid: fddc97e1c4e72b849acb3736b78ee747, type: 3}
+    walkBody1: {fileID: 8415137596240541537, guid: fddc97e1c4e72b849acb3736b78ee747, type: 3}
+    walkBody2: {fileID: 8415137596240541537, guid: fddc97e1c4e72b849acb3736b78ee747, type: 3}
+  - idleBody: {fileID: -1247258581826259589, guid: 1990567735561734caf3f2231cf480e6, type: 3}
+    walkBody1: {fileID: -1247258581826259589, guid: 1990567735561734caf3f2231cf480e6, type: 3}
+    walkBody2: {fileID: -1247258581826259589, guid: 1990567735561734caf3f2231cf480e6, type: 3}
+  - idleBody: {fileID: -4393284066140544444, guid: fb0686da553a0f14f8df4f106f029049, type: 3}
+    walkBody1: {fileID: -4393284066140544444, guid: fb0686da553a0f14f8df4f106f029049, type: 3}
+    walkBody2: {fileID: -4393284066140544444, guid: fb0686da553a0f14f8df4f106f029049, type: 3}
+  - idleBody: {fileID: -4751312954425291882, guid: fdac307e41651e041a30c69eb0b75d02, type: 3}
+    walkBody1: {fileID: -4751312954425291882, guid: fdac307e41651e041a30c69eb0b75d02, type: 3}
+    walkBody2: {fileID: -4751312954425291882, guid: fdac307e41651e041a30c69eb0b75d02, type: 3}
+  femaleBodySets:
+  - idleBody: {fileID: -4351748048710947640, guid: af4c4b0fb36acbc4ab94a6f1563e65f0, type: 3}
+    walkBody1: {fileID: -4351748048710947640, guid: af4c4b0fb36acbc4ab94a6f1563e65f0, type: 3}
+    walkBody2: {fileID: -4351748048710947640, guid: af4c4b0fb36acbc4ab94a6f1563e65f0, type: 3}
+  - idleBody: {fileID: 2969153215016751222, guid: 210d9f903b28814489e09f61471d0821, type: 3}
+    walkBody1: {fileID: 2969153215016751222, guid: 210d9f903b28814489e09f61471d0821, type: 3}
+    walkBody2: {fileID: 2969153215016751222, guid: 210d9f903b28814489e09f61471d0821, type: 3}
+  - idleBody: {fileID: -891886552788939820, guid: ec2809cdede9d1a43bf385e439d1af37, type: 3}
+    walkBody1: {fileID: -891886552788939820, guid: ec2809cdede9d1a43bf385e439d1af37, type: 3}
+    walkBody2: {fileID: -891886552788939820, guid: ec2809cdede9d1a43bf385e439d1af37, type: 3}
+  - idleBody: {fileID: -2907876690653389275, guid: b5db1ec43cfeeef4b8536b321aed15eb, type: 3}
+    walkBody1: {fileID: -2907876690653389275, guid: b5db1ec43cfeeef4b8536b321aed15eb, type: 3}
+    walkBody2: {fileID: -2907876690653389275, guid: b5db1ec43cfeeef4b8536b321aed15eb, type: 3}
   emotionFaces:
   - emotion: 0
     maleFace: {fileID: -4423278522076559584, guid: b0b69cc47f42f984ab3ba2793b0b0ba4, type: 3}

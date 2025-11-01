@@ -249,6 +249,13 @@ MonoBehaviour:
   walkSprite1: {fileID: 6859326965049662136, guid: 00e6be823e8fb304ab86be6fc0c6f594, type: 3}
   walkSprite2: {fileID: -5397753365343789046, guid: 34594ad59abd42a45a25ede94167e6e5, type: 3}
   animationSpeed: 1
+  dynamicLight: {fileID: 0}
+  lightForwardOffset: 0.5
+  lightSmoothing: 5
+  rubberBandStrength: 5
+  priority: 1
+  slowingDistance: 2
+  movementSmoothing: 5
   footstepSounds:
   - {fileID: 8300000, guid: 291d7d99a67bca44180c052111af35d8, type: 3}
   - {fileID: 8300000, guid: 3d1c5942220c8684da4f550822904ba5, type: 3}
@@ -256,19 +263,11 @@ MonoBehaviour:
   - {fileID: 8300000, guid: f0b84a659a1d81a48ab3498d797281c8, type: 3}
   - {fileID: 8300000, guid: d10e7aa0fcbf8924ba231be4ab5eebd5, type: 3}
   - {fileID: 8300000, guid: b00f517858af65f4ba4387e3e85a3bc7, type: 3}
-  fallPivotPoint: {fileID: 3143935391577038641}
-  fallSound: {fileID: 8300000, guid: a174e93b6cac6b04cb39ec648059d50c, type: 3}
   footstepAudioSource: {fileID: -3817331557553524234}
   minSpeedForFootsteps: 0.2
   distanceBetweenSteps: 0.7
-  dynamicLight: {fileID: 0}
-  lightForwardOffset: 0.5
-  lightSmoothing: 5
-  agent: {fileID: 0}
-  rubberBandStrength: 5
-  priority: 1
-  slowingDistance: 2
-  movementSmoothing: 5
+  fallPivotPoint: {fileID: 3143935391577038641}
+  fallSound: {fileID: 8300000, guid: a174e93b6cac6b04cb39ec648059d50c, type: 3}
 --- !u!114 &-4469930473842612289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -313,7 +312,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterName: "\u0411\u0435\u0437\u044B\u043C\u044F\u043D\u043D\u044B\u0439"
   currentRank: {fileID: 0}
-  currentRole: 1
+  currentRole: 7
   experiencePoints: 0
   gender: 0
   skills: {fileID: 0}
@@ -332,13 +331,13 @@ MonoBehaviour:
   frustrationResistanceSkill: 1
   startShiftSound: {fileID: 0}
   endShiftSound: {fileID: 0}
-  spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
+  spriteCollection: {fileID: 11400000, guid: b1c9cb1dc26e5434fbe42e9b72b2c7b6, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 18bb2c0b09d19b84ca27c4993ea9a97d, type: 2}
   directorChairPoint: {fileID: 0}
-  form1Prefab: {fileID: 0}
-  form2Prefab: {fileID: 0}
-  certificate1Prefab: {fileID: 0}
-  certificate2Prefab: {fileID: 0}
+  form1Prefab: {fileID: 798599227355505824, guid: 8641538397a01fe43af7274ec4931f4d, type: 3}
+  form2Prefab: {fileID: 3550377790086235711, guid: b4a4385cb142e0941add6cd29c29e654, type: 3}
+  certificate1Prefab: {fileID: 6963206784104080445, guid: edf11bd38fec4c84e9745075eb5f910b, type: 3}
+  certificate2Prefab: {fileID: 874320401446602386, guid: 3b9e93cf316ee2d4ab8c02695b069d07, type: 3}
 --- !u!114 &4228081369415377242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -356,6 +355,9 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 2048
   clickMarkerPrefab: {fileID: 0}
+  staffInteractionLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
   actionConfigPopup: {fileID: 0}
 --- !u!114 &6049552469313363215
 MonoBehaviour:
@@ -513,7 +515,7 @@ Transform:
   m_GameObject: {fileID: 3455213251003331974}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.19175574, y: -0.2870322, z: -0.004161839}
+  m_LocalPosition: {x: -0.165, y: -0.23, z: -0.004161839}
   m_LocalScale: {x: 0.025, y: 0.025, z: 0.025}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -687,7 +689,7 @@ Transform:
   m_GameObject: {fileID: 4108306136579422342}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.032755747, y: -0.052032188, z: -0.004161839}
+  m_LocalPosition: {x: 0, y: 0.011, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1273,7 +1275,7 @@ Transform:
   m_GameObject: {fileID: 7590036094260278940}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.032755747, y: -0.05103219, z: -0.004161839}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1359,7 +1361,7 @@ Transform:
   m_GameObject: {fileID: 7863440184204810203}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.032755747, y: 0.05103219, z: 0.004161839}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:

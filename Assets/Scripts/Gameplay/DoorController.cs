@@ -44,7 +44,7 @@ public class DoorController : MonoBehaviour
                 {
                     AudioSource.PlayClipAtPoint(openSound, transform.position);
                 }
-                // ------------------------------------------
+               
             }
         }
     }

@@ -1,71 +1,81 @@
-// Файл: Scripts/UI/MainMenuActions.cs --- ОБНОВЛЕННАЯ УПРОЩЕННАЯ ВЕРСИЯ ---
+// Файл: Scripts/UI/MainMenuActions.cs --- ОБНОВЛЕННАЯ ВЕРСИЯ ---
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; // Убедись, что эта строка есть для работы с TextMeshPro
+using TMPro; 
 
 public class MainMenuActions : MonoBehaviour
 {
     [Header("Панели интерфейса")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject saveLoadPanel;
+    
+    // --- <<< НОВАЯ СТРОКА >>> ---
+    [SerializeField] private GameObject achievementListPanel; // Перетащи сюда [UI] AchievementListPanel
+    // --- <<< КОНЕЦ НОВОЙ СТРОКИ >>> ---
+
 	[SerializeField] private Button continueButton;
 
-    // --- <<< ИЗМЕНЕНИЕ: Теперь у нас только ОДНА кнопка >>> ---
+    // ... (остальные поля и Awake() остаются как были) ...
     [Header("Главная кнопка")]
     [SerializeField] private Button primaryActionButton; 
-    
-    private TextMeshProUGUI primaryActionButtonText; // Ссылка на текст внутри кнопки
+    private TextMeshProUGUI primaryActionButtonText; 
 
     void Awake()
     {
-        // Находим компонент текста на кнопке один раз при старте
         if (primaryActionButton != null)
         {
             primaryActionButtonText = primaryActionButton.GetComponentInChildren<TextMeshProUGUI>();
         }
-
-        // Назначаем действие: любая из вариаций кнопки будет открывать панель слотов
         primaryActionButton.onClick.AddListener(Action_OpenSaveLoadPanel);
     }
-
+    
+    // ... (Start() остается как был) ...
     void Start()
     {
-        // Проверяем, есть ли сохранения
         bool hasSaves = SaveLoadManager.Instance != null && SaveLoadManager.Instance.DoesAnySaveExist();
-
-        // --- <<< ИЗМЕНЕНИЕ: Вместо вкл/выкл кнопок, меняем текст >>> ---
         if (primaryActionButtonText != null)
         {
             if (hasSaves)
             {
-                // Если сохранения есть, кнопка предлагает их загрузить
                 primaryActionButtonText.text = "Загрузить игру";
             }
             else
             {
-                // Если сохранений нет, кнопка предлагает начать новую игру
                 primaryActionButtonText.text = "Новая игра";
             }
         }
         if (continueButton != null)
-    {
-        continueButton.gameObject.SetActive(SaveLoadManager.Instance.DoesAnySaveExist());
-    }
-        // Показываем главное меню при старте
+        {
+            continueButton.gameObject.SetActive(SaveLoadManager.Instance.DoesAnySaveExist());
+        }
         ShowPanel(mainMenuPanel);
+		MusicPlayer.Instance?.PlayMenuTheme();
     }
-    
+
     // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ КНОПОК ---
 
     public void Action_OpenSaveLoadPanel()
     {
-        // Этот метод теперь вызывается в обоих случаях
         Debug.Log("<b><color=cyan>[MainMenuActions] ==> Открываю панель выбора слотов...</color></b>");
         ShowPanel(saveLoadPanel);
+		MusicPlayer.Instance?.PlayMenuTheme();
     }
 
-public void Action_Continue()
+    // --- <<< НОВЫЙ МЕТОД >>> ---
+    /// <summary>
+    /// Вызывается кнопкой "Архив" из главного меню.
+    /// </summary>
+    public void Action_OpenAchievementList()
     {
+        Debug.Log("<b><color=green>[MainMenuActions] ==> Открываю Архив Ачивок...</color></b>");
+        ShowPanel(achievementListPanel);
+		MusicPlayer.Instance?.PlayArchiveTheme();
+    }
+    // --- <<< КОНЕЦ НОВОГО МЕТОДА >>> ---
+
+    public void Action_Continue()
+    {
+        // ... (код без изменений) ...
         int latestSaveSlot = SaveLoadManager.Instance.GetLatestSaveSlotIndex();
         if (latestSaveSlot != -1)
         {
@@ -77,9 +87,8 @@ public void Action_Continue()
     {
         Debug.Log("<b><color=orange>[MainMenuActions] ==> Возвращаюсь в главное меню...</color></b>");
         ShowPanel(mainMenuPanel);
+		MusicPlayer.Instance?.PlayMenuTheme();
     }
-
-
 
     public void Action_QuitGame()
     {
@@ -89,12 +98,16 @@ public void Action_Continue()
     
     private void ShowPanel(GameObject panelToShow)
     {
+        // --- <<< ОБНОВЛЕННЫЙ МЕТОД >>> ---
+        // Теперь он знает о трех панелях
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (saveLoadPanel != null) saveLoadPanel.SetActive(false);
+        if (achievementListPanel != null) achievementListPanel.SetActive(false); // Прячем и ачивки
 
         if (panelToShow != null)
         {
             panelToShow.SetActive(true);
         }
+        // --- <<< КОНЕЦ ОБНОВЛЕНИЯ >>> ---
     }
 }
