@@ -58,16 +58,21 @@ public class TutorialMascot : MonoBehaviour, IPointerClickHandler
         if (Instance == null)
         {
             Instance = this;
-            transform.SetParent(null); 
-            DontDestroyOnLoad(gameObject); 
+            
+            // --- ИСПРАВЛЕНИЕ ---
+            // Мы делаем "бессмертным" не себя, а наш родительский Canvas
+            transform.parent.SetParent(null); 
+            DontDestroyOnLoad(transform.parent.gameObject); 
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
         }
         else if (Instance != this)
         {
-            Destroy(gameObject); 
+            // Уничтожаем дубликат (и его родительский Canvas)
+            Destroy(transform.parent.gameObject); 
             return;
         }
 
-        rectTransform = GetComponent<RectTransform>();
+        rectTransform = GetComponent<RectTransform>(); // Это RectTransform самого Mascot_Controller
         canvasGroup = GetComponent<CanvasGroup>();
         audioSource = GetComponent<AudioSource>();
         audioSource.ignoreListenerPause = true; 

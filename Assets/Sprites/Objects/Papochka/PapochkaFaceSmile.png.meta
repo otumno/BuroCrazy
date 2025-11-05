@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      PapochkaFaceSmile_0: -2726649808619467346
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

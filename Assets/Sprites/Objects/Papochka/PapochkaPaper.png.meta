@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      PapochkaPaper_0: -2363700607941676781
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

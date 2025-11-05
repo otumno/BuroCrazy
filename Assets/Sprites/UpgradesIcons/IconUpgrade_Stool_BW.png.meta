@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      IconUpgrade_Stool_BW_0: 5523454706346751863
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

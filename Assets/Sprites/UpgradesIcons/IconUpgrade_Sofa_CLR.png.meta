@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      IconUpgrade_Sofa_CLR_0: -4794894511632522342
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

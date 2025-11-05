@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      PapochkaFaceSmart_0: 483644258721874805
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
