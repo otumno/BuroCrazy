@@ -71,55 +71,21 @@ public class HiringManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            // Make the parent object persistent if this script is on a child and parent exists
-            if (transform.parent != null)
-            {
-                // Basic check if the parent is already part of a scene and not DontDestroyOnLoad
-                // This might need adjustment depending on your exact hierarchy setup for persistence
-                if (transform.parent.gameObject.scene.buildIndex != -1)
-                {
-                    try
-                    {
-                        // Check if the parent is already marked DontDestroyOnLoad implicitly by being a root object not in a scene (rare)
-                        // A more robust check might involve custom logic or tags if needed.
-                        if (transform.parent.parent == null && gameObject.scene.buildIndex == -1) {
-                            // Already persistent root
-                        } else {
-                            transform.parent.SetParent(null); // Detach before DontDestroyOnLoad
-                            DontDestroyOnLoad(transform.parent.gameObject);
-                        }
-                    } catch (System.Exception ex) {
-                         Debug.LogError($"Error making parent persistent: {ex.Message}. Object: {transform.parent.name}");
-                         // Fallback: make self persistent if parent logic fails
-                         transform.SetParent(null);
-                         DontDestroyOnLoad(gameObject);
-                    }
-                }
-            }
-            else
-            {
-                DontDestroyOnLoad(gameObject); // Make self persistent if no parent
-            }
-            SceneManager.sceneLoaded += OnSceneLoaded; // Subscribe only if this is the instance
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            transform.SetParent(null); // Отсоединяемся
+            DontDestroyOnLoad(gameObject); // Делаем бессмертным *этот* объект
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+            
+            Debug.Log($"<color=green>[HiringManager]</color> Awake: Я стал Singleton. Объект 'gameObject' сделан бессмертным.");
+            SceneManager.sceneLoaded += OnSceneLoaded; 
         }
         else if (Instance != this)
         {
-            Debug.Log($"[HiringManager] Duplicate instance detected on {gameObject.name}. Destroying self and potentially parent.");
-            // Destroy the duplicate parent object only if it's different from the original instance's parent
-             bool destroyParent = transform.parent != null && (Instance.transform.parent == null || transform.parent.gameObject != Instance.transform.parent.gameObject);
-
-             if(destroyParent) {
-                  Debug.Log($"Destroying duplicate parent: {transform.parent.name}");
-                 Destroy(transform.parent.gameObject);
-             } else if (transform.parent == null) {
-                 // If no parent, just destroy the duplicate GameObject
-                  Debug.Log($"Destroying duplicate self (no parent): {gameObject.name}");
-                 Destroy(gameObject);
-             } else {
-                 // If parents are the same or other complex case, maybe just destroy the component holder
-                 Debug.Log($"Destroying duplicate self (shared parent?): {gameObject.name}");
-                  Destroy(gameObject);
-             }
+            Debug.LogWarning($"[HiringManager] Awake: Найден дубликат. Уничтожаю *себя* (этот GameObject).");
+            
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            Destroy(gameObject); // Уничтожаем *этот* GameObject
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
     }
 

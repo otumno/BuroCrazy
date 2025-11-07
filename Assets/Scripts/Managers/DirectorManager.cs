@@ -20,18 +20,25 @@ public class DirectorManager : MonoBehaviour
 
     private void Awake()
     {
-        // --- Наш отладочный хук ---
         Debug.Log($"<b><color=purple>[DirectorManager AWAKE] на объекте '{this.gameObject.name}'. ID: {this.gameObject.GetInstanceID()}</color></b>");
 
         if (Instance == null)
         {
             Debug.Log($"<color=purple>[DirectorManager] Instance был пуст. Теперь я ({this.gameObject.GetInstanceID()}) - главный.</color>");
             Instance = this;
+            
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            transform.SetParent(null); // Отсоединяемся
+            DontDestroyOnLoad(gameObject); // Делаем бессмертным *этот* объект
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
         else if (Instance != this)
         {
             Debug.Log($"<color=purple>[DirectorManager] Instance уже занят ({Instance.gameObject.GetInstanceID()}). Я ({this.gameObject.GetInstanceID()}) самоуничтожаюсь.</color>");
-            Destroy(gameObject);
+            
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            Destroy(gameObject); // Уничтожаем *этот* GameObject
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
     }
 

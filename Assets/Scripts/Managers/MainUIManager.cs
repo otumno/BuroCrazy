@@ -20,16 +20,19 @@ private void Awake()
     {
         if (Instance == null)
         {
-            // Если "главного" еще нет, я им становлюсь.
             Instance = this;
-            // Мы НЕ вызываем DontDestroyOnLoad.
-            // Мы полагаемся, что HiringManager сделает нашего родителя [SYSTEMS] бессмертным.
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            transform.SetParent(null); // Отсоединяемся
+            DontDestroyOnLoad(gameObject); // Делаем бессмертным *этот* объект
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+            Debug.Log($"<color=green>[MainUIManager]</color> Awake: Я стал Singleton. Объект 'gameObject' сделан бессмертным.");
         }
         else if (Instance != this)
         {
-            // Мы - дубликат из новой сцены, самоуничтожаемся.
-            // Уничтожаем только этот компонент (gameObject), а не всего родителя.
-            Destroy(gameObject);
+            Debug.LogWarning($"[MainUIManager] Awake: Найден дубликат. Уничтожаю *себя* (этот GameObject).");
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            Destroy(gameObject); // Уничтожаем *этот* GameObject
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
     }
 

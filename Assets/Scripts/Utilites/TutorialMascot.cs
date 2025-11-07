@@ -1,4 +1,4 @@
-// Файл: Assets/Scripts/UI/Tutorial/TutorialMascot.cs (ФИНАЛЬНАЯ ВЕРСИЯ С ЛОГАМИ)
+// Файл: Assets/Scripts/UI/Tutorial/TutorialMascot.cs (ФИНАЛЬНАЯ ВЕРСИЯ С ЛОГАМИ И REALTIME v3)
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -59,6 +59,9 @@ public class TutorialMascot : MonoBehaviour
     private Coroutine sheetAnimationCoroutine;
     private Coroutine initialHintDelayCoroutine;
     private Coroutine nextHintDelayCoroutine;
+    
+    // --- <<< НОВЫЙ ФЛАГ >>> ---
+    private bool isSceneLoadLogicRunning = false; 
 
     private string currentScreenID = "";
     
@@ -73,34 +76,52 @@ public class TutorialMascot : MonoBehaviour
 
     void Awake()
     {
+        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (Возвращаем логику родителя) >>> ---
         if (Instance == null)
         {
             Instance = this;
             
-            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
-            // Мы делаем *этот* GameObject (на котором висит скрипт) бессмертным.
-            // Мы НЕ трогаем родителя.
-            transform.SetParent(null); // Отсоединяемся, чтобы стать корневым объектом
-            DontDestroyOnLoad(gameObject); 
-            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
-
-            Debug.Log("<color=green>[TutorialMascot]</color> Awake: Я стал Singleton. Объект 'gameObject' сделан бессмертным.");
+            // Проверяем, есть ли у нас родитель
+            if (transform.parent != null)
+            {
+                // Отсоединяем родителя (весь Canvas), чтобы он стал корневым
+                transform.parent.SetParent(null);
+                // Делаем бессмертным ВЕСЬ Canvas (родителя)
+                DontDestroyOnLoad(transform.parent.gameObject);
+                Debug.Log($"<color=green>[TutorialMascot]</color> Awake: Я стал Singleton. Мой родитель '{transform.parent.name}' сделан бессмертным.");
+            }
+            else
+            {
+                // Если мы почему-то без родителя, делаем бессмертным себя
+                DontDestroyOnLoad(gameObject);
+                Debug.LogWarning($"<color=yellow>[TutorialMascot]</color> Awake: Я стал Singleton, НО У МЕНЯ НЕТ РОДИТЕЛЯ (Canvas). Делаю бессмертным себя. UI может не работать!");
+            }
             
             SceneManager.sceneLoaded += OnSceneLoadedStarter;
             Debug.Log("[TutorialMascot] Awake: Подписался на событие SceneManager.sceneLoaded.");
+
+            isFirstEverAppearance = PlayerPrefs.GetInt("Mascot_FirstEverAppearance", 0) == 0;
+            Debug.Log($"[TutorialMascot] Awake: Загружено isFirstEverAppearance = {isFirstEverAppearance}");
         }
         else if (Instance != this)
         {
-            Debug.LogWarning($"[TutorialMascot] Awake: Найден дубликат (Instance: {Instance.gameObject.name}, Я: {gameObject.name}). Уничтожаю *себя* (этот GameObject).");
+            // Мы - дубликат из новой сцены.
+            Debug.LogWarning($"[TutorialMascot] Awake: Найден дубликат (Instance: {Instance.gameObject.name}, Я: {gameObject.name}). Уничтожаю *своего родителя* (этот Canvas).");
             
-            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
-            // Уничтожаем только *этот* GameObject, а не родителя.
-            Destroy(gameObject); 
-            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+            // Уничтожаем своего родителя (дубликат Canvas), если он есть
+            if (transform.parent != null)
+            {
+                Destroy(transform.parent.gameObject);
+            }
+            else
+            {
+                // Если у дубликата нет родителя, уничтожаем сам дубликат
+                Destroy(gameObject);
+            }
             return;
         }
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
 
-        // ... остальной код Awake ...
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
         audioSource = GetComponent<AudioSource>();
@@ -116,23 +137,40 @@ public class TutorialMascot : MonoBehaviour
         nextButton.onClick.AddListener(OnNextButtonClicked);
         closeButton.onClick.AddListener(OnCloseButtonClicked);
 
-        isFirstEverAppearance = PlayerPrefs.GetInt("Mascot_FirstEverAppearance", 0) == 0;
-        Debug.Log($"[TutorialMascot] Start: isFirstEverAppearance = {isFirstEverAppearance}");
+        Debug.Log($"[TutorialMascot] Start: (isFirstEverAppearance уже = {isFirstEverAppearance})");
         LoadVisitedState();
-        
     }
     
     // Запускается ПОСЛЕ Start()
     void OnSceneLoadedStarter(Scene scene, LoadSceneMode mode)
     {
         Debug.Log($"[TutorialMascot] OnSceneLoadedStarter: Сцена '{scene.name}' загружена.");
+        
+        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (Проверка флага) >>> ---
+        if (isSceneLoadLogicRunning)
+        {
+            Debug.LogWarning("[TutorialMascot] OnSceneLoadedStarter: Попытка повторного запуска DelayedSceneLoadLogic, пока он уже выполняется. Игнорирую.");
+            return;
+        }
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+        
         StartCoroutine(DelayedSceneLoadLogic(scene));
     }
 
     IEnumerator DelayedSceneLoadLogic(Scene scene)
     {
-        Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: СТОП ВСЕХ КОРУТИН.</color>");
-        StopAllCoroutines();
+        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (Флаг и умный СТОП) >>> ---
+        isSceneLoadLogicRunning = true; 
+        Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Старт. (isSceneLoadLogicRunning = true)</color>");
+
+        // Убиваем только целевые корутины, а не ВСЕ
+        if (tutorialCoroutine != null) StopCoroutine(tutorialCoroutine);
+        if (soundCoroutine != null) StopCoroutine(soundCoroutine);
+        if (sheetAnimationCoroutine != null) StopCoroutine(sheetAnimationCoroutine);
+        if (initialHintDelayCoroutine != null) StopCoroutine(initialHintDelayCoroutine);
+        if (nextHintDelayCoroutine != null) StopCoroutine(nextHintDelayCoroutine);
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+
         tutorialCoroutine = null;
         soundCoroutine = null;
         sheetAnimationCoroutine = null;
@@ -176,14 +214,25 @@ public class TutorialMascot : MonoBehaviour
             lastUsedIdleSpot = null; 
             lastUsedGreetingIndex = -1;
             lastUsedTipIndex = -1;
-            Hide(false); 
+            
+            // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (НЕ ВЫЗЫВАЕМ HIDE) >>> ---
+            // Вместо Hide(false), просто устанавливаем начальное состояние
+            canvasGroup.alpha = 0;
+            canvasGroup.interactable = false;
+            isHidden = true;
+            isCeremonialAppearance = false; 
+            Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Маскот принудительно скрыт (без Fade).");
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
 
             Debug.Log($"<color=orange>[TutorialMascot] DelayedSceneLoadLogic: Ожидание {currentSceneLoadDelay}с перед запуском...</color>");
-            yield return new WaitForSeconds(currentSceneLoadDelay);
+            
+            yield return new WaitForSecondsRealtime(currentSceneLoadDelay);
+            
+            Debug.Log($"<color=green>[TutorialMascot] DelayedSceneLoadLogic: Задержка прошла!</color>");
             
             if (activeContextGroup == null)
             {
-                Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Задержка прошла. Запуск RunIdleLogic. (useCeremonial = {isFirstEverAppearance})</color>");
+                Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Запуск RunIdleLogic. (useCeremonial = {isFirstEverAppearance})</color>");
                 tutorialCoroutine = StartCoroutine(RunIdleLogic(isFirstEverAppearance));
             }
         }
@@ -193,10 +242,20 @@ public class TutorialMascot : MonoBehaviour
             lastUsedIdleSpot = null;
             lastUsedGreetingIndex = -1;
             lastUsedTipIndex = -1;
-            Hide(false); 
+            
+            // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (НЕ ВЫЗЫВАЕМ HIDE) >>> ---
+            canvasGroup.alpha = 0;
+            canvasGroup.interactable = false;
+            isHidden = true;
+            isCeremonialAppearance = false; 
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+            
             Debug.LogWarning("[TutorialMascot] DelayedSceneLoadLogic: TutorialScreenConfig НЕ НАЙДЕН на сцене. Маскот будет неактивен.");
-            yield break; 
         }
+        
+        // --- <<< ДОБАВЛЕНО В КОНЕЦ МЕТОДА >>> ---
+        isSceneLoadLogicRunning = false;
+        Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Завершено. (isSceneLoadLogicRunning = false)</color>");
     }
 
 
@@ -218,6 +277,7 @@ public class TutorialMascot : MonoBehaviour
     {
         if (!isHidden)
         {
+            // Этот код для "покачивания" маскота
             rectTransform.anchoredPosition = baseHoverPosition +
                 new Vector2(0, Mathf.Sin(Time.time * hoverSpeed) * hoverAmplitude);
         }
@@ -226,46 +286,50 @@ public class TutorialMascot : MonoBehaviour
         
         if (tutorialCoroutine == null)
         {
-            // Это может случиться, если корутина завершилась (например, Hide был вызван извне)
-            // Debug.LogWarning("[TutorialMascot] Update: tutorialCoroutine == null. Логика остановлена."); // Слишком спамный лог
+            // Если главная корутина не запущена (например, после Hide), ничего не делаем
             return;
         }
 
         TutorialContextGroup newContext = null;
         if (currentConfig.contextGroups != null)
         {
+            // Ищем *первую* активную панель в списке
             newContext = currentConfig.contextGroups.FirstOrDefault(
                 g => g.contextPanel != null && g.contextPanel.activeInHierarchy
             );
         }
 
+        // Если найденный активный контекст отличается от того, что был в прошлом кадре
         if (newContext != activeContextGroup)
         {
             Debug.Log($"<color=yellow>[TutorialMascot] Update: КОНТЕКСТ ИЗМЕНИЛСЯ. Старый: '{activeContextGroup?.contextID ?? "null"}' -> Новый: '{newContext?.contextID ?? "null"}'</color>");
-            activeContextGroup = newContext;
+            activeContextGroup = newContext; // Запоминаем новый контекст
 
             Debug.Log("<color=cyan>[TutorialMascot] Update: СТОП ВСЕХ КОРУТИН из-за смены контекста.</color>");
-            StopAllCoroutines();
+            StopAllCoroutines(); // Останавливаем *все* корутины (включая Fade, звуки, таймеры)
             tutorialCoroutine = null;
             soundCoroutine = null;
             sheetAnimationCoroutine = null;
             initialHintDelayCoroutine = null;
             nextHintDelayCoroutine = null;
             
-            isCeremonialAppearance = false;
+            isCeremonialAppearance = false; // Сбрасываем флаг "торжественности"
 
             if (activeContextGroup != null && activeContextGroup.muteTutorial)
             {
+                // Если у нового контекста стоит флаг "mute", прячем маскота
                 Debug.Log("[TutorialMascot] Update: Новый контекст 'muteTutorial = true'. Скрытие...");
                 Hide();
             }
             else if (activeContextGroup != null)
             {
+                // Если новый контекст обычный, запускаем логику для него
                 Debug.Log("<color=cyan>[TutorialMascot] Update: Запуск RunTutorialForContext.</color>");
                 tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup));
             }
             else
             {
+                // Если новый контекст = null (т.е. мы вернулись в "главное меню", где нет активных панелей)
                 Debug.Log("<color=cyan>[TutorialMascot] Update: Контекст = null. Запуск RunIdleLogic.</color>");
                 tutorialCoroutine = StartCoroutine(RunIdleLogic(false));
             }
@@ -370,11 +434,12 @@ public class TutorialMascot : MonoBehaviour
                 Debug.Log("<color=orange>[TutorialMascot] RunIdleLogic: Запуск InitialHintDelayTimer (для первой подсказки).</color>");
                 if (initialHintDelayCoroutine != null) StopCoroutine(initialHintDelayCoroutine);
                 initialHintDelayCoroutine = StartCoroutine(InitialHintDelayTimer());
-                yield break; 
+                yield break; // Выходим из RunIdleLogic, передаем управление таймеру
             }
             
             Debug.Log($"<color=orange>[TutorialMascot] RunIdleLogic: Ожидание {currentIdleMessageDelay}с до следующего Idle-сообщения.</color>");
-            yield return new WaitForSeconds(currentIdleMessageDelay);
+            
+            yield return new WaitForSecondsRealtime(currentIdleMessageDelay);
             
             if (activeContextGroup == null)
             {
@@ -501,7 +566,8 @@ public class TutorialMascot : MonoBehaviour
             ));
 
             Debug.Log($"<color=orange>[TutorialMascot] RunIdleLogicForContext: Ожидание {currentIdleMessageDelay}с до следующего сообщения.</color>");
-            yield return new WaitForSeconds(currentIdleMessageDelay);
+            
+            yield return new WaitForSecondsRealtime(currentIdleMessageDelay);
 
             if (activeContextGroup == context)
             {
@@ -516,7 +582,9 @@ public class TutorialMascot : MonoBehaviour
     private IEnumerator InitialHintDelayTimer()
     {
         Debug.Log($"<color=orange>[TutorialMascot] InitialHintDelayTimer: Старт. Ожидание {currentInitialHintDelay}с...</color>");
-        yield return new WaitForSeconds(currentInitialHintDelay);
+        
+        yield return new WaitForSecondsRealtime(currentInitialHintDelay);
+
         initialHintDelayCoroutine = null; 
         Debug.Log("<color=orange>[TutorialMascot] InitialHintDelayTimer: Время вышло.</color>");
 
@@ -536,7 +604,9 @@ public class TutorialMascot : MonoBehaviour
     private IEnumerator NextHintDelayTimer()
     {
         Debug.Log($"<color=orange>[TutorialMascot] NextHintDelayTimer: Старт. Ожидание {currentNextHintDelay}с...</color>");
-        yield return new WaitForSeconds(currentNextHintDelay);
+        
+        yield return new WaitForSecondsRealtime(currentNextHintDelay);
+        
         nextHintDelayCoroutine = null;
         Debug.Log("<color=orange>[TutorialMascot] NextHintDelayTimer: Время вышло.</color>");
         
@@ -663,17 +733,37 @@ public class TutorialMascot : MonoBehaviour
     {
         Debug.Log($"[TutorialMascot] Hide: Вызван. (isCeremonial = {useCeremonialFade})");
         
-        Debug.Log($"<color=cyan>[TutorialMascot] Hide: СТОП ВСЕХ КОРУТИН.</color>");
-        if (tutorialCoroutine != null) StopCoroutine(tutorialCoroutine);
-        if (soundCoroutine != null) StopCoroutine(soundCoroutine);
-        if (sheetAnimationCoroutine != null) StopCoroutine(sheetAnimationCoroutine);
-        if (initialHintDelayCoroutine != null) StopCoroutine(initialHintDelayCoroutine);
-        if (nextHintDelayCoroutine != null) StopCoroutine(nextHintDelayCoroutine);
-        tutorialCoroutine = null;
-        soundCoroutine = null;
-        sheetAnimationCoroutine = null;
-        initialHintDelayCoroutine = null;
-        nextHintDelayCoroutine = null; 
+        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (УМНЫЙ СТОП) >>> ---
+        Debug.Log($"<color=cyan>[TutorialMascot] Hide: Остановка целевых корутин...</color>");
+        
+        // Останавливаем только то, что мешает
+        if (tutorialCoroutine != null) 
+        {
+            StopCoroutine(tutorialCoroutine);
+            tutorialCoroutine = null;
+            Debug.Log("<color=cyan>[TutorialMascot] Hide: Остановлена 'tutorialCoroutine'.</color>");
+        }
+        if (soundCoroutine != null) 
+        {
+            StopCoroutine(soundCoroutine);
+            soundCoroutine = null;
+        }
+        if (sheetAnimationCoroutine != null) 
+        {
+            StopCoroutine(sheetAnimationCoroutine);
+            sheetAnimationCoroutine = null;
+        }
+        if (initialHintDelayCoroutine != null) 
+        {
+            StopCoroutine(initialHintDelayCoroutine);
+            initialHintDelayCoroutine = null;
+        }
+        if (nextHintDelayCoroutine != null) 
+        {
+            StopCoroutine(nextHintDelayCoroutine);
+            nextHintDelayCoroutine = null;
+        }
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         
         if (!isHidden)
         {
