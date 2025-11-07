@@ -1,19 +1,28 @@
-// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpIcon.cs
+// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpIcon.cs (ФИНАЛЬНАЯ ВЕРСИЯ)
 using UnityEngine;
 using UnityEngine.UI;
 
-[RequireComponent(typeof(Button))]
+[RequireComponent(typeof(Button), typeof(AudioSource))]
 public class TutorialHelpIcon : MonoBehaviour
 {
-    [Tooltip("Если true, при каждом нажатии туториал будет начинаться с начала")]
-    [SerializeField] private bool resetOnOpen = true;
+    [Header("Звуки")]
+    [Tooltip("Звук, который проигрывается при нажатии на эту иконку")]
+    [SerializeField] private AudioClip clickSound;
+    
+    [Tooltip("Звук, который проигрывается при сбросе прогресса")]
+    [SerializeField] private AudioClip resetSound;
 
     private Button helpButton;
+    private AudioSource audioSource;
 
     void Awake()
     {
         helpButton = GetComponent<Button>();
         helpButton.onClick.AddListener(OnHelpIconClicked);
+        
+        audioSource = GetComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.ignoreListenerPause = true; 
     }
 
     private void OnHelpIconClicked()
@@ -24,15 +33,25 @@ public class TutorialHelpIcon : MonoBehaviour
             return;
         }
 
-        if (resetOnOpen)
+        if (TutorialMascot.Instance.AreAllSpotsOnScreenVisited())
         {
-            // Сбрасываем прогресс для текущего экрана
+            // Все подсказки уже были показаны. Сбрасываем прогресс.
+            PlaySound(resetSound);
             TutorialMascot.Instance.ResetCurrentScreenTutorial();
         }
         else
         {
-            // Просто показываем (или прячем, если уже показан)
-            TutorialMascot.Instance.ToggleHelp();
+            // Еще есть непоказанные подсказки. Показываем следующую.
+            PlaySound(clickSound); // Исправлена опечатка (был 'mascotClickSound')
+            TutorialMascot.Instance.ShowNextUnvisitedSpotOnScreen();
+        }
+    }
+    
+    private void PlaySound(AudioClip clip)
+    {
+        if (clip != null)
+        {
+            audioSource.PlayOneShot(clip);
         }
     }
 }

@@ -32,6 +32,9 @@ public class TutorialHelpSpot
     
     [Tooltip("Высота 'листка' с текстом, который выдвинется")]
     public float textSheetHeight = 200f;
+	
+	[Tooltip("За сколько шагов лист достигнет этой высоты? (0 или 1 = мгновенно)")]
+    public int heightSteps = 3;
     
     [Tooltip("Количество 'бипов' перед финальным звуком (твое '--.-.---')")]
     public int soundRepetitions = 5;
