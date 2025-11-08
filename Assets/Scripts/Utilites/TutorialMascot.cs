@@ -1,4 +1,4 @@
-// Файл: Assets/Scripts/UI/Tutorial/TutorialMascot.cs (ФИНАЛЬНАЯ ВЕРСИЯ С ЛОГАМИ И REALTIME v3)
+// Файл: Assets/Scripts/UI/Tutorial/TutorialMascot.cs (ФИНАЛЬНАЯ ВЕРСИЯ v6)
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -60,13 +60,16 @@ public class TutorialMascot : MonoBehaviour
     private Coroutine initialHintDelayCoroutine;
     private Coroutine nextHintDelayCoroutine;
     
-    // --- <<< НОВЫЙ ФЛАГ >>> ---
     private bool isSceneLoadLogicRunning = false; 
+
+    // --- <<< ИЗМЕНЕНИЕ 1 (Б): Добавляем "защитный флаг" >>> ---
+    private bool isTutorialResetting = false; 
 
     private string currentScreenID = "";
     
     private bool isFirstEverAppearance = true; 
     private bool isCeremonialAppearance = false; 
+    private bool isFirstAppearanceThisSession = true;
 
     private RectTransform lastUsedIdleSpot = null;
     private int lastUsedGreetingIndex = -1;
@@ -76,23 +79,18 @@ public class TutorialMascot : MonoBehaviour
 
     void Awake()
     {
-        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (Возвращаем логику родителя) >>> ---
         if (Instance == null)
         {
             Instance = this;
             
-            // Проверяем, есть ли у нас родитель
             if (transform.parent != null)
             {
-                // Отсоединяем родителя (весь Canvas), чтобы он стал корневым
                 transform.parent.SetParent(null);
-                // Делаем бессмертным ВЕСЬ Canvas (родителя)
                 DontDestroyOnLoad(transform.parent.gameObject);
                 Debug.Log($"<color=green>[TutorialMascot]</color> Awake: Я стал Singleton. Мой родитель '{transform.parent.name}' сделан бессмертным.");
             }
             else
             {
-                // Если мы почему-то без родителя, делаем бессмертным себя
                 DontDestroyOnLoad(gameObject);
                 Debug.LogWarning($"<color=yellow>[TutorialMascot]</color> Awake: Я стал Singleton, НО У МЕНЯ НЕТ РОДИТЕЛЯ (Canvas). Делаю бессмертным себя. UI может не работать!");
             }
@@ -105,22 +103,18 @@ public class TutorialMascot : MonoBehaviour
         }
         else if (Instance != this)
         {
-            // Мы - дубликат из новой сцены.
             Debug.LogWarning($"[TutorialMascot] Awake: Найден дубликат (Instance: {Instance.gameObject.name}, Я: {gameObject.name}). Уничтожаю *своего родителя* (этот Canvas).");
             
-            // Уничтожаем своего родителя (дубликат Canvas), если он есть
             if (transform.parent != null)
             {
                 Destroy(transform.parent.gameObject);
             }
             else
             {
-                // Если у дубликата нет родителя, уничтожаем сам дубликат
                 Destroy(gameObject);
             }
             return;
         }
-        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
 
         rectTransform = GetComponent<RectTransform>();
         canvasGroup = GetComponent<CanvasGroup>();
@@ -141,35 +135,32 @@ public class TutorialMascot : MonoBehaviour
         LoadVisitedState();
     }
     
-    // Запускается ПОСЛЕ Start()
     void OnSceneLoadedStarter(Scene scene, LoadSceneMode mode)
     {
         Debug.Log($"[TutorialMascot] OnSceneLoadedStarter: Сцена '{scene.name}' загружена.");
         
-        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (Проверка флага) >>> ---
         if (isSceneLoadLogicRunning)
         {
             Debug.LogWarning("[TutorialMascot] OnSceneLoadedStarter: Попытка повторного запуска DelayedSceneLoadLogic, пока он уже выполняется. Игнорирую.");
             return;
         }
-        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         
         StartCoroutine(DelayedSceneLoadLogic(scene));
     }
 
     IEnumerator DelayedSceneLoadLogic(Scene scene)
     {
-        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (Флаг и умный СТОП) >>> ---
         isSceneLoadLogicRunning = true; 
-        Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Старт. (isSceneLoadLogicRunning = true)</color>");
+        
+        // --- <<< ИЗМЕНЕНИЕ (Б): Сбрасываем флаг при загрузке сцены >>> ---
+        isTutorialResetting = false; 
+        Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Старт. (isSceneLoadLogicRunning = true, isTutorialResetting = false)</color>");
 
-        // Убиваем только целевые корутины, а не ВСЕ
         if (tutorialCoroutine != null) StopCoroutine(tutorialCoroutine);
         if (soundCoroutine != null) StopCoroutine(soundCoroutine);
         if (sheetAnimationCoroutine != null) StopCoroutine(sheetAnimationCoroutine);
         if (initialHintDelayCoroutine != null) StopCoroutine(initialHintDelayCoroutine);
         if (nextHintDelayCoroutine != null) StopCoroutine(nextHintDelayCoroutine);
-        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
 
         tutorialCoroutine = null;
         soundCoroutine = null;
@@ -186,10 +177,24 @@ public class TutorialMascot : MonoBehaviour
             currentSceneLoadDelay = currentConfig.sceneLoadDelay; 
             currentNextHintDelay = currentConfig.nextHintDelay;
 
-            if (isFirstEverAppearance)
+            bool useCeremonialDelay = false;
+            if (isFirstEverAppearance) 
             {
                 currentSceneLoadDelay = currentConfig.firstEverAppearanceDelay;
+                useCeremonialDelay = true;
                 Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Это ПЕРВЫЙ ЗАПУСК. Установлена задержка: {currentSceneLoadDelay}с.");
+            }
+            else if (isFirstAppearanceThisSession) 
+            {
+                currentSceneLoadDelay = currentConfig.firstEverAppearanceDelay; 
+                useCeremonialDelay = true;
+                Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Это ПЕРВЫЙ ЗАПУСК В СЕССИИ. Установлена задержка: {currentSceneLoadDelay}с.");
+            }
+            else 
+            {
+                currentSceneLoadDelay = currentConfig.sceneLoadDelay;
+                useCeremonialDelay = false;
+                Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Обычная загрузка. Задержка: {currentSceneLoadDelay}с.");
             }
             
             Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Конфиг '{currentScreenID}' найден. Задержка загрузки сцены: {currentSceneLoadDelay}с.");
@@ -215,14 +220,11 @@ public class TutorialMascot : MonoBehaviour
             lastUsedGreetingIndex = -1;
             lastUsedTipIndex = -1;
             
-            // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (НЕ ВЫЗЫВАЕМ HIDE) >>> ---
-            // Вместо Hide(false), просто устанавливаем начальное состояние
             canvasGroup.alpha = 0;
             canvasGroup.interactable = false;
             isHidden = true;
             isCeremonialAppearance = false; 
             Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Маскот принудительно скрыт (без Fade).");
-            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
 
             Debug.Log($"<color=orange>[TutorialMascot] DelayedSceneLoadLogic: Ожидание {currentSceneLoadDelay}с перед запуском...</color>");
             
@@ -232,8 +234,8 @@ public class TutorialMascot : MonoBehaviour
             
             if (activeContextGroup == null)
             {
-                Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Запуск RunIdleLogic. (useCeremonial = {isFirstEverAppearance})</color>");
-                tutorialCoroutine = StartCoroutine(RunIdleLogic(isFirstEverAppearance));
+                Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Запуск RunIdleLogic. (useCeremonial = {useCeremonialDelay})</color>");
+                tutorialCoroutine = StartCoroutine(RunIdleLogic(useCeremonialDelay));
             }
         }
         else
@@ -243,17 +245,14 @@ public class TutorialMascot : MonoBehaviour
             lastUsedGreetingIndex = -1;
             lastUsedTipIndex = -1;
             
-            // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (НЕ ВЫЗЫВАЕМ HIDE) >>> ---
             canvasGroup.alpha = 0;
             canvasGroup.interactable = false;
             isHidden = true;
             isCeremonialAppearance = false; 
-            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
             
             Debug.LogWarning("[TutorialMascot] DelayedSceneLoadLogic: TutorialScreenConfig НЕ НАЙДЕН на сцене. Маскот будет неактивен.");
         }
         
-        // --- <<< ДОБАВЛЕНО В КОНЕЦ МЕТОДА >>> ---
         isSceneLoadLogicRunning = false;
         Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Завершено. (isSceneLoadLogicRunning = false)</color>");
     }
@@ -261,7 +260,6 @@ public class TutorialMascot : MonoBehaviour
 
     void OnDestroy()
     {
-        // Отписываемся, только если мы - Singleton
         if (Instance == this)
         {
             SceneManager.sceneLoaded -= OnSceneLoadedStarter;
@@ -277,59 +275,58 @@ public class TutorialMascot : MonoBehaviour
     {
         if (!isHidden)
         {
-            // Этот код для "покачивания" маскота
             rectTransform.anchoredPosition = baseHoverPosition +
                 new Vector2(0, Mathf.Sin(Time.time * hoverSpeed) * hoverAmplitude);
         }
 
-        if (currentConfig == null) return;
+        // --- <<< ИЗМЕНЕНИЕ 2 (Б): Добавляем проверку на флаг >>> ---
+        if (currentConfig == null || isSceneLoadLogicRunning || isTutorialResetting)
+        {
+            // Блокируем смену контекста, пока идет загрузка сцены ИЛИ сброс туториала
+            return;
+        }
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ 2 >>> ---
         
         if (tutorialCoroutine == null)
         {
-            // Если главная корутина не запущена (например, после Hide), ничего не делаем
             return;
         }
 
         TutorialContextGroup newContext = null;
         if (currentConfig.contextGroups != null)
         {
-            // Ищем *первую* активную панель в списке
             newContext = currentConfig.contextGroups.FirstOrDefault(
                 g => g.contextPanel != null && g.contextPanel.activeInHierarchy
             );
         }
 
-        // Если найденный активный контекст отличается от того, что был в прошлом кадре
         if (newContext != activeContextGroup)
         {
             Debug.Log($"<color=yellow>[TutorialMascot] Update: КОНТЕКСТ ИЗМЕНИЛСЯ. Старый: '{activeContextGroup?.contextID ?? "null"}' -> Новый: '{newContext?.contextID ?? "null"}'</color>");
-            activeContextGroup = newContext; // Запоминаем новый контекст
+            activeContextGroup = newContext;
 
             Debug.Log("<color=cyan>[TutorialMascot] Update: СТОП ВСЕХ КОРУТИН из-за смены контекста.</color>");
-            StopAllCoroutines(); // Останавливаем *все* корутины (включая Fade, звуки, таймеры)
+            StopAllCoroutines();
             tutorialCoroutine = null;
             soundCoroutine = null;
             sheetAnimationCoroutine = null;
             initialHintDelayCoroutine = null;
             nextHintDelayCoroutine = null;
             
-            isCeremonialAppearance = false; // Сбрасываем флаг "торжественности"
+            isCeremonialAppearance = false;
 
             if (activeContextGroup != null && activeContextGroup.muteTutorial)
             {
-                // Если у нового контекста стоит флаг "mute", прячем маскота
                 Debug.Log("[TutorialMascot] Update: Новый контекст 'muteTutorial = true'. Скрытие...");
                 Hide();
             }
             else if (activeContextGroup != null)
             {
-                // Если новый контекст обычный, запускаем логику для него
                 Debug.Log("<color=cyan>[TutorialMascot] Update: Запуск RunTutorialForContext.</color>");
                 tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup));
             }
             else
             {
-                // Если новый контекст = null (т.е. мы вернулись в "главное меню", где нет активных панелей)
                 Debug.Log("<color=cyan>[TutorialMascot] Update: Контекст = null. Запуск RunIdleLogic.</color>");
                 tutorialCoroutine = StartCoroutine(RunIdleLogic(false));
             }
@@ -343,6 +340,7 @@ public class TutorialMascot : MonoBehaviour
     private IEnumerator RunIdleLogic(bool useCeremonial = false)
     {
         Debug.Log($"<color=cyan>[TutorialMascot] RunIdleLogic: Старт. (useCeremonial = {useCeremonial})</color>");
+        
         if (isFirstEverAppearance)
         {
             Debug.Log("[TutorialMascot] RunIdleLogic: Первый запуск, установка PlayerPrefs.");
@@ -350,6 +348,8 @@ public class TutorialMascot : MonoBehaviour
             PlayerPrefs.SetInt("Mascot_FirstEverAppearance", 1);
             PlayerPrefs.Save();
         }
+        isFirstAppearanceThisSession = false;
+        Debug.Log("[TutorialMascot] RunIdleLogic: isFirstAppearanceThisSession установлен в False.");
 
         while (activeContextGroup == null)
         {
@@ -434,7 +434,7 @@ public class TutorialMascot : MonoBehaviour
                 Debug.Log("<color=orange>[TutorialMascot] RunIdleLogic: Запуск InitialHintDelayTimer (для первой подсказки).</color>");
                 if (initialHintDelayCoroutine != null) StopCoroutine(initialHintDelayCoroutine);
                 initialHintDelayCoroutine = StartCoroutine(InitialHintDelayTimer());
-                yield break; // Выходим из RunIdleLogic, передаем управление таймеру
+                yield break; 
             }
             
             Debug.Log($"<color=orange>[TutorialMascot] RunIdleLogic: Ожидание {currentIdleMessageDelay}с до следующего Idle-сообщения.</color>");
@@ -623,7 +623,7 @@ public class TutorialMascot : MonoBehaviour
 
     private void ShowNextUnvisitedSpotInContext(TutorialContextGroup context)
     {
-        Debug.Log($"[TutorialMascot] ShowNextUnvisitedSpotInContext: Поиск подсказки для '{context.contextID}'.");
+        Debug.Log($"[TutorialMascot] ShowNextUnvisitedSpotInContext: Поиск подсказки для '{context?.contextID ?? "null"}'.");
         if (context == null) return;
 
         TutorialHelpSpot nextSpot = context.helpSpots.FirstOrDefault(spot => 
@@ -663,8 +663,30 @@ public class TutorialMascot : MonoBehaviour
         }
         else
         {
-            Debug.Log("[TutorialMascot] ShowNextUnvisitedSpotOnScreen: Подсказки на этом экране закончились. Переход в RunIdleLogic.");
-            tutorialCoroutine = StartCoroutine(RunIdleLogic(false)); 
+            Debug.Log("[TutorialMascot] ShowNextUnvisitedSpotOnScreen: Подсказки на этом экране закончились.");
+            
+            // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (Фикс Б1) >>> ---
+            if (activeContextGroup != null)
+            {
+                // Если мы были в контексте (MainMenu_Default), мы должны запустить Idle *для этого контекста*
+                Debug.Log($"[TutorialMascot] ShowNextUnvisitedSpotOnScreen: Переход в RunIdleLogicForContext (контекст: {activeContextGroup.contextID}).");
+                tutorialCoroutine = StartCoroutine(RunIdleLogicForContext(activeContextGroup));
+            }
+            else
+            {
+                // Если мы были в Idle (контекст null), запускаем Idle
+                Debug.Log("[TutorialMascot] ShowNextUnvisitedSpotOnScreen: Переход в RunIdleLogic (контекст null).");
+                tutorialCoroutine = StartCoroutine(RunIdleLogic(false)); 
+            }
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ (Фикс Б1) >>> ---
+
+            // --- <<< ИЗМЕНЕНИЕ (Б): Сбрасываем флаг, когда подсказки кончились >>> ---
+            if (isTutorialResetting)
+            {
+                isTutorialResetting = false;
+                Debug.Log("[TutorialMascot] ShowNextUnvisitedSpotOnScreen: Сброшен флаг 'isTutorialResetting = false' (подсказки закончились).");
+            }
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
     }
 
@@ -733,10 +755,8 @@ public class TutorialMascot : MonoBehaviour
     {
         Debug.Log($"[TutorialMascot] Hide: Вызван. (isCeremonial = {useCeremonialFade})");
         
-        // --- <<< НАЧАЛО ИЗМЕНЕНИЯ (УМНЫЙ СТОП) >>> ---
         Debug.Log($"<color=cyan>[TutorialMascot] Hide: Остановка целевых корутин...</color>");
         
-        // Останавливаем только то, что мешает
         if (tutorialCoroutine != null) 
         {
             StopCoroutine(tutorialCoroutine);
@@ -763,7 +783,6 @@ public class TutorialMascot : MonoBehaviour
             StopCoroutine(nextHintDelayCoroutine);
             nextHintDelayCoroutine = null;
         }
-        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         
         if (!isHidden)
         {
@@ -838,6 +857,14 @@ public class TutorialMascot : MonoBehaviour
             soundCoroutine = StartCoroutine(PlayArrivalSound(beeps));
         }
         Debug.Log("<color=green>[TutorialMascot] TeleportToSpot: Завершено.</color>");
+        
+        // --- <<< ИЗМЕНЕНИЕ (Б): Сбрасываем флаг в КОНЦЕ показа >>> ---
+        if (isTutorialResetting)
+        {
+            isTutorialResetting = false;
+            Debug.Log("[TutorialMascot] TeleportToSpot: Сброшен флаг 'isTutorialResetting = false'");
+        }
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
     }
 
     private IEnumerator Fade(float targetAlpha, float duration)
@@ -918,9 +945,15 @@ public class TutorialMascot : MonoBehaviour
     {
         Debug.Log($"<color=yellow>[TutorialMascot] ResetCurrentScreenTutorial: СБРОС для экрана '{currentScreenID}'</color>");
         
+        // --- <<< ИЗМЕНЕНИЕ (Б): Устанавливаем флаг вначале >>> ---
+        isTutorialResetting = true; 
+        Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: Установлен флаг 'isTutorialResetting = true'");
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+
         if (string.IsNullOrEmpty(currentScreenID))
         {
             Debug.LogWarning("<color=red>[TutorialMascot] ResetCurrentScreenTutorial: currentScreenID ПУСТ. Не могу сбросить.</color>");
+            isTutorialResetting = false; // Сбрасываем флаг при ошибке
             return;
         }
         
@@ -943,13 +976,26 @@ public class TutorialMascot : MonoBehaviour
         canvasGroup.interactable = false;
         isHidden = true;
 
-        activeContextGroup = null;
+        // --- <<< ИЗМЕНЕНИЕ (Б/Б1): НЕ сбрасываем контекст, а НАХОДИМ его >>> ---
+        if (currentConfig != null && currentConfig.contextGroups != null)
+        {
+             activeContextGroup = currentConfig.contextGroups.FirstOrDefault(
+                g => g.contextPanel != null && g.contextPanel.activeInHierarchy
+            );
+             Debug.Log($"[TutorialMascot] ResetCurrentScreenTutorial: Контекст принудительно установлен на '{activeContextGroup?.contextID ?? "null"}'.");
+        }
+        else
+        {
+             activeContextGroup = null;
+        }
+        // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
+
         lastUsedIdleSpot = null;
         lastUsedGreetingIndex = -1;
         lastUsedTipIndex = -1;
         
         Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: Вызов ShowNextUnvisitedSpotOnScreen (для бонуса Б.2).");
-        ShowNextUnvisitedSpotOnScreen();
+        ShowNextUnvisitedSpotOnScreen(); // Этот вызов в итоге сбросит флаг 'isTutorialResetting'
     }
     
     public bool AreAllSpotsOnScreenVisited()

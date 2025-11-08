@@ -6714,7 +6714,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   screenID: MainMenu
   sceneLoadDelay: 1
-  firstEverAppearanceDelay: 2
+  firstEverAppearanceDelay: 4
   initialHintDelay: 4
   nextHintDelay: 8
   idleMessageChangeDelay: 7
@@ -7473,6 +7473,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6285389789132127652, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7279160958756786168, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
+      propertyPath: m_Alpha
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7571096873066719081, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
