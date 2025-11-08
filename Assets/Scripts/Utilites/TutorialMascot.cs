@@ -287,10 +287,10 @@ public class TutorialMascot : MonoBehaviour
         }
         // --- <<< КОНЕЦ ИЗМЕНЕНИЯ 2 >>> ---
         
-        if (tutorialCoroutine == null)
-        {
-            return;
-        }
+        //if (tutorialCoroutine == null)
+        //{
+        //    return;
+        //}
 
         TutorialContextGroup newContext = null;
         if (currentConfig.contextGroups != null)
