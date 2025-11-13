@@ -25,6 +25,7 @@ public class TutorialScreenConfig : MonoBehaviour
 
     [Header("Контекстные Подсказки")]
     [Tooltip("Список групп подсказок. Каждая группа привязана к своей панели UI.")]
+	[SerializeReference]
     public List<TutorialContextGroup> contextGroups;
     
     [Header("Места 'Отдыха' (для Главного Меню)")]

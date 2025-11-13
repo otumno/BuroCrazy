@@ -1,4 +1,4 @@
-// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpSpot.cs (ОТКАТ к v10)
+// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpSpot.cs
 using UnityEngine;
 
 [System.Serializable]
