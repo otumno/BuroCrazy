@@ -1,9 +1,10 @@
-// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpSpot.cs
+// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpSpot.cs (ОТКАТ к v10)
 using UnityEngine;
 
 [System.Serializable]
 public class TutorialHelpSpot
 {
+    
     [Tooltip("Уникальный ID для сохранения (например, 'MainMenu_NewGameButton')")]
     public string spotID;
     
@@ -25,17 +26,8 @@ public class TutorialHelpSpot
     [Tooltip("Поворот указателя (ось Z)")]
     public float pointerRotation = 0f;
 
-    [Header("Текст и Звук")]
+    [Header("Текст")]
     [Tooltip("Текст подсказки")]
     [TextArea(3, 5)]
     public string helpText;
-    
-    [Tooltip("Высота 'листка' с текстом, который выдвинется")]
-    public float textSheetHeight = 200f;
-	
-	[Tooltip("За сколько шагов лист достигнет этой высоты? (0 или 1 = мгновенно)")]
-    public int heightSteps = 3;
-    
-    [Tooltip("Количество 'бипов' перед финальным звуком (твое '--.-.---')")]
-    public int soundRepetitions = 5;
 }

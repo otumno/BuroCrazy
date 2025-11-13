@@ -5,6 +5,42 @@ TextureImporter:
   - first:
       213: 750593638663257458
     second: PapochkaFaceSad_0
+  - first:
+      213: -3465754045903809773
+    second: PapochkaFaceSad_1
+  - first:
+      213: -668468151200249166
+    second: PapochkaFaceSad_2
+  - first:
+      213: 3261698340762080746
+    second: PapochkaFaceSad_3
+  - first:
+      213: -6397353074861999487
+    second: PapochkaFaceSad_4
+  - first:
+      213: 3026148229086850555
+    second: PapochkaFaceSad_5
+  - first:
+      213: 773053541515470954
+    second: PapochkaFaceSad_6
+  - first:
+      213: 5224122824766437131
+    second: PapochkaFaceSad_7
+  - first:
+      213: -2522359589842006929
+    second: PapochkaFaceSad_8
+  - first:
+      213: 6445057509660564155
+    second: PapochkaFaceSad_9
+  - first:
+      213: -4006565490523904511
+    second: PapochkaFaceSad_10
+  - first:
+      213: 8681718328939418973
+    second: PapochkaFaceSad_11
+  - first:
+      213: -5564928484763576856
+    second: PapochkaFaceSad_12
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -37,7 +73,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -103,20 +139,20 @@ TextureImporter:
       name: PapochkaFaceSad_0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 1
-        width: 902
-        height: 546
+        x: 0
+        y: 0
+        width: 1137
+        height: 958
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: 27df03300f4aa6a00800000000000000
-      internalID: 750593638663257458
+      spriteID: abbd7e8a79b81af459abbab58dc1be35
+      internalID: 1109798140
       vertices: []
       indices: 
       edges: []
@@ -125,7 +161,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 071eae4f1b7059e47bf7f2bf3e73919d
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +171,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PapochkaFaceSad_0: 750593638663257458
+      PapochkaFaceSad_0: 1109798140
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

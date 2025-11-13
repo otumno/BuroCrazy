@@ -1,4 +1,4 @@
-// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpIcon.cs (ФИНАЛЬНАЯ ВЕРСИЯ)
+// Файл: Assets/Scripts/UI/Tutorial/TutorialHelpIcon.cs
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,7 +33,7 @@ public class TutorialHelpIcon : MonoBehaviour
             return;
         }
 
-        if (TutorialMascot.Instance.AreAllSpotsOnScreenVisited())
+        if (TutorialMascot.Instance.AreAllSpotsInCurrentContextVisited())
         {
             // Все подсказки уже были показаны. Сбрасываем прогресс.
             PlaySound(resetSound);
@@ -41,9 +41,13 @@ public class TutorialHelpIcon : MonoBehaviour
         }
         else
         {
-            // Еще есть непоказанные подсказки. Показываем следующую.
-            PlaySound(clickSound); // Исправлена опечатка (был 'mascotClickSound')
-            TutorialMascot.Instance.ShowNextUnvisitedSpotOnScreen();
+            // Еще есть непоказанные подсказки.
+            PlaySound(clickSound);
+            
+            // --- ИСПРАВЛЕНИЕ ---
+            // Вызываем "умную" функцию, которая знает про контекст
+            TutorialMascot.Instance.RequestNextHintSmart();
+            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
         }
     }
     

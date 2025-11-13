@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -103,20 +103,20 @@ TextureImporter:
       name: PapochkaFaceO_0
       rect:
         serializedVersion: 2
-        x: 1
-        y: 1
-        width: 902
-        height: 546
+        x: 0
+        y: 0
+        width: 1137
+        height: 958
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: a79a7aafe622041b0800000000000000
-      internalID: -5674497670439786118
+      spriteID: eb5cf40c79a30564399f4505fde8fd99
+      internalID: -180302519
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 802573bb2d5528d4b805468aa7c25169
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PapochkaFaceO_0: -5674497670439786118
+      PapochkaFaceO_0: -180302519
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -105,18 +105,18 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 904
-        height: 695
+        width: 1137
+        height: 958
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: -1
+      tessellationDetail: 0
       bones: []
-      spriteID: e102f3a6fc348b170800000000000000
-      internalID: 8194374080120430622
+      spriteID: 0f8a0dcc550902d43ab504fc13d40d73
+      internalID: -184768725
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 26815d648a622e948869716a727f5ab4
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PapochkaBack_0: 8194374080120430622
+      PapochkaBack_0: -184768725
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
