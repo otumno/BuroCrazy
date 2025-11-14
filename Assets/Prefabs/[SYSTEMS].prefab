@@ -169,8 +169,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   uiAudioSource: {fileID: 7754167207647341721}
   pausePanel: {fileID: 0}
-  mainMenuPanel: {fileID: 0}
-  saveLoadPanel: {fileID: 0}
+  splashScreenDwellTime: 2
+  gameSceneName: GameScene
+  mainMenuSceneName: MainMenuScene
 --- !u!82 &7754167207647341721
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1541,10 +1542,100 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   internPrefab: {fileID: 2985711966202016409, guid: 7d98a19b444d5e44e93af250f137b17f, type: 3}
+  allRoleData: []
+  rankDatabase: []
   AllStaff: []
   UnassignedStaff: []
-  minCandidatesPerDay: 2
-  maxCandidatesPerDay: 4
+  internCountOverTime:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 1
+      value: 4
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 30
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  specialistCountOverTime:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 30
+      value: 3
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  experiencedInternChance:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 5
+      value: 0.1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 30
+      value: 0.5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   baseCost: 100
   costPerSkillPoint: 150
 --- !u!1 &5730401970204978948
@@ -2271,8 +2362,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b4140768b136a649b5afca5c4bad3f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gameplaySource: {fileID: 0}
+  uiSource: {fileID: 0}
   menuTheme: {fileID: 8300000, guid: 94963549d0fe0aa42918c15fc01bdcba, type: 3}
   directorsOfficeTheme: {fileID: 8300000, guid: 50249d13f99b8c24d8f7b40cf6c5c4f2, type: 3}
+  pauseTheme: {fileID: 0}
+  archiveTheme: {fileID: 0}
   dayTracks:
   - {fileID: 8300000, guid: 822cd65ba3f20b948b3eba634bbfa4e7, type: 3}
   - {fileID: 8300000, guid: 233b2a9b427429a49b0c5e542393fd62, type: 3}
@@ -2306,9 +2401,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 63eaa2cfbcc442342a99c5b1223f18ae, type: 3}
   nightTrack: {fileID: 8300000, guid: a2a8c0cca9e49bf4a99b288c70baa74e, type: 3}
   radioSwitchSound: {fileID: 8300000, guid: 55e02f8d38c00ef4eb02125f7cb09e20, type: 3}
-  muffledFrequency: 4000
+  masterVolume: 0.5
   muffledVolume: 0.086
   fadeDuration: 0.5
+  muffledFrequency: 4000
 --- !u!1 &8763085085291328836
 GameObject:
   m_ObjectHideFlags: 0
@@ -2388,16 +2484,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c6d1fa630e27134987f31e2ea3aa7e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  allOrders:
-  - {fileID: 11400000, guid: 91cbdd7bfe01c6441a52262968012dff, type: 2}
-  - {fileID: 11400000, guid: 058e4cbdaf16d3d4e98da4fbc646fd05, type: 2}
-  - {fileID: 11400000, guid: 491694cc3f4d30143915192e7ef54f4c, type: 2}
-  allPossibleMandates: []
-  currentStrikes: 0
+  allPossibleOrders: []
   activeOrders: []
-  offeredOrders: []
   activePermanentOrders: []
   completedOneTimeOrders: []
+  currentMandates: []
+  offeredOrders: []
+  currentStrikes: 0
 --- !u!1 &8781239129944979203
 GameObject:
   m_ObjectHideFlags: 0

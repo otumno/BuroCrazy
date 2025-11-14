@@ -50,8 +50,7 @@ public class TutorialMascot : MonoBehaviour
     private RectTransform textBubbleRect; 
     private TutorialScreenConfig currentConfig;
     
-    private TutorialContextGroup activeContextGroup = null; 
-    
+    private TutorialContextGroup activeContextGroup = null;
     private Dictionary<string, List<string>> visitedSpotIDs = new Dictionary<string, List<string>>();
     private bool isHidden = true;
     private Vector2 baseHoverPosition;
@@ -70,6 +69,7 @@ public class TutorialMascot : MonoBehaviour
 
     // --- ФЛАГ "СНА" (GDD 4.2) ---
     private bool isSilenced = false;
+    private bool isSilencedGlobally = false; 
 
     #region Инициализация и Сцены
 
@@ -82,7 +82,6 @@ public class TutorialMascot : MonoBehaviour
             
             if (transform.parent != null)
             {
-                // --- ИСПРАВЛЕНИЕ ДЛЯ DontDestroyOnLoad ---
                 // Мы должны сделать "бессмертным" самого верхнего родителя
                 Transform root = transform;
                 while (root.parent != null)
@@ -104,7 +103,6 @@ public class TutorialMascot : MonoBehaviour
         else if (Instance != this)
         {
             Debug.LogWarning("[TutorialMascot] Awake: Найден дубликат. Уничтожаю.");
-            // --- ИСПРАВЛЕНИЕ ДЛЯ DontDestroyOnLoad ---
             // Уничтожаем *всю* иерархию дубликата
             if (transform.parent != null)
             {
@@ -165,7 +163,8 @@ public class TutorialMascot : MonoBehaviour
     {
         isSceneLoadLogicRunning = true;
         isTutorialResetting = false;
-        isSilenced = false; // Сбрасываем "сон" при загрузке сцены
+        isSilenced = false; 
+        isSilencedGlobally = false; 
 
         Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: StopAllCoroutines() при загрузке сцены.");
         StopAllCoroutines();
@@ -229,10 +228,6 @@ public class TutorialMascot : MonoBehaviour
             yield return new WaitForSecondsRealtime(currentSceneLoadDelay);
             Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Задержка прошла.");
             
-            // --- ИСПРАВЛЕНИЕ (GDD 3.1 / 3.3) ---
-            // 'tutorialCoroutine' здесь = null. Мы должны ПРИНУДИТЕЛЬНО 
-            // запустить правильную стартовую логику, а не ждать Update().
-
             TutorialContextGroup startContext = null;
             if (currentConfig.contextGroups != null)
             {
@@ -241,7 +236,7 @@ public class TutorialMascot : MonoBehaviour
                 );
             }
 
-            activeContextGroup = startContext; // Устанавливаем начальный контекст
+            activeContextGroup = startContext; 
 
             if (activeContextGroup != null && activeContextGroup.muteTutorial)
             {
@@ -249,20 +244,21 @@ public class TutorialMascot : MonoBehaviour
             }
             else if (activeContextGroup != null)
             {
-                // GDD 3.1: Запускаем Приветствие/Логику для активного контекста
                 Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Запуск 'RunTutorialForContext' для '{activeContextGroup.contextID}'.");
                 tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup));
             }
             else
             {
-                // GDD 3.1 / 3.3: Запускаем Приветствие/Idle для Базового контекста
                 Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Запуск 'RunIdleLogic' (Базовый контекст).");
                 tutorialCoroutine = StartCoroutine(RunIdleLogic(useCeremonialDelay));
             }
-            // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
         }
         else
         {
+            // Мы в сцене без конфига (например, MainMenu),
+            // сбрасываем флаг "первого появления" для СЛЕДУЮЩЕЙ сессии.
+            isFirstAppearanceThisSession = true;
+
             currentScreenID = "";
             activeContextGroup = null;
             lastUsedIdleSpot = null;
@@ -294,20 +290,18 @@ public class TutorialMascot : MonoBehaviour
     
     void Update()
     {
-        // Анимация парения (Hover)
         if (!isHidden)
         {
             rectTransform.anchoredPosition = baseHoverPosition +
                 new Vector2(0, Mathf.Sin(Time.time * hoverSpeed) * hoverAmplitude);
         }
 
-        // Пропускаем логику, если конфиг не найден или идет загрузка сцены
-        if (currentConfig == null || isSceneLoadLogicRunning || isTutorialResetting)
+        // Пропускаем логику, если конфиг не найден, идет загрузка, ИЛИ МАСКОТ ГЛОБАЛЬНО ОТКЛЮЧЕН
+        if (currentConfig == null || isSceneLoadLogicRunning || isTutorialResetting || isSilencedGlobally) 
         {
             return;
         }
         
-        // 1. ОПРЕДЕЛЯЕМ ТЕКУЩИЙ КОНТЕКСТ
         TutorialContextGroup newContext = null;
         if (currentConfig.contextGroups != null)
         {
@@ -316,7 +310,6 @@ public class TutorialMascot : MonoBehaviour
             );
         }
 
-        // 2. ПРОВЕРЯЕМ, ИЗМЕНИЛСЯ ЛИ КОНТЕКСТ (GDD 2)
         if (newContext != activeContextGroup)
         {
             Debug.Log($"<color=yellow>[TutorialMascot] Update: КОНТЕКСТ ИЗМЕНИЛСЯ. Старый: '{activeContextGroup?.contextID ?? "Базовый"}' -> Новый: '{newContext?.contextID ?? "Базовый"}'</color>");
@@ -330,40 +323,30 @@ public class TutorialMascot : MonoBehaviour
             
             activeContextGroup = newContext;
             isCeremonialAppearance = false;
-            isSilenced = false; // Сбрасываем "сон" при смене контекста
+            isSilenced = false; 
 
             Debug.Log("[TutorialMascot] Update: Немедленное скрытие (HideInternal()) из-за смены контекста.");
-            HideInternal(); // GDD 2: "немедленно исчезает"
+            HideInternal(); 
             
             if (activeContextGroup != null && activeContextGroup.muteTutorial)
             {
-                // GDD 2: "Тихий" Контекст
                 Debug.Log("[TutorialMascot] Update: Новый контекст 'muteTutorial'. Остаемся скрытыми.");
             }
             else if (activeContextGroup != null)
             {
-                // GDD 3.1: Новый Контекст
                 Debug.Log("[TutorialMascot] Update: Запуск 'RunTutorialForContext' для нового контекста.");
                 tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup));
             }
             else
             {
-                // GDD 3.3: Возврат в Базовый/Idle контекст
                 Debug.Log("[TutorialMascot] Update: Запуск 'RunIdleLogic' (Базовый контекст).");
                 tutorialCoroutine = StartCoroutine(RunIdleLogic(false));
             }
         }
-        // 3. ЕСЛИ КОНТЕКСТ НЕ МЕНЯЛСЯ, НО "МОЗГ" СВОБОДЕН
-        // GDD 3.2 (Авто-переключение) / GDD 3.3 (Idle-цикл)
-        else if (tutorialCoroutine == null && !isSilenced) // <-- ДОБАВЛЕН ФИКС 'isSilenced' (GDD 4.2)
+        else if (tutorialCoroutine == null && !isSilenced) 
         {
-            // Это происходит, когда:
-            // 1. Закончился 'initialHintDelay' (GDD 3.1)
-            // 2. Закончился 'nextHintDelay' (GDD 3.2)
-            // 3. Нажата кнопка 'Next' (GDD 4.1)
-            // 4. Закончился 'idleMessageDelay' (GDD 3.3)
             Debug.Log($"[TutorialMascot] Update: 'tutorialCoroutine' == null и НЕ 'isSilenced'. Мозг свободен. Вызов RequestNextHintSmart().");
-            RequestNextHintSmart(); // <-- ИСПРАВЛЕНИЕ: Вызываем void-метод
+            RequestNextHintSmart(); 
         }
     }
 
@@ -371,7 +354,6 @@ public class TutorialMascot : MonoBehaviour
 
     #region Логика Туториала и Idle (GDD 3.1, 3.2, 3.3)
 
-    // Логика для Базового контекста (когда activeContextGroup == null)
     private IEnumerator RunIdleLogic(bool useCeremonial = false)
     {
         Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Старт.");
@@ -384,12 +366,10 @@ public class TutorialMascot : MonoBehaviour
         }
         isFirstAppearanceThisSession = false;
 
-        // --- ИСПРАВЛЕНИЕ: Разделение логики GDD 3.1 и 3.3 ---
         bool allSpotsOnScreenVisited = AreAllSpotsOnScreenVisited();
 
         if (!allSpotsOnScreenVisited)
         {
-            // --- GDD 3.1: ПРИВЕТСТВИЕ (выполняется ОДИН РАЗ) ---
             Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Обнаружены непросмотренные подсказки. Запуск GDD 3.1 (Приветствие).");
             var visualContext = currentConfig.contextGroups.FirstOrDefault(g => g != null && !g.muteTutorial);
             if (visualContext == null) { HideInternal(); tutorialCoroutine = null; yield break; }
@@ -406,19 +386,16 @@ public class TutorialMascot : MonoBehaviour
                 visualContext.greetingPointerOffset, useCeremonial
             ));
             
-            // GDD 3.1: "Она ждет N секунд (initialHintDelay)"
             Debug.Log($"[TutorialMascot] RunIdleLogic: (Базовый) Приветствие показано. Ожидание initialHintDelay: {currentInitialHintDelay}с.");
             yield return new WaitForSecondsRealtime(currentInitialHintDelay);
             
             Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) GDD 3.1 завершен. 'Мозг' освобожден (Update() вызовет 1-ю подсказку).");
             tutorialCoroutine = null;
-            // НЕ ИСПОЛЬЗУЕМ yield break, корутина просто завершается.
         }
         else
         {
-            // --- GDD 3.3: РЕЖИМ "ОТДЫХА" (цикл) ---
             Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Все подсказки просмотрены. Запуск GDD 3.3 (Цикл Idle/Tips).");
-            while (activeContextGroup == null && !isSilenced) // GDD 3.3: "Она остается в этом режиме, пока..."
+            while (activeContextGroup == null && !isSilenced) 
             {
                 var visualContext = currentConfig.contextGroups.FirstOrDefault(g => g != null && !g.muteTutorial);
                 if (visualContext == null) { HideInternal(); tutorialCoroutine = null; yield break; }
@@ -426,21 +403,20 @@ public class TutorialMascot : MonoBehaviour
                 if (idleSpots == null || idleSpots.Count == 0) { HideInternal(); tutorialCoroutine = null; yield break; }
                 RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
                 lastUsedIdleSpot = randomIdleSpot;
-                List<string> messageList = GetContextIdleTips(visualContext); // GDD 3.3: "показывает 'советы' (Idle Tips)"
+                List<string> messageList = GetContextIdleTips(visualContext); 
                 if (messageList == null || messageList.Count == 0) messageList = visualContext.greetingTexts; // Fallback
                 string message = (messageList != null && messageList.Count > 0) ? messageList[Random.Range(0, messageList.Count)] : "Я здесь, если что!";
 
                 yield return StartCoroutine(TeleportToSpot(
                     randomIdleSpot.position, message, visualContext.greetingEmotion, 
                     visualContext.greetingPointerSprite, visualContext.greetingPointerRotation, 
-                    visualContext.greetingPointerOffset, false // 'useCeremonial' = false
+                    visualContext.greetingPointerOffset, false 
                 ));
 
-                // GDD 3.3: "периодически (раз в M секунд)"
                 Debug.Log($"[TutorialMascot] RunIdleLogic: (Базовый) GDD 3.3 Сообщение показано. Ожидание idleMessageDelay: {currentIdleMessageDelay}с.");
                 yield return new WaitForSecondsRealtime(currentIdleMessageDelay);
                 
-                if (activeContextGroup == null) // Прячемся перед следующей итерацией
+                if (activeContextGroup == null) 
                 {
                     yield return StartCoroutine(Fade(0f, fadeDuration));
                 }
@@ -451,7 +427,6 @@ public class TutorialMascot : MonoBehaviour
         }
     }
 
-    // Логика для Активного Контекста
     private IEnumerator RunTutorialForContext(TutorialContextGroup context)
     {
         Debug.Log($"[TutorialMascot] RunTutorialForContext: Старт для '{context.contextID}'.");
@@ -462,7 +437,6 @@ public class TutorialMascot : MonoBehaviour
 
         if (allSpotsInContextVisited)
         {
-            // GDD 3.3: Все подсказки в этом контексте просмотрены
             Debug.Log($"[TutorialMascot] RunTutorialForContext: Все подсказки для '{context.contextID}' уже просмотрены. Переход в RunIdleLogicForContext.");
             tutorialCoroutine = StartCoroutine(RunIdleLogicForContext(context));
             yield break;
@@ -475,7 +449,6 @@ public class TutorialMascot : MonoBehaviour
 
         if (isFirstTimeInContext)
         {
-            // GDD 3.1: Приветствие
             Debug.Log($"[TutorialMascot] RunTutorialForContext: Первое появление в '{context.contextID}'. Показ Приветствия.");
             List<RectTransform> idleSpots = GetContextIdleSpots(context);
             RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
@@ -496,22 +469,18 @@ public class TutorialMascot : MonoBehaviour
                 false 
             ));
             
-            // GDD 3.1: "Она ждет N секунд (initialHintDelay)"
             Debug.Log($"[TutorialMascot] RunTutorialForContext: Приветствие показано. Ожидание InitialHintDelayTimer ({currentInitialHintDelay}с).");
             yield return new WaitForSecondsRealtime(currentInitialHintDelay);
-            
             Debug.Log($"[TutorialMascot] RunTutorialForContext: InitialHintDelayTimer завершен. 'Мозг' освобожден.");
             tutorialCoroutine = null;
         }
         else
         {
-            // Мы вернулись в контекст, где уже что-то видели, но не всё.
             Debug.Log($"[TutorialMascot] RunTutorialForContext: Возвращение в '{context.contextID}'. 'Мозг' освобожден (Update() подхватит).");
             tutorialCoroutine = null; 
         }
     }
 
-    // Логика Idle для Активного Контекста (GDD 3.3)
     private IEnumerator RunIdleLogicForContext(TutorialContextGroup context)
     {
         Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Старт (режим Idle) для '{context.contextID}'.");
@@ -561,7 +530,6 @@ public class TutorialMascot : MonoBehaviour
                 false 
             ));
 
-            // GDD 3.3: "периодически (раз в M секунд)"
             Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Ожидание Idle ({currentIdleMessageDelay}с).");
             yield return new WaitForSecondsRealtime(currentIdleMessageDelay);
 
@@ -572,7 +540,7 @@ public class TutorialMascot : MonoBehaviour
             }
         }
         Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Цикл завершен (контекст изменился или 'уснул'). 'Мозг' освобожден.");
-        tutorialCoroutine = null; 
+        tutorialCoroutine = null;
     }
     
     // GDD 3.2 Авто-переключение
@@ -589,7 +557,6 @@ public class TutorialMascot : MonoBehaviour
 
         if (!visitedSpotIDs.ContainsKey(currentScreenID))
         {
-            // Эта ситуация не должна возникать, если LoadVisitedState отработал
             visitedSpotIDs[currentScreenID] = new List<string>();
         }
         
@@ -600,7 +567,6 @@ public class TutorialMascot : MonoBehaviour
             SaveVisitedState();
         }
         
-        // GDD 3.2: "Папочка 'телепортируется'... Она показывает свой листок"
         yield return StartCoroutine(TeleportToSpot(
             (Vector2)spot.targetElement.position + spot.mascotPositionOffset,
             spot.helpText,
@@ -611,59 +577,51 @@ public class TutorialMascot : MonoBehaviour
             false 
         ));
         
-        // GDD 3.2: "Папочка ждет N секунд (nextHintDelay)"
         Debug.Log($"[TutorialMascot] ShowSpecificSpotAndManageCoroutine: Ожидание NextHintDelayTimer ({currentNextHintDelay}с).");
         yield return new WaitForSecondsRealtime(currentNextHintDelay);
         
-        // GDD 3.2: "она автоматически переходит к показу следующей"
-        Debug.Log($"[TutorialMascot] ShowSpecificSpotAndManageCoroutine: NextHintDelayTimer завершен. 'Мозг' освобожден (Update() вызовет GDD 3.2-auto).");
-        tutorialCoroutine = null;
+        // --- <<< ИСПРАВЛЕНИЕ 5 (Авто-переключение) >>> ---
+        Debug.Log($"[TutorialMascot] ShowSpecificSpotAndManageCoroutine: NextHintDelayTimer завершен. *Принудительный* вызов RequestNextHintSmart().");
+        RequestNextHintSmart(); // Немедленно запускаем поиск следующей подсказки
+        // --- <<< КОНЕЦ ИСПРАВЛЕНИЯ >>> ---
     }
 
     #endregion
 
     #region Управление (Нажатия кнопок)
 
-    // GDD 4.1: Клик по маскоту ("Next")
     private void OnNextButtonClicked()
     {
         if (isHidden) return;
         Debug.Log("<color=cyan>[TutorialMascot] OnNextButtonClicked: Клик по 'Next'.</color>");
         PlaySound(mascotClickSound);
         
-        // GDD 4.1: "Немедленно прерывает... таймер"
         Debug.Log("[TutorialMascot] OnNextButtonClicked: StopAllCoroutines().");
-        StopAllCoroutines(); // Прерываем ВСЕ, включая 'мозг' (tutorialCoroutine)
+        StopAllCoroutines(); 
 
-        // GDD 4.1: "Немедленно запускает поиск следующей подсказки"
         tutorialCoroutine = null; 
 
-        isSilenced = false; // "Разбудить", если спал
+        isSilenced = false; 
 
-        // --- ИСПРАВЛЕНИЕ: Вызываем немедленно, не ждем Update() ---
         RequestNextHintSmart();
     }
     
-    // GDD 4.2: Клик по 'X' ("Close")
     private void OnCloseButtonClicked()
     {
         if (isHidden) return; 
         Debug.Log("<color=red>[TutorialMascot] OnCloseButtonClicked: Клик по 'X'.</color>");
         PlaySound(closeClickSound);
-        
-        // GDD 4.2: "Немедленно прерывает все"
         Debug.Log("[TutorialMascot] OnCloseButtonClicked: StopAllCoroutines().");
         StopAllCoroutines();
         
-        // GDD 4.2: "и прячется"
         Debug.Log("[TutorialMascot] OnCloseButtonClicked: HideInternal().");
         HideInternal(); 
 
-        // --- НОВЫЙ ФИКС (GDD 4.2) ---
-        // "Папочка "засыпает" в этом контексте."
+        // --- ИСПРАВЛЕНИЕ 1 (Применение) ---
         isSilenced = true;
-        Debug.Log("[TutorialMascot] OnCloseButtonClicked: Установка isSilenced = true. 'Мозг' остановлен.");
-        tutorialCoroutine = null; // Освобождаем "мозг", но 'isSilenced' не даст ему запуститься в Update()
+        isSilencedGlobally = true; 
+        Debug.Log("[TutorialMascot] OnCloseButtonClicked: Установка isSilenced = true и isSilencedGlobally = true.");
+        tutorialCoroutine = null; 
     }
     
     private void HideInternal()
@@ -753,8 +711,6 @@ public class TutorialMascot : MonoBehaviour
         {
             isTutorialResetting = false;
         }
-        
-        // --- ЗАПУСК ТАЙМЕРА УБРАН ОТСЮДА ---
     }
 
     private IEnumerator Fade(float targetAlpha, float duration)
@@ -828,67 +784,51 @@ public class TutorialMascot : MonoBehaviour
 
     #region Сохранение, Сброс и Вспомогательные методы
     
-    // GDD 4.1 / 4.3 / 3.2 / 3.3
-    // Это ЕДИНСТВЕННЫЙ метод, который должен запускать "мозг" (кроме загрузки сцены и сброса)
     public void RequestNextHintSmart()
     {
-        // --- ЗАЩИТА ОТ ДВОЙНОГО ВЫЗОВА ---
         if (IsBusy())
         {
             Debug.LogWarning("[TutorialMascot] RequestNextHintSmart: Вызван, когда 'мозг' УЖЕ БЫЛ ЗАНЯТ. Игнорирую.");
             return;
         }
-        // --- КОНЕЦ ЗАЩИТЫ ---
 
         Debug.Log("<color=cyan>[TutorialMascot] RequestNextHintSmart: Старт.</color>");
         
-        isSilenced = false; // "Разбудить", если спал
+        isSilenced = false; 
         
-        // Мы запускаем корутину и СРАЗУ ЖЕ присваиваем ее 'tutorialCoroutine', 
-        // делая 'IsBusy()' истинным.
         tutorialCoroutine = StartCoroutine(RequestNextHintSmart_Coroutine());
     }
 
-    // Эта корутина - фактический "мозг", который запускается ОДИН РАЗ
     private IEnumerator RequestNextHintSmart_Coroutine()
     {
-        // Прерываем только "младшие" корутины, но не "мозг" (который = this)
         if (soundCoroutine != null) StopCoroutine(soundCoroutine);
         if (sheetAnimationCoroutine != null) StopCoroutine(sheetAnimationCoroutine);
         
         if (activeContextGroup != null)
         {
-            // GDD 3.2 (Контекст)
             TutorialHelpSpot nextSpotInContext = FindNextUnvisitedSpotInContext(activeContextGroup);
             if (nextSpotInContext != null)
             {
                 Debug.Log($"[Mascot Brain] Найдена подсказка в КОНТЕКСТЕ: '{nextSpotInContext.spotID}'.");
-                // Эта корутина сама освободит "мозг" (`tutorialCoroutine = null;`)
                 yield return StartCoroutine(ShowSpecificSpotAndManageCoroutine(nextSpotInContext));
             }
             else
             {
-                // GDD 3.3 (Контекст)
                 Debug.Log($"[Mascot Brain] Подсказки в контексте '{activeContextGroup.contextID}' закончились. Запуск Idle (Контекст).");
-                // Эта корутина сама освободит "мозг" (`tutorialCoroutine = null;`)
                 yield return StartCoroutine(RunIdleLogicForContext(activeContextGroup));
             }
         }
         else
         {
-            // GDD 3.2 (Базовый)
             TutorialHelpSpot nextSpotOnScreen = FindNextUnvisitedSpotOnScreen();
             if (nextSpotOnScreen != null)
             {
                 Debug.Log($"[Mascot Brain] (Базовый) Найдена подсказка на ЭКРАНЕ: '{nextSpotOnScreen.spotID}'.");
-                // Эта корутина сама освободит "мозг" (`tutorialCoroutine = null;`)
                 yield return StartCoroutine(ShowSpecificSpotAndManageCoroutine(nextSpotOnScreen));
             }
             else
             {
-                // GDD 3.3 (Базовый)
                 Debug.Log("[Mascot Brain] (Базовый) Подсказки на экране закончились. Запуск Idle (Базовый).");
-                // Эта корутина сама освободит "мозг" (`tutorialCoroutine = null;`)
                 yield return StartCoroutine(RunIdleLogic(false));
             }
         }
@@ -908,12 +848,12 @@ public class TutorialMascot : MonoBehaviour
         );
     }
     
-    // GDD 4.3 (Сброс)
     public void ResetCurrentScreenTutorial()
     {
         Debug.Log($"<color=orange>[TutorialMascot] ResetCurrentScreenTutorial: Сброс прогресса для экрана '{currentScreenID}'.</color>");
         isTutorialResetting = true;
-        isSilenced = false; // "Разбудить"
+        isSilenced = false; 
+        isSilencedGlobally = false; 
 
         if (string.IsNullOrEmpty(currentScreenID))
         {
@@ -938,7 +878,6 @@ public class TutorialMascot : MonoBehaviour
         Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: HideInternal().");
         HideInternal();
 
-        // Обновляем текущий контекст
         if (currentConfig != null && currentConfig.contextGroups != null)
         {
             activeContextGroup = currentConfig.contextGroups.FirstOrDefault(
@@ -955,18 +894,14 @@ public class TutorialMascot : MonoBehaviour
         lastUsedGreetingIndex = -1;
         lastUsedTipIndex = -1;
         
-        // --- ИСПРАВЛЕНИЕ: Принудительно запускаем "мозг" ---
-        // (Раньше мы ждали Update(), теперь GDD 4.3 требует немедленного старта)
         Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: Принудительный запуск 'мозга' для показа Приветствия.");
         RequestNextHintSmart();
     }
     
-    // GDD 4.3 (Проверка для '?')
     public bool AreAllSpotsInCurrentContextVisited()
     {
         if (activeContextGroup != null)
         {
-            // Проверяем только текущий контекст
             if (activeContextGroup.helpSpots == null || !visitedSpotIDs.ContainsKey(currentScreenID))
             {
                 return true;
@@ -979,7 +914,6 @@ public class TutorialMascot : MonoBehaviour
         }
         else
         {
-            // Проверяем ВЕСЬ экран (Базовый контекст)
             return AreAllSpotsOnScreenVisited();
         }
     }
@@ -1008,7 +942,6 @@ public class TutorialMascot : MonoBehaviour
         foreach (var context in currentConfig.contextGroups)
         {
             if (context == null || context.muteTutorial || context.helpSpots == null) continue;
-
             foreach (var spot in context.helpSpots)
             {
                 if (spot != null && !visitedSpotIDs[currentScreenID].Contains(spot.spotID))
@@ -1017,7 +950,7 @@ public class TutorialMascot : MonoBehaviour
                 }
             }
         }
-        return null; // Все показано
+        return null; 
     }
 
     private List<RectTransform> GetContextIdleSpots(TutorialContextGroup context)
@@ -1054,18 +987,13 @@ public class TutorialMascot : MonoBehaviour
         return new List<string> { "Привет!" };
     }
     
-    // --- НОВЫЙ МЕТОД (GDD 4.3) ---
-    /// <summary>
-    /// Проверяет, занят ли Маскот (показывает анимацию, ждет таймер).
-    /// </summary>
     public bool IsBusy()
     {
-        // "Занят" означает, что "мозг" (tutorialCoroutine) выполняет какую-то задачу.
-        bool busy = tutorialCoroutine != null;
-        // Debug.Log($"[TutorialMascot] IsBusy() Check: {busy} (tutorialCoroutine is {(tutorialCoroutine == null ? "NULL" : "ACTIVE")})");
+        // "Занят" означает, что "мозг" (tutorialCoroutine) выполняет какую-то задачу,
+        // ИЛИ идет первоначальная загрузка сцены.
+        bool busy = tutorialCoroutine != null || isSceneLoadLogicRunning; // <-- ИСПРАВЛЕНИЕ 6
         return busy;
     }
-    // --- КОНЕЦ НОВОГО МЕТОДА ---
 
     private void SaveVisitedState()
     {
@@ -1082,7 +1010,6 @@ public class TutorialMascot : MonoBehaviour
 
     private void LoadVisitedState()
     {
-        // Логика перенесена в DelayedSceneLoadLogic
         Debug.Log("[TutorialMascot] LoadVisitedState: (Пусто) Загрузка будет в DelayedSceneLoadLogic.");
     }
 

@@ -10,7 +10,6 @@ public class TutorialHelpIcon : MonoBehaviour
     [Header("Звуки")]
     [Tooltip("Звук, который проигрывается при нажатии на эту иконку")]
     [SerializeField] private AudioClip clickSound;
-    
     [Tooltip("Звук, который проигрывается при сбросе прогресса")]
     [SerializeField] private AudioClip resetSound;
 
@@ -29,7 +28,7 @@ public class TutorialHelpIcon : MonoBehaviour
 
     private void OnHelpIconClicked()
     {
-        // --- НОВЫЙ ЛОГ ---
+        // --- ИСПРАВЛЕНИЕ 7 (Логика '?' из ТЗ) ---
         Debug.Log("<color=cyan>[TutorialHelpIcon] Кнопка '?' нажата.</color>");
 
         if (TutorialMascot.Instance == null)
@@ -38,34 +37,21 @@ public class TutorialHelpIcon : MonoBehaviour
             return;
         }
 
-        // --- ИСПРАВЛЕНИЕ (GDD 4.3: Защита от спама) ---
-        // GDD: "Если Папочка уже занята (анимируется, показывает подсказку), нажатие на '?' игнорируется."
+        // GDD 4.3: "Если Папочка уже занята ... нажатие на '?' игнорируется."
         if (TutorialMascot.Instance.IsBusy())
         {
             Debug.LogWarning("[TutorialHelpIcon] Клик по '?' проигнорирован: Маскот занят (IsBusy() == true).");
             PlaySound(clickSound);
             return;
         }
+        
+        // --- НАЧАЛО ИСПРАВЛЕНИЯ (Логика из вашего ТЗ) ---
+        // "вызвать обратно можно по нажатии на icon маскота ... сбрасываются и будут показаны заново"
+        
+        Debug.Log("[TutorialHelpIcon] Вызов ResetCurrentScreenTutorial() по требованию пользователя.");
+        PlaySound(resetSound); // Всегда проигрываем звук сброса
+        TutorialMascot.Instance.ResetCurrentScreenTutorial();
         // --- КОНЕЦ ИСПРАВЛЕНИЯ ---
-
-
-        // GDD 4.3: Логика "Сброса" или "Следующей подсказки"
-        if (TutorialMascot.Instance.AreAllSpotsInCurrentContextVisited())
-        {
-            // GDD 4.3: "(ВСЕ подсказки... просмотрены): Нажатие сбрасывает прогресс."
-            Debug.Log("[TutorialHelpIcon] Все подсказки в этом контексте просмотрены. Вызов ResetCurrentScreenTutorial().");
-            PlaySound(resetSound);
-            TutorialMascot.Instance.ResetCurrentScreenTutorial();
-        }
-        else
-        {
-            // GDD 4.3: "(есть непросмотренные подсказки...): Нажатие немедленно вызывает следующую..."
-            Debug.Log("[TutorialHelpIcon] Есть непросмотренные подсказки. Вызов RequestNextHintSmart().");
-            PlaySound(clickSound);
-            
-            // --- ИСПРАВЛЕНИЕ: Вызываем публичный void метод, а не корутину ---
-            TutorialMascot.Instance.RequestNextHintSmart();
-        }
     }
     
     private void PlaySound(AudioClip clip)

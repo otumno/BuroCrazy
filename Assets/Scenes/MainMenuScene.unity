@@ -7328,7 +7328,7 @@ MonoBehaviour:
     - rid: 7911689041367269493
       type: {class: TutorialContextGroup, ns: , asm: Assembly-CSharp}
       data:
-        contextID: MainMenu
+        contextID: MainMenu_panel
         contextPanel: {fileID: 846011594}
         muteTutorial: 0
         helpSpots:
@@ -8064,6 +8064,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5776662180483092927, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
+      propertyPath: autoLineHeight
+      value: 47
+      objectReference: {fileID: 0}
     - target: {fileID: 6285389789132127652, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -8495,6 +8499,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5147576532701257959, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6323726595607129623, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7573636373502958441, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
