@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Data/Actions/CoverRegistrarAction.cs
 using UnityEngine;
 using System.Linq;
 
@@ -7,16 +6,25 @@ public class CoverRegistrarAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        // Условие 1: Это должен быть стажер, и он не должен быть на перерыве.
-        if (!(staff is InternController intern) || intern.IsOnBreak())
-        {
-            return false;
-        }
+        if (!(staff is InternController intern) || intern.IsOnBreak()) return false;
 
-        // Условие 2: Найти хотя бы одно рабочее место Регистратора (deskId = 0), которое сейчас не занято.
-        return ScenePointsRegistry.Instance.allServicePoints
-            .Any(p => p.deskId == 0 && ClientSpawner.GetServiceProviderAtDesk(p.deskId) == null);
+        // Ищем всех нанятых регистраторов
+        var registrars = HiringManager.Instance.AllStaff.OfType<ClerkController>()
+            .Where(c => c.role == ClerkController.ClerkRole.Registrar);
+
+        // Ищем, есть ли среди них тот, кто на перерыве, и чей стол сейчас пуст
+        foreach (var r in registrars)
+        {
+            if (r.IsOnBreak() && r.assignedServicePoint != null && ClientSpawner.GetServiceProviderAtDesk(r.assignedServicePoint.deskId) == null)
+            {
+                return true; // Найдена работа!
+            }
+        }
+        return false;
     }
 
-    public override System.Type GetExecutorType() { return typeof(CoverDeskExecutor); }
+    public override System.Type GetExecutorType()
+    {
+        return typeof(CoverRegistrarExecutor);
+    }
 }

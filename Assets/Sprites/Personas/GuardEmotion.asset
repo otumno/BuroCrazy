@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 18ff03ae229417b478bc87d5d7529885, type: 3}
+  m_Name: GuardEmotion
+  m_EditorClassIdentifier: 
+  maleBaseBodies:
+  - {fileID: 8206839613880520507, guid: a225f84ffd0cb014a94a0859578e7a57, type: 3}
+  femaleBaseBodies: []
+  emotionFaces:
+  - emotion: 0
+    maleFace: {fileID: 1910122378, guid: 455e477477f153a4aa46f0f8e2de6e6f, type: 3}
+    femaleFace: {fileID: 1910122378, guid: 455e477477f153a4aa46f0f8e2de6e6f, type: 3}

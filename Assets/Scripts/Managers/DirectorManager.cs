@@ -28,17 +28,17 @@ public class DirectorManager : MonoBehaviour
             Instance = this;
             
             // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
-            // УБИРАЕМ строки, которые вызывают ошибку
-            // transform.SetParent(null); 
-            // DontDestroyOnLoad(gameObject); 
+            transform.SetParent(null); // Отсоединяемся
+            DontDestroyOnLoad(gameObject); // Делаем бессмертным *этот* объект
             // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
         else if (Instance != this)
         {
             Debug.Log($"<color=purple>[DirectorManager] Instance уже занят ({Instance.gameObject.GetInstanceID()}). Я ({this.gameObject.GetInstanceID()}) самоуничтожаюсь.</color>");
             
-            // Уничтожаем *этот* компонент, а не весь GameObject
-            Destroy(this); 
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            Destroy(gameObject); // Уничтожаем *этот* GameObject
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
     }
 
@@ -103,27 +103,28 @@ public class DirectorManager : MonoBehaviour
         currentStrikes = 0;
     }
 	
-    public void EvaluateEndOfDayStrikes()
+	public void EvaluateEndOfDayStrikes()
+{
+    if (DocumentQualityManager.Instance == null) return;
+
+    float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
+    float allowedError = 1.0f; // 100% по умолчанию
+
+    // Берем норму из активного приказа, если он есть
+    if (currentMandates.Any())
     {
-        if (DocumentQualityManager.Instance == null) return;
-
-        float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
-        float allowedError = 1.0f; // 100% по умолчанию
-
-        // Берем норму из активного приказа, если он есть
-        if (currentMandates.Any())
-        {
-            allowedError = currentMandates[0].allowedDirectorErrorRate;
-        }
-
-        Debug.Log($"[End of Day] Проверка ошибок. Среднее: {averageError:P1}, Норма: {allowedError:P1}");
-        if (averageError > allowedError)
-        {
-            AddStrike();
-            Debug.LogWarning($"[End of Day] СТРАЙК! Среднее количество ошибок превысило норму.");
-        }
-
-        // Сбрасываем счетчик ошибок для следующего дня
-        DocumentQualityManager.Instance.ResetDay();
+        allowedError = currentMandates[0].allowedDirectorErrorRate;
     }
+
+    Debug.Log($"[End of Day] Проверка ошибок. Среднее: {averageError:P1}, Норма: {allowedError:P1}");
+    if (averageError > allowedError)
+    {
+        AddStrike();
+        Debug.LogWarning($"[End of Day] СТРАЙК! Среднее количество ошибок превысило норму.");
+    }
+
+    // Сбрасываем счетчик ошибок для следующего дня
+    DocumentQualityManager.Instance.ResetDay();
+}
+	
 }

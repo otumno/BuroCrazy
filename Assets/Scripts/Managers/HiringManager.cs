@@ -71,25 +71,24 @@ public class HiringManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-
             // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
-            // УБИРАЕМ строки, которые вызывают ошибку
-            // transform.SetParent(null); 
-            // DontDestroyOnLoad(gameObject); 
+            transform.SetParent(null); // Отсоединяемся
+            DontDestroyOnLoad(gameObject); // Делаем бессмертным *этот* объект
             // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
             
-            Debug.Log($"<color=green>[HiringManager]</color> Awake: Я стал Singleton. Объект 'gameObject' будет сделан бессмертным (через родителя).");
+            Debug.Log($"<color=green>[HiringManager]</color> Awake: Я стал Singleton. Объект 'gameObject' сделан бессмертным.");
             SceneManager.sceneLoaded += OnSceneLoaded; 
         }
         else if (Instance != this)
         {
-            Debug.LogWarning($"[HiringManager] Awake: Найден дубликат. Уничтожаю *себя* (этот компонент).");
+            Debug.LogWarning($"[HiringManager] Awake: Найден дубликат. Уничтожаю *себя* (этот GameObject).");
             
-            Destroy(this); // Уничтожаем дубликат скрипта
+            // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
+            Destroy(gameObject); // Уничтожаем *этот* GameObject
+            // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
         }
     }
 
-    // ... (весь остальной код HiringManager.cs без изменений) ...
 
     void OnDestroy()
     {
@@ -369,7 +368,7 @@ public class HiringManager : MonoBehaviour
             // --- Link Components ---
              // Ensure components were found earlier
             if (agentMover != null && visuals != null && logger != null) {
-                 newControllerReference.ForceInitializeBaseComponents(agentMover, visuals, logger);
+                newControllerReference.ForceInitializeBaseComponents(agentMover, visuals, logger);
                  Debug.Log($"Базовые компоненты связаны для {savedName}.");
             } else {
                  Debug.LogError($"Не удалось связать базовые компоненты для {savedName} - ссылки потеряны!");
@@ -401,7 +400,7 @@ public class HiringManager : MonoBehaviour
              bool updatedInAllStaff = false;
             for(int i = 0; i < AllStaff.Count; i++) {
                 if (AllStaff[i] == null || AllStaff[i].gameObject.GetInstanceID() == staffInstanceID) {
-                     AllStaff[i] = newControllerReference;
+                    AllStaff[i] = newControllerReference;
                     updatedInAllStaff = true;
                     break;
                 }
@@ -412,7 +411,7 @@ public class HiringManager : MonoBehaviour
                      Debug.LogWarning($"Сотрудник {savedName} не найден в AllStaff после пересборки (ID: {staffInstanceID}), добавляем заново.");
                      AllStaff.Add(newControllerReference);
                  }
-            }
+             }
 
             bool updatedInUnassigned = false;
              for(int i = 0; i < UnassignedStaff.Count; i++) {
@@ -422,7 +421,7 @@ public class HiringManager : MonoBehaviour
                      break;
                  }
              }
-             // No need to add to UnassignedStaff if not found, it implies it was assigned.
+            // No need to add to UnassignedStaff if not found, it implies it was assigned.
 
              Debug.Log($"Ссылки в списках менеджера обновлены для {savedName}.");
             // --- End Update Lists ---
@@ -569,7 +568,7 @@ public class HiringManager : MonoBehaviour
         {
             Debug.Log($"Роль меняется с {staff.currentRole} на {newRankData.associatedRole} при повышении.");
             // Pass the current active actions (including newly added ones)
-             AssignNewRole_Immediate(staff, newRankData.associatedRole, staff.activeActions); // This might start a coroutine
+            AssignNewRole_Immediate(staff, newRankData.associatedRole, staff.activeActions); // This might start a coroutine
         } else {
              Debug.Log($"Роль {staff.currentRole} остается прежней при повышении.");
         }
@@ -742,7 +741,7 @@ public class HiringManager : MonoBehaviour
         int roleBaseCost = (roleData != null) ? roleData.baseHiringCost : this.baseCost; // Use RoleData cost or fallback
 
         float totalSkillPoints = candidate.Skills.paperworkMastery + candidate.Skills.sedentaryResilience +
-                         candidate.Skills.pedantry + candidate.Skills.softSkills;
+                                 candidate.Skills.pedantry + candidate.Skills.softSkills;
 
         candidate.HiringCost = roleBaseCost + (int)(totalSkillPoints * costPerSkillPoint);
         // Add the cumulative promotion cost stored in the starting RankData asset
@@ -828,7 +827,7 @@ public class HiringManager : MonoBehaviour
                  staffController.StartShift();
                  Debug.Log($"Сотрудник {candidate.Name} нанят и немедленно приступает к работе в период '{currentPeriod}'.");
              } else {
-                 Debug.Log($"Сотрудник {candidate.Name} нанят, но его смена ('{currentPeriod}') сейчас неактивна.");
+                  Debug.Log($"Сотрудник {candidate.Name} нанят, но его смена ('{currentPeriod}') сейчас неактивна.");
              }
             // --- End Start Shift ---
 
@@ -940,7 +939,7 @@ public class HiringManager : MonoBehaviour
             }
             else if (!isScheduledNow && isOnDuty)
             {
-                 Debug.Log($"   -> {staff.characterName}: Закончить смену.");
+                Debug.Log($"   -> {staff.characterName}: Закончить смену.");
                 staff.EndShift();
             }
              // else: Correct state, do nothing.

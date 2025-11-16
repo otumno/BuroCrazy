@@ -1208,7 +1208,7 @@ MonoBehaviour:
   textFinalBeepSound: {fileID: 8300000, guid: 8c51ea2656e5d8844b8cc971a1e8d83c, type: 3}
   mascotClickSound: {fileID: 8300000, guid: a6c08d3d45ee0fa4f9d6c59a621566cb, type: 3}
   closeClickSound: {fileID: 8300000, guid: dd0a15619eb7e3c49b188a6191cbe4ce, type: 3}
-  autoLineHeight: 55
+  autoLineHeight: 50
   fadeDuration: 0.3
   ceremonialFadeDuration: 1.5
   hoverAmplitude: 7

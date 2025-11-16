@@ -37,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 0
+    filterMode: 1
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -103,20 +103,20 @@ TextureImporter:
       name: PapochkaFaceSmile_0
       rect:
         serializedVersion: 2
-        x: 0
-        y: 0
-        width: 1137
-        height: 958
+        x: 1
+        y: 1
+        width: 902
+        height: 546
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
-      tessellationDetail: 0
+      tessellationDetail: -1
       bones: []
-      spriteID: 71b96d65bd775324a9a5b0dca535ac03
-      internalID: 166356600
+      spriteID: ead895a027ef82ad0800000000000000
+      internalID: -2726649808619467346
       vertices: []
       indices: 
       edges: []
@@ -125,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 9f08ef48e81bcf44eaecb929f637e348
+    spriteID: 
     internalID: 0
     vertices: []
     indices: 
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PapochkaFaceSmile_0: 166356600
+      PapochkaFaceSmile_0: -2726649808619467346
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

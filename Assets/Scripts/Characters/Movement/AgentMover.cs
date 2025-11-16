@@ -588,7 +588,7 @@ public class AgentMover : MonoBehaviour
         // --- Fall Physics & Visuals ---
         rb.linearVelocity = Vector2.zero; // Immediately stop physics movement
         rb.angularVelocity = 0f;
-        rb.isKinematic = true; // Make kinematic to prevent physics interference
+        rb.bodyType = RigidbodyType2D.Kinematic; // Make kinematic to prevent physics interference
 
         Transform characterVisualsTransform = characterSpriteRenderer?.transform.parent; // Get the visual container
         Quaternion originalVisualRotation = characterVisualsTransform != null ? characterVisualsTransform.localRotation : Quaternion.identity;

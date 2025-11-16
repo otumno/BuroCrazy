@@ -12,819 +12,6334 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3044ea3f393a4e94e83e237cdd156fea, type: 3}
   m_Name: MainGameCalendar 1
   m_EditorClassIdentifier: 
-  periodSettings:
-  - periodName: "\u0423\u0442\u0440\u043E"
-    clientCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 10
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 30
-        value: 50
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnRate:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 7
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnBatchSize:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    crowdSpawnCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 6
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 30
-        value: 20
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    numberOfCrowdsToSpawn:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    lightingSettings:
-      lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
-      lightIntensity: 0.8
-    panelColor: {r: 0.17238295, g: 0.16197936, b: 0.3773585, a: 0}
-    lightsToEnableNames:
-    - LAMP REGIS
-    - LAMP HALL (1)
-    - Office2
-    - Office1
-    - LAMP HALL Post
-    - LAMP HALL (2)
-    - Cashier
-    - LAMP INNERHALL (13) Kitchen
-    - LAMP INNERHALL (5) Entrance
-    - LAMP INNERHALL (4)
-    - LAMP INNERHALL (6)
-    - LAMP INNERHALL (7)
-    - LAMP INNERHALL (12)
-    - LAMP INNERHALL (11)
-    - LAMP INNERHALL (10)
-    - LAMP INNERHALL (9)
-    - LAMP INNERHALL (8)
-    - ACHIVE DAY
-    - LAMP INNERHALL (14) SECRT
-  - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
-    clientCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 20
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 120
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnRate:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 8
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnBatchSize:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 2
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    crowdSpawnCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 20
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    numberOfCrowdsToSpawn:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 2
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    lightingSettings:
-      lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
-      lightIntensity: 1
-    panelColor: {r: 0.7169812, g: 0.65845275, b: 0.40922037, a: 0}
-    lightsToEnableNames:
-    - DAY (1)
-    - DAY (2)
-    - DAY (3)
-    - DAY (4)
-    - DAY (5)
-    - Office2
-    - Office1
-    - Cashier
-    - ACHIVE DAY
-    - LAMP INNERHALL (13) Kitchen
-    - LAMP INNERHALL (15) DIRECTOR
-    - LAMP INNERHALL (14) SECRT
-    - LAMP INNERHALL (5) Entrance
-    - LAMP INNERHALL (4)
-    - LAMP INNERHALL (6)
-    - LAMP INNERHALL (7)
-    - LAMP INNERHALL (12)
-    - LAMP INNERHALL (11)
-    - LAMP INNERHALL (10)
-    - LAMP INNERHALL (9)
-    - LAMP INNERHALL (8)
-  - periodName: "\u041E\u0431\u0435\u0434"
-    clientCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnRate:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 12
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnBatchSize:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    crowdSpawnCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    numberOfCrowdsToSpawn:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    lightingSettings:
-      lightColor: {r: 1, g: 1, b: 1, a: 1}
-      lightIntensity: 1.1
-    panelColor: {r: 0.9150943, g: 0.8139122, b: 0.44459772, a: 0}
-    lightsToEnableNames:
-    - DAY (1)
-    - DAY (2)
-    - DAY (3)
-    - DAY (4)
-    - DAY (5)
-    - Office2
-    - Office1
-    - Cashier
-    - ACHIVE DAY
-    - LAMP INNERHALL (13) Kitchen
-    - LAMP INNERHALL (15) DIRECTOR
-    - LAMP INNERHALL (14) SECRT
-    - LAMP INNERHALL (5) Entrance
-    - LAMP INNERHALL (4)
-    - LAMP INNERHALL (6)
-    - LAMP INNERHALL (7)
-    - LAMP INNERHALL (12)
-    - LAMP INNERHALL (11)
-    - LAMP INNERHALL (10)
-    - LAMP INNERHALL (9)
-    - LAMP INNERHALL (8)
-  - periodName: "\u0414\u0435\u043D\u044C"
-    clientCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 120
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnRate:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 8
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnBatchSize:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 2
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    crowdSpawnCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    numberOfCrowdsToSpawn:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    lightingSettings:
-      lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
-      lightIntensity: 1.45
-    panelColor: {r: 1, g: 0.8174603, b: 0, a: 0}
-    lightsToEnableNames:
-    - DAY (1)
-    - DAY (2)
-    - DAY (3)
-    - DAY (4)
-    - DAY (5)
-    - Office2
-    - Office1
-    - Cashier
-    - ACHIVE DAY
-    - LAMP INNERHALL (13) Kitchen
-    - LAMP INNERHALL (15) DIRECTOR
-    - LAMP INNERHALL (14) SECRT
-    - LAMP INNERHALL (5) Entrance
-    - LAMP INNERHALL (4)
-    - LAMP INNERHALL (6)
-    - LAMP INNERHALL (7)
-    - LAMP INNERHALL (12)
-    - LAMP INNERHALL (11)
-    - LAMP INNERHALL (10)
-    - LAMP INNERHALL (9)
-    - LAMP INNERHALL (8)
-  - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
-    clientCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 10
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 90
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnRate:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 4
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnBatchSize:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    crowdSpawnCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 10
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    numberOfCrowdsToSpawn:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    lightingSettings:
-      lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
-      lightIntensity: 0.85
-    panelColor: {r: 0.6226415, g: 0.5520869, b: 0.41411534, a: 0}
-    lightsToEnableNames:
-    - Office2
-    - Office1
-    - Cashier
-    - ACHIVE DAY
-    - LAMP INNERHALL (13) Kitchen
-    - LAMP INNERHALL (15) DIRECTOR
-    - LAMP INNERHALL (14) SECRT
-    - LAMP INNERHALL (5) Entrance
-    - LAMP INNERHALL (4)
-    - LAMP INNERHALL (6)
-    - LAMP INNERHALL (7)
-    - LAMP INNERHALL (12)
-    - LAMP INNERHALL (11)
-    - LAMP INNERHALL (10)
-    - LAMP INNERHALL (9)
-    - LAMP INNERHALL (8)
-  - periodName: "\u0412\u0435\u0447\u0435\u0440"
-    clientCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnRate:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 15
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnBatchSize:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    crowdSpawnCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    numberOfCrowdsToSpawn:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    lightingSettings:
-      lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
-      lightIntensity: 0.85
-    panelColor: {r: 0.40610537, g: 0.67084485, b: 0.735849, a: 0}
-    lightsToEnableNames:
-    - LAMP REGIS
-    - LAMP HALL (1)
-    - Office2
-    - Office1
-    - LAMP HALL Post
-    - LAMP HALL (2)
-    - Cashier
-    - ACHIVE DAY
-    - LAMP INNERHALL (13) Kitchen
-    - LAMP INNERHALL (5) Entrance
-    - LAMP INNERHALL (4)
-    - LAMP INNERHALL (6)
-    - LAMP INNERHALL (7)
-    - LAMP INNERHALL (12)
-    - LAMP INNERHALL (11)
-    - LAMP INNERHALL (10)
-    - LAMP INNERHALL (9)
-    - LAMP INNERHALL (8)
-  - periodName: "\u041D\u043E\u0447\u044C"
-    clientCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnRate:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    spawnBatchSize:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    crowdSpawnCount:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    numberOfCrowdsToSpawn:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    lightingSettings:
-      lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
-      lightIntensity: 0.2
-    panelColor: {r: 0.115656935, g: 0.09438412, b: 0.1981132, a: 0}
-    lightsToEnableNames:
-    - LAMP HALL Post
-    - NIGHT (6)
-    - NIGHT (7)
-    - NIGHT (8)
-    - NIGHT (9)
-    - NIGHT (10)
-    - CashierRED
-    - ACHIVE NIGHT
-    - LAMP INNERHALL (5) Entrance
+  days:
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+  - eventOfTheDay: 0
+    periodSettings:
+    - periodName: "\u0423\u0442\u0440\u043E"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 7
+      spawnBatchSize: 1
+      crowdSpawnCount: 6
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.7830189, g: 0.535973, b: 0.37304202, a: 1}
+        lightIntensity: 0.8
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 0.9711264, b: 0.6462264, a: 1}
+        lightIntensity: 1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041E\u0431\u0435\u0434"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 12
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 1, g: 1, b: 1, a: 1}
+        lightIntensity: 1.1
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0414\u0435\u043D\u044C"
+      clientCount: 15
+      durationInSeconds: 120
+      spawnRate: 8
+      spawnBatchSize: 2
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.81960785, g: 0.7882353, b: 0.5686275, a: 1}
+        lightIntensity: 1.45
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+      clientCount: 15
+      durationInSeconds: 90
+      spawnRate: 4
+      spawnBatchSize: 1
+      crowdSpawnCount: 10
+      numberOfCrowdsToSpawn: 1
+      lightingSettings:
+        lightColor: {r: 0.8784314, g: 0.8509804, b: 0.6666667, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u0412\u0435\u0447\u0435\u0440"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 15
+      spawnBatchSize: 1
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.9529412, g: 0.5882353, b: 0.49803922, a: 1}
+        lightIntensity: 0.85
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+    - periodName: "\u041D\u043E\u0447\u044C"
+      clientCount: 15
+      durationInSeconds: 60
+      spawnRate: 0
+      spawnBatchSize: 0
+      crowdSpawnCount: 0
+      numberOfCrowdsToSpawn: 0
+      lightingSettings:
+        lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+        lightIntensity: 0.2
+      panelColor: {r: 1, g: 1, b: 1, a: 0}
+      lightsToEnable:
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}
+      - {fileID: 0}

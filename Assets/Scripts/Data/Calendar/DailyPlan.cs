@@ -1,14 +1,7 @@
 using System.Collections.Generic;
 
-// Enum для "особых дней"
-public enum DayEvent 
-{ 
-    None, 
-    PensionDay, 
-    ClownDay 
-}
+public enum DayEvent { None, PensionDay, ClownDay /*, и т.д. */ }
 
-// Класс для хранения плана на один день
 [System.Serializable]
 public class DailyPlan
 {

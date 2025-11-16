@@ -1,4 +1,4 @@
-// Файл: PersistentEventSystem.cs - ФИНАЛЬНАЯ ВЕРСИЯ
+// Файл: PersistentEventSystem.cs
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -10,15 +10,14 @@ public class PersistentEventSystem : MonoBehaviour
     {
         if (Instance != null)
         {
-            // Если "бессмертный" экземпляр уже существует, 
-            // значит, мы - двойник из новой сцены. Уничтожаем себя.
+            // Если "бессмертный" экземпляр уже существует, уничтожаем этот (двойника).
             Destroy(gameObject);
         }
         else
         {
             // Если мы первые, становимся "бессмертным" экземпляром.
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            //DontDestroyOnLoad(gameObject);
         }
     }
 }

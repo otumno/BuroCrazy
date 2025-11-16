@@ -39,7 +39,7 @@ public class TutorialScreenConfigEditor : Editor
         EditorGUILayout.PropertyField(screenID);
         EditorGUILayout.Space();
 
-        EditorGUILayout.LabelField("Настройки Задержек (в секундах)", EditorStyles.boldLabel);
+        //EditorGUILayout.LabelField("Настройки Задержек (в секундах)", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(sceneLoadDelay);
         EditorGUILayout.PropertyField(firstEverAppearanceDelay);
         EditorGUILayout.PropertyField(initialHintDelay);
@@ -47,7 +47,7 @@ public class TutorialScreenConfigEditor : Editor
         EditorGUILayout.PropertyField(idleMessageChangeDelay);
         EditorGUILayout.Space();
 
-        EditorGUILayout.LabelField("Места 'Отдыха' (Idle)", EditorStyles.boldLabel);
+        //EditorGUILayout.LabelField("Места 'Отдыха' (Idle)", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(idleSpots, true);
         EditorGUILayout.PropertyField(idleTips, true);
         EditorGUILayout.Space();
