@@ -1,5 +1,5 @@
 // Файл: Assets/Scripts/UI/Tutorial/TutorialMascot.cs
-// ВЕРСИЯ С ЛОГАМИ И ИСПРАВЛЕНИЯМИ GDD (Приветствие + Авто-переключение + '?' + 'X')
+// ВЕРСЯ V21 (Исправлена логика Mute-контекстов заменой FirstOrDefault на LastOrDefault)
 
 using UnityEngine;
 using UnityEngine.UI;
@@ -39,17 +39,21 @@ public class TutorialMascot : MonoBehaviour
     [SerializeField] private float hoverSpeed = 2f;
     [SerializeField] private float sheetStepDelay = 0.02f;
     
+    // Загружаемые настройки
     private float currentInitialHintDelay = 3.0f;
     private float currentIdleMessageDelay = 10.0f;
     private float currentFirstEverDelay = 2.0f;
     private float currentNextHintDelay = 5.0f;
     private float currentSceneLoadDelay = 1.0f;
+    
+    // Компоненты
     private AudioSource audioSource;
     private RectTransform rectTransform;
     private CanvasGroup canvasGroup;
     private RectTransform textBubbleRect; 
-    private TutorialScreenConfig currentConfig;
     
+    // Состояние
+    private TutorialScreenConfig currentConfig;
     private TutorialContextGroup activeContextGroup = null;
     private Dictionary<string, List<string>> visitedSpotIDs = new Dictionary<string, List<string>>();
     private bool isHidden = true;
@@ -57,19 +61,21 @@ public class TutorialMascot : MonoBehaviour
     private Coroutine tutorialCoroutine; // "Мозг"
     private Coroutine soundCoroutine;
     private Coroutine sheetAnimationCoroutine;
-    private bool isSceneLoadLogicRunning = false;
+    
+    // Флаги управления
+    private bool isInitializing = true; 
+    private Coroutine sceneLoadCoroutine; // Корутина, которая ждет 2с
     private bool isTutorialResetting = false;
     private string currentScreenID = "";
     private bool isFirstEverAppearance = true;
-    private bool isCeremonialAppearance = false;
     private bool isFirstAppearanceThisSession = true;
+    private bool isSilenced = false; // (GDD 4.2)
+    
+    // Состояние Idle
     private RectTransform lastUsedIdleSpot = null;
     private int lastUsedGreetingIndex = -1;
     private int lastUsedTipIndex = -1;
 
-    // --- ФЛАГ "СНА" (GDD 4.2) ---
-    private bool isSilenced = false;
-    private bool isSilencedGlobally = false; 
 
     #region Инициализация и Сцены
 
@@ -78,47 +84,12 @@ public class TutorialMascot : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            Debug.Log("<color=green>[TutorialMascot] Awake: Я стал Singleton.</color>");
-            
-            if (transform.parent != null)
-            {
-                // Мы должны сделать "бессмертным" самого верхнего родителя
-                Transform root = transform;
-                while (root.parent != null)
-                {
-                    root = root.parent;
-                }
-                DontDestroyOnLoad(root.gameObject);
-                Debug.Log($"<color=green>[TutorialMascot] Awake: Сделал {root.name} бессмертным.</color>");
-            }
-            else
-            {
-                DontDestroyOnLoad(gameObject);
-                Debug.Log($"<color=green>[TutorialMascot] Awake: У меня нет родителя, делаю {gameObject.name} бессмертным.</color>");
-            }
-            
             SceneManager.sceneLoaded += OnSceneLoadedStarter;
             isFirstEverAppearance = PlayerPrefs.GetInt("Mascot_FirstEverAppearance", 0) == 0;
         }
         else if (Instance != this)
         {
-            Debug.LogWarning("[TutorialMascot] Awake: Найден дубликат. Уничтожаю.");
-            // Уничтожаем *всю* иерархию дубликата
-            if (transform.parent != null)
-            {
-                Transform root = transform;
-                while (root.parent != null)
-                {
-                    root = root.parent;
-                }
-                Debug.LogWarning($"[TutorialMascot] Уничтожаю дубликат {root.name}.");
-                Destroy(root.gameObject);
-            }
-            else
-            {
-                Debug.LogWarning($"[TutorialMascot] Уничтожаю дубликат {gameObject.name}.");
-                Destroy(gameObject);
-            }
+            Destroy(gameObject);
             return;
         }
 
@@ -139,6 +110,7 @@ public class TutorialMascot : MonoBehaviour
         canvasGroup.alpha = 0;
         canvasGroup.interactable = false;
         isHidden = true;
+        isInitializing = true; 
     }
 
     void Start()
@@ -150,37 +122,28 @@ public class TutorialMascot : MonoBehaviour
     
     void OnSceneLoadedStarter(Scene scene, LoadSceneMode mode)
     {
-        Debug.Log($"<color=purple>[TutorialMascot] OnSceneLoadedStarter: Сцена '{scene.name}' загружена.</color>");
-        if (isSceneLoadLogicRunning)
-        {
-            Debug.LogWarning("[TutorialMascot] OnSceneLoadedStarter: Предыдущая загрузка еще выполняется. Выход.");
-            return;
-        }
-        StartCoroutine(DelayedSceneLoadLogic(scene));
+        sceneLoadCoroutine = StartCoroutine(DelayedSceneLoadLogic(scene));
     }
 
     IEnumerator DelayedSceneLoadLogic(Scene scene)
     {
-        isSceneLoadLogicRunning = true;
+        isInitializing = true; 
         isTutorialResetting = false;
         isSilenced = false; 
-        isSilencedGlobally = false; 
 
-        Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: StopAllCoroutines() при загрузке сцены.");
-        StopAllCoroutines();
+        if (tutorialCoroutine != null) StopCoroutine(tutorialCoroutine);
+        if (soundCoroutine != null) StopCoroutine(soundCoroutine);
+        if (sheetAnimationCoroutine != null) StopCoroutine(sheetAnimationCoroutine);
         tutorialCoroutine = null;
         soundCoroutine = null;
         sheetAnimationCoroutine = null;
-
+        
         currentConfig = FindObjectOfType<TutorialScreenConfig>();
         if (currentConfig != null)
         {
             currentScreenID = currentConfig.screenID;
-            Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: TutorialScreenConfig НАЙДЕН. ScreenID: '{currentScreenID}'.");
-
             currentInitialHintDelay = currentConfig.initialHintDelay;
             currentIdleMessageDelay = currentConfig.idleMessageChangeDelay;
-            currentSceneLoadDelay = currentConfig.sceneLoadDelay;
             currentNextHintDelay = currentConfig.nextHintDelay;
 
             bool useCeremonialDelay = false;
@@ -214,73 +177,67 @@ public class TutorialMascot : MonoBehaviour
                 }
             }
 
-            activeContextGroup = null;
+            activeContextGroup = null; 
             lastUsedIdleSpot = null;
             lastUsedGreetingIndex = -1;
             lastUsedTipIndex = -1;
-            
             canvasGroup.alpha = 0;
             canvasGroup.interactable = false;
             isHidden = true;
-            isCeremonialAppearance = false;
+
+            isInitializing = false;
+            Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Конфиг загружен. isInitializing = false. (Кнопка '?' теперь работает)</color>");
 
             Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Ожидание задержки загрузки сцены: {currentSceneLoadDelay}с.");
             yield return new WaitForSecondsRealtime(currentSceneLoadDelay);
-            Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Задержка прошла.");
             
-            TutorialContextGroup startContext = null;
+            Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Задержка прошла. Поиск активного контекста...");
+
             if (currentConfig.contextGroups != null)
             {
-                startContext = currentConfig.contextGroups.FirstOrDefault(
+                // --- <<< ИЗМЕНЕНИЕ V21 (1/4) >>> ---
+                activeContextGroup = currentConfig.contextGroups.LastOrDefault(
                     g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
                 );
             }
 
-            activeContextGroup = startContext; 
-
-            if (activeContextGroup != null && activeContextGroup.muteTutorial)
+            if (tutorialCoroutine != null) 
+            {
+                Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: 'Мозг' (tutorialCoroutine) уже занят (вероятно, кнопкой '?'). Приветствие отменено.");
+            }
+            else if (activeContextGroup != null && activeContextGroup.muteTutorial)
             {
                 Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Начальный контекст 'mute'. Ничего не запускаем.");
             }
             else if (activeContextGroup != null)
             {
                 Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Запуск 'RunTutorialForContext' для '{activeContextGroup.contextID}'.");
-                tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup));
+                tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup, useCeremonialDelay));
             }
             else
             {
-                Debug.Log("[TutorialMascot] DelayedSceneLoadLogic: Запуск 'RunIdleLogic' (Базовый контекст).");
+                Debug.Log($"[TutorialMascot] DelayedSceneLoadLogic: Запуск 'RunIdleLogic' (Базовый контекст).");
                 tutorialCoroutine = StartCoroutine(RunIdleLogic(useCeremonialDelay));
             }
         }
         else
         {
-            // Мы в сцене без конфига (например, MainMenu),
-            // сбрасываем флаг "первого появления" для СЛЕДУЮЩЕЙ сессии.
-            isFirstAppearanceThisSession = true;
-
             currentScreenID = "";
             activeContextGroup = null;
-            lastUsedIdleSpot = null;
-            lastUsedGreetingIndex = -1;
-            lastUsedTipIndex = -1;
-            canvasGroup.alpha = 0;
-            canvasGroup.interactable = false;
             isHidden = true;
-            isCeremonialAppearance = false;
-            Debug.LogWarning("[TutorialMascot] DelayedSceneLoadLogic: TutorialScreenConfig НЕ НАЙДЕН на сцене. Маскот будет неактивен.");
+            Debug.LogWarning("[TutorialMascot] DelayedSceneLoadLogic: TutorialScreenConfig НЕ НАЙДЕН.");
+            isInitializing = false; 
         }
         
-        isSceneLoadLogicRunning = false;
+        sceneLoadCoroutine = null; 
+        Debug.Log($"<color=cyan>[TutorialMascot] DelayedSceneLoadLogic: Завершено.</color>");
     }
-
 
     void OnDestroy()
     {
         if (Instance == this)
         {
             SceneManager.sceneLoaded -= OnSceneLoadedStarter;
-            Debug.Log("[TutorialMascot] OnDestroy: Отписался от SceneManager.sceneLoaded.");
         }
     }
     
@@ -290,14 +247,7 @@ public class TutorialMascot : MonoBehaviour
     
     void Update()
     {
-        if (!isHidden)
-        {
-            rectTransform.anchoredPosition = baseHoverPosition +
-                new Vector2(0, Mathf.Sin(Time.time * hoverSpeed) * hoverAmplitude);
-        }
-
-        // Пропускаем логику, если конфиг не найден, идет загрузка, ИЛИ МАСКОТ ГЛОБАЛЬНО ОТКЛЮЧЕН
-        if (currentConfig == null || isSceneLoadLogicRunning || isTutorialResetting || isSilencedGlobally) 
+        if (currentConfig == null || isInitializing || isTutorialResetting)
         {
             return;
         }
@@ -305,37 +255,48 @@ public class TutorialMascot : MonoBehaviour
         TutorialContextGroup newContext = null;
         if (currentConfig.contextGroups != null)
         {
-            newContext = currentConfig.contextGroups.FirstOrDefault(
+            // --- <<< ИЗМЕНЕНИЕ V21 (2/4) >>> ---
+            newContext = currentConfig.contextGroups.LastOrDefault(
                  g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
             );
+        }
+
+        if (sceneLoadCoroutine != null)
+        {
+            if (newContext != null && activeContextGroup == null)
+            {
+                activeContextGroup = newContext;
+                Debug.Log($"<color=yellow>[TutorialMascot] Update: Контекст '{newContext.contextID}' пойман во время 'sceneLoadCoroutine'.</color>");
+            }
+            return;
         }
 
         if (newContext != activeContextGroup)
         {
             Debug.Log($"<color=yellow>[TutorialMascot] Update: КОНТЕКСТ ИЗМЕНИЛСЯ. Старый: '{activeContextGroup?.contextID ?? "Базовый"}' -> Новый: '{newContext?.contextID ?? "Базовый"}'</color>");
             
-            Debug.Log("[TutorialMascot] Update: StopAllCoroutines() из-за смены контекста.");
             StopAllCoroutines();
-            
             tutorialCoroutine = null;
             soundCoroutine = null;
             sheetAnimationCoroutine = null;
+            sceneLoadCoroutine = null; 
             
             activeContextGroup = newContext;
-            isCeremonialAppearance = false;
-            isSilenced = false; 
-
-            Debug.Log("[TutorialMascot] Update: Немедленное скрытие (HideInternal()) из-за смены контекста.");
+            
             HideInternal(); 
             
-            if (activeContextGroup != null && activeContextGroup.muteTutorial)
+            if (isSilenced)
+            {
+                 Debug.Log("[TutorialMascot] Update: Контекст сменился, но 'isSilenced' = true. Остаемся скрытыми.");
+            }
+            else if (activeContextGroup != null && activeContextGroup.muteTutorial)
             {
                 Debug.Log("[TutorialMascot] Update: Новый контекст 'muteTutorial'. Остаемся скрытыми.");
             }
             else if (activeContextGroup != null)
             {
                 Debug.Log("[TutorialMascot] Update: Запуск 'RunTutorialForContext' для нового контекста.");
-                tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup));
+                tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup, false)); 
             }
             else
             {
@@ -348,44 +309,59 @@ public class TutorialMascot : MonoBehaviour
             Debug.Log($"[TutorialMascot] Update: 'tutorialCoroutine' == null и НЕ 'isSilenced'. Мозг свободен. Вызов RequestNextHintSmart().");
             RequestNextHintSmart(); 
         }
+        
+        if (!isHidden)
+        {
+            rectTransform.anchoredPosition = baseHoverPosition +
+                new Vector2(0, Mathf.Sin(Time.time * hoverSpeed) * hoverAmplitude);
+        }
     }
-
     #endregion
+
 
     #region Логика Туториала и Idle (GDD 3.1, 3.2, 3.3)
 
     private IEnumerator RunIdleLogic(bool useCeremonial = false)
     {
-        Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Старт.");
+        Debug.Log($"[TutorialMascot] RunIdleLogic: (Базовый) Старт. (useCeremonial = {useCeremonial})");
         if (isFirstEverAppearance)
         {
             isFirstEverAppearance = false; 
             PlayerPrefs.SetInt("Mascot_FirstEverAppearance", 1);
             PlayerPrefs.Save();
-            Debug.Log("[TutorialMascot] RunIdleLogic: Это первое появление в игре.");
         }
         isFirstAppearanceThisSession = false;
 
         bool allSpotsOnScreenVisited = AreAllSpotsOnScreenVisited();
 
+        Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Запуск GDD 3.1 (Приветствие).");
+        var visualContext = currentConfig.contextGroups.FirstOrDefault(g => g != null && !g.muteTutorial);
+        
+        List<RectTransform> idleSpots = GetContextIdleSpots(visualContext);
+        if (idleSpots == null || idleSpots.Count == 0) 
+        {
+            Debug.LogWarning($"[TutorialMascot] RunIdleLogic: Не найдены Idle Spots. Не могу показать приветствие.");
+            HideInternal(); 
+            tutorialCoroutine = null; 
+            yield break; 
+        }
+        
+        RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
+        lastUsedIdleSpot = randomIdleSpot;
+        List<string> messageList = GetGreetingListFromConfig(visualContext); 
+        string message = (messageList != null && messageList.Count > 0) ? messageList[Random.Range(0, messageList.Count)] : "Привет!";
+        
+        yield return StartCoroutine(TeleportToSpot(
+            randomIdleSpot.position, message, 
+            visualContext?.greetingEmotion, 
+            visualContext?.greetingPointerSprite, 
+            visualContext?.greetingPointerRotation ?? 0f, 
+            visualContext?.greetingPointerOffset ?? Vector2.zero, 
+            useCeremonial
+        ));
+        
         if (!allSpotsOnScreenVisited)
         {
-            Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Обнаружены непросмотренные подсказки. Запуск GDD 3.1 (Приветствие).");
-            var visualContext = currentConfig.contextGroups.FirstOrDefault(g => g != null && !g.muteTutorial);
-            if (visualContext == null) { HideInternal(); tutorialCoroutine = null; yield break; }
-            List<RectTransform> idleSpots = GetContextIdleSpots(visualContext);
-            if (idleSpots == null || idleSpots.Count == 0) { HideInternal(); tutorialCoroutine = null; yield break; }
-            RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
-            lastUsedIdleSpot = randomIdleSpot;
-            List<string> messageList = visualContext.greetingTexts; 
-            string message = (messageList != null && messageList.Count > 0) ? messageList[Random.Range(0, messageList.Count)] : "Привет!";
-            
-            yield return StartCoroutine(TeleportToSpot(
-                randomIdleSpot.position, message, visualContext.greetingEmotion, 
-                visualContext.greetingPointerSprite, visualContext.greetingPointerRotation, 
-                visualContext.greetingPointerOffset, useCeremonial
-            ));
-            
             Debug.Log($"[TutorialMascot] RunIdleLogic: (Базовый) Приветствие показано. Ожидание initialHintDelay: {currentInitialHintDelay}с.");
             yield return new WaitForSecondsRealtime(currentInitialHintDelay);
             
@@ -394,99 +370,84 @@ public class TutorialMascot : MonoBehaviour
         }
         else
         {
-            Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Все подсказки просмотрены. Запуск GDD 3.3 (Цикл Idle/Tips).");
-            while (activeContextGroup == null && !isSilenced) 
-            {
-                var visualContext = currentConfig.contextGroups.FirstOrDefault(g => g != null && !g.muteTutorial);
-                if (visualContext == null) { HideInternal(); tutorialCoroutine = null; yield break; }
-                List<RectTransform> idleSpots = GetContextIdleSpots(visualContext);
-                if (idleSpots == null || idleSpots.Count == 0) { HideInternal(); tutorialCoroutine = null; yield break; }
-                RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
-                lastUsedIdleSpot = randomIdleSpot;
-                List<string> messageList = GetContextIdleTips(visualContext); 
-                if (messageList == null || messageList.Count == 0) messageList = visualContext.greetingTexts; // Fallback
-                string message = (messageList != null && messageList.Count > 0) ? messageList[Random.Range(0, messageList.Count)] : "Я здесь, если что!";
-
-                yield return StartCoroutine(TeleportToSpot(
-                    randomIdleSpot.position, message, visualContext.greetingEmotion, 
-                    visualContext.greetingPointerSprite, visualContext.greetingPointerRotation, 
-                    visualContext.greetingPointerOffset, false 
-                ));
-
-                Debug.Log($"[TutorialMascot] RunIdleLogic: (Базовый) GDD 3.3 Сообщение показано. Ожидание idleMessageDelay: {currentIdleMessageDelay}с.");
-                yield return new WaitForSecondsRealtime(currentIdleMessageDelay);
-                
-                if (activeContextGroup == null) 
-                {
-                    yield return StartCoroutine(Fade(0f, fadeDuration));
-                }
-            }
-            
-            Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Цикл GDD 3.3 завершен (контекст изменился или 'уснул'). 'Мозг' освобожден.");
-            tutorialCoroutine = null;
+            Debug.Log("[TutorialMascot] RunIdleLogic: (Базовый) Все подсказки просмотрены. Немедленный переход в GDD 3.3 (Цикл Idle/Tips).");
+            tutorialCoroutine = StartCoroutine(RunIdleLogicForContext(null)); 
+            yield break; 
         }
     }
 
-    private IEnumerator RunTutorialForContext(TutorialContextGroup context)
+    private IEnumerator RunTutorialForContext(TutorialContextGroup context, bool useCeremonial = false)
     {
-        Debug.Log($"[TutorialMascot] RunTutorialForContext: Старт для '{context.contextID}'.");
-        bool allSpotsInContextVisited = context.helpSpots.All(spot => 
-            spot == null || 
-            visitedSpotIDs[currentScreenID].Contains(spot.spotID)
-        );
+        Debug.Log($"[TutorialMascot] RunTutorialForContext: Старт для '{context.contextID}'. (useCeremonial = {useCeremonial})");
+
+        Debug.Log($"[TutorialMascot] RunTutorialForContext: Показ Приветствия для '{context.contextID}'.");
+        
+        List<RectTransform> idleSpots = GetContextIdleSpots(context);
+        if (idleSpots == null || idleSpots.Count == 0)
+        {
+             Debug.LogWarning($"[TutorialMascot] RunTutorialForContext: Не найдены Idle Spots для '{context.contextID}'. Не могу показать приветствие.");
+             HideInternal();
+             tutorialCoroutine = null; 
+             yield break;
+        }
+        
+        RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
+        
+        string greeting = "Привет!";
+        if (context.greetingTexts != null && context.greetingTexts.Count > 0)
+        {
+            int newIndex = Random.Range(0, context.greetingTexts.Count);
+            if (context.greetingTexts.Count > 1 && newIndex == lastUsedGreetingIndex)
+            {
+                newIndex = (newIndex + 1) % context.greetingTexts.Count;
+            }
+            greeting = context.greetingTexts[newIndex];
+            lastUsedGreetingIndex = newIndex;
+        }
+
+        yield return StartCoroutine(TeleportToSpot(
+             randomIdleSpot.position,
+            greeting,
+            context.greetingEmotion, 
+            context.greetingPointerSprite,
+            context.greetingPointerRotation,
+            context.greetingPointerOffset,
+            useCeremonial
+        ));
+        
+        bool allSpotsInContextVisited = AreAllSpotsInCurrentContextVisited();
 
         if (allSpotsInContextVisited)
         {
-            Debug.Log($"[TutorialMascot] RunTutorialForContext: Все подсказки для '{context.contextID}' уже просмотрены. Переход в RunIdleLogicForContext.");
+            Debug.Log($"[TutorialMascot] RunTutorialForContext: Все подсказки для '{context.contextID}' просмотрены. Переход в RunIdleLogicForContext (Tips-loop).");
             tutorialCoroutine = StartCoroutine(RunIdleLogicForContext(context));
-            yield break;
-        }
-
-        bool isFirstTimeInContext = !context.helpSpots.Any(spot => 
-            spot != null && 
-            visitedSpotIDs[currentScreenID].Contains(spot.spotID)
-        );
-
-        if (isFirstTimeInContext)
-        {
-            Debug.Log($"[TutorialMascot] RunTutorialForContext: Первое появление в '{context.contextID}'. Показ Приветствия.");
-            List<RectTransform> idleSpots = GetContextIdleSpots(context);
-            RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
-            
-            string greeting = "Привет!";
-            if (context.greetingTexts != null && context.greetingTexts.Count > 0)
-            {
-                greeting = context.greetingTexts[Random.Range(0, context.greetingTexts.Count)];
-            }
-
-            yield return StartCoroutine(TeleportToSpot(
-                 randomIdleSpot.position,
-                greeting,
-                context.greetingEmotion, 
-                context.greetingPointerSprite,
-                context.greetingPointerRotation,
-                context.greetingPointerOffset,
-                false 
-            ));
-            
-            Debug.Log($"[TutorialMascot] RunTutorialForContext: Приветствие показано. Ожидание InitialHintDelayTimer ({currentInitialHintDelay}с).");
-            yield return new WaitForSecondsRealtime(currentInitialHintDelay);
-            Debug.Log($"[TutorialMascot] RunTutorialForContext: InitialHintDelayTimer завершен. 'Мозг' освобожден.");
-            tutorialCoroutine = null;
+            yield break; 
         }
         else
         {
-            Debug.Log($"[TutorialMascot] RunTutorialForContext: Возвращение в '{context.contextID}'. 'Мозг' освобожден (Update() подхватит).");
+            Debug.Log($"[TutorialMascot] RunTutorialForContext: Приветствие показано. Ожидание InitialHintDelayTimer ({currentInitialHintDelay}с) перед показом 1-й подсказки.");
+            yield return new WaitForSecondsRealtime(currentInitialHintDelay);
+            
+            Debug.Log($"[TutorialMascot] RunTutorialForContext: InitialHintDelayTimer завершен. 'Мозг' освобожден (Update() вызовет 1-ю подсказку).");
             tutorialCoroutine = null; 
         }
     }
 
     private IEnumerator RunIdleLogicForContext(TutorialContextGroup context)
     {
-        Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Старт (режим Idle) для '{context.contextID}'.");
-        while (activeContextGroup != null && activeContextGroup.contextID == context.contextID && !isSilenced)
+        string contextID = (context != null) ? context.contextID : null;
+        Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Старт (режим Idle) для '{contextID ?? "Базовый"}'.");
+
+        while (activeContextGroup == context && !isSilenced)
         {
             List<RectTransform> idleSpots = GetContextIdleSpots(context);
+            if (idleSpots == null || idleSpots.Count == 0)
+            {
+                 Debug.LogWarning($"[TutorialMascot] RunIdleLogicForContext: Не найдены Idle Spots для '{contextID ?? "Базовый"}'. Прерывание Idle-цикла.");
+                 HideInternal();
+                 tutorialCoroutine = null;
+                 yield break;
+            }
             RectTransform randomIdleSpot = idleSpots[Random.Range(0, idleSpots.Count)];
 
             bool isUsingGreetings;
@@ -500,7 +461,7 @@ public class TutorialMascot : MonoBehaviour
             }
             else
             {
-                messageList = context.greetingTexts;
+                messageList = GetGreetingListFromConfig(context); 
                 isUsingGreetings = true;
                 lastIndex = lastUsedGreetingIndex;
             }
@@ -520,20 +481,26 @@ public class TutorialMascot : MonoBehaviour
             }
 
             Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Показ Idle сообщения: '{message}'");
+            
+            Sprite emotion = (context != null) ? context.greetingEmotion : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingEmotion : null;
+            Sprite pointer = (context != null) ? context.greetingPointerSprite : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingPointerSprite : null;
+            float pointerRot = (context != null) ? context.greetingPointerRotation : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingPointerRotation : 0f;
+            Vector2 pointerOffset = (context != null) ? context.greetingPointerOffset : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingPointerOffset : Vector2.zero;
+
             yield return StartCoroutine(TeleportToSpot(
                 randomIdleSpot.position,
                 message,
-                context.greetingEmotion, 
-                context.greetingPointerSprite,
-                context.greetingPointerRotation,
-                context.greetingPointerOffset,
+                emotion, 
+                pointer,
+                pointerRot,
+                pointerOffset,
                 false 
             ));
 
             Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Ожидание Idle ({currentIdleMessageDelay}с).");
             yield return new WaitForSecondsRealtime(currentIdleMessageDelay);
 
-            if (activeContextGroup != null && activeContextGroup.contextID == context.contextID)
+            if (activeContextGroup == context) 
             {
                 Debug.Log("[TutorialMascot] RunIdleLogicForContext: Контекст не изменился. Плавное скрытие.");
                 yield return StartCoroutine(Fade(0f, fadeDuration)); 
@@ -543,7 +510,6 @@ public class TutorialMascot : MonoBehaviour
         tutorialCoroutine = null;
     }
     
-    // GDD 3.2 Авто-переключение
     private IEnumerator ShowSpecificSpotAndManageCoroutine(TutorialHelpSpot spot)
     {
         Debug.Log($"[TutorialMascot] ShowSpecificSpotAndManageCoroutine: Старт для '{spot.spotID}'.");
@@ -580,10 +546,13 @@ public class TutorialMascot : MonoBehaviour
         Debug.Log($"[TutorialMascot] ShowSpecificSpotAndManageCoroutine: Ожидание NextHintDelayTimer ({currentNextHintDelay}с).");
         yield return new WaitForSecondsRealtime(currentNextHintDelay);
         
-        // --- <<< ИСПРАВЛЕНИЕ 5 (Авто-переключение) >>> ---
-        Debug.Log($"[TutorialMascot] ShowSpecificSpotAndManageCoroutine: NextHintDelayTimer завершен. *Принудительный* вызов RequestNextHintSmart().");
-        RequestNextHintSmart(); // Немедленно запускаем поиск следующей подсказки
-        // --- <<< КОНЕЦ ИСПРАВЛЕНИЯ >>> ---
+        Debug.Log($"[TutorialMascot] ShowSpecificSpotAndManageCoroutine: NextHintDelayTimer завершен. 'Мозг' освобожден (Update() вызовет GDD 3.2-auto).");
+        tutorialCoroutine = null;
+        
+        if (isTutorialResetting)
+        {
+            isTutorialResetting = false;
+        }
     }
 
     #endregion
@@ -598,10 +567,9 @@ public class TutorialMascot : MonoBehaviour
         
         Debug.Log("[TutorialMascot] OnNextButtonClicked: StopAllCoroutines().");
         StopAllCoroutines(); 
-
+        sceneLoadCoroutine = null; 
         tutorialCoroutine = null; 
-
-        isSilenced = false; 
+        isSilenced = false;
 
         RequestNextHintSmart();
     }
@@ -611,16 +579,16 @@ public class TutorialMascot : MonoBehaviour
         if (isHidden) return; 
         Debug.Log("<color=red>[TutorialMascot] OnCloseButtonClicked: Клик по 'X'.</color>");
         PlaySound(closeClickSound);
+        
         Debug.Log("[TutorialMascot] OnCloseButtonClicked: StopAllCoroutines().");
         StopAllCoroutines();
+        sceneLoadCoroutine = null; 
         
         Debug.Log("[TutorialMascot] OnCloseButtonClicked: HideInternal().");
         HideInternal(); 
 
-        // --- ИСПРАВЛЕНИЕ 1 (Применение) ---
         isSilenced = true;
-        isSilencedGlobally = true; 
-        Debug.Log("[TutorialMascot] OnCloseButtonClicked: Установка isSilenced = true и isSilencedGlobally = true.");
+        Debug.Log("[TutorialMascot] OnCloseButtonClicked: Установка isSilenced = true. 'Мозг' остановлен.");
         tutorialCoroutine = null; 
     }
     
@@ -642,12 +610,11 @@ public class TutorialMascot : MonoBehaviour
     private IEnumerator TeleportToSpot(Vector2 worldPosition, string text, Sprite emotion, 
         Sprite pointer, float pointerRot, Vector2 pointerOffset, bool isCeremonial = false)
     {
-        Debug.Log($"[TutorialMascot] TeleportToSpot: Старт. Позиция: {worldPosition}, Текст: '{(text != null && text.Length > 10 ? text.Substring(0, 10) : text)}...'");
+        Debug.Log($"[TutorialMascot] TeleportToSpot: Старт. Позиция: {worldPosition}, Текст: '{(text != null && text.Length > 10 ? text.Substring(0, 10) : text)}...' (isCeremonial = {isCeremonial})");
         if (sheetAnimationCoroutine != null) StopCoroutine(sheetAnimationCoroutine);
         if (soundCoroutine != null) StopCoroutine(soundCoroutine); 
 
         float duration = isCeremonial ? ceremonialFadeDuration : fadeDuration;
-        isCeremonialAppearance = isCeremonial; 
 
         if (!isHidden)
         {
@@ -705,11 +672,6 @@ public class TutorialMascot : MonoBehaviour
             soundCoroutine = null;
             PlaySound(textFinalBeepSound);
             Debug.Log("[TutorialMascot] TeleportToSpot: Анимация 'листка' завершена.");
-        }
-        
-        if (isTutorialResetting)
-        {
-            isTutorialResetting = false;
         }
     }
 
@@ -786,6 +748,12 @@ public class TutorialMascot : MonoBehaviour
     
     public void RequestNextHintSmart()
     {
+        if (isInitializing)
+        {
+            Debug.LogWarning($"[TutorialMascot] RequestNextHintSmart: Вызван во время isInitializing. Игнорирую.");
+            return;
+        }
+        
         if (IsBusy())
         {
             Debug.LogWarning("[TutorialMascot] RequestNextHintSmart: Вызван, когда 'мозг' УЖЕ БЫЛ ЗАНЯТ. Игнорирую.");
@@ -796,6 +764,13 @@ public class TutorialMascot : MonoBehaviour
         
         isSilenced = false; 
         
+        if (sceneLoadCoroutine != null)
+        {
+            StopCoroutine(sceneLoadCoroutine);
+            sceneLoadCoroutine = null;
+            Debug.Log("[TutorialMascot] RequestNextHintSmart: Корутина 'DelayedSceneLoadLogic' остановлена (взят ручной контроль).");
+        }
+        
         tutorialCoroutine = StartCoroutine(RequestNextHintSmart_Coroutine());
     }
 
@@ -803,6 +778,15 @@ public class TutorialMascot : MonoBehaviour
     {
         if (soundCoroutine != null) StopCoroutine(soundCoroutine);
         if (sheetAnimationCoroutine != null) StopCoroutine(sheetAnimationCoroutine);
+        
+        if (activeContextGroup == null && currentConfig != null && currentConfig.contextGroups != null)
+        {
+            // --- <<< ИЗМЕНЕНИЕ V21 (3/4) >>> ---
+             activeContextGroup = currentConfig.contextGroups.LastOrDefault(
+                g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
+            );
+             Debug.Log($"[Mascot Brain] Контекст был null. Принудительный поиск -> '{activeContextGroup?.contextID ?? "Базовый"}'.");
+        }
         
         if (activeContextGroup != null)
         {
@@ -844,16 +828,28 @@ public class TutorialMascot : MonoBehaviour
         
         return context.helpSpots.FirstOrDefault(spot => 
             spot != null && 
+            !string.IsNullOrEmpty(spot.spotID) && 
             !visitedSpotIDs[currentScreenID].Contains(spot.spotID)
         );
     }
     
     public void ResetCurrentScreenTutorial()
     {
-        Debug.Log($"<color=orange>[TutorialMascot] ResetCurrentScreenTutorial: Сброс прогресса для экрана '{currentScreenID}'.</color>");
-        isTutorialResetting = true;
+        if (isInitializing)
+        {
+            Debug.LogWarning("[TutorialMascot] ResetCurrentScreenTutorial: Вызван во время isInitializing. Игнорирую.");
+            return;
+        }
+        
+        if (isTutorialResetting)
+        {
+             Debug.LogWarning("[TutorialMascot] ResetCurrentScreenTutorial: Вызван во время сброса. Игнорирую.");
+            return;
+        }
+
+        Debug.Log($"<color=orange>[TutorialMascot] ResetCurrentScreenTutorial: Сброс прогресса для '{currentScreenID}'.</color>");
+        isTutorialResetting = true; 
         isSilenced = false; 
-        isSilencedGlobally = false; 
 
         if (string.IsNullOrEmpty(currentScreenID))
         {
@@ -864,23 +860,39 @@ public class TutorialMascot : MonoBehaviour
         
         if (visitedSpotIDs.ContainsKey(currentScreenID))
         {
-            visitedSpotIDs[currentScreenID].Clear();
-            Debug.Log($"[TutorialMascot] ResetCurrentScreenTutorial: Список visitedSpotIDs для '{currentScreenID}' очищен.");
+            if (activeContextGroup != null && activeContextGroup.helpSpots != null)
+            {
+                Debug.Log($"[TutorialMascot] ResetCurrentScreenTutorial: Сброс контекста '{activeContextGroup.contextID}'.");
+                
+                List<string> spotsInThisContext = activeContextGroup.helpSpots
+                    .Where(s => s != null && !string.IsNullOrEmpty(s.spotID))
+                    .Select(s => s.spotID)
+                    .ToList();
+                
+                int removedCount = visitedSpotIDs[currentScreenID].RemoveAll(visitedID => spotsInThisContext.Contains(visitedID));
+                Debug.Log($"[TutorialMascot] ResetCurrentScreenTutorial: Удалено {removedCount} посещенных подсказок, принадлежащих '{activeContextGroup.contextID}'.");
+            }
+            else
+            {
+                Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: Сброс в 'Базовом' контексте. Очистка ВСЕХ подсказок для экрана '{currentScreenID}'.");
+                visitedSpotIDs[currentScreenID].Clear();
+            }
         }
+        
         SaveVisitedState();
         
-        Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: StopAllCoroutines().");
         StopAllCoroutines();
+        sceneLoadCoroutine = null; 
         tutorialCoroutine = null;
         soundCoroutine = null;
         sheetAnimationCoroutine = null;
         
-        Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: HideInternal().");
         HideInternal();
 
         if (currentConfig != null && currentConfig.contextGroups != null)
         {
-            activeContextGroup = currentConfig.contextGroups.FirstOrDefault(
+            // --- <<< ИЗМЕНЕНИЕ V21 (4/4) >>> ---
+            activeContextGroup = currentConfig.contextGroups.LastOrDefault(
                 g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
             );
         }
@@ -888,34 +900,55 @@ public class TutorialMascot : MonoBehaviour
         {
              activeContextGroup = null;
         }
-        Debug.Log($"[TutorialMascot] ResetCurrentScreenTutorial: Текущий контекст обновлен на '{activeContextGroup?.contextID ?? "Базовый"}'.");
 
         lastUsedIdleSpot = null;
         lastUsedGreetingIndex = -1;
         lastUsedTipIndex = -1;
         
         Debug.Log("[TutorialMascot] ResetCurrentScreenTutorial: Принудительный запуск 'мозга' для показа Приветствия.");
-        RequestNextHintSmart();
-    }
-    
-    public bool AreAllSpotsInCurrentContextVisited()
-    {
+        
         if (activeContextGroup != null)
         {
-            if (activeContextGroup.helpSpots == null || !visitedSpotIDs.ContainsKey(currentScreenID))
-            {
-                return true;
-            }
-            bool result = activeContextGroup.helpSpots
-                .Where(s => s != null)
-                .All(spot => visitedSpotIDs[currentScreenID].Contains(spot.spotID));
-            
-            return result;
+            tutorialCoroutine = StartCoroutine(RunTutorialForContext(activeContextGroup, false));
         }
         else
         {
-            return AreAllSpotsOnScreenVisited();
+            tutorialCoroutine = StartCoroutine(RunIdleLogic(false));
         }
+    }
+
+    
+    public bool AreAllSpotsInCurrentContextVisited()
+    {
+        List<TutorialHelpSpot> spotsToCkeck;
+
+        if (activeContextGroup != null)
+        {
+            spotsToCkeck = activeContextGroup.helpSpots;
+        }
+        else
+        {
+            if (currentConfig == null || currentConfig.contextGroups == null) return true;
+            spotsToCkeck = currentConfig.contextGroups
+                .Where(g => g != null && !g.muteTutorial && g.helpSpots != null)
+                .SelectMany(g => g.helpSpots)
+                .ToList();
+        }
+
+        if (spotsToCkeck == null || spotsToCkeck.Count == 0)
+        {
+            return true; 
+        }
+        if (!visitedSpotIDs.ContainsKey(currentScreenID))
+        {
+            return false; 
+        }
+            
+        bool result = spotsToCkeck
+            .Where(s => s != null && !string.IsNullOrEmpty(s.spotID)) 
+            .All(spot => visitedSpotIDs[currentScreenID].Contains(spot.spotID));
+        
+        return result;
     }
     
     private bool AreAllSpotsOnScreenVisited()
@@ -928,7 +961,7 @@ public class TutorialMascot : MonoBehaviour
             g.muteTutorial ||
             (g.helpSpots == null) ||
             g.helpSpots
-                .Where(s => s != null)
+                .Where(s => s != null && !string.IsNullOrEmpty(s.spotID)) 
                 .All(spot => visitedSpotIDs[currentScreenID].Contains(spot.spotID))
         );
         return result;
@@ -944,7 +977,7 @@ public class TutorialMascot : MonoBehaviour
             if (context == null || context.muteTutorial || context.helpSpots == null) continue;
             foreach (var spot in context.helpSpots)
             {
-                if (spot != null && !visitedSpotIDs[currentScreenID].Contains(spot.spotID))
+                if (spot != null && !string.IsNullOrEmpty(spot.spotID) && !visitedSpotIDs[currentScreenID].Contains(spot.spotID))
                 {
                     return spot;
                 }
@@ -955,12 +988,30 @@ public class TutorialMascot : MonoBehaviour
 
     private List<RectTransform> GetContextIdleSpots(TutorialContextGroup context)
     {
+        List<RectTransform> validSpots = null;
+
         if (context != null && context.contextIdleSpots != null && context.contextIdleSpots.Count > 0)
         {
-            return context.contextIdleSpots;
+            validSpots = context.contextIdleSpots.Where(s => s != null).ToList();
+            if (validSpots.Count > 0)
+            {
+                return validSpots;
+            }
         }
-        return currentConfig.idleSpots;
+        
+        if (currentConfig != null && currentConfig.idleSpots != null && currentConfig.idleSpots.Count > 0)
+        {
+            validSpots = currentConfig.idleSpots.Where(s => s != null).ToList();
+            if (validSpots.Count > 0)
+            {
+                return validSpots;
+            }
+        }
+        
+        Debug.LogWarning($"[TutorialMascot] GetContextIdleSpots: Не найдено НИ ОДНОГО валидного (не null) IdleSpot.");
+        return new List<RectTransform>();
     }
+
 
     private List<string> GetContextIdleTips(TutorialContextGroup context)
     {
@@ -975,10 +1026,16 @@ public class TutorialMascot : MonoBehaviour
         return null;
     }
 
-    private List<string> GetGreetingListFromConfig()
+    private List<string> GetGreetingListFromConfig(TutorialContextGroup context)
     {
+        if (context != null && context.greetingTexts != null && context.greetingTexts.Count > 0)
+        {
+            return context.greetingTexts;
+        }
+        
         var firstContext = currentConfig?.contextGroups?.FirstOrDefault(g => g != null && !g.muteTutorial);
         
+        // --- <<< ИСПРАВЛЕНИЕ V20 (Опечатка) >>> ---
         if (firstContext != null && firstContext.greetingTexts != null && firstContext.greetingTexts.Count > 0)
         {
             return firstContext.greetingTexts;
@@ -989,9 +1046,8 @@ public class TutorialMascot : MonoBehaviour
     
     public bool IsBusy()
     {
-        // "Занят" означает, что "мозг" (tutorialCoroutine) выполняет какую-то задачу,
-        // ИЛИ идет первоначальная загрузка сцены.
-        bool busy = tutorialCoroutine != null || isSceneLoadLogicRunning; // <-- ИСПРАВЛЕНИЕ 6
+        // "Занят" = "мозг" думает
+        bool busy = (tutorialCoroutine != null);
         return busy;
     }
 
@@ -1033,7 +1089,7 @@ public static class PlayerPrefsNext
     }
 
     private static IEnumerator SaveRoutine()
-    {
+    { 
         PlayerPrefs.Save();
         yield return null;
         isSaving = false;
