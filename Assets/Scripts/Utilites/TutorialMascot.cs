@@ -138,7 +138,7 @@ public class TutorialMascot : MonoBehaviour
         soundCoroutine = null;
         sheetAnimationCoroutine = null;
         
-        currentConfig = FindFirstObjectByType<TutorialScreenConfig>();
+        currentConfig = FindObjectOfType<TutorialScreenConfig>();
         if (currentConfig != null)
         {
             currentScreenID = currentConfig.screenID;
