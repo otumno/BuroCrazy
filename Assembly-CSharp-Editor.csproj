@@ -12,11 +12,11 @@
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <RootNamespace></RootNamespace>
-    <ProjectGuid>{1301cd08-eabc-aff2-cd80-6360547cdadd}</ProjectGuid>
+    <ProjectGuid>{10a0ce77-2b45-ebe7-502a-be0be10e34be}</ProjectGuid>
     <ProjectTypeGuids>{E097FAD1-6243-4DAD-9C02-E9B9EFC3FFC1};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <AssemblyName>Assembly-CSharp</AssemblyName>
+    <AssemblyName>Assembly-CSharp-Editor</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <BaseDirectory>.</BaseDirectory>
@@ -25,8 +25,8 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>Temp\Bin\Debug\Assembly-CSharp\</OutputPath>
-    <DefineConstants>UNITY_6000_2_10;UNITY_6000_2;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;UNITY_6000_1_OR_NEWER;UNITY_6000_2_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_UNITY_CONSENT;ENABLE_UNITY_CLOUD_IDENTIFIERS;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_STANDARD_2_0;NET_STANDARD;NET_STANDARD_2_1;NETSTANDARD;NETSTANDARD2_1;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER</DefineConstants>
+    <OutputPath>Temp\Bin\Debug\Assembly-CSharp-Editor\</OutputPath>
+    <DefineConstants>UNITY_6000_2_10;UNITY_6000_2;UNITY_6000;UNITY_5_3_OR_NEWER;UNITY_5_4_OR_NEWER;UNITY_5_5_OR_NEWER;UNITY_5_6_OR_NEWER;UNITY_2017_1_OR_NEWER;UNITY_2017_2_OR_NEWER;UNITY_2017_3_OR_NEWER;UNITY_2017_4_OR_NEWER;UNITY_2018_1_OR_NEWER;UNITY_2018_2_OR_NEWER;UNITY_2018_3_OR_NEWER;UNITY_2018_4_OR_NEWER;UNITY_2019_1_OR_NEWER;UNITY_2019_2_OR_NEWER;UNITY_2019_3_OR_NEWER;UNITY_2019_4_OR_NEWER;UNITY_2020_1_OR_NEWER;UNITY_2020_2_OR_NEWER;UNITY_2020_3_OR_NEWER;UNITY_2021_1_OR_NEWER;UNITY_2021_2_OR_NEWER;UNITY_2021_3_OR_NEWER;UNITY_2022_1_OR_NEWER;UNITY_2022_2_OR_NEWER;UNITY_2022_3_OR_NEWER;UNITY_2023_1_OR_NEWER;UNITY_2023_2_OR_NEWER;UNITY_2023_3_OR_NEWER;UNITY_6000_0_OR_NEWER;UNITY_6000_1_OR_NEWER;UNITY_6000_2_OR_NEWER;PLATFORM_ARCH_64;UNITY_64;UNITY_INCLUDE_TESTS;ENABLE_AR;ENABLE_AUDIO;ENABLE_CACHING;ENABLE_CLOTH;ENABLE_EVENT_QUEUE;ENABLE_MICROPHONE;ENABLE_MULTIPLE_DISPLAYS;ENABLE_PHYSICS;ENABLE_TEXTURE_STREAMING;ENABLE_VIRTUALTEXTURING;ENABLE_LZMA;ENABLE_UNITYEVENTS;ENABLE_VR;ENABLE_WEBCAM;ENABLE_UNITYWEBREQUEST;ENABLE_WWW;ENABLE_CLOUD_SERVICES;ENABLE_CLOUD_SERVICES_ADS;ENABLE_CLOUD_SERVICES_USE_WEBREQUEST;ENABLE_UNITY_CONSENT;ENABLE_UNITY_CLOUD_IDENTIFIERS;ENABLE_CLOUD_SERVICES_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_NATIVE_CRASH_REPORTING;ENABLE_CLOUD_SERVICES_PURCHASING;ENABLE_CLOUD_SERVICES_ANALYTICS;ENABLE_CLOUD_SERVICES_BUILD;ENABLE_EDITOR_GAME_SERVICES;ENABLE_UNITY_GAME_SERVICES_ANALYTICS_SUPPORT;ENABLE_CLOUD_LICENSE;ENABLE_EDITOR_HUB_LICENSE;ENABLE_WEBSOCKET_CLIENT;ENABLE_GENERATE_NATIVE_PLUGINS_FOR_ASSEMBLIES_API;ENABLE_DIRECTOR_AUDIO;ENABLE_DIRECTOR_TEXTURE;ENABLE_MANAGED_JOBS;ENABLE_MANAGED_TRANSFORM_JOBS;ENABLE_MANAGED_ANIMATION_JOBS;ENABLE_MANAGED_AUDIO_JOBS;ENABLE_MANAGED_UNITYTLS;INCLUDE_DYNAMIC_GI;ENABLE_SCRIPTING_GC_WBARRIERS;PLATFORM_SUPPORTS_MONO;RENDER_SOFTWARE_CURSOR;ENABLE_MARSHALLING_TESTS;ENABLE_VIDEO;ENABLE_NAVIGATION_OFFMESHLINK_TO_NAVMESHLINK;ENABLE_ACCELERATOR_CLIENT_DEBUGGING;TEXTCORE_1_0_OR_NEWER;EDITOR_ONLY_NAVMESH_BUILDER_DEPRECATED;PLATFORM_STANDALONE_WIN;PLATFORM_STANDALONE;UNITY_STANDALONE_WIN;UNITY_STANDALONE;ENABLE_RUNTIME_GI;ENABLE_MOVIES;ENABLE_NETWORK;ENABLE_NVIDIA;ENABLE_AMD;ENABLE_CRUNCH_TEXTURE_COMPRESSION;ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS;ENABLE_OUT_OF_PROCESS_CRASH_HANDLER;ENABLE_CLUSTER_SYNC;ENABLE_CLUSTERINPUT;PLATFORM_UPDATES_TIME_OUTSIDE_OF_PLAYER_LOOP;GFXDEVICE_WAITFOREVENT_MESSAGEPUMP;PLATFORM_USES_EXPLICIT_MEMORY_MANAGER_INITIALIZER;PLATFORM_SUPPORTS_WAIT_FOR_PRESENTATION;PLATFORM_SUPPORTS_SPLIT_GRAPHICS_JOBS;ENABLE_MONO;NET_4_6;NET_UNITY_4_8;ENABLE_PROFILER;DEBUG;TRACE;UNITY_ASSERTIONS;UNITY_EDITOR;UNITY_EDITOR_64;UNITY_EDITOR_WIN;ENABLE_UNITY_COLLECTIONS_CHECKS;ENABLE_BURST_AOT;UNITY_TEAM_LICENSE;ENABLE_CUSTOM_RENDER_TEXTURE;ENABLE_DIRECTOR;ENABLE_LOCALIZATION;ENABLE_SPRITES;ENABLE_TERRAIN;ENABLE_TILEMAP;ENABLE_TIMELINE;ENABLE_INPUT_SYSTEM;ENABLE_LEGACY_INPUT_MANAGER;TEXTCORE_FONT_ENGINE_1_5_OR_NEWER;TEXTCORE_TEXT_ENGINE_1_5_OR_NEWER;CSHARP_7_OR_LATER;CSHARP_7_3_OR_NEWER;UNITY_EDITOR_ONLY_COMPILATION</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <NoWarn>0169,0649</NoWarn>
@@ -46,297 +46,22 @@
     <Analyzer Include="F:\Unity\Editor\6000.2.10f1\Editor\Data\Tools\Unity.SourceGenerators\Unity.UIToolkit.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Characters\ClientNotification.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\Action_GoToBreak.cs" />
-    <Compile Include="Assets\Scripts\Utilites\NightPatrolRoute.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\Actions\ActionExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\GoToCoolerExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\SortPapersExecutor.cs" />
-    <Compile Include="Assets\Scripts\Emums\ClientState.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\DoorController.cs" />
-    <Compile Include="Assets\Scripts\Managers\ScenePointsRegistry.cs" />
-    <Compile Include="Assets\Scripts\StartDayButtonConnector.cs" />
-    <Compile Include="Assets\Scripts\ArchiveCabinet.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrioritizeDirectorDocAction.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\SecurityBarrier.cs" />
-    <Compile Include="Assets\Scripts\UI\AchievementListUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\OperateBarrierExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\DirectorPrepareSalariesAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ArchiveDocumentExecutor.cs" />
-    <Compile Include="Assets\Scripts\Characters\GuardNotification.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrioritizePayTaxAction.cs" />
-    <Compile Include="Assets\Scripts\Data\DirectorOrder.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\SystematizeArchiveAction.cs" />
-    <Compile Include="Assets\Scripts\UI\HoverOutline.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrepareSalariesExecutor.cs" />
-    <Compile Include="Assets\Scripts\TimeOfDaySpriteController.cs" />
-    <Compile Include="Assets\Scripts\UI\ZoneStatusUI.cs" />
-    <Compile Include="Assets\Scripts\DirectorDocumentLayout.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CoverClerkAction.cs" />
-    <Compile Include="Assets\Scripts\Data\SaveData.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\EmptyTrashCanAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\JanitorPatrolAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ManageBarrierAction.cs" />
-    <Compile Include="Assets\Scripts\DocumentTitleGenerator.cs" />
-    <Compile Include="Assets\Scripts\CharacterType.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\StaffController.cs" />
-    <Compile Include="Assets\Scripts\Managers\SystemBootstapper.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\DirectorAvatarController.cs" />
-    <Compile Include="Assets\Scripts\MessManager.cs" />
-    <Compile Include="Assets\Scripts\Utilites\SkillDescriptor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrepareSalariesAction.cs" />
-    <Compile Include="Assets\Scripts\ClientQueueManager.cs" />
-    <Compile Include="Assets\Scripts\UI\PromotionOptionButton.cs" />
-    <Compile Include="Assets\Scripts\Characters\Movement\AgentMover.cs" />
-    <Compile Include="Assets\Scripts\Characters\ResumeGenerator.cs" />
-    <Compile Include="Assets\Scripts\StartOfDayPanel.cs" />
-    <Compile Include="Assets\Scripts\Managers\GuardManager.cs" />
-    <Compile Include="Assets\Scripts\Characters\ServiceWorkerNotification.cs" />
-    <Compile Include="Assets\Scripts\DocumentHolder.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\MakeArchiveRequestExecutor.cs" />
-    <Compile Include="Assets\Scripts\FallingLeaf.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\JanitorPatrolExecutor.cs" />
-    <Compile Include="Assets\Scripts\Utilites\InteractionPoint.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\GoToToiletExecutor.cs" />
-    <Compile Include="Assets\Scripts\DirectorDocumentReviewPanel.cs" />
-    <Compile Include="Assets\Scripts\Managers\DocumentManager.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\ClerkController.cs" />
-    <Compile Include="Assets\Scripts\FormTable.cs" />
-    <Compile Include="Assets\Scripts\Data\RoleColorDatabase.cs" />
-    <Compile Include="Assets\Scripts\UIManager.cs" />
-    <Compile Include="Assets\Scripts\ThoughtBubbleController.cs" />
-    <Compile Include="Assets\Scripts\Data\Calendar\PeriodSettings.cs" />
-    <Compile Include="Assets\Scripts\UI\MainMenuActions.cs" />
-    <Compile Include="Assets\Scripts\Emums\Gender.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PatrolExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ScreamInClosetExecutor.cs" />
-    <Compile Include="Assets\Scripts\ServicePoint.cs" />
-    <Compile Include="Assets\Scripts\UI\UpgradeIconUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CatchThiefExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CleanPuddleExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\Action_CorrectDocument.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\TakeOverClientAction.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\Waypoint.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CleanPuddleAction.cs" />
-    <Compile Include="Assets\Scripts\Utilites\PathfindingUtility.cs" />
-    <Compile Include="Assets\Scripts\UI\DirectorDocumentIcon.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ArchiveDocumentAction.cs" />
-    <Compile Include="Assets\Scripts\DocumentMover.cs" />
-    <Compile Include="Assets\Scripts\Managers\ExperienceManager.cs" />
-    <Compile Include="Assets\Scripts\Utilites\TutorialHelpSpot.cs" />
-    <Compile Include="Assets\Scripts\DirectorDeskButton.cs" />
-    <Compile Include="Assets\Scripts\Data\Calendar\GameCalendar.cs" />
-    <Compile Include="Assets\Scripts\ClickableCharacter.cs" />
-    <Compile Include="Assets\Scripts\Emums\ActionType.cs" />
-    <Compile Include="Assets\Scripts\Managers\DocumentQualityManager.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\WriteReportAction.cs" />
-    <Compile Include="Assets\Scripts\UI\DirectorControlPanelUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\Action_GoToCooler.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CoverDeskExecutor.cs" />
-    <Compile Include="Assets\Scripts\UI\SaveSlotUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\RetrieveDocumentExecutor.cs" />
-    <Compile Include="Assets\Scripts\UI\PromotionPanelUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\GoToJanitorHomeExecutor.cs" />
-    <Compile Include="Assets\Scripts\Characters\ClerkNotification.cs" />
-    <Compile Include="Assets\Scripts\SaveLoadPanelController.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\HandleSituationAction.cs" />
-    <Compile Include="Assets\Scripts\UI\LayoutHelper.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ProcessDocumentCat2Executor.cs" />
-    <Compile Include="Assets\Scripts\Data\DailyMandates.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\EmptyTrashCanExecutor.cs" />
-    <Compile Include="Assets\Scripts\UI\HiringSystemUI.cs" />
-    <Compile Include="Assets\Scripts\Data\RankData.cs" />
-    <Compile Include="Assets\Scripts\Data\AchievementData.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\TakeStackToArchiveAction.cs" />
-    <Compile Include="Assets\Scripts\WaitingZone.cs" />
-    <Compile Include="Assets\Scripts\Utilites\TutorialScreenConfig.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\TakeOverClientExecutor.cs" />
-    <Compile Include="Assets\Scripts\UI\TeamMemberCardUI.cs" />
-    <Compile Include="Assets\Scripts\PersistentEventSystem.cs" />
-    <Compile Include="Assets\Scripts\Utilites\UIRaycastDebugger.cs" />
-    <Compile Include="Assets\Scripts\Managers\PlayerWallet.cs" />
-    <Compile Include="Assets\Scripts\Data\Calendar\DailyPlan.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\EnvelopeStack.cs" />
-    <Compile Include="Assets\Scripts\Managers\ArchiveRequestManager.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\InternController.cs" />
-    <Compile Include="Assets\Scripts\UI\ActionIconUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CalmDownViolatorAction.cs" />
-    <Compile Include="Assets\Scripts\ActionDatabase.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\DirectorPrepareSalariesExecutor.cs" />
-    <Compile Include="Assets\Scripts\ClickMarkerFeedback.cs" />
-    <Compile Include="Assets\Scripts\InternPointsRegistry.cs" />
-    <Compile Include="Assets\Scripts\Characters\Visuals\StaffPrefabReferences.cs" />
-    <Compile Include="Assets\Scripts\Managers\PayrollManager.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\HandleSituationExecutor.cs" />
-    <Compile Include="Assets\Scripts\Utilites\ResolutionManager.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\Action_ServiceAtRegistration.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CoverYourTracksExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\TakeStackToArchiveExecutor.cs" />
-    <Compile Include="Assets\Scripts\BlackoutUIImage.cs" />
-    <Compile Include="Assets\Scripts\UI\DirectorDeskAccessController.cs" />
-    <Compile Include="Assets\Scripts\Utilites\TutorialHelpIcon.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ClientOrientedServiceAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\DeliverDocumentsAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CleanDirtExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\Action_ServiceAtCashier.cs" />
-    <Compile Include="Assets\Scripts\UI\MainMenuController.cs" />
-    <Compile Include="Assets\Scripts\UI\CursorController.cs" />
-    <Compile Include="Assets\Scripts\UI\DaySplashScreenController.cs" />
-    <Compile Include="Assets\Scripts\Managers\HiringManager.cs" />
-    <Compile Include="Assets\Scripts\UI\GlobalDocumentUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\GoToBreakExecutor.cs" />
-    <Compile Include="Assets\Scripts\MoneyMover.cs" />
-    <Compile Include="Assets\Scripts\Utilites\TutorialMascot.cs" />
-    <Compile Include="Assets\Scripts\UI\BookkeepingButtonController.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\DeliverDocumentsExecutor.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\ClientPathfinding.cs" />
-    <Compile Include="Assets\Scripts\DirtGridManager.cs" />
-    <Compile Include="Assets\Scripts\RectZone.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CalmDownViolatorExecutor.cs" />
-    <Compile Include="Assets\Scripts\Managers\DirectorManager.cs" />
-    <Compile Include="Assets\Scripts\CharacterStateLogger.cs" />
-    <Compile Include="Assets\Scripts\Managers\MusicPlayer.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrioritizeConsultationExecutor.cs" />
-    <Compile Include="Assets\Scripts\Emums\DocumentType.cs" />
-    <Compile Include="Assets\Scripts\UI\AchievementToastUI.cs" />
-    <Compile Include="Assets\Scripts\ClientMovement.cs" />
-    <Compile Include="Assets\Scripts\Managers\FinancialLedgerManager.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CoverCashierAction.cs" />
-    <Compile Include="Assets\Scripts\Managers\MainUIManager.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\Actions\GoToWorkstationExecutor.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\GuardMovement.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\Action_GoToToilet.cs" />
-    <Compile Include="Assets\Scripts\Managers\ArchiveManager.cs" />
-    <Compile Include="Assets\Scripts\PlayerInputController.cs" />
-    <Compile Include="Assets\Scripts\Data\StaffAction.cs" />
-    <Compile Include="Assets\Scripts\ClientStateMachine.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ClientOrientedServiceExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\RetrieveDocumentAction.cs" />
-    <Compile Include="Assets\Scripts\UI\ComicViewerUI.cs" />
-    <Compile Include="Assets\Scripts\UI\HiringPanelUI.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\MessPoint.cs" />
-    <Compile Include="Assets\Scripts\ClientGoal.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CatchThiefAction.cs" />
-    <Compile Include="Assets\Scripts\UI\NotificationStyleManager.cs" />
-    <Compile Include="Assets\Scripts\CameraAudioLink.cs" />
-    <Compile Include="Assets\Scripts\Data\EmotionsSpriteCollection.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\GoToPostExecutor.cs" />
-    <Compile Include="Assets\Scripts\Characters\InternNotification.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\Puddle.cs" />
-    <Compile Include="Assets\Scripts\UI\IconClockUI.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\DoBookkeepingAction.cs" />
-    <Compile Include="Assets\Scripts\Managers\SaveLoadManager.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ChairPatrolAction.cs" />
-    <Compile Include="Assets\Scripts\Utilites\Candidate.cs" />
-    <Compile Include="Assets\Scripts\Data\UpgradeData.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\MakeArchiveRequestAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\SortPapersAction.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\TrashCan.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrioritizeConsultationAction.cs" />
-    <Compile Include="Assets\Scripts\Utilites\BureaucraticTextGenerator.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\WriteReportExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CleanTrashAction.cs" />
-    <Compile Include="Assets\Scripts\UI\UpgradePopupUI.cs" />
-    <Compile Include="Assets\Scripts\Managers\AssignmentManager.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ProcessDocumentCat1Action.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\ServiceWorkerController.cs" />
-    <Compile Include="Assets\Scripts\UI\BookkeepingPanelUI.cs" />
-    <Compile Include="Assets\Scripts\DebugTimeSkip.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrioritizeDirectorDocExecutor.cs" />
-    <Compile Include="Assets\Scripts\DirectorDocument.cs" />
-    <Compile Include="Assets\Scripts\UI\ShowDirectorDeskButton.cs" />
-    <Compile Include="Assets\Scripts\Managers\UpgradeManager.cs" />
-    <Compile Include="Assets\Scripts\UI\InGameUI_Actions.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PatrolAction.cs" />
-    <Compile Include="Assets\Scripts\UI\UpgradePanelUI.cs" />
-    <Compile Include="Assets\Scripts\UI\AchievementItemUI.cs" />
-    <Compile Include="Assets\Scripts\RankDatabase.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ProcessDocumentCat1Executor.cs" />
-    <Compile Include="Assets\Scripts\InfoPopupManager.cs" />
-    <Compile Include="Assets\Scripts\Utilites\TutorialContextGroup.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\Action_CoverYourTracks.cs" />
-    <Compile Include="Assets\Scripts\UI\OrderSelectionUI.cs" />
-    <Compile Include="Assets\Scripts\UI\ResumePin.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\OperateBarrierAction.cs" />
-    <Compile Include="Assets\Scripts\SlideshowFader.cs" />
-    <Compile Include="Assets\Scripts\UI\ActionDropZone.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ServiceAtRegistrationExecutor.cs" />
-    <Compile Include="Assets\Scripts\Utilites\GraphBuilder.cs" />
-    <Compile Include="Assets\Scripts\Characters\IServiceProvider.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CoverRegistrarAction.cs" />
-    <Compile Include="Assets\Scripts\Managers\TransitionManager.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CleanTrashExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\DefaultActionExecutor.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\LimitedCapacityZone.cs" />
-    <Compile Include="Assets\Scripts\SimpleZoomTest.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\InternPatrolAction.cs" />
-    <Compile Include="Assets\Scripts\Managers\CameraToggle.cs" />
-    <Compile Include="Assets\Scripts\Data\CharacterSkills.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ManageBarrierExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\ActionXPData.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\FindValuablesAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CheckDocumentAction.cs" />
-    <Compile Include="Assets\Scripts\Emums\Emotions.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ProcessDocumentAction.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ProcessDocumentCat2Action.cs" />
-    <Compile Include="Assets\Scripts\Utilites\SceneEventSystemValidator.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CleanDirtAction.cs" />
-    <Compile Include="Assets\Scripts\UI\WorkstationUI.cs" />
-    <Compile Include="Assets\Scripts\Gameplay\DocumentStack.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\DoBookkeepingExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\CorrectDocumentExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\InternPatrolExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ChairPatrolExecutor.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\SystematizeArchiveExecutor.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\DirectorInteractionController.cs" />
-    <Compile Include="Assets\Scripts\Characters\Controllers\Actions\ProcessDocumentExecutor.cs" />
-    <Compile Include="Assets\Scripts\UI\ActionConfigPopupUI.cs" />
-    <Compile Include="Assets\Scripts\Data\StateEmotionMap.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\PrioritizePayTaxExecutor.cs" />
-    <Compile Include="Assets\Scripts\UI\HoverToggleObject.cs" />
-    <Compile Include="Assets\Scripts\Characters\StackHolder.cs" />
-    <Compile Include="Assets\Scripts\DestroyZone.cs" />
-    <Compile Include="Assets\Scripts\Characters\Visuals\CharacterVisuals.cs" />
-    <Compile Include="Assets\Scripts\Managers\ClientSpawner.cs" />
-    <Compile Include="Assets\Scripts\Data\Actions\ServiceAtCashierExecutor.cs" />
-    <Compile Include="Assets\Scripts\UI\OrderCardUI.cs" />
-    <Compile Include="Assets\Scripts\Managers\AchievementManager.cs" />
-    <Compile Include="Assets\Scripts\Data\ThoughtCollection.cs" />
-    <Compile Include="Assets\Scripts\Data\RoleData.cs" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMPro.cginc" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Overlay.shader" />
-    <None Include="Assets\Sprites\Emoji\Emojis.json" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile-2-Pass.shader" />
-    <None Include="Assets\TextMesh Pro\Fonts\Emojis.txt" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap.shader" />
-    <None Include="Assets\Shaders\SolidColorOutlineShader.shader" />
-    <None Include="Assets\thoughts.json" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMPro_Mobile.cginc" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF SSD.shader" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface-Mobile.shader" />
-    <None Include="Assets\Shaders\SpriteOutlineShader.shader" />
-    <None Include="Assets\TextMesh Pro\Shaders\SDFFunctions.hlsl" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Surface.shader" />
-    <None Include="Assets\TextMesh Pro\Sprites\EmojiOne Attribution.txt" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Custom-Atlas.shader" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF.shader" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile SSD.shader" />
-    <None Include="Assets\TextMesh Pro\Resources\LineBreaking Leading Characters.txt" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMPro_Properties.cginc" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMPro_Surface.cginc" />
-    <None Include="Assets\TextMesh Pro\Resources\LineBreaking Following Characters.txt" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile Masking.shader" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF Overlay.shader" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_Bitmap-Mobile.shader" />
-    <None Include="Assets\TextMesh Pro\Fonts\LiberationSans - OFL.txt" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_SDF-Mobile.shader" />
-    <None Include="Assets\TextMesh Pro\Sprites\EmojiOne.json" />
-    <None Include="Assets\TextMesh Pro\Shaders\TMP_Sprite.shader" />
+    <Compile Include="Assets\Editor\CalendarConversionEditor.cs" />
+    <Compile Include="Assets\Editor\SceneAutoLoader.cs" />
+    <Compile Include="Assets\Editor\TutorialScreenConfigEditor.cs" />
+    <Compile Include="Assets\Editor\StaffScheduleEditor.cs" />
+    <Compile Include="Assets\Editor\StateEmotionMapEditor.cs" />
+    <Compile Include="Assets\Editor\GameCalendarEditor.cs" />
+    <Compile Include="Assets\Editor\ThoughtCollectionEditor.cs" />
+    <Compile Include="Assets\Editor\GraphBuilderEditor.cs" />
     <Reference Include="UnityEngine">
       <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule">
       <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEngine.AIModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AMDModule">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEngine.AMDModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ARModule">
       <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEngine.ARModule.dll</HintPath>
@@ -430,6 +155,9 @@
     </Reference>
     <Reference Include="UnityEngine.MultiplayerModule">
       <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEngine.MultiplayerModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.NVIDIAModule">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEngine.NVIDIAModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ParticleSystemModule">
       <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEngine.ParticleSystemModule.dll</HintPath>
@@ -698,11 +426,35 @@
     <Reference Include="UnityEditor.XRModule">
       <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEngine\UnityEditor.XRModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEditor.Graphs">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\Managed\UnityEditor.Graphs.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.WindowsStandalone.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\PlaybackEngines\WindowsStandaloneSupport\UnityEditor.WindowsStandalone.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.Android.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\PlaybackEngines\AndroidPlayer\UnityEditor.Android.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.iOS.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\PlaybackEngines\iOSSupport\UnityEditor.iOS.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="Unity.Collections.LowLevel.ILSupport">
       <HintPath>D:\Unity\OtherPeople\Library\PackageCache\com.unity.collections@aea9d3bd5e19\Unity.Collections.LowLevel.ILSupport\Unity.Collections.LowLevel.ILSupport.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>D:\Unity\OtherPeople\Library\PackageCache\com.unity.ext.nunit@031a54704bff\net40\unity-custom\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Plastic.Antlr3.Runtime">
+      <HintPath>D:\Unity\OtherPeople\Library\PackageCache\com.unity.collab-proxy@1e5e48aff19d\Lib\Editor\Unity.Plastic.Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Plastic.Newtonsoft.Json">
+      <HintPath>D:\Unity\OtherPeople\Library\PackageCache\com.unity.collab-proxy@1e5e48aff19d\Lib\Editor\Unity.Plastic.Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="log4netPlastic">
+      <HintPath>D:\Unity\OtherPeople\Library\PackageCache\com.unity.collab-proxy@1e5e48aff19d\Lib\Editor\log4netPlastic.dll</HintPath>
+    </Reference>
+    <Reference Include="unityplastic">
+      <HintPath>D:\Unity\OtherPeople\Library\PackageCache\com.unity.collab-proxy@1e5e48aff19d\Lib\Editor\unityplastic.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Hashing">
       <HintPath>D:\Unity\OtherPeople\Library\PackageCache\com.unity.collections@aea9d3bd5e19\Unity.Collections.Tests\System.IO.Hashing\System.IO.Hashing.dll</HintPath>
@@ -728,371 +480,386 @@
     <Reference Include="Unity.Android.Gradle">
       <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\PlaybackEngines\AndroidPlayer\Unity.Android.Gradle.dll</HintPath>
     </Reference>
-    <Reference Include="netstandard">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\ref\2.1.0\netstandard.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Win32.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\Microsoft.Win32.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.AppContext">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.AppContext.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Buffers">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Buffers.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Collections.Concurrent">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Collections.Concurrent.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Collections">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Collections.NonGeneric">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Collections.NonGeneric.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Collections.Specialized">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Collections.Specialized.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.ComponentModel.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel.EventBasedAsync">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.ComponentModel.EventBasedAsync.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.ComponentModel.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel.TypeConverter">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.ComponentModel.TypeConverter.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Console">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Console.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data.Common">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Data.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.Contracts">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.Contracts.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.Debug">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.Debug.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.FileVersionInfo">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.FileVersionInfo.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.Process">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.Process.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.StackTrace">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.StackTrace.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.TextWriterTraceListener">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.TextWriterTraceListener.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.Tools">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.Tools.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.TraceSource">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.TraceSource.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Diagnostics.Tracing">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Diagnostics.Tracing.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Drawing.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Drawing.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Dynamic.Runtime">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Dynamic.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Globalization.Calendars">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Globalization.Calendars.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Globalization">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Globalization.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Globalization.Extensions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Globalization.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.Compression">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.Compression.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.Compression.ZipFile">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.Compression.ZipFile.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.FileSystem">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.FileSystem.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.FileSystem.DriveInfo">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.FileSystem.DriveInfo.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.FileSystem.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.FileSystem.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.FileSystem.Watcher">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.FileSystem.Watcher.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.IsolatedStorage">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.IsolatedStorage.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.MemoryMappedFiles">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.MemoryMappedFiles.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.Pipes">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.Pipes.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.UnmanagedMemoryStream">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.IO.UnmanagedMemoryStream.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Linq">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Linq.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Linq.Expressions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Linq.Expressions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Linq.Parallel">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Linq.Parallel.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Linq.Queryable">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Linq.Queryable.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Memory">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Memory.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Http">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.Http.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.NameResolution">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.NameResolution.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.NetworkInformation">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.NetworkInformation.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Ping">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.Ping.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Requests">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.Requests.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Security">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.Sockets">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.Sockets.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.WebHeaderCollection">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.WebHeaderCollection.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.WebSockets.Client">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.WebSockets.Client.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net.WebSockets">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Net.WebSockets.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Numerics.Vectors">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Numerics.Vectors.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ObjectModel">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.ObjectModel.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection.DispatchProxy">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Reflection.DispatchProxy.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Reflection.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection.Emit">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Reflection.Emit.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection.Emit.ILGeneration">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Reflection.Emit.ILGeneration.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection.Emit.Lightweight">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Reflection.Emit.Lightweight.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection.Extensions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Reflection.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Reflection.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Reflection.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Resources.Reader">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Resources.Reader.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Resources.ResourceManager">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Resources.ResourceManager.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Resources.Writer">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Resources.Writer.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.CompilerServices.VisualC">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.CompilerServices.VisualC.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Extensions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Handles">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.Handles.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.InteropServices">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.InteropServices.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.InteropServices.RuntimeInformation">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Numerics">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.Numerics.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization.Formatters">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.Serialization.Formatters.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization.Json">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.Serialization.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.Serialization.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization.Xml">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Runtime.Serialization.Xml.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Claims">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.Claims.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Algorithms">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.Cryptography.Algorithms.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Csp">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.Cryptography.Csp.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Encoding">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.Cryptography.Encoding.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.Primitives">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.Cryptography.Primitives.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Cryptography.X509Certificates">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.Cryptography.X509Certificates.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.Principal">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.Principal.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Security.SecureString">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Security.SecureString.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Encoding">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Text.Encoding.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.Encoding.Extensions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Text.Encoding.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Text.RegularExpressions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Text.RegularExpressions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Overlapped">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.Overlapped.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.Tasks.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.Tasks.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Tasks.Parallel">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.Tasks.Parallel.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Thread">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.Thread.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.ThreadPool">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.ThreadPool.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Threading.Timer">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Threading.Timer.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ValueTuple">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.ValueTuple.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.ReaderWriter">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Xml.ReaderWriter.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.XDocument">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Xml.XDocument.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.XmlDocument">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Xml.XmlDocument.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.XmlSerializer">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Xml.XmlSerializer.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.XPath">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Xml.XPath.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Xml.XPath.XDocument">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netstandard\System.Xml.XPath.XDocument.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Runtime.InteropServices.WindowsRuntime">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\Extensions\2.0.0\System.Runtime.InteropServices.WindowsRuntime.dll</HintPath>
-    </Reference>
     <Reference Include="mscorlib">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\mscorlib.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ComponentModel.Composition">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.ComponentModel.Composition.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Core">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Data">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Data.dll</HintPath>
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\mscorlib.dll</HintPath>
     </Reference>
     <Reference Include="System">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.dll</HintPath>
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.dll</HintPath>
     </Reference>
-    <Reference Include="System.Drawing">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Drawing.dll</HintPath>
-    </Reference>
-    <Reference Include="System.IO.Compression.FileSystem">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.IO.Compression.FileSystem.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Net">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Net.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Numerics">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Numerics.dll</HintPath>
+    <Reference Include="System.Core">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.Serialization">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Runtime.Serialization.dll</HintPath>
-    </Reference>
-    <Reference Include="System.ServiceModel.Web">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.ServiceModel.Web.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Transactions">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Transactions.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Web">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Web.dll</HintPath>
-    </Reference>
-    <Reference Include="System.Windows">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Windows.dll</HintPath>
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Runtime.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Xml.dll</HintPath>
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Xml.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Xml.Linq.dll</HintPath>
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Xml.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xml.Serialization">
-      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.Xml.Serialization.dll</HintPath>
+    <Reference Include="System.Numerics">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Net.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.IO.Compression.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Microsoft.CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.DataSetExtensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Data.DataSetExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression.FileSystem">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.IO.Compression.FileSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Composition">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.ComponentModel.Composition.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Transactions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.Transactions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Win32.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\Microsoft.Win32.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="netstandard">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\netstandard.dll</HintPath>
+    </Reference>
+    <Reference Include="System.AppContext">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.AppContext.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Concurrent">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.Concurrent.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.NonGeneric">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.NonGeneric.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Collections.Specialized">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Collections.Specialized.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Annotations">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.EventBasedAsync">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.EventBasedAsync.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ComponentModel.TypeConverter">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ComponentModel.TypeConverter.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Console">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Console.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data.Common">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Data.Common.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Contracts">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Contracts.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Debug">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Debug.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.FileVersionInfo">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.FileVersionInfo.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Process">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Process.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.StackTrace">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.StackTrace.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.TextWriterTraceListener">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.TextWriterTraceListener.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.Tools">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.Tools.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Diagnostics.TraceSource">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Diagnostics.TraceSource.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Drawing.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Dynamic.Runtime">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Dynamic.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Globalization.Calendars">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Globalization.Calendars.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Globalization">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Globalization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Globalization.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Globalization.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression.ZipFile">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.Compression.ZipFile.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.DriveInfo">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.DriveInfo.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.FileSystem.Watcher">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.FileSystem.Watcher.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.IsolatedStorage">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.IsolatedStorage.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.MemoryMappedFiles">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.MemoryMappedFiles.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipes">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.Pipes.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.UnmanagedMemoryStream">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.IO.UnmanagedMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Expressions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.Expressions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Parallel">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.Parallel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Linq.Queryable">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Linq.Queryable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Http.Rtc">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Http.Rtc.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.NameResolution">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.NameResolution.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.NetworkInformation">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.NetworkInformation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Ping">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Ping.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Requests">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Requests.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Security">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.Sockets">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.Sockets.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.WebHeaderCollection">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.WebHeaderCollection.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.WebSockets.Client">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.WebSockets.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Net.WebSockets">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Net.WebSockets.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ObjectModel">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ObjectModel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.DispatchProxy">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.DispatchProxy.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Emit">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Emit.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.ILGeneration">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Emit.ILGeneration.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Emit.Lightweight">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Emit.Lightweight.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reflection.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Reflection.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Reader">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Resources.Reader.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.ResourceManager">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Resources.ResourceManager.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Resources.Writer">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Resources.Writer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.VisualC">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.CompilerServices.VisualC.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Handles">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Handles.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.InteropServices.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.RuntimeInformation">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.InteropServices.RuntimeInformation.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.InteropServices.WindowsRuntime">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.InteropServices.WindowsRuntime.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Numerics">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Formatters">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Formatters.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Json">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.Serialization.Xml">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.Serialization.Xml.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Claims">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Claims.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Algorithms">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Algorithms.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Csp">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Csp.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Encoding">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Encoding.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Cryptography.X509Certificates">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Cryptography.X509Certificates.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.Principal">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.Principal.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Security.SecureString">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Security.SecureString.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel.Duplex">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Duplex.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel.Http">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Http.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel.NetTcp">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.NetTcp.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel.Primitives">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ServiceModel.Security">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ServiceModel.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encoding">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Text.Encoding.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encoding.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Text.Encoding.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.RegularExpressions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Text.RegularExpressions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Overlapped">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Overlapped.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Tasks.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Parallel">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Tasks.Parallel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Thread">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Thread.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.ThreadPool">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.ThreadPool.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Timer">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Threading.Timer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.ReaderWriter">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.ReaderWriter.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XDocument">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XDocument.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XmlDocument">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XmlDocument.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XmlSerializer">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XmlSerializer.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XPath">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XPath.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml.XPath.XDocument">
+      <HintPath>F:\Unity\Editor\6000.2.10f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Xml.XPath.XDocument.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.TestRunner">
+      <HintPath>D:\Unity\OtherPeople\Library\ScriptAssemblies\UnityEditor.TestRunner.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.TestRunner">
+      <HintPath>D:\Unity\OtherPeople\Library\ScriptAssemblies\UnityEngine.TestRunner.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Editor">
       <HintPath>D:\Unity\OtherPeople\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
@@ -1285,6 +1052,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Assembly-CSharp.csproj">
+      <Project>{1301cd08-eabc-aff2-cd80-6360547cdadd}</Project>
+      <Name>Assembly-CSharp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
