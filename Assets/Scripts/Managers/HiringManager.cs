@@ -27,6 +27,7 @@ namespace Managers
         [Tooltip("Перетащите сюда все ассеты RankData")]
         public List<RankData> rankDatabase; // This should be List<RankData>
 
+        // todo: this shit contains null elements somehow. find reason and fix.
         public List<StaffController> AllStaff = new List<StaffController>();
         public List<StaffController> UnassignedStaff = new List<StaffController>();
 
@@ -498,8 +499,7 @@ namespace Managers
                     continue;
                 }
 
-                var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
-
+                var isScheduledNow = staff.WorkShiftMask.HasFlag(periodType);
                 if (isScheduledNow && !staff.IsOnDuty())
                 {
                     Debug.Log($" -> Активация смены для {staff.characterName} (Роль: {staff.currentRole})");
@@ -836,7 +836,7 @@ namespace Managers
                 // todo: dafaq? I already saw code that starts and ends shifts
                 // --- Start Shift if Applicable ---
                 var periodType = ClientSpawner.CurrentPeriodType;
-                if ((staffController.WorkShiftMask & periodType) != 0)
+                if (staffController.WorkShiftMask.HasFlag(periodType))
                 {
                     staffController.StartShift();
                     Debug.Log($"Сотрудник {candidate.Name} нанят и немедленно приступает к работе в период '{periodType}'.");
@@ -926,7 +926,6 @@ namespace Managers
             FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
         }
 
-
         public void CheckAllStaffShiftsImmediately()
         {
             var periodType = ClientSpawner.CurrentPeriodType;
@@ -940,16 +939,13 @@ namespace Managers
                     continue;
                 }
 
-                var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
-                
-                var isOnDuty = staff.IsOnDuty(); 
-
-                if (isScheduledNow && !isOnDuty)
+                var isScheduledNow = staff.WorkShiftMask.HasFlag(periodType);
+                if (isScheduledNow && !staff.IsOnDuty())
                 {
                     Debug.Log($"   -> {staff.characterName}: Начать смену.");
                     staff.StartShift();
                 }
-                else if (!isScheduledNow && isOnDuty)
+                else if (!isScheduledNow && staff.IsOnDuty())
                 {
                     Debug.Log($"   -> {staff.characterName}: Закончить смену.");
                     staff.EndShift();

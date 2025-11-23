@@ -1,4 +1,4 @@
-using Scriptables;
+using Data.Calendar;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,7 +18,7 @@ namespace Editor
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("График Работы (Flux Mask)", EditorStyles.boldLabel);
 
-            staff.WorkShiftMask = (Data.Calendar.CalendarDayPeriodType)EditorGUILayout.EnumFlagsField("Смены", staff.WorkShiftMask);
+            staff.WorkShiftMask = (CalendarDayPeriodType)EditorGUILayout.EnumFlagsField("Смены", staff.WorkShiftMask);
 
             if (GUI.changed)
             {

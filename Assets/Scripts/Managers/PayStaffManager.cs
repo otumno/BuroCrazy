@@ -1,9 +1,9 @@
-using System.Linq;
 using Data.Calendar;
 using UnityEngine;
 
 namespace Managers
 {
+    // todo: this must not be monoBehaviour, just simple class inside some central OfficeSystem, which will aggregate time, schedule, calendar, etc.
     public class PayStaffManager : MonoBehaviour
     {
         public static PayStaffManager Instance { get; set; }
@@ -51,7 +51,7 @@ namespace Managers
                     continue;
                 }
 
-                if ((staff.WorkShiftMask & periodName) != 0) 
+                if (staff.WorkShiftMask.HasFlag(periodName)) 
                 {
                     staff.unpaidPeriods++;  
                     totalDebtAccrued += staff.salaryPerPeriod;

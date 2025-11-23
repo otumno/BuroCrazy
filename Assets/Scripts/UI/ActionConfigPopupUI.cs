@@ -277,17 +277,17 @@ public class ActionConfigPopupUI : MonoBehaviour
         
         // todo: you can add/remove periods here. can just use FLAGS to handle this
         var currentIndex = 0;
-		if (currentStaff != null && currentStaff.WorkShiftMask != 0)
-			{
-				for (int i = 0; i < periodTypes.Count; i++)
-				{
-					if ((currentStaff.WorkShiftMask & periodTypes[i]) != 0)
-						{
-							currentIndex = i;
-							break;
-						}
-				}
-			}
+        if (currentStaff != null && currentStaff.WorkShiftMask != 0)
+        {
+            for (int i = 0; i < periodTypes.Count; i++)
+            {
+                if (currentStaff.WorkShiftMask.HasFlag(periodTypes[i]))
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
+        }
         shiftDropdown.SetValueWithoutNotify(currentIndex); // Устанавливаем значение без вызова события
 
         UpdateShiftInfoText(); // Обновляем текст с длительностью

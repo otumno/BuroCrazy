@@ -1,4 +1,5 @@
 using System.Collections;
+using Data.Calendar;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -262,12 +263,7 @@ namespace Managers
         }
 
         // todo: move to timeSystem
-        private static bool IsNightTime()
-        {
-            if (ClientSpawner.Instance == null || ClientSpawner.Instance.NightPeriodTypes == null)
-                return false;
-            
-            return ClientSpawner.Instance.NightPeriodTypes.Contains(ClientSpawner.CurrentPeriodType);
-        }
+        private static bool IsNightTime() => ClientSpawner.Instance != null &&
+                                             ClientSpawner.CurrentPeriodType.IsNight();
     }
 }

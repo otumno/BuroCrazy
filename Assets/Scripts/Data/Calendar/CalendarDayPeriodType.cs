@@ -23,5 +23,7 @@ namespace Data.Calendar
                                                        CalendarDayPeriodType.Day |
                                                        CalendarDayPeriodType.LateDay |
                                                        CalendarDayPeriodType.Evening;
+
+        public static bool IsNight(this CalendarDayPeriodType type) => type == CalendarDayPeriodType.Night;
     }
 }

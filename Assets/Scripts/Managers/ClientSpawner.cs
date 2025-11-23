@@ -36,10 +36,6 @@ namespace Managers
         public LimitedCapacityZone directorReceptionZone;
 
         [Header("Настройки света и UI")]
-        public List<CalendarDayPeriodType> NightPeriodTypes = new()
-        {
-            CalendarDayPeriodType.Night
-        };
         public List<GameObject> allControllableLights;
         public float lightFadeDuration = 0.5f;
         public TextMeshProUGUI timeDisplay;
@@ -194,15 +190,14 @@ namespace Managers
 
             if (continuousSpawnCoroutine != null) StopCoroutine(continuousSpawnCoroutine);
         
-            var isNightTime = NightPeriodTypes.Contains(CurrentPeriodType);
-            ToggleStaffLights(isNightTime);
+            ToggleStaffLights(CurrentPeriodType.IsNight());
 
             // todo: it seems this should be somewhere else
             ApplySpecialEvent(SpecialEventType.None);
 
             int clientsForThisPeriod = Mathf.RoundToInt(currentPeriodPlan.clientCount.Evaluate(dayCounter));
 
-            if (clientsForThisPeriod > 0 && !isNightTime)
+            if (clientsForThisPeriod > 0 && !CurrentPeriodType.IsNight())
             {
                 continuousSpawnCoroutine = StartCoroutine(HandleContinuousSpawning(currentPeriodPlan, clientsForThisPeriod));
             }
@@ -369,22 +364,21 @@ namespace Managers
         // todo: this is okay to be exactly here, just minor code improvements
         private void UpdateStaffShifts(CalendarDayPeriodType periodType)
 		{
-				var allStaffOnScene = HiringManager.Instance.AllStaff;
-				foreach (var staffMember in allStaffOnScene)
-			{
-				if (staffMember == null) continue;
+            var allStaffOnScene = HiringManager.Instance.AllStaff;
+            foreach (var staffMember in allStaffOnScene)
+            {
+                if (staffMember == null) continue;
 
-				bool isScheduledNow = (staffMember.WorkShiftMask & periodType) != 0;
-
-				if (isScheduledNow && !staffMember.IsOnDuty())
-					{
-						staffMember.StartShift();
-					}
-			else if (!isScheduledNow && staffMember.IsOnDuty())
-				{
-					staffMember.EndShift();
-				}
-			}
+                var shouldWork = staffMember.WorkShiftMask.HasFlag(periodType);
+                if (shouldWork && !staffMember.IsOnDuty())
+                {
+                    staffMember.StartShift();
+                }
+                else if (!shouldWork && staffMember.IsOnDuty())
+                {
+                    staffMember.EndShift();
+                }
+            }
 		}
     
         private void UpdateDayCounterUI()
