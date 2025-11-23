@@ -368,24 +368,24 @@ namespace Managers
 
         // todo: this is okay to be exactly here, just minor code improvements
         private void UpdateStaffShifts(CalendarDayPeriodType periodType)
-        {
-            var allStaffOnScene = HiringManager.Instance.AllStaff;
-            foreach (var staffMember in allStaffOnScene)
-            {
-                if (staffMember == null)
-                    continue;
+		{
+				var allStaffOnScene = HiringManager.Instance.AllStaff;
+				foreach (var staffMember in allStaffOnScene)
+			{
+				if (staffMember == null) continue;
 
-                var isScheduledNow = true; //staffMember.workPeriods.Any(t => t.);
-                if (isScheduledNow && !staffMember.IsOnDuty())
-                {
-                    staffMember.StartShift();
-                }
-                else if (!isScheduledNow && staffMember.IsOnDuty())
-                {
-                    staffMember.EndShift();
-                }
-            }
-        }
+				bool isScheduledNow = (staffMember.WorkShiftMask & periodType) != 0;
+
+				if (isScheduledNow && !staffMember.IsOnDuty())
+					{
+						staffMember.StartShift();
+					}
+			else if (!isScheduledNow && staffMember.IsOnDuty())
+				{
+					staffMember.EndShift();
+				}
+			}
+		}
     
         private void UpdateDayCounterUI()
         {

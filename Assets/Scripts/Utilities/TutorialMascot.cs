@@ -140,7 +140,7 @@ namespace Utilities
             soundCoroutine = null;
             sheetAnimationCoroutine = null;
         
-            currentConfig = FindObjectOfType<TutorialScreenConfig>();
+            currentConfig = FindFirstObjectByType<TutorialScreenConfig>();
             if (currentConfig != null)
             {
                 currentScreenID = currentConfig.screenID;

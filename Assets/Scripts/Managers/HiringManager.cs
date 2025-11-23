@@ -295,7 +295,7 @@ namespace Managers
                 int savedSalary = staff.salaryPerPeriod;
                 int savedUnpaidPeriods = staff.unpaidPeriods;
                 int savedMissedPayments = staff.missedPaymentCount;
-                List<string> savedWorkPeriods = new List<string>(staff.workPeriods ?? new List<string>()); // Handle null list
+				Data.Calendar.CalendarDayPeriodType savedMask = staff.WorkShiftMask;
                 ServicePoint savedWorkstation = staff.assignedWorkstation;
                 ActionDatabase savedSystemDb = staff.systemActionDatabase;
                 // --- End Save Data ---
@@ -357,7 +357,7 @@ namespace Managers
                 newControllerReference.salaryPerPeriod = savedSalary;
                 newControllerReference.unpaidPeriods = savedUnpaidPeriods;
                 newControllerReference.missedPaymentCount = savedMissedPayments;
-                newControllerReference.workPeriods = savedWorkPeriods;
+                newControllerReference.WorkShiftMask = savedMask;
                 newControllerReference.activeActions = newActions; // Assign the (potentially new) list of actions
                 newControllerReference.systemActionDatabase = savedSystemDb;
                 // --- End Restore Data ---
@@ -421,7 +421,6 @@ namespace Managers
                     }
                 }
 
-                bool updatedInUnassigned = false;
                 for(int i = 0; i < UnassignedStaff.Count; i++) {
                     if (UnassignedStaff[i] == null || UnassignedStaff[i].gameObject.GetInstanceID() == staffInstanceID) {
                         UnassignedStaff[i] = newControllerReference;
@@ -491,28 +490,21 @@ namespace Managers
 
             Debug.Log($"<color=orange>ЗАПУСК AI:</color> Активация сотрудников для периода '{periodType}'...");
             
-            // Iterate over a copy of the list
             foreach (var staff in AllStaff.ToList())
             {
-                // todo: error
                 if (staff == null)
                 {
                     Debug.LogError($"Staff is null! Clean up!");
                     continue;
                 }
 
-                var isScheduledNow = staff.WorkingPeriods != null &&
-                                     staff.WorkingPeriods.Contains(periodType);
+                var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
 
                 if (isScheduledNow && !staff.IsOnDuty())
                 {
                     Debug.Log($" -> Активация смены для {staff.characterName} (Роль: {staff.currentRole})");
                     staff.StartShift();
                 }
-                // else if (!isScheduledNow && staff.IsOnDuty()) {
-                // Ending shift logic is usually handled by CheckAllStaffShiftsImmediately or similar
-                // Debug.Log($" -> {staff.characterName} не должен работать, но на смене. (Завершение смены будет обработано отдельно)");
-                // }
             }
             
             Debug.Log($"<color=orange>Активация смен завершена.</color>");
@@ -813,15 +805,19 @@ namespace Managers
                 else { Debug.LogWarning($"Не удалось найти базу системных действий для назначения {staffController.characterName}."); }
                 
                 // Assign Default Schedule
+                staffController.WorkShiftMask = 0; // Сбрасываем
                 if (ClientSpawner.Instance?.mainCalendarDay?.periodSettings != null)
                 {
                     var periodSettings = ClientSpawner.Instance.mainCalendarDay.periodSettings;
-                    staffController.WorkingPeriods = periodSettings.Select(p => p.PeriodType).ToHashSet();
+                    foreach (var p in periodSettings)
+                    {
+                        staffController.WorkShiftMask |= p.PeriodType;
+                    }
                 }
                 else
                 {
                     Debug.LogWarning($"Не удалось назначить расписание по умолчанию для {staffController.characterName}.");
-                    staffController.WorkingPeriods = new HashSet<CalendarDayPeriodType>();
+                    staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.FullDay;
                 }
                 // --- End Initialize ---
 
@@ -840,7 +836,7 @@ namespace Managers
                 // todo: dafaq? I already saw code that starts and ends shifts
                 // --- Start Shift if Applicable ---
                 var periodType = ClientSpawner.CurrentPeriodType;
-                if (staffController.WorkingPeriods.Contains(periodType))
+                if ((staffController.WorkShiftMask & periodType) != 0)
                 {
                     staffController.StartShift();
                     Debug.Log($"Сотрудник {candidate.Name} нанят и немедленно приступает к работе в период '{periodType}'.");
@@ -937,7 +933,6 @@ namespace Managers
 
             Debug.Log($"<color=orange>ПРОВЕРКА СМЕН:</color> Период '{periodType}'. Сотрудников в AllStaff: {AllStaff.Count}");
 
-            // Iterate over a copy
             foreach (var staff in AllStaff.ToList())
             {
                 if (staff == null) {
@@ -945,11 +940,9 @@ namespace Managers
                     continue;
                 }
 
-                var isScheduledNow = staff.WorkingPeriods != null && staff.WorkingPeriods.Contains(periodType);
-                var isOnDuty = staff.IsOnDuty(); // Check current duty status
-
-                // Debug log for each staff member
-                // Debug.Log($" - Проверка {staff.characterName} (На смене: {isOnDuty}, Расписание содержит '{currentPeriod}': {isScheduledNow})");
+                var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
+                
+                var isOnDuty = staff.IsOnDuty(); 
 
                 if (isScheduledNow && !isOnDuty)
                 {
@@ -961,7 +954,6 @@ namespace Managers
                     Debug.Log($"   -> {staff.characterName}: Закончить смену.");
                     staff.EndShift();
                 }
-                // else: Correct state, do nothing.
             }
             Debug.Log($"<color=orange>ПРОВЕРКА СМЕН ЗАВЕРШЕНА</color>");
         }

@@ -23,8 +23,7 @@ public abstract class StaffController : MonoBehaviour
 	public bool promotionAvailableNotificationPlayed = false;
     
     [Header("График и Зарплата")]
-    public HashSet<CalendarDayPeriodType> WorkingPeriods = new();  // todo: copy here from workPeriods
-    public List<string> workPeriods = new List<string>();
+    public CalendarDayPeriodType WorkShiftMask;
     public int salaryPerPeriod = 15;
 	public int unpaidPeriods = 0;
 	public int missedPaymentCount = 0;

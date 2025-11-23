@@ -118,14 +118,11 @@ public class ActionConfigPopupUI : MonoBehaviour
 
     private IEnumerator OnSave()
     {
-        // todo: no reason to store and restore periods. can just check employees
-        currentStaff.workPeriods.Clear();
+        currentStaff.WorkShiftMask = 0; 
         
-        // todo: I will rewrite this bs
         if (ClientSpawner.Instance != null && ClientSpawner.Instance.mainCalendarDay != null &&
             ClientSpawner.Instance.mainCalendarDay.periodSettings != null)
         {
-            // todo: this is pointless
             var allPeriods = ClientSpawner.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
             
             if (allPeriods.Any())
@@ -135,7 +132,8 @@ public class ActionConfigPopupUI : MonoBehaviour
                 for (int i = 0; i < duration; i++)
                 {
                     int periodIndex = (startIndex + i) % allPeriods.Count;
-                    currentStaff.WorkingPeriods.Add(allPeriods[periodIndex]);
+                    
+                    currentStaff.WorkShiftMask |= allPeriods[periodIndex];
                 }
             }
             else
@@ -148,11 +146,8 @@ public class ActionConfigPopupUI : MonoBehaviour
             Debug.LogError("Не удалось сохранить расписание: ClientSpawner или его календарь не найдены.");
         }
 
-        // --- Используем текущую роль ---
         StaffController.Role currentRole = currentStaff.currentRole;
-        // ---
 
-        // Назначаем рабочее место
         if (AssignmentManager.Instance != null && ScenePointsRegistry.Instance != null)
         {
             if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
@@ -167,42 +162,30 @@ public class ActionConfigPopupUI : MonoBehaviour
             else { AssignmentManager.Instance.UnassignStaff(currentStaff); }
         } else { Debug.LogError("Не удалось назначить рабочее место: AssignmentManager или ScenePointsRegistry не найдены."); }
 
-        // Логируем сохраняемые действия
         var actionNames = tempActiveActions.Select(a => a.actionType.ToString());
-        Debug.Log($"<color=cyan>[ActionConfigPopupUI.OnSave]</color> Сохраняем для '{currentStaff.characterName}' следующие тактические действия: [{string.Join(", ", actionNames)}]");
+        Debug.Log($"<color=cyan>[ActionConfigPopupUI.OnSave]</color> Сохраняем для '{currentStaff.characterName}' действия: [{string.Join(", ", actionNames)}]");
 
-        // --- Вызываем AssignNewRole_Immediate с ТЕКУЩЕЙ ролью ---
         Coroutine rebuildCoroutine = null;
         if (HiringManager.Instance != null)
         {
-             rebuildCoroutine = HiringManager.Instance.AssignNewRole_Immediate(currentStaff, currentRole, new List<StaffAction>(tempActiveActions));
+            rebuildCoroutine = HiringManager.Instance.AssignNewRole_Immediate(currentStaff, currentRole, new List<StaffAction>(tempActiveActions));
         } else { Debug.LogError("Не удалось сохранить роль/действия: HiringManager не найден."); }
 
-        // Ожидание завершения (если нужно)
          if (rebuildCoroutine != null)
          {
-             Debug.Log($"[ActionConfigPopupUI.OnSave] Ожидание завершения RebuildControllerComponent для {currentStaff?.characterName}...");
              yield return rebuildCoroutine;
               if (currentStaff != null)
               {
-                  currentStaff = currentStaff.gameObject.GetComponent<StaffController>(); // Обновляем ссылку
-                  if (currentStaff == null) { Debug.LogError("Не удалось найти StaffController после пересборки!"); }
-                  else { Debug.Log($"[ActionConfigPopupUI.OnSave] RebuildControllerComponent для {currentStaff.characterName} завершен."); }
-              } else { Debug.LogError("Ссылка на currentStaff потеряна после пересборки!"); }
+                  currentStaff = currentStaff.gameObject.GetComponent<StaffController>(); 
+              } 
          }
          else { yield return null; }
 
-        gameObject.SetActive(false); // Прячем панель
+        gameObject.SetActive(false); 
 
-        // Обновляем HiringPanelUI
         HiringPanelUI hiringPanel = FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include);
-        if (hiringPanel != null)
-        {
-            hiringPanel.RefreshTeamList();
-            Debug.Log($"[ActionConfigPopupUI.OnSave] Обновление HiringPanelUI вызвано.");
-        } else { Debug.LogWarning($"[ActionConfigPopupUI.OnSave] HiringPanelUI не найден для обновления."); }
+        if (hiringPanel != null) hiringPanel.RefreshTeamList();
 
-        // Проверяем смены немедленно
         HiringManager.Instance?.CheckAllStaffShiftsImmediately();
     }
 
@@ -294,14 +277,17 @@ public class ActionConfigPopupUI : MonoBehaviour
         
         // todo: you can add/remove periods here. can just use FLAGS to handle this
         var currentIndex = 0;
-        if (currentStaff != null && currentStaff.WorkingPeriods.Any())
-        {
-            var firstWorkPeriod = currentStaff.WorkingPeriods.First();
-            var foundIndex = periodTypes.IndexOf(firstWorkPeriod);
-            
-            if (foundIndex != -1)
-                 currentIndex = foundIndex;
-        }
+		if (currentStaff != null && currentStaff.WorkShiftMask != 0)
+			{
+				for (int i = 0; i < periodTypes.Count; i++)
+				{
+					if ((currentStaff.WorkShiftMask & periodTypes[i]) != 0)
+						{
+							currentIndex = i;
+							break;
+						}
+				}
+			}
         shiftDropdown.SetValueWithoutNotify(currentIndex); // Устанавливаем значение без вызова события
 
         UpdateShiftInfoText(); // Обновляем текст с длительностью
@@ -380,10 +366,8 @@ public class ActionConfigPopupUI : MonoBehaviour
                 // Если точка занята ДРУГИМ сотрудником, добавляем информацию об этом
                 if (assignedStaff != null && assignedStaff != currentStaff)
                 {
-                    // Собираем строку с периодами работы занявшего сотрудника
-                    string periods = (assignedStaff.workPeriods != null && assignedStaff.workPeriods.Any())
-                                     ? string.Join(", ", assignedStaff.workPeriods)
-                                     : "нет";
+                    string periods = assignedStaff.WorkShiftMask.ToString();
+                    
                     optionText += $" (Занят: {assignedStaff.characterName} - {periods})";
                 }
                 options.Add(optionText); // Добавляем опцию в список
