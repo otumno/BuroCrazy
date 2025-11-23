@@ -3,7 +3,8 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.SceneManagement;
-using System.Collections; // Required for IEnumerator
+using System.Collections;
+using Utilities; // Required for IEnumerator
 
 [System.Serializable]
 public class HiringManager : MonoBehaviour

@@ -1,0 +1,20 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Scriptables
+{
+    [Serializable]
+    public class SpawningPeriod
+    {
+        public string periodName;
+        public float durationInSeconds = 60f;
+        public float spawnRate = 5f;
+        public int spawnBatchSize = 1;
+        public int crowdSpawnCount = 0;
+        public int numberOfCrowdsToSpawn = 0;
+        public LightingPreset lightingSettings;
+        public Color panelColor = new Color(1,1,1,0);
+        public List<GameObject> lightsToEnable;
+    }
+}

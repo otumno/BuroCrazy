@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Utilities;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(AgentMover))]

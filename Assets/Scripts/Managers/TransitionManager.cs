@@ -1,9 +1,8 @@
-// Файл: Assets/Scripts/Managers/TransitionManager.cs
 using UnityEngine;
-using UnityEngine.SceneManagement; // Required for scene management
-using System.Collections; // Required for Coroutines
-using System.Collections.Generic; // Required for List<>
-using System.Linq; // Required for Linq methods like Any()
+using UnityEngine.SceneManagement;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
 public class TransitionManager : MonoBehaviour
 {

@@ -4,28 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using System;
-
-[System.Serializable]
-public class LightingPreset
-{
-    public Color lightColor = Color.white;
-    [Range(0f, 2f)] public float lightIntensity = 1f;
-}
-
-// Этот класс нужен только конвертеру. После успешной конвертации его можно удалить.
-[System.Serializable]
-public class SpawningPeriod
-{
-    public string periodName;
-    public float durationInSeconds = 60f;
-    public float spawnRate = 5f;
-    public int spawnBatchSize = 1;
-    public int crowdSpawnCount = 0;
-    public int numberOfCrowdsToSpawn = 0;
-    public LightingPreset lightingSettings;
-    public Color panelColor = new Color(1,1,1,0);
-    public List<GameObject> lightsToEnable;
-}
+using Data.Calendar;
 
 public class ClientSpawner : MonoBehaviour
 {
@@ -53,9 +32,6 @@ public class ClientSpawner : MonoBehaviour
 	public LimitedCapacityZone toiletZone;
 	public LimitedCapacityZone directorReceptionZone;
     
-    [Header("Настройки цикла дня и ночи (Для конвертера)")]
-    public SpawningPeriod[] periods; 
-
     [Header("Настройки света и UI")]
     public List<string> nightPeriodNames;
     public List<GameObject> allControllableLights;
@@ -93,51 +69,54 @@ public event System.Action OnPeriodChanged;
     }
 
     void Start()
-{
-    if (mainCalendar == null || mainCalendar.periodSettings.Count == 0)
     {
-        Debug.LogError("Календарь (Main Calendar) не назначен или пуст в ClientSpawner! Работа невозможна.", this);
-        enabled = false;
-        return;
+        if (mainCalendar == null || mainCalendar.periodSettings.Count == 0)
+        {
+            Debug.LogError("Календарь (Main Calendar) не назначен или пуст в ClientSpawner! Работа невозможна.", this);
+            enabled = false;
+            return;
+        }
+
+        // --- ВОЗВРАЩАЕМ НАДЕЖНУЮ СХЕМУ ЗАПУСКА ---
+
+        // 1. Начинаем с "нулевого" дня. Это технический день, ночь ПЕРЕД первым днем.
+        dayCounter = 0;
+
+        // 2. Находим индекс "Ночи"
+        int nightIndex = mainCalendar.periodSettings.FindIndex(p =>
+            p.periodName.Equals("Ночь", System.StringComparison.InvariantCultureIgnoreCase));
+        if (nightIndex == -1)
+            nightIndex = mainCalendar.periodSettings.Count - 1; // Если "Ночь" не найдена, берем просто последний период
+
+        // 3. Устанавливаем текущий период на "Ночь"
+        currentPeriodIndex = nightIndex;
+        PeriodSettings nightPeriodPlan = mainCalendar.periodSettings[nightIndex];
+
+        // 4. Устанавливаем таймер так, чтобы до конца "Ночи" оставалось 10 секунд
+        //    Длительность ночи мы считаем для будущего ДНЯ 1.
+        float duration = nightPeriodPlan.durationInSeconds.Evaluate(1);
+        periodTimer = Mathf.Max(0, duration - 10f);
+
+        // 5. Инициализируем "предыдущий" период, чтобы был плавный переход от ночи к утру
+        previousPeriodPlan = nightPeriodPlan;
+
+        // 6. Настраиваем начальное освещение вручную, чтобы избежать "скачка" при старте
+        if (globalLight != null)
+        {
+            globalLight.color = nightPeriodPlan.lightingSettings.lightColor;
+            globalLight.intensity = nightPeriodPlan.lightingSettings.lightIntensity;
+        }
+
+        foreach (var lightName in nightPeriodPlan.lightsToEnableNames)
+        {
+            var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
+            if (lightObj != null) lightObj.SetActive(true);
+        }
+
+        // 7. Запускаем "Ночь" без сброса таймера и обновляем UI
+        UpdateDayCounterUI();
+        StartNewPeriod(false);
     }
-
-    // --- ВОЗВРАЩАЕМ НАДЕЖНУЮ СХЕМУ ЗАПУСКА ---
-
-    // 1. Начинаем с "нулевого" дня. Это технический день, ночь ПЕРЕД первым днем.
-    dayCounter = 0;
-
-    // 2. Находим индекс "Ночи"
-    int nightIndex = mainCalendar.periodSettings.FindIndex(p => p.periodName.Equals("Ночь", System.StringComparison.InvariantCultureIgnoreCase));
-    if (nightIndex == -1) nightIndex = mainCalendar.periodSettings.Count - 1; // Если "Ночь" не найдена, берем просто последний период
-
-    // 3. Устанавливаем текущий период на "Ночь"
-    currentPeriodIndex = nightIndex;
-    PeriodSettings nightPeriodPlan = mainCalendar.periodSettings[nightIndex];
-
-    // 4. Устанавливаем таймер так, чтобы до конца "Ночи" оставалось 10 секунд
-    //    Длительность ночи мы считаем для будущего ДНЯ 1.
-    float duration = nightPeriodPlan.durationInSeconds.Evaluate(1); 
-    periodTimer = Mathf.Max(0, duration - 10f);
-
-    // 5. Инициализируем "предыдущий" период, чтобы был плавный переход от ночи к утру
-    previousPeriodPlan = nightPeriodPlan;
-
-    // 6. Настраиваем начальное освещение вручную, чтобы избежать "скачка" при старте
-    if (globalLight != null)
-    {
-        globalLight.color = nightPeriodPlan.lightingSettings.lightColor;
-        globalLight.intensity = nightPeriodPlan.lightingSettings.lightIntensity;
-    }
-    foreach (var lightName in nightPeriodPlan.lightsToEnableNames)
-    {
-        var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
-        if (lightObj != null) lightObj.SetActive(true);
-    }
-
-    // 7. Запускаем "Ночь" без сброса таймера и обновляем UI
-    UpdateDayCounterUI();
-    StartNewPeriod(false);
-}
 
     void Update()
     {

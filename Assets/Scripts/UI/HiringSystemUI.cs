@@ -4,7 +4,8 @@ using UnityEngine.UI; // Required for Button, Image
 using TMPro; // Required for TextMeshProUGUI
 using System.Text; // Required for StringBuilder
 using System.Collections.Generic; // Required for List<>, Dictionary<>
-using System.Linq; // Required for Linq methods like Any(), FirstOrDefault()
+using System.Linq;
+using Utilities; // Required for Linq methods like Any(), FirstOrDefault()
 
 // Этот скрипт должен висеть на ГЛАВНОЙ ПАНЕЛИ найма.
 public class HiringSystemUI : MonoBehaviour // This line is correct

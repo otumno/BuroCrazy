@@ -1,6 +1,7 @@
 // Файл: CharacterSkills.cs
 using UnityEngine;
 using System.Collections.Generic;
+using Utilities;
 
 [CreateAssetMenu(fileName = "CharacterSkills", menuName = "My Game/Character Skills")]
 public class CharacterSkills : ScriptableObject

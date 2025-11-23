@@ -1,21 +1,25 @@
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
+using Utilities;
 
-[CustomEditor(typeof(GraphBuilder))]
-public class GraphBuilderEditor : Editor
+namespace Editor
 {
-    public override void OnInspectorGUI()
+    [CustomEditor(typeof(GraphBuilder))]
+    public class GraphBuilderEditor : UnityEditor.Editor
     {
-        // Сначала рисуем стандартные поля (maxDistance, pathRadius и т.д.)
-        DrawDefaultInspector();
-
-        // Получаем ссылку на наш скрипт
-        GraphBuilder builder = (GraphBuilder)target;
-
-        // Рисуем большую, удобную кнопку
-        if (GUILayout.Button("Перестроить Граф", GUILayout.Height(30)))
+        public override void OnInspectorGUI()
         {
-            builder.BuildGraph();
+            // Сначала рисуем стандартные поля (maxDistance, pathRadius и т.д.)
+            DrawDefaultInspector();
+
+            // Получаем ссылку на наш скрипт
+            GraphBuilder builder = (GraphBuilder)target;
+
+            // Рисуем большую, удобную кнопку
+            if (GUILayout.Button("Перестроить Граф", GUILayout.Height(30)))
+            {
+                builder.BuildGraph();
+            }
         }
     }
 }

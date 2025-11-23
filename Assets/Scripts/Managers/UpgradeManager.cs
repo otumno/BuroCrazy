@@ -1,7 +1,8 @@
 // Файл: Assets/Scripts/Managers/UpgradeManager.cs
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq; // Нужен для FirstOrDefault и других Linq-методов
+using System.Linq;
+using Utilities; // Нужен для FirstOrDefault и других Linq-методов
 
 public class UpgradeManager : MonoBehaviour
 {

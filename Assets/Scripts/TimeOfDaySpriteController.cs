@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/TimeOfDaySpriteController.cs
 using UnityEngine;
 using System.Collections.Generic;
+using Data.Calendar;
 
 public class TimeOfDaySpriteController : MonoBehaviour
 {

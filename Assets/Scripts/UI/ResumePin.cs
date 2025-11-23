@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
-using System.Collections.Generic; // <--- Убедитесь, что эта строка есть
+using System.Collections.Generic;
+using Utilities; // <--- Убедитесь, что эта строка есть
 
 public class ResumePin : MonoBehaviour
 {
