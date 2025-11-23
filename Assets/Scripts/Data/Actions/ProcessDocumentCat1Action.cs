@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/Action_ProcessDocumentCat1.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_ProcessDocCat1", menuName = "Бюрократия/Тактические/Работа в офисе (Кат. 1)")]
 public class ProcessDocumentCat1Action : StaffAction

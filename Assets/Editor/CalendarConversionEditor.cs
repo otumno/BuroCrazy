@@ -1,19 +1,20 @@
 using System.IO;
 using System.Linq;
 using Data.Calendar;
+using Managers;
 using Scriptables;
 using UnityEditor;
 using UnityEngine;
 
 namespace Editor
 {
-    [CustomEditor(typeof(CalendarSerializer))]
+    [CustomEditor(typeof(CalendarDayEditor))]
     public class CalendarConversionEditor : UnityEditor.Editor
     {
         public override void OnInspectorGUI()
         {
             base.OnInspectorGUI();
-            var spawner = (CalendarSerializer)target;
+            var spawner = (CalendarDayEditor)target;
 
             EditorGUILayout.Space(20);
             EditorGUILayout.LabelField("Утилиты Конвертации", EditorStyles.boldLabel);
@@ -29,45 +30,49 @@ namespace Editor
             }
         }
 
-        private void ConvertPeriodsToCalendar(CalendarSerializer serializer)
+        private void ConvertPeriodsToCalendar(CalendarDayEditor dayEditor)
         {
-            if (serializer.Periods == null || serializer.Periods.Length == 0)
+            if (dayEditor.Periods == null || dayEditor.Periods.Length == 0)
             {
                 EditorUtility.DisplayDialog("Ошибка", "Массив 'Periods' в ClientSpawner пуст. Нечего конвертировать.", "OK");
                 return;
             }
 
-            GameCalendar newCalendar = ScriptableObject.CreateInstance<GameCalendar>();
+            CalendarDay newCalendarDay = ScriptableObject.CreateInstance<CalendarDay>();
             // Мы больше не используем DailyPlan и 30-дневную структуру
-            newCalendar.periodSettings = new System.Collections.Generic.List<PeriodSettings>();
+            newCalendarDay.periodSettings = new System.Collections.Generic.List<PeriodSettings>();
 
             // Напрямую конвертируем каждый старый период в новый формат с кривыми
-            foreach (var oldPeriod in serializer.Periods)
+            foreach (var oldPeriod in dayEditor.Periods)
             {
                 var newPeriodSetting = new PeriodSettings
                 {
-                    periodName = oldPeriod.periodName,
+                    // period
+                    PeriodType = oldPeriod.PeriodType,
                 
-                    // Создаем кривую с одним ключом - это будет стартовое значение для дня 1.
-                    // Остальные дни можно будет настроить в новом редакторе.
+                    // duration
+                    durationInSeconds = oldPeriod.durationInSeconds,
+                    
+                    // spawn curves
                     clientCount = new AnimationCurve(new Keyframe(1, oldPeriod.crowdSpawnCount)), // Предполагаем, что clientCount - это основной параметр
-                    durationInSeconds = new AnimationCurve(new Keyframe(1, oldPeriod.durationInSeconds)),
                     spawnRate = new AnimationCurve(new Keyframe(1, oldPeriod.spawnRate)),
                     spawnBatchSize = new AnimationCurve(new Keyframe(1, oldPeriod.spawnBatchSize)),
                     crowdSpawnCount = new AnimationCurve(new Keyframe(1, oldPeriod.crowdSpawnCount)),
                     numberOfCrowdsToSpawn = new AnimationCurve(new Keyframe(1, oldPeriod.numberOfCrowdsToSpawn)),
                 
-                    // Копируем остальные настройки как есть
+                    // light
                     lightingSettings = new LightingPreset
                     {
                         lightColor = oldPeriod.lightingSettings.lightColor,
                         lightIntensity = oldPeriod.lightingSettings.lightIntensity
                     },
                     panelColor = oldPeriod.panelColor,
+                    
+                    // go names save
                     lightsToEnableNames = oldPeriod.lightsToEnable.Where(l => l != null).Select(l => l.name).ToList()
                 };
                 // Добавляем настроенный период в корневой список
-                newCalendar.periodSettings.Add(newPeriodSetting);
+                newCalendarDay.periodSettings.Add(newPeriodSetting);
             }
         
             string path = "Assets/Data/Calendar";
@@ -77,13 +82,13 @@ namespace Editor
             }
             string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/MainGameCalendar.asset");
 
-            AssetDatabase.CreateAsset(newCalendar, assetPathAndName);
+            AssetDatabase.CreateAsset(newCalendarDay, assetPathAndName);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
             var clientSpawners = FindObjectsByType<ClientSpawner>(FindObjectsSortMode.None);
             var spawner = clientSpawners[0];
-            spawner.mainCalendar = newCalendar;
+            spawner.mainCalendarDay = newCalendarDay;
             EditorUtility.SetDirty(spawner);
 
             EditorUtility.DisplayDialog("Успех", $"Конвертация завершена! Создан и назначен новый ассет:\n{assetPathAndName}", "Отлично!");

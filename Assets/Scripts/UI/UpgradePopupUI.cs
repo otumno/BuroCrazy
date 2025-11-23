@@ -1,5 +1,6 @@
 // Файл: Assets/Scripts/UI/UpgradePopupUI.cs
 
+using Managers;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;

@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/DoBookkeepingAction.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_DoBookkeeping", menuName = "Bureau/Actions/DoBookkeeping")]
 public class DoBookkeepingAction : StaffAction

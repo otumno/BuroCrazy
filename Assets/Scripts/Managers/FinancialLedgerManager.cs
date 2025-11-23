@@ -1,59 +1,62 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
-// Тип дохода, чтобы различать "белые" и "черные" деньги
-public enum IncomeType { Official, Shadow }
+namespace Managers
+{
+    // Тип дохода, чтобы различать "белые" и "черные" деньги
+    public enum IncomeType { Official, Shadow }
 
 // Структура для хранения одной транзакции
-[System.Serializable]
-public class Transaction
-{
-    public string description;
-    public int amount;
-    public IncomeType type;
-    public int day;
-}
-
-public class FinancialLedgerManager : MonoBehaviour
-{
-    public static FinancialLedgerManager Instance { get; private set; }
-
-    public List<Transaction> dailyLog = new List<Transaction>();
-
-    // --- НАШ НОВЫЙ СЧЕТЧИК КОРРУПЦИИ ---
-    public int globalCorruptionScore = 0;
-
-    void Awake()
+    [System.Serializable]
+    public class Transaction
     {
-        if (Instance != null) { Destroy(gameObject); } else { Instance = this; }
+        public string description;
+        public int amount;
+        public IncomeType type;
+        public int day;
     }
 
-    /// <summary>
-    /// Записывает транзакцию в лог и обновляет счетчик коррупции.
-    /// </summary>
-    public void LogTransaction(string desc, int amount, IncomeType type)
+    public class FinancialLedgerManager : MonoBehaviour
     {
-        if (ClientSpawner.Instance == null) return;
+        public static FinancialLedgerManager Instance { get; private set; }
 
-        dailyLog.Add(new Transaction
-        {
-            description = desc,
-            amount = amount,
-            type = type,
-            day = ClientSpawner.Instance.GetCurrentDay()
-        });
+        public List<Transaction> dailyLog = new List<Transaction>();
 
-        // Если транзакция "теневая", увеличиваем уровень коррупции
-        if (type == IncomeType.Shadow)
+        // --- НАШ НОВЫЙ СЧЕТЧИК КОРРУПЦИИ ---
+        public int globalCorruptionScore = 0;
+
+        void Awake()
         {
-            globalCorruptionScore += Mathf.Abs(amount);
-            Debug.Log($"<color=purple>СЧЕТЧИК КОРРУПЦИИ:</color> Увеличен на {Mathf.Abs(amount)}. Текущее значение: {globalCorruptionScore}");
+            if (Instance != null) { Destroy(gameObject); } else { Instance = this; }
         }
-    }
 
-    public void ResetDay()
-    {
-        dailyLog.Clear();
-        // Глобальный счетчик коррупции НЕ сбрасываем каждый день! Он накапливается.
+        /// <summary>
+        /// Записывает транзакцию в лог и обновляет счетчик коррупции.
+        /// </summary>
+        public void LogTransaction(string desc, int amount, IncomeType type)
+        {
+            if (ClientSpawner.Instance == null) return;
+
+            dailyLog.Add(new Transaction
+            {
+                description = desc,
+                amount = amount,
+                type = type,
+                day = ClientSpawner.Instance.GetCurrentDay()
+            });
+
+            // Если транзакция "теневая", увеличиваем уровень коррупции
+            if (type == IncomeType.Shadow)
+            {
+                globalCorruptionScore += Mathf.Abs(amount);
+                Debug.Log($"<color=purple>СЧЕТЧИК КОРРУПЦИИ:</color> Увеличен на {Mathf.Abs(amount)}. Текущее значение: {globalCorruptionScore}");
+            }
+        }
+
+        public void ResetDay()
+        {
+            dailyLog.Clear();
+            // Глобальный счетчик коррупции НЕ сбрасываем каждый день! Он накапливается.
+        }
     }
 }

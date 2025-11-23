@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using Managers;
 
 public class InGameUI_Actions : MonoBehaviour
 {

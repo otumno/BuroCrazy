@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/CoverRegistrarAction.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_CoverRegistrar", menuName = "Bureau/Actions/CoverRegistrar")]
 public class CoverRegistrarAction : StaffAction

@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Linq;
+using Managers;
 
 public class CleanDirtExecutor : ActionExecutor
 {

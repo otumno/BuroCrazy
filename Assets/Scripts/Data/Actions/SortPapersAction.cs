@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/SortPapersAction.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_SortPapers", menuName = "Bureau/Actions/SortPapers")]
 public class SortPapersAction : StaffAction

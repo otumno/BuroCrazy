@@ -1,102 +1,106 @@
 // Файл: ArchiveManager.cs
-using UnityEngine;
+
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
-public class ArchiveManager : MonoBehaviour
+namespace Managers
 {
-    public static ArchiveManager Instance { get; private set; }
-
-    [Header("Основная точка сдачи документов")]
-    [Tooltip("Ссылка на стопку документов у стола архивариуса")]
-    public DocumentStack mainDocumentStack;
-    [Tooltip("Максимальное количество документов в основной стопке до того, как они начнут появляться в других местах")]
-    public int maxCapacityBeforeOverflow = 20;
-    [Header("Точки для переполнения")]
-    [Tooltip("Список трансформов, где будут появляться документы, если основная стопка переполнена")]
-    public List<Transform> overflowPoints;
-    [Header("Архивные шкафы")]
-    [Tooltip("Список всех шкафов, куда архивариус будет относить документы")]
-    public List<ArchiveCabinet> cabinets;
-    private List<Transform> occupiedOverflowPoints = new List<Transform>();
-
-    void Awake()
+    public class ArchiveManager : MonoBehaviour
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); }
-        else { Instance = this; }
-    }
+        public static ArchiveManager Instance { get; private set; }
 
-    void Start()
-    {
-        if (cabinets == null || cabinets.Count == 0)
+        [Header("Основная точка сдачи документов")]
+        [Tooltip("Ссылка на стопку документов у стола архивариуса")]
+        public DocumentStack mainDocumentStack;
+        [Tooltip("Максимальное количество документов в основной стопке до того, как они начнут появляться в других местах")]
+        public int maxCapacityBeforeOverflow = 20;
+        [Header("Точки для переполнения")]
+        [Tooltip("Список трансформов, где будут появляться документы, если основная стопка переполнена")]
+        public List<Transform> overflowPoints;
+        [Header("Архивные шкафы")]
+        [Tooltip("Список всех шкафов, куда архивариус будет относить документы")]
+        public List<ArchiveCabinet> cabinets;
+        private List<Transform> occupiedOverflowPoints = new List<Transform>();
+
+        void Awake()
         {
-            cabinets = FindObjectsByType<ArchiveCabinet>(FindObjectsSortMode.None).ToList();
+            if (Instance != null && Instance != this) { Destroy(gameObject); }
+            else { Instance = this; }
         }
-    }
 
-    public Transform RequestDropOffPoint()
-    {
-        if (mainDocumentStack.CurrentSize < maxCapacityBeforeOverflow)
+        void Start()
         {
-            return mainDocumentStack.transform;
-        }
-        else
-        {
-            Transform freePoint = overflowPoints.FirstOrDefault(p => !occupiedOverflowPoints.Contains(p));
-            if (freePoint != null)
+            if (cabinets == null || cabinets.Count == 0)
             {
-                occupiedOverflowPoints.Add(freePoint);
-                return freePoint;
+                cabinets = FindObjectsByType<ArchiveCabinet>(FindObjectsSortMode.None).ToList();
             }
         }
+
+        public Transform RequestDropOffPoint()
+        {
+            if (mainDocumentStack.CurrentSize < maxCapacityBeforeOverflow)
+            {
+                return mainDocumentStack.transform;
+            }
+            else
+            {
+                Transform freePoint = overflowPoints.FirstOrDefault(p => !occupiedOverflowPoints.Contains(p));
+                if (freePoint != null)
+                {
+                    occupiedOverflowPoints.Add(freePoint);
+                    return freePoint;
+                }
+            }
         
-        Debug.LogWarning("Нет свободных мест для сдачи документов в архиве!");
-        return null;
-    }
+            Debug.LogWarning("Нет свободных мест для сдачи документов в архиве!");
+            return null;
+        }
 
-    public DocumentStack GetStackToProcess()
-    {
-        return mainDocumentStack;
-    }
+        public DocumentStack GetStackToProcess()
+        {
+            return mainDocumentStack;
+        }
     
-    public ArchiveCabinet GetRandomCabinet()
-    {
-        if (cabinets == null || cabinets.Count == 0) return null;
-        return cabinets[Random.Range(0, cabinets.Count)];
-    }
-
-    public void FreeOverflowPoint(Transform point)
-    {
-        if (occupiedOverflowPoints.Contains(point))
+        public ArchiveCabinet GetRandomCabinet()
         {
-            occupiedOverflowPoints.Remove(point);
+            if (cabinets == null || cabinets.Count == 0) return null;
+            return cabinets[Random.Range(0, cabinets.Count)];
         }
-    }
 
-    // --- НОВЫЕ МЕТОДЫ ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ И НОВОЙ ИГРЫ ---
-
-    public int GetCurrentDocumentCount()
-    {
-        if (mainDocumentStack == null) return 0;
-        return mainDocumentStack.CurrentSize;
-    }
-
-    public void SetDocumentCount(int count)
-    {
-        if (mainDocumentStack == null) return;
-        mainDocumentStack.TakeEntireStack(); // Очищаем стопку
-        for (int i = 0; i < count; i++)
+        public void FreeOverflowPoint(Transform point)
         {
-            mainDocumentStack.AddDocumentToStack();
+            if (occupiedOverflowPoints.Contains(point))
+            {
+                occupiedOverflowPoints.Remove(point);
+            }
         }
-    }
 
-    public void ResetState()
-    {
-        if (mainDocumentStack != null)
+        // --- НОВЫЕ МЕТОДЫ ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ И НОВОЙ ИГРЫ ---
+
+        public int GetCurrentDocumentCount()
         {
-            mainDocumentStack.TakeEntireStack();
+            if (mainDocumentStack == null) return 0;
+            return mainDocumentStack.CurrentSize;
         }
-        occupiedOverflowPoints.Clear();
+
+        public void SetDocumentCount(int count)
+        {
+            if (mainDocumentStack == null) return;
+            mainDocumentStack.TakeEntireStack(); // Очищаем стопку
+            for (int i = 0; i < count; i++)
+            {
+                mainDocumentStack.AddDocumentToStack();
+            }
+        }
+
+        public void ResetState()
+        {
+            if (mainDocumentStack != null)
+            {
+                mainDocumentStack.TakeEntireStack();
+            }
+            occupiedOverflowPoints.Clear();
+        }
     }
 }

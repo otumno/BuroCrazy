@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Managers;
 
 // Этот скрипт висит на главной панели "Отдел Кадров", где отображается список нанятых сотрудников.
 public class HiringPanelUI : MonoBehaviour

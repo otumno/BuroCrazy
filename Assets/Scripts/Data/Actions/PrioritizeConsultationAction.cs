@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_PrioritizeConsultation", menuName = "Bureau/Actions/PrioritizeConsultation")]
 public class PrioritizeConsultationAction : StaffAction

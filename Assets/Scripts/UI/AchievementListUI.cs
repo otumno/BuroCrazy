@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using Managers;
 
 public class AchievementListUI : MonoBehaviour
 {

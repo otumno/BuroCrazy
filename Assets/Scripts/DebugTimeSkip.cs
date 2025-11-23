@@ -1,4 +1,6 @@
 // Файл: DebugTimeSkip.cs
+
+using Managers;
 using UnityEngine;
 
 public class DebugTimeSkip : MonoBehaviour

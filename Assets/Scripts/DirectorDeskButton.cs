@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
+using Managers;
 
 public class DirectorDeskButton : MonoBehaviour
 {

@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Linq;
 using System.Text;
+using Managers;
 
 public class BookkeepingPanelUI : MonoBehaviour
 {

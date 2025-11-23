@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_CoverCashier", menuName = "Bureau/Actions/CoverCashier")]
 public class CoverCashierAction : StaffAction

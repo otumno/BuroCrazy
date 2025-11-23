@@ -1,4 +1,6 @@
 // Файл: Scripts/UI/MainMenuActions.cs --- ОБНОВЛЕННАЯ ВЕРСИЯ ---
+
+using Managers;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro; 

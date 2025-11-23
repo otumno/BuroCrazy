@@ -16,7 +16,7 @@ namespace Editor
             StaffController staff = (StaffController)target;
 
             // Ищем на сцене ClientSpawner
-            var spawner = FindFirstObjectByType<CalendarSerializer>();
+            var spawner = FindFirstObjectByType<CalendarDayEditor>();
 
             if (spawner == null || spawner.Periods == null || spawner.Periods.Length == 0)
             {
@@ -31,13 +31,11 @@ namespace Editor
             // Проходим по всем периодам, которые есть в ClientSpawner
             foreach (var period in spawner.Periods)
             {
-                if (string.IsNullOrEmpty(period.periodName)) continue;
-
                 // Проверяем, есть ли этот период в списке рабочих периодов у сотрудника
-                bool isWorkingInThisPeriod = staff.workPeriods.Contains(period.periodName);
+                bool isWorkingInThisPeriod = staff.WorkingPeriods.Contains(period.PeriodType);
 
                 // Рисуем галочку (Toggle)
-                bool shouldWork = EditorGUILayout.Toggle(period.periodName, isWorkingInThisPeriod);
+                var shouldWork = EditorGUILayout.Toggle(period.PeriodType.ToString(), isWorkingInThisPeriod);
 
                 // Если состояние галочки изменилось
                 if (shouldWork != isWorkingInThisPeriod)
@@ -45,15 +43,15 @@ namespace Editor
                     if (shouldWork)
                     {
                         // Если галочку поставили - добавляем период в список
-                        if (!staff.workPeriods.Contains(period.periodName))
+                        if (!staff.WorkingPeriods.Contains(period.PeriodType))
                         {
-                            staff.workPeriods.Add(period.periodName);
+                            staff.WorkingPeriods.Add(period.PeriodType);
                         }
                     }
                     else
                     {
                         // Если галочку убрали - удаляем период из списка
-                        staff.workPeriods.Remove(period.periodName);
+                        staff.WorkingPeriods.Remove(period.PeriodType);
                     }
                     // Помечаем объект как "измененный", чтобы Unity сохранил изменения
                     EditorUtility.SetDirty(staff);

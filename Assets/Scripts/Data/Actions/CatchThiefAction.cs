@@ -1,3 +1,4 @@
+using Managers;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Action_CatchThief", menuName = "Bureau/Actions/CatchThief")]

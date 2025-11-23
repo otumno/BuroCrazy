@@ -1,4 +1,6 @@
 // Файл: CameraAudioLink.cs
+
+using Managers;
 using UnityEngine;
 
 public class CameraAudioLink : MonoBehaviour

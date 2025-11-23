@@ -2,7 +2,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq; // Нужен для OrderBy и др.
-using System.Collections; // Нужен для корутин (IEnumerator)
+using System.Collections;
+using Managers; // Нужен для корутин (IEnumerator)
 
 public class UpgradePanelUI : MonoBehaviour
 {

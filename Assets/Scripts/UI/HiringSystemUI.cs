@@ -5,6 +5,7 @@ using TMPro; // Required for TextMeshProUGUI
 using System.Text; // Required for StringBuilder
 using System.Collections.Generic; // Required for List<>, Dictionary<>
 using System.Linq;
+using Managers;
 using Utilities; // Required for Linq methods like Any(), FirstOrDefault()
 
 // Этот скрипт должен висеть на ГЛАВНОЙ ПАНЕЛИ найма.

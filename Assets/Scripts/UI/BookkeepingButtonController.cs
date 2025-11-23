@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Linq;
 using System.Text;
+using Managers;
 
 [RequireComponent(typeof(Button))]
 public class BookkeepingButtonController : MonoBehaviour

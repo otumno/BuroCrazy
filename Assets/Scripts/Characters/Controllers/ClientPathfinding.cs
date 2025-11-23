@@ -3,6 +3,7 @@ using UnityEngine;
 using TMPro;
 using System.Linq;
 using System.Collections.Generic;
+using Managers;
 
 public class ClientPathfinding : MonoBehaviour
 {

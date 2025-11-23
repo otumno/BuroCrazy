@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/Action_ServiceAtRegistration.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_ServiceAtRegistration", menuName = "Bureau/Actions/ServiceAtRegistration")]
 public class Action_ServiceAtRegistration : StaffAction

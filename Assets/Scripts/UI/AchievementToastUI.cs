@@ -3,7 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-using System.Collections.Generic; // <<< ИСПРАВЛЕНИЕ 1: Добавлена эта строка
+using System.Collections.Generic;
+using Managers; // <<< ИСПРАВЛЕНИЕ 1: Добавлена эта строка
 
 [RequireComponent(typeof(CanvasGroup))]
 public class AchievementToastUI : MonoBehaviour

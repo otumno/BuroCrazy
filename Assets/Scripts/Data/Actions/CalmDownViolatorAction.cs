@@ -1,3 +1,4 @@
+using Managers;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "Action_CalmDownViolator", menuName = "Bureau/Actions/CalmDownViolator")]

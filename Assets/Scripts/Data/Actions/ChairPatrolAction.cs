@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/ChairPatrolAction.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_ChairPatrol", menuName = "Bureau/Actions/ChairPatrol")]
 public class ChairPatrolAction : StaffAction

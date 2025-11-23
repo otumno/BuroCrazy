@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/CoverYourTracksExecutor.cs
 using UnityEngine;
 using System.Collections;
+using Managers;
 
 public class CoverYourTracksExecutor : ActionExecutor
 {

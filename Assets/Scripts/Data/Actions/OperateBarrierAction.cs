@@ -1,6 +1,8 @@
 using UnityEngine;
-using System.Linq;
+using Data.Calendar;
+using Managers;
 
+// todo: move operate conditions somewhere to remove code duplicates
 [CreateAssetMenu(fileName = "Action_OperateBarrier", menuName = "Bureau/Actions/OperateBarrier")]
 public class OperateBarrierAction : StaffAction
 {
@@ -18,20 +20,16 @@ public class OperateBarrierAction : StaffAction
         var clientSpawner = ClientSpawner.Instance;
         if (clientSpawner == null) return false;
 
-        string currentPeriodName = ClientSpawner.CurrentPeriodName;
+        var currentPeriodType = ClientSpawner.CurrentPeriodType;
 
         // Условие 1: Сейчас "Утро", и барьер АКТИВЕН (закрыт) -> нужно ОТКРЫТЬ
-        if (currentPeriodName == "Утро" && barrier.IsActive())
-        {
+        if (currentPeriodType == CalendarDayPeriodType.Morning && barrier.IsActive())
             return true;
-        }
 
         // Условие 2: Сейчас "Ночь", барьер НЕ АКТИВЕН (открыт), и на сцене нет клиентов -> нужно ЗАКРЫТЬ
         var activeClients = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
-        if (currentPeriodName == "Ночь" && !barrier.IsActive() && activeClients.Length == 0)
-        {
+        if (currentPeriodType == CalendarDayPeriodType.Morning && !barrier.IsActive() && activeClients.Length == 0)
             return true;
-        }
 
         return false;
     }

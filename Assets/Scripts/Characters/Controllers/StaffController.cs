@@ -4,6 +4,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Data.Calendar;
+using Managers;
 using Utilities;
 
 public abstract class StaffController : MonoBehaviour
@@ -21,6 +23,7 @@ public abstract class StaffController : MonoBehaviour
 	public bool promotionAvailableNotificationPlayed = false;
     
     [Header("График и Зарплата")]
+    public HashSet<CalendarDayPeriodType> WorkingPeriods = new();  // todo: copy here from workPeriods
     public List<string> workPeriods = new List<string>();
     public int salaryPerPeriod = 15;
 	public int unpaidPeriods = 0;
@@ -272,7 +275,9 @@ public abstract class StaffController : MonoBehaviour
 
     public virtual void StartShift()
     {
-        if (isOnDuty) return;
+        if (isOnDuty)
+            return;
+        
         isOnDuty = true;
         if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
 
@@ -369,6 +374,7 @@ public abstract class StaffController : MonoBehaviour
     }
 
     #region Utility Methods
+    // todo: must rewrite this, super error prone counter :/ should go home by event
     private IEnumerator GoHomeRoutine()
     {
         if (unpaidPeriods > 0)

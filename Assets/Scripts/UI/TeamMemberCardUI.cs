@@ -4,6 +4,7 @@ using TMPro;
 using System.Linq;
 using System.Text;
 using System.Collections.Generic;
+using Managers;
 
 public class TeamMemberCardUI : MonoBehaviour
 {

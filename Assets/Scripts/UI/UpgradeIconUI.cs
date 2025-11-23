@@ -1,4 +1,6 @@
 // Файл: Assets/Scripts/UI/UpgradeIconUI.cs
+
+using Managers;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using Data.Calendar;
 using UnityEngine;
 
 namespace Scriptables
 {
     [Serializable]
-    public class SpawningPeriod
+    public class CalendarDayPeriodSettings
     {
-        public string periodName;
+        public CalendarDayPeriodType PeriodType;
         public float durationInSeconds = 60f;
         public float spawnRate = 5f;
         public int spawnBatchSize = 1;

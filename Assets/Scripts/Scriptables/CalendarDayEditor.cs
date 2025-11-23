@@ -2,9 +2,9 @@ using UnityEngine;
 
 namespace Scriptables
 {
-    public class CalendarSerializer : MonoBehaviour
+    public class CalendarDayEditor : MonoBehaviour
     {
         [Header("Настройки цикла дня и ночи (Для конвертера)")]
-        public SpawningPeriod[] Periods;
+        public CalendarDayPeriodSettings[] Periods;
     }
 }

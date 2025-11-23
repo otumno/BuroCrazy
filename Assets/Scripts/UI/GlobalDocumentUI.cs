@@ -1,4 +1,6 @@
 // Файл: GlobalDocumentUI.cs
+
+using Managers;
 using UnityEngine;
 using TMPro;
 

@@ -1,5 +1,8 @@
+using Data.Calendar;
+using Managers;
 using UnityEngine;
 
+// todo: move operate conditions somewhere to remove code duplicates
 [CreateAssetMenu(fileName = "Action_ManageBarrier", menuName = "Bureau/Actions/ManageBarrier")]
 public class ManageBarrierAction : StaffAction
 {
@@ -9,12 +12,14 @@ public class ManageBarrierAction : StaffAction
         var barrier = GuardManager.Instance.securityBarrier;
         if (barrier == null) return false;
 
-        string currentPeriodName = ClientSpawner.CurrentPeriodName;
+        var currentPeriodName = ClientSpawner.CurrentPeriodType;
 
-        if (currentPeriodName == "Утро" && barrier.IsActive()) return true;
+        if (currentPeriodName == CalendarDayPeriodType.Morning && barrier.IsActive())
+            return true;
 
         var activeClients = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
-        if (currentPeriodName == "Ночь" && !barrier.IsActive() && activeClients.Length == 0) return true;
+        if (currentPeriodName == CalendarDayPeriodType.Night && !barrier.IsActive() && activeClients.Length == 0)
+            return true;
 
         return false;
     }

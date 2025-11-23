@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/Action_ServiceAtCashier.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_ServiceAtCashier", menuName = "Bureau/Actions/ServiceAtCashier")]
 public class Action_ServiceAtCashier : StaffAction

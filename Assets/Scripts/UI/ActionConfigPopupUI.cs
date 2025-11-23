@@ -5,7 +5,11 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Data.Calendar;
+using Managers;
 
+
+// todo: this one is actually staffConfigurator ui to select worker periodTypes
 public class ActionConfigPopupUI : MonoBehaviour
 {
     [Header("Ссылки на UI")]
@@ -24,8 +28,9 @@ public class ActionConfigPopupUI : MonoBehaviour
     [Header("Префабы и данные")]
     [SerializeField] private GameObject actionIconPrefab;
     [SerializeField] private ActionDatabase actionDatabase; // Оставляем на случай, если он нужен для чего-то еще
-
+    
     private StaffController currentStaff;
+    
     private RankData currentRank;
     private List<StaffAction> tempActiveActions = new List<StaffAction>();
 
@@ -43,10 +48,11 @@ public class ActionConfigPopupUI : MonoBehaviour
 
     public void OpenForStaff(StaffController staff)
     {
-        this.currentStaff = staff;
-        this.currentRank = staff.currentRank;
+        currentStaff = staff;
+        currentRank = staff.currentRank;
+        
         // Клонируем список, чтобы изменения были временными до сохранения
-        this.tempActiveActions = new List<StaffAction>(staff.activeActions ?? new List<StaffAction>());
+        tempActiveActions = new List<StaffAction>(staff.activeActions ?? new List<StaffAction>());
         gameObject.SetActive(true);
 
         //PopulateRoleDropdown();
@@ -55,7 +61,10 @@ public class ActionConfigPopupUI : MonoBehaviour
         {
              currentRoleText.text = GetRoleNameInRussian(staff.currentRole);
         }
-         else { Debug.LogError("CurrentRoleText не назначен в инспекторе ActionConfigPopupUI!"); }
+        else
+        {
+            Debug.LogError("CurrentRoleText не назначен в инспекторе ActionConfigPopupUI!");
+        }
 		
         PopulateShiftDropdown();
         PopulateWorkstationDropdown(currentStaff.currentRole);
@@ -109,11 +118,16 @@ public class ActionConfigPopupUI : MonoBehaviour
 
     private IEnumerator OnSave()
     {
-        // Сохраняем периоды работы
+        // todo: no reason to store and restore periods. can just check employees
         currentStaff.workPeriods.Clear();
-        if (ClientSpawner.Instance != null && ClientSpawner.Instance.mainCalendar != null && ClientSpawner.Instance.mainCalendar.periodSettings != null)
+        
+        // todo: I will rewrite this bs
+        if (ClientSpawner.Instance != null && ClientSpawner.Instance.mainCalendarDay != null &&
+            ClientSpawner.Instance.mainCalendarDay.periodSettings != null)
         {
-            List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings.Select(p => p.periodName).Where(n => !string.IsNullOrEmpty(n)).ToList();
+            // todo: this is pointless
+            var allPeriods = ClientSpawner.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
+            
             if (allPeriods.Any())
             {
                 int startIndex = shiftDropdown.value;
@@ -121,10 +135,18 @@ public class ActionConfigPopupUI : MonoBehaviour
                 for (int i = 0; i < duration; i++)
                 {
                     int periodIndex = (startIndex + i) % allPeriods.Count;
-                    currentStaff.workPeriods.Add(allPeriods[periodIndex]);
+                    currentStaff.WorkingPeriods.Add(allPeriods[periodIndex]);
                 }
-            } else { Debug.LogError("Не удалось сохранить расписание: список периодов в календаре пуст или некорректен."); }
-        } else { Debug.LogError("Не удалось сохранить расписание: ClientSpawner или его календарь не найдены."); }
+            }
+            else
+            {
+                Debug.LogError("Не удалось сохранить расписание: список периодов в календаре пуст или некорректен.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Не удалось сохранить расписание: ClientSpawner или его календарь не найдены.");
+        }
 
         // --- Используем текущую роль ---
         StaffController.Role currentRole = currentStaff.currentRole;
@@ -248,40 +270,37 @@ public class ActionConfigPopupUI : MonoBehaviour
         // При отмене не нужно обновлять HiringPanelUI, так как изменения не применяются
     }
 
-
+    // todo: looks like this is setting for ui
     private void PopulateShiftDropdown()
     {
         shiftDropdown.ClearOptions();
-        if (ClientSpawner.Instance == null || ClientSpawner.Instance.mainCalendar == null || ClientSpawner.Instance.mainCalendar.periodSettings == null)
+        
+        if (ClientSpawner.Instance == null || ClientSpawner.Instance.mainCalendarDay == null || ClientSpawner.Instance.mainCalendarDay.periodSettings == null)
         {
             Debug.LogError("Невозможно заполнить список смен: ClientSpawner или календарь не найдены.");
             return;
         }
 
-
-        // Получаем имена всех периодов из календаря
-        List<string> periodNames = ClientSpawner.Instance.mainCalendar.periodSettings
-                                        .Select(p => p.periodName)
-                                        .Where(n => !string.IsNullOrEmpty(n)) // Исключаем пустые имена
-                                        .ToList();
-
-        if (!periodNames.Any())
-        {
-             Debug.LogError("Невозможно заполнить список смен: в календаре нет периодов с именами.");
+        // todo: here is good idea to take settings from current spawner settings, because it can use some simplified staff, like exclude some part of periodTypes
+        var currentCalendarDay = ClientSpawner.Instance.mainCalendarDay.periodSettings;
+        var periodTypes = currentCalendarDay.Select(p => p.PeriodType).ToList();
+        if (!periodTypes.Any())
              return;
-        }
 
+        var periodNames = periodTypes.Select(t => t.ToString()).ToList();
         shiftDropdown.AddOptions(periodNames);
 
         // Устанавливаем текущий первый рабочий период сотрудника как выбранный
-        int currentIndex = 0; // По умолчанию - первый период
-        if (currentStaff != null && currentStaff.workPeriods.Any()) // Проверка на null и наличие периодов
+        
+        // todo: you can add/remove periods here. can just use FLAGS to handle this
+        var currentIndex = 0;
+        if (currentStaff != null && currentStaff.WorkingPeriods.Any())
         {
-            string firstWorkPeriod = currentStaff.workPeriods.First();
-            int foundIndex = periodNames.IndexOf(firstWorkPeriod);
-            if (foundIndex != -1) { // Если период найден в общем списке
+            var firstWorkPeriod = currentStaff.WorkingPeriods.First();
+            var foundIndex = periodTypes.IndexOf(firstWorkPeriod);
+            
+            if (foundIndex != -1)
                  currentIndex = foundIndex;
-            }
         }
         shiftDropdown.SetValueWithoutNotify(currentIndex); // Устанавливаем значение без вызова события
 
@@ -297,7 +316,7 @@ public class ActionConfigPopupUI : MonoBehaviour
             // Используем РЕАЛЬНЫЙ ранг сотрудника
             RankData staffRank = currentStaff?.currentRank;
 
-            if (staffRank == null || ClientSpawner.Instance?.mainCalendar?.periodSettings == null) // Проверка
+            if (staffRank == null || ClientSpawner.Instance?.mainCalendarDay?.periodSettings == null) // Проверка
             {
                  shiftDurationText.text = "Периодов: N/A";
                  // Debug.LogWarning("UpdateShiftInfoText: currentStaff, currentRank или календарь null!");
@@ -306,12 +325,10 @@ public class ActionConfigPopupUI : MonoBehaviour
             // --- ИЗМЕНЕНИЕ КОНЕЦ ---
 
             int duration = staffRank.workPeriodsCount;
-            List<string> allPeriods = ClientSpawner.Instance.mainCalendar.periodSettings
-                                        .Select(p => p.periodName)
-                                        .Where(n => !string.IsNullOrEmpty(n))
-                                        .ToList();
+            var periodSettings = ClientSpawner.Instance.mainCalendarDay.periodSettings;
+            var currentDayPeriods = periodSettings.Select(t => t.PeriodType).ToList();
 
-            if (!allPeriods.Any()) { // Проверка на пустой список периодов
+            if (!currentDayPeriods.Any()) { // Проверка на пустой список периодов
                  shiftDurationText.text = "Периодов: N/A (ошибка)";
                  return;
             }
@@ -319,15 +336,15 @@ public class ActionConfigPopupUI : MonoBehaviour
             int startIndex = shiftDropdown.value; // Индекс выбранного начального периода
 
             // Проверка, что startIndex в пределах списка
-            if (startIndex < 0 || startIndex >= allPeriods.Count) {
+            if (startIndex < 0 || startIndex >= currentDayPeriods.Count) {
                  startIndex = 0; // Сбрасываем на первый, если индекс некорректен
             }
 
 
-            string startPeriodName = allPeriods[startIndex];
+            var startPeriodName = currentDayPeriods[startIndex];
             // Вычисляем индекс последнего периода с учетом зацикливания
-            int endIndex = (startIndex + duration - 1 + allPeriods.Count) % allPeriods.Count; // Добавлено + allPeriods.Count для корректной работы с отрицательными остатками
-            string endPeriodName = allPeriods[endIndex];
+            int endIndex = (startIndex + duration - 1 + currentDayPeriods.Count) % currentDayPeriods.Count; // Добавлено + allPeriods.Count для корректной работы с отрицательными остатками
+            var endPeriodName = currentDayPeriods[endIndex];
 
             shiftDurationText.text = $"Периодов: {duration}. С {startPeriodName} по {endPeriodName}";
         } else {

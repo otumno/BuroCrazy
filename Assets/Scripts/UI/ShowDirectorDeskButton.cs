@@ -1,5 +1,6 @@
 // Файл: ShowDirectorDeskButton.cs
 
+using Managers;
 using UnityEngine;
 using UnityEngine.UI;
 

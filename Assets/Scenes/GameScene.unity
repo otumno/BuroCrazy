@@ -68675,7 +68675,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 1
-  m_AdditionalShaderChannelsFlag: 7
+  m_AdditionalShaderChannelsFlag: 31
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -99376,7 +99376,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Utilities.CalendarHelper
   Periods:
-  - periodName: "\u0423\u0442\u0440\u043E"
+  - PeriodType: 0
+    periodName: "\u0423\u0442\u0440\u043E"
     durationInSeconds: 60
     spawnRate: 7
     spawnBatchSize: 1
@@ -99406,7 +99407,8 @@ MonoBehaviour:
     - {fileID: 176077812}
     - {fileID: 1433176541}
     - {fileID: 918444580}
-  - periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
+  - PeriodType: 1
+    periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
     durationInSeconds: 120
     spawnRate: 8
     spawnBatchSize: 2
@@ -99438,7 +99440,8 @@ MonoBehaviour:
     - {fileID: 1588264261}
     - {fileID: 514594055}
     - {fileID: 176077812}
-  - periodName: "\u041E\u0431\u0435\u0434"
+  - PeriodType: 2
+    periodName: "\u041E\u0431\u0435\u0434"
     durationInSeconds: 60
     spawnRate: 12
     spawnBatchSize: 1
@@ -99470,7 +99473,8 @@ MonoBehaviour:
     - {fileID: 1588264261}
     - {fileID: 514594055}
     - {fileID: 176077812}
-  - periodName: "\u0414\u0435\u043D\u044C"
+  - PeriodType: 3
+    periodName: "\u0414\u0435\u043D\u044C"
     durationInSeconds: 120
     spawnRate: 8
     spawnBatchSize: 2
@@ -99502,7 +99506,8 @@ MonoBehaviour:
     - {fileID: 1588264261}
     - {fileID: 514594055}
     - {fileID: 176077812}
-  - periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
+  - PeriodType: 4
+    periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
     durationInSeconds: 90
     spawnRate: 4
     spawnBatchSize: 1
@@ -99529,7 +99534,8 @@ MonoBehaviour:
     - {fileID: 1588264261}
     - {fileID: 514594055}
     - {fileID: 176077812}
-  - periodName: "\u0412\u0435\u0447\u0435\u0440"
+  - PeriodType: 5
+    periodName: "\u0412\u0435\u0447\u0435\u0440"
     durationInSeconds: 60
     spawnRate: 15
     spawnBatchSize: 1
@@ -99558,7 +99564,8 @@ MonoBehaviour:
     - {fileID: 1588264261}
     - {fileID: 514594055}
     - {fileID: 176077812}
-  - periodName: "\u041D\u043E\u0447\u044C"
+  - PeriodType: 6
+    periodName: "\u041D\u043E\u0447\u044C"
     durationInSeconds: 60
     spawnRate: 0
     spawnBatchSize: 0
@@ -99762,7 +99769,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b140c5e3b020f6b44868908f9e471ea4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainCalendar: {fileID: 11400000, guid: ae60cb213c3e23a41bff4f3b5c8f40ae, type: 2}
+  mainCalendarDay: {fileID: 0}
   clientPrefab: {fileID: 7041728646939229016, guid: 461189addbf9ffc40b0b1c0ad5b76ee2, type: 3}
   spawnPoint: {fileID: 91450248}
   maxClientsOnScene: 100

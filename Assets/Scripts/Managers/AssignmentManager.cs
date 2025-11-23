@@ -1,51 +1,54 @@
-using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
-public class AssignmentManager : MonoBehaviour
+namespace Managers
 {
-    public static AssignmentManager Instance { get; private set; }
-
-    // Наш главный справочник: "На каком столе -> какой сотрудник назначен"
-    private Dictionary<ServicePoint, StaffController> assignments = new Dictionary<ServicePoint, StaffController>();
-
-    void Awake()
+    public class AssignmentManager : MonoBehaviour
     {
-        if (Instance != null) { Destroy(gameObject); } else { Instance = this; }
-    }
+        public static AssignmentManager Instance { get; private set; }
 
-    // Метод для назначения сотрудника на рабочее место
-    public void AssignStaffToWorkstation(StaffController staff, ServicePoint workstation)
-    {
-        if (staff == null || workstation == null) return;
+        // Наш главный справочник: "На каком столе -> какой сотрудник назначен"
+        private Dictionary<ServicePoint, StaffController> assignments = new Dictionary<ServicePoint, StaffController>();
 
-        // Если сотрудник раньше был на другом месте, освобождаем его
-        if (assignments.ContainsValue(staff))
+        void Awake()
         {
-            var oldWorkstation = assignments.First(kvp => kvp.Value == staff).Key;
-            assignments.Remove(oldWorkstation);
+            if (Instance != null) { Destroy(gameObject); } else { Instance = this; }
         }
 
-        assignments[workstation] = staff;
-        staff.assignedWorkstation = workstation;
-        Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} назначен на {workstation.name}");
-    }
+        // Метод для назначения сотрудника на рабочее место
+        public void AssignStaffToWorkstation(StaffController staff, ServicePoint workstation)
+        {
+            if (staff == null || workstation == null) return;
 
-    // Метод для снятия назначения
-    public void UnassignStaff(StaffController staff)
-    {
-        if (staff == null || !assignments.ContainsValue(staff)) return;
+            // Если сотрудник раньше был на другом месте, освобождаем его
+            if (assignments.ContainsValue(staff))
+            {
+                var oldWorkstation = assignments.First(kvp => kvp.Value == staff).Key;
+                assignments.Remove(oldWorkstation);
+            }
 
-        var workstation = assignments.First(kvp => kvp.Value == staff).Key;
-        assignments.Remove(workstation);
-        staff.assignedWorkstation = null;
-         Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} снят с рабочего места {workstation.name}");
-    }
+            assignments[workstation] = staff;
+            staff.assignedWorkstation = workstation;
+            Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} назначен на {workstation.name}");
+        }
 
-    // Получить сотрудника, назначенного на конкретное место
-    public StaffController GetAssignedStaff(ServicePoint workstation)
-    {
-        assignments.TryGetValue(workstation, out StaffController staff);
-        return staff;
+        // Метод для снятия назначения
+        public void UnassignStaff(StaffController staff)
+        {
+            if (staff == null || !assignments.ContainsValue(staff)) return;
+
+            var workstation = assignments.First(kvp => kvp.Value == staff).Key;
+            assignments.Remove(workstation);
+            staff.assignedWorkstation = null;
+            Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} снят с рабочего места {workstation.name}");
+        }
+
+        // Получить сотрудника, назначенного на конкретное место
+        public StaffController GetAssignedStaff(ServicePoint workstation)
+        {
+            assignments.TryGetValue(workstation, out StaffController staff);
+            return staff;
+        }
     }
 }

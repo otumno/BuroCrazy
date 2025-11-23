@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Actions/Action_CoverYourTracks.cs
 using UnityEngine;
 using System.Linq;
+using Managers;
 
 [CreateAssetMenu(fileName = "Action_CoverYourTracks", menuName = "Bureau/Actions/Tactic/CoverYourTracks")]
 public class CoverYourTracksAction : StaffAction

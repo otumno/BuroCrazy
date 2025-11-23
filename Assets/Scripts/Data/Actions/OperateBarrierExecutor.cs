@@ -1,6 +1,9 @@
 using System.Collections;
+using Data.Calendar;
+using Managers;
 using UnityEngine;
 
+// todo: can operate same logic as employees. just assign WorkingPeriods
 public class OperateBarrierExecutor : ActionExecutor
 {
     protected override IEnumerator ActionRoutine()
@@ -22,12 +25,12 @@ public class OperateBarrierExecutor : ActionExecutor
         yield return staff.StartCoroutine(guard.MoveToTarget(barrier.guardInteractionPoint.position, GuardMovement.GuardState.OperatingBarrier));
         yield return new WaitForSeconds(2.0f);
         
-        string currentPeriodName = ClientSpawner.CurrentPeriodName;
-        if (currentPeriodName == "Утро" && barrier.IsActive())
+        var currentPeriodType = ClientSpawner.CurrentPeriodType;
+        if (currentPeriodType == CalendarDayPeriodType.Morning && barrier.IsActive())
         {
             barrier.DeactivateBarrier();
         }
-        else if (currentPeriodName == "Ночь" && !barrier.IsActive())
+        else if (currentPeriodType == CalendarDayPeriodType.Night && !barrier.IsActive())
         {
             barrier.ActivateBarrier();
         }
