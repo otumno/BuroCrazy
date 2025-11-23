@@ -422,9 +422,9 @@ namespace Managers
                 }
 
                 for(int i = 0; i < UnassignedStaff.Count; i++) {
-                    if (UnassignedStaff[i] == null || UnassignedStaff[i].gameObject.GetInstanceID() == staffInstanceID) {
+                    if (UnassignedStaff[i] == null || UnassignedStaff[i].gameObject.GetInstanceID() == staffInstanceID)
+                    {
                         UnassignedStaff[i] = newControllerReference;
-                        updatedInUnassigned = true;
                         break;
                     }
                 }
@@ -817,7 +817,7 @@ namespace Managers
                 else
                 {
                     Debug.LogWarning($"Не удалось назначить расписание по умолчанию для {staffController.characterName}.");
-                    staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.FullDay;
+                    staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
                 }
                 // --- End Initialize ---
 

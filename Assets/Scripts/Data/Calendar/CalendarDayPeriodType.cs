@@ -13,7 +13,15 @@ namespace Data.Calendar
         LateDay     = 1 << 4,
         Evening     = 1 << 5,
         Night       = 1 << 6,
-        
-        FullDay     = Morning | EarlyDay | Noon | Day | LateDay | Evening
+    }
+
+    public static class CalendarDayPeriodTypeExtensions
+    {
+        public static CalendarDayPeriodType FullDay => CalendarDayPeriodType.Morning |
+                                                       CalendarDayPeriodType.EarlyDay |
+                                                       CalendarDayPeriodType.Noon |
+                                                       CalendarDayPeriodType.Day |
+                                                       CalendarDayPeriodType.LateDay |
+                                                       CalendarDayPeriodType.Evening;
     }
 }
