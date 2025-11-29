@@ -9,13 +9,23 @@ namespace UI
         [Tooltip("Ссылка на текстовое поле времени")]
         public TextMeshProUGUI timeDisplay;
 
-        void Update()
+        private float _nextRefreshTime;
+        
+        private const float REFRESH_COOLDOWN = 0.5f;
+
+        private void Update()
         {
-            if (timeDisplay == null || ClientSpawner.Instance == null) return;
+            if (Time.realtimeSinceStartup < _nextRefreshTime)
+                return;
+            
+            _nextRefreshTime = Time.realtimeSinceStartup + REFRESH_COOLDOWN;
+            if (timeDisplay == null || ClientSpawner.Instance == null)
+                return;
 
             // Получаем текущий план периода
             var currentPeriodPlan = ClientSpawner.Instance.GetCurrentPeriodPlan();
-            if (currentPeriodPlan == null) return;
+            if (currentPeriodPlan == null)
+                return;
 
             // Считаем время
             float duration = currentPeriodPlan.durationInSeconds;
@@ -25,11 +35,12 @@ namespace UI
             float timeLeft = Mathf.Max(0, duration - timer);
 
             // Форматируем
-            string formattedTime = string.Format("{0:00}:{1:00}", 
-                Mathf.FloorToInt(timeLeft / 60), 
-                Mathf.FloorToInt(timeLeft % 60));
+            var seconds = Mathf.FloorToInt(timeLeft % 60);
+            var minutes = Mathf.FloorToInt(timeLeft / 60);
+            var formattedTime = $"{minutes}:{seconds}";
 
-            timeDisplay.text = formattedTime;
+            if (formattedTime != timeDisplay.text)
+                timeDisplay.text = formattedTime;
         }
     }
 }
