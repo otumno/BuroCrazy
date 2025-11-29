@@ -13,23 +13,8 @@ MonoBehaviour:
   m_Name: MainGameCalendar
   m_EditorClassIdentifier: 
   periodSettings:
-  - PeriodType: 0
-    periodName: "\u0423\u0442\u0440\u043E"
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  - PeriodType: 1
+    durationInSeconds: 60
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -147,23 +132,8 @@ MonoBehaviour:
     - LAMP INNERHALL (8)
     - ACHIVE DAY
     - LAMP INNERHALL (14) SECRT
-  - PeriodType: 1
-    periodName: "\u041D\u0430\u0447\u0430\u043B\u043E \u0434\u043D\u044F"
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 120
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  - PeriodType: 2
+    durationInSeconds: 60
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -265,23 +235,8 @@ MonoBehaviour:
     - LAMP INNERHALL (10)
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
-  - PeriodType: 2
-    periodName: "\u041E\u0431\u0435\u0434"
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  - PeriodType: 4
+    durationInSeconds: 0
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -383,23 +338,8 @@ MonoBehaviour:
     - LAMP INNERHALL (10)
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
-  - PeriodType: 3
-    periodName: "\u0414\u0435\u043D\u044C"
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 120
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  - PeriodType: 8
+    durationInSeconds: 60
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -501,23 +441,8 @@ MonoBehaviour:
     - LAMP INNERHALL (10)
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
-  - PeriodType: 4
-    periodName: "\u041A\u043E\u043D\u0435\u0446 \u0434\u043D\u044F"
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 90
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  - PeriodType: 16
+    durationInSeconds: 60
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -614,23 +539,8 @@ MonoBehaviour:
     - LAMP INNERHALL (10)
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
-  - PeriodType: 5
-    periodName: "\u0412\u0435\u0447\u0435\u0440"
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  - PeriodType: 32
+    durationInSeconds: 60
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -729,23 +639,8 @@ MonoBehaviour:
     - LAMP INNERHALL (10)
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
-  - PeriodType: 6
-    periodName: "\u041D\u043E\u0447\u044C"
-    durationInSeconds:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 1
-        value: 60
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  - PeriodType: 64
+    durationInSeconds: 60
     clientCount:
       serializedVersion: 2
       m_Curve:
