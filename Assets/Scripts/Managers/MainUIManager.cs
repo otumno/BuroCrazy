@@ -1,4 +1,5 @@
 using System.Collections;
+using Data.Saves;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -37,22 +38,22 @@ namespace Managers
 	
         void Update()
         {
-            if (Input.GetKeyDown(KeyCode.Space)) 
+            if (!Input.GetKeyDown(KeyCode.Space))
+                return;
+            
+            StartOfDayPanel deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+            bool isDirectorDeskOpen = deskPanel != null && deskPanel.gameObject.activeInHierarchy;
+            
+            bool isAnyOtherMajorPanelOpen = false; 
+            
+            if (isDirectorDeskOpen || isAnyOtherMajorPanelOpen)
             {
-                StartOfDayPanel deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
-                bool isDirectorDeskOpen = deskPanel != null && deskPanel.gameObject.activeInHierarchy;
-            
-                bool isAnyOtherMajorPanelOpen = false; 
-            
-                if (isDirectorDeskOpen || isAnyOtherMajorPanelOpen)
-                {
-                    //
-                }
-                else
-                {
-                    bool isPaused = Time.timeScale == 0f;
-                    ShowPausePanel(!isPaused);
-                }
+                //
+            }
+            else
+            {
+                bool isPaused = Time.timeScale == 0f;
+                ShowPausePanel(!isPaused);
             }
         }
 
@@ -102,11 +103,23 @@ namespace Managers
         }
     
         #region Остальные методы (без изменений)
-        private IEnumerator UnveilSequence(StartOfDayPanel startOfDayPanel, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController)
+        
+        // todo: this script initializes the whole game
+        private IEnumerator UnveilSequence(StartOfDayPanel startOfDayPanel,
+                                           OrderSelectionUI orderSelectionUI,
+                                           DaySplashScreenController daySplashScreenController)
         {
             PauseGame(true);
 
-            if (SaveLoadManager.Instance.isNewGame) { DirectorManager.Instance.ResetState(); } else { SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot()); }
+            if (SaveLoadManager.Instance.isNewGame)
+            {
+                DirectorManager.Instance.ResetState();
+            }
+            else
+            {
+                var slotIndex = SaveLoadManager.Instance.GetCurrentSlot();
+                SaveLoadManager.Instance.LoadGame(slotIndex);
+            }
 
             DirectorManager.Instance.PrepareDay();
 
@@ -136,7 +149,10 @@ namespace Managers
 
             yield return new WaitForSecondsRealtime(splashScreenDwellTime);
 
-            if (daySplashScreenController != null) { yield return daySplashScreenController.Fade(false); }
+            if (daySplashScreenController != null)
+            {
+                yield return daySplashScreenController.Fade(false);
+            }
 
             if (orderSelectionUI != null) {
                 var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
@@ -146,6 +162,7 @@ namespace Managers
 
             isTransitioning = false;
         }
+        
         public void OnSaveSlotClicked(int slotIndex)
         {
             if (isTransitioning) return;
@@ -153,6 +170,7 @@ namespace Managers
             SaveLoadManager.Instance.isNewGame = false;
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
+        
         public void OnNewGameClicked(int slotIndex)
         {
             if (isTransitioning) return;
@@ -162,11 +180,13 @@ namespace Managers
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
+        
         public void StartOrResumeGameplay()
         {
             if (isTransitioning) return;
             StartCoroutine(StartGameplaySequence());
         }
+        
         private IEnumerator StartGameplaySequence()
         {
             isTransitioning = true;
@@ -214,6 +234,7 @@ namespace Managers
                 if (pausePanel != null) pausePanel.SetActive(false);
             }
         }
+        
         public void GoToMainMenu()
         {
             if (isTransitioning) return;
@@ -236,17 +257,21 @@ namespace Managers
         
             StartCoroutine(LoadSceneRoutine(mainMenuSceneName));
         }
+        
         public void TriggerNextDayTransition()
         {
             if (isTransitioning) return;
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
+        
         public void PauseGame(bool playMusic = true)
         {
             Time.timeScale = 0f;
             if (playMusic && MusicPlayer.Instance != null) MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
         }
+        
         public void ResumeGame() { Time.timeScale = 1f; }
+        
         #endregion
     }
 }

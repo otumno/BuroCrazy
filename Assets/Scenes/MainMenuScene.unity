@@ -8168,6 +8168,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
+    - rid: -2
+      type: {class: , ns: , asm: }
     - rid: 7911689084870852683
       type: {class: TutorialContextGroup, ns: , asm: Assembly-CSharp}
       data:
@@ -9781,7 +9783,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7573636373502958441, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_Name
-      value: '[SYSTEMS]'
+      value: '[COMMON_SYSTEMS]'
       objectReference: {fileID: 0}
     - target: {fileID: 8795954490284929068, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: rankDatabase.Array.size

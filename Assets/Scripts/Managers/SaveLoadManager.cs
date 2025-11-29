@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Data.Saves;
 using UnityEngine;
 
 namespace Managers
@@ -48,11 +49,11 @@ namespace Managers
                 data.completedOneTimeOrderNames = DirectorManager.Instance.completedOneTimeOrders.Select(order => order.name).ToList();
             }
 
-            data.allStaffData = new List<StaffSaveData>();
+            data.allStaffData = new List<StaffData>();
             StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
             foreach (var staffMember in allStaff)
             {
-                StaffSaveData staffData = new StaffSaveData();
+                StaffData staffData = new StaffData();
                 staffData.characterName = staffMember.gameObject.name;
                 staffData.position = staffMember.transform.position;
                 staffData.stressLevel = staffMember.GetCurrentFrustration();
@@ -62,12 +63,12 @@ namespace Managers
                 data.allStaffData.Add(staffData);
             }
 
-            data.allDocumentStackData = new List<DocumentStackSaveData>();
+            data.allDocumentStackData = new List<DocumentData>();
             DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
             foreach (var stack in allStacks)
             {
                 if (ArchiveManager.Instance != null && stack == ArchiveManager.Instance.mainDocumentStack) continue;
-                DocumentStackSaveData stackData = new DocumentStackSaveData();
+                DocumentData stackData = new DocumentData();
                 stackData.stackOwnerName = stack.gameObject.name;
                 stackData.documentCount = stack.CurrentSize;
                 data.allDocumentStackData.Add(stackData);
@@ -115,6 +116,7 @@ namespace Managers
                 string json = File.ReadAllText(path);
                 SaveData data = JsonUtility.FromJson<SaveData>(json);
 
+                
                 ClientSpawner.Instance.SetDay(data.day);
                 PlayerWallet.Instance.SetMoney(data.money);
                 ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);

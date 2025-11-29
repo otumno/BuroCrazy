@@ -5,18 +5,33 @@ using UnityEngine;
 
 public class DebugTimeSkip : MonoBehaviour
 {
-    [Tooltip("Клавиша для переключения на следующий период")]
-    public KeyCode skipKey = KeyCode.F10;
+    [Header("Dependencies")]
+    [SerializeField]
+    private SingleDaySystem singleDaySystem;
 
-    void Update()
+    [Header("Keys")]
+    [SerializeField]
+    public KeyCode _skipPeriodKey = KeyCode.F10;
+    [SerializeField]
+    public KeyCode _skipDayKey = KeyCode.F11;
+
+#if DEBUG_ENABLED
+    private void Update()
     {
-        if (Input.GetKeyDown(skipKey))
+        if (!singleDaySystem || !singleDaySystem.isRunning)
+            return;
+
+        if (Input.GetKeyDown(_skipDayKey))
         {
-            if (ClientSpawner.Instance != null)
-            {
-                Debug.Log($"<color=orange>DEBUG: Принудительный переход на следующий период...</color>");
-                ClientSpawner.Instance.GoToNextPeriod();
-            }
+            singleDaySystem.ForceFinishDay();
+            return;
+        }
+
+        if (Input.GetKeyDown(_skipPeriodKey))
+        {
+            singleDaySystem.ForceFinishPeriod();
+            return;
         }
     }
+#endif
 }

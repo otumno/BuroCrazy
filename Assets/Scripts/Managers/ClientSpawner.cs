@@ -12,8 +12,8 @@ namespace Managers
     {
         #region Fields and Properties
         
-        [Header("Настройки Календаря")]
-        public CalendarDay mainCalendarDay;
+        [SerializeField]
+        private SingleDaySystem singleDaySystem;
 
         [Header("Основные настройки спавна")]
         public GameObject clientPrefab;
@@ -41,18 +41,14 @@ namespace Managers
         public TextMeshProUGUI timeDisplay;
         public UnityEngine.Rendering.Universal.Light2D globalLight;
         public TextMeshProUGUI dayCounterText;
+        
         [Header("Настройки звука толпы")]
         public AudioSource crowdAudioSource;
         public int minClientsForCrowdSound = 3;
         public int maxClientsForFullVolume = 15;
 
-        public static CalendarDayPeriodType CurrentPeriodType { get; private set; }  // todo: introduce currentPeriodPlan.CurrentPeriodType
-        private int currentPeriodIndex = 0;
-    
-        private PeriodSettings previousPeriodPlan;
-        private float periodTimer;
         private Coroutine lightManagementCoroutine, continuousSpawnCoroutine;
-        private int dayCounter = 1;
+        
         public static ClientSpawner Instance { get; private set; }
     
         private float globalSpawnRateMultiplier = 1f;
@@ -73,49 +69,18 @@ namespace Managers
 
         void Start()
         {
-            if (mainCalendarDay == null || mainCalendarDay.periodSettings.Count == 0)
-            {
-                Debug.LogError("Календарь (Main Calendar) не назначен или пуст в ClientSpawner! Работа невозможна.", this);
-                enabled = false;
-                return;
-            }
-
-            // --- ВОЗВРАЩАЕМ НАДЕЖНУЮ СХЕМУ ЗАПУСКА ---
-
-            // 1. Начинаем с "нулевого" дня. Это технический день, ночь ПЕРЕД первым днем.
-            dayCounter = 0;
-
-            // 2. Находим индекс "Ночи"
-            var nightIndex = mainCalendarDay.periodSettings.FindIndex(p => p.PeriodType == CalendarDayPeriodType.Night);
-            if (nightIndex == -1)
-            {
-                nightIndex = mainCalendarDay.periodSettings.Count - 1; // Если "Ночь" не найдена, берем просто последний период
-            }
-
-            // 3. Устанавливаем текущий период на "Ночь"
-            currentPeriodIndex = nightIndex;
-            PeriodSettings nightPeriodPlan = mainCalendarDay.periodSettings[nightIndex];
-
-            // 4. Устанавливаем таймер так, чтобы до конца "Ночи" оставалось 10 секунд
-            //    Длительность ночи мы считаем для будущего ДНЯ 1.
-            var duration = nightPeriodPlan.durationInSeconds;
-            periodTimer = Mathf.Max(0, duration - 10f);
-
-            // 5. Инициализируем "предыдущий" период, чтобы был плавный переход от ночи к утру
-            previousPeriodPlan = nightPeriodPlan;
-
-            // 6. Настраиваем начальное освещение вручную, чтобы избежать "скачка" при старте
-            if (globalLight != null)
-            {
-                globalLight.color = nightPeriodPlan.lightingSettings.lightColor;
-                globalLight.intensity = nightPeriodPlan.lightingSettings.lightIntensity;
-            }
-
-            foreach (var lightName in nightPeriodPlan.lightsToEnableNames)
-            {
-                var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
-                if (lightObj != null) lightObj.SetActive(true);
-            }
+            // todo: move to lightManager
+            // if (globalLight != null)
+            // {
+            //     globalLight.color = nightPeriodPlan.lightingSettings.lightColor;
+            //     globalLight.intensity = nightPeriodPlan.lightingSettings.lightIntensity;
+            // }
+            //
+            // foreach (var lightName in nightPeriodPlan.lightsToEnableNames)
+            // {
+            //     var lightObj = allControllableLights.FirstOrDefault(l => l.name == lightName);
+            //     if (lightObj != null) lightObj.SetActive(true);
+            // }
 
             // 7. Запускаем "Ночь" без сброса таймера и обновляем UI
             UpdateDayCounterUI();
@@ -124,11 +89,8 @@ namespace Managers
 
         void Update()
         {
-            // todo: pause system with "isPaused" setting
-            if (Time.timeScale == 0f)
-                return;
-        
-            periodTimer += Time.deltaTime;
+            
+            
             UpdateUITimer();
             UpdateLighting();
     
@@ -146,51 +108,20 @@ namespace Managers
 
         public void GoToNextPeriod()
         {
-            CalendarDayPeriodType previousPeriodType;
-        
-            var todayPeriods = mainCalendarDay?.periodSettings;
+            UpdateDayCounterUI();
+            ClientQueueManager.Instance.ResetQueueNumber();
+            PlanDirectorClientSpawns();
 
-            if (todayPeriods != null && todayPeriods.Count > 0)
-            {
-                if (currentPeriodIndex >= 0 && currentPeriodIndex < todayPeriods.Count)
-                {
-                    previousPeriodType = todayPeriods[currentPeriodIndex].PeriodType;
-                    previousPeriodPlan = todayPeriods[currentPeriodIndex];
-                }
-
-                currentPeriodIndex = (currentPeriodIndex + 1) % todayPeriods.Count;
-                periodTimer = 0;
-            }
-
-            // Увеличиваем счетчик дня, ТОЛЬКО КОГДА начинается новый цикл (период с индексом 0 - "Утро")
-            if (currentPeriodIndex == 0)
-            {
-                dayCounter++; // На старте dayCounter был 0, теперь станет 1. В следующий раз станет 2.
-                UpdateDayCounterUI();
-                ClientQueueManager.Instance.ResetQueueNumber();
-                PlanDirectorClientSpawns();
-            }
-
-            if (todayPeriods != null)
-            {
-                UpdateStaffShifts(todayPeriods[currentPeriodIndex].PeriodType);
-            }
+            // todo:
+            // UpdateStaffShifts();
 
             StartNewPeriod();
         }
 
         void StartNewPeriod(bool resetTimer = true)
         {
-            if (resetTimer) periodTimer = 0;
-        
-            PeriodSettings currentPeriodPlan = GetCurrentPeriodPlan();
-            if (currentPeriodPlan == null) return;
-
-            CurrentPeriodType = currentPeriodPlan.PeriodType;
-
-            if (continuousSpawnCoroutine != null) StopCoroutine(continuousSpawnCoroutine);
-        
-            ToggleStaffLights(CurrentPeriodType.IsNight());
+            if (continuousSpawnCoroutine != null)
+                StopCoroutine(continuousSpawnCoroutine);
 
             // todo: it seems this should be somewhere else
             ApplySpecialEvent(SpecialEventType.None);
@@ -426,18 +357,6 @@ namespace Managers
             SpawnClientBatch(1, true);
         }
 
-        void ToggleStaffLights(bool enable)
-        {
-            var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
-            foreach(var staff in allStaff)
-            {
-                if (staff is GuardMovement guard && guard.nightLight != null)
-                    guard.nightLight.SetActive(enable);
-                else if (staff is ServiceWorkerController worker && worker.nightLight != null)
-                    worker.nightLight.SetActive(enable);
-            }
-        }
-
         void EvacuateAllClients(bool force = false)
         {
             ClientPathfinding[] allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
@@ -452,7 +371,7 @@ namespace Managers
         }
     
         IEnumerator SpawnCrowdsDuringPeriod(PeriodSettings periodPlan) 
-        { 
+        {
             int crowdCount = Mathf.RoundToInt(periodPlan.numberOfCrowdsToSpawn.Evaluate(dayCounter));
             if (crowdCount <= 0) yield break;
 
@@ -468,7 +387,9 @@ namespace Managers
     
         void CheckCrowdDensity() 
         { 
-            if (crowdAudioSource == null || waitingZoneObject == null) return;
+            if (crowdAudioSource == null || waitingZoneObject == null)
+                return;
+            
             int clientCount = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length; 
             if (clientCount >= minClientsForCrowdSound) 
             { 

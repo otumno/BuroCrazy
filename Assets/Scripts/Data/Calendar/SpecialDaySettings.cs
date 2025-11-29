@@ -1,11 +1,13 @@
+using System;
 using System.Collections.Generic;
 
 namespace Data.Calendar
 {
-    [System.Serializable]
+    [Serializable]
     public class SpecialDaySettings
     {
-        public SpecialEventType specialEventType = SpecialEventType.None;
-        public List<PeriodSettings> periodSettings = new List<PeriodSettings>();
+        public float Weight;
+        public SpecialEventType EventType = SpecialEventType.None;
+        public List<PeriodSettings> Settings = new List<PeriodSettings>();
     }
 }

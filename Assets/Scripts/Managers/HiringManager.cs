@@ -15,6 +15,9 @@ namespace Managers
     [System.Serializable]
     public class HiringManager : MonoBehaviour
     {
+        [SerializeField]
+        private SingleDaySystem _singleDaySystem;
+        
         public static HiringManager Instance { get; set; }
 
         [Header("Префабы сотрудников")]
@@ -485,27 +488,28 @@ namespace Managers
             }
         }
 
+        // todo: fix
         public void ActivateAllScheduledStaff()
         {
-            var periodType = ClientSpawner.CurrentPeriodType;
-
-            Debug.Log($"<color=orange>ЗАПУСК AI:</color> Активация сотрудников для периода '{periodType}'...");
-            
-            foreach (var staff in AllStaff.ToList())
-            {
-                if (staff == null)
-                {
-                    Debug.LogError($"Staff is null! Clean up!");
-                    continue;
-                }
-
-                var isScheduledNow = staff.WorkShiftMask.HasFlag(periodType);
-                if (isScheduledNow && !staff.IsOnDuty())
-                {
-                    Debug.Log($" -> Активация смены для {staff.characterName} (Роль: {staff.currentRole})");
-                    staff.StartShift();
-                }
-            }
+            // var periodType = ClientSpawner.CurrentPeriodType;
+            //
+            // Debug.Log($"<color=orange>ЗАПУСК AI:</color> Активация сотрудников для периода '{periodType}'...");
+            //
+            // foreach (var staff in AllStaff.ToList())
+            // {
+            //     if (staff == null)
+            //     {
+            //         Debug.LogError($"Staff is null! Clean up!");
+            //         continue;
+            //     }
+            //
+            //     var isScheduledNow = staff.WorkShiftMask.HasFlag(periodType);
+            //     if (isScheduledNow && !staff.IsOnDuty())
+            //     {
+            //         Debug.Log($" -> Активация смены для {staff.characterName} (Роль: {staff.currentRole})");
+            //         staff.StartShift();
+            //     }
+            // }
             
             Debug.Log($"<color=orange>Активация смен завершена.</color>");
         }
@@ -806,9 +810,9 @@ namespace Managers
                 
                 // Assign Default Schedule
                 staffController.WorkShiftMask = 0; // Сбрасываем
-                if (ClientSpawner.Instance?.mainCalendarDay?.periodSettings != null)
+                if (_singleDaySystem?.periods != null)
                 {
-                    var periodSettings = ClientSpawner.Instance.mainCalendarDay.periodSettings;
+                    var periodSettings = _singleDaySystem?.periods;
                     foreach (var p in periodSettings)
                     {
                         staffController.WorkShiftMask |= p.PeriodType;
@@ -835,7 +839,7 @@ namespace Managers
 
                 // todo: dafaq? I already saw code that starts and ends shifts
                 // --- Start Shift if Applicable ---
-                var periodType = ClientSpawner.CurrentPeriodType;
+                var periodType = _singleDaySystem.periodType;
                 if (staffController.WorkShiftMask.HasFlag(periodType))
                 {
                     staffController.StartShift();
@@ -928,7 +932,7 @@ namespace Managers
 
         public void CheckAllStaffShiftsImmediately()
         {
-            var periodType = ClientSpawner.CurrentPeriodType;
+            var periodType = _singleDaySystem.periodType;
 
             Debug.Log($"<color=orange>ПРОВЕРКА СМЕН:</color> Период '{periodType}'. Сотрудников в AllStaff: {AllStaff.Count}");
 

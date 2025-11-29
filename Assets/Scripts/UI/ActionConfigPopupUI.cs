@@ -5,13 +5,15 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Data.Calendar;
 using Managers;
-
 
 // todo: this one is actually staffConfigurator ui to select worker periodTypes
 public class ActionConfigPopupUI : MonoBehaviour
 {
+    [Header("Ссылки на манагеры")]
+    [SerializeField]
+    private SingleDaySystem singleDaySystem;
+    
     [Header("Ссылки на UI")]
     [SerializeField] private TextMeshProUGUI currentRoleText;
     [SerializeField] private TMP_Dropdown shiftDropdown;
@@ -115,16 +117,13 @@ public class ActionConfigPopupUI : MonoBehaviour
         UpdateUIState();
     }
 
-
     private IEnumerator OnSave()
     {
         currentStaff.WorkShiftMask = 0; 
         
-        if (ClientSpawner.Instance != null && ClientSpawner.Instance.mainCalendarDay != null &&
-            ClientSpawner.Instance.mainCalendarDay.periodSettings != null)
+        if (singleDaySystem.periods != null)
         {
-            var allPeriods = ClientSpawner.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
-            
+            var allPeriods = singleDaySystem.periods.Select(p => p.PeriodType).ToList();
             if (allPeriods.Any())
             {
                 int startIndex = shiftDropdown.value;
@@ -253,20 +252,18 @@ public class ActionConfigPopupUI : MonoBehaviour
         // При отмене не нужно обновлять HiringPanelUI, так как изменения не применяются
     }
 
-    // todo: looks like this is setting for ui
     private void PopulateShiftDropdown()
     {
         shiftDropdown.ClearOptions();
-        
-        if (ClientSpawner.Instance == null || ClientSpawner.Instance.mainCalendarDay == null || ClientSpawner.Instance.mainCalendarDay.periodSettings == null)
+
+        if (!singleDaySystem)
         {
-            Debug.LogError("Невозможно заполнить список смен: ClientSpawner или календарь не найдены.");
+            Debug.LogError($"_singleDayTimeSystem == null! check SerializeField reference");
             return;
         }
 
-        // todo: here is good idea to take settings from current spawner settings, because it can use some simplified staff, like exclude some part of periodTypes
-        var currentCalendarDay = ClientSpawner.Instance.mainCalendarDay.periodSettings;
-        var periodTypes = currentCalendarDay.Select(p => p.PeriodType).ToList();
+        var periods = singleDaySystem.periods;
+        var periodTypes = periods.Select(p => p.PeriodType).ToList();
         if (!periodTypes.Any())
              return;
 
@@ -293,7 +290,6 @@ public class ActionConfigPopupUI : MonoBehaviour
         UpdateShiftInfoText(); // Обновляем текст с длительностью
     }
 
-
     private void UpdateShiftInfoText()
     {
         // --- ИЗМЕНЕНИЕ НАЧАЛО (Добавлена проверка на null) ---
@@ -302,7 +298,7 @@ public class ActionConfigPopupUI : MonoBehaviour
             // Используем РЕАЛЬНЫЙ ранг сотрудника
             RankData staffRank = currentStaff?.currentRank;
 
-            if (staffRank == null || ClientSpawner.Instance?.mainCalendarDay?.periodSettings == null) // Проверка
+            if (staffRank == null || singleDaySystem?.periods == null) // Проверка
             {
                  shiftDurationText.text = "Периодов: N/A";
                  // Debug.LogWarning("UpdateShiftInfoText: currentStaff, currentRank или календарь null!");
@@ -311,7 +307,7 @@ public class ActionConfigPopupUI : MonoBehaviour
             // --- ИЗМЕНЕНИЕ КОНЕЦ ---
 
             int duration = staffRank.workPeriodsCount;
-            var periodSettings = ClientSpawner.Instance.mainCalendarDay.periodSettings;
+            var periodSettings = singleDaySystem?.periods;
             var currentDayPeriods = periodSettings.Select(t => t.PeriodType).ToList();
 
             if (!currentDayPeriods.Any()) { // Проверка на пустой список периодов
