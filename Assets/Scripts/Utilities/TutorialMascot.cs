@@ -484,10 +484,12 @@ namespace Utilities
 
                 Debug.Log($"[TutorialMascot] RunIdleLogicForContext: Показ Idle сообщения: '{message}'");
             
-                Sprite emotion = (context != null) ? context.greetingEmotion : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingEmotion : null;
-                Sprite pointer = (context != null) ? context.greetingPointerSprite : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingPointerSprite : null;
-                float pointerRot = (context != null) ? context.greetingPointerRotation : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingPointerRotation : 0f;
-                Vector2 pointerOffset = (context != null) ? context.greetingPointerOffset : GetGreetingListFromConfig(null).Any() ? currentConfig.contextGroups.First(g => g!=null && !g.muteTutorial).greetingPointerOffset : Vector2.zero;
+        var defaultGroup = currentConfig.contextGroups.FirstOrDefault(g => g != null && !g.muteTutorial);
+
+					Sprite emotion = (context != null) ? context.greetingEmotion : (defaultGroup != null ? defaultGroup.greetingEmotion : null);
+					Sprite pointer = (context != null) ? context.greetingPointerSprite : (defaultGroup != null ? defaultGroup.greetingPointerSprite : null);
+					float pointerRot = (context != null) ? context.greetingPointerRotation : (defaultGroup != null ? defaultGroup.greetingPointerRotation : 0f);
+					Vector2 pointerOffset = (context != null) ? context.greetingPointerOffset : (defaultGroup != null ? defaultGroup.greetingPointerOffset : Vector2.zero);
 
                 yield return StartCoroutine(TeleportToSpot(
                     randomIdleSpot.position,
