@@ -20,7 +20,7 @@ public class OperateBarrierAction : StaffAction
         var clientSpawner = ClientSpawner.Instance;
         if (clientSpawner == null) return false;
 
-        var currentPeriodType = ClientSpawner.CurrentPeriodType;
+        var currentPeriodType = DayPeriodManager.Instance.CurrentPeriodType;
 
         // Условие 1: Сейчас "Утро", и барьер АКТИВЕН (закрыт) -> нужно ОТКРЫТЬ
         if (currentPeriodType == CalendarDayPeriodType.Morning && barrier.IsActive())

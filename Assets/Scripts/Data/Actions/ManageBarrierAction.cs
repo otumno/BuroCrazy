@@ -12,7 +12,7 @@ public class ManageBarrierAction : StaffAction
         var barrier = GuardManager.Instance.securityBarrier;
         if (barrier == null) return false;
 
-        var currentPeriodName = ClientSpawner.CurrentPeriodType;
+        var currentPeriodName = DayPeriodManager.Instance.CurrentPeriodType;
 
         if (currentPeriodName == CalendarDayPeriodType.Morning && barrier.IsActive())
             return true;

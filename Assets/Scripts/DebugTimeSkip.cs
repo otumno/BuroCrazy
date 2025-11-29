@@ -12,10 +12,10 @@ public class DebugTimeSkip : MonoBehaviour
     {
         if (Input.GetKeyDown(skipKey))
         {
-            if (ClientSpawner.Instance != null)
+            if (DayPeriodManager.Instance != null)
             {
                 Debug.Log($"<color=orange>DEBUG: Принудительный переход на следующий период...</color>");
-                ClientSpawner.Instance.GoToNextPeriod();
+                DayPeriodManager.Instance.SkipCurrentPeriod();
             }
         }
     }

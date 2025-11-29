@@ -120,7 +120,7 @@ namespace Managers
             if (daySplashScreenController != null)
             {
                 daySplashScreenController.gameObject.SetActive(true);
-                daySplashScreenController.Setup(ClientSpawner.Instance.GetCurrentDay()); 
+                daySplashScreenController.Setup(CalendarManager.Instance.CurrentDay); 
                 daySplashScreenController.GetComponent<CanvasGroup>().alpha = 1f;
             }
 

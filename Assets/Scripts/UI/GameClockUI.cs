@@ -6,41 +6,33 @@ namespace UI
 {
     public class GameClockUI : MonoBehaviour
     {
-        [Tooltip("Ссылка на текстовое поле времени")]
+        [Tooltip("Ссылка на компонент TextMeshPro для отображения времени")]
         public TextMeshProUGUI timeDisplay;
 
-        private float _nextRefreshTime;
-        
-        private const float REFRESH_COOLDOWN = 0.5f;
-
-        private void Update()
+        void Update()
         {
-            if (Time.realtimeSinceStartup < _nextRefreshTime)
-                return;
+            // Проверки на наличие ссылок
+            if (timeDisplay == null || DayPeriodManager.Instance == null) return;
+
+            // Получаем настройки текущего периода
+            var currentPeriodPlan = DayPeriodManager.Instance.CurrentPeriodConfig;
             
-            _nextRefreshTime = Time.realtimeSinceStartup + REFRESH_COOLDOWN;
-            if (timeDisplay == null || ClientSpawner.Instance == null)
-                return;
+            // Если игра еще не инициализировалась, выходим
+            if (currentPeriodPlan == null) return;
 
-            // Получаем текущий план периода
-            var currentPeriodPlan = ClientSpawner.Instance.GetCurrentPeriodPlan();
-            if (currentPeriodPlan == null)
-                return;
-
-            // Считаем время
+            // Получаем данные о времени
             float duration = currentPeriodPlan.durationInSeconds;
-            float timer = ClientSpawner.Instance.GetPeriodTimer();
+            float timer = DayPeriodManager.Instance.PeriodTimer;
             
-            // Вычисляем остаток
+            // Вычисляем оставшееся время
             float timeLeft = Mathf.Max(0, duration - timer);
 
-            // Форматируем
-            var seconds = Mathf.FloorToInt(timeLeft % 60);
-            var minutes = Mathf.FloorToInt(timeLeft / 60);
-            var formattedTime = $"{minutes}:{seconds}";
+            // Форматируем в ММ:СС
+            string formattedTime = string.Format("{0:00}:{1:00}", 
+                Mathf.FloorToInt(timeLeft / 60), 
+                Mathf.FloorToInt(timeLeft % 60));
 
-            if (formattedTime != timeDisplay.text)
-                timeDisplay.text = formattedTime;
+            timeDisplay.text = formattedTime;
         }
     }
 }

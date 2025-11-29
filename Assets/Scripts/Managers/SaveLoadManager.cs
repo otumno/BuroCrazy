@@ -38,7 +38,7 @@ namespace Managers
             currentSlotIndex = slotIndex;
             SaveData data = new SaveData();
 
-            data.day = ClientSpawner.Instance.GetCurrentDay();
+            data.day = CalendarManager.Instance.CurrentDay;
             data.money = PlayerWallet.Instance.GetCurrentMoney();
             data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
 
@@ -115,7 +115,7 @@ namespace Managers
                 string json = File.ReadAllText(path);
                 SaveData data = JsonUtility.FromJson<SaveData>(json);
 
-                ClientSpawner.Instance.SetDay(data.day);
+                CalendarManager.Instance.SetDay(data.day);
                 PlayerWallet.Instance.SetMoney(data.money);
                 ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
 

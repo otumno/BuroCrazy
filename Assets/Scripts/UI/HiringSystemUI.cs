@@ -48,7 +48,7 @@ public class HiringSystemUI : MonoBehaviour // This line is correct
     private void OnEnable()
     {
         // Безопасно получаем текущий день
-        int currentDay = ClientSpawner.Instance != null ? ClientSpawner.Instance.GetCurrentDay() : 1;
+        int currentDay = CalendarManager.Instance != null ? CalendarManager.Instance.CurrentDay : 1;
         // Debug.Log($"[HiringSystemUI] OnEnable. Current Day: {currentDay}, Last Generated Day: {lastGeneratedDay}"); // Отладка
 
         // Генерируем новых кандидатов ТОЛЬКО если это новый день
