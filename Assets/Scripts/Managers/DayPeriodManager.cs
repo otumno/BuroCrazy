@@ -35,7 +35,9 @@ namespace Managers
 
         private void InitializeFirstPeriod()
         {
-            if (mainCalendarDay == null || mainCalendarDay.periodSettings.Count == 0) return;
+            if (mainCalendarDay == null || mainCalendarDay.periodSettings.Count == 0)
+                return;
+            
             var nightIndex = mainCalendarDay.periodSettings.FindIndex(p => p.PeriodType == CalendarDayPeriodType.Night);
             if (nightIndex == -1) nightIndex = mainCalendarDay.periodSettings.Count - 1;
 
@@ -50,12 +52,16 @@ namespace Managers
         private void SwitchToNextPeriod()
         {
             var periods = mainCalendarDay.periodSettings;
-            if (periods == null || periods.Count == 0) return;
-
+            if (periods == null || periods.Count == 0)
+                return;
+            
             PreviousPeriodConfig = CurrentPeriodConfig;
             currentPeriodIndex = (currentPeriodIndex + 1) % periods.Count;
             
-            if (currentPeriodIndex == 0) CompleteDay();
+            if (currentPeriodIndex == 0)
+            {
+                CompleteDay();
+            }
 
             CurrentPeriodConfig = periods[currentPeriodIndex];
             CurrentPeriodType = CurrentPeriodConfig.PeriodType;
