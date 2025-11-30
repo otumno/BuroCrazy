@@ -48,43 +48,43 @@ public class BookkeepingPanelUI : MonoBehaviour
     }
 
     // Главный метод для обновления всех данных на панели
-    public void UpdateAllData()
+public void UpdateAllData()
 {
     var ledger = FinancialLedgerManager.Instance;
     var wallet = PlayerWallet.Instance;
     var staffList = HiringManager.Instance.AllStaff;
 
-    if (ledger == null || wallet == null || staffList == null)
+    if (ledger == null || wallet == null || staffList == null || CalendarManager.Instance == null)
     {
-        Debug.LogError("Один из менеджеров (Ledger, Wallet, Hiring) не найден!");
+        Debug.LogError("Один из менеджеров (Ledger, Wallet, Hiring, Calendar) не найден!");
         return;
     }
 
-    // --- Считаем и отображаем основные показатели ---
+    // --- ИСПРАВЛЕНО: Берем день из CalendarManager ---
+    int currentDay = CalendarManager.Instance.CurrentDay; 
 
     // 1. Считаем доходы из лога за текущий день
     int officialGross = ledger.dailyLog
-        .Where(t => t.day == ClientSpawner.Instance.GetCurrentDay() && t.type == IncomeType.Official && t.amount > 0)
+        .Where(t => t.day == currentDay && t.type == IncomeType.Official && t.amount > 0)
         .Sum(t => t.amount);
 
     int shadowIncome = ledger.dailyLog
-        .Where(t => t.day == ClientSpawner.Instance.GetCurrentDay() && t.type == IncomeType.Shadow)
+        .Where(t => t.day == currentDay && t.type == IncomeType.Shadow)
         .Sum(t => t.amount);
 
     // 2. Считаем зарплатный фонд
     int estimatedPayroll = 0;
     foreach(var staff in staffList)
     {
-        estimatedPayroll += staff.unpaidPeriods * staff.salaryPerPeriod;
+        if(staff != null) estimatedPayroll += staff.unpaidPeriods * staff.salaryPerPeriod;
     }
 
     // 3. Считаем расходы за день
     int dailyExpenses = ledger.dailyLog
-        .Where(t => t.day == ClientSpawner.Instance.GetCurrentDay() && t.amount < 0)
+        .Where(t => t.day == currentDay && t.amount < 0)
         .Sum(t => t.amount);
 
-
-    // --- Обновляем текстовые поля ---
+    // ... (дальше код обновления UI текстов без изменений)
     officialGrossText.text = $"Подотчетный доход: ${officialGross}";
     playersCutText.text = $"Ваша доля ({wallet.officialIncomeRate:P0}): ${Mathf.RoundToInt(officialGross * wallet.officialIncomeRate)}";
     shadowIncomeText.text = $"Теневой доход: ${shadowIncome}";
@@ -94,16 +94,13 @@ public class BookkeepingPanelUI : MonoBehaviour
     dailyExpensesText.text = $"Расходы сегодня: ${Mathf.Abs(dailyExpenses)}";
 
     // --- Обновляем лог транзакций ---
-    foreach (Transform child in transactionLogContent)
-    {
-        Destroy(child.gameObject);
-    }
+    foreach (Transform child in transactionLogContent) Destroy(child.gameObject);
 
     if (transactionLogEntryPrefab != null)
     {
-        // Берем последние 15 транзакций за СЕГОДНЯ и переворачиваем их, чтобы новые были сверху
+        // Берем последние 15 транзакций за СЕГОДНЯ
         var todaysTransactions = ledger.dailyLog
-            .Where(t => t.day == ClientSpawner.Instance.GetCurrentDay())
+            .Where(t => t.day == currentDay)
             .Reverse()
             .Take(15);
 
@@ -114,12 +111,9 @@ public class BookkeepingPanelUI : MonoBehaviour
             if (entryText != null)
             {
                 string sign = transaction.amount >= 0 ? "+" : "";
-                // Определяем цвет: теневые - фиолетовый, расходы - красный, официальные - белый
                 Color color = Color.white;
-                if (transaction.amount < 0) 
-                    color = Color.red;
-                else if (transaction.type == IncomeType.Shadow) 
-                    color = new Color(0.8f, 0.4f, 1f); // Лиловый
+                if (transaction.amount < 0) color = Color.red;
+                else if (transaction.type == IncomeType.Shadow) color = new Color(0.8f, 0.4f, 1f);
 
                 entryText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{transaction.description}: {sign}${transaction.amount}</color>";
             }

@@ -39,9 +39,9 @@ public class TimeOfDaySpriteController : MonoBehaviour
         if (tintedSprites == null || tintedSprites.Count == 0 || ClientSpawner.Instance == null)
             return;
         
-        currentPeriodPlan = ClientSpawner.Instance.GetCurrentPeriodPlan();
-        previousPeriodPlan = ClientSpawner.Instance.GetPreviousPeriodPlan();
-        periodTimer = ClientSpawner.Instance.GetPeriodTimer();
+        currentPeriodPlan = DayPeriodManager.Instance.CurrentPeriodConfig;
+        previousPeriodPlan = DayPeriodManager.Instance.PreviousPeriodConfig;
+        periodTimer = DayPeriodManager.Instance.PeriodTimer;
 
         if (currentPeriodPlan == null || previousPeriodPlan == null)
             return;

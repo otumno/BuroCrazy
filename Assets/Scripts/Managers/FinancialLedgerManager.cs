@@ -42,7 +42,7 @@ namespace Managers
                 description = desc,
                 amount = amount,
                 type = type,
-                day = ClientSpawner.Instance.GetCurrentDay()
+                day = CalendarManager.Instance.CurrentDay
             });
 
             // Если транзакция "теневая", увеличиваем уровень коррупции

@@ -1,7 +1,7 @@
 using System.IO;
 using System.Linq;
 using Data.Calendar;
-using Managers;
+using Managers; // Нужно для доступа к DayPeriodManager
 using Scriptables;
 using UnityEditor;
 using UnityEngine;
@@ -34,33 +34,26 @@ namespace Editor
         {
             if (dayEditor.Periods == null || dayEditor.Periods.Length == 0)
             {
-                EditorUtility.DisplayDialog("Ошибка", "Массив 'Periods' в ClientSpawner пуст. Нечего конвертировать.", "OK");
+                EditorUtility.DisplayDialog("Ошибка", "Массив 'Periods' пуст. Нечего конвертировать.", "OK");
                 return;
             }
 
             CalendarDay newCalendarDay = ScriptableObject.CreateInstance<CalendarDay>();
-            // Мы больше не используем DailyPlan и 30-дневную структуру
             newCalendarDay.periodSettings = new System.Collections.Generic.List<PeriodSettings>();
 
-            // Напрямую конвертируем каждый старый период в новый формат с кривыми
             foreach (var oldPeriod in dayEditor.Periods)
             {
                 var newPeriodSetting = new PeriodSettings
                 {
-                    // period
                     PeriodType = oldPeriod.PeriodType,
-                
-                    // duration
                     durationInSeconds = oldPeriod.durationInSeconds,
                     
-                    // spawn curves
-                    clientCount = new AnimationCurve(new Keyframe(1, oldPeriod.crowdSpawnCount)), // Предполагаем, что clientCount - это основной параметр
+                    clientCount = new AnimationCurve(new Keyframe(1, oldPeriod.crowdSpawnCount)), 
                     spawnRate = new AnimationCurve(new Keyframe(1, oldPeriod.spawnRate)),
                     spawnBatchSize = new AnimationCurve(new Keyframe(1, oldPeriod.spawnBatchSize)),
                     crowdSpawnCount = new AnimationCurve(new Keyframe(1, oldPeriod.crowdSpawnCount)),
                     numberOfCrowdsToSpawn = new AnimationCurve(new Keyframe(1, oldPeriod.numberOfCrowdsToSpawn)),
                 
-                    // light
                     lightingSettings = new LightingPreset
                     {
                         lightColor = oldPeriod.lightingSettings.lightColor,
@@ -68,10 +61,8 @@ namespace Editor
                     },
                     panelColor = oldPeriod.panelColor,
                     
-                    // go names save
                     lightsToEnableNames = oldPeriod.lightsToEnable.Where(l => l != null).Select(l => l.name).ToList()
                 };
-                // Добавляем настроенный период в корневой список
                 newCalendarDay.periodSettings.Add(newPeriodSetting);
             }
         
@@ -86,13 +77,23 @@ namespace Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            var clientSpawners = FindObjectsByType<ClientSpawner>(FindObjectsSortMode.None);
-            var spawner = clientSpawners[0];
-            spawner.mainCalendarDay = newCalendarDay;
-            EditorUtility.SetDirty(spawner);
+            // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
+            // Пытаемся найти DayPeriodManager вместо ClientSpawner
+            var dayManager = FindFirstObjectByType<DayPeriodManager>();
+            
+            if (dayManager != null)
+            {
+                dayManager.mainCalendarDay = newCalendarDay;
+                EditorUtility.SetDirty(dayManager);
+                Debug.Log($"<color=green>Календарь назначен в DayPeriodManager.</color>");
+            }
+            else
+            {
+                Debug.LogWarning("DayPeriodManager не найден на сцене. Пожалуйста, назначьте созданный календарь вручную.");
+            }
+            // -------------------------
 
-            EditorUtility.DisplayDialog("Успех", $"Конвертация завершена! Создан и назначен новый ассет:\n{assetPathAndName}", "Отлично!");
-            Debug.Log($"<color=green>Конвертация завершена! Создан новый ассет '{assetPathAndName}' и назначен в ClientSpawner.</color>");
+            EditorUtility.DisplayDialog("Успех", $"Конвертация завершена! Создан новый ассет:\n{assetPathAndName}", "Отлично!");
         }
     }
 }

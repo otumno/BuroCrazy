@@ -13,6 +13,97 @@ MonoBehaviour:
   m_Name: MainGameCalendar
   m_EditorClassIdentifier: 
   periodSettings:
+  - PeriodType: 64
+    durationInSeconds: 30
+    clientCount:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    spawnRate:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    spawnBatchSize:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    crowdSpawnCount:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    numberOfCrowdsToSpawn:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    panelColor: {r: 0.115656935, g: 0.09438412, b: 0.1981132, a: 0}
+    lightingSettings:
+      lightColor: {r: 0.047058824, g: 0.101960786, b: 0.28235295, a: 1}
+      lightIntensity: 0.2
+    lightsToEnableNames:
+    - LAMP HALL Post
+    - NIGHT (6)
+    - NIGHT (7)
+    - NIGHT (8)
+    - NIGHT (9)
+    - NIGHT (10)
+    - CashierRED
+    - ACHIVE NIGHT
+    - LAMP INNERHALL (5) Entrance
   - PeriodType: 1
     durationInSeconds: 60
     clientCount:
@@ -236,7 +327,7 @@ MonoBehaviour:
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
   - PeriodType: 4
-    durationInSeconds: 0
+    durationInSeconds: 60
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -639,8 +730,8 @@ MonoBehaviour:
     - LAMP INNERHALL (10)
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
-  - PeriodType: 64
-    durationInSeconds: 60
+  - PeriodType: 128
+    durationInSeconds: 30
     clientCount:
       serializedVersion: 2
       m_Curve:

@@ -44,7 +44,7 @@ public class StartOfDayPanel : MonoBehaviour
 
     public void UpdatePanelInfo()
     {
-        if (dayText != null) dayText.text = $"ДЕНЬ {ClientSpawner.Instance.GetCurrentDay()}";
+        if (dayText != null) dayText.text = $"ДЕНЬ {CalendarManager.Instance.CurrentDay}";
         if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
         if (strikesText != null) strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
 
@@ -83,10 +83,10 @@ public class StartOfDayPanel : MonoBehaviour
             var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
 
             // --- ИЗМЕНЕНИЕ: Вызываем новый метод GetCurrentPeriodPlan() ---
-            var currentPeriodPlan = ClientSpawner.Instance.GetCurrentPeriodPlan();
+            var currentPeriodPlan = DayPeriodManager.Instance.CurrentPeriodConfig;
             var isMidDayPause = Time.timeScale == 0f &&
                                 currentPeriodPlan != null &&
-                                currentPeriodPlan.PeriodType != CalendarDayPeriodType.Night;
+                                currentPeriodPlan.PeriodType.IsNight();
 
             // todo: localize text
             if (isMidDayPause)

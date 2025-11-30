@@ -5,18 +5,30 @@ using UnityEngine;
 
 public class DebugTimeSkip : MonoBehaviour
 {
-    [Tooltip("Клавиша для переключения на следующий период")]
-    public KeyCode skipKey = KeyCode.F10;
+#if DEBUG_ENABLED
+    [Header("Skip Day")]
+    public KeyCode skipDay = KeyCode.F10;
+    
+    [Header("Skip Day")]
+    public KeyCode skipPeriod = KeyCode.F11;
 
-    void Update()
+    private void Update()
     {
-        if (Input.GetKeyDown(skipKey))
+        if (CalendarManager.Instance == null || DayPeriodManager.Instance == null)
+            return;
+
+        if (Input.GetKeyDown(skipDay))
         {
-            if (ClientSpawner.Instance != null)
-            {
-                Debug.Log($"<color=orange>DEBUG: Принудительный переход на следующий период...</color>");
-                ClientSpawner.Instance.GoToNextPeriod();
-            }
+            Debug.Log("Debug skip day++");
+            CalendarManager.Instance.AdvanceDay();
+            return;
+        }
+
+        if (Input.GetKeyDown(skipPeriod))
+        {
+            Debug.Log("Debug Skip period ++");
+            DayPeriodManager.Instance.SkipCurrentPeriod();
         }
     }
+#endif
 }

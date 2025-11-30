@@ -6,24 +6,29 @@ namespace UI
 {
     public class DayCounterUI : MonoBehaviour
     {
-        [Tooltip("Ссылка на текстовое поле дня")]
+        [Tooltip("Ссылка на компонент TextMeshPro для отображения номера дня")]
         public TextMeshProUGUI dayCounterText;
 
-        // Оптимизация: храним последнее значение, чтобы не перерисовывать текст каждый кадр
-        private int _dayIndex = -1;
+        // Храним последнее значение, чтобы не обновлять текст каждый кадр (оптимизация)
+        private int _lastDay = -1;
 
-        private void Update()
+        void Update()
         {
-            if (dayCounterText == null || ClientSpawner.Instance == null) return;
+            // Проверки на наличие ссылок
+            if (dayCounterText == null || CalendarManager.Instance == null) return;
 
-            var currentDay = ClientSpawner.Instance.GetCurrentDay();
-            if (currentDay == _dayIndex)
-                return;
-            
-            _dayIndex = currentDay;
-            
-            // todo: localization (alias + args)
-            dayCounterText.text = $"ДЕНЬ: {currentDay + 1}";
+            // Получаем текущий день из календаря
+            int currentDay = CalendarManager.Instance.CurrentDay;
+
+            // Если день изменился с прошлого кадра
+            if (currentDay != _lastDay)
+            {
+                // Mathf.Max(1, ...) гарантирует, что мы не покажем "День: 0" во время инициализации
+                dayCounterText.text = $"ДЕНЬ: {Mathf.Max(1, currentDay)}";
+                
+                // Запоминаем текущее значение
+                _lastDay = currentDay;
+            }
         }
     }
 }

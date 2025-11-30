@@ -263,7 +263,7 @@ namespace Managers
         }
 
         // todo: move to timeSystem
-        private static bool IsNightTime() => ClientSpawner.Instance != null &&
-                                             ClientSpawner.CurrentPeriodType.IsNight();
+        private static bool IsNightTime() => DayPeriodManager.Instance != null &&
+                                     DayPeriodManager.Instance.CurrentPeriodType.IsNight();
     }
 }

@@ -487,7 +487,7 @@ namespace Managers
 
         public void ActivateAllScheduledStaff()
         {
-            var periodType = ClientSpawner.CurrentPeriodType;
+            var periodType = DayPeriodManager.Instance.CurrentPeriodType;
 
             Debug.Log($"<color=orange>ЗАПУСК AI:</color> Активация сотрудников для периода '{periodType}'...");
             
@@ -614,7 +614,7 @@ namespace Managers
         public void GenerateNewCandidates()
         {
             AvailableCandidates.Clear();
-            int currentDay = ClientSpawner.Instance != null ? ClientSpawner.Instance.GetCurrentDay() : 1;
+            int currentDay = CalendarManager.Instance != null ? CalendarManager.Instance.CurrentDay : 1;
 
             int internsToCreate = Mathf.Max(0, Mathf.RoundToInt(internCountOverTime.Evaluate(currentDay))); // Ensure non-negative
             int specialistsToCreate = Mathf.Max(0, Mathf.RoundToInt(specialistCountOverTime.Evaluate(currentDay))); // Ensure non-negative
@@ -806,9 +806,9 @@ namespace Managers
                 
                 // Assign Default Schedule
                 staffController.WorkShiftMask = 0; // Сбрасываем
-                if (ClientSpawner.Instance?.mainCalendarDay?.periodSettings != null)
+                if (DayPeriodManager.Instance?.mainCalendarDay?.periodSettings != null)
                 {
-                    var periodSettings = ClientSpawner.Instance.mainCalendarDay.periodSettings;
+                    var periodSettings = DayPeriodManager.Instance.mainCalendarDay.periodSettings;
                     foreach (var p in periodSettings)
                     {
                         staffController.WorkShiftMask |= p.PeriodType;
@@ -817,7 +817,7 @@ namespace Managers
                 else
                 {
                     Debug.LogWarning($"Не удалось назначить расписание по умолчанию для {staffController.characterName}.");
-                    staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
+                    staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.AllDay;
                 }
                 // --- End Initialize ---
 
@@ -835,7 +835,7 @@ namespace Managers
 
                 // todo: dafaq? I already saw code that starts and ends shifts
                 // --- Start Shift if Applicable ---
-                var periodType = ClientSpawner.CurrentPeriodType;
+                var periodType = DayPeriodManager.Instance.CurrentPeriodType;
                 if (staffController.WorkShiftMask.HasFlag(periodType))
                 {
                     staffController.StartShift();
@@ -928,7 +928,7 @@ namespace Managers
 
         public void CheckAllStaffShiftsImmediately()
         {
-            var periodType = ClientSpawner.CurrentPeriodType;
+            var periodType = DayPeriodManager.Instance.CurrentPeriodType;
 
             Debug.Log($"<color=orange>ПРОВЕРКА СМЕН:</color> Период '{periodType}'. Сотрудников в AllStaff: {AllStaff.Count}");
 
