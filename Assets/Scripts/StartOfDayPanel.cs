@@ -48,11 +48,11 @@ public class StartOfDayPanel : MonoBehaviour
         if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
         if (strikesText != null) strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
 
-        if (errorRateText != null && DocumentQualityManager.Instance != null && DirectorManager.Instance != null)
+        if (errorRateText != null && DocumentQualityManager.Instance != null && OrderManager.Instance != null)
         {
             float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
-            float allowedError = DirectorManager.Instance.currentMandates.Any()
-                ? DirectorManager.Instance.currentMandates[0].allowedDirectorErrorRate
+            float allowedError = OrderManager.Instance.currentMandates.Any()
+                ? OrderManager.Instance.currentMandates[0].allowedDirectorErrorRate
                 : 1f;
 
             errorRateText.text = $"Ошибки: {averageError:P0} / Норма: {allowedError:P0}";
@@ -63,8 +63,8 @@ public class StartOfDayPanel : MonoBehaviour
 
         if (activeOrdersText != null)
         {
-            var dailyOrders = DirectorManager.Instance.activeOrders.Select(o => o.orderName);
-            var permanentOrders = DirectorManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
+            var dailyOrders = OrderManager.Instance.activeOrders.Select(o => o.orderName);
+            var permanentOrders = OrderManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
             var allActiveOrders = dailyOrders.Concat(permanentOrders);
             if (allActiveOrders.Any())
             {

@@ -79,12 +79,6 @@ namespace Managers
             if (Instance == null)
             {
                 Instance = this;
-
-                // --- <<< ИЗМЕНЕНИЕ ЗДЕСЬ >>> ---
-                // УБИРАЕМ строки, которые вызывают ошибку
-                // transform.SetParent(null); 
-                // DontDestroyOnLoad(gameObject); 
-                // --- <<< КОНЕЦ ИЗМЕНЕНИЯ >>> ---
             
                 Debug.Log($"<color=green>[HiringManager]</color> Awake: Я стал Singleton. Объект 'gameObject' будет сделан бессмертным (через родителя).");
                 SceneManager.sceneLoaded += OnSceneLoaded; 

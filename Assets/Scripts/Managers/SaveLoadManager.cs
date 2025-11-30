@@ -42,10 +42,10 @@ namespace Managers
             data.money = PlayerWallet.Instance.GetCurrentMoney();
             data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
 
-            if (DirectorManager.Instance != null)
+            if (OrderManager.Instance != null)
             {
-                data.activePermanentOrderNames = DirectorManager.Instance.activePermanentOrders.Select(order => order.name).ToList();
-                data.completedOneTimeOrderNames = DirectorManager.Instance.completedOneTimeOrders.Select(order => order.name).ToList();
+                data.activePermanentOrderNames = OrderManager.Instance.activePermanentOrders.Select(order => order.name).ToList();
+                data.completedOneTimeOrderNames = OrderManager.Instance.completedOneTimeOrders.Select(order => order.name).ToList();
             }
 
             data.allStaffData = new List<StaffSaveData>();
@@ -119,13 +119,13 @@ namespace Managers
                 PlayerWallet.Instance.SetMoney(data.money);
                 ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
 
-                if (DirectorManager.Instance != null)
+                if (OrderManager.Instance != null)
                 {
                     // <<< ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ >>>
                     // Используем правильный список 'allPossibleOrders'
-                    var allOrders = DirectorManager.Instance.allPossibleOrders;
-                    DirectorManager.Instance.activePermanentOrders.Clear();
-                    DirectorManager.Instance.completedOneTimeOrders.Clear();
+                    var allOrders = OrderManager.Instance.allPossibleOrders;
+                    OrderManager.Instance.activePermanentOrders.Clear();
+                    OrderManager.Instance.completedOneTimeOrders.Clear();
 
                     if (data.activePermanentOrderNames != null)
                     {
@@ -134,7 +134,7 @@ namespace Managers
                             DirectorOrder orderAsset = allOrders.FirstOrDefault(o => o.name == orderName);
                             if (orderAsset != null)
                             {
-                                DirectorManager.Instance.activePermanentOrders.Add(orderAsset);
+                                OrderManager.Instance.activePermanentOrders.Add(orderAsset);
                             }
                         }
                     }
@@ -146,7 +146,7 @@ namespace Managers
                             DirectorOrder orderAsset = allOrders.FirstOrDefault(o => o.name == orderName);
                             if (orderAsset != null)
                             {
-                                DirectorManager.Instance.completedOneTimeOrders.Add(orderAsset);
+                                OrderManager.Instance.completedOneTimeOrders.Add(orderAsset);
                             }
                         }
                     }

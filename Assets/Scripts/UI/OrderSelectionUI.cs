@@ -14,8 +14,11 @@ public class OrderSelectionUI : MonoBehaviour
 
     public void Setup()
     {
-        if (DirectorManager.Instance == null) return;
-        List<DirectorOrder> availableOrders = DirectorManager.Instance.GetAvailableOrdersForDay();
+        // ИСПРАВЛЕНИЕ: Используем OrderManager
+        if (OrderManager.Instance == null) return;
+        
+        List<DirectorOrder> availableOrders = OrderManager.Instance.GetAvailableOrdersForDay();
+        
         for (int i = 0; i < orderCards.Count; i++)
         {
             if (i < availableOrders.Count)
@@ -32,23 +35,19 @@ public class OrderSelectionUI : MonoBehaviour
 
     public void OnOrderSelected(DirectorOrder selectedOrder)
     {
-        if (DirectorManager.Instance != null)
+        // ИСПРАВЛЕНИЕ: Используем OrderManager
+        if (OrderManager.Instance != null)
         {
-            DirectorManager.Instance.SelectOrder(selectedOrder);
+            OrderManager.Instance.SelectOrder(selectedOrder);
         }
         StartCoroutine(UpdateAndFadeOut());
     }
 
-    // <<< НОВАЯ ОБЪЕДИНЕННАЯ КОРУТИНА >>>
     private IEnumerator UpdateAndFadeOut()
     {
-        // Сначала плавно прячем эту панель
         yield return StartCoroutine(Fade(false));
-
-        // Затем ждем конца кадра, чтобы все изменения применились
         yield return new WaitForEndOfFrame();
 
-        // И только теперь надежно обновляем панель стола
         if (StartOfDayPanel.Instance != null)
         {
             StartOfDayPanel.Instance.UpdatePanelInfo();
