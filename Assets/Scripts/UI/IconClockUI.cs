@@ -30,34 +30,25 @@ namespace UI
         // Храним последний тип, чтобы не спамить обновлениями
         private CalendarDayPeriodType _lastPeriodType = CalendarDayPeriodType.None;
 
-        private void Awake()
+        private void Start()
         {
             clockImage = GetComponent<Image>();
-            if (audioSource == null) audioSource = GetComponent<AudioSource>();
-        }
-
-        private void OnEnable()
-        {
-            // Подписываемся на события нового менеджера
-            if (DayPeriodManager.Instance != null)
+            audioSource ??= GetComponent<AudioSource>();
+            
+            if (DayPeriodManager.Instance == null)
             {
-                DayPeriodManager.Instance.OnPeriodChanged += UpdateClock;
-                // Сразу обновляем при включении, чтобы не ждать смены периода
-                UpdateClock();
+                Debug.LogError($"DayPeriodManager == null!!");
+                return;
             }
-        }
-
-        private void OnDisable()
-        {
-            if (DayPeriodManager.Instance != null)
-            {
-                DayPeriodManager.Instance.OnPeriodChanged -= UpdateClock;
-            }
+            
+            DayPeriodManager.Instance.OnPeriodChanged += UpdateClock;
+            UpdateClock();
         }
 
         private void UpdateClock()
         {
-            if (DayPeriodManager.Instance == null) return;
+            if (DayPeriodManager.Instance == null)
+                return;
 
             // Получаем текущий тип периода напрямую из Enum
             var currentPeriodType = DayPeriodManager.Instance.CurrentPeriodType;
@@ -66,7 +57,7 @@ namespace UI
             if (currentPeriodType == _lastPeriodType) return;
 
             // Ищем настройку в списке по Enum
-            PeriodVisual currentVisual = periodVisuals.FirstOrDefault(v => v.periodType == currentPeriodType);
+            PeriodVisual currentVisual = periodVisuals.FirstOrDefault(v => v.periodType.HasFlag(currentPeriodType));
 
             if (currentVisual != null)
             {
@@ -90,6 +81,11 @@ namespace UI
 
             // Запоминаем текущий период
             _lastPeriodType = currentPeriodType;
+        }
+        
+        private void OnDestroy()
+        {
+            DayPeriodManager.Instance.OnPeriodChanged -= UpdateClock;
         }
     }
 }

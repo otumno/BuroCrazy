@@ -64,20 +64,23 @@ namespace Managers
 
         private void UpdateGlobalLighting()
         {
-            if (globalLight == null || DayPeriodManager.Instance == null) return;
+            if (globalLight == null || DayPeriodManager.Instance == null)
+                return;
 
             var currentPlan = DayPeriodManager.Instance.CurrentPeriodConfig;
             var prevPlan = DayPeriodManager.Instance.PreviousPeriodConfig;
-            float timer = DayPeriodManager.Instance.PeriodTimer;
+            var timer = DayPeriodManager.Instance.PeriodTimer;
 
             // Если конфиги еще не загрузились
-            if (currentPlan == null || prevPlan == null) return;
+            if (currentPlan == null || prevPlan == null)
+                return;
 
-            float duration = currentPlan.durationInSeconds;
-            if (duration <= 0) return;
+            var duration = currentPlan.durationInSeconds;
+            if (duration <= 0)
+                return;
 
             // Вычисляем прогресс времени от 0.0 до 1.0
-            float progress = Mathf.Clamp01(timer / duration);
+            var progress = Mathf.Clamp01(timer / duration);
 
             // Интерполируем (смешиваем) цвет и яркость между предыдущим и текущим периодом
             globalLight.color = Color.Lerp(prevPlan.lightingSettings.lightColor, currentPlan.lightingSettings.lightColor, progress);
@@ -91,7 +94,7 @@ namespace Managers
             if (currentPlan == null) return;
 
             // 1. Включаем/выключаем фонарики у персонала (если Ночь)
-            bool isNight = DayPeriodManager.Instance.CurrentPeriodType == CalendarDayPeriodType.Night;
+            bool isNight = DayPeriodManager.Instance.CurrentPeriodType.IsNight();
             ToggleStaffLights(isNight);
 
             // 2. Управляем лампами в офисе (включаем те, что прописаны в календаре)

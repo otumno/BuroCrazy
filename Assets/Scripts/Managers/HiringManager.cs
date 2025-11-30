@@ -817,7 +817,7 @@ namespace Managers
                 else
                 {
                     Debug.LogWarning($"Не удалось назначить расписание по умолчанию для {staffController.characterName}.");
-                    staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
+                    staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.AllDay;
                 }
                 // --- End Initialize ---
 

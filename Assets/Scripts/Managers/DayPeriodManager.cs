@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Data.Calendar;
 using UnityEngine;
 
@@ -22,13 +21,15 @@ namespace Managers
         public event Action OnPeriodChanged;
         public event Action OnDayFinished;
 
-        void Awake() { if (Instance != null) Destroy(gameObject); else Instance = this; }
+        private void Awake() { if (Instance != null) Destroy(gameObject); else Instance = this; }
 
         void Start() { InitializeFirstPeriod(); }
 
-        void Update()
+        private void Update()
         {
-            if (Time.timeScale == 0f || CurrentPeriodConfig == null) return;
+            if (Time.timeScale == 0f || CurrentPeriodConfig == null)
+                return;
+            
             PeriodTimer += Time.deltaTime;
             if (PeriodTimer >= CurrentPeriodConfig.durationInSeconds) SwitchToNextPeriod();
         }
@@ -38,12 +39,9 @@ namespace Managers
             if (mainCalendarDay == null || mainCalendarDay.periodSettings.Count == 0)
                 return;
             
-            var nightIndex = mainCalendarDay.periodSettings.FindIndex(p => p.PeriodType == CalendarDayPeriodType.Night);
-            if (nightIndex == -1) nightIndex = mainCalendarDay.periodSettings.Count - 1;
-
-            currentPeriodIndex = nightIndex;
-            CurrentPeriodConfig = mainCalendarDay.periodSettings[nightIndex];
-            PreviousPeriodConfig = CurrentPeriodConfig;
+            currentPeriodIndex = 0;
+            CurrentPeriodConfig = mainCalendarDay.periodSettings[0];
+            PreviousPeriodConfig = CurrentPeriodConfig; // todo: this is incorrect between cycle changes -_-
             CurrentPeriodType = CurrentPeriodConfig.PeriodType;
             PeriodTimer = Mathf.Max(0, CurrentPeriodConfig.durationInSeconds - 5f); // Почти конец ночи
             OnPeriodChanged?.Invoke();

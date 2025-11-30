@@ -29,7 +29,7 @@ public class ManageBarrierExecutor : ActionExecutor
         {
             barrier.DeactivateBarrier();
         }
-        else if (currentPeriodType == CalendarDayPeriodType.Night && !barrier.IsActive())
+        else if (currentPeriodType.IsNight() && !barrier.IsActive())
         {
             barrier.ActivateBarrier();
         }

@@ -86,7 +86,7 @@ public class StartOfDayPanel : MonoBehaviour
             var currentPeriodPlan = DayPeriodManager.Instance.CurrentPeriodConfig;
             var isMidDayPause = Time.timeScale == 0f &&
                                 currentPeriodPlan != null &&
-                                currentPeriodPlan.PeriodType != CalendarDayPeriodType.Night;
+                                currentPeriodPlan.PeriodType.IsNight();
 
             // todo: localize text
             if (isMidDayPause)

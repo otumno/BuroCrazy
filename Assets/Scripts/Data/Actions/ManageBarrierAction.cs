@@ -18,7 +18,7 @@ public class ManageBarrierAction : StaffAction
             return true;
 
         var activeClients = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
-        if (currentPeriodName == CalendarDayPeriodType.Night && !barrier.IsActive() && activeClients.Length == 0)
+        if (currentPeriodName.IsNight() && !barrier.IsActive() && activeClients.Length == 0)
             return true;
 
         return false;
