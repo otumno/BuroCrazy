@@ -8147,14 +8147,14 @@ MonoBehaviour:
   nextHintDelay: 8
   idleMessageChangeDelay: 10
   contextGroups:
-  - rid: 7911689084870852683
-  - rid: 7911689084870852727
-  - rid: 7911689084870852730
-  - rid: 7911689084870852731
+  - rid: 7911689448950333533
+  - rid: 7911689448950333534
+  - rid: 7911689448950333535
+  - rid: 7911689448950333536
   idleSpots:
-  - {fileID: 1251018651}
-  - {fileID: 1688292317}
-  - {fileID: 360232149}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
   idleTips:
   - "\u0421\u043E\u0431\u043B\u044E\u0434\u0435\u043D\u0438\u0435 \u0440\u0435\u0433\u043B\u0430\u043C\u0435\u043D\u0442\u0430
     \u2014 \u0441\u0430\u043C\u044B\u0439 \u043A\u043E\u0440\u043E\u0442\u043A\u0438\u0439
@@ -8168,8 +8168,8 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 7911689084870852683
-      type: {class: TutorialContextGroup, ns: , asm: Assembly-CSharp}
+    - rid: 7911689448950333533
+      type: {class: TutorialContextGroup, ns: Utilities, asm: Assembly-CSharp}
       data:
         contextID: MainMenu
         contextPanel: {fileID: 846011594}
@@ -8320,8 +8320,8 @@ MonoBehaviour:
         - {fileID: 1251018651}
         - {fileID: 1688292317}
         - {fileID: 360232149}
-    - rid: 7911689084870852727
-      type: {class: TutorialContextGroup, ns: , asm: Assembly-CSharp}
+    - rid: 7911689448950333534
+      type: {class: TutorialContextGroup, ns: Utilities, asm: Assembly-CSharp}
       data:
         contextID: SaveLoad
         contextPanel: {fileID: 1864426794}
@@ -8330,7 +8330,7 @@ MonoBehaviour:
         - spotID: SaveLoad_slots
           targetElement: {fileID: 1795987377}
           mascotPositionOffset: {x: 0, y: 0}
-          mascotEmotionSprite: {fileID: 483644258721874805, guid: af677e915e0c5a946910ed93b5ce4768, type: 3}
+          mascotEmotionSprite: {fileID: 758100383, guid: a27e2739622d32b42b2413cfc3384fd8, type: 3}
           pointerSprite: {fileID: -4233831229414548677, guid: 6c6eeb6a8b20afb44b9277c8ef551866, type: 3}
           pointerPositionOffset: {x: 0, y: 0}
           pointerRotation: 0
@@ -8346,7 +8346,7 @@ MonoBehaviour:
         - spotID: SaveLoad_Newgame
           targetElement: {fileID: 83742134}
           mascotPositionOffset: {x: 0, y: 0}
-          mascotEmotionSprite: {fileID: 758100383, guid: a27e2739622d32b42b2413cfc3384fd8, type: 3}
+          mascotEmotionSprite: {fileID: 483644258721874805, guid: af677e915e0c5a946910ed93b5ce4768, type: 3}
           pointerSprite: {fileID: 1023286620735609724, guid: 0ac81ff437d704d4b878f10ef1753ed9, type: 3}
           pointerPositionOffset: {x: 0, y: 0}
           pointerRotation: 0
@@ -8381,7 +8381,7 @@ MonoBehaviour:
         - spotID: SaveLoad_Delete
           targetElement: {fileID: 472658824}
           mascotPositionOffset: {x: 0, y: 0}
-          mascotEmotionSprite: {fileID: -180302519, guid: efa422578226bf5468b90e13a299aa69, type: 3}
+          mascotEmotionSprite: {fileID: 1269719411, guid: 3789375a9e974f14eb6e792467426c08, type: 3}
           pointerSprite: {fileID: 8369614749934515133, guid: 1d53e3fe29efde9439ee5b65a3374748, type: 3}
           pointerPositionOffset: {x: 0, y: 0}
           pointerRotation: 0
@@ -8421,7 +8421,7 @@ MonoBehaviour:
           \u043F\u0440\u043E\u0434\u0443\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C!"
         greetingEmotion: {fileID: 166356600, guid: fd38e8600a6faae439cb31891190f3c9, type: 3}
         greetingPointerSprite: {fileID: -3228882657599919148, guid: fcf1cb834e221a14fbbcb9c7d0b6a2ff, type: 3}
-        greetingPointerOffset: {x: 0, y: 0}
+        greetingPointerOffset: {x: -50, y: 0}
         greetingPointerRotation: 0
         contextIdleTips:
         - "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0441\u043C\u0435\u043D\u044B
@@ -8482,8 +8482,8 @@ MonoBehaviour:
         - {fileID: 234117956}
         - {fileID: 1956109780}
         - {fileID: 974466651}
-    - rid: 7911689084870852730
-      type: {class: TutorialContextGroup, ns: , asm: Assembly-CSharp}
+    - rid: 7911689448950333535
+      type: {class: TutorialContextGroup, ns: Utilities, asm: Assembly-CSharp}
       data:
         contextID: Achievements
         contextPanel: {fileID: 1708293350}
@@ -8492,7 +8492,7 @@ MonoBehaviour:
         - spotID: Achievements_Help1
           targetElement: {fileID: 823818304}
           mascotPositionOffset: {x: 0, y: 0}
-          mascotEmotionSprite: {fileID: 483644258721874805, guid: af677e915e0c5a946910ed93b5ce4768, type: 3}
+          mascotEmotionSprite: {fileID: 166356600, guid: fd38e8600a6faae439cb31891190f3c9, type: 3}
           pointerSprite: {fileID: -3228882657599919148, guid: fcf1cb834e221a14fbbcb9c7d0b6a2ff, type: 3}
           pointerPositionOffset: {x: 0, y: 0}
           pointerRotation: 0
@@ -8506,7 +8506,7 @@ MonoBehaviour:
         - spotID: Achievements_Help2
           targetElement: {fileID: 1372940521}
           mascotPositionOffset: {x: 0, y: 0}
-          mascotEmotionSprite: {fileID: 166356600, guid: fd38e8600a6faae439cb31891190f3c9, type: 3}
+          mascotEmotionSprite: {fileID: 1269719411, guid: 3789375a9e974f14eb6e792467426c08, type: 3}
           pointerSprite: {fileID: -3228882657599919148, guid: fcf1cb834e221a14fbbcb9c7d0b6a2ff, type: 3}
           pointerPositionOffset: {x: 0, y: 0}
           pointerRotation: 0
@@ -8522,7 +8522,7 @@ MonoBehaviour:
         - spotID: Achievements_Help3
           targetElement: {fileID: 1815194054}
           mascotPositionOffset: {x: 0, y: 0}
-          mascotEmotionSprite: {fileID: 758100383, guid: a27e2739622d32b42b2413cfc3384fd8, type: 3}
+          mascotEmotionSprite: {fileID: 483644258721874805, guid: af677e915e0c5a946910ed93b5ce4768, type: 3}
           pointerSprite: {fileID: -3228882657599919148, guid: fcf1cb834e221a14fbbcb9c7d0b6a2ff, type: 3}
           pointerPositionOffset: {x: 0, y: 0}
           pointerRotation: 0
@@ -8567,9 +8567,9 @@ MonoBehaviour:
           \u0441 \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E \u0437\u0430\u0432\u0435\u0440\u0435\u043D\u043D\u043E\u0439
           \u0438\u0441\u0442\u043E\u0440\u0438\u0435\u0439 \u0432\u0430\u0448\u0438\u0445
           \u0443\u0441\u043F\u0435\u0445\u043E\u0432?"
-        greetingEmotion: {fileID: 166356600, guid: fd38e8600a6faae439cb31891190f3c9, type: 3}
+        greetingEmotion: {fileID: 758100383, guid: a27e2739622d32b42b2413cfc3384fd8, type: 3}
         greetingPointerSprite: {fileID: -3228882657599919148, guid: fcf1cb834e221a14fbbcb9c7d0b6a2ff, type: 3}
-        greetingPointerOffset: {x: 0, y: 0}
+        greetingPointerOffset: {x: -50, y: 0}
         greetingPointerRotation: 0
         contextIdleTips:
         - "\u0417\u0430\u0431\u043B\u043E\u043A\u0438\u0440\u043E\u0432\u0430\u043D\u043D\u0430\u044F
@@ -8635,8 +8635,8 @@ MonoBehaviour:
         - {fileID: 1870788057}
         - {fileID: 452257215}
         - {fileID: 988190616}
-    - rid: 7911689084870852731
-      type: {class: TutorialContextGroup, ns: , asm: Assembly-CSharp}
+    - rid: 7911689448950333536
+      type: {class: TutorialContextGroup, ns: Utilities, asm: Assembly-CSharp}
       data:
         contextID: Comic
         contextPanel: {fileID: 1351160080}
