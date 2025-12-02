@@ -23,18 +23,20 @@ namespace Managers
         }
 
         private void Update()
-		{
-			// ИСПРАВЛЕНО: Смотрим в DayPeriodManager
-			if (DayPeriodManager.Instance == null)
-				return;
+        {
+            // ИСПРАВЛЕНИЕ: Используем TimeManager
+            if (TimeManager.Instance == null)
+                return;
 
-			var currentPeriod = DayPeriodManager.Instance.CurrentPeriodType;
-			if (currentPeriod == _periodType)
-				return;
+            // ВАЖНО: GetCurrentPeriodType() - это метод, нужны скобки ()
+            var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
+            
+            if (currentPeriod == _periodType)
+                return;
 
-			_periodType = currentPeriod;
-			PaySalariesForPeriod(_periodType.Value);
-		}
+            _periodType = currentPeriod;
+            PaySalariesForPeriod(_periodType.Value);
+        }
 
         private void PaySalariesForPeriod(CalendarDayPeriodType periodName)
         {

@@ -263,7 +263,12 @@ namespace Managers
         }
 
         // todo: move to timeSystem
-        private static bool IsNightTime() => DayPeriodManager.Instance != null &&
-                                     DayPeriodManager.Instance.CurrentPeriodType.IsNight();
+        private static bool IsNightTime()
+        {
+            // ИСПРАВЛЕНИЕ: Используем TimeManager и метод расширения IsNight()
+            if (TimeManager.Instance == null) return false;
+            
+            return TimeManager.Instance.GetCurrentPeriodType().IsNight();
+        }
     }
 }

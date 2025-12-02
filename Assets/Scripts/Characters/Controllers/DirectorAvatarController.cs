@@ -24,6 +24,9 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     public GameObject form2Prefab;
     public GameObject certificate1Prefab;
     public GameObject certificate2Prefab;
+	
+	[Header("Свет")]
+    public GameObject nightLight; // Фонарик для директора
 
     private DirectorState currentState = DirectorState.Idle;
     private ServicePoint currentWorkstation;

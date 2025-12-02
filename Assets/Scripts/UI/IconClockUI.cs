@@ -2,90 +2,79 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
-using Data.Calendar; // Обязательно для CalendarDayPeriodType
+using Data.Calendar;
 using Managers;
 
-namespace UI
+[System.Serializable]
+public class PeriodVisual
 {
-    // Класс для настройки визуалов в инспекторе
-    [System.Serializable]
-    public class PeriodVisual
+    // ИСПРАВЛЕНИЕ: Убрали string periodName. 
+    // Теперь в Инспекторе будет выпадающий список из Enum.
+    public CalendarDayPeriodType periodType; 
+    public Sprite icon;
+    public AudioClip transitionSound;
+}
+
+[RequireComponent(typeof(Image), typeof(AudioSource))]
+public class IconClockUI : MonoBehaviour
+{
+    [Header("Визуальные элементы периодов")]
+    public List<PeriodVisual> periodVisuals;
+
+    [Header("Ссылки")]
+    [SerializeField] private AudioSource audioSource;
+    private Image clockImage;
+
+    private CalendarDayPeriodType _currentType;
+
+    private void Awake()
     {
-        [Tooltip("Выберите тип периода из списка")]
-        public CalendarDayPeriodType periodType; // Теперь используем Enum, а не строку
-        public Sprite icon;
-        public AudioClip transitionSound;
+        clockImage = GetComponent<Image>();
+        audioSource = GetComponent<AudioSource>();
     }
 
-    [RequireComponent(typeof(Image), typeof(AudioSource))]
-    public class IconClockUI : MonoBehaviour
+    private void OnEnable()
     {
-        [Header("Визуальные элементы периодов")]
-        public List<PeriodVisual> periodVisuals;
-
-        [Header("Ссылки")]
-        [SerializeField] private AudioSource audioSource;
-        private Image clockImage;
-
-        // Храним последний тип, чтобы не спамить обновлениями
-        private CalendarDayPeriodType _lastPeriodType = CalendarDayPeriodType.None;
-
-        private void Start()
+        if (TimeManager.Instance != null)
         {
-            clockImage = GetComponent<Image>();
-            audioSource ??= GetComponent<AudioSource>();
-            
-            if (DayPeriodManager.Instance == null)
-            {
-                Debug.LogError($"DayPeriodManager == null!!");
-                return;
-            }
-            
-            DayPeriodManager.Instance.OnPeriodChanged += UpdateClock;
-            UpdateClock();
+            TimeManager.Instance.OnPeriodChanged += UpdateClock;
+            // Обновляем сразу при включении
+            UpdateClock(TimeManager.Instance.GetCurrentPeriodSettings());
         }
+    }
 
-        private void UpdateClock()
+    private void OnDisable()
+    {
+        if (TimeManager.Instance != null)
         {
-            if (DayPeriodManager.Instance == null)
-                return;
-
-            // Получаем текущий тип периода напрямую из Enum
-            var currentPeriodType = DayPeriodManager.Instance.CurrentPeriodType;
-
-            // Если период не изменился с прошлого раза, ничего не делаем
-            if (currentPeriodType == _lastPeriodType) return;
-
-            // Ищем настройку в списке по Enum
-            PeriodVisual currentVisual = periodVisuals.FirstOrDefault(v => v.periodType.HasFlag(currentPeriodType));
-
-            if (currentVisual != null)
-            {
-                // Обновляем иконку
-                if (currentVisual.icon != null && clockImage != null)
-                {
-                    clockImage.sprite = currentVisual.icon;
-                }
-
-                // Проигрываем звук (если назначен и это не инициализация "None")
-                if (currentVisual.transitionSound != null && audioSource != null && _lastPeriodType != CalendarDayPeriodType.None)
-                {
-                    audioSource.PlayOneShot(currentVisual.transitionSound);
-                }
-            }
-            else
-            {
-                // Полезный лог, если забыл настроить иконку для периода
-                Debug.LogWarning($"[IconClockUI] Не найдена иконка для периода: {currentPeriodType}");
-            }
-
-            // Запоминаем текущий период
-            _lastPeriodType = currentPeriodType;
+            TimeManager.Instance.OnPeriodChanged -= UpdateClock;
         }
+    }
+
+    private void UpdateClock(PeriodSettings settings)
+    {
+        if (settings == null) return;
+
+        var type = settings.PeriodType;
         
-        private void OnDestroy()
+        // Если период не изменился, ничего не делаем (оптимизация)
+        if (type == _currentType) return;
+
+        // Ищем настройку в списке.
+        // Так как это [Flags], используем проверку HasFlag или точное совпадение.
+        // В данном случае лучше точное совпадение для иконки.
+        PeriodVisual visual = periodVisuals.FirstOrDefault(v => v.periodType == type);
+
+        if (visual != null)
         {
-            DayPeriodManager.Instance.OnPeriodChanged -= UpdateClock;
+            if (visual.icon != null) 
+                clockImage.sprite = visual.icon;
+            
+            // Звук играем только если это не старт игры
+            if (visual.transitionSound != null && audioSource != null && _currentType != CalendarDayPeriodType.None)
+                audioSource.PlayOneShot(visual.transitionSound);
         }
+
+        _currentType = type;
     }
 }

@@ -82,13 +82,12 @@ public class StartOfDayPanel : MonoBehaviour
             startDayButton.interactable = true;
             var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
 
-            // --- ИЗМЕНЕНИЕ: Вызываем новый метод GetCurrentPeriodPlan() ---
-            var currentPeriodPlan = DayPeriodManager.Instance.CurrentPeriodConfig;
+            var currentPeriodPlan = TimeManager.Instance.GetCurrentPeriodSettings();
             var isMidDayPause = Time.timeScale == 0f &&
                                 currentPeriodPlan != null &&
-                                currentPeriodPlan.PeriodType.IsNight();
+                                !currentPeriodPlan.PeriodType.IsNight(); // Используем метод расширения IsNight()
+            // -------------------------------------------
 
-            // todo: localize text
             if (isMidDayPause)
             {
                 buttonText.text = "Продолжить день";

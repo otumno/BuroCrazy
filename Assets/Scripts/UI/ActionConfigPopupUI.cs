@@ -55,28 +55,30 @@ public class ActionConfigPopupUI : MonoBehaviour
     {
         shiftDropdown.ClearOptions();
         
-        // ИСПРАВЛЕНИЕ: Берем календарь из DayPeriodManager
-        if (DayPeriodManager.Instance == null || DayPeriodManager.Instance.mainCalendarDay == null)
+        // --- ИСПРАВЛЕНИЕ: Заменили DayPeriodManager на TimeManager ---
+        if (TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
         {
-            Debug.LogError("DayPeriodManager или календарь не найдены.");
             return;
         }
 
-        var periods = DayPeriodManager.Instance.mainCalendarDay.periodSettings;
-        var periodTypes = periods.Select(p => p.PeriodType).ToList();
+        var currentCalendarDay = TimeManager.Instance.mainCalendarDay.periodSettings;
+        var periodTypes = currentCalendarDay.Select(p => p.PeriodType).ToList();
         
         if (!periodTypes.Any()) return;
 
-        shiftDropdown.AddOptions(periodTypes.Select(t => t.ToString()).ToList());
+        var periodNames = periodTypes.Select(t => t.ToString()).ToList();
+        shiftDropdown.AddOptions(periodNames);
 
-        // Находим текущую смену сотрудника
-        int currentIndex = 0;
-        for (int i = 0; i < periodTypes.Count; i++)
+        var currentIndex = 0;
+        if (currentStaff != null && currentStaff.WorkShiftMask != 0)
         {
-            if (currentStaff.WorkShiftMask.HasFlag(periodTypes[i]))
+            for (int i = 0; i < periodTypes.Count; i++)
             {
-                currentIndex = i;
-                break;
+                if ((currentStaff.WorkShiftMask & periodTypes[i]) != 0)
+                {
+                    currentIndex = i;
+                    break;
+                }
             }
         }
         shiftDropdown.SetValueWithoutNotify(currentIndex);
@@ -85,64 +87,136 @@ public class ActionConfigPopupUI : MonoBehaviour
 
     private void UpdateShiftInfoText()
     {
-        if (shiftDurationText == null || DayPeriodManager.Instance?.mainCalendarDay == null) return;
+        if (shiftDurationText == null) return;
 
-        var periods = DayPeriodManager.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
-        if (!periods.Any()) return;
-
+        // --- ИСПРАВЛЕНИЕ: Заменили DayPeriodManager на TimeManager ---
+        if (currentStaff == null || TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
+        {
+             shiftDurationText.text = "Периодов: N/A";
+             return;
+        }
+        
         int duration = (currentStaff.currentRank != null) ? currentStaff.currentRank.workPeriodsCount : 3;
-        int startIndex = shiftDropdown.value;
-        int endIndex = (startIndex + duration - 1) % periods.Count;
+        
+        var periodSettings = TimeManager.Instance.mainCalendarDay.periodSettings;
+        var currentDayPeriods = periodSettings.Select(t => t.PeriodType).ToList();
 
-        shiftDurationText.text = $"Периодов: {duration}. С {periods[startIndex]} по {periods[endIndex]}";
+        if (currentDayPeriods.Count == 0) return;
+
+        int startIndex = shiftDropdown.value;
+        if (startIndex < 0 || startIndex >= currentDayPeriods.Count) startIndex = 0;
+
+        var startPeriodName = currentDayPeriods[startIndex];
+        
+        // --- ИСПРАВЛЕНИЕ ОШИБКИ С % ---
+        // Сохраняем количество в переменную int, чтобы компилятор не путался
+        int totalCount = currentDayPeriods.Count;
+        
+        // Теперь математика работает с чистыми числами
+        int endIndex = (startIndex + duration - 1 + totalCount) % totalCount;
+        
+        var endPeriodName = currentDayPeriods[endIndex];
+
+        shiftDurationText.text = $"Периодов: {duration}. С {startPeriodName} по {endPeriodName}";
     }
 
     private IEnumerator OnSave()
     {
-        currentStaff.WorkShiftMask = 0;
+        // 1. Сбрасываем маску смен перед записью новой
+        currentStaff.WorkShiftMask = 0; 
         
-        // ИСПРАВЛЕНИЕ: Берем календарь из DayPeriodManager
-        if (DayPeriodManager.Instance != null && DayPeriodManager.Instance.mainCalendarDay != null)
+        // --- ИСПРАВЛЕНИЕ: Используем TimeManager вместо DayPeriodManager ---
+        if (Managers.TimeManager.Instance != null && Managers.TimeManager.Instance.mainCalendarDay != null)
         {
-            var allPeriods = DayPeriodManager.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
-            int startIndex = shiftDropdown.value;
-            int duration = (currentStaff.currentRank != null) ? currentStaff.currentRank.workPeriodsCount : 3;
-
-            for (int i = 0; i < duration; i++)
+            var allPeriods = Managers.TimeManager.Instance.mainCalendarDay.periodSettings
+                                .Select(p => p.PeriodType).ToList();
+            
+            if (allPeriods.Any())
             {
-                int index = (startIndex + i) % allPeriods.Count;
-                currentStaff.WorkShiftMask |= allPeriods[index];
+                int startIndex = shiftDropdown.value;
+                // Берем длительность смены из ранга или дефолт (3)
+                int duration = (currentStaff.currentRank != null) ? currentStaff.currentRank.workPeriodsCount : 3;
+                
+                for (int i = 0; i < duration; i++)
+                {
+                    int index = (startIndex + i) % allPeriods.Count;
+                    // Добавляем период в маску через побитовое ИЛИ
+                    currentStaff.WorkShiftMask |= allPeriods[index];
+                }
             }
         }
-
-        // Сохранение рабочего места
-        if (AssignmentManager.Instance != null && workstationDropdown.value > 0)
+        else
         {
-            string selectedName = workstationDropdown.options[workstationDropdown.value].text.Split('(')[0].Trim();
-            var point = ScenePointsRegistry.Instance.allServicePoints.FirstOrDefault(p => (p.friendlyName == selectedName || p.name == selectedName));
-            if (point != null) AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, point);
+            Debug.LogError("Не удалось сохранить расписание: TimeManager или календарь не найдены.");
         }
-        else if (AssignmentManager.Instance != null)
+        // ------------------------------------------------------------------
+
+        // Далее идет логика сохранения роли и рабочего места (оставляем как было)
+        StaffController.Role currentRole = currentStaff.currentRole;
+
+        if (Managers.AssignmentManager.Instance != null && Managers.ScenePointsRegistry.Instance != null)
         {
-            AssignmentManager.Instance.UnassignStaff(currentStaff);
+            if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
+            {
+                string selectedOptionText = workstationDropdown.options[workstationDropdown.value].text;
+                // Отрезаем лишнюю инфу в скобках, если она есть
+                string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
+                
+                var selectedPoint = Managers.ScenePointsRegistry.Instance.allServicePoints?
+                    .FirstOrDefault(p => p != null && GetWorkstationFriendlyName(p) == friendlyNameFromDropdown);
+                
+                if (selectedPoint != null) 
+                { 
+                    Managers.AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint); 
+                }
+                else 
+                { 
+                    Managers.AssignmentManager.Instance.UnassignStaff(currentStaff); 
+                }
+            }
+            else 
+            { 
+                Managers.AssignmentManager.Instance.UnassignStaff(currentStaff); 
+            }
+        } 
+
+        // Пересборка компонента (Rebuild) через HiringManager
+        Coroutine rebuildCoroutine = null;
+        if (Managers.HiringManager.Instance != null)
+        {
+            // Важно: передаем копию списка действий
+            rebuildCoroutine = Managers.HiringManager.Instance.AssignNewRole_Immediate(
+                currentStaff, 
+                currentRole, 
+                new System.Collections.Generic.List<StaffAction>(tempActiveActions)
+            );
         }
 
-        // Сохранение действий через пересборку
-        if (HiringManager.Instance != null)
+        if (rebuildCoroutine != null)
         {
-            yield return HiringManager.Instance.AssignNewRole_Immediate(currentStaff, currentStaff.currentRole, new List<StaffAction>(tempActiveActions));
+            yield return rebuildCoroutine;
+            // После пересборки ссылка currentStaff может устареть, обновляем её (хотя панель все равно закрывается)
+            if (currentStaff != null)
+            {
+                currentStaff = currentStaff.gameObject.GetComponent<StaffController>(); 
+            } 
+        }
+        else 
+        { 
+            yield return null; 
         }
 
-        gameObject.SetActive(false);
-        HiringManager.Instance?.CheckAllStaffShiftsImmediately();
+        gameObject.SetActive(false); // Закрываем панель
+
+        // Обновляем список в отделе кадров
+        HiringPanelUI hiringPanel = FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include);
+        if (hiringPanel != null) hiringPanel.RefreshTeamList();
+
+        // Проверяем смены немедленно
+        Managers.HiringManager.Instance?.CheckAllStaffShiftsImmediately();
     }
 
-    // ... Остальные методы (PopulateActionLists, CanAddAction, OnActionDropped, PopulateWorkstationDropdown, и т.д.) 
-    // остаются без изменений логики, просто убедись, что они есть в файле. 
-    // Я сократил ответ для удобства, но при копировании используй полную версию или аккуратно замени методы выше.
-    
-    // ВСТАВЬ СЮДА ОСТАЛЬНЫЕ МЕТОДЫ ИЗ ПРЕДЫДУЩЕГО ВАРИАНТА ФАЙЛА (PopulateActionLists и ниже)
-    // ...
+
     
     private void PopulateActionLists()
     {
@@ -239,4 +313,12 @@ public class ActionConfigPopupUI : MonoBehaviour
         if (id == 3) return StaffController.Role.Archivist;
         return StaffController.Role.Unassigned;
     }
+	
+	private string GetWorkstationFriendlyName(ServicePoint point)
+    {
+        if (point == null) return "Неизвестно";
+        // Используем friendlyName если оно есть, иначе имя GameObject'а
+        return !string.IsNullOrEmpty(point.friendlyName) ? point.friendlyName : point.name;
+    }
+	
 }

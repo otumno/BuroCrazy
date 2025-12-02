@@ -1,13 +1,10 @@
-// Файл: Assets/Scripts/TimeOfDaySpriteController.cs
 using UnityEngine;
 using System.Collections.Generic;
 using Data.Calendar;
 using Managers;
 
-// todo: link this to TimeSystem
 public class TimeOfDaySpriteController : MonoBehaviour
 {
-    [Tooltip("Перетащите сюда все 2D спрайты, цвет которых должен меняться")]
     public List<SpriteRenderer> tintedSprites;
     private PeriodSettings currentPeriodPlan;
     private PeriodSettings previousPeriodPlan;
@@ -17,57 +14,43 @@ public class TimeOfDaySpriteController : MonoBehaviour
 
     private void Start()
     {
-        if (ClientSpawner.Instance == null)
-        {
-            Debug.LogError("TimeOfDaySpriteController не может найти ClientSpawner!");
-            enabled = false;
-            return;
-        }
-
+        // Сохраняем исходную прозрачность
         _originalAlphas.Clear();
         foreach (var sprite in tintedSprites)
         {
-            if (sprite != null)
-            {
-                _originalAlphas[sprite] = sprite.color.a;
-            }
+            if (sprite != null) _originalAlphas[sprite] = sprite.color.a;
         }
     }
 
     private void Update()
     {
-        if (tintedSprites == null || tintedSprites.Count == 0 || ClientSpawner.Instance == null)
+        if (tintedSprites == null || tintedSprites.Count == 0 || TimeManager.Instance == null)
             return;
         
-        currentPeriodPlan = DayPeriodManager.Instance.CurrentPeriodConfig;
-        previousPeriodPlan = DayPeriodManager.Instance.PreviousPeriodConfig;
-        periodTimer = DayPeriodManager.Instance.PeriodTimer;
+        // --- ИСПРАВЛЕНИЕ: Берем данные из TimeManager ---
+        currentPeriodPlan = TimeManager.Instance.GetCurrentPeriodSettings();
+        previousPeriodPlan = TimeManager.Instance.GetPreviousPeriodSettings();
+        periodTimer = TimeManager.Instance.GetPeriodTimer();
+        // -----------------------------------------------
 
-        if (currentPeriodPlan == null || previousPeriodPlan == null)
-            return;
+        if (currentPeriodPlan == null || previousPeriodPlan == null) return;
 
         var duration = currentPeriodPlan.durationInSeconds;
-        if (duration <= 0)
-            return;
+        if (duration <= 0) return;
 
-        // Плавно вычисляем нужный цвет RGB (без альфы)
         float progress = Mathf.Clamp01(periodTimer / duration);
-        // Получаем цвета из настроек периода
+        
         Color prevColor = previousPeriodPlan.panelColor;
         Color currentColor = currentPeriodPlan.panelColor;
 
-        // Интерполируем только RGB компоненты
         Color targetColorRGB = Color.Lerp(prevColor, currentColor, progress);
 
-        // Применяем вычисленный цвет ко всем спрайтам в списке, сохраняя их исходную альфу
         foreach (var sprite in tintedSprites)
         {
             if (sprite != null)
             {
-                // --- ИЗМЕНЕНИЕ НАЧАЛО: Устанавливаем цвет с сохраненной альфой ---
-                float originalAlpha = _originalAlphas.ContainsKey(sprite) ? _originalAlphas[sprite] : 1f; // Берем сохраненную альфу или 1 по умолчанию
-                sprite.color = new Color(targetColorRGB.r, targetColorRGB.g, targetColorRGB.b, originalAlpha); // Применяем RGB от Lerp и исходную Alpha
-                // --- ИЗМЕНЕНИЕ КОНЕЦ ---
+                float originalAlpha = _originalAlphas.ContainsKey(sprite) ? _originalAlphas[sprite] : 1f;
+                sprite.color = new Color(targetColorRGB.r, targetColorRGB.g, targetColorRGB.b, originalAlpha);
             }
         }
     }

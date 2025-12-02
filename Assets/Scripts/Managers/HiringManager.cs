@@ -79,26 +79,13 @@ namespace Managers
             if (Instance == null)
             {
                 Instance = this;
-            
-                Debug.Log($"<color=green>[HiringManager]</color> Awake: Я стал Singleton. Объект 'gameObject' будет сделан бессмертным (через родителя).");
+                Debug.Log($"<color=green>[HiringManager]</color> Awake: Я стал Singleton.");
                 SceneManager.sceneLoaded += OnSceneLoaded; 
             }
             else if (Instance != this)
             {
-                Debug.LogWarning($"[HiringManager] Awake: Найден дубликат. Уничтожаю *себя* (этот компонент).");
-            
-                Destroy(this); // Уничтожаем дубликат скрипта
-            }
-        }
-
-        // ... (весь остальной код HiringManager.cs без изменений) ...
-
-        void OnDestroy()
-        {
-            // Unsubscribe only if this was the singleton instance
-            if (Instance == this)
-            {
-                SceneManager.sceneLoaded -= OnSceneLoaded;
+                Debug.LogWarning($"[HiringManager] Awake: Найден дубликат. Уничтожаю *себя*.");
+                Destroy(this); 
             }
         }
 
@@ -125,6 +112,35 @@ namespace Managers
                 // staffBeingModified.Clear();
             }
         }
+		
+		private void Start()
+        {
+            if (TimeManager.Instance != null)
+            {
+                TimeManager.Instance.OnPeriodChanged += OnTimePeriodChanged;
+            }
+        }
+
+        void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                SceneManager.sceneLoaded -= OnSceneLoaded;
+                
+                if (TimeManager.Instance != null)
+                {
+                    TimeManager.Instance.OnPeriodChanged -= OnTimePeriodChanged;
+                }
+            }
+        }
+
+        // Обработчик события
+        private void OnTimePeriodChanged(PeriodSettings settings)
+        {
+            // Каждый раз, когда меняется период (Утро -> День), проверяем смены
+            CheckAllStaffShiftsImmediately();
+        }
+		
 
         private IEnumerator RegisterExistingStaffAndAssignDatabases()
         {
@@ -481,7 +497,7 @@ namespace Managers
 
         public void ActivateAllScheduledStaff()
         {
-            var periodType = DayPeriodManager.Instance.CurrentPeriodType;
+            var periodType = TimeManager.Instance.GetCurrentPeriodType();
 
             Debug.Log($"<color=orange>ЗАПУСК AI:</color> Активация сотрудников для периода '{periodType}'...");
             
@@ -800,18 +816,21 @@ namespace Managers
                 
                 // Assign Default Schedule
                 staffController.WorkShiftMask = 0; // Сбрасываем
-                if (DayPeriodManager.Instance?.mainCalendarDay?.periodSettings != null)
+                
+                // ИСПРАВЛЕНИЕ: Используем TimeManager вместо DayPeriodManager
+                if (Managers.TimeManager.Instance?.mainCalendarDay?.periodSettings != null)
                 {
-                    var periodSettings = DayPeriodManager.Instance.mainCalendarDay.periodSettings;
+                    var periodSettings = Managers.TimeManager.Instance.mainCalendarDay.periodSettings;
                     foreach (var p in periodSettings)
                     {
+                        // Добавляем период в маску
                         staffController.WorkShiftMask |= p.PeriodType;
                     }
                 }
                 else
                 {
-                    Debug.LogWarning($"Не удалось назначить расписание по умолчанию для {staffController.characterName}.");
-                    staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.AllDay;
+                    // Фолбэк, если календаря нет
+                    staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.FullDay;
                 }
                 // --- End Initialize ---
 
@@ -829,7 +848,7 @@ namespace Managers
 
                 // todo: dafaq? I already saw code that starts and ends shifts
                 // --- Start Shift if Applicable ---
-                var periodType = DayPeriodManager.Instance.CurrentPeriodType;
+                var periodType = TimeManager.Instance.GetCurrentPeriodType();
                 if (staffController.WorkShiftMask.HasFlag(periodType))
                 {
                     staffController.StartShift();
@@ -922,7 +941,10 @@ namespace Managers
 
         public void CheckAllStaffShiftsImmediately()
         {
-            var periodType = DayPeriodManager.Instance.CurrentPeriodType;
+            // --- ИСПРАВЛЕНИЕ: Заменили DayPeriodManager на TimeManager ---
+            // ВАЖНО: GetCurrentPeriodType() - это МЕТОД, нужны скобки ()
+            if (TimeManager.Instance == null) return;
+            var periodType = TimeManager.Instance.GetCurrentPeriodType();
 
             Debug.Log($"<color=orange>ПРОВЕРКА СМЕН:</color> Период '{periodType}'. Сотрудников в AllStaff: {AllStaff.Count}");
 
@@ -933,13 +955,16 @@ namespace Managers
                     continue;
                 }
 
-                var isScheduledNow = staff.WorkShiftMask.HasFlag(periodType);
-                if (isScheduledNow && !staff.IsOnDuty())
+                // Проверка маски
+                var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
+                var isOnDuty = staff.IsOnDuty(); 
+
+                if (isScheduledNow && !isOnDuty)
                 {
                     Debug.Log($"   -> {staff.characterName}: Начать смену.");
                     staff.StartShift();
                 }
-                else if (!isScheduledNow && staff.IsOnDuty())
+                else if (!isScheduledNow && isOnDuty)
                 {
                     Debug.Log($"   -> {staff.characterName}: Закончить смену.");
                     staff.EndShift();

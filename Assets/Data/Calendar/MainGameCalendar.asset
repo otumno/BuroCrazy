@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: MainGameCalendar
   m_EditorClassIdentifier: 
   periodSettings:
-  - PeriodType: 64
-    durationInSeconds: 30
+  - PeriodType: 128
+    durationInSeconds: 10
     clientCount:
       serializedVersion: 2
       m_Curve:
@@ -730,8 +730,8 @@ MonoBehaviour:
     - LAMP INNERHALL (10)
     - LAMP INNERHALL (9)
     - LAMP INNERHALL (8)
-  - PeriodType: 128
-    durationInSeconds: 30
+  - PeriodType: 64
+    durationInSeconds: 50
     clientCount:
       serializedVersion: 2
       m_Curve:
