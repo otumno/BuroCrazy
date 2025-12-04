@@ -3,12 +3,9 @@ using UnityEngine;
 
 namespace Managers
 {
-    // todo: this must not be monoBehaviour, just simple class inside some central OfficeSystem, which will aggregate time, schedule, calendar, etc.
     public class PayStaffManager : MonoBehaviour
     {
         public static PayStaffManager Instance { get; set; }
-
-        private CalendarDayPeriodType? _periodType;
 
         private void Awake()
         {
@@ -22,30 +19,26 @@ namespace Managers
             Instance = this;
         }
 
-        private void Update()
+        private void Start()
         {
-            // ИСПРАВЛЕНИЕ: Используем TimeManager
-            if (TimeManager.Instance == null)
-                return;
+            TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
+        }
 
-            // ВАЖНО: GetCurrentPeriodType() - это метод, нужны скобки ()
-            var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
-            
-            if (currentPeriod == _periodType)
-                return;
-
-            _periodType = currentPeriod;
-            PaySalariesForPeriod(_periodType.Value);
+        private void OnPeriodChanged(PeriodSettings obj)
+        {
+            PaySalariesForPeriod(obj.PeriodType);
         }
 
         private void PaySalariesForPeriod(CalendarDayPeriodType periodName)
         {
-            if (HiringManager.Instance == null) return;
+            if (HiringManager.Instance == null)
+                return;
 
             var allStaff = HiringManager.Instance.AllStaff; 
-            if (allStaff == null) return;
+            if (allStaff == null)
+                return;
 
-            var totalDebtAccrued = 0;
+            var totalDebtAcquired = 0;
             foreach (var staff in allStaff)
             {
                 if (staff == null)
@@ -57,19 +50,20 @@ namespace Managers
                 if (staff.WorkShiftMask.HasFlag(periodName)) 
                 {
                     staff.unpaidPeriods++;  
-                    totalDebtAccrued += staff.salaryPerPeriod;
+                    totalDebtAcquired += staff.salaryPerPeriod;
                 }
             }
 
-            if (totalDebtAccrued > 0)
+            if (totalDebtAcquired > 0)
             {
-                Debug.Log($"[Payroll] Начислен долг по зарплате за период '{periodName}': ${totalDebtAccrued}.");
+                Debug.Log($"[Payroll] Начислен долг по зарплате за период '{periodName}': ${totalDebtAcquired}.");
             }
-        } 
+        }
 
         private void OnDestroy()
         {
             Instance = null;
+            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
         }
     }
 }

@@ -12,8 +12,29 @@ using Utilities;
 [RequireComponent(typeof(StackHolder))]
 public class ClerkController : StaffController, IServiceProvider
 {
-    public enum ClerkState { Working, GoingToBreak, OnBreak, ReturningToWork, GoingToToilet, AtToilet, Inactive, StressedOut, GoingToArchive, AtArchive, WaitingForArchive, ChairPatrol }
-    public enum ClerkRole { Regular, Cashier, Registrar, Archivist }
+    public enum ClerkState
+    {
+        Working,
+        GoingToBreak,
+        OnBreak,
+        ReturningToWork,
+        GoingToToilet,
+        AtToilet,
+        Inactive,
+        StressedOut,
+        GoingToArchive,
+        AtArchive,
+        WaitingForArchive,
+        ChairPatrol
+    }
+
+    public enum ClerkRole
+    {
+        Regular,
+        Cashier,
+        Registrar,
+        Archivist
+    }
 
     [Header("Настройки клерка")]
     public ClerkRole role = ClerkRole.Regular;

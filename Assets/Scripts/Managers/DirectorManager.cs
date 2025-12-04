@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Linq;
 
@@ -32,9 +33,10 @@ namespace Managers
             currentStrikes = 0;
         }
         
-        public void EvaluateEndOfDayStrikes()
+        public void EvaluateEndOfDayStrikes(int dayIndex)
         {
-            if (DocumentQualityManager.Instance == null || OrderManager.Instance == null) return;
+            if (DocumentQualityManager.Instance == null || OrderManager.Instance == null)
+                return;
 
             float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
             float allowedError = 1.0f; 
@@ -52,6 +54,16 @@ namespace Managers
             }
             
             DocumentQualityManager.Instance.ResetDay();
+        }
+
+        private void Start()
+        {
+            TimeManager.Instance.OnDayChanged += EvaluateEndOfDayStrikes;
+        }
+
+        private void OnDestroy()
+        {
+            TimeManager.Instance.OnDayChanged -= EvaluateEndOfDayStrikes;
         }
     }
 }

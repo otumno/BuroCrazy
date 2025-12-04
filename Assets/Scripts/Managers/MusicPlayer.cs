@@ -262,13 +262,6 @@ namespace Managers
             effectsCoroutine = null;
         }
 
-        // todo: move to timeSystem
-        private static bool IsNightTime()
-        {
-            // ИСПРАВЛЕНИЕ: Используем TimeManager и метод расширения IsNight()
-            if (TimeManager.Instance == null) return false;
-            
-            return TimeManager.Instance.GetCurrentPeriodType().IsNight();
-        }
+        private static bool IsNightTime() => TimeManager.Instance != null && TimeManager.Instance.IsNight();
     }
 }

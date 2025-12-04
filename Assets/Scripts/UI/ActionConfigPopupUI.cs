@@ -4,7 +4,6 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Data.Calendar;
 using Managers;
 
 public class ActionConfigPopupUI : MonoBehaviour
@@ -55,11 +54,8 @@ public class ActionConfigPopupUI : MonoBehaviour
     {
         shiftDropdown.ClearOptions();
         
-        // --- ИСПРАВЛЕНИЕ: Заменили DayPeriodManager на TimeManager ---
         if (TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
-        {
             return;
-        }
 
         var currentCalendarDay = TimeManager.Instance.mainCalendarDay.periodSettings;
         var periodTypes = currentCalendarDay.Select(p => p.PeriodType).ToList();
@@ -89,7 +85,6 @@ public class ActionConfigPopupUI : MonoBehaviour
     {
         if (shiftDurationText == null) return;
 
-        // --- ИСПРАВЛЕНИЕ: Заменили DayPeriodManager на TimeManager ---
         if (currentStaff == null || TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
         {
              shiftDurationText.text = "Периодов: N/A";
@@ -101,18 +96,17 @@ public class ActionConfigPopupUI : MonoBehaviour
         var periodSettings = TimeManager.Instance.mainCalendarDay.periodSettings;
         var currentDayPeriods = periodSettings.Select(t => t.PeriodType).ToList();
 
-        if (currentDayPeriods.Count == 0) return;
+        if (currentDayPeriods.Count == 0)
+            return;
 
         int startIndex = shiftDropdown.value;
-        if (startIndex < 0 || startIndex >= currentDayPeriods.Count) startIndex = 0;
+        if (startIndex < 0 || startIndex >= currentDayPeriods.Count)
+            startIndex = 0;
 
         var startPeriodName = currentDayPeriods[startIndex];
         
-        // --- ИСПРАВЛЕНИЕ ОШИБКИ С % ---
-        // Сохраняем количество в переменную int, чтобы компилятор не путался
         int totalCount = currentDayPeriods.Count;
         
-        // Теперь математика работает с чистыми числами
         int endIndex = (startIndex + duration - 1 + totalCount) % totalCount;
         
         var endPeriodName = currentDayPeriods[endIndex];
@@ -126,9 +120,9 @@ public class ActionConfigPopupUI : MonoBehaviour
         currentStaff.WorkShiftMask = 0; 
         
         // --- ИСПРАВЛЕНИЕ: Используем TimeManager вместо DayPeriodManager ---
-        if (Managers.TimeManager.Instance != null && Managers.TimeManager.Instance.mainCalendarDay != null)
+        if (TimeManager.Instance != null && TimeManager.Instance.mainCalendarDay != null)
         {
-            var allPeriods = Managers.TimeManager.Instance.mainCalendarDay.periodSettings
+            var allPeriods = TimeManager.Instance.mainCalendarDay.periodSettings
                                 .Select(p => p.PeriodType).ToList();
             
             if (allPeriods.Any())
@@ -154,7 +148,7 @@ public class ActionConfigPopupUI : MonoBehaviour
         // Далее идет логика сохранения роли и рабочего места (оставляем как было)
         StaffController.Role currentRole = currentStaff.currentRole;
 
-        if (Managers.AssignmentManager.Instance != null && Managers.ScenePointsRegistry.Instance != null)
+        if (AssignmentManager.Instance != null && ScenePointsRegistry.Instance != null)
         {
             if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
             {
@@ -162,33 +156,33 @@ public class ActionConfigPopupUI : MonoBehaviour
                 // Отрезаем лишнюю инфу в скобках, если она есть
                 string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
                 
-                var selectedPoint = Managers.ScenePointsRegistry.Instance.allServicePoints?
+                var selectedPoint = ScenePointsRegistry.Instance.allServicePoints?
                     .FirstOrDefault(p => p != null && GetWorkstationFriendlyName(p) == friendlyNameFromDropdown);
                 
                 if (selectedPoint != null) 
                 { 
-                    Managers.AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint); 
+                    AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint); 
                 }
                 else 
                 { 
-                    Managers.AssignmentManager.Instance.UnassignStaff(currentStaff); 
+                    AssignmentManager.Instance.UnassignStaff(currentStaff); 
                 }
             }
             else 
             { 
-                Managers.AssignmentManager.Instance.UnassignStaff(currentStaff); 
+                AssignmentManager.Instance.UnassignStaff(currentStaff); 
             }
         } 
 
         // Пересборка компонента (Rebuild) через HiringManager
         Coroutine rebuildCoroutine = null;
-        if (Managers.HiringManager.Instance != null)
+        if (HiringManager.Instance != null)
         {
             // Важно: передаем копию списка действий
-            rebuildCoroutine = Managers.HiringManager.Instance.AssignNewRole_Immediate(
+            rebuildCoroutine = HiringManager.Instance.AssignNewRole_Immediate(
                 currentStaff, 
                 currentRole, 
-                new System.Collections.Generic.List<StaffAction>(tempActiveActions)
+                new List<StaffAction>(tempActiveActions)
             );
         }
 
@@ -213,7 +207,7 @@ public class ActionConfigPopupUI : MonoBehaviour
         if (hiringPanel != null) hiringPanel.RefreshTeamList();
 
         // Проверяем смены немедленно
-        Managers.HiringManager.Instance?.CheckAllStaffShiftsImmediately();
+        HiringManager.Instance?.CheckAllStaffShiftsImmediately();
     }
 
 

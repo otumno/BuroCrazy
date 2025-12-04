@@ -30,27 +30,20 @@ namespace Managers
 
         private void Start()
         {
-            if (TimeManager.Instance != null)
-            {
-                // 1. Подписываемся на будущие изменения
-                TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
+            TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
 
-                // 2. ИСПРАВЛЕНИЕ: Проверяем текущее состояние прямо сейчас
-                var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
-                if (currentSettings != null)
-                {
-                    // Применяем свет МГНОВЕННО (true), чтобы при старте не было "перетекания"
-                    ApplyLightingSettings(currentSettings, true);
-                }
+            var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
+            if (currentSettings != null)
+            {
+                // Применяем свет МГНОВЕННО (true), чтобы при старте не было "перетекания"
+                ApplyLightingSettings(currentSettings, true);
             }
         }
 
         private void OnDestroy()
         {
-            if (TimeManager.Instance != null)
-            {
-                TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
-            }
+            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
+            Instance = null;
         }
 
         // Обработчик события (вызывается при смене периода во время игры)
@@ -60,10 +53,10 @@ namespace Managers
             ApplyLightingSettings(newSettings, false);
         }
 
-        // Единый метод применения настроек
         private void ApplyLightingSettings(PeriodSettings settings, bool isInstant)
         {
-            if (settings == null) return;
+            if (settings == null)
+                return;
 
             // 1. Глобальный свет
             if (lightTransitionCoroutine != null) StopCoroutine(lightTransitionCoroutine);

@@ -830,7 +830,7 @@ namespace Managers
                 else
                 {
                     // Фолбэк, если календаря нет
-                    staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.FullDay;
+                    staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
                 }
                 // --- End Initialize ---
 

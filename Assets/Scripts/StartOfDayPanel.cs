@@ -8,6 +8,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Data.Calendar;
+using DG.Tweening;
 using Managers;
 
 public class StartOfDayPanel : MonoBehaviour
@@ -30,11 +31,28 @@ public class StartOfDayPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI strikesText;
     [SerializeField] private TextMeshProUGUI activeOrdersText;
     private Dictionary<ClientPathfinding, DirectorDocumentIcon> waitingDocumentIcons = new Dictionary<ClientPathfinding, DirectorDocumentIcon>();
+
+    [Header("Animation Settings")]
+    [SerializeField]
+    private float _fadeDuration;
+    
+    private Sequence _sequence;
     
     private void Awake()
     {
-        if (Instance == null) { Instance = this; }
-        else if (Instance != this) { Destroy(gameObject); }
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+        }
+    }
+
+    private void Start()
+    {
+        
     }
     
     private void OnEnable()
@@ -60,15 +78,15 @@ public class StartOfDayPanel : MonoBehaviour
             errorRateText.gameObject.SetActive(true);
         }
 
-
         if (activeOrdersText != null)
         {
             var dailyOrders = OrderManager.Instance.activeOrders.Select(o => o.orderName);
             var permanentOrders = OrderManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
             var allActiveOrders = dailyOrders.Concat(permanentOrders);
-            if (allActiveOrders.Any())
+            var activeOrders = allActiveOrders as string[] ?? allActiveOrders.ToArray();
+            if (activeOrders.Any())
             {
-                activeOrdersText.text = "<b>Активные приказы:</b>\n" + string.Join("\n", allActiveOrders);
+                activeOrdersText.text = "<b>Активные приказы:</b>\n" + string.Join("\n", activeOrders);
                 activeOrdersText.gameObject.SetActive(true);
             }
             else
@@ -86,16 +104,8 @@ public class StartOfDayPanel : MonoBehaviour
             var isMidDayPause = Time.timeScale == 0f &&
                                 currentPeriodPlan != null &&
                                 !currentPeriodPlan.PeriodType.IsNight(); // Используем метод расширения IsNight()
-            // -------------------------------------------
 
-            if (isMidDayPause)
-            {
-                buttonText.text = "Продолжить день";
-            }
-            else
-            {
-                buttonText.text = "Начать день";
-            }
+            buttonText.text = isMidDayPause ? "Продолжить день" : "Начать день";
 
             startDayButton.onClick.RemoveAllListeners();
             startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay());
@@ -114,7 +124,7 @@ public class StartOfDayPanel : MonoBehaviour
         float endAlpha = fadeIn ? 1f : 0f;
         float fadeDuration = 0.3f;
         canvasGroup.interactable = false;
-        canvasGroup.blocksRaycasts = false;
+        canvasGroup.blocksRaycasts = true; // always block raycasts or can click through this
         if (fadeIn) { gameObject.SetActive(true); }
         float timer = 0f;
         while (timer < fadeDuration)
@@ -125,8 +135,44 @@ public class StartOfDayPanel : MonoBehaviour
         }
         canvasGroup.alpha = endAlpha;
         canvasGroup.interactable = interactableAfterFade;
-        canvasGroup.blocksRaycasts = interactableAfterFade;
         if (!fadeIn) { gameObject.SetActive(false); }
+    }
+
+    public IEnumerator FadeDoTween(bool fadeIn, bool interactableAfterFade)
+    {
+        if (_sequence.IsActive())
+            _sequence.Kill();
+
+        if (canvasGroup == null)
+        {
+            Debug.LogError($"StartOfDayPanel canvas group not serialized");
+            yield break;
+        }
+        
+        var startAlpha = fadeIn ? 0f : 1f;
+        var endAlpha = fadeIn ? 1f : 0f;
+
+        _sequence = DOTween.Sequence()
+            .OnStart(() =>
+            {
+                canvasGroup.interactable = false;
+                canvasGroup.alpha = startAlpha;
+                
+                if (fadeIn)
+                    gameObject.SetActive(true);
+            })
+            .Append(canvasGroup.DOFade(endAlpha, _fadeDuration))
+            .OnComplete(() =>
+            {
+                canvasGroup.interactable = interactableAfterFade;
+                
+                if (!fadeIn)
+                    gameObject.SetActive(false);
+            })
+            .Play();
+
+        while (_sequence.IsActive())
+            yield return new WaitForSeconds(0.01f);
     }
 
     public void RegisterDirectorDocument(ClientPathfinding client)

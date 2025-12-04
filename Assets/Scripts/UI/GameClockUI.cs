@@ -1,32 +1,35 @@
 using UnityEngine;
 using TMPro;
 using Managers;
-using Data.Calendar;
 
 public class GameClockUI : MonoBehaviour
 {
     public TextMeshProUGUI timeText;
 
-    void Update()
-    {
-        if (TimeManager.Instance == null || timeText == null) return;
+    private float _nextRefreshTime;
+    private const float REFRESH_CD = 0.1f;
 
-        // Получаем данные из TimeManager
+    private void Update()
+    {
+        if (TimeManager.Instance == null || timeText == null)
+            return;
+
         var settings = TimeManager.Instance.GetCurrentPeriodSettings();
-        float timer = TimeManager.Instance.GetPeriodTimer();
+        if (settings == null)
+            return;
+
+        if (Time.time < _nextRefreshTime)
+            return;
         
-        if (settings != null)
-        {
-            float duration = settings.durationInSeconds;
-            // Считаем обратный отсчет
-            float timeLeft = Mathf.Max(0, duration - timer);
+        _nextRefreshTime = Time.time + REFRESH_CD;
+        
+        var currentTime = TimeManager.Instance.GetPeriodTimer();
+        var timeLeft = Mathf.Max(0, settings.durationInSeconds - currentTime);
+
+        var minutes = Mathf.FloorToInt(timeLeft / 60);
+        var seconds = Mathf.FloorToInt(timeLeft % 60);
+        var formattedTime = $"{minutes:00}:{seconds:00}";
             
-            // Форматируем время (минуты:секунды)
-            // Например: 01:30
-            string formattedTime = string.Format("{0:00}:{1:00}", Mathf.FloorToInt(timeLeft / 60), Mathf.FloorToInt(timeLeft % 60));
-            
-            // --- ИСПРАВЛЕНИЕ: Убрали "({settings.PeriodType})" ---
-            timeText.text = formattedTime;
-        }
+        timeText.text = formattedTime;
     }
 }

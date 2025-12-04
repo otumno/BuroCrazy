@@ -27,22 +27,22 @@ public class TimeOfDaySpriteController : MonoBehaviour
         if (tintedSprites == null || tintedSprites.Count == 0 || TimeManager.Instance == null)
             return;
         
-        // --- ИСПРАВЛЕНИЕ: Берем данные из TimeManager ---
         currentPeriodPlan = TimeManager.Instance.GetCurrentPeriodSettings();
         previousPeriodPlan = TimeManager.Instance.GetPreviousPeriodSettings();
         periodTimer = TimeManager.Instance.GetPeriodTimer();
-        // -----------------------------------------------
 
-        if (currentPeriodPlan == null || previousPeriodPlan == null) return;
+        if (currentPeriodPlan == null)
+            return;
 
         var duration = currentPeriodPlan.durationInSeconds;
-        if (duration <= 0) return;
+        if (duration <= 0)
+            return;
 
         float progress = Mathf.Clamp01(periodTimer / duration);
         
-        Color prevColor = previousPeriodPlan.panelColor;
+        // if previousPlan == null => use current, so lerp will result in current color
+        Color prevColor = previousPeriodPlan?.panelColor ?? currentPeriodPlan.panelColor;
         Color currentColor = currentPeriodPlan.panelColor;
-
         Color targetColorRGB = Color.Lerp(prevColor, currentColor, progress);
 
         foreach (var sprite in tintedSprites)

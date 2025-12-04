@@ -79,7 +79,7 @@ namespace Editor
 
             // --- ИСПРАВЛЕНИЕ ЗДЕСЬ ---
             // Пытаемся найти DayPeriodManager вместо ClientSpawner
-            var dayManager = FindFirstObjectByType<Managers.TimeManager>();
+            var dayManager = FindFirstObjectByType<TimeManager>();
             
             if (dayManager != null)
             {

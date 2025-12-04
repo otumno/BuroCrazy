@@ -12,7 +12,22 @@ using Utilities;
 [RequireComponent(typeof(StackHolder))]
 public class InternController : StaffController, IServiceProvider
 {
-    public enum InternState { Patrolling, HelpingConfused, ServingFromQueue, CoveringDesk, GoingToBreak, OnBreak, GoingToToilet, AtToilet, ReturningToPatrol, Inactive, Working, TalkingToConfused, TakingStackToArchive }
+    public enum InternState
+    {
+        Patrolling,
+        HelpingConfused,
+        ServingFromQueue,
+        CoveringDesk,
+        GoingToBreak,
+        OnBreak,
+        GoingToToilet,
+        AtToilet,
+        ReturningToPatrol,
+        Inactive,
+        Working,
+        TalkingToConfused,
+        TakingStackToArchive
+    }
     
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;

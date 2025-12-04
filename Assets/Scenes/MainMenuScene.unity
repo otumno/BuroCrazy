@@ -9511,6 +9511,14 @@ PrefabInstance:
       propertyPath: m_Color.a
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2980457272053435897, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_VertexColorAlwaysGammaSpace
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2980457272053435897, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 7
+      objectReference: {fileID: 0}
     - target: {fileID: 3205192136744656858, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: baseCost
       value: 50

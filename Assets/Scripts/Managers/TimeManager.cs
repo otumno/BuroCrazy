@@ -110,13 +110,25 @@ namespace Managers
         public CalendarDayPeriodType GetCurrentPeriodType() => currentPeriodType;
         public PeriodSettings GetCurrentPeriodSettings() => currentPeriodSettings;
         public float GetPeriodTimer() => periodTimer;
+        public bool IsNight() => currentPeriodType != null && currentPeriodType.IsNight();
         
         public PeriodSettings GetPreviousPeriodSettings()
         {
-            if (mainCalendarDay == null || mainCalendarDay.periodSettings.Count == 0) return null;
-            int prevIndex = currentPeriodIndex - 1;
-            if (prevIndex < 0) prevIndex = mainCalendarDay.periodSettings.Count - 1;
+            if (mainCalendarDay == null || mainCalendarDay.periodSettings.Count == 0)
+                return null;
+            
+            var prevIndex = currentPeriodIndex - 1;
+            if (prevIndex < 0)
+                prevIndex = mainCalendarDay.periodSettings.Count - 1;
+            
             return mainCalendarDay.periodSettings[prevIndex];
+        }
+
+        private void OnDestroy()
+        {
+            OnDayChanged = null;
+            OnPeriodChanged = null;
+            Instance = null;
         }
     }
 }

@@ -8,7 +8,21 @@ using Utilities;
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class ServiceWorkerController : StaffController
 {
-    public enum WorkerState { Idle, SearchingForWork, GoingToMess, Cleaning, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, StressedOut, Patrolling, DeliveringValuables }
+    public enum WorkerState
+    {
+        Idle,
+        SearchingForWork,
+        GoingToMess,
+        Cleaning,
+        GoingToBreak,
+        OnBreak,
+        GoingToToilet,
+        AtToilet,
+        OffDuty,
+        StressedOut,
+        Patrolling,
+        DeliveringValuables
+    }
     
     [Header("Состояние Уборщика")]
     private WorkerState currentState = WorkerState.OffDuty;

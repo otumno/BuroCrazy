@@ -8,7 +8,8 @@ public class OperateBarrierExecutor : ActionExecutor
 {
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is GuardMovement guard))
+        // only guards operate barrier
+        if (staff is not GuardMovement guard)
         {
             FinishAction(false);
             yield break;

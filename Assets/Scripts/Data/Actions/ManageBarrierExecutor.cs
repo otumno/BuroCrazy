@@ -24,7 +24,7 @@ public class ManageBarrierExecutor : ActionExecutor
         yield return staff.StartCoroutine(guard.MoveToTarget(barrier.guardInteractionPoint.position, GuardMovement.GuardState.OperatingBarrier));
         yield return new WaitForSeconds(2.0f);
 
-		var currentPeriodType = Managers.TimeManager.Instance.GetCurrentPeriodType();
+		var currentPeriodType = TimeManager.Instance.GetCurrentPeriodType();
         if (currentPeriodType == CalendarDayPeriodType.Morning && barrier.IsActive())
         {
             barrier.DeactivateBarrier();

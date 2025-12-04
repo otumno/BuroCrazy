@@ -28,48 +28,45 @@ namespace Managers
 
         private void Start()
         {
-            // Теперь TimeManager точно существует в этом namespace
-            if (TimeManager.Instance != null)
-            {
-                TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
-            }
+            TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
         }
 
         private void OnDestroy()
         {
-            if (TimeManager.Instance != null)
-            {
-                TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
-            }
+            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
         }
 
         private void OnPeriodChanged(PeriodSettings settings)
         {
-            if (spawnCoroutine != null) StopCoroutine(spawnCoroutine);
+            if (spawnCoroutine != null)
+                StopCoroutine(spawnCoroutine);
 
-            // --- ОБНОВЛЕНИЕ ПОД НОВЫЙ ENUM ---
-            // Используем метод расширения IsNight(), который написал Ратмир
             if (settings.PeriodType.IsNight())
-            {
-                return; // Ночью не спавним
-            }
+                return;
 
             int day = TimeManager.Instance.GetCurrentDay();
             int clientsCount = Mathf.RoundToInt(settings.clientCount.Evaluate(day));
             
             if (clientsCount > 0)
-            {
                 spawnCoroutine = StartCoroutine(SpawnRoutine(settings, clientsCount));
-            }
         }
 
+        // по идее, можно просто в апдейт вынести и обойтись без корутины (за корутинами сложно следить, кмк)
+        // тут ещё при смене периода, получается, отдохнуть можно 5 секунд
         private IEnumerator SpawnRoutine(PeriodSettings settings, int totalClients)
         {
+            // задержку можно в конфиг тоже убрать, кстати, и тоже функцией задать.
+            // Можно вообще порофлить и добавить в какой-нибудь день затишье, а потом атаку зергов
             yield return new WaitForSeconds(initialSpawnDelay);
 
             float duration = settings.durationInSeconds - initialSpawnDelay;
-            if (duration <= 0) duration = 1f;
+            if (duration <= 0)
+            {
+                Debug.LogError($"PeriodSettings.durationInSeconds - initialSpawnDelay < 0. Day: {TimeManager.Instance.GetCurrentDay()}");
+                duration = 1f;
+            }
 
+            // равномерное распределение
             float interval = duration / totalClients;
 
             for (int i = 0; i < totalClients; i++)

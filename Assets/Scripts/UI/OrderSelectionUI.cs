@@ -14,8 +14,8 @@ public class OrderSelectionUI : MonoBehaviour
 
     public void Setup()
     {
-        // ИСПРАВЛЕНИЕ: Используем OrderManager
-        if (OrderManager.Instance == null) return;
+        if (OrderManager.Instance == null)
+            return;
         
         List<DirectorOrder> availableOrders = OrderManager.Instance.GetAvailableOrdersForDay();
         
@@ -60,7 +60,7 @@ public class OrderSelectionUI : MonoBehaviour
         float startAlpha = canvasGroup.alpha;
         float fadeDuration = 0.5f;
         canvasGroup.interactable = fadeIn;
-        canvasGroup.blocksRaycasts = fadeIn;
+        canvasGroup.blocksRaycasts = fadeIn; // лучше всегда блочить рэйкасты, пока идёт анимация, иначе игрок сквозь экран прокликает
         float elapsedTime = 0f;
         while (elapsedTime < fadeDuration)
         {

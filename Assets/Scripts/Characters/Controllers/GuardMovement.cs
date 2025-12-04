@@ -9,7 +9,26 @@ using Utilities;
 [RequireComponent(typeof(Rigidbody2D), typeof(AgentMover), typeof(CharacterStateLogger))]
 public class GuardMovement : StaffController
 {
-    public enum GuardState { Idle, Patrolling, WaitingAtWaypoint, Chasing, Talking, OnPost, GoingToBreak, OnBreak, GoingToToilet, AtToilet, OffDuty, ChasingThief, EscortingThief, Evicting, StressedOut, WritingReport, OperatingBarrier }
+    public enum GuardState
+    {
+        Idle,
+        Patrolling,
+        WaitingAtWaypoint,
+        Chasing,
+        Talking,
+        OnPost,
+        GoingToBreak,
+        OnBreak,
+        GoingToToilet,
+        AtToilet,
+        OffDuty,
+        ChasingThief,
+        EscortingThief,
+        Evicting,
+        StressedOut,
+        WritingReport,
+        OperatingBarrier
+    }
     
     [Header("Состояние Охранника")]
     private GuardState currentState = GuardState.OffDuty;

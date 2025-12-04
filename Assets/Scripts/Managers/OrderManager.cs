@@ -20,8 +20,14 @@ namespace Managers
 
         private void Awake()
         {
-            if (Instance == null) { Instance = this; }
-            else if (Instance != this) { Destroy(gameObject); }
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else if (Instance != this)
+            {
+                Destroy(gameObject);
+            }
         }
 
         public List<DirectorOrder> GetAvailableOrdersForDay()
@@ -34,7 +40,7 @@ namespace Managers
 
             var orderPool = new List<DirectorOrder>(allPossibleOrders);
             // Исключаем уже выполненные одноразовые приказы
-            orderPool.RemoveAll(o => completedOneTimeOrders.Contains(o));
+            orderPool.RemoveAll(order => completedOneTimeOrders.Contains(order));
 
             offeredOrders.Clear();
             int numberOfChoices = 3;

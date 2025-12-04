@@ -14,21 +14,23 @@ namespace Data.Calendar
         Evening     = 1 << 5,
         StartNight  = 1 << 6,
         EndNight    = 1 << 7,
-        
-        // --- ДОБАВЛЕНО: Маска полного рабочего дня ---
-        FullDay     = Morning | EarlyDay | Noon | Day | LateDay | Evening
     }
 
     public static class CalendarDayPeriodTypeExtensions
     {
-        public static CalendarDayPeriodType AllDay => CalendarDayPeriodType.FullDay;
+        public static CalendarDayPeriodType FullDay => CalendarDayPeriodType.Morning |
+                                                       CalendarDayPeriodType.EarlyDay |
+                                                       CalendarDayPeriodType.Noon |
+                                                       CalendarDayPeriodType.Day |
+                                                       CalendarDayPeriodType.LateDay |
+                                                       CalendarDayPeriodType.Evening;
 
-        public static CalendarDayPeriodType AllNight => CalendarDayPeriodType.StartNight |
-                                                        CalendarDayPeriodType.EndNight;
+        public static CalendarDayPeriodType FullNight => CalendarDayPeriodType.StartNight |
+                                                         CalendarDayPeriodType.EndNight;
 
-        public static CalendarDayPeriodType AllCalendarDay => AllDay | AllNight; 
+        public static CalendarDayPeriodType Hours24 => FullDay | FullNight;
 
         public static bool IsNight(this CalendarDayPeriodType type) =>
-            (type & AllNight) != 0; // Проверка битовой маски
+            (type & FullNight) != 0; // Проверка битовой маски
     }
 }

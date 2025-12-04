@@ -10,20 +10,20 @@ public class PauseVisualEffect : MonoBehaviour
     [Tooltip("Скорость перехода (чем больше, тем быстрее)")]
     public float transitionSpeed = 5f;
 
-    void Start()
+    private void Start()
     {
-        // Если забыли назначить, пробуем найти на этом же объекте
-        if (pauseVolume == null) 
-            pauseVolume = GetComponent<Volume>();
-		pauseVolume.weight = 0.001f;
+        pauseVolume ??= GetComponent<Volume>();
+		pauseVolume.weight = 0.001f; // поч не 0?)
     }
 
-    void Update()
+    private void Update()
     {
-        if (pauseVolume == null) return;
+        if (pauseVolume == null)
+            return;
 
-        // Проверяем: игра на паузе? (Время стоит?)
-        // Используем Time.timeScale, так как MainUIManager управляет именно им.
+        // по-хорошему, управление паузой должно где-то лежать в 1 скрипте, все остальные должны только к нему обращаться
+        // так потом найти проще, если где-то будет баг, что пауза не снялась или не ставится,
+        // или снимается когда ui какой-нибудь паузящий активен ещё
         bool isPaused = Time.timeScale == 0f;
 
         // Если пауза -> хотим Вес = 1 (черно-белое).

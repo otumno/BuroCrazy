@@ -3,7 +3,7 @@ using System;
 
 namespace Managers
 {
-    // todo: kind of does nothing at this point. will store specialDayEvent logic and general game schedule
+    // че-то на второй взгляд выглядит избыточно. можно всю эту логику в таймМанагер убрать
     public class CalendarManager : MonoBehaviour
     {
         public static CalendarManager Instance { get; private set; }

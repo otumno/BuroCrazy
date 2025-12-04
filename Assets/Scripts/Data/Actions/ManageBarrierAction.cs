@@ -12,16 +12,14 @@ public class ManageBarrierAction : StaffAction
         var barrier = GuardManager.Instance.securityBarrier;
         if (barrier == null) return false;
 
-        // --- ИСПРАВЛЕНИЕ: Объявляем переменную через TimeManager ---
-        if (Managers.TimeManager.Instance == null) return false;
-        var currentPeriodType = Managers.TimeManager.Instance.GetCurrentPeriodType();
-        // ---------------------------------------------------------
-
+        if (TimeManager.Instance == null)
+            return false;
+        
+        var currentPeriodType = TimeManager.Instance.GetCurrentPeriodType();
         if (currentPeriodType == CalendarDayPeriodType.Morning && barrier.IsActive())
             return true;
 
-        // Используем метод расширения IsNight()
-        var activeClients = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
+        var activeClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
         if (currentPeriodType.IsNight() && !barrier.IsActive() && activeClients.Length == 0)
             return true;
 

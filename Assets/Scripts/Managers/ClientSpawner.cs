@@ -20,8 +20,7 @@ namespace Managers
         public Waypoint exitWaypoint;
         public FormTable formTable;
 
-        // --- ОБНОВЛЕНИЕ ---
-        // Обновляем список, чтобы инспектор не ругался на пропавший "Night"
+        // тут можно просто юзать метод расширения IsNight из CalendarDayPeriodTypeExtensions
         public List<CalendarDayPeriodType> NightPeriodTypes = new()
         {
             CalendarDayPeriodType.StartNight,

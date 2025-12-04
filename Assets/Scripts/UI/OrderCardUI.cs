@@ -37,7 +37,7 @@ public class OrderCardUI : MonoBehaviour
         selectButton.onClick.AddListener(OnCardSelected);
     }
 
-    // Что происходит, когда игрок нажимает на кнопку
+    // если в менюшку с выбором карточки, как-то попал приказ, который не может быть выбран, то надо кидать ошибку
     private void OnCardSelected()
     {
         // Карточка сообщает главному менеджеру, что ее выбрали
