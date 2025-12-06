@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class DebugTimeSkip : MonoBehaviour
 {
-#if DEBUG_ENABLED
+#if DEBUG
     [Header("Skip Day")]
     public KeyCode skipDay = KeyCode.F10;
     
