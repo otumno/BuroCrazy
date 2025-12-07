@@ -7,7 +7,7 @@ namespace Utilities
 {
     public class UIRaycastDebugger : MonoBehaviour
     {
-        void Update()
+        private void Update()
         {
             // Проверяем, была ли нажата левая кнопка мыши в этом кадре
             if (Input.GetMouseButtonDown(0))
