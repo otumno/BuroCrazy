@@ -15,6 +15,8 @@ MonoBehaviour:
   roleType: 1
   moveSpeed: 3
   priority: 1
+  maleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}
+  femaleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}
   spriteCollection: {fileID: 11400000, guid: cdab1e82753fc0d4fb395149bfc4e7dc, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: eb749ec48a08bef40ae01024a4f27c97, type: 2}
   accessoryPrefab: {fileID: 0}

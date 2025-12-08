@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4cfc7926d205074cb3f456320180982, type: 3}
+  m_Name: Voice_Director
+  m_EditorClassIdentifier: Assembly-CSharp::VoiceData
+  speechClips:
+  - {fileID: 8300000, guid: cfb0db51424a33e419238ec001495278, type: 3}
+  - {fileID: 8300000, guid: 164f741858de624498aa919472c3a38e, type: 3}
+  - {fileID: 8300000, guid: 3ac3c3f8b7e55db4e9164dc61ec3d5ec, type: 3}
+  - {fileID: 8300000, guid: 94f7862b61f6c974d994840084c9d48e, type: 3}
+  - {fileID: 8300000, guid: 0c5d86de7108ae24db7e062ffb03fbf3, type: 3}
+  - {fileID: 8300000, guid: 0b114ae6d6b24d242aeedcbabb6cc67b, type: 3}
+  - {fileID: 8300000, guid: 935da684e04ad324eb2ec3f9ee3ede88, type: 3}
+  - {fileID: 8300000, guid: 1a7f737bd57f3fd459a07760d608bbe6, type: 3}
+  basePitch: 0.9
+  pitchDelta: 0.1
+  delayPerSyllable: 0.1
+  delayPerWord: 0.25
+  volume: 1

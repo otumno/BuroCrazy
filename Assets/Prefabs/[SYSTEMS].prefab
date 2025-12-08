@@ -2117,6 +2117,7 @@ MonoBehaviour:
   initialPoolSize: 15
   maxPoolSize: 30
   musicSource: {fileID: 3416656430771986492}
+  sfxGroup: {fileID: 5176753214275266797, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
 --- !u!1 &8264849977637957682
 GameObject:
   m_ObjectHideFlags: 0
@@ -2320,8 +2321,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b4140768b136a649b5afca5c4bad3f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameplaySource: {fileID: 3416656430771986492}
-  uiSource: {fileID: 3416656430771986492}
   menuTheme: {fileID: 8300000, guid: 94963549d0fe0aa42918c15fc01bdcba, type: 3}
   directorsOfficeTheme: {fileID: 8300000, guid: 50249d13f99b8c24d8f7b40cf6c5c4f2, type: 3}
   pauseTheme: {fileID: 8300000, guid: ab6632915c0ea944f8064f0dbd6dc4cc, type: 3}
@@ -2358,11 +2357,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 3b01980907257fd469d71f64315619eb, type: 3}
   - {fileID: 8300000, guid: 63eaa2cfbcc442342a99c5b1223f18ae, type: 3}
   nightTrack: {fileID: 8300000, guid: a2a8c0cca9e49bf4a99b288c70baa74e, type: 3}
-  radioSwitchSound: {fileID: 8300000, guid: 55e02f8d38c00ef4eb02125f7cb09e20, type: 3}
-  masterVolume: 0.5
+  radioSwitchSound: 1
   muffledVolume: 0.086
-  fadeDuration: 0.5
-  muffledFrequency: 4000
 --- !u!1 &8763085085291328836
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,6 +15,8 @@ MonoBehaviour:
   roleType: 3
   moveSpeed: 2
   priority: 2
+  maleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}
+  femaleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}
   spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: eb749ec48a08bef40ae01024a4f27c97, type: 2}
   accessoryPrefab: {fileID: 0}
@@ -37,8 +39,12 @@ MonoBehaviour:
   worker_cleaningTimeTrash: 2
   worker_cleaningTimePuddle: 4
   worker_cleaningTimePerDirtLevel: 1.5
+  worker_trashBagPrefab: {fileID: 0}
   worker_maxStress: 100
   worker_stressGainPerMess: 2
   worker_stressReliefRate: 10
+  cashier_corruptionChanceMultiplier: 1
+  cashier_maxSkimAmount: 0.3
   minIdleWait: 5
   maxIdleWait: 10
+  baseHiringCost: 100

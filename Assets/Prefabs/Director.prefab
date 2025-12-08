@@ -102,6 +102,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -123,6 +125,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 2
@@ -316,7 +319,8 @@ MonoBehaviour:
   experiencePoints: 0
   gender: 0
   skills: {fileID: 0}
-  workPeriods: []
+  promotionAvailableNotificationPlayed: 0
+  WorkShiftMask: 0
   salaryPerPeriod: 15
   unpaidPeriods: 0
   missedPaymentCount: 0
@@ -331,6 +335,7 @@ MonoBehaviour:
   frustrationResistanceSkill: 1
   startShiftSound: {fileID: 0}
   endShiftSound: {fileID: 0}
+  voiceProfile: {fileID: 11400000, guid: 886bf9ee27f40ff4cb5f1d97124c19e2, type: 2}
   spriteCollection: {fileID: 11400000, guid: b1c9cb1dc26e5434fbe42e9b72b2c7b6, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 18bb2c0b09d19b84ca27c4993ea9a97d, type: 2}
   directorChairPoint: {fileID: 0}
@@ -338,6 +343,7 @@ MonoBehaviour:
   form2Prefab: {fileID: 3550377790086235711, guid: b4a4385cb142e0941add6cd29c29e654, type: 3}
   certificate1Prefab: {fileID: 6963206784104080445, guid: edf11bd38fec4c84e9745075eb5f910b, type: 3}
   certificate2Prefab: {fileID: 874320401446602386, guid: 3b9e93cf316ee2d4ab8c02695b069d07, type: 3}
+  nightLight: {fileID: 6540925649609091333}
 --- !u!114 &4228081369415377242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -541,6 +547,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -562,6 +570,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 4
@@ -628,6 +637,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -649,6 +660,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 20
@@ -715,6 +727,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -736,6 +750,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 3
@@ -922,6 +937,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -943,6 +960,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 3
@@ -1098,6 +1116,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -1119,6 +1139,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 20
@@ -1301,6 +1322,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -1322,6 +1345,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 2

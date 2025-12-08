@@ -48,6 +48,9 @@ public abstract class StaffController : MonoBehaviour
     [Header("Звуки смены")]
     public AudioClip startShiftSound;
     public AudioClip endShiftSound;
+	
+	[Header("Аудио")]
+    public VoiceData voiceProfile;
 
     // Ссылки на компоненты
     public EmotionSpriteCollection spriteCollection;
@@ -237,6 +240,15 @@ public abstract class StaffController : MonoBehaviour
 
 
         this.currentRole = data.roleType; // Устанавливаем роль
+		
+		if (this.gender == Gender.Male)
+        {
+            this.voiceProfile = data.maleVoice;
+        }
+        else
+        {
+            this.voiceProfile = data.femaleVoice;
+        }
 
         // Настраиваем внешний вид через CharacterVisuals, передавая RoleData
         // Этот вызов УЖЕ настроит и спрайт тела, и спрайты анимации в AgentMover
