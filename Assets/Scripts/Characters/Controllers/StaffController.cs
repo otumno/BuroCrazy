@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Data.Calendar;
 using Managers;
+using Scriptables.Audio;
 using Utilities;
 
 public abstract class StaffController : MonoBehaviour
@@ -48,6 +49,9 @@ public abstract class StaffController : MonoBehaviour
     [Header("Звуки смены")]
     public AudioClip startShiftSound;
     public AudioClip endShiftSound;
+	
+	[Header("Аудио")]
+    public VoiceData voiceProfile;
 
     // Ссылки на компоненты
     public EmotionSpriteCollection spriteCollection;
@@ -235,8 +239,8 @@ public abstract class StaffController : MonoBehaviour
             // Можно решить, продолжать ли инициализацию без движения
         }
 
-
-        this.currentRole = data.roleType; // Устанавливаем роль
+        currentRole = data.roleType;
+        voiceProfile = gender == Gender.Male ? data.maleVoice : data.femaleVoice;
 
         // Настраиваем внешний вид через CharacterVisuals, передавая RoleData
         // Этот вызов УЖЕ настроит и спрайт тела, и спрайты анимации в AgentMover
@@ -373,7 +377,6 @@ public abstract class StaffController : MonoBehaviour
     }
 
     #region Utility Methods
-    // todo: must rewrite this, super error prone counter :/ should go home by event
     private IEnumerator GoHomeRoutine()
     {
         if (unpaidPeriods > 0)

@@ -62,8 +62,10 @@ namespace Managers
 
         private void OnDestroy()
         {
+            if (TimeManager.Instance)
+                TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
+            
             Instance = null;
-            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
         }
     }
 }

@@ -29,15 +29,10 @@ public class IconClockUI : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
     }
 
-    private void OnEnable()
+    private void Start()
     {
         TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
         UpdateClock(TimeManager.Instance.GetCurrentPeriodSettings(), false);
-    }
-
-    private void OnDisable()
-    {
-        TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
     }
 
     private void OnPeriodChanged(PeriodSettings settings) => UpdateClock(settings, true);
@@ -62,5 +57,11 @@ public class IconClockUI : MonoBehaviour
         // Звук играем только если это не старт игры
         if (visual.transitionSound != null && playSound)
             audioSource.PlayOneShot(visual.transitionSound);
+    }
+    
+    private void OnDestroy()
+    {
+        if (TimeManager.Instance)
+            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
     }
 }

@@ -61,7 +61,7 @@ namespace Managers
                 // Ensure AudioSource exists if sounds are assigned
                 if ((leavesSound != null || leavesExitSound != null) && audioSource == null) {
                     audioSource = GetComponent<AudioSource>();
-                    if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+                    audioSource ??= gameObject.AddComponent<AudioSource>();
                     audioSource.playOnAwake = false; // Prevent playing on load
                     audioSource.loop = false;
                     // Set AudioSource to ignore pause state if needed

@@ -63,7 +63,8 @@ namespace Managers
 
         private void OnDestroy()
         {
-            TimeManager.Instance.OnDayChanged -= EvaluateEndOfDayStrikes;
+            if (TimeManager.Instance)
+                TimeManager.Instance.OnDayChanged -= EvaluateEndOfDayStrikes;
         }
     }
 }

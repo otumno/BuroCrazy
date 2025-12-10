@@ -40,12 +40,6 @@ namespace Managers
             }
         }
 
-        private void OnDestroy()
-        {
-            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
-            Instance = null;
-        }
-
         // Обработчик события (вызывается при смене периода во время игры)
         private void OnPeriodChanged(PeriodSettings newSettings)
         {
@@ -186,6 +180,14 @@ namespace Managers
                 else if (staff is DirectorAvatarController director && director.nightLight != null)
                     director.nightLight.SetActive(enable);
             }
+        }
+        
+        private void OnDestroy()
+        {
+            if (TimeManager.Instance)
+                TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
+            
+            Instance = null;
         }
     }
 }

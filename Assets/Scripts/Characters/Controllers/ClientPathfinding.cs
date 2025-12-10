@@ -4,6 +4,7 @@ using TMPro;
 using System.Linq;
 using System.Collections.Generic;
 using Managers;
+using Scriptables.Audio;
 
 public class ClientPathfinding : MonoBehaviour
 {
@@ -50,6 +51,9 @@ public class ClientPathfinding : MonoBehaviour
     public AudioClip stampSound;
     public AudioClip impoliteSound;
     public AudioClip theftAttemptSound;
+	
+	[Header("Аудио")]
+    public VoiceData voiceProfile;
     
     public static int totalClients, clientsExited, clientsInWaiting, clientsToToilet, clientsToRegistration, clientsConfused;
     public static int clientsExitedAngry = 0, clientsExitedProcessed = 0;

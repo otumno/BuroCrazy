@@ -1840,7 +1840,6 @@ Transform:
   - {fileID: 3114165290283519538}
   - {fileID: 8532378419452326138}
   - {fileID: 4011524539500755867}
-  - {fileID: 4162724985982814048}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6323726595607129623
@@ -1964,12 +1963,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7778612619835768913}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1664084752037518102}
+  m_Father: {fileID: 4011524539500755867}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!82 &3416656430771986492
 AudioSource:
@@ -2097,7 +2096,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 4162724985982814048}
   m_Father: {fileID: 1664084752037518102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3024501595822386486
@@ -2112,8 +2112,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b934b5cb59dbb3f4aac4e034d88c4ea0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Managers.AudioManager
-  audioLibrary: {fileID: 11400000, guid: 831a7eda1cf6f7f419ab0061501bfb6b, type: 2}
+  soundLibrary: {fileID: 11400000, guid: 831a7eda1cf6f7f419ab0061501bfb6b, type: 2}
   mainMixer: {fileID: 24100000, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  sfxGroup: {fileID: 5176753214275266797, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   initialPoolSize: 15
   maxPoolSize: 30
   musicSource: {fileID: 3416656430771986492}
@@ -2320,8 +2321,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b4140768b136a649b5afca5c4bad3f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameplaySource: {fileID: 3416656430771986492}
-  uiSource: {fileID: 3416656430771986492}
   menuTheme: {fileID: 8300000, guid: 94963549d0fe0aa42918c15fc01bdcba, type: 3}
   directorsOfficeTheme: {fileID: 8300000, guid: 50249d13f99b8c24d8f7b40cf6c5c4f2, type: 3}
   pauseTheme: {fileID: 8300000, guid: ab6632915c0ea944f8064f0dbd6dc4cc, type: 3}
@@ -2358,11 +2357,8 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 3b01980907257fd469d71f64315619eb, type: 3}
   - {fileID: 8300000, guid: 63eaa2cfbcc442342a99c5b1223f18ae, type: 3}
   nightTrack: {fileID: 8300000, guid: a2a8c0cca9e49bf4a99b288c70baa74e, type: 3}
-  radioSwitchSound: {fileID: 8300000, guid: 55e02f8d38c00ef4eb02125f7cb09e20, type: 3}
-  masterVolume: 0.5
+  radioSwitchSound: 1
   muffledVolume: 0.086
-  fadeDuration: 0.5
-  muffledFrequency: 4000
 --- !u!1 &8763085085291328836
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,17 +1,17 @@
-using System;
 using UnityEngine;
-using UnityEngine.EventSystems; // Нужен для обработки событий мыши
-using UnityEngine.UI; // Нужен для проверки интерактивности кнопки
+using UnityEngine.EventSystems;
+using UnityEngine.UI;
 using Managers;
+using Scriptables.Audio;
 
 namespace UI.Utils
 {
-    [RequireComponent(typeof(Selectable))]
     public class PlaySoundOnPointerEvent : MonoBehaviour, IPointerEnterHandler, IPointerClickHandler
     {
         [Header("Настройки Звуков")]
         [Tooltip("Звук при наведении курсора")]
         public SoundID hoverSound = SoundID.UI_Hover;
+
         [Tooltip("Звук при клике")]
         public SoundID clickSound = SoundID.UI_Click_Default;
 
@@ -32,7 +32,7 @@ namespace UI.Utils
             if (!enableHover || !IsInteractable())
                 return;
 
-            AudioManager.Instance?.PlaySound(hoverSound);
+            AudioManager.Instance.PlaySound(hoverSound);
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -40,7 +40,7 @@ namespace UI.Utils
             if (!enableClick || !IsInteractable())
                 return;
 
-            AudioManager.Instance?.PlaySound(clickSound);
+            AudioManager.Instance.PlaySound(clickSound);
         }
 
         private bool IsInteractable() => _selectable != null && _selectable.interactable;

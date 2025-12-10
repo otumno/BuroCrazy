@@ -31,11 +31,6 @@ namespace Managers
             TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
         }
 
-        private void OnDestroy()
-        {
-            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
-        }
-
         private void OnPeriodChanged(PeriodSettings settings)
         {
             if (spawnCoroutine != null)
@@ -91,6 +86,12 @@ namespace Managers
             {
                 client.Initialize(waitingZoneObject, exitWaypoint);
             }
+        }
+        
+        private void OnDestroy()
+        {
+            if (TimeManager.Instance)
+                TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
         }
     }
 }

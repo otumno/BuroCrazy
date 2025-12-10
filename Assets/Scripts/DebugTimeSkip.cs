@@ -27,6 +27,6 @@ public class DebugTimeSkip : MonoBehaviour
             Debug.Log("Debug Skip period ++");
             TimeManager.Instance.GoToNextPeriod();
         }
-#endif
     }
+#endif
 }

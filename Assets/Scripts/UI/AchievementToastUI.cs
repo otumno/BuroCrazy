@@ -32,8 +32,8 @@ public class AchievementToastUI : MonoBehaviour
     {
         canvasGroup = GetComponent<CanvasGroup>();
         audioSource = GetComponent<AudioSource>();
-        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-        
+        audioSource ??= gameObject.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
         canvasGroup.alpha = 0f;
     }
 

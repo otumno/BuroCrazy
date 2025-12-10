@@ -1,4 +1,6 @@
 // Файл: Scripts/Data/RoleData.cs
+
+using Scriptables.Audio;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "RoleData_New", menuName = "Bureau/Role Data")]
@@ -8,6 +10,12 @@ public class RoleData : ScriptableObject
     public StaffController.Role roleType;
     public float moveSpeed = 3f;
     public int priority = 1;
+	
+	[Header("Аудио")]
+    [Tooltip("Профиль голоса для мужских персонажей этой роли")]
+    public VoiceData maleVoice;
+    [Tooltip("Профиль голоса для женских персонажей этой роли")]
+    public VoiceData femaleVoice;
     
     [Header("Внешний вид")]
     public EmotionSpriteCollection spriteCollection;
