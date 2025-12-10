@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Managers; // <<< ИСПРАВЛЕНИЕ 1: Добавлена эта строка
 
+[RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(CanvasGroup))]
 public class AchievementToastUI : MonoBehaviour
 {
@@ -32,8 +33,7 @@ public class AchievementToastUI : MonoBehaviour
     {
         canvasGroup = GetComponent<CanvasGroup>();
         audioSource = GetComponent<AudioSource>();
-        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
-        
+        audioSource.playOnAwake = false;
         canvasGroup.alpha = 0f;
     }
 

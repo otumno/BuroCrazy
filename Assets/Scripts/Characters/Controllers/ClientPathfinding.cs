@@ -4,6 +4,7 @@ using TMPro;
 using System.Linq;
 using System.Collections.Generic;
 using Managers;
+using Scriptables.Audio;
 
 public class ClientPathfinding : MonoBehaviour
 {

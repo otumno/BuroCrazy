@@ -1,7 +1,7 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using Data.Calendar; // <--- ДОБАВЛЕНО: Чтобы видеть расширение .IsNight()
+using Data.Calendar;
+using Scriptables.Audio;
 
 namespace Managers
 {
@@ -184,11 +184,7 @@ namespace Managers
             // TODO: Связать с параметром LowPass в микшере
         }
         
-        private static bool IsNightTime()
-        {
-            if (TimeManager.Instance == null) return false;
-            // Теперь это работает, так как мы добавили using Data.Calendar;
-            return TimeManager.Instance.GetCurrentPeriodType().IsNight();
-        }
+        private static bool IsNightTime() => TimeManager.Instance != null &&
+                                             TimeManager.Instance.GetCurrentPeriodType().IsNight();
     }
 }

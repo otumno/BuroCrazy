@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections;
 using TMPro;
-using Managers; // Важно для доступа к AudioManager
+using Managers;
+using Scriptables.Audio;
 
 public class ThoughtBubbleController : MonoBehaviour
 {
@@ -29,7 +30,8 @@ public class ThoughtBubbleController : MonoBehaviour
     // --- Переменная для контроля корутины голоса ---
     private Coroutine talkingCoroutine;
 
-    void Awake()
+    // т.к. это всё в 1 сцене по сути, то референсы можно сериализовать просто в 1 поле
+    private void Awake()
     {
         // Кэшируем ссылки на все возможные контроллеры на этом объекте
         myStaffController = GetComponent<StaffController>();
@@ -41,7 +43,7 @@ public class ThoughtBubbleController : MonoBehaviour
         serviceWorkerController = GetComponent<ServiceWorkerController>();
     }
 
-    void Start()
+    private void Start()
     {
         if (thoughtCollection == null || thoughtBubbleObject == null || thoughtTextMesh == null)
         {
@@ -94,14 +96,16 @@ public class ThoughtBubbleController : MonoBehaviour
     // --- ГЛАВНАЯ КОРУТИНА ОЗВУЧКИ (Gibberish System) ---
     private IEnumerator PlayVoiceForText(string text)
     {
-        // 1. Ищем профиль голоса
         VoiceData voice = null;
 
-        if (myStaffController != null) voice = myStaffController.voiceProfile;
-        else if (clientPathfinding != null) voice = clientPathfinding.voiceProfile;
+        // дублирующиеся данные - хуёво
+        if (myStaffController != null)
+            voice = myStaffController.voiceProfile;
+        else if (clientPathfinding != null)
+            voice = clientPathfinding.voiceProfile;
 
-        // Если голоса нет — молчим
-        if (voice == null || voice.speechClips == null || voice.speechClips.Count == 0) yield break;
+        if (voice == null || voice.speechClips == null || voice.speechClips.Count == 0)
+            yield break;
 
         // 2. Разбиваем текст на слова
         string[] words = text.Split(' ');
@@ -109,7 +113,8 @@ public class ThoughtBubbleController : MonoBehaviour
         // 3. Читаем каждое слово
         foreach (string word in words)
         {
-            if (string.IsNullOrWhiteSpace(word)) continue;
+            if (string.IsNullOrWhiteSpace(word))
+                continue;
 
             // --- ЛОГИКА СЛОГОВ ---
             int soundsToPlay = 1; // По умолчанию 1 звук (для 1 буквы)
@@ -126,10 +131,9 @@ public class ThoughtBubbleController : MonoBehaviour
             {
                 AudioClip clip = voice.GetRandomClip();
             
-                if (Managers.AudioManager.Instance != null && clip != null)
+                if (AudioManager.Instance != null && clip != null)
                 {
-                    Managers.AudioManager.Instance.PlayVoiceClip(
-                        clip, 
+                    AudioManager.Instance.PlayVoiceClip(clip,
                         transform.position, 
                         voice.basePitch, 
                         voice.pitchDelta, 
@@ -211,7 +215,7 @@ public class ThoughtBubbleController : MonoBehaviour
         return new Color(1.0f, 0.64f, 0.0f); 
     }
 
-    // Логика выбора темы мысли в зависимости от состояния и роли
+    // не надо пользоваться строками, которые прописаны прямо в коде либо енум заводи, либо пиши данные отдельно в конфиг
     private (string, float) DetermineThoughtParameters()
     {
         string key = "";

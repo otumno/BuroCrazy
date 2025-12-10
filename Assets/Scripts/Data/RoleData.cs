@@ -1,4 +1,6 @@
 // Файл: Scripts/Data/RoleData.cs
+
+using Scriptables.Audio;
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "RoleData_New", menuName = "Bureau/Role Data")]

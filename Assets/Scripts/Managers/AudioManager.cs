@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Audio;
 using System.Collections.Generic;
+using Scriptables.Audio;
 
 namespace Managers
 {
@@ -9,7 +10,7 @@ namespace Managers
         public static AudioManager Instance { get; private set; }
 
         [Header("Ссылки")]
-        public AudioLibrary audioLibrary;
+        public SoundLibrary soundLibrary;
         public AudioMixer mainMixer;
 
         [Header("Микшер Группы")]
@@ -97,9 +98,9 @@ namespace Managers
 
         private void PlayInternal(SoundID id, Vector3 position, bool is3D)
         {
-            if (id == SoundID.None || audioLibrary == null) return;
+            if (id == SoundID.None || soundLibrary == null) return;
 
-            var soundData = audioLibrary.GetSound(id);
+            var soundData = soundLibrary.GetSound(id);
             if (soundData == null || soundData.clip == null) return;
 
             AudioSource source = GetAvailableSource();
@@ -132,7 +133,6 @@ namespace Managers
         private void ResetSource(AudioSource source)
         {
             source.Stop();
-            source.time = 0;
             source.mute = false;
             source.loop = false;
             source.priority = 128;

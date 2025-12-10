@@ -9,29 +9,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
+  m_Script: {fileID: 11500000, guid: 522e5d51c165c6243b1c4342e6097c8d, type: 3}
   m_Name: MainAudioLibrary
   m_EditorClassIdentifier: Assembly-CSharp::AudioLibrary
   sounds:
-  - id: 1
-    clip: {fileID: 8300000, guid: a6c08d3d45ee0fa4f9d6c59a621566cb, type: 3}
-    volume: 1
-    pitch: 1
-    pitchDelta: 0.1
-    SpatialBlend: 1
-    Rolloff: 1
-    DopplerLevel: 1
-    DistanceMin: 0
-    DistanceMax: 50
-    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
-  - id: 2
-    clip: {fileID: 8300000, guid: dd0a15619eb7e3c49b188a6191cbe4ce, type: 3}
-    volume: 1
-    pitch: 1
-    pitchDelta: 0.1
-    SpatialBlend: 1
-    Rolloff: 1
-    DopplerLevel: 1
-    DistanceMin: 0
-    DistanceMax: 50
-    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+    - id: 1
+      clip: {fileID: 8300000, guid: a6c08d3d45ee0fa4f9d6c59a621566cb, type: 3}
+      volume: 1
+      pitch: 1
+      pitchDelta: 0.1
+      SpatialBlend: 1
+      Rolloff: 1
+      DopplerLevel: 1
+      DistanceMin: 0
+      DistanceMax: 50
+      mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+    - id: 2
+      clip: {fileID: 8300000, guid: dd0a15619eb7e3c49b188a6191cbe4ce, type: 3}
+      volume: 1
+      pitch: 1
+      pitchDelta: 0.1
+      SpatialBlend: 1
+      Rolloff: 1
+      DopplerLevel: 1
+      DistanceMin: 0
+      DistanceMax: 50
+      mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
