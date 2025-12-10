@@ -133,7 +133,6 @@ namespace Managers
         private void ResetSource(AudioSource source)
         {
             source.Stop();
-            source.time = 0;
             source.mute = false;
             source.loop = false;
             source.priority = 128;
