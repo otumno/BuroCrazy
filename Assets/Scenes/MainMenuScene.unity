@@ -9554,11 +9554,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8393267408139864138, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
       propertyPath: m_ReferenceResolution.x
-      value: 1920
+      value: 3840
       objectReference: {fileID: 0}
     - target: {fileID: 8393267408139864138, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
       propertyPath: m_ReferenceResolution.y
-      value: 1080
+      value: 2160
       objectReference: {fileID: 0}
     - target: {fileID: 9165004230610633035, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
       propertyPath: m_Sprite
