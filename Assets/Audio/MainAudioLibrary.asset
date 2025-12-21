@@ -14,24 +14,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AudioLibrary
   sounds:
   - id: 1
-    clip: {fileID: 8300000, guid: a6c08d3d45ee0fa4f9d6c59a621566cb, type: 3}
+    clips:
+    - {fileID: 8300000, guid: a6c08d3d45ee0fa4f9d6c59a621566cb, type: 3}
     volume: 1
     pitch: 1
     pitchDelta: 0.2
+    Priority: 128
+    Loop: 0
     SpatialBlend: 1
     Rolloff: 1
     DopplerLevel: 1
     DistanceMin: 0
     DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   - id: 2
-    clip: {fileID: 8300000, guid: 387007d5365a63547b93076288408824, type: 3}
+    clips: []
     volume: 1
     pitch: 1
     pitchDelta: 0.2
+    Priority: 128
+    Loop: 0
     SpatialBlend: 1
     Rolloff: 1
     DopplerLevel: 1
     DistanceMin: 0
     DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}

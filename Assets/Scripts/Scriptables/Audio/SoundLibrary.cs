@@ -19,15 +19,10 @@ namespace Scriptables.Audio
             for (int k = 0; k < sounds.Count; k++)
             {
                 var sound = sounds[k];
-            
-                // пишем ошибку, что звук есть в списке, но не настроен
-                if (sound.id == SoundID.None)
-                {
-                    Debug.LogError($"SoundData {k} SoundID == None");
+                if (!sound.Validate(k))
                     continue;
-                }
 
-                // добавляем и пишем ошибку, если дубликат
+                // не добавляем и пишем ошибку, если дубликат
                 if (!_dataOverId.TryAdd(sound.id, sound))
                     Debug.LogError($"SoundData {k}. {sound.id} already added!");
             }
@@ -38,12 +33,7 @@ namespace Scriptables.Audio
             if (_dataOverId.Count == 0)
                 Initialize();
         
-            if (_dataOverId.TryGetValue(id, out var data))
-                return data;
-        
-            // пишем ошибку, если звук не найден
-            Debug.LogError($"SoundData {id} not found in audio library!");
-            return null;
+            return _dataOverId.TryGetValue(id, out var data) ? data : null;
         }
     }
 }
