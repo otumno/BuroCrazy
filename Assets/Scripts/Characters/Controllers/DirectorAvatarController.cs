@@ -27,6 +27,9 @@ public class DirectorAvatarController : StaffController, IServiceProvider
 	
 	[Header("Свет")]
     public GameObject nightLight; // Фонарик для директора
+	
+	[Header("UI Эффекты")]
+	public GameObject processingIconPrefab;
 
     private DirectorState currentState = DirectorState.Idle;
     private ServicePoint currentWorkstation;
@@ -691,7 +694,23 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                  // --- Конец анимации забора ---
 
                 thoughtBubble?.ShowPriorityMessage("Обрабатываю...", 3f, Color.white);
-                yield return new WaitForSeconds(Random.Range(2.5f, 4.0f)); // Время обработки
+
+					float processTime = Random.Range(2.5f, 4.0f); // Вычисляем время заранее
+
+						// Запускаем иконку
+						if (processingIconPrefab != null)
+						{
+							GameObject iconObj = Instantiate(processingIconPrefab);
+							ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
+							if (animScript != null)
+							{
+								// Позиция А - Директор, Позиция Б - Клиент
+								animScript.Play(transform.position, client.transform.position, processTime);
+							}
+						}
+
+					// Ждем ровно столько, сколько длится анимация
+					yield return new WaitForSeconds(processTime);
 
                  // Проверяем клиента и стол перед выдачей
                  if (client == null || client.stateMachine == null || currentWorkstation == null) {

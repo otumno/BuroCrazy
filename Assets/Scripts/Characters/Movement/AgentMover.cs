@@ -564,99 +564,113 @@ public class AgentMover : MonoBehaviour
     /// Coroutine managing the visual and physical states during slipping, falling, lying down, and recovering.
     /// </summary>
     private IEnumerator SlipAndRecoverRoutine()
+{
+    isSlipping = true;
+    Debug.Log($"!!! {gameObject.name} НАЧАЛ СКОЛЬЗИТЬ !!!");
+
+    // --- References and State Saving ---
+    DirectorAvatarController director = GetComponent<DirectorAvatarController>(); 
+    bool wasUninterruptible = false;
+    if (director != null)
     {
-        isSlipping = true;
-        Debug.Log($"!!! {gameObject.name} НАЧАЛ СКОЛЬЗИТЬ !!!");
-
-        // --- References and State Saving ---
-        DirectorAvatarController director = GetComponent<DirectorAvatarController>(); // Check if it's the director
-        bool wasUninterruptible = false;
-        if (director != null)
-        {
-            wasUninterruptible = director.IsInUninterruptibleAction;
-            director.SetUninterruptible(true); // Block director actions during fall
-        }
-        Vector2 lastVelocity = rb.linearVelocity; // Store velocity before stopping
-        Stop(); // Stop path following / chasing logic
-
-        // --- Play Sound ---
-        if (fallSound != null && footstepAudioSource != null)
-        {
-            footstepAudioSource.PlayOneShot(fallSound);
-        }
-
-        // --- Fall Physics & Visuals ---
-        rb.linearVelocity = Vector2.zero; // Immediately stop physics movement
-        rb.angularVelocity = 0f;
-        rb.bodyType = RigidbodyType2D.Kinematic; // Make kinematic to prevent physics interference
-
-        Transform characterVisualsTransform = characterSpriteRenderer?.transform.parent; // Get the visual container
-        Quaternion originalVisualRotation = characterVisualsTransform != null ? characterVisualsTransform.localRotation : Quaternion.identity;
-        float fallDirection = (Random.value > 0.5f) ? 1f : -1f; // Random fall direction
-        Quaternion targetVisualRotation = Quaternion.Euler(0, 0, 90f * fallDirection); // Target rotation (lying down)
-
-        Vector3 initialRootPosition = transform.position; // Position before falling
-        Vector3 initialPivotWorldPosition = fallPivotPoint != null ? fallPivotPoint.position : initialRootPosition; // Pivot point world position before falling
-
-        var visuals = GetComponent<CharacterVisuals>();
-        visuals?.SetEmotion(Emotion.Scared); // Show scared face
-
-        // Animate fall rotation
-        float fallDuration = 0.2f;
-        for (float t = 0; t < fallDuration && characterVisualsTransform != null; t += Time.deltaTime)
-        {
-            characterVisualsTransform.localRotation = Quaternion.Slerp(originalVisualRotation, targetVisualRotation, t / fallDuration);
-            yield return null;
-        }
-        if (characterVisualsTransform != null) characterVisualsTransform.localRotation = targetVisualRotation; // Ensure final rotation
-
-        // Correct root position based on pivot
-        if (fallPivotPoint != null)
-        {
-            Vector3 currentPivotWorldPosition = fallPivotPoint.position; // Pivot position after rotation
-            Vector3 correctionVector = initialPivotWorldPosition - currentPivotWorldPosition; // Vector needed to move pivot back
-            transform.position += correctionVector; // Apply correction to root object
-        }
-        // --- End Fall Physics & Visuals ---
-
-        // --- Lying Down Phase ---
-        ThoughtBubbleController thoughtBubble = GetComponent<ThoughtBubbleController>();
-        if (thoughtBubble != null)
-        {
-            string[] fallComments = { "Ой!", "Ай!", "Упс...", "*Неловкий звук*", "Скользко!", "Вот же ж..." };
-            thoughtBubble.ShowPriorityMessage(fallComments[Random.Range(0, fallComments.Length)], 2.0f, Color.yellow);
-        }
-
-        yield return new WaitForSeconds(Random.Range(1.5f, 2.5f)); // Wait while lying down
-        // --- End Lying Down ---
-
-        // --- Recovery Phase ---
-        visuals?.SetEmotion(Emotion.Neutral); // Reset emotion
-
-        // Animate recovery rotation
-        float riseDuration = 0.3f;
-        Quaternion currentVisualRotation = characterVisualsTransform != null ? characterVisualsTransform.localRotation : targetVisualRotation;
-        for (float t = 0; t < riseDuration && characterVisualsTransform != null; t += Time.deltaTime)
-        {
-            characterVisualsTransform.localRotation = Quaternion.Slerp(currentVisualRotation, originalVisualRotation, t / riseDuration);
-            yield return null;
-        }
-        if (characterVisualsTransform != null) characterVisualsTransform.localRotation = originalVisualRotation; // Ensure final rotation
-
-        // Snap back to the original root position before the fall
-        transform.position = initialRootPosition;
-
-        rb.bodyType = RigidbodyType2D.Dynamic; // Return to dynamic physics
-        isSlipping = false; // Clear slipping flag
-
-        // Unblock director actions if they weren't blocked before the fall
-        if (director != null && !wasUninterruptible)
-        {
-            director.SetUninterruptible(false);
-        }
-         Debug.Log($"{gameObject.name} поднялся после падения.");
-        // --- End Recovery ---
+        wasUninterruptible = director.IsInUninterruptibleAction;
+        director.SetUninterruptible(true); 
     }
+    Vector2 lastVelocity = rb.linearVelocity; 
+    Stop(); 
+
+    // --- Play Sound ---
+    if (fallSound != null && footstepAudioSource != null)
+    {
+        footstepAudioSource.PlayOneShot(fallSound);
+    }
+
+    var clientBrain = GetComponent<ClientPathfinding>();
+    
+    if (clientBrain != null)
+    {
+        // Добавляем 10% стресса мгновенно за унижение
+        // (Можешь вынести 0.10f в настройки, если захочешь)
+        clientBrain.ApplyStressJump(0.10f); 
+        Debug.Log($"[AgentMover] {gameObject.name} получил стресс за падение!");
+    }
+
+    // --- Fall Physics & Visuals ---
+    rb.linearVelocity = Vector2.zero; 
+    rb.angularVelocity = 0f;
+    rb.bodyType = RigidbodyType2D.Kinematic; 
+
+    Transform characterVisualsTransform = characterSpriteRenderer?.transform.parent; 
+    Quaternion originalVisualRotation = characterVisualsTransform != null ? characterVisualsTransform.localRotation : Quaternion.identity;
+    float fallDirection = (Random.value > 0.5f) ? 1f : -1f; 
+    Quaternion targetVisualRotation = Quaternion.Euler(0, 0, 90f * fallDirection); 
+
+    Vector3 initialRootPosition = transform.position; 
+    Vector3 initialPivotWorldPosition = fallPivotPoint != null ? fallPivotPoint.position : initialRootPosition; 
+
+    var visuals = GetComponent<CharacterVisuals>();
+    visuals?.SetEmotion(Emotion.Scared); 
+
+    // Animate fall rotation
+    float fallDuration = 0.2f;
+    for (float t = 0; t < fallDuration && characterVisualsTransform != null; t += Time.deltaTime)
+    {
+        characterVisualsTransform.localRotation = Quaternion.Slerp(originalVisualRotation, targetVisualRotation, t / fallDuration);
+        yield return null;
+    }
+    if (characterVisualsTransform != null) characterVisualsTransform.localRotation = targetVisualRotation; 
+
+    // Correct root position based on pivot
+    if (fallPivotPoint != null)
+    {
+        Vector3 currentPivotWorldPosition = fallPivotPoint.position; 
+        Vector3 correctionVector = initialPivotWorldPosition - currentPivotWorldPosition; 
+        transform.position += correctionVector; 
+    }
+    // --- End Fall Physics & Visuals ---
+
+    // --- Lying Down Phase ---
+    ThoughtBubbleController thoughtBubble = GetComponent<ThoughtBubbleController>();
+    if (thoughtBubble != null)
+    {
+        string[] fallComments = { "Ой!", "Ай!", "Упс...", "*Неловкий звук*", "Скользко!", "Вот же ж..." };
+        
+        // Маленький бонус: если клиент, можно сделать реплику красной (злой)
+        Color msgColor = (clientBrain != null) ? Color.red : Color.yellow;
+        
+        thoughtBubble.ShowPriorityMessage(fallComments[Random.Range(0, fallComments.Length)], 2.0f, msgColor);
+    }
+
+    yield return new WaitForSeconds(Random.Range(1.5f, 2.5f)); 
+    // --- End Lying Down ---
+
+    // --- Recovery Phase ---
+    visuals?.SetEmotion(Emotion.Neutral); 
+
+    // Animate recovery rotation
+    float riseDuration = 0.3f;
+    Quaternion currentVisualRotation = characterVisualsTransform != null ? characterVisualsTransform.localRotation : targetVisualRotation;
+    for (float t = 0; t < riseDuration && characterVisualsTransform != null; t += Time.deltaTime)
+    {
+        characterVisualsTransform.localRotation = Quaternion.Slerp(currentVisualRotation, originalVisualRotation, t / riseDuration);
+        yield return null;
+    }
+    if (characterVisualsTransform != null) characterVisualsTransform.localRotation = originalVisualRotation; 
+
+    // Snap back to the original root position before the fall
+    transform.position = initialRootPosition;
+
+    rb.bodyType = RigidbodyType2D.Dynamic; 
+    isSlipping = false; 
+
+    // Unblock director actions if they weren't blocked before the fall
+    if (director != null && !wasUninterruptible)
+    {
+        director.SetUninterruptible(false);
+    }
+      Debug.Log($"{gameObject.name} поднялся после падения.");
+    // --- End Recovery ---
+}
     // --- End Slip and Recover ---
 
 } // End of AgentMover class

@@ -56,6 +56,8 @@ public class MakeArchiveRequestExecutor : ActionExecutor
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
             yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
             
+			client.ApplyStressJump(client.stressJump_Refusal);
+			
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
             client.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
             client.stateMachine.SetState(ClientState.LeavingUpset);

@@ -24,6 +24,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         if (client.docHolder.GetCurrentDocumentType() != DocumentType.Form1)
         {
             clerk.thoughtBubble?.ShowPriorityMessage("Это не тот бланк,\nвозьмите другой.", 3f, Color.yellow);
+			client.ApplyStressJump(client.stressJump_Refusal);
             client.stateMachine.GoGetFormAndReturn();
             FinishAction(true); // Задача выполнена (клиент отправлен)
             yield break;
@@ -73,7 +74,21 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         // --- Конец анимации забора ---
 
         clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 1)...", 3f, Color.white);
-        yield return new WaitForSeconds(Random.Range(2f, 4f)); // Время на "печать"
+			float workTime = Random.Range(2f, 4f);
+
+				// Пытаемся достать префаб через ссылки клерка
+				var refs = clerk.GetComponent<StaffPrefabReferences>();
+				if (refs != null && refs.processingIconPrefab != null)
+				{
+					GameObject iconObj = Instantiate(refs.processingIconPrefab);
+					ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
+					if (animScript != null)
+					{
+						animScript.Play(clerk.transform.position, client.transform.position, workTime);
+					}
+				}
+
+yield return new WaitForSeconds(workTime);
         
         // --- 4. АНИМАЦИЯ: Выдаем сертификат ---
         if (flyingDoc != null) Destroy(flyingDoc); // Уничтожаем старый бланк на столе

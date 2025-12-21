@@ -66,7 +66,97 @@ public class ClientStateMachine : MonoBehaviour
         if (parent.movement == null) { enabled = false; return; }
 
         StartCoroutine(MainLogicLoop());
+		
+		StartCoroutine(GlobalPatienceMonitor());
     }
+	
+	private IEnumerator GlobalPatienceMonitor()
+    {
+        float checkInterval = 0.2f; // Проверяем 5 раз в секунду
+        var wait = new WaitForSeconds(checkInterval);
+        
+        while (true)
+        {
+            yield return wait;
+
+            // Если уходим - стоп
+            if (IsLeavingState(currentState) || currentState == ClientState.PassedRegistration) yield break;
+
+            // 1. Базовая скорость накопления зависит от состояния
+            float currentMultiplier = parent.stressMod_Standing; // База (1.0)
+
+            switch (currentState)
+            {
+                case ClientState.SittingInWaitingArea:
+                    currentMultiplier = parent.stressMod_Sitting; // Сидит (0.5)
+                    break;
+
+                // Состояния "При деле" (почти не злится)
+                case ClientState.AtRegistration: 
+                case ClientState.AtDesk1:        
+                case ClientState.AtDesk2:
+                case ClientState.AtCashier:
+                case ClientState.InsideLimitedZone: 
+                case ClientState.MovingToSeat:      
+                case ClientState.ReturningToWait:   
+                case ClientState.WaitingForDocument: 
+                    currentMultiplier = parent.stressMod_BusyOrServed; // (0.1)
+                    break;
+                
+                case ClientState.MovingToGoal:
+                    // Если идет к врачу - спокоен, если просто в очередь - стрессует
+                    currentMultiplier = (targetZone != null) ? parent.stressMod_BusyOrServed : parent.stressMod_Standing;
+                    break;
+            }
+
+            // 2. Проверка окружения (Мусор) - только если стоит и ждет
+            if (currentState == ClientState.AtWaitingArea || currentState == ClientState.SittingInWaitingArea)
+            {
+                if (MessManager.Instance != null)
+                {
+                    // Упрощенная проверка: берем ближайшие объекты грязи
+                    int nearbyMessCount = MessManager.Instance.GetSortedMessList(transform.position)
+                        .Take(5) // Проверяем только 5 ближайших
+                        .Count(m => m != null && Vector2.Distance(transform.position, m.transform.position) < 3f);
+
+                    if (nearbyMessCount > 0)
+                    {
+                        float messPenalty = nearbyMessCount * parent.stressAdd_NearbyMess;
+                        if (parent.suetunFactor > 0.5f) messPenalty *= 1.5f; // Суетуны ненавидят грязь
+                        currentMultiplier += messPenalty;
+                    }
+                }
+            }
+
+            // 3. Применяем стресс
+            parent.AddStress(checkInterval * currentMultiplier);
+
+            // 4. Проверка срыва
+            if (parent.PatienceHeat >= 1.0f)
+            {
+                Debug.Log($"<color=red>[ClientStateMachine]</color> {parent.name}: Терпение лопнуло (100%)!");
+                HandlePatienceExhausted();
+                yield break;
+            }
+        }
+    }
+	
+	private void HandlePatienceExhausted()
+    {
+        StopAllActionCoroutines(); 
+
+        if (Random.value < 0.4f) // 40% шанс скандала
+        {
+            SetState(ClientState.Enraged);
+        }
+        else
+        {
+            parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+            SetGoal(ClientSpawner.Instance.exitWaypoint);
+            SetState(ClientState.LeavingUpset);
+        }
+    }
+	
 
     public IEnumerator MainLogicLoop()
     {
@@ -83,6 +173,63 @@ public class ClientStateMachine : MonoBehaviour
             yield return null;
         }
     }
+
+	public float GetNormalizedProgress()
+    {
+        // Если уже уходим (успешно) - 100%
+        if (currentState == ClientState.Leaving && parent.reasonForLeaving == ClientPathfinding.LeaveReason.Processed) return 1f;
+        // Если уходим злыми - прогресс останавливается на том, где был (или 0, как решишь)
+        if (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset) return 0f;
+
+        switch (parent.mainGoal)
+        {
+            case ClientGoal.AskAndLeave:
+                // Пришел -> Регистратура -> Ушел
+                if (currentState == ClientState.Spawning || currentState == ClientState.MovingToGoal) return 0.1f;
+                if (currentState == ClientState.AtRegistration) return 0.5f; // В процессе разговора
+                if (currentState == ClientState.Leaving) return 1f;
+                return 0.1f;
+
+            case ClientGoal.GetCertificate1:
+            case ClientGoal.GetCertificate2:
+                // Пришел(0) -> Регистратура(33) -> Бланк/Ожидание(66) -> Клерк(100)
+                
+                // Этап 1: До регистрации
+                if (currentState == ClientState.Spawning || currentState == ClientState.MovingToGoal && targetZone == null) return 0.0f;
+                
+                // Этап 2: Регистрация (направление)
+                if (currentState == ClientState.AtRegistration || currentState == ClientState.AtLimitedZoneEntrance) return 0.33f;
+
+                // Этап 3: Получение бланка / Ожидание в очереди к клерку
+                // Если мы уже прошли регистрацию и сидим ждем или идем за бланком
+                if (currentState == ClientState.MovingToSeat || currentState == ClientState.SittingInWaitingArea || 
+                    currentState == ClientState.AtWaitingArea || currentState == ClientState.WaitingForDocument) return 0.66f;
+
+                // Этап 4: У стола клерка (или внутри зоны клерка)
+                if (currentState == ClientState.AtDesk1 || currentState == ClientState.AtDesk2 || 
+                    (currentState == ClientState.InsideLimitedZone && (targetZone == ClientSpawner.GetDesk1Zone() || targetZone == ClientSpawner.GetDesk2Zone()))) 
+                    return 0.9f; // Почти готово
+
+                // Этап 5: Касса (это уже 100% выполнения услуги, осталась оплата)
+                if (currentState == ClientState.AtCashier || currentState == ClientState.GoingToCashier || parent.billToPay > 0) return 1f;
+
+                return 0.1f;
+
+            case ClientGoal.PayTax:
+                // Сразу в кассу: Пришел(0) -> Касса(100)
+                if (currentState == ClientState.AtCashier || currentState == ClientState.GoingToCashier) return 1f;
+                return 0.1f;
+                
+            case ClientGoal.GetArchiveRecord:
+                 if (currentState == ClientState.WaitingForDocument) return 0.5f;
+                 if (parent.billToPay > 0) return 1f;
+                 return 0.1f;
+
+            default:
+                return 0f;
+        }
+    }
+
 
     // --- ИСПРАВЛЕНИЕ: Вернули метод StopAllActionCoroutines (public, т.к. нужен в ClientPathfinding) ---
     public void StopAllActionCoroutines()
@@ -130,7 +277,7 @@ public class ClientStateMachine : MonoBehaviour
             case ClientState.AtLimitedZoneEntrance:
                 // Запускаем мониторинг терпения параллельно
                 if (zonePatienceCoroutine != null) StopCoroutine(zonePatienceCoroutine);
-                zonePatienceCoroutine = StartCoroutine(PatienceMonitorForZone(targetZone));
+                //zonePatienceCoroutine = StartCoroutine(PatienceMonitorForZone(targetZone));
                 
                 // Делегируем сложную логику входа экзекьютору
                 yield return StartCoroutine(actionExecutor.EnterZoneRoutine(targetZone));
@@ -148,7 +295,7 @@ public class ClientStateMachine : MonoBehaviour
 
             case ClientState.SittingInWaitingArea:
             case ClientState.AtWaitingArea:
-                ClientQueueManager.Instance.StartPatienceTimer(parent);
+                //ClientQueueManager.Instance.StartPatienceTimer(parent);
                 // Если стоим - можем слоняться
                 if (currentState == ClientState.AtWaitingArea) 
                     yield return StartCoroutine(MillAroundRoutine());
@@ -407,7 +554,7 @@ public class ClientStateMachine : MonoBehaviour
 
     private IEnumerator MillAroundRoutine()
     {
-        ClientQueueManager.Instance.StartPatienceTimer(parent);
+        //ClientQueueManager.Instance.StartPatienceTimer(parent);
         while (currentState == ClientState.AtWaitingArea)
         {
             Transform freeSeat = ClientQueueManager.Instance.FindSeatForClient(parent);
@@ -469,22 +616,6 @@ public class ClientStateMachine : MonoBehaviour
         SetGoal(nextGoal); 
         SetState(nextState); 
         yield return null; 
-    }
-
-    private IEnumerator PatienceMonitorForZone(LimitedCapacityZone zone)
-    {
-        yield return new WaitForSeconds(zonePatienceTime);
-        if (currentState == ClientState.AtLimitedZoneEntrance)
-        {
-            zone.LeaveQueue(parent.gameObject);
-            messGenerator.TrySpawnPuddle();
-            if (Random.value < 0.5f) SetState(ClientState.Enraged);
-            else 
-            {
-                parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                SetState(ClientState.LeavingUpset);
-            }
-        }
     }
     
     private IEnumerator WaitForServiceRoutine()

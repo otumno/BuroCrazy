@@ -18,4 +18,6 @@ public class StaffPrefabReferences : MonoBehaviour
 	
 	[Header("Звуки")]
 	public AudioClip levelUpSound;
+	
+	public GameObject processingIconPrefab;
 }

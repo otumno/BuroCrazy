@@ -13,6 +13,48 @@ public class ClientPathfinding : MonoBehaviour
     public ClientMovement movement;
     public ClientNotification notification;
     public DocumentHolder docHolder;
+	
+	[Header("Настройки Стресса (Баланс)")]
+    [Tooltip("Множитель скорости стресса, когда клиент стоит в очереди (База = 1.0)")]
+    public float stressMod_Standing = 1.0f;
+    [Tooltip("Множитель скорости, когда клиент сидит (комфорт)")]
+    public float stressMod_Sitting = 0.5f;
+    [Tooltip("Множитель скорости, когда клиент занят делом (идет, в туалете) или обслуживается")]
+    public float stressMod_BusyOrServed = 0.1f;
+    [Tooltip("Сколько стресса добавляет каждая куча мусора/лужа рядом (в секунду)")]
+    public float stressAdd_NearbyMess = 0.2f;
+    [Tooltip("Мгновенный стресс при отказе/ошибке (в % от максимума, 0.15 = 15%)")]
+    public float stressJump_Refusal = 0.15f;
+	
+	private float _maxPatienceValue;      // Максимальный "объем" терпения
+    private float _currentStressValue = 0f; // Текущий накопленный стресс
+	
+	public float PatienceHeat 
+    {
+        get 
+        {
+            if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.Upset) return 1f;
+            if (isLeavingSuccessfully) return 0f;
+            
+            // Защита от деления на 0
+            if (_maxPatienceValue <= 0.001f) return 0f;
+
+            return Mathf.Clamp01(_currentStressValue / _maxPatienceValue);
+        }
+    }
+	
+	// Таймер для расчета терпения
+    private float patienceStartTime;
+	
+	public float CurrentPatience 
+    {
+        get 
+        {
+            if (reasonForLeaving == LeaveReason.Angry || reasonForLeaving == LeaveReason.Upset) return 0f;
+            float timeAlive = Time.time - patienceStartTime;
+            return Mathf.Max(0, totalPatienceTime - timeAlive);
+        }
+    }
 
     [Header("Цели и Характер")]
     public ClientGoal mainGoal;
@@ -93,6 +135,9 @@ public class ClientPathfinding : MonoBehaviour
         suetunFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         prolazaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         documentQuality = 1.0f - (suetunFactor * 0.5f);
+		
+
+		_currentStressValue = 0f;
         
         if (mainGoal == default(ClientGoal))
         {
@@ -121,8 +166,22 @@ public class ClientPathfinding : MonoBehaviour
         movement.Initialize(this);
         float basePatience = Random.Range(minPatienceTime, maxPatienceTime);
         totalPatienceTime = basePatience * (1 + babushkaFactor);
+		
+		patienceStartTime = Time.time;
 
         if (spawnSound != null) AudioSource.PlayClipAtPoint(spawnSound, transform.position);
+		
+		var overlay = GetComponentInChildren<ClientStatusOverlay>(); 
+    
+		if (overlay != null)
+		{
+			overlay.Initialize(this);
+		}
+			else
+		{
+        Debug.LogError($"[ClientPathfinding] Не найден скрипт ClientStatusOverlay в детях объекта {gameObject.name}!");
+    }
+		
     }
 
     void OnDestroy()
@@ -223,4 +282,23 @@ public class ClientPathfinding : MonoBehaviour
             .OrderBy(c => Vector3.Distance(c.transform.position, position))
             .FirstOrDefault();
     }
+	
+	public void AddStress(float amount)
+    {
+        if (isLeavingSuccessfully) return;
+        _currentStressValue += amount;
+    }
+	
+	public void ApplyStressJump(float percent)
+    {
+        if (isLeavingSuccessfully) return;
+        _currentStressValue += _maxPatienceValue * percent;
+    }
+	
+	public void RelieveStress(float percent)
+    {
+        _currentStressValue -= _maxPatienceValue * percent;
+        if (_currentStressValue < 0) _currentStressValue = 0;
+    }
+	
 }

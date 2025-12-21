@@ -38,6 +38,7 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             if (Random.value < (1f - client.documentQuality) && Random.value < clerk.skills.pedantry)
             {
                 clerk.thoughtBubble?.ShowPriorityMessage("Здесь ошибка!\nНужно переделать.", 3f, Color.red);
+				client.ApplyStressJump(client.stressJump_Refusal);
                 yield return new WaitForSeconds(2f);
                 client.stateMachine.GoGetFormAndReturn();
                 FinishAction(true); // Задача выполнена (ошибка найдена)
@@ -72,8 +73,22 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         }
         // --- Конец анимации забора ---
 
-        clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 2)...", 3f, Color.white); // <<< ИЗМЕНЕНИЕ
-        yield return new WaitForSeconds(Random.Range(2f, 4f)); // Время на "печать"
+        clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 2)...", 3f, Color.white);
+				float workTime = Random.Range(2f, 4f);
+
+				// Пытаемся достать префаб через ссылки клерка
+				var refs = clerk.GetComponent<StaffPrefabReferences>();
+				if (refs != null && refs.processingIconPrefab != null)
+				{
+					GameObject iconObj = Instantiate(refs.processingIconPrefab);
+					ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
+					if (animScript != null)
+					{
+						animScript.Play(clerk.transform.position, client.transform.position, workTime);
+					}
+				}
+
+yield return new WaitForSeconds(workTime);
         
         // --- 4. АНИМАЦИЯ: Выдаем сертификат ---
         if (flyingDoc != null) Destroy(flyingDoc); // Уничтожаем старый бланк на столе

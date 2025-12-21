@@ -103,6 +103,8 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
              yield return new WaitForSeconds(1.5f); // Даем время прочитать
 
              if (client == null || client.stateMachine == null) yield break; // Перепроверка
+			 
+			 client.ApplyStressJump(client.stressJump_Refusal * 1.5f);
 
              // Снимаем с очереди, если он там был
              if (client.stateMachine.MyQueueNumber != -1)
@@ -133,6 +135,10 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         if (Random.value > finalChance)
         {
             Debug.LogWarning($"[Registration] ПРОВАЛ НАПРАВЛЕНИЯ! Регистратор {registrar.name} ошибся с клиентом {client.name}. Шанс был {finalChance:P0}");
+			
+			client.ApplyStressJump(0.05f); 
+			registrar.thoughtBubble?.ShowPriorityMessage("Эээ... наверное туда...", 2f, Color.yellow);
+			
             // Собираем список возможных НЕПРАВИЛЬНЫХ пунктов назначения
             List<Waypoint> possibleDestinations = new List<Waypoint>();
             if (ClientSpawner.Instance != null) {

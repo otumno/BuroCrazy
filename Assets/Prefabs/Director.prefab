@@ -344,6 +344,7 @@ MonoBehaviour:
   certificate1Prefab: {fileID: 6963206784104080445, guid: edf11bd38fec4c84e9745075eb5f910b, type: 3}
   certificate2Prefab: {fileID: 874320401446602386, guid: 3b9e93cf316ee2d4ab8c02695b069d07, type: 3}
   nightLight: {fileID: 6540925649609091333}
+  processingIconPrefab: {fileID: 8302179308828539902, guid: 2082aa1967a44324cb451698f5122270, type: 3}
 --- !u!114 &4228081369415377242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -398,6 +399,7 @@ MonoBehaviour:
   headAttachPoint: {fileID: 0}
   handAttachPoint: {fileID: 0}
   levelUpSound: {fileID: 0}
+  processingIconPrefab: {fileID: 0}
 --- !u!82 &-3817331557553524234
 AudioSource:
   m_ObjectHideFlags: 0

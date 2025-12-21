@@ -401,6 +401,7 @@ MonoBehaviour:
   frustrationResistanceSkill: 1
   startShiftSound: {fileID: 8300000, guid: 7df9251a62a0ec148b130536dba1b021, type: 3}
   endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
+  voiceProfile: {fileID: 0}
   spriteCollection: {fileID: 11400000, guid: cdab1e82753fc0d4fb395149bfc4e7dc, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 785cfc11f7b6eee47a4deaaf43942ff6, type: 2}
 --- !u!114 &9101693390999189065
@@ -422,6 +423,7 @@ MonoBehaviour:
   headAttachPoint: {fileID: 6204879837612137969}
   handAttachPoint: {fileID: 6279665039555831547}
   levelUpSound: {fileID: 8300000, guid: 8c28600a3205ba242917538dcb24c0ce, type: 3}
+  processingIconPrefab: {fileID: 8302179308828539902, guid: 2082aa1967a44324cb451698f5122270, type: 3}
 --- !u!114 &2692440484751530476
 MonoBehaviour:
   m_ObjectHideFlags: 0
