@@ -19,6 +19,8 @@ public class CharacterVisuals : MonoBehaviour
     private StateEmotionMap currentStateEmotionMap;
     private Gender characterGender;
     private Coroutine levelUpCoroutine; // Handle for the level-up effect coroutine
+	
+	private Sprite assignedPortrait;
 
     [Header("Звуки")] // Sound Effects section
     [Tooltip("Звук, проигрываемый при повышении уровня")]
@@ -154,6 +156,7 @@ public class CharacterVisuals : MonoBehaviour
             {
                  agentMover.SetAnimationSprites(bodySet.idleBody, bodySet.walkBody1, bodySet.walkBody2);
             }
+			assignedPortrait = bodySet.portrait;
         }
         else // Handle cases where bodySet or its sprites are missing
         {
@@ -166,6 +169,15 @@ public class CharacterVisuals : MonoBehaviour
 
         // Set the initial face emotion to Neutral
         SetEmotion(Emotion.Neutral);
+    }
+	
+	public Sprite GetPortraitSprite()
+    {
+        // Если портрет был назначен — возвращаем его
+        if (assignedPortrait != null) return assignedPortrait;
+        
+        // Если нет — возвращаем хотя бы тело (чтобы не было пустоты)
+        return bodyRenderer != null ? bodyRenderer.sprite : null;
     }
 
     /// <summary>

@@ -255,6 +255,7 @@ public abstract class StaffController : MonoBehaviour
 
             // Устанавливаем скорость и приоритет из RoleData
             agentMover.moveSpeed = data.moveSpeed;
+			agentMover.animationSpeed = data.animationSpeed;
             agentMover.priority = data.priority;
             // Обновляем базовую скорость на случай, если moveSpeed изменился
             agentMover.ApplySpeedMultiplier(1f); // Вызовем с множителем 1, чтобы обновить baseMoveSpeed, если нужно

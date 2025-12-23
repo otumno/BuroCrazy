@@ -1,12 +1,10 @@
-// Файл: StartOfDayPanel.cs
-
+// Файл: Assets/Scripts/UI/Panels/StartOfDayPanel.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 using Data.Calendar;
 using DG.Tweening;
 using Managers;
@@ -22,7 +20,6 @@ public class StartOfDayPanel : MonoBehaviour
 	[SerializeField] private TextMeshProUGUI errorRateText;
     
     [Header("Документы Директора")]
-    // --- ДОБАВЛЕНО: Ссылка на кнопку счетчика ---
     [SerializeField] private DirectorDeskButton directorDeskButton;
     [SerializeField] private GameObject documentIconPrefab;
     [SerializeField] private Transform documentIconsContainer;
@@ -30,31 +27,20 @@ public class StartOfDayPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI moneyText;
     [SerializeField] private TextMeshProUGUI strikesText;
     [SerializeField] private TextMeshProUGUI activeOrdersText;
+    
+    // Хранилище активных иконок
     private Dictionary<ClientPathfinding, DirectorDocumentIcon> waitingDocumentIcons = new Dictionary<ClientPathfinding, DirectorDocumentIcon>();
 
     [Header("Animation Settings")]
-    [SerializeField]
-    private float _fadeDuration;
-    
+    [SerializeField] private float _fadeDuration;
     private Sequence _sequence;
     
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else if (Instance != this)
-        {
-            Destroy(gameObject);
-        }
+        if (Instance == null) Instance = this;
+        else if (Instance != this) Destroy(gameObject);
     }
 
-    private void Start()
-    {
-        
-    }
-    
     private void OnEnable()
     {
         UpdatePanelInfo();
@@ -66,6 +52,7 @@ public class StartOfDayPanel : MonoBehaviour
         if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
         if (strikesText != null) strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
 
+        // Обновление ошибок
         if (errorRateText != null && DocumentQualityManager.Instance != null && OrderManager.Instance != null)
         {
             float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
@@ -78,12 +65,14 @@ public class StartOfDayPanel : MonoBehaviour
             errorRateText.gameObject.SetActive(true);
         }
 
+        // Обновление приказов
         if (activeOrdersText != null)
         {
             var dailyOrders = OrderManager.Instance.activeOrders.Select(o => o.orderName);
             var permanentOrders = OrderManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
             var allActiveOrders = dailyOrders.Concat(permanentOrders);
             var activeOrders = allActiveOrders as string[] ?? allActiveOrders.ToArray();
+            
             if (activeOrders.Any())
             {
                 activeOrdersText.text = "<b>Активные приказы:</b>\n" + string.Join("\n", activeOrders);
@@ -95,6 +84,7 @@ public class StartOfDayPanel : MonoBehaviour
             }
         }
 
+        // Кнопка начала дня
         if (startDayButton != null)
         {
             startDayButton.interactable = true;
@@ -103,7 +93,7 @@ public class StartOfDayPanel : MonoBehaviour
             var currentPeriodPlan = TimeManager.Instance.GetCurrentPeriodSettings();
             var isMidDayPause = Time.timeScale == 0f &&
                                 currentPeriodPlan != null &&
-                                !currentPeriodPlan.PeriodType.IsNight(); // Используем метод расширения IsNight()
+                                !currentPeriodPlan.PeriodType.IsNight();
 
             buttonText.text = isMidDayPause ? "Продолжить день" : "Начать день";
 
@@ -117,6 +107,53 @@ public class StartOfDayPanel : MonoBehaviour
         }
     }
 
+    // --- ОБНОВЛЕННЫЙ МЕТОД СОЗДАНИЯ ИКОНКИ ---
+    // Вызывается из WaveManager (для звонков) или из логики прихода клиента
+    public void CreateDocumentIcon(ClientPathfinding client)
+    {
+        if (documentIconPrefab == null || documentIconsContainer == null || waitingDocumentIcons.ContainsKey(client)) return;
+        
+        GameObject iconGO = Instantiate(documentIconPrefab, documentIconsContainer);
+        DirectorDocumentIcon icon = iconGO.GetComponent<DirectorDocumentIcon>();
+        
+        if (icon != null) { 
+            // Передаем клиента. Внутри Setup иконка сама проверит client.iconOverride
+            icon.Setup(client, reviewPanel); 
+            waitingDocumentIcons.Add(client, icon); 
+
+            // Обновляем счетчик на кнопке стола
+            if(directorDeskButton != null)
+            {
+                directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+            }
+        }
+    }
+    
+    // Для обратной совместимости (если где-то остался вызов старого метода)
+    public void RegisterDirectorDocument(ClientPathfinding client)
+    {
+        CreateDocumentIcon(client);
+    }
+
+    public void RemoveDocumentIcon(ClientPathfinding client)
+    {
+        if (client != null && waitingDocumentIcons.ContainsKey(client))
+        {
+            DirectorDocumentIcon iconToRemove = waitingDocumentIcons[client];
+            waitingDocumentIcons.Remove(client);
+            if(iconToRemove != null) Destroy(iconToRemove.gameObject);
+
+            // Обновляем кнопку стола
+            if(directorDeskButton != null)
+            {
+                directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+            }
+        }
+    }
+
+    public int GetWaitingDocumentCount() { return waitingDocumentIcons.Count; }
+
+    // Анимации
     public IEnumerator Fade(bool fadeIn, bool interactableAfterFade)
     {
         if (canvasGroup == null) yield break;
@@ -124,7 +161,7 @@ public class StartOfDayPanel : MonoBehaviour
         float endAlpha = fadeIn ? 1f : 0f;
         float fadeDuration = 0.3f;
         canvasGroup.interactable = false;
-        canvasGroup.blocksRaycasts = true; // always block raycasts or can click through this
+        canvasGroup.blocksRaycasts = true; 
         if (fadeIn) { gameObject.SetActive(true); }
         float timer = 0f;
         while (timer < fadeDuration)
@@ -174,40 +211,4 @@ public class StartOfDayPanel : MonoBehaviour
         while (_sequence.IsActive())
             yield return new WaitForSeconds(0.01f);
     }
-
-    public void RegisterDirectorDocument(ClientPathfinding client)
-    {
-        if (documentIconPrefab == null || documentIconsContainer == null || waitingDocumentIcons.ContainsKey(client)) return;
-        
-        GameObject iconGO = Instantiate(documentIconPrefab, documentIconsContainer);
-        DirectorDocumentIcon icon = iconGO.GetComponent<DirectorDocumentIcon>();
-        if (icon != null) { 
-            icon.Setup(client, reviewPanel); 
-            waitingDocumentIcons.Add(client, icon); 
-
-            // --- ДОБАВЛЕНО: Уведомляем кнопку об изменении ---
-            if(directorDeskButton != null)
-            {
-                directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
-            }
-        }
-    }
-
-    public void RemoveDocumentIcon(ClientPathfinding client)
-    {
-        if (client != null && waitingDocumentIcons.ContainsKey(client))
-        {
-            DirectorDocumentIcon iconToRemove = waitingDocumentIcons[client];
-            waitingDocumentIcons.Remove(client);
-            if(iconToRemove != null) Destroy(iconToRemove.gameObject);
-
-            // --- ДОБАВЛЕНО: Уведомляем кнопку об изменении ---
-            if(directorDeskButton != null)
-            {
-                directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
-            }
-        }
-    }
-
-    public int GetWaitingDocumentCount() { return waitingDocumentIcons.Count; }
 }

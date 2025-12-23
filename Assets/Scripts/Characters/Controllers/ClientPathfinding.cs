@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using Managers;
 using Scriptables.Audio;
+using DialogueSystem.Data;
 
 public class ClientPathfinding : MonoBehaviour
 {
@@ -28,6 +29,10 @@ public class ClientPathfinding : MonoBehaviour
 	
 	private float _maxPatienceValue;      // Максимальный "объем" терпения
     private float _currentStressValue = 0f; // Текущий накопленный стресс
+	
+	public bool IsRemote { get; private set; } // Флаг: это звонок?
+    public Sprite iconOverride; // Специальная иконка (телефон)
+	
 	
 	public float PatienceHeat 
     {
@@ -67,6 +72,8 @@ public class ClientPathfinding : MonoBehaviour
     [Header("Внешний вид")]
     public Gender gender;
     private CharacterVisuals visuals;
+	[Tooltip("Скорость анимации ходьбы (сек на кадр). Меньше = быстрее.")]
+	public float animationSpeed = 0.3f;
 	[Tooltip("Набор спрайтов (одежда) для клиентов")]
 	public EmotionSpriteCollection spriteCollection;
 	public StateEmotionMap stateEmotionMap;
@@ -109,6 +116,10 @@ public class ClientPathfinding : MonoBehaviour
     public bool hasBeenSentForRevision = false;
 	public DirectorDocumentLayout directorDocumentLayout;
 	public bool documentChecked = false;
+	
+	[Header("Сюжет")]
+    [Tooltip("Диалог, который запустится, если вызвать этого клиента в кабинет")]
+    public DialogueGraph specificDialogue;
     
     public CharacterVisuals GetVisuals() => visuals;
     
@@ -117,6 +128,11 @@ public class ClientPathfinding : MonoBehaviour
     totalClients++;
     stateMachine = gameObject.GetComponent<ClientStateMachine>();
     movement = gameObject.GetComponent<ClientMovement>();
+	var agent = GetComponent<AgentMover>();
+    if (agent != null)
+    {
+        agent.animationSpeed = this.animationSpeed;
+    }
     notification = gameObject.GetComponent<ClientNotification>();
     docHolder = gameObject.GetComponent<DocumentHolder>();
     visuals = gameObject.GetComponent<CharacterVisuals>();
@@ -299,6 +315,24 @@ public class ClientPathfinding : MonoBehaviour
     {
         _currentStressValue -= _maxPatienceValue * percent;
         if (_currentStressValue < 0) _currentStressValue = 0;
+    }
+	
+	public void InitializeRemote(Sprite icon)
+    {
+        IsRemote = true;
+        iconOverride = icon;
+
+        // Отключаем визуал тела, чтобы его не было видно
+        if (visuals != null) visuals.gameObject.SetActive(false);
+        
+        // Отключаем коллайдеры, чтобы по нему не кликнули случайно
+        var col = GetComponent<Collider2D>();
+        if (col) col.enabled = false;
+
+        // Отключаем движение
+        var mover = GetComponent<AgentMover>();
+        if (mover) mover.enabled = false;
+        
     }
 	
 }

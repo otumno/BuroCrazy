@@ -619,6 +619,68 @@ RectTransform:
   m_AnchoredPosition: {x: 758.625, y: 87.00012}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &2807503902096744252
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6393219160300706207}
+  - component: {fileID: 1229093190503658547}
+  m_Layer: 0
+  m_Name: DialogueUIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6393219160300706207
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2807503902096744252}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -63.966064, y: -184.34924, z: -1.4505856}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1664084752037518102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1229093190503658547
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2807503902096744252}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0afd8333f7c59b448424cd6d312e93d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Managers.DialogueUIManager
+  choiceButtonPrefab: {fileID: 6641948219214280999, guid: 2443633740cbfe1428468e60613ae3b9, type: 3}
+  defaultStartSound: {fileID: 8300000, guid: b10425f56e5b45447bb5006212fe8cfa, type: 3}
+  defaultChoiceSound: {fileID: 8300000, guid: 1dcb20c25a26db749952de112c0107ed, type: 3}
+  defaultEventSound: {fileID: 8300000, guid: 8c51ea2656e5d8844b8cc971a1e8d83c, type: 3}
+  defaultPhraseSound: {fileID: 8300000, guid: 387007d5365a63547b93076288408824, type: 3}
+  directorVoiceProfile: {fileID: 11400000, guid: 886bf9ee27f40ff4cb5f1d97124c19e2, type: 2}
+  windowAnimDuration: 0.3
+  windowStartScale: {x: 0.9, y: 0.9, z: 1}
+  portraitAnimDuration: 0.2
+  activeScale: {x: 1.1, y: 1.1, z: 1}
+  inactiveScale: {x: 1, y: 1, z: 1}
+  activeColor: {r: 1, g: 1, b: 1, a: 1}
+  activeTextColor: {r: 0, g: 0, b: 0, a: 1}
+  inactiveColor: {r: 0.6, g: 0.6, b: 0.6, a: 1}
+  inactiveTextColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  npcProfiles:
+  - {fileID: 11400000, guid: cbf52728ba191fe4f896f21c44a86cf1, type: 2}
+  - {fileID: 11400000, guid: d8116ba00b4fcce43b00a3d131778101, type: 2}
 --- !u!1 &2987444737071581337
 GameObject:
   m_ObjectHideFlags: 0
@@ -1840,6 +1902,7 @@ Transform:
   - {fileID: 3114165290283519538}
   - {fileID: 8532378419452326138}
   - {fileID: 4011524539500755867}
+  - {fileID: 6393219160300706207}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6323726595607129623

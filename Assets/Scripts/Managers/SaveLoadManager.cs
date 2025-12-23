@@ -67,7 +67,12 @@ namespace Managers
                 stackData.documentCount = stack.CurrentSize;
                 data.allDocumentStackData.Add(stackData);
             }
-        
+			
+			if (StoryStateManager.Instance != null)
+				{
+					StoryStateManager.Instance.SaveToData(data); // <--- Добавлено
+				}
+			
             WriteSaveDataToFile(slotIndex, data);
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
             Debug.Log($"Игра сохранена в слот {slotIndex}");
@@ -78,6 +83,12 @@ namespace Managers
             isNewGame = false;
             currentSlotIndex = slotIndex;
             WriteSaveDataToFile(slotIndex, initialData);
+			
+			if (StoryStateManager.Instance != null)
+				{
+					StoryStateManager.Instance.ResetState();
+				}
+			
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
             Debug.Log($"Новая игра создана и сохранена в слот {slotIndex}");
         }
@@ -113,6 +124,11 @@ namespace Managers
                 CalendarManager.Instance.SetDay(data.day);
                 PlayerWallet.Instance.SetMoney(data.money);
                 ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
+				
+				if (StoryStateManager.Instance != null)
+						{
+							StoryStateManager.Instance.LoadFromData(data); // <--- Добавлено
+						}
 
                 if (OrderManager.Instance != null)
                 {

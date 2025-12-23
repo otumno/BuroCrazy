@@ -21,6 +21,11 @@ public class EmotionSpriteCollection : ScriptableObject
     {
         [Tooltip("Базовый спрайт тела (состояние покоя)")]
         public Sprite idleBody;
+		
+		[Header("Диалоги")]
+        [Tooltip("Крупный портрет для диалогов, соответствующий этому телу")]
+        public Sprite portrait;
+		
         [Tooltip("Первый спрайт ходьбы для этого тела")]
         public Sprite walkBody1;
         [Tooltip("Второй спрайт ходьбы для этого тела")]

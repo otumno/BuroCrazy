@@ -9,6 +9,8 @@ public class RoleData : ScriptableObject
     [Header("Идентификация и Базовые Параметры")]
     public StaffController.Role roleType;
     public float moveSpeed = 3f;
+	[Tooltip("Скорость смены кадров ходьбы (сек на кадр). Меньше = быстрее.")]
+	public float animationSpeed = 0.3f;
     public int priority = 1;
 	
 	[Header("Аудио")]

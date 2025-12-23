@@ -133,6 +133,7 @@ public class GameBalanceControlPanel : EditorWindow
             DrawSerializedObject(role, role.name, (so) => 
             {
                 EditorGUILayout.PropertyField(so.FindProperty("moveSpeed"));
+				EditorGUILayout.PropertyField(so.FindProperty("animationSpeed"));
                 EditorGUILayout.PropertyField(so.FindProperty("baseHiringCost"));
                 EditorGUILayout.PropertyField(so.FindProperty("priority"));
                 
@@ -219,6 +220,7 @@ public class GameBalanceControlPanel : EditorWindow
             DrawComponentSettings(cp, "Настройки Клиента (Patience & Traits)", (so) => {
                 EditorGUILayout.PropertyField(so.FindProperty("minPatienceTime"));
                 EditorGUILayout.PropertyField(so.FindProperty("maxPatienceTime"));
+				EditorGUILayout.PropertyField(so.FindProperty("animationSpeed"));
                 EditorGUILayout.PropertyField(so.FindProperty("babushkaFactor"));
                 EditorGUILayout.PropertyField(so.FindProperty("suetunFactor"));
                 EditorGUILayout.PropertyField(so.FindProperty("prolazaFactor"));

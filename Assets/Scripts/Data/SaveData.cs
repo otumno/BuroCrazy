@@ -8,6 +8,9 @@ public class SaveData
     public int day;
     public int money;
     public int archiveDocumentCount;
+	
+	public List<string> storyFlagKeys = new List<string>();
+    public List<int> storyFlagValues = new List<int>();
 
     // New fields for Director's Orders
     public List<string> activePermanentOrderNames;

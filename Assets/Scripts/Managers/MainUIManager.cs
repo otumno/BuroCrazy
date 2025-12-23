@@ -1,3 +1,4 @@
+// Файл: Assets/Scripts/Managers/MainUIManager.cs
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -21,18 +22,21 @@ namespace Managers
             if (Instance == null)
             {
                 Instance = this;
-                // --- <<< ЭТОТ КОД ДОЛЖЕН ЗДЕСЬ БЫТЬ >>> ---
                 transform.SetParent(null); 
                 DontDestroyOnLoad(gameObject); 
-                // --- <<< КОНЕЦ >>> ---
-                Debug.Log($"<color=green>[MainUIManager]</color> Awake: Я стал Singleton. Объект 'gameObject' сделан бессмертным.");
+                Debug.Log($"<color=green>[MainUIManager]</color> Awake: Я стал Singleton.");
             }
             else if (Instance != this)
             {
-                Debug.LogWarning($"[MainUIManager] Awake: Найден дубликат. Уничтожаю *себя* (этот GameObject).");
-            
                 Destroy(gameObject); 
             }
+        }
+
+        private void Start()
+        {
+            // --- ИСПРАВЛЕНИЕ: Принудительный сброс флага при старте сцены ---
+            isTransitioning = false; 
+            Debug.Log("[MainUIManager] Start: Флаг isTransitioning сброшен.");
         }
 	
         void Update()
@@ -42,13 +46,7 @@ namespace Managers
                 StartOfDayPanel deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
                 bool isDirectorDeskOpen = deskPanel != null && deskPanel.gameObject.activeInHierarchy;
             
-                bool isAnyOtherMajorPanelOpen = false; 
-            
-                if (isDirectorDeskOpen || isAnyOtherMajorPanelOpen)
-                {
-                    //
-                }
-                else
+                if (!isDirectorDeskOpen)
                 {
                     bool isPaused = Time.timeScale == 0f;
                     ShowPausePanel(!isPaused);
@@ -65,7 +63,6 @@ namespace Managers
             if (deskPanel != null)
             {
                 PauseGame(true);
-            
                 StartCoroutine(deskPanel.Fade(true, true));
             }
             else
@@ -77,6 +74,7 @@ namespace Managers
         private IEnumerator LoadSceneRoutine(string sceneName)
         {
             isTransitioning = true;
+            Debug.Log($"[MainUIManager] LoadSceneRoutine: Переход к {sceneName}");
         
             if (TransitionManager.Instance != null)
             {
@@ -101,7 +99,6 @@ namespace Managers
             }
         }
     
-        #region Остальные методы (без изменений)
         private IEnumerator UnveilSequence(StartOfDayPanel startOfDayPanel, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController)
         {
             PauseGame(true);
@@ -146,57 +143,66 @@ namespace Managers
 
             isTransitioning = false;
         }
+
         public void OnSaveSlotClicked(int slotIndex)
         {
-            if (isTransitioning) return;
+            if (isTransitioning) 
+            {
+                Debug.LogWarning("[MainUIManager] Игнор загрузки: занят переходом.");
+                return;
+            }
+            
+            Debug.Log($"[MainUIManager] Загрузка слота {slotIndex}");
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
             SaveLoadManager.Instance.isNewGame = false;
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
+
         public void OnNewGameClicked(int slotIndex)
         {
-            if (isTransitioning) return;
+            if (isTransitioning)
+            {
+                Debug.LogWarning("[MainUIManager] Игнор новой игры: занят переходом.");
+                return;
+            }
+
+            Debug.Log($"[MainUIManager] Новая игра в слоте {slotIndex}");
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
             SaveLoadManager.Instance.isNewGame = true;
             SaveData newGameData = new SaveData { day = 1, money = 1000 };
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
+
         public void StartOrResumeGameplay()
         {
             if (isTransitioning) return;
             StartCoroutine(StartGameplaySequence());
         }
+
         private IEnumerator StartGameplaySequence()
         {
             isTransitioning = true;
-            Debug.Log("<color=lime>[MainUIManager] Начало последовательности StartGameplaySequence.</color>");
-        
-            if (pausePanel != null)
-            {
-                pausePanel.SetActive(false);
-            }
+            
+            if (pausePanel != null) pausePanel.SetActive(false);
 
             StartOfDayPanel sodp = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); 
             if (sodp != null)
             {
-                Debug.Log("<color=lime>[MainUIManager] Прячем StartOfDayPanel...</color>");
                 yield return StartCoroutine(sodp.Fade(false, false));
             }
 
-            Debug.Log("<color=lime>[MainUIManager] Снимаем игру с паузы.</color>");
             ResumeGame();
             HiringManager.Instance?.ActivateAllScheduledStaff();
         
             if (MusicPlayer.Instance != null)
             {
-                Debug.Log("<color=lime>[MainUIManager] Включаем музыку геймплея.</color>");
                 MusicPlayer.Instance.StartGameplayMusic();
             }
         
             isTransitioning = false;
-            Debug.Log("<color=lime>[MainUIManager] Последовательность StartGameplaySequence завершена. Игровой день запущен.</color>");
         }
+
         public void ShowPausePanel(bool show)
         {
             if (isTransitioning) return;
@@ -214,6 +220,7 @@ namespace Managers
                 if (pausePanel != null) pausePanel.SetActive(false);
             }
         }
+
         public void GoToMainMenu()
         {
             if (isTransitioning) return;
@@ -225,28 +232,29 @@ namespace Managers
             {
                 try
                 {
-                    Debug.Log($"[MainUIManager] Автосохранение в слот {SaveLoadManager.Instance.GetCurrentSlot()} перед выходом в меню...");
                     SaveLoadManager.Instance.SaveGame(SaveLoadManager.Instance.GetCurrentSlot());
                 }
                 catch (System.Exception e)
                 {
-                    Debug.LogError($"[MainUIManager] Ошибка автосохранения при выходе в меню: {e.Message}");
+                    Debug.LogError($"[MainUIManager] Ошибка автосохранения: {e.Message}");
                 }
             }
         
             StartCoroutine(LoadSceneRoutine(mainMenuSceneName));
         }
+
         public void TriggerNextDayTransition()
         {
             if (isTransitioning) return;
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
+
         public void PauseGame(bool playMusic = true)
         {
             Time.timeScale = 0f;
             if (playMusic && MusicPlayer.Instance != null) MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
         }
+
         public void ResumeGame() { Time.timeScale = 1f; }
-        #endregion
     }
 }

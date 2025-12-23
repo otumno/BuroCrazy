@@ -24,6 +24,13 @@ public class SaveSlotUI : MonoBehaviour
 
         bool slotInUse = SaveLoadManager.Instance.DoesSaveExist(slotIndex);
         Debug.Log($"[SaveSlotUI #{slotIndex}] Слот используется: {slotInUse}");
+		
+		newGameButton.onClick.AddListener(() => {
+			Debug.Log($"КЛИК: Новая игра (Слот {slotIndex})...");
+			if(MainUIManager.Instance == null) Debug.LogError("MainUIManager is NULL");
+			else if(MainUIManager.Instance.isTransitioning) Debug.LogWarning("MainUIManager is Transitioning");
+			else MainUIManager.Instance.OnNewGameClicked(slotIndex);
+		});
 
         if (slotInUse)
         {
