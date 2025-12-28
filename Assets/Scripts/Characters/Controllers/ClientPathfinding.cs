@@ -32,6 +32,7 @@ public class ClientPathfinding : MonoBehaviour
 	
 	public bool IsRemote { get; private set; } // Флаг: это звонок?
     public Sprite iconOverride; // Специальная иконка (телефон)
+	private int _remoteLifetimePeriods = 0;
 	
 	
 	public float PatienceHeat 
@@ -202,6 +203,11 @@ public class ClientPathfinding : MonoBehaviour
 
     void OnDestroy()
 {
+	if (Managers.TimeManager.Instance != null)
+        {
+            Managers.TimeManager.Instance.OnPeriodChanged -= OnRemotePeriodTick;
+        }
+	
     if (ClientQueueManager.Instance != null)
     {
         ClientQueueManager.Instance.RemoveClientFromQueue(this);
@@ -222,6 +228,38 @@ public class ClientPathfinding : MonoBehaviour
     }
     // --- ИЗМЕНЕНИЕ КОНЕЦ ---
 }
+
+	public void InitializeRemoteLifetime(int periods)
+    {
+        if (periods <= 0) return; // 0 = живет вечно (пока день не кончится)
+
+        _remoteLifetimePeriods = periods;
+        
+        // Подписываемся на событие смены периода
+        if (Managers.TimeManager.Instance != null)
+        {
+            Managers.TimeManager.Instance.OnPeriodChanged += OnRemotePeriodTick;
+        }
+    }
+	
+	private void OnRemotePeriodTick(Data.Calendar.PeriodSettings settings)
+    {
+        if (isLeavingSuccessfully) return; // Если уже "обслужен", таймер не важен
+
+        _remoteLifetimePeriods--;
+        
+        if (_remoteLifetimePeriods <= 0)
+        {
+            Debug.Log($"[ClientPathfinding] Время ожидания звонка от {name} истекло. Удаляем.");
+            
+            // Если игрок не ответил, считаем это как Upset (расстроен)
+            reasonForLeaving = LeaveReason.Upset;
+            
+            // Уничтожаем объект -> сработает OnDestroy -> удалится иконка со стола
+            Destroy(gameObject);
+        }
+    }
+	
 
     public void OnClientExit()
     {

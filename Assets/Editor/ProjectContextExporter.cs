@@ -89,7 +89,14 @@ public class ProjectContextExporter : EditorWindow
     {
         string result = GenerateFullReport();
         string path = EditorUtility.SaveFilePanel("Save Context", "", "project_context", "txt");
-        if (!string.IsNullOrEmpty(path)) File.WriteAllText(path, result);
+        if (!string.IsNullOrEmpty(path)) 
+        {
+            File.WriteAllText(path, result);
+            Debug.Log($"<color=green>Файл сохранен: {path}</color>");
+            
+            // --- ДОБАВЛЕНО: Открытие папки ---
+            EditorUtility.RevealInFinder(path);
+        }
     }
 
     private string GenerateFullReport()

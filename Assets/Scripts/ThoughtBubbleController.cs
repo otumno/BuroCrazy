@@ -221,37 +221,64 @@ public class ThoughtBubbleController : MonoBehaviour
         string key = "";
         float param = 1f;
 
+        // --- КЛИЕНТ ---
         if (clientPathfinding != null)
         {
-            var state = clientPathfinding.stateMachine.GetCurrentState();
-            if (state == ClientState.SittingInWaitingArea || state == ClientState.AtWaitingArea)
+            // ВАЖНО: Добавлена проверка stateMachine, чтобы избежать NullReferenceException
+            if (clientPathfinding.stateMachine != null)
             {
-                key = "Client_Waiting";
+                var state = clientPathfinding.stateMachine.GetCurrentState();
+                if (state == ClientState.SittingInWaitingArea || state == ClientState.AtWaitingArea)
+                {
+                    key = "Client_Waiting";
+                }
+                // Можно добавить другие состояния, например WaitingForDocument
             }
-            // Можно добавить другие состояния клиента
         }
+        // --- ОХРАННИК ---
         else if (guardMovement != null)
         {
             var state = guardMovement.GetCurrentState();
             if (state == GuardMovement.GuardState.Chasing || state == GuardMovement.GuardState.Talking) key = "Staff_Action";
             else if (state == GuardMovement.GuardState.OnBreak || state == GuardMovement.GuardState.AtToilet) key = "Staff_OnBreak";
             else if (state == GuardMovement.GuardState.Patrolling || state == GuardMovement.GuardState.WritingReport) key = "Staff_Working";
+            
             param = 1f - guardMovement.GetCurrentFrustration();
         }
+        // --- ДИРЕКТОР ---
         else if (directorController != null)
         {
             var state = directorController.GetCurrentState();
             if (state == DirectorAvatarController.DirectorState.AtDesk) key = "Director_Working";
             else if (state == DirectorAvatarController.DirectorState.Idle || state == DirectorAvatarController.DirectorState.MovingToPoint) key = "Director_Idle";
         }
+        // --- КЛЕРК ---
         else if (clerkController != null)
         {
              var state = clerkController.GetCurrentState();
              if (state == ClerkController.ClerkState.Working) key = "Staff_Working";
              else if (state == ClerkController.ClerkState.OnBreak) key = "Staff_OnBreak";
+             
              param = 1f - clerkController.GetCurrentFrustration();
         }
-        // Можно добавить internController и serviceWorkerController по аналогии
+        // --- СТАЖЕР (Добавлено) ---
+        else if (internController != null)
+        {
+             var state = internController.GetCurrentState();
+             if (state == InternController.InternState.Patrolling || state == InternController.InternState.CoveringDesk) key = "Staff_Working";
+             else if (state == InternController.InternState.OnBreak) key = "Staff_OnBreak";
+             
+             param = 1f - internController.GetCurrentFrustration();
+        }
+        // --- УБОРЩИК (Добавлено) ---
+        else if (serviceWorkerController != null)
+        {
+             var state = serviceWorkerController.GetCurrentState();
+             if (state == ServiceWorkerController.WorkerState.Cleaning) key = "Staff_Working";
+             else if (state == ServiceWorkerController.WorkerState.OnBreak) key = "Staff_OnBreak";
+             
+             param = 1f - serviceWorkerController.GetCurrentFrustration();
+        }
         
         return (key, param);
     }

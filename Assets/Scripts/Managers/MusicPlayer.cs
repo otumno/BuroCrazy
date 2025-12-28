@@ -28,6 +28,8 @@ namespace Managers
         private int lastTrackIndex = -1;
         private bool isGameplayMusicActive = false;
         private AudioClip lastPlayedGameplayTrack;
+		private float _savedTrackTime = 0f;
+        private AudioClip _savedTrackClip;
 
         private bool isMuffled = false;
 
@@ -125,6 +127,19 @@ namespace Managers
 
         public void PauseGameplayMusicForManualPause()
         {
+            // 1. Сохраняем текущий трек и время, если это была игровая музыка
+            if (isGameplayMusicActive && AudioManager.Instance != null && AudioManager.Instance.musicSource.isPlaying)
+            {
+                _savedTrackClip = AudioManager.Instance.musicSource.clip;
+                _savedTrackTime = AudioManager.Instance.musicSource.time;
+            }
+            else
+            {
+                _savedTrackClip = null;
+                _savedTrackTime = 0f;
+            }
+
+            // 2. Включаем музыку паузы
             PlayTrack(pauseTheme);
             SetMuffled(true);
         }
@@ -134,7 +149,23 @@ namespace Managers
             if (isGameplayMusicActive)
             {
                 SetMuffled(false);
-                PlayCorrectTrackForCurrentTime();
+
+                // 1. Если у нас есть сохраненный трек — восстанавливаем его
+                if (_savedTrackClip != null)
+                {
+                    PlayTrack(_savedTrackClip);
+                    
+                    // Важно: устанавливаем время ПОСЛЕ запуска PlayTrack
+                    if (AudioManager.Instance != null)
+                    {
+                        AudioManager.Instance.musicSource.time = _savedTrackTime;
+                    }
+                }
+                else
+                {
+                    // Если нечего восстанавливать — запускаем как обычно
+                    PlayCorrectTrackForCurrentTime();
+                }
             }
             else
             {
@@ -152,27 +183,41 @@ namespace Managers
 
         private void PlayCorrectTrackForCurrentTime()
         {
-            if (IsNightTime())
+            bool night = TimeManager.Instance != null && TimeManager.Instance.GetCurrentPeriodType().IsNight();
+            Debug.Log($"[MusicPlayer] Проверка трека. Ночь? {night}. Текущий клип: {AudioManager.Instance?.musicSource?.clip?.name}");
+
+            if (night)
             {
+                Debug.Log("[MusicPlayer] Включаю ночной трек.");
                 PlayTrack(nightTrack);
             }
             else
             {
-                if (AudioManager.Instance != null) 
-                     PlayRandomDayTrack();
+                Debug.Log("[MusicPlayer] Включаю дневной плейлист.");
+                // Даже если что-то играет, если это не дневной трек (например, офисная тема), надо сменить
+                PlayRandomDayTrack();
             }
         }
 
         private void PlayRandomDayTrack()
         {
-            if (dayTracks.Length == 0) return;
-            if (dayTracks.Length == 1) { PlayTrack(dayTracks[0]); return; }
+            if (dayTracks.Length == 0) 
+            {
+                Debug.LogError("[MusicPlayer] ОШИБКА: Список dayTracks пуст!");
+                return;
+            }
             
+            // ... (старая логика выбора индекса) ...
             int newIndex;
-            do { newIndex = Random.Range(0, dayTracks.Length); } while (newIndex == lastTrackIndex);
+            if (dayTracks.Length == 1) newIndex = 0;
+            else 
+            {
+                do { newIndex = Random.Range(0, dayTracks.Length); } while (newIndex == lastTrackIndex);
+            }
             lastTrackIndex = newIndex;
             
             lastPlayedGameplayTrack = dayTracks[lastTrackIndex];
+            Debug.Log($"[MusicPlayer] Выбран трек: {lastPlayedGameplayTrack?.name}");
             PlayTrack(lastPlayedGameplayTrack);
         }
 

@@ -3,8 +3,8 @@ guid: 50a061639f9eaeb4796148cec0f6f608
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -1610692827542834244
-    second: PortraitOlimpiaWANF 1_0
+      213: -4156053456432135956
+    second: PortraitOlimpiaWANF_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -100,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: PortraitOlimpiaWANF 1_0
+      name: PortraitOlimpiaWANF_0
       rect:
         serializedVersion: 2
         x: 0
@@ -115,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: cb33a0c386ba5a9e0800000000000000
-      internalID: -1610692827542834244
+      spriteID: ce004dda66bb256c0800000000000000
+      internalID: -4156053456432135956
       vertices: []
       indices: 
       edges: []
@@ -135,7 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      PortraitOlimpiaWANF 1_0: -1610692827542834244
+      PortraitOlimpiaWANF_0: -4156053456432135956
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

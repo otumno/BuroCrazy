@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/Managers/DialogueUIManager.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -33,6 +32,10 @@ namespace Managers
         // --- НАСТРОЙКИ ---
         [Header("Assets")]
         [SerializeField] private GameObject choiceButtonPrefab;
+
+        [Header("Настройки Текста")]
+        [Tooltip("Фиксированная скорость печати (сек на символ). 0.04 - комфортная скорость.")]
+        [SerializeField] private float unifiedTypingSpeed = 0.04f;
 
         [Header("Звуки")]
         [SerializeField] private AudioClip defaultStartSound;
@@ -137,7 +140,7 @@ namespace Managers
             {
                 directorPortrait.gameObject.SetActive(true);
                 if(directorNameText) directorNameText.text = "Директор"; 
-                SetVisualState(directorPortrait, directorNameText, false); 
+                SetVisualState(directorPortrait, directorNameText, false);
             }
 
             if (clientPortrait)
@@ -163,7 +166,18 @@ namespace Managers
         {
             currentNode = node;
             if (choiceContainer != null) foreach (Transform child in choiceContainer) Destroy(child.gameObject);
-
+			
+			if (node is EndNode endNode)
+            {
+                if (endNode.endSound != null)
+                {
+                    PlaySystemSound(endNode.endSound);
+                }
+                EndDialogue();
+                return;
+            }
+			
+			
             if (node == null || node is EndNode)
             {
                 EndDialogue();
@@ -175,7 +189,39 @@ namespace Managers
                 case PhraseNode phrase: ShowPhrase(phrase); break;
                 case ChoiceNode choice: ShowChoice(choice); break;
                 case EventNode evt: ExecuteEvent(evt); break;
+                case RandomNode rnd: ProcessRandomNode(rnd); break;
             }
+        }
+        
+        private void ProcessRandomNode(RandomNode node)
+        {
+            if (node.outcomes == null || node.outcomes.Count == 0)
+            {
+                Debug.LogWarning("RandomNode не имеет исходов!");
+                EndDialogue();
+                return;
+            }
+
+            float totalWeight = 0f;
+            foreach (var outcome in node.outcomes) totalWeight += outcome.chance;
+
+            float randomPoint = UnityEngine.Random.value * totalWeight;
+            float currentWeight = 0f;
+
+            DialogueNode targetNode = null;
+
+            foreach (var outcome in node.outcomes)
+            {
+                currentWeight += outcome.chance;
+                if (randomPoint <= currentWeight)
+                {
+                    targetNode = outcome.nextNode;
+                    break;
+                }
+            }
+            
+            if (targetNode == null) targetNode = node.outcomes[node.outcomes.Count - 1].nextNode;
+            ProcessNode(targetNode);
         }
 
         private void ShowPhrase(PhraseNode phrase)
@@ -196,11 +242,8 @@ namespace Managers
                 speakerName = "Директор";
                 isDirector = true;
                 
-                // 1. Приоритет: Аватар на сцене
                 if (DirectorAvatarController.Instance != null) 
                     voice = DirectorAvatarController.Instance.voiceProfile;
-                
-                // 2. Фолбэк: Настройка в инспекторе UI (для меню)
                 if (voice == null) 
                     voice = directorVoiceProfile;
             }
@@ -309,23 +352,22 @@ namespace Managers
             fullTextTarget = text;
             dialogueText.text = "";
             
-            // --- УСКОРЕНИЕ: Дефолтная задержка уменьшена до 0.01 ---
-            // Но если есть VoiceData, скорость берется оттуда. Настрой VoiceData ассет!
-            float delay = (voice != null) ? voice.delayPerSyllable : 0.01f; 
+            // --- ЕДИНАЯ СКОРОСТЬ ДЛЯ ВСЕХ ---
+            float delay = unifiedTypingSpeed; 
 
-            // --- ФИКС ЗВУКА: Играем звук в позиции КАМЕРЫ ---
-            // Это гарантирует, что звук будет слышно (как 2D), даже если UI далеко
+            // Звук должен быть слышен всегда, берем позицию камеры
             Vector3 soundPos = Camera.main != null ? Camera.main.transform.position : transform.position;
 
             for (int i = 0; i < text.Length; i++)
             {
                 dialogueText.text += text[i];
-                // Звук каждые 2 символа
+                
+                // Проигрываем звук (каждые 2 символа для не слишком частого треска)
                 if (i % 2 == 0 && !char.IsWhiteSpace(text[i]) && voice != null && AudioManager.Instance != null)
                 {
                     AudioManager.Instance.PlayVoiceClip(
                         voice.GetRandomClip(), 
-                        soundPos, // <-- Исправленная позиция
+                        soundPos, 
                         voice.basePitch, 
                         voice.pitchDelta, 
                         voice.volume
@@ -334,18 +376,44 @@ namespace Managers
                 yield return new WaitForSecondsRealtime(delay);
             }
             isTyping = false;
+
+            // --- АВТО-СКРЫТИЕ КНОПКИ В ВЫБОРЕ ---
+            // Если текст дописался сам и это Выбор, убираем кнопку "Далее", чтобы можно было жать варианты
+            if (currentNode is ChoiceNode)
+            {
+                nextButton.gameObject.SetActive(false);
+            }
         }
 
         private void ShowChoice(ChoiceNode choice)
         {
-            nextButton.gameObject.SetActive(false);
             choiceContainer.gameObject.SetActive(true);
             PlaySystemSound(defaultChoiceSound);
 
             if (!string.IsNullOrEmpty(choice.queryText))
             {
-                dialogueText.text = choice.queryText;
+                // Показываем кнопку "Далее" как прозрачный кликер для пропуска текста
+                nextButton.gameObject.SetActive(true);
+                
+                // Анимация фокуса на Директоре
+                if (directorNameText) directorNameText.text = "Директор";
                 UpdateFocusAnimation(true);
+
+                // Озвучка голосом Директора
+                VoiceData voice = null;
+                if (DirectorAvatarController.Instance != null) 
+                    voice = DirectorAvatarController.Instance.voiceProfile;
+                else 
+                    voice = directorVoiceProfile;
+
+                if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+                typingCoroutine = StartCoroutine(TypewriterRoutine(choice.queryText, voice));
+            }
+            else
+            {
+                // Если текста вопроса нет - сразу кнопки
+                dialogueText.text = "";
+                nextButton.gameObject.SetActive(false); 
             }
 
             foreach (var option in choice.options)
@@ -363,11 +431,25 @@ namespace Managers
 
         private void ExecuteEvent(EventNode evt)
         {
-            if (StoryStateManager.Instance != null)
+            // 1. Флаги сюжета (требуют StoryStateManager)
+            if (evt.eventType == EventNode.EventType.SetFlag) 
             {
-                if (evt.eventType == EventNode.EventType.SetFlag) StoryStateManager.Instance.SetFlag(evt.flagKey, evt.intValue);
-                else if (evt.eventType == EventNode.EventType.AddMoney) PlayerWallet.Instance?.AddMoney(evt.intValue, "Сюжет");
-                else if (evt.eventType == EventNode.EventType.AddStrike) DirectorManager.Instance?.AddStrike();
+                if (StoryStateManager.Instance != null)
+                    StoryStateManager.Instance.SetFlag(evt.flagKey, evt.intValue);
+                else
+                    Debug.LogWarning("Попытка установить флаг, но StoryStateManager не найден!");
+            }
+                
+            // 2. Деньги (НЕ требуют StoryStateManager)
+            else if (evt.eventType == EventNode.EventType.AddMoney) 
+            {
+                PlayerWallet.Instance?.AddMoney(evt.intValue, "Сюжет (Диалог)", IncomeType.Shadow);
+            }
+                
+            // 3. Страйки (НЕ требуют StoryStateManager)
+            else if (evt.eventType == EventNode.EventType.AddStrike) 
+            {
+                DirectorManager.Instance?.AddStrike();
             }
             
             AudioClip clip = evt.soundEffect != null ? evt.soundEffect : defaultEventSound;
@@ -396,11 +478,19 @@ namespace Managers
         {
             if (isTyping)
             {
+                // --- СКИП ТЕКСТА ---
                 if (typingCoroutine != null) StopCoroutine(typingCoroutine);
                 dialogueText.text = fullTextTarget;
                 isTyping = false;
+
+                // Если это Выбор и мы скипнули текст - сразу убираем кнопку, открывая варианты
+                if (currentNode is ChoiceNode)
+                {
+                    nextButton.gameObject.SetActive(false);
+                }
                 return;
             }
+
             if (currentNode is PhraseNode phrase) ProcessNode(phrase.nextNode);
             else if (currentNode is EventNode evt)
             {
@@ -466,14 +556,13 @@ namespace Managers
 
         private void PlaySystemSound(AudioClip clip)
         {
-            // Также используем позицию камеры для системных звуков
             Vector3 soundPos = Camera.main != null ? Camera.main.transform.position : transform.position;
 
             if (clip != null && AudioManager.Instance != null)
             {
                 AudioSource src = GetComponent<AudioSource>();
                 if (src) src.PlayOneShot(clip);
-                else AudioSource.PlayClipAtPoint(clip, soundPos); // <-- Исправлено
+                else AudioSource.PlayClipAtPoint(clip, soundPos);
             }
         }
     }

@@ -34,9 +34,8 @@ namespace Managers
 
         private void Start()
         {
-            // --- ИСПРАВЛЕНИЕ: Принудительный сброс флага при старте сцены ---
+            // Сбрасываем флаг при старте любой сцены (фикс залипания кнопок меню)
             isTransitioning = false; 
-            Debug.Log("[MainUIManager] Start: Флаг isTransitioning сброшен.");
         }
 	
         void Update()
@@ -103,7 +102,33 @@ namespace Managers
         {
             PauseGame(true);
 
-            if (SaveLoadManager.Instance.isNewGame) { DirectorManager.Instance.ResetState(); } else { SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot()); }
+            // --- ИСПРАВЛЕНИЕ: ПРИНУДИТЕЛЬНЫЙ СБРОС ДАННЫХ ---
+            
+            // 1. Всегда загружаем данные из слота. 
+            // Если это "Новая игра", то в слоте УЖЕ лежат чистые данные (мы их записали при клике на кнопку),
+            // и LoadGame корректно сбросит кошелек, календарь и архивы.
+            bool loadSuccess = SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
+            
+            if (!loadSuccess && SaveLoadManager.Instance.isNewGame)
+            {
+                // Если вдруг файл не создался (маловероятно), сбрасываем вручную
+                Debug.LogError("[MainUIManager] Файл сохранения не найден для новой игры! Сбрасываем вручную.");
+                PlayerWallet.Instance.ResetState(); // 100$
+                CalendarManager.Instance.StartNewGame(); // День 1
+                ArchiveManager.Instance.ResetState();
+            }
+
+            // 2. Дополнительный сброс для систем, которые не сохраняются в JSON
+            if (SaveLoadManager.Instance.isNewGame)
+            {
+                Debug.Log("[MainUIManager] Новая игра: Дополнительный сброс менеджеров.");
+                DirectorManager.Instance.ResetState(); 
+                HiringManager.Instance.ResetState(); // Очищаем список сотрудников
+                OrderManager.Instance.ResetState();  // Очищаем приказы
+                // StoryStateManager сбрасывается внутри SaveLoadManager.SaveNewGame, но для надежности:
+                StoryStateManager.Instance?.ResetState(); 
+            }
+            // ------------------------------------------------
 
             DirectorManager.Instance.PrepareDay();
 
@@ -146,11 +171,7 @@ namespace Managers
 
         public void OnSaveSlotClicked(int slotIndex)
         {
-            if (isTransitioning) 
-            {
-                Debug.LogWarning("[MainUIManager] Игнор загрузки: занят переходом.");
-                return;
-            }
+            if (isTransitioning) return;
             
             Debug.Log($"[MainUIManager] Загрузка слота {slotIndex}");
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
@@ -160,17 +181,16 @@ namespace Managers
 
         public void OnNewGameClicked(int slotIndex)
         {
-            if (isTransitioning)
-            {
-                Debug.LogWarning("[MainUIManager] Игнор новой игры: занят переходом.");
-                return;
-            }
+            if (isTransitioning) return;
 
-            Debug.Log($"[MainUIManager] Новая игра в слоте {slotIndex}");
+            Debug.Log($"[MainUIManager] Создание НОВОЙ игры в слоте {slotIndex}");
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
             SaveLoadManager.Instance.isNewGame = true;
+            
+            // Создаем чистый сейв
             SaveData newGameData = new SaveData { day = 1, money = 1000 };
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
+            
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
 
@@ -198,6 +218,14 @@ namespace Managers
             if (MusicPlayer.Instance != null)
             {
                 MusicPlayer.Instance.StartGameplayMusic();
+                // --- ДОБАВЛЕНО: Принудительно обновляем трек, если уже день ---
+                MusicPlayer.Instance.RequestNextTrack(); 
+            }
+
+            // --- ДОБАВЛЕНО: Пинаем WaveManager ---
+            if (WaveManager.Instance != null)
+            {
+                WaveManager.Instance.ForceCheckMorningEvents();
             }
         
             isTransitioning = false;

@@ -7,5 +7,6 @@ public enum ClientGoal
     VisitToilet,
     AskAndLeave,
     DirectorApproval,
+	DirectorAudience,
 	GetArchiveRecord	// Добавлена новая цель
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace DialogueSystem.Data
 {
-    public enum NodeType { Start, Phrase, Choice, Event, End }
+    public enum NodeType { Start, Phrase, Choice, Event, Random, End }
 
     public abstract class DialogueNode : ScriptableObject
     {

@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/UI/Panels/StartOfDayPanel.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -17,8 +16,25 @@ public class StartOfDayPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI dayText;
     [SerializeField] private Button startDayButton;
     [SerializeField] private CanvasGroup canvasGroup;
-	[SerializeField] private TextMeshProUGUI errorRateText;
+    [SerializeField] private TextMeshProUGUI errorRateText;
     
+    // --- НОВЫЕ ПОЛЯ ДЛЯ ФОНА ---
+    [Header("Атмосферный Фон")]
+    [Tooltip("Ссылка на Image объекта 'Back'")]
+    [SerializeField] private Image backgroundImage; 
+    
+    [System.Serializable]
+    public class PeriodBackground
+    {
+        [Tooltip("Выберите периоды, для которых подходит этот фон")]
+        public CalendarDayPeriodType periodMask;
+        public Sprite backgroundSprite;
+    }
+    
+    [Tooltip("Список фонов для разного времени суток")]
+    public List<PeriodBackground> backgroundVisuals;
+    // ---------------------------
+
     [Header("Документы Директора")]
     [SerializeField] private DirectorDeskButton directorDeskButton;
     [SerializeField] private GameObject documentIconPrefab;
@@ -28,7 +44,6 @@ public class StartOfDayPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI strikesText;
     [SerializeField] private TextMeshProUGUI activeOrdersText;
     
-    // Хранилище активных иконок
     private Dictionary<ClientPathfinding, DirectorDocumentIcon> waitingDocumentIcons = new Dictionary<ClientPathfinding, DirectorDocumentIcon>();
 
     [Header("Animation Settings")]
@@ -44,13 +59,40 @@ public class StartOfDayPanel : MonoBehaviour
     private void OnEnable()
     {
         UpdatePanelInfo();
+        UpdateBackground(); // Обновляем фон при открытии
+    }
+    
+    // --- МЕТОД ОБНОВЛЕНИЯ ФОНА ---
+    private void UpdateBackground()
+    {
+        if (backgroundImage == null || TimeManager.Instance == null || backgroundVisuals == null) return;
+
+        var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
+
+        // Ищем подходящий фон (проверка битовой маски)
+        foreach (var bg in backgroundVisuals)
+        {
+            if ((bg.periodMask & currentPeriod) != 0)
+            {
+                if (bg.backgroundSprite != null)
+                {
+                    backgroundImage.sprite = bg.backgroundSprite;
+                }
+                return;
+            }
+        }
     }
 
     public void UpdatePanelInfo()
     {
-        if (dayText != null) dayText.text = $"ДЕНЬ {CalendarManager.Instance.CurrentDay}";
-        if (moneyText != null) moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
-        if (strikesText != null) strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
+        if (dayText != null && CalendarManager.Instance != null) 
+            dayText.text = $"ДЕНЬ {CalendarManager.Instance.CurrentDay}";
+        
+        if (moneyText != null && PlayerWallet.Instance != null) 
+            moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
+        
+        if (strikesText != null && DirectorManager.Instance != null) 
+            strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
 
         // Обновление ошибок
         if (errorRateText != null && DocumentQualityManager.Instance != null && OrderManager.Instance != null)
@@ -66,7 +108,7 @@ public class StartOfDayPanel : MonoBehaviour
         }
 
         // Обновление приказов
-        if (activeOrdersText != null)
+        if (activeOrdersText != null && OrderManager.Instance != null)
         {
             var dailyOrders = OrderManager.Instance.activeOrders.Select(o => o.orderName);
             var permanentOrders = OrderManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
@@ -85,15 +127,17 @@ public class StartOfDayPanel : MonoBehaviour
         }
 
         // Кнопка начала дня
-        if (startDayButton != null)
+        if (startDayButton != null && TimeManager.Instance != null)
         {
             startDayButton.interactable = true;
             var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
 
             var currentPeriodPlan = TimeManager.Instance.GetCurrentPeriodSettings();
+            
+            // Здесь была ошибка с лишними символами, исправлено:
             var isMidDayPause = Time.timeScale == 0f &&
                                 currentPeriodPlan != null &&
-                                !currentPeriodPlan.PeriodType.IsNight();
+                                !currentPeriodPlan.PeriodType.IsNight(); 
 
             buttonText.text = isMidDayPause ? "Продолжить день" : "Начать день";
 
@@ -107,8 +151,6 @@ public class StartOfDayPanel : MonoBehaviour
         }
     }
 
-    // --- ОБНОВЛЕННЫЙ МЕТОД СОЗДАНИЯ ИКОНКИ ---
-    // Вызывается из WaveManager (для звонков) или из логики прихода клиента
     public void CreateDocumentIcon(ClientPathfinding client)
     {
         if (documentIconPrefab == null || documentIconsContainer == null || waitingDocumentIcons.ContainsKey(client)) return;
@@ -117,11 +159,9 @@ public class StartOfDayPanel : MonoBehaviour
         DirectorDocumentIcon icon = iconGO.GetComponent<DirectorDocumentIcon>();
         
         if (icon != null) { 
-            // Передаем клиента. Внутри Setup иконка сама проверит client.iconOverride
             icon.Setup(client, reviewPanel); 
             waitingDocumentIcons.Add(client, icon); 
 
-            // Обновляем счетчик на кнопке стола
             if(directorDeskButton != null)
             {
                 directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
@@ -129,7 +169,6 @@ public class StartOfDayPanel : MonoBehaviour
         }
     }
     
-    // Для обратной совместимости (если где-то остался вызов старого метода)
     public void RegisterDirectorDocument(ClientPathfinding client)
     {
         CreateDocumentIcon(client);
@@ -143,7 +182,6 @@ public class StartOfDayPanel : MonoBehaviour
             waitingDocumentIcons.Remove(client);
             if(iconToRemove != null) Destroy(iconToRemove.gameObject);
 
-            // Обновляем кнопку стола
             if(directorDeskButton != null)
             {
                 directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
@@ -153,16 +191,20 @@ public class StartOfDayPanel : MonoBehaviour
 
     public int GetWaitingDocumentCount() { return waitingDocumentIcons.Count; }
 
-    // Анимации
     public IEnumerator Fade(bool fadeIn, bool interactableAfterFade)
     {
         if (canvasGroup == null) yield break;
+        
+        if (fadeIn) UpdateBackground(); 
+
         float startAlpha = fadeIn ? 0f : 1f;
         float endAlpha = fadeIn ? 1f : 0f;
         float fadeDuration = 0.3f;
         canvasGroup.interactable = false;
         canvasGroup.blocksRaycasts = true; 
+        
         if (fadeIn) { gameObject.SetActive(true); }
+        
         float timer = 0f;
         while (timer < fadeDuration)
         {
@@ -172,19 +214,17 @@ public class StartOfDayPanel : MonoBehaviour
         }
         canvasGroup.alpha = endAlpha;
         canvasGroup.interactable = interactableAfterFade;
+        
         if (!fadeIn) { gameObject.SetActive(false); }
     }
 
     public IEnumerator FadeDoTween(bool fadeIn, bool interactableAfterFade)
     {
-        if (_sequence.IsActive())
-            _sequence.Kill();
+        if (_sequence.IsActive()) _sequence.Kill();
 
-        if (canvasGroup == null)
-        {
-            Debug.LogError($"StartOfDayPanel canvas group not serialized");
-            yield break;
-        }
+        if (canvasGroup == null) yield break;
+        
+        if (fadeIn) UpdateBackground();
         
         var startAlpha = fadeIn ? 0f : 1f;
         var endAlpha = fadeIn ? 1f : 0f;
@@ -194,21 +234,16 @@ public class StartOfDayPanel : MonoBehaviour
             {
                 canvasGroup.interactable = false;
                 canvasGroup.alpha = startAlpha;
-                
-                if (fadeIn)
-                    gameObject.SetActive(true);
+                if (fadeIn) gameObject.SetActive(true);
             })
             .Append(canvasGroup.DOFade(endAlpha, _fadeDuration))
             .OnComplete(() =>
             {
                 canvasGroup.interactable = interactableAfterFade;
-                
-                if (!fadeIn)
-                    gameObject.SetActive(false);
+                if (!fadeIn) gameObject.SetActive(false);
             })
             .Play();
 
-        while (_sequence.IsActive())
-            yield return new WaitForSeconds(0.01f);
+        while (_sequence.IsActive()) yield return new WaitForSeconds(0.01f);
     }
 }

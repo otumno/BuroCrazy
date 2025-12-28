@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.SpeakerProfile
   speakerID: Mascot
   displayName: "\u041E\u043B\u0438\u043C\u043F\u0438\u044F 426LV"
-  portrait: {fileID: -1610692827542834244, guid: 50a061639f9eaeb4796148cec0f6f608, type: 3}
+  portrait: {fileID: -4156053456432135956, guid: 50a061639f9eaeb4796148cec0f6f608, type: 3}
   voice: {fileID: 11400000, guid: a3ce67bdd3ab40c458c784c073eb1c95, type: 2}

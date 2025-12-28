@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/DialogueSystem/Editor/DialogueGraphView.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +32,7 @@ namespace DialogueSystem.Editor
         }
 
         // ---------------------------------------------------------
-        // 1. ПАМЯТКА НАРРАТИВЩИКА
+        // 1. СПРАВКА (HELP BOX)
         // ---------------------------------------------------------
         private void GenerateHelpBox()
         {
@@ -41,8 +40,8 @@ namespace DialogueSystem.Editor
             _helpBox.style.position = Position.Absolute;
             _helpBox.style.left = 15;
             _helpBox.style.top = 35;
-            _helpBox.style.width = 380;
-            _helpBox.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.9f);
+            _helpBox.style.width = 400; // Чуть шире для текста
+            _helpBox.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.95f);
             
             Color borderCol = new Color(1, 1, 1, 0.2f);
             _helpBox.style.borderTopColor = borderCol; _helpBox.style.borderBottomColor = borderCol;
@@ -60,11 +59,45 @@ namespace DialogueSystem.Editor
             };
             _helpBox.Add(title);
 
-            AddHelpSection("1. СТАРТ (START)", "Начало диалога. Нет входа, только выход. Задает звук старта.");
-            AddHelpSection("2. ФРАЗА (PHRASE)", "Speaker ID: 'Director', 'Client' или имя.\nТекст: Реплика.\nМожно переопределить голос/портрет.");
-            AddHelpSection("3. ВЫБОР (CHOICE)", "Ветвление диалога.\nУсловия: Чтобы кнопка появилась только при условии.\nПример: MONEY >= 100");
-            AddHelpSection("4. СОБЫТИЕ (EVENT)", "Логика игры.\nAddMoney (100 или -50), AddStrike, SetFlag.\nЕсли есть текст сообщения — покажет окно результата.");
-            AddHelpSection("5. КОНЕЦ (END)", "Обрывает диалог.");
+            // --- ОПИСАНИЕ ВОЗМОЖНОСТЕЙ ---
+			
+			AddHelpSection("0. СОЗДАНИЕ НОД", 
+                "Основной функционал.\n" +
+                "- Правой кнопкой мыши на любом месте в окне." +
+				"- Начинаем нодой СТАРТ заканчиваем КОНЕЦ.");
+			
+            AddHelpSection("1. ФРАЗА (PHRASE)", 
+                "Базовая реплика.\n" +
+                "- Speaker ID: 'Director', 'Client' или ID из базы NPC.\n" +
+                "- Appear Sound: Звук 'вжик' при появлении.\n" +
+                "- Voice/Portrait: Можно переопределить дефолтные.");
+
+            AddHelpSection("2. ВЫБОР (CHOICE)", 
+                "Ветвление диалога кнопками.\n" +
+                "- Условия (Condition): Кнопка появится, ТОЛЬКО если условие верно.\n" +
+                "  Пример Key: 'MONEY', Op: '>=', Val: 100.\n" +
+                "  Пример Key: 'MET_INSPECTOR', Op: '==', Val: 1.");
+
+            AddHelpSection("3. СОБЫТИЕ (EVENT)", 
+                "Изменение состояния игры.\n" +
+                "- SetFlag: Запомнить выбор. Key: 'HELPED_GRANNY', Val: 1.\n" +
+                "  (Используется для спавна клиентов на след. день!)\n" +
+                "- AddMoney: Дать/забрать деньги (100 или -50).\n" +
+                "- AddStrike: Выдать страйк директору.\n" +
+                "- Notification: Если заполнить текст, покажет окно 'РЕЗУЛЬТАТ'.");
+
+            AddHelpSection("4. СЛУЧАЙНОСТЬ (RANDOM)", 
+                "Автоматический выбор пути.\n" +
+                "- Chance: Вес вероятности (чем больше, тем чаще).\n" +
+                "  Используется для проверок удачи или вариативности.");
+
+            AddHelpSection("КАК СДЕЛАТЬ КВЕСТ 'ПРИХОДИТЕ ЗАВТРА':", 
+                "1. В диалоге сегодня: Нода EVENT -> SetFlag 'COME_BACK' = 1.\n" +
+                "2. В базе SpecialVisitors (Resources):\n" +
+                "   - Создать посетителя на День X+1.\n" +
+                "   - Required Flag Key: 'COME_BACK'.\n" +
+                "   - Required Flag Value: 1.\n" +
+                "   - Forced Goal: DirectorApproval.");
 
             var closeBtn = new Button(() => ToggleHelp()) { text = "Закрыть справку" };
             closeBtn.style.marginTop = 10;
@@ -118,12 +151,15 @@ namespace DialogueSystem.Editor
             };
             nodeView.capabilities |= Capabilities.Resizable;
 
+            // Входной порт для всех, кроме Старта
             if (!(nodeData is StartNode))
             {
                 var input = GeneratePort(nodeView, Direction.Input, Port.Capacity.Multi);
                 input.portName = "Вход";
                 nodeView.inputContainer.Add(input);
             }
+
+            // --- ОТРИСОВКА НОД ---
 
             if (nodeData is StartNode start)
             {
@@ -139,10 +175,15 @@ namespace DialogueSystem.Editor
                 nodeView.extensionContainer.Add(soundContainer);
                 nodeView.capabilities &= ~Capabilities.Deletable;
             }
-            else if (nodeData is EndNode)
+            else if (nodeData is EndNode end)
             {
                 nodeView.title = "КОНЕЦ";
                 nodeView.mainContainer.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.8f);
+				var soundContainer = new IMGUIContainer(() => {
+                    GUILayout.Space(5);
+                    end.endSound = (AudioClip)EditorGUILayout.ObjectField("Звук конца:", end.endSound, typeof(AudioClip), false);
+                });
+                nodeView.extensionContainer.Add(soundContainer);
             }
             else if (nodeData is PhraseNode phrase)
             {
@@ -256,6 +297,60 @@ namespace DialogueSystem.Editor
                     nodeView.extensionContainer.Add(box);
                 }
             }
+            // --- ДОБАВЛЕНО: RANDOM NODE ---
+            else if (nodeData is RandomNode rnd)
+            {
+                nodeView.title = "СЛУЧАЙНОСТЬ";
+                nodeView.mainContainer.style.backgroundColor = new Color(0.4f, 0.2f, 0.5f, 0.8f);
+
+                AddTextField(nodeView, "Комментарий:", rnd.developerComment, v => rnd.developerComment = v, rnd, true);
+
+                var addBtn = new Button(() => { 
+                    rnd.outcomes.Add(new RandomNode.RandomOutcome { chance = 1f });
+                    EditorUtility.SetDirty(rnd); 
+                    PopulateView(_graph);
+                }) { text = "+ Добавить исход" };
+                nodeView.extensionContainer.Add(addBtn);
+
+                for (int i = 0; i < rnd.outcomes.Count; i++)
+                {
+                    int idx = i;
+                    var box = CreateOptionBox();
+
+                    var header = new VisualElement() { style = { flexDirection = FlexDirection.Row, justifyContent = Justify.SpaceBetween, marginBottom = 5 } };
+                    header.Add(new Label($"Исход {i + 1}") { style = { unityFontStyleAndWeight = FontStyle.Bold } });
+                    
+                    var del = new Button(() => { 
+                        rnd.outcomes.RemoveAt(idx); 
+                        EditorUtility.SetDirty(rnd); 
+                        PopulateView(_graph); 
+                    }) { text = "X" };
+                    del.style.backgroundColor = new Color(0.6f, 0.2f, 0.2f);
+                    header.Add(del);
+                    box.Add(header);
+
+                    var row = new VisualElement() { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                    row.Add(new Label("Вес (Chance):") { style = { width = 90 } });
+                    
+                    var chanceField = new FloatField() { value = rnd.outcomes[i].chance };
+                    chanceField.style.flexGrow = 1;
+                    chanceField.RegisterValueChangedCallback(e => { 
+                        rnd.outcomes[idx].chance = e.newValue; 
+                        EditorUtility.SetDirty(rnd); 
+                    });
+                    row.Add(chanceField);
+                    box.Add(row);
+
+                    var port = GeneratePort(nodeView, Direction.Output, Port.Capacity.Single);
+                    port.userData = idx;
+                    port.portName = "->"; 
+                    port.style.alignSelf = Align.FlexEnd;
+                    port.style.marginTop = 5;
+                    box.Add(port);
+
+                    nodeView.extensionContainer.Add(box);
+                }
+            }
 
             nodeView.RefreshExpandedState();
             nodeView.RefreshPorts();
@@ -301,6 +396,25 @@ namespace DialogueSystem.Editor
                     LinkNodes(outPort, inPort);
                 }
             }
+
+            // --- ДОБАВЛЕНО: RANDOM NODE CONNECTIONS ---
+            if (nodeData is RandomNode rnd)
+            {
+                var allPorts = outputNodeView.Query<Port>().ToList();
+                var outputPorts = allPorts.Where(p => p.direction == Direction.Output).ToList();
+
+                for (int i = 0; i < rnd.outcomes.Count; i++)
+                {
+                    if (rnd.outcomes[i].nextNode == null) continue;
+                    
+                    var targetNodeView = GetNodeByGuid(rnd.outcomes[i].nextNode.id);
+                    if (targetNodeView == null) continue;
+
+                    var outPort = outputPorts.FirstOrDefault(p => p.userData is int idx && idx == i);
+                    var inPort = targetNodeView.inputContainer[0] as Port;
+                    LinkNodes(outPort, inPort);
+                }
+            }
         }
 
         private VisualElement CreateOptionBox()
@@ -330,10 +444,8 @@ namespace DialogueSystem.Editor
         private Node GetNodeByGuid(string id) => nodes.ToList().FirstOrDefault(n => n.viewDataKey == id);
         public override List<Port> GetCompatiblePorts(Port start, NodeAdapter adapter) => ports.ToList().Where(p => start != p && start.node != p.node && start.direction != p.direction).ToList();
 
-        // --- ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ: ОБРАБОТКА ПЕРЕМЕЩЕНИЯ ---
         private GraphViewChange OnGraphViewChanged(GraphViewChange change)
         {
-            // 1. Обработка удаления
             if (change.elementsToRemove != null)
             {
                 foreach (var el in change.elementsToRemove)
@@ -342,10 +454,8 @@ namespace DialogueSystem.Editor
                     if (el is Edge e) RemoveLink(e);
                 }
             }
-            // 2. Обработка создания связей
             if (change.edgesToCreate != null) foreach (var e in change.edgesToCreate) CreateLink(e);
             
-            // 3. Обработка ПЕРЕМЕЩЕНИЯ (сохраняем позицию)
             if (change.movedElements != null)
             {
                 foreach (var element in change.movedElements)
@@ -369,10 +479,14 @@ namespace DialogueSystem.Editor
         {
             var inDat = _graph.allNodes.FirstOrDefault(n => n.id == e.input.node.viewDataKey);
             var outDat = _graph.allNodes.FirstOrDefault(n => n.id == e.output.node.viewDataKey);
+            
             if(outDat is StartNode s) s.nextNode = inDat;
             if(outDat is PhraseNode p) p.nextNode = inDat;
             if(outDat is EventNode ev) ev.nextNode = inDat;
             if(outDat is ChoiceNode c) { int i = (int)e.output.userData; if(i < c.options.Count) c.options[i].nextNode = inDat; }
+            // --- RANDOM LINK ---
+            if(outDat is RandomNode rnd) { int i = (int)e.output.userData; if(i < rnd.outcomes.Count) rnd.outcomes[i].nextNode = inDat; }
+            
             EditorUtility.SetDirty(outDat);
         }
 
@@ -386,6 +500,9 @@ namespace DialogueSystem.Editor
             if (outDat is PhraseNode p) p.nextNode = null;
             if (outDat is EventNode ev) ev.nextNode = null;
             if (outDat is ChoiceNode c) { int i = (int)e.output.userData; if(i < c.options.Count) c.options[i].nextNode = null; }
+            // --- RANDOM UNLINK ---
+            if (outDat is RandomNode rnd) { int i = (int)e.output.userData; if(i < rnd.outcomes.Count) rnd.outcomes[i].nextNode = null; }
+            
             EditorUtility.SetDirty(outDat);
         }
 
@@ -396,6 +513,7 @@ namespace DialogueSystem.Editor
             evt.menu.AppendAction("Создать Фразу", _ => Create<PhraseNode>(pos));
             evt.menu.AppendAction("Создать Выбор", _ => Create<ChoiceNode>(pos));
             evt.menu.AppendAction("Создать Событие", _ => Create<EventNode>(pos));
+            evt.menu.AppendAction("Создать Случайность", _ => Create<RandomNode>(pos)); // Добавлено
             evt.menu.AppendAction("Создать КОНЕЦ", _ => Create<EndNode>(pos));
         }
 
@@ -404,6 +522,11 @@ namespace DialogueSystem.Editor
             var node = _graph.CreateNode<T>();
             node.graphPosition = new Rect(pos, Vector2.zero);
             if(node is ChoiceNode c) c.options.Add(new ChoiceNode.ChoiceOption { text = "Далее..." });
+            // Добавляем дефолтные исходы для рандома
+            if(node is RandomNode r) { 
+                r.outcomes.Add(new RandomNode.RandomOutcome { chance = 1f });
+                r.outcomes.Add(new RandomNode.RandomOutcome { chance = 1f });
+            }
             CreateNodeView(node);
         }
     }
