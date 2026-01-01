@@ -110,7 +110,7 @@ namespace Managers
         public CalendarDayPeriodType GetCurrentPeriodType() => currentPeriodType;
         public PeriodSettings GetCurrentPeriodSettings() => currentPeriodSettings;
         public float GetPeriodTimer() => periodTimer;
-        public bool IsNight() => currentPeriodType != null && currentPeriodType.IsNight();
+        public bool IsNight() => currentPeriodType.IsNight();
         
         public PeriodSettings GetPreviousPeriodSettings()
         {

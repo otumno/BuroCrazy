@@ -19,6 +19,7 @@ public class SaveData
     // Lists for storing data about individual objects
     public List<StaffSaveData> allStaffData;
     public List<DocumentStackSaveData> allDocumentStackData;
+    public HashSet<string> watchedDialogues;
 }
 
 [System.Serializable]

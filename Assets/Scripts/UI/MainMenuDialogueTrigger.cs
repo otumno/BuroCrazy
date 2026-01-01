@@ -1,3 +1,4 @@
+using BuroDebug;
 using UnityEngine;
 using Managers;
 using DialogueSystem.Data;
@@ -7,7 +8,6 @@ public class MainMenuDialogueTrigger : MonoBehaviour
     [Header("Диалог")]
     public DialogueGraph introDialogue;
     public string saveKey = "HAS_SEEN_INTRO";
-    public bool debugAlwaysShow = false;
 
     [Header("Система, которую надо задержать")]
     [Tooltip("Ссылка на объект HelpSystem или TutorialManager")]
@@ -20,7 +20,8 @@ public class MainMenuDialogueTrigger : MonoBehaviour
         // 1. Проверяем состояние СРАЗУ при загрузке объекта
         _hasSeen = PlayerPrefs.GetInt(saveKey, 0) == 1;
 
-        if (debugAlwaysShow) _hasSeen = false;
+        if (DebugSettings.IsDebug)
+            _hasSeen = false;
 
         // 2. Если мы еще НЕ видели интро — жестко гасим маскота, 
         // чтобы он даже не успел пикнуть.
@@ -84,6 +85,7 @@ public class MainMenuDialogueTrigger : MonoBehaviour
         }
     }
 
+    [ContextMenu("Reset Intro Flag")]
     public void ResetIntroFlag()
     {
         PlayerPrefs.DeleteKey(saveKey);
