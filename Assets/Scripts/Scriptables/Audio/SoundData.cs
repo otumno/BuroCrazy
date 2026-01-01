@@ -55,7 +55,7 @@ namespace Scriptables.Audio
             }
 
             volume = Mathf.Clamp01(volume);
-            pitch = Mathf.Clamp(pitch, 0.1f, 0.3f);
+            pitch = Mathf.Clamp(pitch, 0.1f, 3f);
             pitchDelta = Mathf.Clamp(pitchDelta, 0f, 0.5f);
             SpatialBlend = Mathf.Clamp(SpatialBlend, 0f, 1f);
             DopplerLevel = Mathf.Clamp(DopplerLevel, 0f, 5f);

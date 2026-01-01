@@ -22,12 +22,18 @@ public abstract class StaffController : MonoBehaviour
     public Gender gender;
     public CharacterSkills skills;
 	public bool promotionAvailableNotificationPlayed = false;
+	
+	[Header("UI Расписания")]
+	public int uiScheduleTrackIndex = -1; // -1 значит "не назначено" или "автоматически"
     
     [Header("График и Зарплата")]
     public CalendarDayPeriodType WorkShiftMask;
     public int salaryPerPeriod = 15;
 	public int unpaidPeriods = 0;
 	public int missedPaymentCount = 0;
+	
+	[Header("Schedule Settings")]
+	public int shiftStartIndex = -1;
     
     [Header("Базы данных действий")]
     public List<StaffAction> activeActions = new List<StaffAction>();

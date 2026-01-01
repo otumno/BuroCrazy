@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Managers;
 
-// Этот скрипт висит на главной панели "Отдел Кадров", где отображается список нанятых сотрудников.
 public class HiringPanelUI : MonoBehaviour
 {
     [Header("Настройки")]
@@ -14,82 +13,69 @@ public class HiringPanelUI : MonoBehaviour
     [Tooltip("Префаб 'папки', который будет отображаться в конце списка")]
     public GameObject folderBottomPrefab;
     
-    // Перечисление для хранения текущего режима сортировки
+    // --- ИСПРАВЛЕНИЕ: Ссылка на новую панель расписания (если нужна) ---
+    [Header("Ссылки")]
+    [SerializeField] private StaffSchedulePanelUI schedulePanel; 
+    // ------------------------------------------------------------------
+
     private enum SortMode { ByName, ByRole, ByRank }
     private SortMode currentSortMode = SortMode.ByName;
-    // Хранит направление сортировки: true = по возрастанию, false = по убыванию
     private bool isSortAscending = true; 
     
     private List<TeamMemberCardUI> activeCards = new List<TeamMemberCardUI>();
 
-    // Вызывается каждый раз, когда панель становится активной
     void OnEnable()
     {
-        // Сбрасываем сортировку по умолчанию при каждом открытии
         currentSortMode = SortMode.ByName;
         isSortAscending = true;
         RefreshTeamList();
     }
     
-    /// <summary>
-    /// Публичный метод для показа панели.
-    /// </summary>
     public void Show()
     {
         gameObject.SetActive(true);
-        // RefreshTeamList() будет вызван автоматически через OnEnable()
     }
 
-    /// <summary>
-    /// Публичный метод для скрытия панели.
-    /// </summary>
     public void Hide()
     {
         gameObject.SetActive(false);
     }
 
-    /// <summary>
-    /// Этот метод будет вызываться кнопками сортировки.
-    /// 0 = по имени, 1 = по роли, 2 = по рангу.
-    /// </summary>
+    // Метод для открытия расписания (можно привязать к кнопке в инспекторе)
+    public void OpenSchedule()
+    {
+        if (schedulePanel != null)
+        {
+            schedulePanel.gameObject.SetActive(true);
+            // schedulePanel.RebuildTable(); // Обычно вызывается в OnEnable самой панели
+        }
+    }
+
     public void OnSortButtonClicked(int mode)
     {
         SortMode newMode = (SortMode)mode;
 
         if (newMode == currentSortMode)
         {
-            // Если мы кликнули на ту же кнопку, меняем направление
             isSortAscending = !isSortAscending;
         }
         else
         {
-            // Если мы выбрали новую колонку, сбрасываем на сортировку по возрастанию
             currentSortMode = newMode;
             isSortAscending = true;
         }
-
-        // Перерисовываем список с новыми параметрами
         RefreshTeamList();
     }
 
-    /// <summary>
-    /// Полностью перестраивает и перерисовывает список сотрудников.
-    /// </summary>
     public void RefreshTeamList()
     {
-        // Шаг 1: Очищаем старые карточки
-        foreach (Transform child in teamListContent)
-        {
-            Destroy(child.gameObject);
-        }
+        foreach (Transform child in teamListContent) Destroy(child.gameObject);
         activeCards.Clear();
 
         if (HiringManager.Instance == null) return;
         
-        // Шаг 2: Получаем актуальный список сотрудников
         var allStaff = HiringManager.Instance.AllStaff;
 
-        // Шаг 3: Сортируем список в соответствии с выбранным режимом
         switch (currentSortMode)
         {
             case SortMode.ByName:
@@ -99,14 +85,12 @@ public class HiringPanelUI : MonoBehaviour
                 allStaff = isSortAscending ? allStaff.OrderBy(s => s.currentRole.ToString()).ToList() : allStaff.OrderByDescending(s => s.currentRole.ToString()).ToList();
                 break;
             case SortMode.ByRank:
-                // Сортируем по уровню ранга, если он есть
                 allStaff = isSortAscending 
                     ? allStaff.OrderBy(s => s.currentRank != null ? s.currentRank.rankLevel : -1).ToList() 
                     : allStaff.OrderByDescending(s => s.currentRank != null ? s.currentRank.rankLevel : -1).ToList();
                 break;
         }
 
-        // Шаг 4: Создаем новые карточки для отсортированного списка
         foreach (var staffMember in allStaff)
         {
             if (staffMember == null) continue;
@@ -119,13 +103,11 @@ public class HiringPanelUI : MonoBehaviour
             }
         }
         
-        // Шаг 5: Добавляем "папку-замыкающий" в конец
-        if (folderBottomPrefab != null /* && allStaff.Any() */)
+        if (folderBottomPrefab != null)
         {
-            // Убедимся, что добавляем только один раз, если вдруг RefreshTeamList вызовется несколько раз подряд без очистки
             bool alreadyHasFolder = false;
             foreach (Transform child in teamListContent) {
-                if (child.gameObject.name.StartsWith(folderBottomPrefab.name)) { // Проверяем по имени префаба
+                if (child.gameObject.name.StartsWith(folderBottomPrefab.name)) { 
                     alreadyHasFolder = true;
                     break;
                 }
@@ -136,17 +118,13 @@ public class HiringPanelUI : MonoBehaviour
         }
     }
     
-    // Обновляет данные на уже существующих карточках в реальном времени
     void Update()
     {
         if (gameObject.activeInHierarchy)
         {
             foreach (var card in activeCards)
             {
-                if (card != null)
-                {
-                    card.UpdateCard();
-                }
+                if (card != null) card.UpdateCard();
             }
         }
     }

@@ -53,7 +53,7 @@ namespace Managers
                 staffData.stressLevel = staffMember.GetCurrentFrustration();
 			
                 staffData.assignedWorkstationId = staffMember.assignedWorkstation != null ? staffMember.assignedWorkstation.deskId : -999;
-			
+				staffData.scheduleTrackIndex = staffMember.uiScheduleTrackIndex;
                 data.allStaffData.Add(staffData);
             }
 

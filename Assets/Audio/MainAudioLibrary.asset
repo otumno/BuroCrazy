@@ -17,7 +17,7 @@ MonoBehaviour:
     clips:
     - {fileID: 8300000, guid: a6c08d3d45ee0fa4f9d6c59a621566cb, type: 3}
     volume: 1
-    pitch: 0.3
+    pitch: 1
     pitchDelta: 0.2
     Priority: 128
     Loop: 0
@@ -37,6 +37,27 @@ MonoBehaviour:
     volume: 1
     pitch: 1
     pitchDelta: 0.2
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 1
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 7
+    clips:
+    - {fileID: 8300000, guid: a48aef5edcdb97a40a381aacb5108222, type: 3}
+    - {fileID: 8300000, guid: 313d28e7f86e1974f993fd5a09186525, type: 3}
+    - {fileID: 8300000, guid: dfbeb520d41c78f46b82474cdecc8f73, type: 3}
+    - {fileID: 8300000, guid: 5967f12cd631adc4a85216ccdb3d1074, type: 3}
+    volume: 0.8
+    pitch: 1
+    pitchDelta: 0.1
     Priority: 128
     Loop: 0
     SpatialBlend: 1

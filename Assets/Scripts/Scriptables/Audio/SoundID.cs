@@ -11,6 +11,7 @@ namespace Scriptables.Audio
         UI_Money_Income,
         UI_Stamp_Approve,
         UI_Stamp_Reject,
+		UI_Pencil_Hatch,
     
         // Music (Теги для треков)
         Music_Menu,

@@ -10,8 +10,8 @@ public class ActionConfigPopupUI : MonoBehaviour
 {
     [Header("Ссылки на UI")]
     [SerializeField] private TextMeshProUGUI currentRoleText;
-    [SerializeField] private TMP_Dropdown shiftDropdown;
-    [SerializeField] private TextMeshProUGUI shiftDurationText;
+    // [SerializeField] private TMP_Dropdown shiftDropdown; // УДАЛЕНО
+    // [SerializeField] private TextMeshProUGUI shiftDurationText; // УДАЛЕНО
     [SerializeField] private Transform availableActionsContent;
     [SerializeField] private Transform activeActionsContent;
     [SerializeField] private Button saveButton;
@@ -23,6 +23,11 @@ public class ActionConfigPopupUI : MonoBehaviour
 
     [Header("Префабы")]
     [SerializeField] private GameObject actionIconPrefab;
+    
+    // --- ИСПРАВЛЕНИЕ: Ссылка на новую панель расписания (для обновления) ---
+    [Header("Связи")]
+    [SerializeField] private StaffSchedulePanelUI schedulePanel; 
+    // ----------------------------------------------------------------------
 
     private StaffController currentStaff;
     private List<StaffAction> tempActiveActions = new List<StaffAction>();
@@ -31,7 +36,7 @@ public class ActionConfigPopupUI : MonoBehaviour
     {
         saveButton.onClick.AddListener(() => StartCoroutine(OnSave()));
         cancelButton.onClick.AddListener(OnCancel);
-        shiftDropdown.onValueChanged.AddListener(delegate { UpdateShiftInfoText(); });
+        // shiftDropdown.onValueChanged... // УДАЛЕНО
         
         if (availableActionsDropZone != null) { availableActionsDropZone.popupController = this; availableActionsDropZone.type = ActionDropZone.ZoneType.Available; }
         if (activeActionsDropZone != null) { activeActionsDropZone.popupController = this; activeActionsDropZone.type = ActionDropZone.ZoneType.Active; }
@@ -45,107 +50,19 @@ public class ActionConfigPopupUI : MonoBehaviour
 
         if (currentRoleText != null) currentRoleText.text = staff.currentRole.ToString();
         
-        PopulateShiftDropdown();
+        // PopulateShiftDropdown(); // УДАЛЕНО
         PopulateWorkstationDropdown(currentStaff.currentRole);
         PopulateActionLists();
     }
 
-    private void PopulateShiftDropdown()
-    {
-        shiftDropdown.ClearOptions();
-        
-        if (TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
-            return;
-
-        var currentCalendarDay = TimeManager.Instance.mainCalendarDay.periodSettings;
-        var periodTypes = currentCalendarDay.Select(p => p.PeriodType).ToList();
-        
-        if (!periodTypes.Any()) return;
-
-        var periodNames = periodTypes.Select(t => t.ToString()).ToList();
-        shiftDropdown.AddOptions(periodNames);
-
-        var currentIndex = 0;
-        if (currentStaff != null && currentStaff.WorkShiftMask != 0)
-        {
-            for (int i = 0; i < periodTypes.Count; i++)
-            {
-                if ((currentStaff.WorkShiftMask & periodTypes[i]) != 0)
-                {
-                    currentIndex = i;
-                    break;
-                }
-            }
-        }
-        shiftDropdown.SetValueWithoutNotify(currentIndex);
-        UpdateShiftInfoText();
-    }
-
-    private void UpdateShiftInfoText()
-    {
-        if (shiftDurationText == null) return;
-
-        if (currentStaff == null || TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
-        {
-             shiftDurationText.text = "Периодов: N/A";
-             return;
-        }
-        
-        int duration = (currentStaff.currentRank != null) ? currentStaff.currentRank.workPeriodsCount : 3;
-        
-        var periodSettings = TimeManager.Instance.mainCalendarDay.periodSettings;
-        var currentDayPeriods = periodSettings.Select(t => t.PeriodType).ToList();
-
-        if (currentDayPeriods.Count == 0)
-            return;
-
-        int startIndex = shiftDropdown.value;
-        if (startIndex < 0 || startIndex >= currentDayPeriods.Count)
-            startIndex = 0;
-
-        var startPeriodName = currentDayPeriods[startIndex];
-        
-        int totalCount = currentDayPeriods.Count;
-        
-        int endIndex = (startIndex + duration - 1 + totalCount) % totalCount;
-        
-        var endPeriodName = currentDayPeriods[endIndex];
-
-        shiftDurationText.text = $"Периодов: {duration}. С {startPeriodName} по {endPeriodName}";
-    }
+    // Методы PopulateShiftDropdown и UpdateShiftInfoText УДАЛЕНЫ, так как UI элементы удалены
 
     private IEnumerator OnSave()
     {
-        // 1. Сбрасываем маску смен перед записью новой
-        currentStaff.WorkShiftMask = 0; 
-        
-        // --- ИСПРАВЛЕНИЕ: Используем TimeManager вместо DayPeriodManager ---
-        if (TimeManager.Instance != null && TimeManager.Instance.mainCalendarDay != null)
-        {
-            var allPeriods = TimeManager.Instance.mainCalendarDay.periodSettings
-                                .Select(p => p.PeriodType).ToList();
-            
-            if (allPeriods.Any())
-            {
-                int startIndex = shiftDropdown.value;
-                // Берем длительность смены из ранга или дефолт (3)
-                int duration = (currentStaff.currentRank != null) ? currentStaff.currentRank.workPeriodsCount : 3;
-                
-                for (int i = 0; i < duration; i++)
-                {
-                    int index = (startIndex + i) % allPeriods.Count;
-                    // Добавляем период в маску через побитовое ИЛИ
-                    currentStaff.WorkShiftMask |= allPeriods[index];
-                }
-            }
-        }
-        else
-        {
-            Debug.LogError("Не удалось сохранить расписание: TimeManager или календарь не найдены.");
-        }
-        // ------------------------------------------------------------------
+        // Логику смен (WorkShiftMask) здесь больше НЕ трогаем, 
+        // она управляется напрямую через клики в StaffSchedulePanelUI.
 
-        // Далее идет логика сохранения роли и рабочего места (оставляем как было)
+        // Сохранение роли и рабочего места
         StaffController.Role currentRole = currentStaff.currentRole;
 
         if (AssignmentManager.Instance != null && ScenePointsRegistry.Instance != null)
@@ -153,7 +70,6 @@ public class ActionConfigPopupUI : MonoBehaviour
             if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
             {
                 string selectedOptionText = workstationDropdown.options[workstationDropdown.value].text;
-                // Отрезаем лишнюю инфу в скобках, если она есть
                 string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
                 
                 var selectedPoint = ScenePointsRegistry.Instance.allServicePoints?
@@ -178,7 +94,6 @@ public class ActionConfigPopupUI : MonoBehaviour
         Coroutine rebuildCoroutine = null;
         if (HiringManager.Instance != null)
         {
-            // Важно: передаем копию списка действий
             rebuildCoroutine = HiringManager.Instance.AssignNewRole_Immediate(
                 currentStaff, 
                 currentRole, 
@@ -189,7 +104,6 @@ public class ActionConfigPopupUI : MonoBehaviour
         if (rebuildCoroutine != null)
         {
             yield return rebuildCoroutine;
-            // После пересборки ссылка currentStaff может устареть, обновляем её (хотя панель все равно закрывается)
             if (currentStaff != null)
             {
                 currentStaff = currentStaff.gameObject.GetComponent<StaffController>(); 
@@ -202,16 +116,15 @@ public class ActionConfigPopupUI : MonoBehaviour
 
         gameObject.SetActive(false); // Закрываем панель
 
-        // Обновляем список в отделе кадров
         HiringPanelUI hiringPanel = FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include);
         if (hiringPanel != null) hiringPanel.RefreshTeamList();
+        
+        // Обновляем панель расписания, если она есть, чтобы отразить новые роли/имена
+        if (schedulePanel != null) schedulePanel.RebuildTable();
 
-        // Проверяем смены немедленно
         HiringManager.Instance?.CheckAllStaffShiftsImmediately();
     }
 
-
-    
     private void PopulateActionLists()
     {
         foreach (Transform child in availableActionsContent) Destroy(child.gameObject);
@@ -311,8 +224,6 @@ public class ActionConfigPopupUI : MonoBehaviour
 	private string GetWorkstationFriendlyName(ServicePoint point)
     {
         if (point == null) return "Неизвестно";
-        // Используем friendlyName если оно есть, иначе имя GameObject'а
         return !string.IsNullOrEmpty(point.friendlyName) ? point.friendlyName : point.name;
     }
-	
 }

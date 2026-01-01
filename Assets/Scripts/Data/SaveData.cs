@@ -40,6 +40,7 @@ public struct StaffSaveData
     public float softSkills;
     public float corruption;
 	public int assignedWorkstationId;
+	public int scheduleTrackIndex;
 }
 
 [System.Serializable]

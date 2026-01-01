@@ -815,21 +815,28 @@ namespace Managers
                 else { Debug.LogWarning($"Не удалось найти базу системных действий для назначения {staffController.characterName}."); }
                 
                 // Assign Default Schedule
-                staffController.WorkShiftMask = 0; // Сбрасываем
-                
-                // ИСПРАВЛЕНИЕ: Используем TimeManager вместо DayPeriodManager
+                staffController.WorkShiftMask = 0; // Сбрасываем в ноль
+
                 if (Managers.TimeManager.Instance?.mainCalendarDay?.periodSettings != null)
                 {
-                    var periodSettings = Managers.TimeManager.Instance.mainCalendarDay.periodSettings;
-                    foreach (var p in periodSettings)
+                    var allPeriods = Managers.TimeManager.Instance.mainCalendarDay.periodSettings
+                                        .Select(p => p.PeriodType).ToList();
+                    
+                    // Берем длительность из ранга кандидата (или дефолт 3)
+                    int duration = candidate.Rank != null ? candidate.Rank.workPeriodsCount : 3;
+
+                    // Назначаем смену начиная с ПЕРВОГО периода (Утро)
+                    for (int i = 0; i < duration; i++)
                     {
-                        // Добавляем период в маску
-                        staffController.WorkShiftMask |= p.PeriodType;
+                        if (i < allPeriods.Count)
+                        {
+                            staffController.WorkShiftMask |= allPeriods[i];
+                        }
                     }
                 }
                 else
                 {
-                    // Фолбэк, если календаря нет
+                    // Фолбэк, только если календаря нет
                     staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
                 }
                 // --- End Initialize ---

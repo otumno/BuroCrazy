@@ -10745,6 +10745,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1229093190503658547, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: unifiedTypingSpeed
+      value: 0.07
+      objectReference: {fileID: 0}
     - target: {fileID: 1663327023189599198, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: allPossibleOrders.Array.size
       value: 3
