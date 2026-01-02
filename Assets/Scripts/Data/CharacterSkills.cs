@@ -35,7 +35,7 @@ public class CharacterSkills : ScriptableObject
     {
         var value = GetSkillValue(type);
         var translation = GetSkillString(type);
-        return translation + " : " + (value * 100).ToString("0"); // пишем только целую часть числа
+        return $"{translation} : {(value * 100).ToString("0")}%"; // пишем только целую часть числа
     }
     
     public static string GetSkillString(SkillType type) =>
