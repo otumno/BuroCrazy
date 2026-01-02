@@ -17,16 +17,35 @@ public class CharacterSkills : ScriptableObject
     [Tooltip("Скрытый параметр, влияет на коррупцию")]
     [Range(0.0f, 1.0f)]
     public float corruption;
-	public float GetSkillValue(SkillType type)
-{
-    switch (type)
+
+    public float GetSkillValue(SkillType type)
     {
-        case SkillType.PaperworkMastery: return this.paperworkMastery;
-        case SkillType.SedentaryResilience: return this.sedentaryResilience;
-        case SkillType.Pedantry: return this.pedantry;
-        case SkillType.SoftSkills: return this.softSkills;
-        case SkillType.Corruption: return this.corruption;
-        default: return 0f;
+        switch (type)
+        {
+            case SkillType.PaperworkMastery: return paperworkMastery;
+            case SkillType.SedentaryResilience: return sedentaryResilience;
+            case SkillType.Pedantry: return pedantry;
+            case SkillType.SoftSkills: return softSkills;
+            case SkillType.Corruption: return corruption;
+            default: return 0f;
+        }
     }
-}
+
+    public string GetSkillShortText(SkillType type)
+    {
+        var value = GetSkillValue(type);
+        var translation = GetSkillString(type);
+        return translation + " : " + (value * 100).ToString("0"); // пишем только целую часть числа
+    }
+    
+    public static string GetSkillString(SkillType type) =>
+        type switch
+        {
+            SkillType.PaperworkMastery => "Мастерство бумажной работы",
+            SkillType.SedentaryResilience => "Устойчивость к малоподвижному образу жизни",
+            SkillType.Pedantry => "Педантичность",
+            SkillType.SoftSkills => "Умение общаться",
+            SkillType.Corruption => "Коррумпированность",
+            _ => ""
+        };
 }

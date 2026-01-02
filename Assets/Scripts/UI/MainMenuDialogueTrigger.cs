@@ -18,10 +18,7 @@ public class MainMenuDialogueTrigger : MonoBehaviour
     private void Awake()
     {
         // 1. Проверяем состояние СРАЗУ при загрузке объекта
-        _hasSeen = PlayerPrefs.GetInt(saveKey, 0) == 1;
-
-        if (DebugSettings.IsDebug)
-            _hasSeen = false;
+        _hasSeen = PlayerPrefs.HasKey(saveKey) && !DebugSettings.IsDebug;
 
         // 2. Если мы еще НЕ видели интро — жестко гасим маскота, 
         // чтобы он даже не успел пикнуть.

@@ -50,7 +50,6 @@ public class ActionConfigPopupUI : MonoBehaviour
 
         if (currentRoleText != null) currentRoleText.text = staff.currentRole.ToString();
         
-        // PopulateShiftDropdown(); // УДАЛЕНО
         PopulateWorkstationDropdown(currentStaff.currentRole);
         PopulateActionLists();
     }

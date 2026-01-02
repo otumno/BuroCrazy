@@ -1,10 +1,11 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
 using System.Text;
-using System.Collections.Generic;
 using Managers;
+using Utilities;
 
 public class TeamMemberCardUI : MonoBehaviour
 {
@@ -37,23 +38,16 @@ public class TeamMemberCardUI : MonoBehaviour
 
     public void Setup(StaffController staff)
     {
-        this.assignedStaff = staff;
+        assignedStaff = staff;
         
-        if (fireButton != null)
-        {
-            fireButton.onClick.RemoveAllListeners();
-            fireButton.onClick.AddListener(OnFireButtonClicked);
-        }
-        if (promoteButton != null)
-        {
-            promoteButton.onClick.RemoveAllListeners();
-            promoteButton.onClick.AddListener(OnPromoteButtonClicked);
-        }
-        if (changeRoleButton != null)
-        {
-            changeRoleButton.onClick.RemoveAllListeners();
-            changeRoleButton.onClick.AddListener(OnChangeRoleButtonClicked);
-        }
+        fireButton.onClick.RemoveAllListeners();
+        fireButton.onClick.AddListener(OnFireButtonClicked);
+
+        promoteButton.onClick.RemoveAllListeners();
+        promoteButton.onClick.AddListener(OnPromoteButtonClicked);
+
+        changeRoleButton.onClick.RemoveAllListeners();
+        changeRoleButton.onClick.AddListener(OnChangeRoleButtonClicked);
 
         UpdateCard();
     }
@@ -66,12 +60,27 @@ public class TeamMemberCardUI : MonoBehaviour
             return;
         }
 
-        if (nameText != null) nameText.text = assignedStaff.characterName;
-        if (roleText != null) roleText.text = GetRoleNameInRussian(assignedStaff.currentRole);
-        if (stressText != null) stressText.text = $"Стресс: {assignedStaff.frustration:P0}";
-        if (salaryText != null) salaryText.text = $"З/П: ${assignedStaff.salaryPerPeriod} / период";
-        if (genderText != null) genderText.text = assignedStaff.gender == Gender.Male ? "Пол: М" : "Пол: Ж";
-        if (skillsText != null && assignedStaff.skills != null) { /* ... */ }
+        nameText.text = assignedStaff.characterName;
+        roleText.text = GetRoleNameInRussian(assignedStaff.currentRole);
+        stressText.text = $"Стресс: {assignedStaff.frustration.ToString("0")}";
+        salaryText.text = $"З/П: ${assignedStaff.salaryPerPeriod.ToString()} / период";
+        genderText.text = assignedStaff.gender == Gender.Male ? "Пол: М" : "Пол: Ж";
+        
+        if (assignedStaff.skills == null)
+        {
+            skillsText.text = "Нет особых навыков";
+        }
+        else
+        {
+            var stringBuilder = new StringBuilder();
+            var skillTypes = Enum.GetValues(typeof(SkillType)).Cast<SkillType>();
+            foreach (var skillType in skillTypes)
+            {
+                var line = assignedStaff.skills.GetSkillShortText(skillType);
+                stringBuilder.Append(line + "\n");
+            }
+            skillsText.text = stringBuilder.ToString();
+        }
 
         if (assignedStaff.currentRank != null)
         {
@@ -84,18 +93,18 @@ public class TeamMemberCardUI : MonoBehaviour
                 int xpForNextRank = nextRankData.experienceRequired;
                 int totalXpForLevel = xpForNextRank - xpForCurrentRank;
                 int currentXpInLevel = assignedStaff.experiencePoints - xpForCurrentRank;
-                if (xpBarFill != null) xpBarFill.fillAmount = totalXpForLevel > 0 ? (float)currentXpInLevel / totalXpForLevel : 1f;
-                if (xpText != null) xpText.text = $"XP: {currentXpInLevel} / {totalXpForLevel}";
+                xpBarFill.fillAmount = totalXpForLevel > 0 ? (float)currentXpInLevel / totalXpForLevel : 1f;
+                xpText.text = $"XP: {currentXpInLevel} / {totalXpForLevel}";
             }
             else
             {
-                if (xpBarFill != null) xpBarFill.fillAmount = 1f;
-                if (xpText != null) xpText.text = "МАКС. РАНГ";
+                xpBarFill.fillAmount = 1f;
+                xpText.text = "МАКС. РАНГ";
             }
         }
         else
         {
-            if (rankText != null) rankText.text = "Без ранга";
+            rankText.text = "Без ранга";
         }
         
         if (promoteButton != null)
@@ -108,7 +117,7 @@ public class TeamMemberCardUI : MonoBehaviour
             promoteButton.gameObject.SetActive(canBePromoted);
         }
         
-        if (background != null) background.sprite = GetBackgroundForRole(assignedStaff.currentRole);
+        background.sprite = GetBackgroundForRole(assignedStaff.currentRole);
     }
     
     private Sprite GetBackgroundForRole(StaffController.Role role)
@@ -141,32 +150,36 @@ public class TeamMemberCardUI : MonoBehaviour
     }
 
     private void OnPromoteButtonClicked()
-{
-    if (assignedStaff != null)
     {
-        // THE FIX: Instead of promoting directly, we open the selection panel.
-        PromotionPanelUI.Instance.ShowForStaff(assignedStaff);
+        if (assignedStaff != null)
+        {
+            // THE FIX: Instead of promoting directly, we open the selection panel.
+            PromotionPanelUI.Instance.ShowForStaff(assignedStaff);
+        }
     }
-}
 
     private void OnChangeRoleButtonClicked()
     {
-        FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include)?.OpenForStaff(assignedStaff);
+        var actionConfigPopupUi = FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include);
+        if (actionConfigPopupUi == null)
+        {
+            Debug.LogError($"На сцене отсутствует {nameof(ActionConfigPopupUI)}");
+            return;
+        }
+        
+        actionConfigPopupUi.OpenForStaff(assignedStaff);
     }
-	
-	private string GetRoleNameInRussian(StaffController.Role role)
-{
-    switch (role)
-    {
-        case StaffController.Role.Intern: return "Стажёр";
-        case StaffController.Role.Clerk: return "Клерк";
-        case StaffController.Role.Registrar: return "Регистратор";
-        case StaffController.Role.Cashier: return "Кассир";
-        case StaffController.Role.Archivist: return "Архивариус";
-        case StaffController.Role.Guard: return "Охранник";
-        case StaffController.Role.Janitor: return "Уборщик";
-        default: return "Не назначено";
-    }
-	
-}
+
+    private static string GetRoleNameInRussian(StaffController.Role role) =>
+        role switch
+        {
+            StaffController.Role.Intern => "Стажёр",
+            StaffController.Role.Clerk => "Клерк",
+            StaffController.Role.Registrar => "Регистратор",
+            StaffController.Role.Cashier => "Кассир",
+            StaffController.Role.Archivist => "Архивариус",
+            StaffController.Role.Guard => "Охранник",
+            StaffController.Role.Janitor => "Уборщик",
+            _ => "Не назначено"
+        };
 }
