@@ -1,73 +1,139 @@
+// Assets/Scripts/Gameplay/DocumentStack.cs
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Gameplay.Documents; // Наш новый namespace
+using Data.Documents;     // Данные документов
 
 public class DocumentStack : MonoBehaviour
 {
     [Header("Настройки стопки")]
-    [Tooltip("Максимальное количество документов в стопке.")]
     public int maxStackSize = 10;
-    [Tooltip("Префаб одного документа для визуализации стопки.")]
+    
+    [Tooltip("Префаб для ОБЫЧНЫХ клиентских документов")]
     public GameObject documentVisualPrefab;
-    [Tooltip("Вертикальное смещение для каждого нового документа в стопке.")]
+    
+    [Tooltip("Смещение по высоте")]
     public float stackOffset = 0.05f;
     
+    // Список созданных объектов (визуал)
     private List<GameObject> visualStack = new List<GameObject>();
+
     public int CurrentSize => visualStack.Count;
     public bool IsFull => CurrentSize >= maxStackSize;
     public bool IsEmpty => CurrentSize == 0;
 
-    public bool AddDocumentToStack() // Изменяем void на bool
-{
-    if (IsFull)
+    // --- ПУБЛИЧНЫЕ МЕТОДЫ ---
+
+    /// <summary>
+    /// Добавить обычный документ (визуальная пустышка).
+    /// </summary>
+    public bool AddDocumentToStack() 
     {
-        return false; // Сообщаем о неудаче
+        return AddDocumentInternal(null, null);
     }
 
-    if (documentVisualPrefab == null)
+    /// <summary>
+    /// Добавить ВАЖНЫЙ документ (с данными и своим префабом).
+    /// </summary>
+    public bool AddProjectDocument(ProjectDocumentDefinition projectDoc, GameObject prefabOverride)
     {
-        Debug.LogError($"<color=red>[{name}] НЕ МОЖЕТ создать копию документа, потому что в инспекторе не назначен 'Document Visual Prefab'!</color>");
-        return false; // Сообщаем о неудаче
+        if (projectDoc == null) return false;
+        // Передаем данные и префаб во внутренний метод
+        return AddDocumentInternal(prefabOverride, projectDoc);
     }
 
-    Vector3 position = transform.position + new Vector3(0, CurrentSize * stackOffset, 0);
-    GameObject newDoc = Instantiate(documentVisualPrefab, position, transform.rotation, transform);
-    visualStack.Add(newDoc);
-    return true; // Сообщаем об успехе
-}
+    /// <summary>
+    /// Забрать верхний документ. 
+    /// Возвращает данные (если это спец. документ) или null (если обычный).
+    /// out documentObject - ссылка на физический объект, который нужно взять в руку.
+    /// </summary>
+    public ProjectDocumentDefinition TakeTopDocument(out GameObject documentObject)
+    {
+        if (IsEmpty) 
+        {
+            documentObject = null;
+            return null;
+        }
+        
+        // 1. Берем верхний объект
+        GameObject docToRemove = visualStack.Last();
+        visualStack.Remove(docToRemove);
+        
+        documentObject = docToRemove; // Передаем объект наружу (для Parent к руке)
+
+        // 2. Проверяем, есть ли на нем данные
+        var projComp = docToRemove.GetComponent<ProjectDocumentObject>();
+        if (projComp != null)
+        {
+            return projComp.documentData;
+        }
+
+        return null; // Обычная бумага
+    }
+
+    // --- ВНУТРЕННЯЯ ЛОГИКА ---
+
+    private bool AddDocumentInternal(GameObject specificPrefab, ProjectDocumentDefinition dataForInit)
+    {
+        if (IsFull) return false;
+
+        GameObject prefabToUse = specificPrefab != null ? specificPrefab : documentVisualPrefab;
+
+        if (prefabToUse == null)
+        {
+            Debug.LogError($"<color=red>[{name}] ОШИБКА: Не назначен префаб документа!</color>");
+            return false;
+        }
+
+        Vector3 position = transform.position + new Vector3(0, CurrentSize * stackOffset, 0);
+        
+        // Легкий рандом вращения для реализма
+        Quaternion rotation = transform.rotation * Quaternion.Euler(0, 0, Random.Range(-5f, 5f));
+
+        GameObject newDocGO = Instantiate(prefabToUse, position, rotation, transform);
+        
+        // ИНИЦИАЛИЗАЦИЯ ДАННЫХ (Ключевой момент)
+        if (dataForInit != null)
+        {
+            var projComp = newDocGO.GetComponent<ProjectDocumentObject>();
+            if (projComp != null)
+            {
+                projComp.Initialize(dataForInit);
+            }
+            else
+            {
+                Debug.LogWarning($"На префабе {prefabToUse.name} нет скрипта ProjectDocumentObject, хотя переданы данные!");
+            }
+        }
+
+        visualStack.Add(newDocGO);
+        return true;
+    }
+
+    // --- МЕТОДЫ ДЛЯ СОВМЕСТИМОСТИ И ОЧИСТКИ ---
 
     public int TakeEntireStack()
     {
         int count = CurrentSize;
-        foreach (var doc in visualStack)
-        {
-            Destroy(doc);
-        }
+        foreach (var doc in visualStack) Destroy(doc);
         visualStack.Clear();
         return count;
     }
 
     public bool TakeOneDocument()
     {
+        // Упрощенный метод для уничтожения (если берет не игрок, а система/скрипт)
         if (IsEmpty) return false;
-        
-        GameObject docToRemove = visualStack.Last();
-        visualStack.Remove(docToRemove);
-        Destroy(docToRemove);
+        GameObject doc;
+        TakeTopDocument(out doc);
+        if (doc != null) Destroy(doc);
         return true;
     }
 
-    // --- МЕТОД ДЛЯ СИСТЕМЫ СОХРАНЕНИЙ ---
     public void SetCount(int count)
     {
-        // Сначала очищаем стопку от старых визуальных объектов
         TakeEntireStack();
-
-        // Затем создаем нужное количество новых
-        int countToCreate = Mathf.Min(count, maxStackSize);
-        for (int i = 0; i < countToCreate; i++)
-        {
-            AddDocumentToStack();
-        }
+        for (int i = 0; i < count; i++) AddDocumentToStack();
     }
 }

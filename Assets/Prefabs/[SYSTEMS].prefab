@@ -664,6 +664,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Managers.DialogueUIManager
   choiceButtonPrefab: {fileID: 6641948219214280999, guid: 2443633740cbfe1428468e60613ae3b9, type: 3}
+  unifiedTypingSpeed: 0.04
   defaultStartSound: {fileID: 8300000, guid: b10425f56e5b45447bb5006212fe8cfa, type: 3}
   defaultChoiceSound: {fileID: 8300000, guid: 1dcb20c25a26db749952de112c0107ed, type: 3}
   defaultEventSound: {fileID: 8300000, guid: 8c51ea2656e5d8844b8cc971a1e8d83c, type: 3}
@@ -1903,6 +1904,7 @@ Transform:
   - {fileID: 8532378419452326138}
   - {fileID: 4011524539500755867}
   - {fileID: 6393219160300706207}
+  - {fileID: 870064151362820002}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6323726595607129623
@@ -2324,6 +2326,55 @@ MonoBehaviour:
   nightTrack: {fileID: 8300000, guid: a2a8c0cca9e49bf4a99b288c70baa74e, type: 3}
   radioSwitchSound: 1
   muffledVolume: 0.086
+--- !u!1 &8734194016205747986
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 870064151362820002}
+  - component: {fileID: 4717711491252510616}
+  m_Layer: 0
+  m_Name: ProgressionManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &870064151362820002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8734194016205747986}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1665.5642, y: -480.49908, z: -1.4505856}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1664084752037518102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4717711491252510616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8734194016205747986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d62c8bc43e617a408bed36bc8dd6a48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Managers.ProgressionManager
+  currentInfluence: 0
+  allRegionsDatabase:
+  - {fileID: 11400000, guid: 6b5ab1b480378254ea939188135c5c70, type: 2}
+  allJobsDatabase:
+  - {fileID: 11400000, guid: c1e14a88f48100445906024f6aeb56d9, type: 2}
 --- !u!1 &8763085085291328836
 GameObject:
   m_ObjectHideFlags: 0

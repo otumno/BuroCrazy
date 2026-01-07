@@ -3161,7 +3161,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainMenuDialogueTrigger
   introDialogue: {fileID: 11400000, guid: ee44276f4a2bf664ba7be4ef888b5482, type: 2}
   saveKey: HAS_SEEN_INTRO
-  debugAlwaysShow: 1
   helpSystemObject: {fileID: 5044551281937521762}
 --- !u!1 &852333781
 GameObject:

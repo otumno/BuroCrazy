@@ -43,7 +43,13 @@ public class StartOfDayPanel : MonoBehaviour
     [SerializeField] private TextMeshProUGUI moneyText;
     [SerializeField] private TextMeshProUGUI strikesText;
     [SerializeField] private TextMeshProUGUI activeOrdersText;
+	
+	[Header("Проектные Документы")]
+    [SerializeField] private GameObject projectDocIconPrefab; // Префаб иконки (скрипт ProjectDocumentIconUI)
+    [SerializeField] private UI.ProjectReviewPanelUI projectReviewPanel; // Ссылка на панель просмотра
     
+	
+	private Dictionary<Data.Documents.ProjectDocumentDefinition, GameObject> activeProjectIcons = new Dictionary<Data.Documents.ProjectDocumentDefinition, GameObject>();
     private Dictionary<ClientPathfinding, DirectorDocumentIcon> waitingDocumentIcons = new Dictionary<ClientPathfinding, DirectorDocumentIcon>();
 
     [Header("Animation Settings")]
@@ -173,6 +179,44 @@ public class StartOfDayPanel : MonoBehaviour
     {
         CreateDocumentIcon(client);
     }
+	
+	public void RegisterProjectDocument(Data.Documents.ProjectDocumentDefinition docData, System.Action onSignedWorldCallback)
+    {
+        if (docData == null || activeProjectIcons.ContainsKey(docData)) return;
+
+        // Создаем иконку в DocumentContainer (туда же, где клиентские документы)
+        // documentIconsContainer - это существующее поле в вашем скрипте (надеюсь, оно public или SerializeField)
+        if (documentIconsContainer == null) return;
+
+        GameObject iconGO = Instantiate(projectDocIconPrefab, documentIconsContainer);
+        var iconUI = iconGO.GetComponent<UI.ProjectDocumentIconUI>();
+        
+        if (iconUI != null)
+        {
+            iconUI.Setup(docData, (doc) => 
+            {
+                // При клике на иконку открываем панель просмотра
+                projectReviewPanel.Show(doc, () => 
+                {
+                    // Когда подписали в панели:
+                    
+                    // 1. Убираем иконку из UI
+                    RemoveProjectDocumentIcon(doc);
+                    
+                    // 2. Сообщаем физическому миру (Callback в ProjectDocumentObject)
+                    onSignedWorldCallback?.Invoke();
+                    
+                    // 3. Обновляем счетчик на кнопке стола
+                    if(directorDeskButton != null) directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+                });
+            });
+        }
+
+        activeProjectIcons.Add(docData, iconGO);
+        
+        // Обновляем кнопку стола (красный кружочек с цифрой)
+        if(directorDeskButton != null) directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+    }
 
     public void RemoveDocumentIcon(ClientPathfinding client)
     {
@@ -188,8 +232,17 @@ public class StartOfDayPanel : MonoBehaviour
             }
         }
     }
+	
+	public void RemoveProjectDocumentIcon(Data.Documents.ProjectDocumentDefinition docData)
+    {
+        if (activeProjectIcons.ContainsKey(docData))
+        {
+            Destroy(activeProjectIcons[docData]);
+            activeProjectIcons.Remove(docData);
+        }
+    }
 
-    public int GetWaitingDocumentCount() { return waitingDocumentIcons.Count; }
+    public int GetWaitingDocumentCount() { return waitingDocumentIcons.Count + activeProjectIcons.Count; }
 
     public IEnumerator Fade(bool fadeIn, bool interactableAfterFade)
     {
