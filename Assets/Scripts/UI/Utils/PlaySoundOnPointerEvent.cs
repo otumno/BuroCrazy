@@ -32,7 +32,10 @@ namespace UI.Utils
             if (!enableHover || !IsInteractable())
                 return;
 
-            AudioManager.Instance.PlaySound(hoverSound);
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySound(hoverSound);
+            }
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -40,7 +43,10 @@ namespace UI.Utils
             if (!enableClick || !IsInteractable())
                 return;
 
-            AudioManager.Instance.PlaySound(clickSound);
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.PlaySound(clickSound);
+            }
         }
 
         private bool IsInteractable() => _selectable != null && _selectable.interactable;
