@@ -9,15 +9,6 @@ using Managers;
 public class WorkstationUI : MonoBehaviour
 {
     // Шаг 1: Определяем типы станций, которые мы можем отслеживать
-    public enum WorkstationType
-    {
-        Registrar,
-        Cashier,
-        OfficeDesk1,
-        OfficeDesk2,
-        GuardPost
-    }
-
     [Header("Настройки Станции")]
     [Tooltip("Выберите тип станции, за которой будет следить этот UI элемент")]
     [SerializeField] private WorkstationType stationType;
@@ -31,7 +22,7 @@ public class WorkstationUI : MonoBehaviour
     private List<GuardMovement> allGuards = new List<GuardMovement>();
     private StringBuilder sb = new StringBuilder();
 
-    void Start()
+    private void Start()
     {
         if (statusText == null) statusText = GetComponentInChildren<TextMeshProUGUI>();
         if (statusText == null)
@@ -45,14 +36,15 @@ public class WorkstationUI : MonoBehaviour
         FindTrackedObjects();
     }
 
-    void FindTrackedObjects()
+    private void FindTrackedObjects()
     {
-        if (ScenePointsRegistry.Instance == null) return;
+        if (ScenePointsRegistry.Instance == null)
+            return;
 
         // В зависимости от типа, находим соответствующие ServicePoint'ы
         switch (stationType)
         {
-            case WorkstationType.Registrar:
+            case WorkstationType.Registration:
                 trackedServicePoints.Add(ScenePointsRegistry.Instance.GetServicePointByID(0));
                 break;
             case WorkstationType.Cashier:
@@ -72,13 +64,21 @@ public class WorkstationUI : MonoBehaviour
                 }
                 break;
         }
+        
         // Убираем из списка пустые/ненайденные точки
         trackedServicePoints.RemoveAll(item => item == null);
     }
 
-    void Update()
+    private void Update()
     {
-        if (Time.timeScale == 0f) return;
+        // todo:
+        // заведи скрипт отдельный для паузы, и там внутри по-простому если,
+        // то счётчик на паузу, чтобы несколько источников могли паузу ставить
+        // int _pauseCount;
+        // if (_pauseCount > 0) => Time.timeScale = 0f;
+        // else => Time.timeScale = 1f;
+        if (Time.timeScale == 0f)
+            return;
 
         sb.Clear(); // Очищаем построитель строк перед новым циклом
 
@@ -164,20 +164,26 @@ public class WorkstationUI : MonoBehaviour
     }
 
     // Вспомогательные методы для текста статусов (можно расширять)
-    private string GetGuardStatusText(GuardMovement.GuardState state)
+    private static string GetGuardStatusText(GuardMovement.GuardState state)
     {
         switch (state)
         {
-            case GuardMovement.GuardState.Patrolling: return "Патруль";
-            case GuardMovement.GuardState.OnPost: return "На посту";
+            case GuardMovement.GuardState.Patrolling:
+                return "Патруль";
+            case GuardMovement.GuardState.OnPost:
+                return "На посту";
             case GuardMovement.GuardState.Chasing:
             case GuardMovement.GuardState.Talking:
             case GuardMovement.GuardState.ChasingThief:
                 return "Разбирается";
-            case GuardMovement.GuardState.OnBreak: return "Обед";
-            case GuardMovement.GuardState.AtToilet: return "Перерыв";
-            case GuardMovement.GuardState.WritingReport: return "Пишет отчет";
-            default: return "Бездействует";
+            case GuardMovement.GuardState.OnBreak:
+                return "Обед";
+            case GuardMovement.GuardState.AtToilet:
+                return "Перерыв";
+            case GuardMovement.GuardState.WritingReport:
+                return "Пишет отчет";
+            default:
+                return "Бездействует";
         }
     }
 }
