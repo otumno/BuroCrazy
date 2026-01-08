@@ -411,6 +411,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   allAchievementsDatabase:
   - {fileID: 11400000, guid: aa5cba6092009b840a1feef2edfc6bca, type: 2}
+--- !u!114 &96204289
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 96204279}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d62c8bc43e617a408bed36bc8dd6a48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Managers.ProgressionManager
+  currentInfluence: 0
+  allRegionsDatabase:
+  - {fileID: 11400000, guid: 6b5ab1b480378254ea939188135c5c70, type: 2}
+  - {fileID: 11400000, guid: a5a1a320397b6f247940635fcf00d64d, type: 2}
+  - {fileID: 11400000, guid: 1b4105eb69cd8ea4caefb99aa8fa4ba2, type: 2}
+  allJobsDatabase:
+  - {fileID: 11400000, guid: c1e14a88f48100445906024f6aeb56d9, type: 2}
 --- !u!224 &143603966 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2868023028901988796, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -11208,6 +11227,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7573636373502958441, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 96204288}
+    - targetCorrespondingSourceObject: {fileID: 7573636373502958441, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 96204289}
     - targetCorrespondingSourceObject: {fileID: 3844153927004544440, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2063886893}
