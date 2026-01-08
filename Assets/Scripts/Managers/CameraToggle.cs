@@ -26,7 +26,7 @@ namespace Managers
 
         private bool isAtPositionOne = true;
 
-        void Start()
+        private void Start()
         {
             if (mainCamera == null)
             {
@@ -51,12 +51,11 @@ namespace Managers
             audioLink?.ToggleMuffledAudio(!isAtPositionOne);
         }
 
-        void LateUpdate()
+        private void LateUpdate()
         {
             if (UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
-            {
                 return;
-            }
+            
             float scrollInput = Input.GetAxis("Mouse ScrollWheel");
             if (scrollInput > 0f)
             {
@@ -100,7 +99,7 @@ namespace Managers
             audioLink?.ToggleMuffledAudio(!isAtPositionOne);
         }
 
-        void UpdateUIVisibility()
+        private void UpdateUIVisibility()
         {
             List<GameObject> activeBlacklist = isAtPositionOne ? hideInPositionOne : hideInPositionTwo;
             foreach (var uiObject in allToggleableUI)

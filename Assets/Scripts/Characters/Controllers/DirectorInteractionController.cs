@@ -51,7 +51,7 @@ public class DirectorInteractionController : MonoBehaviour
     {
         if (contextButton == null || currentInteractionPoint == null || directorAvatar == null)
         {
-            contextButton?.gameObject.SetActive(false);
+            if (contextButton) contextButton.gameObject.SetActive(false);
             return;
         }
 

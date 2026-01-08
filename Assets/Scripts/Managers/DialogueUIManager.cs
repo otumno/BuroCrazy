@@ -554,16 +554,6 @@ namespace Managers
             }
         }
 
-        private void PlaySystemSound(AudioClip clip)
-        {
-            Vector3 soundPos = Camera.main != null ? Camera.main.transform.position : transform.position;
-
-            if (clip != null && AudioManager.Instance != null)
-            {
-                AudioSource src = GetComponent<AudioSource>();
-                if (src) src.PlayOneShot(clip);
-                else AudioSource.PlayClipAtPoint(clip, soundPos);
-            }
-        }
+        private static void PlaySystemSound(AudioClip clip) => AudioManager.Instance.PlayAudioClip2D(clip);
     }
 }

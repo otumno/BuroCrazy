@@ -76,8 +76,15 @@ namespace Managers
         // play 3D sound at position
         public void PlaySound(SoundID id, Vector3 position) => PlayInternal(id, null, position);
         // play 3D sound at position and link audioSource to gameObject while clip is playing
-        public void PlaySound(SoundID id, Transform linkTransform) => PlayInternal(id, linkTransform, null); 
+        public void PlaySound(SoundID id, Transform linkTransform) => PlayInternal(id, linkTransform, null);
 
+        public void PlayAudioClip2D(AudioClip clip)
+        {
+            var source = GetAvailableInstance();
+            source.ResetSource();
+            source.PlayAudioClip2D(clip, sfxGroup);
+        }
+        
         public void PlayVoiceClip(AudioClip clip,
                                   Vector3 position,
                                   float basePitch,

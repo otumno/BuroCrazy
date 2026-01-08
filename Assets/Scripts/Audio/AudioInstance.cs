@@ -83,6 +83,16 @@ namespace Audio
             _audioSource.Play();
         }
 
+        public void PlayAudioClip2D(AudioClip clip, AudioMixerGroup mixerGroup)
+        {
+            if (clip == null)
+                return;
+
+            _audioSource.clip = clip;
+            _audioSource.outputAudioMixerGroup = mixerGroup;
+            _audioSource.spatialBlend = 0f;
+        }
+
         public void PlayVoiceClip(AudioClip clip,
                                   Vector3 position,
                                   float basePitch,
