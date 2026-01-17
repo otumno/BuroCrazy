@@ -49,6 +49,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6779672326456234917}
   - component: {fileID: 4964731019733582162}
+  - component: {fileID: 5140651449602814168}
   m_Layer: 6
   m_Name: Body
   m_TagString: Untagged
@@ -129,6 +130,59 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &5140651449602814168
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 723156005510397454}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
+  m_ShadowGroup: 0
+  m_Priority: 2
+  m_ComponentVersion: 5
+  m_HasRenderer: 1
+  m_UseRendererSilhouette: 1
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_AlphaCutoff: 0.1
+  m_ApplyToSortingLayers: 00000000d1771a59
+  m_ShapePath:
+  - {x: -0.31925926, y: -0.45185184, z: 0}
+  - {x: -0.31925926, y: 0.45185184, z: 0}
+  - {x: 0.31925926, y: 0.45185184, z: 0}
+  - {x: 0.31925926, y: -0.45185184, z: 0}
+  m_ShapePathHash: 0
+  m_InstanceId: 0
+  m_ShadowShape2DComponent: {fileID: 4964731019733582162}
+  m_ShadowShape2DProvider:
+    rid: 3478506552836489317
+  m_ShadowCastingSource: 2
+  m_ShadowMesh:
+    m_Mesh: {fileID: 0}
+    m_LocalBounds:
+      m_Center: {x: -0.0031814575, y: 0.036636353, z: 0}
+      m_Extent: {x: 0.18132782, y: 0.31781006, z: 0}
+    m_EdgeProcessing: 1
+    m_TrimEdge: 0.09
+    m_FlipX: 0
+    m_FlipY: 0
+    m_InitialTrim: 0.03
+  m_CastingOption: 1
+  m_PreviousTrimEdge: 0.09
+  m_PreviousEdgeProcessing: 1
+  m_PreviousShadowCastingSource: 2
+  m_PreviousShadowShape2DSource: {fileID: 4964731019733582162}
+  references:
+    version: 2
+    RefIds:
+    - rid: 3478506552836489317
+      type: {class: ShadowShape2DProvider_SpriteRenderer, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
+      data: 
 --- !u!1 &1025120421053719610
 GameObject:
   m_ObjectHideFlags: 0
@@ -1743,12 +1797,14 @@ MonoBehaviour:
   stressMod_BusyOrServed: 0.1
   stressAdd_NearbyMess: 0.2
   stressJump_Refusal: 0.15
+  iconOverride: {fileID: 0}
   mainGoal: 0
   babushkaFactor: 0
   suetunFactor: 0
   prolazaFactor: 0
   assignedHelper: {fileID: 0}
   gender: 0
+  animationSpeed: 0.3
   spriteCollection: {fileID: 11400000, guid: 353cecdf3dbe99647a3b64ac83940024, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: bd148befb14c01a4cb1387d785650324, type: 2}
   totalPatienceTime: 0
@@ -1783,6 +1839,7 @@ MonoBehaviour:
   directorDocumentLayout:
     gridState: 
   documentChecked: 0
+  specificDialogue: {fileID: 0}
 --- !u!114 &2801172396659410360
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1990,6 +2047,7 @@ MonoBehaviour:
   walkSprite1: {fileID: 0}
   walkSprite2: {fileID: 0}
   animationSpeed: 1
+  walkWaddleAngle: 3
   dynamicLight: {fileID: 0}
   lightForwardOffset: 0.5
   lightSmoothing: 5
@@ -2058,6 +2116,7 @@ MonoBehaviour:
   headAttachPoint: {fileID: 0}
   handAttachPoint: {fileID: 0}
   levelUpSound: {fileID: 0}
+  processingIconPrefab: {fileID: 0}
 --- !u!114 &-5268273505259981457
 MonoBehaviour:
   m_ObjectHideFlags: 0

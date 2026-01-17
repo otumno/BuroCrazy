@@ -33,7 +33,8 @@ public class ClerkController : StaffController, IServiceProvider
         Regular,
         Cashier,
         Registrar,
-        Archivist
+        Archivist,
+		Accountant
     }
 
     [Header("Настройки клерка")]

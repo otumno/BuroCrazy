@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 602a80440fe6e5e4d89843d878ae7570, type: 3}
+  m_Name: RoleData_Accountant
+  m_EditorClassIdentifier: Assembly-CSharp::RoleData
+  roleType: 9
+  moveSpeed: 2.5
+  animationSpeed: 0.3
+  priority: 1
+  maleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}
+  femaleVoice: {fileID: 11400000, guid: 93ce9cb2280fa83408ffdf3e7d695ec9, type: 2}
+  spriteCollection: {fileID: 0}
+  stateEmotionMap: {fileID: 0}
+  accessoryPrefab: {fileID: 0}
+  idleSprite: {fileID: 0}
+  walkSprite1: {fileID: 0}
+  walkSprite2: {fileID: 0}
+  guard_minWaitTime: 1
+  guard_maxWaitTime: 3
+  guard_chaseSpeedMultiplier: 1.5
+  guard_talkTime: 3
+  guard_timeInToilet: 15
+  guard_maxStress: 100
+  guard_stressGainPerViolator: 25
+  guard_stressReliefRate: 10
+  clerk_timeInToilet: 10
+  clerk_clientArrivalTimeout: 16
+  clerk_maxStress: 100
+  clerk_stressGainPerClient: 5
+  clerk_stressReliefRate: 10
+  worker_cleaningTimeTrash: 2
+  worker_cleaningTimePuddle: 4
+  worker_cleaningTimePerDirtLevel: 1.5
+  worker_trashBagPrefab: {fileID: 0}
+  worker_maxStress: 100
+  worker_stressGainPerMess: 2
+  worker_stressReliefRate: 10
+  cashier_corruptionChanceMultiplier: 1
+  cashier_maxSkimAmount: 0.3
+  minIdleWait: 5
+  maxIdleWait: 10
+  baseHiringCost: 300

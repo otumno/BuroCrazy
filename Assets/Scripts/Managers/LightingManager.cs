@@ -1,9 +1,12 @@
+// Assets/Scripts/Managers/LightingManager.cs
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Data.Calendar;
 using UnityEngine;
-using UnityEngine.Rendering.Universal;
+using UnityEngine.Rendering.Universal; // Обязательно для Light2D
+using Scriptables.Audio;
+// using Characters.Controllers; // Убрали, чтобы не было ошибки пространства имен
 
 namespace Managers
 {
@@ -17,10 +20,24 @@ namespace Managers
         [Header("Лампы в Офисе")]
         public List<GameObject> allControllableLights;
         
-        [Header("Настройки")]
+        [Header("Тайминги")]
+        [Tooltip("Длительность плавного перехода глобального света")]
         public float lightFadeDuration = 1.0f;
 
+        [Tooltip("Задержка перед тем, как лампы начнут переключаться после смены периода")]
+        public float periodStartDelay = 1.5f;
+
+        [Tooltip("Максимальный разброс времени включения отдельных ламп.")]
+        public float maxLampDelay = 2.5f; 
+        
+        [Header("Звуки")]
+        public SoundID masterSwitchSound = SoundID.Light_MasterSwitch;
+        public SoundID lampTwinkleSound = SoundID.Light_LampTwinkle;
+        public float soundDelayAfterVisual = 0.1f;
+        [Range(0f, 1f)] public float lampSoundChance = 0.33f;
+
         private Coroutine lightTransitionCoroutine;
+        private Coroutine lampsRoutine;
 
         private void Awake()
         {
@@ -30,34 +47,31 @@ namespace Managers
 
         private void Start()
         {
-            TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
-
-            var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
-            if (currentSettings != null)
+            if (TimeManager.Instance != null)
             {
-                // Применяем свет МГНОВЕННО (true), чтобы при старте не было "перетекания"
-                ApplyLightingSettings(currentSettings, true);
+                TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
+                var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
+                if (currentSettings != null)
+                {
+                    ApplyLightingSettings(currentSettings, true);
+                }
             }
         }
 
-        // Обработчик события (вызывается при смене периода во время игры)
         private void OnPeriodChanged(PeriodSettings newSettings)
         {
-            // При смене периода используем плавный переход (false)
             ApplyLightingSettings(newSettings, false);
         }
 
         private void ApplyLightingSettings(PeriodSettings settings, bool isInstant)
         {
-            if (settings == null)
-                return;
+            if (settings == null) return;
 
-            // 1. Глобальный свет
+            // --- 1. ГЛОБАЛЬНЫЙ СВЕТ ---
             if (lightTransitionCoroutine != null) StopCoroutine(lightTransitionCoroutine);
             
             if (isInstant)
             {
-                // Мгновенная установка (для старта игры)
                 if (globalLight != null)
                 {
                     globalLight.color = settings.lightingSettings.lightColor;
@@ -66,21 +80,34 @@ namespace Managers
             }
             else
             {
-                // Плавный переход (для геймплея)
+                StartCoroutine(PlayMasterSwitchWithDelay(periodStartDelay));
                 lightTransitionCoroutine = StartCoroutine(TransitionGlobalLight(settings));
             }
 
-            // 2. Лампы
-            ManageLocalLights(settings, isInstant);
+            // --- 2. ЛАМПЫ ---
+            if (lampsRoutine != null) StopCoroutine(lampsRoutine);
+            lampsRoutine = StartCoroutine(ManageLocalLightsRoutine(settings, isInstant));
 
-            // 3. Фонарики персонала
+            // --- 3. ФОНАРИКИ ПЕРСОНАЛА ---
             bool isNight = settings.PeriodType.IsNight();
             ToggleStaffLights(isNight);
+        }
+
+        private IEnumerator PlayMasterSwitchWithDelay(float delay)
+        {
+            if (delay > 0) yield return new WaitForSeconds(delay);
+            
+            if (AudioManager.Instance != null && masterSwitchSound != SoundID.None)
+            {
+                AudioManager.Instance.PlaySound(masterSwitchSound);
+            }
         }
 
         private IEnumerator TransitionGlobalLight(PeriodSettings targetSettings)
         {
             if (globalLight == null) yield break;
+
+            yield return new WaitForSeconds(periodStartDelay);
 
             Color startColor = globalLight.color;
             float startIntensity = globalLight.intensity;
@@ -103,8 +130,13 @@ namespace Managers
             globalLight.intensity = targetIntensity;
         }
 
-        private void ManageLocalLights(PeriodSettings periodPlan, bool isInstant)
+        private IEnumerator ManageLocalLightsRoutine(PeriodSettings periodPlan, bool isInstant)
         {
+            if (!isInstant && periodStartDelay > 0)
+            {
+                yield return new WaitForSeconds(periodStartDelay);
+            }
+
             var lightsToEnable = new HashSet<string>(periodPlan.lightsToEnableNames);
 
             foreach (var lightGO in allControllableLights)
@@ -116,25 +148,18 @@ namespace Managers
 
                 if (isInstant)
                 {
-                    // Мгновенно включаем/выключаем без корутин
                     if (shouldBeOn != isCurrentlyOn)
                     {
                         lightGO.SetActive(shouldBeOn);
-                        // Если на объекте есть Light2D, сбрасываем его интенсивность на норму
                         var lightSource = lightGO.GetComponent<Light2D>();
                         if (lightSource != null && shouldBeOn) lightSource.intensity = 1f;
                     }
                 }
                 else
                 {
-                    // Плавное переключение
-                    if (shouldBeOn && !isCurrentlyOn)
+                    if (shouldBeOn != isCurrentlyOn)
                     {
-                        StartCoroutine(FadeLocalLight(lightGO, true));
-                    }
-                    else if (!shouldBeOn && isCurrentlyOn)
-                    {
-                        StartCoroutine(FadeLocalLight(lightGO, false));
+                        StartCoroutine(FadeLocalLight(lightGO, shouldBeOn));
                     }
                 }
             }
@@ -142,12 +167,14 @@ namespace Managers
 
         private IEnumerator FadeLocalLight(GameObject lightObj, bool turnOn)
         {
-            yield return new WaitForSeconds(Random.Range(0f, 0.5f));
+            yield return new WaitForSeconds(Random.Range(0f, maxLampDelay));
 
             var lightSource = lightObj.GetComponent<Light2D>();
+            
             if (lightSource == null)
             {
                 lightObj.SetActive(turnOn);
+                yield return PlayLampSoundWithDelay(lightObj); 
                 yield break;
             }
 
@@ -156,11 +183,13 @@ namespace Managers
             
             if (turnOn) lightObj.SetActive(true);
 
+            StartCoroutine(PlayLampSoundWithDelay(lightObj));
+
             float timer = 0f;
-            while (timer < 0.5f)
+            while (timer < 0.4f)
             {
                 timer += Time.deltaTime;
-                lightSource.intensity = Mathf.Lerp(startInt, endInt, timer / 0.5f);
+                lightSource.intensity = Mathf.Lerp(startInt, endInt, timer / 0.4f);
                 yield return null;
             }
 
@@ -168,17 +197,49 @@ namespace Managers
             lightSource.intensity = endInt;
         }
 
+        private IEnumerator PlayLampSoundWithDelay(GameObject lightObj)
+        {
+            if (Random.value > lampSoundChance) yield break;
+
+            if (soundDelayAfterVisual > 0) 
+                yield return new WaitForSeconds(soundDelayAfterVisual);
+
+            if (AudioManager.Instance != null && lampTwinkleSound != SoundID.None)
+            {
+                AudioManager.Instance.PlaySound(lampTwinkleSound, lightObj.transform.position);
+            }
+        }
+
+        // --- ИСПРАВЛЕННЫЙ МЕТОД (БЕЗ ТЕГОВ [source]) ---
         private void ToggleStaffLights(bool enable)
         {
             var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
+            
             foreach (var staff in allStaff)
             {
-                if (staff is GuardMovement guard && guard.nightLight != null)
-                    guard.nightLight.SetActive(enable);
-                else if (staff is ServiceWorkerController worker && worker.nightLight != null)
-                    worker.nightLight.SetActive(enable);
-                else if (staff is DirectorAvatarController director && director.nightLight != null)
-                    director.nightLight.SetActive(enable);
+                // 1. ОХРАННИКИ (У них nightLight это Light2D)
+                var guard = staff.GetComponent<GuardMovement>();
+                if (guard != null && guard.nightLight != null)
+                {
+                    guard.nightLight.enabled = enable; // Используем enabled
+                    continue;
+                }
+
+                // 2. РАБОЧИЕ (У них nightLight это GameObject)
+                var worker = staff.GetComponent<ServiceWorkerController>();
+                if (worker != null && worker.nightLight != null)
+                {
+                    worker.nightLight.SetActive(enable); // Используем SetActive
+                    continue;
+                }
+
+                // 3. ДИРЕКТОР (У него nightLight это GameObject)
+                var director = staff.GetComponent<DirectorAvatarController>();
+                if (director != null && director.nightLight != null)
+                {
+                    director.nightLight.SetActive(enable); // Используем SetActive
+                    continue;
+                }
             }
         }
         

@@ -7,16 +7,16 @@ namespace Scriptables.Progression
     public class JobTitleData : ScriptableObject
     {
         [Header("Основное")]
-        public string jobID; // Например "HEAD_OF_CHAOS"
-        public string titleName; // "Начальник отдела Хаоса"
+        public string jobID; 
+        public string titleName; 
         [TextArea(2, 4)]
-        public string description; // Тултип: "Дает возможность орать на подчиненных"
+        public string description;
 
         [Header("Структура Дерева")]
         [Tooltip("Уровень должности: 0 - Директор, 1 - Региональный, 5 - Министр")]
         public int tierLevel;
         
-        [Tooltip("Какую должность нужно иметь перед этой (родительская нода). Если null — это стартовая должность.")]
+        [Tooltip("Какую должность нужно иметь перед этой (родительская нода).")]
         public JobTitleData requiredPreviousJob;
 
         [Header("Условия Открытия")]
@@ -29,7 +29,5 @@ namespace Scriptables.Progression
         [Header("Финал")]
         [Tooltip("Если галочка стоит, получение этой должности означает победу в игре.")]
         public bool isMinisterPosition; 
-        
-        // public List<PolicyData> unlockedPolicies; // Заготовка под Политики (Этап 2)
     }
 }

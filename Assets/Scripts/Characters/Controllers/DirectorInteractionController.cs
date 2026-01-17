@@ -65,7 +65,7 @@ public class DirectorInteractionController : MonoBehaviour
         switch (currentInteractionPoint.type)
         {
             case InteractionPoint.InteractionType.BarrierControl:
-                buttonText = SecurityBarrier.Instance.IsActive() ? "Открыть дверь" : "Закрыть дверь";
+                buttonText = Managers.GuardManager.Instance.securityBarrier.IsActive() ? "Открыть дверь" : "Закрыть дверь";
                 break;
             case InteractionPoint.InteractionType.CollectDocuments:
                 buttonText = "Забрать документы";
@@ -102,8 +102,8 @@ public class DirectorInteractionController : MonoBehaviour
         switch (currentInteractionPoint.type)
         {
             case InteractionPoint.InteractionType.BarrierControl:
-                if (SecurityBarrier.Instance.IsActive()) SecurityBarrier.Instance.DeactivateBarrier();
-                else SecurityBarrier.Instance.ActivateBarrier();
+                if (Managers.GuardManager.Instance.securityBarrier.IsActive()) Managers.GuardManager.Instance.securityBarrier.DeactivateBarrier();
+                else Managers.GuardManager.Instance.securityBarrier.ActivateBarrier();
                 break;
             case InteractionPoint.InteractionType.CollectDocuments:
                 if (currentInteractionPoint.associatedStack != null)

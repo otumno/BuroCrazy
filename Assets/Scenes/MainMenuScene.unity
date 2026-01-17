@@ -10767,6 +10767,14 @@ PrefabInstance:
       propertyPath: unifiedTypingSpeed
       value: 0.07
       objectReference: {fileID: 0}
+    - target: {fileID: 1229093190503658547, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: npcProfiles.Array.size
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1229093190503658547, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'npcProfiles.Array.data[2]'
+      value: 
+      objectReference: {fileID: 11400000, guid: 88a967b8431ada241975311f6ef650a9, type: 2}
     - target: {fileID: 1663327023189599198, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: allPossibleOrders.Array.size
       value: 3

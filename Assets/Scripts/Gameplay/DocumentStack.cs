@@ -1,139 +1,202 @@
-// Assets/Scripts/Gameplay/DocumentStack.cs
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
-using Gameplay.Documents; // Наш новый namespace
-using Data.Documents;     // Данные документов
+using Gameplay.Documents;
+using Data.Documents;
+using Managers;
 
 public class DocumentStack : MonoBehaviour
 {
-    [Header("Настройки стопки")]
-    public int maxStackSize = 10;
+    [Header("Настройки")]
+    [Tooltip("Максимальная высота стопки (визуально)")]
+    public int maxStackSize = 20;
+    public float stackOffset = 0.015f; 
+
+    [Header("Ссылки")]
+    [Tooltip("Префаб обычного белого документа")]
+    public GameObject documentPrefab; 
     
-    [Tooltip("Префаб для ОБЫЧНЫХ клиентских документов")]
-    public GameObject documentVisualPrefab;
-    
-    [Tooltip("Смещение по высоте")]
-    public float stackOffset = 0.05f;
-    
-    // Список созданных объектов (визуал)
+    [Tooltip("Точка, где растет стопка")]
+    public Transform stackRoot;
+
+    // Внутренний список объектов
     private List<GameObject> visualStack = new List<GameObject>();
 
+    // --- СВОЙСТВА ---
+    public bool IsEmpty => visualStack.Count == 0;
+    public bool IsFull => visualStack.Count >= maxStackSize; // << ВЕРНУЛИ ISFULL
     public int CurrentSize => visualStack.Count;
-    public bool IsFull => CurrentSize >= maxStackSize;
-    public bool IsEmpty => CurrentSize == 0;
 
-    // --- ПУБЛИЧНЫЕ МЕТОДЫ ---
-
-    /// <summary>
-    /// Добавить обычный документ (визуальная пустышка).
-    /// </summary>
-    public bool AddDocumentToStack() 
+    private void Start()
     {
-        return AddDocumentInternal(null, null);
+        if (stackRoot == null) stackRoot = transform;
     }
 
-    /// <summary>
-    /// Добавить ВАЖНЫЙ документ (с данными и своим префабом).
-    /// </summary>
-    public bool AddProjectDocument(ProjectDocumentDefinition projectDoc, GameObject prefabOverride)
-    {
-        if (projectDoc == null) return false;
-        // Передаем данные и префаб во внутренний метод
-        return AddDocumentInternal(prefabOverride, projectDoc);
-    }
+    // =================================================================================
+    // МЕТОДЫ ДЛЯ ОБЫЧНЫХ ДОКУМЕНТОВ (БЕЛЫЕ)
+    // =================================================================================
 
     /// <summary>
-    /// Забрать верхний документ. 
-    /// Возвращает данные (если это спец. документ) или null (если обычный).
-    /// out documentObject - ссылка на физический объект, который нужно взять в руку.
+    /// Добавляет документ. Теперь возвращает bool (для WriteReportExecutor).
     /// </summary>
-    public ProjectDocumentDefinition TakeTopDocument(out GameObject documentObject)
+    public bool AddDocumentToStack()
     {
-        if (IsEmpty) 
-        {
-            documentObject = null;
-            return null;
-        }
-        
-        // 1. Берем верхний объект
-        GameObject docToRemove = visualStack.Last();
-        visualStack.Remove(docToRemove);
-        
-        documentObject = docToRemove; // Передаем объект наружу (для Parent к руке)
-
-        // 2. Проверяем, есть ли на нем данные
-        var projComp = docToRemove.GetComponent<ProjectDocumentObject>();
-        if (projComp != null)
-        {
-            return projComp.documentData;
-        }
-
-        return null; // Обычная бумага
-    }
-
-    // --- ВНУТРЕННЯЯ ЛОГИКА ---
-
-    private bool AddDocumentInternal(GameObject specificPrefab, ProjectDocumentDefinition dataForInit)
-    {
-        if (IsFull) return false;
-
-        GameObject prefabToUse = specificPrefab != null ? specificPrefab : documentVisualPrefab;
-
-        if (prefabToUse == null)
-        {
-            Debug.LogError($"<color=red>[{name}] ОШИБКА: Не назначен префаб документа!</color>");
-            return false;
-        }
-
-        Vector3 position = transform.position + new Vector3(0, CurrentSize * stackOffset, 0);
-        
-        // Легкий рандом вращения для реализма
-        Quaternion rotation = transform.rotation * Quaternion.Euler(0, 0, Random.Range(-5f, 5f));
-
-        GameObject newDocGO = Instantiate(prefabToUse, position, rotation, transform);
-        
-        // ИНИЦИАЛИЗАЦИЯ ДАННЫХ (Ключевой момент)
-        if (dataForInit != null)
-        {
-            var projComp = newDocGO.GetComponent<ProjectDocumentObject>();
-            if (projComp != null)
-            {
-                projComp.Initialize(dataForInit);
-            }
-            else
-            {
-                Debug.LogWarning($"На префабе {prefabToUse.name} нет скрипта ProjectDocumentObject, хотя переданы данные!");
-            }
-        }
-
-        visualStack.Add(newDocGO);
+        if (visualStack.Count >= maxStackSize) return false;
+        AddDocumentInternal(documentPrefab);
         return true;
     }
 
-    // --- МЕТОДЫ ДЛЯ СОВМЕСТИМОСТИ И ОЧИСТКИ ---
+    /// <summary>
+    /// Пытается забрать один документ сверху. Возвращает true, если успешно.
+    /// </summary>
+    public bool TakeOneDocument()
+    {
+        if (visualStack.Count > 0)
+        {
+            RemoveDocumentFromStack();
+            return true;
+        }
+        return false;
+    }
 
+    public void RemoveDocumentFromStack()
+    {
+        if (visualStack.Count > 0)
+        {
+            GameObject topDoc = visualStack[visualStack.Count - 1];
+            visualStack.RemoveAt(visualStack.Count - 1);
+            if (topDoc != null) Destroy(topDoc);
+        }
+    }
+
+    /// <summary>
+    /// Забирает ВСЮ стопку и возвращает количество (для ArchiveManager/Director).
+    /// </summary>
     public int TakeEntireStack()
     {
-        int count = CurrentSize;
-        foreach (var doc in visualStack) Destroy(doc);
+        int count = visualStack.Count;
+        
+        // Уничтожаем все визуальные объекты
+        foreach (var doc in visualStack)
+        {
+            if (doc != null) Destroy(doc);
+        }
         visualStack.Clear();
+        
         return count;
     }
 
-    public bool TakeOneDocument()
-    {
-        // Упрощенный метод для уничтожения (если берет не игрок, а система/скрипт)
-        if (IsEmpty) return false;
-        GameObject doc;
-        TakeTopDocument(out doc);
-        if (doc != null) Destroy(doc);
-        return true;
-    }
-
+    /// <summary>
+    /// Восстанавливает стопку при загрузке (для SaveLoadManager).
+    /// </summary>
     public void SetCount(int count)
     {
+        // Сначала очищаем
         TakeEntireStack();
-        for (int i = 0; i < count; i++) AddDocumentToStack();
+
+        // Спавним нужное количество
+        for (int i = 0; i < count; i++)
+        {
+            if (visualStack.Count >= maxStackSize) break;
+            AddDocumentInternal(documentPrefab);
+        }
+    }
+
+    // =================================================================================
+    // ПРОЕКТНЫЕ ДОКУМЕНТЫ (КРАСНЫЕ ПАПКИ)
+    // =================================================================================
+
+    public bool AddProjectDocument(ProjectDocumentDefinition data, GameObject prefab)
+    {
+        if (visualStack.Count >= maxStackSize) return false;
+
+        GameObject newDoc = AddDocumentInternal(prefab);
+        if (newDoc != null)
+        {
+            var script = newDoc.GetComponent<ProjectDocumentObject>();
+            if (script != null) script.Initialize(data);
+            return true;
+        }
+        return false;
+    }
+
+    public ProjectDocumentObject FindPendingProjectDocument(StaffController.Role role)
+    {
+        if (visualStack == null || visualStack.Count == 0) return null;
+
+        foreach (var docGO in visualStack)
+        {
+            if (docGO == null) continue;
+            
+            var projDoc = docGO.GetComponent<ProjectDocumentObject>();
+            if (projDoc == null || projDoc.documentData == null) continue;
+
+            var data = projDoc.documentData;
+
+            // Логика фильтрации
+            if (role == StaffController.Role.Registrar)
+            {
+                if (data.signedByDirector && !data.processedByRegistrar) return projDoc;
+            }
+            else if (role == StaffController.Role.Cashier || role == StaffController.Role.Accountant)
+            {
+                if (data.processedByRegistrar && !data.paidAtCashier) return projDoc;
+            }
+            else if (role == StaffController.Role.Archivist)
+            {
+                if (data.paidAtCashier && !data.archived) return projDoc;
+            }
+        }
+        return null;
+    }
+
+    public ProjectDocumentObject FindPendingProjectDocument(ClerkController.ClerkRole clerkRole)
+    {
+        StaffController.Role role = StaffController.Role.Clerk;
+        if (clerkRole == ClerkController.ClerkRole.Registrar) role = StaffController.Role.Registrar;
+        if (clerkRole == ClerkController.ClerkRole.Cashier) role = StaffController.Role.Cashier;
+        if (clerkRole == ClerkController.ClerkRole.Accountant) role = StaffController.Role.Accountant;
+        
+        return FindPendingProjectDocument(role);
+    }
+
+    public GameObject TakeSpecificDocument(ProjectDocumentObject targetDoc)
+    {
+        if (targetDoc == null || !visualStack.Contains(targetDoc.gameObject)) return null;
+        visualStack.Remove(targetDoc.gameObject);
+        return targetDoc.gameObject;
+    }
+
+    // =================================================================================
+    // ВНУТРЕННЯЯ ЛОГИКА
+    // =================================================================================
+
+    private GameObject AddDocumentInternal(GameObject prefabToSpawn)
+    {
+        if (prefabToSpawn == null || stackRoot == null) return null;
+
+        GameObject newDoc = Instantiate(prefabToSpawn, stackRoot);
+        
+        Vector3 pos = stackRoot.position + new Vector3(0, visualStack.Count * stackOffset, 0);
+        Quaternion rot = stackRoot.rotation * Quaternion.Euler(0, 0, Random.Range(-5f, 5f));
+
+        newDoc.transform.position = pos;
+        newDoc.transform.rotation = rot;
+
+        visualStack.Add(newDoc);
+        return newDoc;
+    }
+    
+    public List<ProjectDocumentObject> GetAllProjectDocuments()
+    {
+        List<ProjectDocumentObject> list = new List<ProjectDocumentObject>();
+        foreach(var go in visualStack)
+        {
+            if(go != null)
+            {
+                var comp = go.GetComponent<ProjectDocumentObject>();
+                if(comp != null) list.Add(comp);
+            }
+        }
+        return list;
     }
 }

@@ -351,6 +351,37 @@ namespace Managers
             }
             return null; // Не найден в этой ветке
         }
+	
+	public void ActivateUpgradeByID(string upgradeID)
+    {
+        UpgradeData upgrade = allUpgradesDatabase.FirstOrDefault(u => u != null && u.name == upgradeID);
+        
+        if (upgrade == null)
+        {
+            Debug.LogError($"[UpgradeManager] Не удалось найти апгрейд с ID '{upgradeID}' для активации!");
+            return;
+        }
+
+        if (IsUpgradePurchased(upgrade))
+        {
+            Debug.LogWarning($"[UpgradeManager] Апгрейд '{upgradeID}' уже активирован.");
+            return;
+        }
+
+        // Добавляем в список купленных
+        purchasedUpgradeNames.Add(upgrade.name);
+        
+        // Применяем эффекты (появление мебели и т.д.)
+        ApplyUpgradeEffects(upgrade);
+
+        Debug.Log($"<color=green>[UpgradeManager] Апгрейд '{upgrade.upgradeName}' УСПЕШНО АКТИВИРОВАН через приказ!</color>");
+        OnUpgradePurchased?.Invoke();
+        
+        // Перестраиваем граф навигации
+        var graphBuilder = FindFirstObjectByType<GraphBuilder>();
+        graphBuilder?.BuildGraph();
+    }
+	
 
     } // Конец класса UpgradeManager
 

@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4905a3b68fb839a43a85afb79ec2e114, type: 3}
+  m_Name: ArchitectSpeaker
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.SpeakerProfile
+  speakerID: Architect
+  displayName: "\u0410\u0440\u0445\u0438\u0442\u0435\u043A\u0442\u043E\u0440"
+  portrait: {fileID: 7617208636905809826, guid: 57c1bcf9ef9ac694b932e93cc259f65f, type: 3}
+  voice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}

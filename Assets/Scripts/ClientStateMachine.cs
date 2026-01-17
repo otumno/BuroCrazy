@@ -523,7 +523,7 @@ public class ClientStateMachine : MonoBehaviour
 
     private IEnumerator EnragedRoutine()
     {
-        GuardManager.Instance.ReportViolator(parent);
+        GuardManager.Instance.ReportViolator(parent.gameObject);
         ClientQueueManager.Instance.AddAngryClient(parent);
         
         for(int i=0; i<5; i++) messGenerator.TrySpawnPuddle();

@@ -1,8 +1,8 @@
-// Файл: Assets/Scripts/Managers/ScenePointsRegistry.cs
-
+// Assets/Scripts/Managers/ScenePointsRegistry.cs
+using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
+using Gameplay; // Для ServicePoint, NoticeBoard, EnvelopeStack
 
 namespace Managers
 {
@@ -10,61 +10,64 @@ namespace Managers
     {
         public static ScenePointsRegistry Instance { get; private set; }
 
-        [Header("Общие точки для персонала")]
-        public RectZone staffHomeZone;
-        public Transform staffToiletPoint;
-        public List<Transform> kitchenPoints;
+        [Header("Основные зоны")]
+        public RectZone staffHomeZone; // Исправлено: RectZone для рандомных точек
+        public Waypoint janitorHomePoint; 
 
-        [Header("Патрульные маршруты")]
-        public List<Transform> internPatrolPoints;
-        public List<Transform> guardPatrolPoints;
-        public List<Transform> janitorPatrolPoints;
-	
-        [Header("Базы персонажей")]
-        public Transform janitorHomePoint;
-        public Transform dumpsterPoint;
-        public EnvelopeStack salaryStackPoint;
-
-        [Header("Рабочие места и зоны")]
-        public List<ServicePoint> allServicePoints;
-        public Transform guardPostPoint;
+        [Header("Рабочие места (Service Points)")]
+        public List<ServicePoint> allServicePoints = new List<ServicePoint>();
+        
+        [Header("Специальные столы")]
+        public ServicePoint bookkeepingDesk; 
+        public ServicePoint guardPostPoint; 
         public ServicePoint guardReportDesk;
-        public ServicePoint bookkeepingDesk;
 
-        // --- ДОБАВЛЕНО: Ссылка на уникальный объект сцены ---
-        [Header("Уникальные интерактивные объекты")]
+        [Header("Интерактивные объекты")]
+        public NoticeBoard noticeBoard;
+        public EnvelopeStack salaryStackPoint; // Исправлено: EnvelopeStack для логики зарплат
+        public Transform dumpsterPoint;      
         public SecurityBarrier securityBarrier;
 
-        private List<Transform> occupiedKitchenPoints = new List<Transform>();
+        [Header("Точки нужд")]
+        public List<Waypoint> kitchenPoints = new List<Waypoint>();
+        public List<Waypoint> toiletPoints = new List<Waypoint>();
 
-        private void Awake()
+        [Header("Патруль")]
+        public List<Waypoint> guardPatrolPoints = new List<Waypoint>();
+        public List<Waypoint> janitorPatrolPoints = new List<Waypoint>();
+        public List<Waypoint> internPatrolPoints = new List<Waypoint>();
+
+        void Awake()
         {
-            if (Instance != null && Instance != this) { Destroy(gameObject); }
-            else { Instance = this; }
+            if (Instance != null) Destroy(gameObject);
+            else Instance = this;
+            
+            if (allServicePoints == null || allServicePoints.Count == 0)
+                allServicePoints = FindObjectsByType<ServicePoint>(FindObjectsSortMode.None).ToList();
         }
+
+        // --- МЕТОДЫ ДОСТУПА ---
 
         public ServicePoint GetServicePointByID(int id)
         {
-            return allServicePoints.FirstOrDefault(p => p.deskId == id);
+            if (allServicePoints == null) return null;
+            return allServicePoints.FirstOrDefault(sp => sp.deskId == id);
         }
 
-        public Transform RequestKitchenPoint()
+        public Waypoint RequestKitchenPoint()
         {
             if (kitchenPoints == null || kitchenPoints.Count == 0) return null;
-            Transform freePoint = kitchenPoints.FirstOrDefault(p => !occupiedKitchenPoints.Contains(p));
-            if (freePoint != null)
-            {
-                occupiedKitchenPoints.Add(freePoint);
-                return freePoint;
-            }
-            return kitchenPoints.FirstOrDefault();
+            return kitchenPoints[Random.Range(0, kitchenPoints.Count)];
         }
+        
+        public void FreeKitchenPoint(Waypoint wp) { }
 
-        public void FreeKitchenPoint(Transform point)
+        public Waypoint staffToiletPoint
         {
-            if (point != null && occupiedKitchenPoints.Contains(point))
+            get
             {
-                occupiedKitchenPoints.Remove(point);
+                if (toiletPoints == null || toiletPoints.Count == 0) return null;
+                return toiletPoints[Random.Range(0, toiletPoints.Count)];
             }
         }
     }

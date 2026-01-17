@@ -1,0 +1,617 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-9004920804495711498
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5c6f881a8b64bc41a3ec2bc23a605bd, type: 3}
+  m_Name: c_choice_moral_final
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.ChoiceNode
+  id: 3777875b-1020-4725-b476-67aef321a615
+  graphPosition:
+    serializedVersion: 2
+    x: 1500
+    y: 250
+    width: 0
+    height: 0
+  queryText: "(\u0410\u0440\u0445\u0438\u0442\u0435\u043A\u0442\u043E\u0440 \u043F\u0440\u043E\u0442\u044F\u0433\u0438\u0432\u0430\u0435\u0442
+    \u0440\u0443\u0447\u043A\u0443. \u041E\u043D\u0430 \u0445\u043E\u043B\u043E\u0434\u043D\u0430\u044F
+    \u043A\u0430\u043A \u043B\u0435\u0434.)"
+  options:
+  - text: "\u041F\u043E\u0434\u043F\u0438\u0441\u0430\u0442\u044C. \u042D\u0444\u0444\u0435\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C
+      \u043F\u0440\u0435\u0432\u044B\u0448\u0435 \u0432\u0441\u0435\u0433\u043E."
+    nextNode: {fileID: 3400739840693958834}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+  - text: "\u041E\u0442\u043A\u0430\u0437\u0430\u0442\u044C. \u041C\u044B \u043D\u0430\u0439\u0434\u0435\u043C
+      \u0433\u0443\u043C\u0430\u043D\u043D\u044B\u0439 \u0441\u043F\u043E\u0441\u043E\u0431."
+    nextNode: {fileID: 1205271435810621573}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+  - text: "[\u0412\u0417\u042F\u0422\u041A\u0410] \u0410 \u0435\u0441\u043B\u0438
+      \u043C\u044B \u043F\u0440\u043E\u0441\u0442\u043E... \u0437\u0430\u043C\u0443\u0440\u0443\u0435\u043C
+      \u0434\u0432\u0435\u0440\u044C?"
+    nextNode: {fileID: -2520061136928121243}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+--- !u!114 &-7151687494198837378
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_explain_literal
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 331f2470-a897-4d55-b55e-8d1bfe31236b
+  graphPosition:
+    serializedVersion: 2
+    x: 1200
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u0423\u0431\u043E\u0440\u0449\u0438\u043A \u0442\u0443\u0442 \u0431\u0435\u0441\u0441\u0438\u043B\u0435\u043D.
+    \u042D\u0442\u043E \u043D\u0435 \u0433\u0440\u044F\u0437\u044C, \u044D\u0442\u043E
+    \u0434\u0430\u043D\u043D\u044B\u0435. \u0421\u0442\u0430\u0440\u044B\u0435 \u043E\u0442\u0447\u0435\u0442\u044B
+    \u0432\u043F\u0438\u0442\u0430\u043B\u0438\u0441\u044C \u0432 \u0431\u0435\u0442\u043E\u043D
+    \u0438 \u0442\u0440\u0435\u0431\u0443\u044E\u0442 \u0432\u044B\u0445\u043E\u0434\u0430."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -5123605053959303700}
+--- !u!114 &-7013927677214054624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619f1e1e8bede14b96118d2e1a8d7a5, type: 3}
+  m_Name: e_evt_refuse
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.EventNode
+  id: 760fc3e3-dd00-4e4c-9ba2-95ef12692bf3
+  graphPosition:
+    serializedVersion: 2
+    x: 900
+    y: 500
+    width: 0
+    height: 0
+  eventType: 2
+  flagKey: 
+  intValue: 1
+  notificationText: "\u0410\u0440\u0445\u0438\u0442\u0435\u043A\u0442\u043E\u0440
+    \u043F\u043E\u0434\u0430\u043B \u043D\u0430 \u0432\u0430\u0441 \u0436\u0430\u043B\u043E\u0431\u0443
+    \u0432\u044B\u0448\u0435\u0441\u0442\u043E\u044F\u0449\u0435\u043C\u0443 \u0440\u0443\u043A\u043E\u0432\u043E\u0434\u0441\u0442\u0432\u0443."
+  soundEffect: {fileID: 0}
+  nextNode: {fileID: -1674375403690128749}
+--- !u!114 &-6581253019594956867
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619f1e1e8bede14b96118d2e1a8d7a5, type: 3}
+  m_Name: e_evt_bribe
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.EventNode
+  id: 904bf2f6-2443-4654-9762-e0e384d20e5f
+  graphPosition:
+    serializedVersion: 2
+    x: 1500
+    y: 500
+    width: 0
+    height: 0
+  eventType: 1
+  flagKey: 
+  intValue: 200
+  notificationText: "\u0412\u044B \u043F\u043E\u043B\u0443\u0447\u0438\u043B\u0438
+    \u043E\u0442\u043A\u0430\u0442 \u0437\u0430 '\u044D\u043A\u043E\u043D\u043E\u043C\u0438\u044E
+    \u0441\u0442\u0440\u043E\u0439\u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u043E\u0432'."
+  soundEffect: {fileID: 0}
+  nextNode: {fileID: -2035467165796561687}
+--- !u!114 &-5123605053959303700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_proposal_intro
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: ad64c422-2cec-4270-b0fc-ca854a49e7e9
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 250
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u042F \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0430\u043B \u043F\u0440\u043E\u0435\u043A\u0442
+    \u0440\u0435\u043D\u043E\u0432\u0430\u0446\u0438\u0438. '\u041F\u0440\u043E\u0442\u043E\u043A\u043E\u043B
+    \u041C\u0451\u0431\u0438\u0443\u0441\u0430'. \u041C\u044B \u0441\u0432\u0435\u0440\u043D\u0435\u043C
+    \u043A\u043E\u0440\u0438\u0434\u043E\u0440\u044B \u0432 \u043F\u0435\u0442\u043B\u044E.
+    \u041F\u0440\u043E\u0434\u0443\u043A\u0442\u0438\u0432\u043D\u043E\u0441\u0442\u044C
+    \u0432\u044B\u0440\u0430\u0441\u0442\u0435\u0442, \u0442\u0430\u043A \u043A\u0430\u043A
+    \u0432\u044B\u0445\u043E\u0434 \u043F\u0435\u0440\u0435\u0441\u0442\u0430\u043D\u0435\u0442
+    \u0441\u0443\u0449\u0435\u0441\u0442\u0432\u043E\u0432\u0430\u0442\u044C."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: 4611735770343134993}
+--- !u!114 &-2520061136928121243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_outcome_bribe
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 45ee3725-4c0e-452b-ae17-67903a1e9be6
+  graphPosition:
+    serializedVersion: 2
+    x: 1200
+    y: 500
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u0425\u043C. \u041F\u0440\u043E\u0441\u0442\u043E \u0437\u0430\u043C\u0443\u0440\u043E\u0432\u0430\u0442\u044C?
+    \u0414\u0435\u0448\u0435\u0432\u043E. \u0421\u0435\u0440\u0434\u0438\u0442\u043E.
+    \u0418 \u043D\u0438\u043A\u0430\u043A\u0438\u0445 \u0431\u0443\u043C\u0430\u0433.
+    \u041C\u043D\u0435 \u043D\u0440\u0430\u0432\u0438\u0442\u0441\u044F \u0432\u0430\u0448
+    \u0441\u0442\u0438\u043B\u044C \u043C\u044B\u0448\u043B\u0435\u043D\u0438\u044F."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -6581253019594956867}
+--- !u!114 &-2035467165796561687
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1af36ba5234e6439af301385bd3bde, type: 3}
+  m_Name: end_end_good
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.EndNode
+  id: 87aa5bf1-0a87-4c07-85a0-3feba7a30bc9
+  graphPosition:
+    serializedVersion: 2
+    x: 600
+    y: 750
+    width: 0
+    height: 0
+  endSound: {fileID: 0}
+--- !u!114 &-1674375403690128749
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1af36ba5234e6439af301385bd3bde, type: 3}
+  m_Name: end_end_bad
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.EndNode
+  id: 39f7232c-2140-412d-806a-f1373fe81794
+  graphPosition:
+    serializedVersion: 2
+    x: 300
+    y: 750
+    width: 0
+    height: 0
+  endSound: {fileID: 0}
+--- !u!114 &-385745028484245965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619f1e1e8bede14b96118d2e1a8d7a5, type: 3}
+  m_Name: e_evt_cruel
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.EventNode
+  id: d008bb6d-568f-4ea2-8886-202987c67b91
+  graphPosition:
+    serializedVersion: 2
+    x: 300
+    y: 500
+    width: 0
+    height: 0
+  eventType: 1
+  flagKey: 
+  intValue: 500
+  notificationText: "\u0412\u044B \u0441\u044D\u043A\u043E\u043D\u043E\u043C\u0438\u043B\u0438
+    \u0431\u044E\u0434\u0436\u0435\u0442 \u043D\u0430 \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u0430\u0445."
+  soundEffect: {fileID: 0}
+  nextNode: {fileID: 6277486832380188848}
+--- !u!114 &-373025287610595870
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_cost_discussion
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 3722fbad-825f-45e8-a7dc-e6e8387a4d16
+  graphPosition:
+    serializedVersion: 2
+    x: 900
+    y: 250
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u0411\u044E\u0434\u0436\u0435\u0442 \u043D\u0443\u043B\u0435\u0432\u043E\u0439.
+    \u041C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B \u043C\u044B \u0432\u043E\u0437\u044C\u043C\u0435\u043C
+    \u0438\u0437... \u0438\u0437\u043B\u0438\u0448\u043A\u043E\u0432 \u043F\u0435\u0440\u0441\u043E\u043D\u0430\u043B\u0430.
+    \u041C\u043D\u0435 \u043D\u0443\u0436\u043D\u0430 \u043B\u0438\u0448\u044C \u0432\u0430\u0448\u0430
+    \u043F\u043E\u0434\u043F\u0438\u0441\u044C."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -9004920804495711498}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7e28d74defd1d54d8957d654b304587, type: 3}
+  m_Name: Architect_Audience
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.DialogueGraph
+  startNode: {fileID: 3181261902969693027}
+  allNodes:
+  - {fileID: 3181261902969693027}
+  - {fileID: 2596512397009662977}
+  - {fileID: 1416355111029271584}
+  - {fileID: -7151687494198837378}
+  - {fileID: 4717985086137380430}
+  - {fileID: -5123605053959303700}
+  - {fileID: 4611735770343134993}
+  - {fileID: 434421302594822270}
+  - {fileID: -373025287610595870}
+  - {fileID: 1991666536903957891}
+  - {fileID: -9004920804495711498}
+  - {fileID: 3400739840693958834}
+  - {fileID: -385745028484245965}
+  - {fileID: 1205271435810621573}
+  - {fileID: -7013927677214054624}
+  - {fileID: -2520061136928121243}
+  - {fileID: -6581253019594956867}
+  - {fileID: 6277486832380188848}
+  - {fileID: -1674375403690128749}
+  - {fileID: -2035467165796561687}
+--- !u!114 &434421302594822270
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_people_resource
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 68b43b34-5987-491f-839c-aaa1f0b18058
+  graphPosition:
+    serializedVersion: 2
+    x: 600
+    y: 250
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u041B\u044E\u0434\u0438? \u041E, \u0432\u044B \u0438\u043C\u0435\u0435\u0442\u0435
+    \u0432 \u0432\u0438\u0434\u0443 '\u0431\u0438\u043E-\u0435\u0434\u0438\u043D\u0438\u0446\u044B'.
+    \u041E\u043D\u0438 \u0441\u0442\u0430\u043D\u0443\u0442 \u0447\u0430\u0441\u0442\u044C\u044E
+    \u0444\u0443\u043D\u0434\u0430\u043C\u0435\u043D\u0442\u0430. \u041E\u0447\u0435\u043D\u044C
+    \u043F\u0440\u043E\u0447\u043D\u043E. \u041E\u0447\u0435\u043D\u044C... \u0442\u0438\u0445\u043E."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -9004920804495711498}
+--- !u!114 &1205271435810621573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_outcome_refuse
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 2528a15c-0eaf-43ef-a9a8-0795071fc550
+  graphPosition:
+    serializedVersion: 2
+    x: 600
+    y: 500
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u0416\u0430\u043B\u044C. \u0413\u0443\u043C\u0430\u043D\u0438\u0437\u043C
+    \u2014 \u044D\u0442\u043E \u0440\u0436\u0430\u0432\u0447\u0438\u043D\u0430 \u043D\u0430
+    \u043C\u0435\u0445\u0430\u043D\u0438\u0437\u043C\u0435 \u0431\u044E\u0440\u043E\u043A\u0440\u0430\u0442\u0438\u0438.
+    \u042F \u0432\u0435\u0440\u043D\u0443\u0441\u044C, \u043A\u043E\u0433\u0434\u0430
+    \u0441\u0442\u0435\u043D\u044B \u043D\u0430\u0447\u043D\u0443\u0442 \u0433\u043E\u0432\u043E\u0440\u0438\u0442\u044C
+    \u0433\u0440\u043E\u043C\u0447\u0435."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -7013927677214054624}
+--- !u!114 &1416355111029271584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5c6f881a8b64bc41a3ec2bc23a605bd, type: 3}
+  m_Name: c_choice_init
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.ChoiceNode
+  id: aec506b3-074d-424a-88f8-f73b8920336c
+  graphPosition:
+    serializedVersion: 2
+    x: 900
+    y: 0
+    width: 0
+    height: 0
+  queryText: "(\u041E\u043D \u043A\u043B\u0430\u0434\u0435\u0442 \u043D\u0430 \u0441\u0442\u043E\u043B
+    \u0447\u0435\u0440\u0442\u0435\u0436, \u043F\u043E\u0445\u043E\u0436\u0438\u0439
+    \u043D\u0430 \u043B\u0430\u0431\u0438\u0440\u0438\u043D\u0442)"
+  options:
+  - text: "\u042D\u0442\u043E \u043C\u0435\u0442\u0430\u0444\u043E\u0440\u0430? \u0418\u043B\u0438
+      \u043C\u043D\u0435 \u0437\u0432\u0430\u0442\u044C \u0443\u0431\u043E\u0440\u0449\u0438\u043A\u0430?"
+    nextNode: {fileID: -7151687494198837378}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+  - text: "\u0414\u0435\u043F\u0430\u0440\u0442\u0430\u043C\u0435\u043D\u0442 7?
+      \u0423 \u043D\u0430\u0441 \u043D\u0435\u0442 \u0442\u0430\u043A\u043E\u0433\u043E
+      \u043E\u0442\u0434\u0435\u043B\u0430."
+    nextNode: {fileID: 4717985086137380430}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+  - text: "\u0423 \u043C\u0435\u043D\u044F \u043D\u0435\u0442 \u0432\u0440\u0435\u043C\u0435\u043D\u0438
+      \u043D\u0430 \u0437\u0430\u0433\u0430\u0434\u043A\u0438. \u0411\u043B\u0438\u0436\u0435
+      \u043A \u0434\u0435\u043B\u0443."
+    nextNode: {fileID: -5123605053959303700}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+--- !u!114 &1991666536903957891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_refusal_soft
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 9e5a4d46-9c11-4e2f-a2ad-254912fcef14
+  graphPosition:
+    serializedVersion: 2
+    x: 1200
+    y: 250
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u0417\u0430\u043F\u0440\u0435\u0442 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u0435\u043D.
+    \u0413\u0435\u043E\u043C\u0435\u0442\u0440\u0438\u044F \u0443\u0436\u0435 \u043D\u0430\u0447\u0430\u043B\u0430
+    \u043C\u0435\u043D\u044F\u0442\u044C\u0441\u044F. \u0412\u043E\u043F\u0440\u043E\u0441
+    \u043B\u0438\u0448\u044C \u0432 \u0442\u043E\u043C, \u0431\u0443\u0434\u0435\u0442\u0435
+    \u043B\u0438 \u0432\u044B \u043A\u043E\u043D\u0442\u0440\u043E\u043B\u0438\u0440\u043E\u0432\u0430\u0442\u044C
+    \u043F\u0440\u043E\u0446\u0435\u0441\u0441... \u0438\u043B\u0438 \u0441\u0442\u0430\u043D\u0435\u0442\u0435
+    \u0435\u0433\u043E \u0447\u0430\u0441\u0442\u044C\u044E."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -9004920804495711498}
+--- !u!114 &2596512397009662977
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_entry_1
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: ec97b6ec-d9e0-416c-afb7-77b4d572f296
+  graphPosition:
+    serializedVersion: 2
+    x: 571
+    y: 2
+    width: 729
+    height: 248
+  speakerID: Architect
+  text: "\u0413\u043E\u0441\u043F\u043E\u0434\u0438\u043D \u0414\u0438\u0440\u0435\u043A\u0442\u043E\u0440.
+    \u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u0430\u044F \u0446\u0435\u043B\u043E\u0441\u0442\u043D\u043E\u0441\u0442\u044C
+    \u0414\u0435\u043F\u0430\u0440\u0442\u0430\u043C\u0435\u043D\u0442\u0430 7 \u043D\u0430\u0440\u0443\u0448\u0435\u043D\u0430.
+    \u0421\u0442\u0435\u043D\u044B... \u043A\u0440\u043E\u0432\u043E\u0442\u043E\u0447\u0430\u0442
+    \u0447\u0435\u0440\u043D\u0438\u043B\u0430\u043C\u0438."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: 1416355111029271584}
+--- !u!114 &3181261902969693027
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec49ac1309bd0c94dbba53650b3bee98, type: 3}
+  m_Name: start_start
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.StartNode
+  id: c3e6631b-6655-477b-ab91-4e806be85249
+  graphPosition:
+    serializedVersion: 2
+    x: 300
+    y: 0
+    width: 0
+    height: 0
+  startSoundOverride: {fileID: 0}
+  nextNode: {fileID: 2596512397009662977}
+--- !u!114 &3400739840693958834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_outcome_cruel
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 04621998-3bb1-409b-8284-9b2d2cf59ab6
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 500
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u041C\u0443\u0434\u0440\u043E\u0435 \u0440\u0435\u0448\u0435\u043D\u0438\u0435.
+    \u0412\u044B \u043D\u0435 \u0443\u0441\u043B\u044B\u0448\u0438\u0442\u0435 \u043A\u0440\u0438\u043A\u043E\u0432.
+    \u0418\u0437\u043E\u043B\u044F\u0446\u0438\u044F \u0431\u0435\u0437\u0443\u043F\u0440\u0435\u0447\u043D\u0430."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -385745028484245965}
+--- !u!114 &4611735770343134993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5c6f881a8b64bc41a3ec2bc23a605bd, type: 3}
+  m_Name: c_choice_moral_1
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.ChoiceNode
+  id: 2f034af2-6550-4f2c-8a17-15a27f797fb5
+  graphPosition:
+    serializedVersion: 2
+    x: 300
+    y: 250
+    width: 0
+    height: 0
+  queryText: "(\u0417\u0432\u0443\u0447\u0438\u0442 \u0436\u0443\u0442\u043A\u043E,
+    \u043D\u043E \u044D\u0444\u0444\u0435\u043A\u0442\u0438\u0432\u043D\u043E...)"
+  options:
+  - text: "\u0410 \u0447\u0442\u043E \u0431\u0443\u0434\u0435\u0442 \u0441 \u043B\u044E\u0434\u044C\u043C\u0438
+      \u0432\u043D\u0443\u0442\u0440\u0438?"
+    nextNode: {fileID: 434421302594822270}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+  - text: "\u0421\u043A\u043E\u043B\u044C\u043A\u043E \u044D\u0442\u043E \u0431\u0443\u0434\u0435\u0442
+      \u0441\u0442\u043E\u0438\u0442\u044C \u043A\u0430\u0437\u043D\u0435?"
+    nextNode: {fileID: -373025287610595870}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+  - text: "\u042D\u0442\u043E \u0431\u0435\u0437\u0443\u043C\u0438\u0435. \u042F
+      \u0437\u0430\u043F\u0440\u0435\u0449\u0430\u044E."
+    nextNode: {fileID: 1991666536903957891}
+    conditionKey: 
+    operation: ==
+    conditionValue: 0
+--- !u!114 &4717985086137380430
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_explain_secret
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 66b38fbe-28fc-4aed-a470-c87a1551ad1f
+  graphPosition:
+    serializedVersion: 2
+    x: 1500
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Architect
+  text: "\u0420\u0430\u0437\u0443\u043C\u0435\u0435\u0442\u0441\u044F, \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E
+    \u0435\u0433\u043E \u043D\u0435\u0442. \u0422\u0430\u043C \u043C\u044B \u0445\u0440\u0430\u043D\u0438\u043C
+    \u0442\u0435\u0445 \u0441\u043E\u0442\u0440\u0443\u0434\u043D\u0438\u043A\u043E\u0432,
+    \u043A\u043E\u0433\u043E \u043D\u0435\u043B\u044C\u0437\u044F \u0443\u0432\u043E\u043B\u0438\u0442\u044C,
+    \u043D\u043E \u0438 \u043F\u043E\u043A\u0430\u0437\u044B\u0432\u0430\u0442\u044C
+    \u043D\u0435\u043B\u044C\u0437\u044F."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  appearSound: {fileID: 0}
+  nextNode: {fileID: -5123605053959303700}
+--- !u!114 &6277486832380188848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1af36ba5234e6439af301385bd3bde, type: 3}
+  m_Name: end_end_cruel
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.EndNode
+  id: f9c7fdf9-4f31-40a8-9e74-5271cf0ac448
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 750
+    width: 213
+    height: 107
+  endSound: {fileID: 0}

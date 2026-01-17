@@ -23,6 +23,11 @@ public enum ActionType
 	PrioritizePayment,
 	ChairPatrol,
 	MakeArchiveRequest,
+	
+	// --- ДЕЙСТВИЯ ОФИС-МЕНЕДЖЕРА ---
+	ProcessProjectDocument,
+	TransportProjectDocument,
+	ReplenishResource,
     
     // --- ДЕЙСТВИЯ АРХИВАРИУСА И БУХГАЛТЕРА ---
     ArchiveDocument,
@@ -38,7 +43,8 @@ public enum ActionType
     CleanDirt,
 	FindValuablesInTrash,
 	JanitorPatrol,
-	EmptyTrashCan,	
+	EmptyTrashCan,
+	RepairObject,	
 
     // Действия Стажера
     HelpConfusedClient,
@@ -59,5 +65,9 @@ public enum ActionType
     None,
 	GoToToilet,
     GoToBreak,
-    GoToCooler
+    GoToCooler,
+	GoToPost,
+    GoHome,
+    Eat,
+    Drink
 }

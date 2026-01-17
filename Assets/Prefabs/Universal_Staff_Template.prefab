@@ -106,6 +106,7 @@ GameObject:
   - component: {fileID: 9101693390999189065}
   - component: {fileID: 2692440484751530476}
   - component: {fileID: 2373439032493062296}
+  - component: {fileID: 6056835534794846610}
   m_Layer: 6
   m_Name: Universal_Staff_Template
   m_TagString: Clerk
@@ -274,6 +275,7 @@ MonoBehaviour:
   walkSprite1: {fileID: 1894015300992715325, guid: 22a93148dcaaea6459ec2aad88f79846, type: 3}
   walkSprite2: {fileID: -6371035009962811522, guid: 618fb1f9e00240d4889cb3efafedeaf4, type: 3}
   animationSpeed: 1
+  walkWaddleAngle: 3
   dynamicLight: {fileID: 3202741118275778470}
   lightForwardOffset: 1
   lightSmoothing: 5
@@ -386,10 +388,12 @@ MonoBehaviour:
   gender: 0
   skills: {fileID: 11400000, guid: 05796c8f594ceed43a520c44f439c320, type: 2}
   promotionAvailableNotificationPlayed: 0
+  uiScheduleTrackIndex: -1
   WorkShiftMask: -1
   salaryPerPeriod: 15
   unpaidPeriods: 0
   missedPaymentCount: 0
+  shiftStartIndex: -1
   activeActions: []
   systemActionDatabase: {fileID: 11400000, guid: c7b8428fcc6cc6249ace94ab953910d3, type: 2}
   assignedWorkstation: {fileID: 0}
@@ -534,6 +538,23 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &6056835534794846610
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300310410156682885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b7ca6f46160ec144ad16bb63e474377, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SmallTalkController
+  database: {fileID: 11400000, guid: 6e9583fa9c8f530458f7186f6a41532d, type: 2}
+  checkRadius: 3
+  checkInterval: 1
+  globalCooldown: 10
+  chatChance: 0.3
 --- !u!1 &1381716582639190742
 GameObject:
   m_ObjectHideFlags: 0
@@ -1629,6 +1650,7 @@ GameObject:
   m_Component:
   - component: {fileID: 9087066593266581742}
   - component: {fileID: 6987943344844722921}
+  - component: {fileID: 8116303467867726841}
   m_Layer: 11
   m_Name: Body
   m_TagString: Untagged
@@ -1709,3 +1731,56 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &8116303467867726841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8798333718552723363}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7db70e0ea77f5ac47a8f4565a9406397, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.2D.Runtime::UnityEngine.Rendering.Universal.ShadowCaster2D
+  m_ShadowGroup: 0
+  m_Priority: 2
+  m_ComponentVersion: 5
+  m_HasRenderer: 1
+  m_UseRendererSilhouette: 1
+  m_CastsShadows: 1
+  m_SelfShadows: 0
+  m_AlphaCutoff: 0.1
+  m_ApplyToSortingLayers: 00000000d1771a59
+  m_ShapePath:
+  - {x: -0.31925926, y: -0.45185184, z: 0}
+  - {x: -0.31925926, y: 0.45185184, z: 0}
+  - {x: 0.31925926, y: 0.45185184, z: 0}
+  - {x: 0.31925926, y: -0.45185184, z: 0}
+  m_ShapePathHash: 0
+  m_InstanceId: 0
+  m_ShadowShape2DComponent: {fileID: 6987943344844722921}
+  m_ShadowShape2DProvider:
+    rid: 3478506552836489318
+  m_ShadowCastingSource: 2
+  m_ShadowMesh:
+    m_Mesh: {fileID: 0}
+    m_LocalBounds:
+      m_Center: {x: -0.000869751, y: 0.052238464, z: 0}
+      m_Extent: {x: 0.17559814, y: 0.30072784, z: 0}
+    m_EdgeProcessing: 1
+    m_TrimEdge: 0.09
+    m_FlipX: 0
+    m_FlipY: 0
+    m_InitialTrim: 0
+  m_CastingOption: 1
+  m_PreviousTrimEdge: 0.09
+  m_PreviousEdgeProcessing: 1
+  m_PreviousShadowCastingSource: 2
+  m_PreviousShadowShape2DSource: {fileID: 6987943344844722921}
+  references:
+    version: 2
+    RefIds:
+    - rid: 3478506552836489318
+      type: {class: ShadowShape2DProvider_SpriteRenderer, ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
+      data: 

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roleType: 6
   moveSpeed: 3
+  animationSpeed: 0.13
   priority: 3
   maleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}
   femaleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}

@@ -1,8 +1,9 @@
-// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat2Executor.cs
+// Assets/Scripts/Data/Actions/ProcessDocumentCat2Executor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
 using Managers;
+using Gameplay; // Подключаем пространство имен с OfficeObjectDurability
 
 public class ProcessDocumentCat2Executor : ActionExecutor
 {
@@ -11,19 +12,46 @@ public class ProcessDocumentCat2Executor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var clerk = staff as ClerkController;
-        if (clerk == null || clerk.assignedWorkstation == null) { FinishAction(false); yield break; }
+        // Проверки
+        if (clerk == null || clerk.assignedWorkstation == null) 
+        { 
+            FinishAction(false); 
+            yield break; 
+        }
 
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         var client = zone?.GetOccupyingClients().FirstOrDefault();
 
-        if (client == null || client.docHolder == null) { FinishAction(false); yield break; }
+        if (client == null || client.docHolder == null) 
+        { 
+            FinishAction(false); 
+            yield break; 
+        }
+
+        // --- ИНТЕГРАЦИЯ ИЗНОСА (НАЧАЛО) ---
+        // 1. Получаем компонент прочности
+        var durability = clerk.assignedWorkstation.GetComponent<OfficeObjectDurability>();
+        
+        // 2. Проверка на поломку
+        if (durability != null && !durability.IsUsable())
+        {
+            clerk.thoughtBubble?.ShowPriorityMessage("Стол сломан!", 3f, Color.red);
+            clerk.SetState(ClerkController.ClerkState.Working); 
+            FinishAction(false);
+            yield break;
+        }
+
+        // 3. Расчет эффективности
+        float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
+        // --- ИНТЕГРАЦИЯ ИЗНОСА (КОНЕЦ) ---
 
         clerk.SetState(ClerkController.ClerkState.Working);
         
         // 1. Проверяем, правильный ли бланк у клиента
-        if (client.docHolder.GetCurrentDocumentType() != DocumentType.Form2) // <<< ИЗМЕНЕНИЕ
+        if (client.docHolder.GetCurrentDocumentType() != DocumentType.Form2) 
         {
             clerk.thoughtBubble?.ShowPriorityMessage("Это не тот бланк,\nвозьмите другой.", 3f, Color.yellow);
+            client.ApplyStressJump(client.stressJump_Refusal);
             client.stateMachine.GoGetFormAndReturn();
             FinishAction(true); // Задача выполнена (клиент отправлен)
             yield break;
@@ -38,7 +66,7 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             if (Random.value < (1f - client.documentQuality) && Random.value < clerk.skills.pedantry)
             {
                 clerk.thoughtBubble?.ShowPriorityMessage("Здесь ошибка!\nНужно переделать.", 3f, Color.red);
-				client.ApplyStressJump(client.stressJump_Refusal);
+                client.ApplyStressJump(client.stressJump_Refusal);
                 yield return new WaitForSeconds(2f);
                 client.stateMachine.GoGetFormAndReturn();
                 FinishAction(true); // Задача выполнена (ошибка найдена)
@@ -74,27 +102,36 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         // --- Конец анимации забора ---
 
         clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 2)...", 3f, Color.white);
-				float workTime = Random.Range(2f, 4f);
+        
+        // --- ПРИМЕНЕНИЕ ЭФФЕКТИВНОСТИ ---
+        float workTime = Random.Range(2f, 4f) / efficiency;
 
-				// Пытаемся достать префаб через ссылки клерка
-				var refs = clerk.GetComponent<StaffPrefabReferences>();
-				if (refs != null && refs.processingIconPrefab != null)
-				{
-					GameObject iconObj = Instantiate(refs.processingIconPrefab);
-					ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
-					if (animScript != null)
-					{
-						animScript.Play(clerk.transform.position, client.transform.position, workTime);
-					}
-				}
+        // Пытаемся достать префаб через ссылки клерка
+        var refs = clerk.GetComponent<StaffPrefabReferences>();
+        if (refs != null && refs.processingIconPrefab != null)
+        {
+            GameObject iconObj = Instantiate(refs.processingIconPrefab);
+            ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
+            if (animScript != null)
+            {
+                animScript.Play(clerk.transform.position, client.transform.position, workTime);
+            }
+        }
 
-yield return new WaitForSeconds(workTime);
+        yield return new WaitForSeconds(workTime);
+        
+        // --- НАНЕСЕНИЕ УРОНА СТОЛУ ---
+        if (durability != null)
+        {
+            durability.Degrade(Random.Range(2f, 5f));
+        }
+        // -----------------------------
         
         // --- 4. АНИМАЦИЯ: Выдаем сертификат ---
         if (flyingDoc != null) Destroy(flyingDoc); // Уничтожаем старый бланк на столе
 
         // Ищем префаб сертификата в DocumentHolder'е клиента
-        GameObject certificatePrefab = client.docHolder.GetPrefabForType(DocumentType.Certificate2); // <<< ИЗМЕНЕНИЕ
+        GameObject certificatePrefab = client.docHolder.GetPrefabForType(DocumentType.Certificate2); 
         
         if (certificatePrefab != null && deskPoint != null && clientHand != null && client.stateMachine != null)
         {
@@ -104,7 +141,7 @@ yield return new WaitForSeconds(workTime);
             mover.StartMove(clientHand, () => {
                 if (client != null && client.docHolder != null) {
                      // Клиент "получает" прилетевший документ
-                     client.docHolder.ReceiveTransferredDocument(DocumentType.Certificate2, newCertGO); // <<< ИЗМЕНЕНИЕ
+                     client.docHolder.ReceiveTransferredDocument(DocumentType.Certificate2, newCertGO); 
                 } else {
                      Destroy(newCertGO); // Клиент ушел, пока документ летел
                 }
@@ -116,14 +153,14 @@ yield return new WaitForSeconds(workTime);
         {
             // Если анимация не удалась, используем старый метод
             if (client.stateMachine != null) 
-                client.docHolder.SetDocument(DocumentType.Certificate2); // <<< ИЗМЕНЕНИЕ
+                client.docHolder.SetDocument(DocumentType.Certificate2); 
         }
         // --- Конец анимации выдачи ---
 
         // 5. Отправляем в кассу
         if (client.stateMachine != null) // Проверяем, что клиент еще тут
         {
-            client.billToPay += 250; // <<< ИЗМЕНЕНИЕ
+            client.billToPay += 250; 
             clerk.thoughtBubble?.ShowPriorityMessage("Готово! Пройдите в кассу.", 3f, Color.green);
             client.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
             client.stateMachine.SetState(ClientState.MovingToGoal);

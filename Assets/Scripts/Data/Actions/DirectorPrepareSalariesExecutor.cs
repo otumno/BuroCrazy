@@ -1,43 +1,51 @@
+// Assets/Scripts/Data/Actions/DirectorPrepareSalariesExecutor.cs
 using UnityEngine;
 using System.Collections;
-using System.Linq;
 using Managers;
 
 public class DirectorPrepareSalariesExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => false;
+    public override bool IsInterruptible => true;
 
     protected override IEnumerator ActionRoutine()
     {
-        var director = staff as DirectorAvatarController;
-        var bookkeepingDesk = ScenePointsRegistry.Instance?.bookkeepingDesk;
-        if (director == null || bookkeepingDesk == null) { FinishAction(false); yield break; }
-
-        yield return staff.StartCoroutine(director.MoveToTarget(bookkeepingDesk.clerkStandPoint.position, DirectorAvatarController.DirectorState.WorkingAtStation.ToString()));
+        // Получаем точку стопки (теперь это EnvelopeStack)
+        var envelopeStack = ScenePointsRegistry.Instance?.salaryStackPoint; 
         
-        director.thoughtBubble?.ShowPriorityMessage("Придется самому...", 3f, Color.blue);
-
-        var salaryStack = ScenePointsRegistry.Instance?.salaryStackPoint;
-        if (salaryStack == null) { FinishAction(false); yield break; }
-
-        int envelopesToCreate = HiringManager.Instance.AllStaff.Count(s => s.unpaidPeriods > 0);
-        envelopesToCreate -= salaryStack.CurrentEnvelopeCount;
-
-        if (envelopesToCreate <= 0)
+        if (envelopeStack == null)
         {
-            director.thoughtBubble?.ShowPriorityMessage("Зарплата уже готова.", 2f, Color.gray);
-            FinishAction(true);
+            staff.thoughtBubble?.ShowPriorityMessage("Нет места для зарплат!", 3f, Color.red);
+            FinishAction(false);
             yield break;
         }
 
-        for (int i = 0; i < envelopesToCreate; i++)
+        // Идем к сейфу
+        yield return staff.StartCoroutine(staff.MoveToTarget(envelopeStack.transform.position, "Working"));
+
+        int costPerEnvelope = 100; // Условная цена
+        int envelopesToMake = 5;
+
+        for (int i = 0; i < envelopesToMake; i++)
         {
-            yield return new WaitForSeconds(1.5f);
-            if (!salaryStack.AddEnvelope())
+            if (PlayerWallet.Instance.GetCurrentMoney() < costPerEnvelope)
             {
-                director.thoughtBubble?.ShowPriorityMessage("Стол завален!", 2f, Color.red);
+                staff.thoughtBubble?.ShowPriorityMessage("Денег нет!", 2f, Color.red);
                 break;
             }
+
+            // ИСПРАВЛЕНИЕ: Вызываем метод у компонента, а не у трансформа
+            if (envelopeStack.CurrentEnvelopeCount >= envelopeStack.maxCapacity)
+            {
+                staff.thoughtBubble?.ShowPriorityMessage("Сейф полон!", 2f, Color.red);
+                break;
+            }
+
+            yield return new WaitForSeconds(1.5f);
+            
+            PlayerWallet.Instance.AddMoney(-costPerEnvelope, "Подготовка зарплаты");
+            envelopeStack.AddEnvelope(); // Исправлено
+            
+            staff.thoughtBubble?.ShowPriorityMessage("+1 Конверт", 1f, Color.green);
         }
 
         FinishAction(true);

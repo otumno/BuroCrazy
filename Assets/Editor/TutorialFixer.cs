@@ -1,15 +1,16 @@
+// Assets/Editor/TutorialFixer.cs
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
 using Utilities;
-using UnityEngine.UI; // Для поиска Image/Button
+using UnityEngine.UI;
 
 public class TutorialFixer : EditorWindow
 {
     string jsonString = "";
     TutorialScreenConfig target;
 
-    [MenuItem("Tools/Fix Tutorial Data")]
+    [MenuItem("Tools/AI Toolset/Tutorial Data Fixer")]
     public static void ShowWindow()
     {
         GetWindow<TutorialFixer>("Tutorial Fixer");
@@ -28,7 +29,6 @@ public class TutorialFixer : EditorWindow
             RestoreData();
         }
 
-        // Кнопка для попытки найти ссылки
         if (GUILayout.Button("Попытаться найти ссылки по именам") && target != null)
         {
             TryAutoLink();
@@ -70,13 +70,10 @@ public class TutorialFixer : EditorWindow
 
         Undo.RecordObject(target, "Auto Link Tutorial Refs");
         int linkedCount = 0;
-
-        // Ищем все RectTransform на сцене (включая неактивные)
         RectTransform[] allRects = Resources.FindObjectsOfTypeAll<RectTransform>();
 
         foreach (var group in target.contextGroups)
         {
-            // 1. Пытаемся найти Context Panel по ID (например "MainMenu")
             if (group.contextPanel == null && !string.IsNullOrEmpty(group.contextID))
             {
                 GameObject found = FindObjectByName(group.contextID);
@@ -87,22 +84,17 @@ public class TutorialFixer : EditorWindow
                 }
             }
 
-            // 2. Пытаемся найти Target Elements для спотов
             if (group.helpSpots != null)
             {
                 foreach (var spot in group.helpSpots)
                 {
                     if (spot.targetElement == null && !string.IsNullOrEmpty(spot.spotID))
                     {
-                        // Ищем объект, имя которого совпадает с spotID (или содержит его часть после "_")
-                        // Пример: spotID = "MainMenu_Load", ищем объект "Load" или "Button_Load" или "MainMenu_Load"
-                        
                         string searchKey = spot.spotID;
-                        // Попробуем упростить имя (взять часть после подчеркивания)
                         string simpleName = spot.spotID.Contains("_") ? spot.spotID.Split('_')[1] : spot.spotID;
 
-                        RectTransform foundRect = FindRectByName(allRects, searchKey); // Точное совпадение
-                        if (foundRect == null) foundRect = FindRectByName(allRects, simpleName); // Частичное
+                        RectTransform foundRect = FindRectByName(allRects, searchKey); 
+                        if (foundRect == null) foundRect = FindRectByName(allRects, simpleName); 
 
                         if (foundRect != null)
                         {
@@ -115,15 +107,14 @@ public class TutorialFixer : EditorWindow
         }
         
         EditorUtility.SetDirty(target);
-        Debug.Log($"Автоматически найдено и привязано {linkedCount} объектов. Остальные придется назначить вручную.");
+        Debug.Log($"Автоматически найдено и привязано {linkedCount} объектов.");
     }
 
     GameObject FindObjectByName(string name)
     {
-        // Поиск среди всех объектов (медленно, но для эдитора пойдет)
         foreach (GameObject go in Resources.FindObjectsOfTypeAll<GameObject>())
         {
-            if (go.hideFlags != HideFlags.None) continue; // Пропускаем скрытые системные объекты
+            if (go.hideFlags != HideFlags.None) continue;
             if (go.name.Equals(name, System.StringComparison.OrdinalIgnoreCase)) return go;
         }
         return null;
@@ -134,7 +125,6 @@ public class TutorialFixer : EditorWindow
         foreach (var rect in list)
         {
             if (rect.gameObject.hideFlags != HideFlags.None) continue;
-            // Ищем частичное совпадение для удобства
             if (rect.name.Equals(name, System.StringComparison.OrdinalIgnoreCase)) return rect;
         }
         return null;

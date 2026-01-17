@@ -1,9 +1,10 @@
-// Файл: Assets/Scripts/Characters/Controllers/ServiceWorkerController.cs
+// Assets/Scripts/Characters/Controllers/ServiceWorkerController.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Utilities;
+using Managers;
 
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class ServiceWorkerController : StaffController
@@ -44,6 +45,11 @@ public class ServiceWorkerController : StaffController
 	public float minIdleWait;
 	public float maxIdleWait;
 
+    // --- ДОБАВЛЕННЫЕ ПОЛЯ ---
+    public EmotionSpriteCollection spriteCollection;
+    public StateEmotionMap stateEmotionMap;
+    // ------------------------
+
     public void SetState(WorkerState newState)
     {
         if (currentState == newState) return;
@@ -58,8 +64,6 @@ public class ServiceWorkerController : StaffController
         }
     }
 
-    // ----- УДАЛЕНЫ УСТАРЕВШИЕ МЕТОДЫ GetIdleActionExecutor и GetBurnoutActionExecutor -----
-
     public override string GetCurrentStateName()
     {
         return currentState.ToString();
@@ -72,8 +76,10 @@ public class ServiceWorkerController : StaffController
 
     public IEnumerator MoveToTarget(Vector2 targetPosition, WorkerState stateOnArrival)
     {
-        agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
-        yield return new WaitUntil(() => !agentMover.IsMoving());
+        if(agentMover != null)
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject));
+        
+        yield return new WaitUntil(() => agentMover == null || !agentMover.IsMoving());
         SetState(stateOnArrival);
     }
     
@@ -101,6 +107,7 @@ public class ServiceWorkerController : StaffController
         
         this.spriteCollection = data.spriteCollection;
         this.stateEmotionMap = data.stateEmotionMap;
+        
         if(visuals != null)
         {
             visuals.EquipAccessory(data.accessoryPrefab);
@@ -117,7 +124,7 @@ public class ServiceWorkerController : StaffController
         
         if (data.worker_trashBagPrefab != null)
         {
-            var visuals = GetComponent<CharacterVisuals>();
+            // Здесь предполагаем, что CharacterVisuals имеет метод GetAttachPoint
             if (visuals != null)
             {
                 Transform handPoint = visuals.GetAttachPoint(CharacterVisuals.AttachPointType.Hand);

@@ -1,39 +1,32 @@
-using System.Collections;
-using Data.Calendar;
-using Managers;
+// Assets/Scripts/Data/Actions/ManageBarrierExecutor.cs
 using UnityEngine;
+using System.Collections;
+using Managers;
 
 public class ManageBarrierExecutor : ActionExecutor
 {
+    public override bool IsInterruptible => true;
+
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is GuardMovement guard))
-        {
-            FinishAction(false);
-            yield break;
-        }
+        var guard = staff.GetComponent<GuardMovement>();
+        if (guard == null) { FinishAction(false); yield break; }
 
-        var barrier = GuardManager.Instance.securityBarrier;
-        if (barrier == null || barrier.guardInteractionPoint == null)
-        {
-            FinishAction(false);
-            yield break;
-        }
-        
+        var barrier = ScenePointsRegistry.Instance?.securityBarrier;
+        if (barrier == null) { FinishAction(false); yield break; }
+
+        // Идем к шлагбауму
+        // Используем guard.MoveToTarget (мост) или staff.MoveToTarget
+        yield return staff.StartCoroutine(staff.MoveToTarget(barrier.interactionPoint.position, "Walking"));
+
         guard.SetState(GuardMovement.GuardState.OperatingBarrier);
-        yield return staff.StartCoroutine(guard.MoveToTarget(barrier.guardInteractionPoint.position, GuardMovement.GuardState.OperatingBarrier));
-        yield return new WaitForSeconds(2.0f);
+        staff.thoughtBubble?.ShowPriorityMessage("Проверка пропуска...", 3f, Color.blue);
 
-		var currentPeriodType = TimeManager.Instance.GetCurrentPeriodType();
-        if (currentPeriodType == CalendarDayPeriodType.Morning && barrier.IsActive())
-        {
-            barrier.DeactivateBarrier();
-        }
-        else if (currentPeriodType.IsNight() && !barrier.IsActive())
-        {
-            barrier.ActivateBarrier();
-        }
-
+        // Имитация работы
+        yield return new WaitForSeconds(3f);
+        
+        // barrier.Toggle(); // Если есть метод открытия
+        
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(true);
     }

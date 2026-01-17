@@ -1,3 +1,4 @@
+// Assets/Scripts/Data/Actions/GoToPostExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
@@ -5,21 +6,25 @@ using Managers;
 public class GoToPostExecutor : ActionExecutor
 {
     public override bool IsInterruptible => true;
+
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is GuardMovement guard)) { FinishAction(false); yield break; }
+        // guardPostPoint теперь ServicePoint
+        var post = ScenePointsRegistry.Instance?.guardPostPoint;
 
-        float actualMaxWait = guard.maxIdleWait * (1f - guard.skills.pedantry);
-        float waitTime = Random.Range(guard.minIdleWait, actualMaxWait);
-        
-        Transform post = ScenePointsRegistry.Instance?.guardPostPoint;
         if (post != null)
         {
-            guard.SetState(GuardMovement.GuardState.OnPost);
-            yield return staff.StartCoroutine(guard.MoveToTarget(post.position, GuardMovement.GuardState.OnPost));
+            // ИСПРАВЛЕНИЕ: .transform.position
+            yield return staff.StartCoroutine(staff.MoveToTarget(post.transform.position, "Guarding"));
+            
+            while(true)
+            {
+                // Стоим охраняем
+                yield return new WaitForSeconds(5f);
+                staff.ChangeEnergy(-1);
+            }
         }
         
-        yield return new WaitForSeconds(waitTime);
-        FinishAction(true);
+        FinishAction(true); // Если поста нет
     }
 }

@@ -1,47 +1,43 @@
+// Assets/Scripts/Data/Actions/WriteReportExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
 
 public class WriteReportExecutor : ActionExecutor
 {
+    public override bool IsInterruptible => true;
+
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is GuardMovement guard))
+        var guard = staff.GetComponent<GuardMovement>();
+        if (guard == null) { FinishAction(false); yield break; }
+
+        var desk = ScenePointsRegistry.Instance?.guardReportDesk;
+        if (desk == null) 
         {
-            FinishAction(false);
-            yield break;
+            staff.thoughtBubble?.ShowPriorityMessage("Нет стола для отчетов!", 2f, Color.red);
+            FinishAction(false); 
+            yield break; 
         }
 
-        ServicePoint reportDesk = ScenePointsRegistry.Instance?.guardReportDesk;
-        if (reportDesk == null || reportDesk.clerkStandPoint == null || reportDesk.documentStack == null)
-        {
-            FinishAction(false);
-            yield break;
-        }
+        // Идем к столу
+        yield return staff.StartCoroutine(staff.MoveToTarget(desk.clerkStandPoint.position, "Walking"));
 
         guard.SetState(GuardMovement.GuardState.WritingReport);
-        staff.thoughtBubble?.ShowPriorityMessage("Нужно заполнить\nбумаги...", 2f, Color.yellow);
+        staff.thoughtBubble?.ShowPriorityMessage("Пишу рапорт...", 3f, Color.cyan);
+
+        // Пишем отчет (время зависит от кол-ва очков)
+        float duration = guard.unwrittenReportPoints * 2f;
+        yield return new WaitForSeconds(duration);
+
+        // Сдаем отчет
+        ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         
-        yield return staff.StartCoroutine(guard.MoveToTarget(reportDesk.clerkStandPoint.position, GuardMovement.GuardState.WritingReport.ToString()));
+        // Сбрасываем очки
+        guard.unwrittenReportPoints = 0;
+        
+        staff.thoughtBubble?.ShowPriorityMessage("Рапорт сдан.", 2f, Color.green);
 
-        int pointsAtStart = guard.unwrittenReportPoints;
-        for (int i = 0; i < pointsAtStart; i++)
-        {
-            if (guard.unwrittenReportPoints <= 0) break;
-            float writeTime = Random.Range(1f, 2f);
-            yield return new WaitForSeconds(writeTime);
-
-            if (reportDesk.documentStack.AddDocumentToStack())
-            {
-                guard.unwrittenReportPoints--;
-            }
-            else
-            {
-                guard.thoughtBubble?.ShowPriorityMessage("Стол завален!\nНе могу работать.", 3f, Color.red);
-                break;
-            }
-        }
-    
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(true);
     }

@@ -1,33 +1,37 @@
+// Assets/Scripts/Data/Actions/JanitorPatrolExecutor.cs
 using UnityEngine;
 using System.Collections;
-using System.Linq;
 using Managers;
 
 public class JanitorPatrolExecutor : ActionExecutor
 {
     public override bool IsInterruptible => true;
+
     protected override IEnumerator ActionRoutine()
     {
-        var worker = staff as ServiceWorkerController;
-        if (worker == null) { FinishAction(false); yield break; }
+        var points = ScenePointsRegistry.Instance?.janitorPatrolPoints;
 
-        worker.SetState(ServiceWorkerController.WorkerState.Patrolling);
-        var patrolRoute = ScenePointsRegistry.Instance?.janitorPatrolPoints;
-
-        if (patrolRoute == null || !patrolRoute.Any())
+        if (points == null || points.Count == 0)
         {
-            yield return new WaitForSeconds(10f);
             FinishAction(false);
             yield break;
         }
 
-        int pointsToVisit = actionData.patrolPointsToVisit;
-        for (int i = 0; i < pointsToVisit; i++)
+        int index = 0;
+        while (true)
         {
-            var randomPoint = patrolRoute[Random.Range(0, patrolRoute.Count)];
-            yield return staff.StartCoroutine(worker.MoveToTarget(randomPoint.position, ServiceWorkerController.WorkerState.Patrolling));
-            yield return new WaitForSeconds(Random.Range(3f, 7f));
+            var target = points[index];
+            if (target != null)
+            {
+                // ИСПРАВЛЕНИЕ: target.transform.position
+                yield return staff.StartCoroutine(staff.MoveToTarget(target.transform.position, "Cleaning"));
+                
+                // Имитация уборки
+                yield return new WaitForSeconds(2f);
+            }
+
+            index = (index + 1) % points.Count;
+            yield return null;
         }
-        FinishAction(true);
     }
 }

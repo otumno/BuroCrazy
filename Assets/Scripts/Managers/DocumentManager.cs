@@ -85,5 +85,36 @@ namespace Managers
         
             return "Порядок";
         }
+	
+		// --- РЕЕСТР АКТИВНЫХ ПРОЕКТНЫХ ДОКУМЕНТОВ ---
+        // Хранит ID объектов (RegionID, JobID, UpgradeID), на которые уже выписан приказ
+        private HashSet<string> activeProjectDocIDs = new HashSet<string>();
+
+        public void RegisterActiveProjectDoc(string id)
+        {
+            if (!string.IsNullOrEmpty(id) && !activeProjectDocIDs.Contains(id))
+            {
+                activeProjectDocIDs.Add(id);
+                Debug.Log($"[DocumentManager] Зарегистрирован активный приказ: {id}");
+            }
+        }
+
+        public void UnregisterActiveProjectDoc(string id)
+        {
+            if (!string.IsNullOrEmpty(id) && activeProjectDocIDs.Contains(id))
+            {
+                activeProjectDocIDs.Remove(id);
+                Debug.Log($"[DocumentManager] Приказ {id} удален из активных.");
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, находится ли документ на данный момент в обороте (на столе или в руках).
+        /// </summary>
+        public bool IsProjectDocPending(string id)
+        {
+            return activeProjectDocIDs.Contains(id);
+        }
+	
     }
 }

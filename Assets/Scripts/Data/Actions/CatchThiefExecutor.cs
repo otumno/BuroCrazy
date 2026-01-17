@@ -1,50 +1,59 @@
+// Assets/Scripts/Data/Actions/CatchThiefExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
 
 public class CatchThiefExecutor : ActionExecutor
 {
-	public override bool IsInterruptible => false;
+    public override bool IsInterruptible => false; // Нельзя прерывать погоню
 
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is GuardMovement guard))
+        // ИСПРАВЛЕНИЕ: Получаем компонент
+        var guard = staff.GetComponent<GuardMovement>();
+        if (guard == null) 
         {
             FinishAction(false);
             yield break;
         }
 
-        ClientPathfinding thief = GuardManager.Instance.GetThiefToCatch();
+        var thief = GuardManager.Instance?.currentThief;
         if (thief == null)
         {
-            FinishAction(false);
+            FinishAction(true); // Вор исчез
             yield break;
         }
 
-        GuardManager.Instance.MarkTaskAsTaken(thief);
+        // Устанавливаем состояние (новое состояние из Enum)
         guard.SetState(GuardMovement.GuardState.ChasingThief);
-        Debug.Log($"<color=red>{guard.name} начинает погоню за вором {thief.name}!</color>");
-
-        guard.AgentMover.ApplySpeedMultiplier(guard.chaseSpeedMultiplier);
-        while (thief != null && Vector2.Distance(guard.transform.position, thief.transform.position) > 1.5f)
-        {
-            guard.AgentMover.StartDirectChase(thief.transform.position);
-            yield return null;
-        }
-
-        guard.AgentMover.StopDirectChase();
-        guard.AgentMover.ApplySpeedMultiplier(1f);
-
-        if (thief == null)
-        {
-            FinishAction(false);
-            yield break;
-        }
-
-        Debug.Log($"{guard.name} поймал вора {thief.name}.");
-        thief.ForceLeave(ClientPathfinding.LeaveReason.Theft);
         
-        guard.unwrittenReportPoints++;
+        staff.thoughtBubble?.ShowPriorityMessage("Стой, ворюга!", 2f, Color.red);
+
+        // Ускоряем (используем AgentMover через мост или напрямую через staff)
+        float originalSpeed = staff.agentMover.moveSpeed;
+        staff.agentMover.moveSpeed *= guard.chaseSpeedMultiplier;
+
+        // Логика преследования
+        while (thief != null && Vector3.Distance(staff.transform.position, thief.transform.position) > 1.5f)
+        {
+            // Обновляем цель каждые 0.2 сек
+            staff.agentMover.SetTarget(thief.transform.position);
+            yield return new WaitForSeconds(0.2f);
+        }
+
+        // Поймали!
+        staff.agentMover.moveSpeed = originalSpeed; // Возвращаем скорость
+        
+        if (thief != null)
+        {
+            // Логика поимки (например, удаление вора или вывод из здания)
+            // GuardManager.Instance.ArrestThief(thief); // Если есть такой метод
+            staff.thoughtBubble?.ShowPriorityMessage("Попался!", 2f, Color.green);
+            
+            // Очки за отчет
+            guard.unwrittenReportPoints++;
+        }
+
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(true);
     }

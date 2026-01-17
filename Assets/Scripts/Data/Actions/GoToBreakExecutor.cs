@@ -1,36 +1,48 @@
+// Assets/Scripts/Data/Actions/GoToBreakExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
 
 public class GoToBreakExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => false;
+    public override bool IsInterruptible => true;
+    private Waypoint occupiedPoint;
 
     protected override IEnumerator ActionRoutine()
     {
-        Transform breakPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
-        if (breakPoint == null)
+        // Получаем точку (Waypoint)
+        occupiedPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
+
+        if (occupiedPoint != null)
         {
-            staff.SetActionCooldown(actionData.actionType, 15f);
-            FinishAction(false);
-            yield break;
+            // ИСПРАВЛЕНИЕ: occupiedPoint.transform.position
+            yield return staff.StartCoroutine(staff.MoveToTarget(occupiedPoint.transform.position, "Break"));
+
+            float breakDuration = 10f;
+            float timer = 0;
+            while (timer < breakDuration)
+            {
+                timer += 1f;
+                staff.ChangeEnergy(2); // Восстанавливаем энергию
+                staff.ChangeStress(-2); // Снижаем стресс
+                yield return new WaitForSeconds(1f);
+            }
+            
+            staff.thoughtBubble?.ShowPriorityMessage("Перерыв окончен", 2f, Color.white);
+        }
+        else
+        {
+            staff.thoughtBubble?.ShowPriorityMessage("Нет места!", 2f, Color.red);
         }
 
-        staff.thoughtBubble?.ShowPriorityMessage("Время обеда!", 2f, Color.cyan);
-        float breakDuration = 30f * (1f + staff.skills.pedantry);
-
-        if (staff is ClerkController clerk)
-        {
-            clerk.SetState(ClerkController.ClerkState.GoingToBreak);
-            yield return staff.StartCoroutine(staff.MoveToTarget(breakPoint.position, ClerkController.ClerkState.OnBreak.ToString()));
-            yield return new WaitForSeconds(breakDuration);
-            clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-        }
-        
-        staff.energy = 1f;
-        staff.frustration = Mathf.Max(0, staff.frustration - 0.5f);
-        
-        ScenePointsRegistry.Instance.FreeKitchenPoint(breakPoint);
         FinishAction(true);
+    }
+
+    private void OnDestroy()
+    {
+        if (occupiedPoint != null && ScenePointsRegistry.Instance != null)
+        {
+            ScenePointsRegistry.Instance.FreeKitchenPoint(occupiedPoint);
+        }
     }
 }

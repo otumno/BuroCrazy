@@ -1,25 +1,27 @@
+// Assets/Scripts/Data/Actions/GoToJanitorHomeExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
 
 public class GoToJanitorHomeExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => true;
+    public override bool IsInterruptible => false;
+
     protected override IEnumerator ActionRoutine()
     {
-        if (!(staff is ServiceWorkerController worker)) { FinishAction(false); yield break; }
+        var target = ScenePointsRegistry.Instance?.janitorHomePoint;
         
-        float actualMaxWait = worker.maxIdleWait * (1f - worker.skills.pedantry);
-        float waitTime = Random.Range(worker.minIdleWait, actualMaxWait);
-
-        Transform homePoint = ScenePointsRegistry.Instance?.janitorHomePoint;
-        if (homePoint != null)
+        if (target != null)
         {
-            worker.SetState(ServiceWorkerController.WorkerState.Idle);
-            yield return staff.StartCoroutine(worker.MoveToTarget(homePoint.position, ServiceWorkerController.WorkerState.Idle));
+            // ИСПРАВЛЕНИЕ: target.transform.position
+            yield return staff.StartCoroutine(staff.MoveToTarget(target.transform.position, "Idle"));
+            
+            // Восстанавливаемся
+            staff.ChangeEnergy(50);
+            staff.thoughtBubble?.ShowPriorityMessage("Отдыхаю...", 2f, Color.cyan);
+            yield return new WaitForSeconds(3f);
         }
-
-        yield return new WaitForSeconds(waitTime);
+        
         FinishAction(true);
     }
 }

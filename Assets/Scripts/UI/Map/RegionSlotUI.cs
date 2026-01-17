@@ -44,12 +44,26 @@ namespace UI.Map
             if (regionData == null || ProgressionManager.Instance == null) return;
 
             bool isUnlocked = ProgressionManager.Instance.IsRegionUnlocked(regionData.regionID);
+            
+            // --- НОВАЯ ПРОВЕРКА ---
+            bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(regionData.regionID);
+            // ----------------------
 
             if (regionImage != null)
-                regionImage.color = isUnlocked ? unlockedColor : lockedColor;
+            {
+                if (isUnlocked) regionImage.color = unlockedColor;
+                else if (isPending) regionImage.color = Color.yellow; // Подсветка "В процессе"
+                else regionImage.color = lockedColor;
+            }
 
             if (lockIcon != null)
-                lockIcon.gameObject.SetActive(!isUnlocked);
+            {
+                // Скрываем замок, если открыто ИЛИ если в процессе (чтобы было видно желтый цвет)
+                lockIcon.gameObject.SetActive(!isUnlocked && !isPending);
+            }
+            
+            // Блокируем клик, если уже в процессе? 
+            // Можно оставить кликабельным, чтобы посмотреть инфо, но кнопку "Заказать" заблокируем в MapPanelUI.
         }
 
         private void OnClicked()

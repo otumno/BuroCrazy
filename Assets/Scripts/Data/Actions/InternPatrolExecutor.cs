@@ -1,34 +1,33 @@
+// Assets/Scripts/Data/Actions/InternPatrolExecutor.cs
 using UnityEngine;
 using System.Collections;
-using System.Linq;
 using Managers;
 
 public class InternPatrolExecutor : ActionExecutor
 {
     public override bool IsInterruptible => true;
+
     protected override IEnumerator ActionRoutine()
     {
-        var intern = staff as InternController;
-        if (intern == null) { FinishAction(false); yield break; }
+        var points = ScenePointsRegistry.Instance?.internPatrolPoints;
 
-        intern.SetState(InternController.InternState.Patrolling);
-        intern.thoughtBubble?.ShowPriorityMessage("Патрулирую...", 5f, Color.gray);
-        var patrolRoute = ScenePointsRegistry.Instance?.internPatrolPoints;
-        if (patrolRoute == null || !patrolRoute.Any())
+        if (points == null || points.Count == 0)
         {
-            yield return new WaitForSeconds(10f);
             FinishAction(false);
             yield break;
         }
 
-        int pointsToVisit = actionData.patrolPointsToVisit;
-        for (int i = 0; i < pointsToVisit; i++)
+        while (true)
         {
-            var randomPoint = patrolRoute[Random.Range(0, patrolRoute.Count)];
-            yield return staff.StartCoroutine(intern.MoveToTarget(randomPoint.position, InternController.InternState.Patrolling));
-            yield return new WaitForSeconds(Random.Range(2f, 5f));
+            // Случайная точка
+            var target = points[Random.Range(0, points.Count)];
+            if (target != null)
+            {
+                // ИСПРАВЛЕНИЕ: target.transform.position
+                yield return staff.StartCoroutine(staff.MoveToTarget(target.transform.position, "Patrolling"));
+                yield return new WaitForSeconds(Random.Range(3f, 7f));
+            }
+            yield return null;
         }
-
-        FinishAction(true);
     }
 }

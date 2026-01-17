@@ -1,509 +1,207 @@
-// Файл: Assets/Scripts/Characters/Controllers/StaffController.cs
+// Assets/Scripts/Characters/Controllers/StaffController.cs
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Data.Calendar;
+using System.Collections.Generic; 
+using Gameplay; 
 using Managers;
+using Utilities; 
+using Data.Calendar; 
 using Scriptables.Audio;
-using Utilities;
 
-public abstract class StaffController : MonoBehaviour
+[RequireComponent(typeof(AgentMover))]
+[RequireComponent(typeof(CharacterStateLogger))]
+[RequireComponent(typeof(ThoughtBubbleController))]
+public class StaffController : MonoBehaviour
 {
-    #region Fields
-    public enum Role { Unassigned, Intern, Registrar, Cashier, Archivist, Guard, Janitor, Clerk }
+    public enum Role 
+    { 
+        Unassigned, Intern, Registrar, Cashier, Archivist, Guard, Janitor, Clerk, OfficeManager, Accountant, ServiceWorker, Director
+    }
 
-    [Header("Прогрессия и Роль")]
-    public string characterName = "Безымянный";
-    public RankData currentRank;
-    public Role currentRole = Role.Intern;
-    public int experiencePoints = 0;
-    public Gender gender;
-    public CharacterSkills skills;
-	public bool promotionAvailableNotificationPlayed = false;
-	
-	[Header("UI Расписания")]
-	public int uiScheduleTrackIndex = -1; // -1 значит "не назначено" или "автоматически"
-    
-    [Header("График и Зарплата")]
-    public CalendarDayPeriodType WorkShiftMask;
-    public int salaryPerPeriod = 15;
-	public int unpaidPeriods = 0;
-	public int missedPaymentCount = 0;
-	
-	[Header("Schedule Settings")]
-	public int shiftStartIndex = -1;
-    
-    [Header("Базы данных действий")]
+    [Header("Базовые настройки")]
+    public string characterName = "Сотрудник";
+    public Role role = Role.Unassigned; 
+    public RoleData roleData; 
+    public Gender gender; // ИСПОЛЬЗУЕМ ВАШ ГЛОБАЛЬНЫЙ ENUM GENDER
+
+    [Header("Карьера")]
+    public RankData currentRankData; 
+    public RankData currentRank 
+    {
+        get => currentRankData;
+        set => currentRankData = value;
+    }
+    public int currentRankLevel => currentRankData != null ? currentRankData.rankLevel : 1;
+
+    public int salaryPerPeriod = 100;
+    public int unpaidPeriods = 0;
+    public int missedPaymentCount = 0;
+    public float experiencePoints = 0f;
+    public bool promotionAvailableNotificationPlayed = false;
+
+    // Обертка для скиллов (совместимость)
+    [System.Serializable]
+    public class CharacterSkillsWrapper 
+    {
+        public float speed = 1f;
+        public float efficiency = 1f;
+        public float paperworkMastery = 0f;
+        public float sedentaryResilience = 0f; 
+        public float pedantry = 0f;            
+        public float softSkills = 0f;          
+        public float corruption = 0f;          
+        
+        public string GetSkillShortText(SkillType type) => $"{type}: 100%"; 
+
+        public static implicit operator CharacterSkillsWrapper(CharacterSkills s)
+        {
+            if (s == null) return new CharacterSkillsWrapper();
+            return new CharacterSkillsWrapper 
+            {
+                paperworkMastery = s.paperworkMastery,
+                sedentaryResilience = s.sedentaryResilience,
+                pedantry = s.pedantry,
+                softSkills = s.softSkills,
+                corruption = s.corruption
+            };
+        }
+        
+        public static implicit operator CharacterSkills(CharacterSkillsWrapper w)
+        {
+            var s = ScriptableObject.CreateInstance<CharacterSkills>();
+            s.paperworkMastery = w.paperworkMastery;
+            s.sedentaryResilience = w.sedentaryResilience;
+            s.pedantry = w.pedantry;
+            s.softSkills = w.softSkills;
+            s.corruption = w.corruption;
+            return s;
+        }
+    }
+    public CharacterSkillsWrapper skills = new CharacterSkillsWrapper();
+
+    [Header("График работы")]
+    public CalendarDayPeriodType WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
+
+    [Header("Действия")]
     public List<StaffAction> activeActions = new List<StaffAction>();
-    public ActionDatabase systemActionDatabase;
-
-    [Header("Рабочее место")]
-    public ServicePoint assignedWorkstation;
+    public ActionDatabase systemActionDatabase; 
     
-    [Header("Состояние потребностей (от 0.0 до 1.0)")]
-    [Range(0f, 1f)] public float frustration = 0f;
-    [Range(0f, 1f)] public float bladder = 0f;
-    [Range(0f, 1f)] public float energy = 1f;
-    [Range(0f, 1f)] public float morale = 1f;
+    [Header("Компоненты")]
+    public AgentMover agentMover; 
+    public ThoughtBubbleController thoughtBubble;
+    public CharacterStateLogger logger;
     
-    [Header("Настройки Выгорания")]
-    [SerializeField] private float baseFrustrationGain = 0.1f;
-    [SerializeField] private SkillType frustrationResistanceSkill = SkillType.SedentaryResilience;
+    // ИСПРАВЛЕНИЕ: Используем CharacterVisuals вместо StaffPrefabReferences
+    public CharacterVisuals visuals; 
+    public VoiceData voiceProfile; 
 
-    [Header("Звуки смены")]
-    public AudioClip startShiftSound;
-    public AudioClip endShiftSound;
-	
-	[Header("Аудио")]
-    public VoiceData voiceProfile;
+    [Header("Состояние")]
+    public float energy = 100f;
+    public float stress = 0f;
+    public float frustration = 0f;
+    public float bladder = 0f; 
+    public float morale = 100f;
 
-    // Ссылки на компоненты
-    public EmotionSpriteCollection spriteCollection;
-    public StateEmotionMap stateEmotionMap;
-    protected AgentMover agentMover;
-	public AgentMover AgentMover => agentMover;
-    protected CharacterStateLogger logger;
-    protected CharacterVisuals visuals;
-    public ThoughtBubbleController thoughtBubble { get; private set; }
-    public ActionExecutor currentExecutor { get; private set; }
-    
-    // Внутренние переменные
-    protected Dictionary<ActionType, float> actionCooldowns = new Dictionary<ActionType, float>();
-    protected bool isOnDuty = false;
-    private Coroutine needsUpdateCoroutine;
-    private Coroutine actionDecisionCoroutine;
-    #endregion
+    public ServicePoint assignedWorkstation; 
+    public int uiScheduleTrackIndex = -1;
 
-    #region Core AI Logic (The "Brain")
-    private IEnumerator ShiftRoutine()
-    {
-        if (this is DirectorAvatarController) { yield break; }
+    // Для совместимости с Executor-ами
+    public StaffAction currentAction; 
+    public ActionExecutor currentExecutor; 
 
-        if (assignedWorkstation != null)
-        {
-            var goToWorkExecutor = gameObject.AddComponent<GoToWorkstationExecutor>();
-            goToWorkExecutor.Execute(this, null);
-            yield return new WaitUntil(() => goToWorkExecutor == null);
-        }
-
-        while (isOnDuty)
-        {
-            StaffAction bestAction = FindBestActionToPerform();
-
-            if (currentExecutor == null)
-            {
-                if (bestAction != null)
-                {
-                    if (CheckActionRoll(bestAction))
-                    {
-                        ExecuteAction(bestAction);
-                    }
-                    else
-                    {
-                        thoughtBubble?.ShowPriorityMessage("Эх, не вышло...", 2f, Color.red);
-                        SetActionCooldown(bestAction.actionType, 10f);
-                    }
-                }
-            }
-            else 
-            {
-                if (bestAction != null && bestAction.priority > currentExecutor.actionData.priority)
-                {
-                    if (currentExecutor.IsInterruptible)
-                    {
-                        Debug.Log($"<color=orange>[AI Brain - {characterName}]</color> ПРЕРЫВАНИЕ! Новое действие '{bestAction.displayName}' ({bestAction.priority}) важнее, чем '{currentExecutor.actionData.displayName}' ({currentExecutor.actionData.priority}).");
-                        
-                        Destroy(currentExecutor);
-                        currentExecutor = null;
-
-                        ExecuteAction(bestAction);
-                    }
-                }
-            }
-            
-            yield return new WaitForSeconds(1f);
-        }
-    }
-
-    private StaffAction FindBestActionToPerform()
-    {
-        StringBuilder logBuilder = new StringBuilder();
-        logBuilder.AppendLine($"<b><color=yellow>--- AI SCORE SHEET: {characterName} ({currentRole}) ---</color></b>");
-        
-        List<StaffAction> allPossibleActions = new List<StaffAction>();
-        if(activeActions != null) allPossibleActions.AddRange(activeActions);
-        if(systemActionDatabase != null) allPossibleActions.AddRange(systemActionDatabase.allActions);
-
-        StaffAction bestAction = null;
-        float bestScore = -1f;
-
-        foreach (var action in allPossibleActions.Distinct())
-        {
-            if (action == null || !action.applicableRoles.Contains(this.currentRole)) continue;
-
-            bool onCooldown = actionCooldowns.ContainsKey(action.actionType) && Time.time < actionCooldowns[action.actionType];
-            if (onCooldown)
-            {
-                logBuilder.AppendLine($"  - {action.displayName} | <color=grey>НА ПЕРЕЗАРЯДКЕ</color>");
-                continue;
-            }
-
-            if (!action.AreConditionsMet(this))
-            {
-                logBuilder.AppendLine($"  - {action.displayName} ({action.category}) | <color=red>УСЛОВИЯ НЕ ВЫПОЛНЕНЫ</color>");
-                continue;
-            }
-
-            float currentScore = action.priority;
-            if (action.category == ActionCategory.System)
-            {
-                if (action.actionType == ActionType.GoToToilet) currentScore += this.bladder * 100f;
-                if (action.actionType == ActionType.GoToBreak) currentScore += (1f - this.energy) * 100f;
-                if (action.actionType == ActionType.GoToCooler) currentScore += (1f - this.morale) * 100f;
-            }
-            
-            logBuilder.AppendLine($"  - {action.displayName} ({action.category}) | Приоритет: {action.priority} | Бонус: {(currentScore - action.priority):F0} | <b>Итоговый счет: {currentScore:F0}</b> | <color=green>ДОСТУПНО</color>");
-
-            if (currentScore > bestScore)
-            {
-                bestScore = currentScore;
-                bestAction = action;
-            }
-        }
-        
-        if (bestAction != null)
-        {
-            logBuilder.AppendLine($"<b>ИТОГ: Выбрано лучшее действие -> <color=lime>'{bestAction.displayName}'</color> (Счет: {bestScore:F0})</b>");
-        }
-        else
-        {
-            logBuilder.AppendLine("<b>ИТОГ: <color=orange>Нет доступных действий.</color> Сотрудник будет бездействовать.</b>");
-        }
-
-        Debug.Log(logBuilder.ToString());
-        return bestAction;
-    }
-
-    protected bool CheckActionRoll(StaffAction actionData)
-    {
-        if (this is DirectorAvatarController) return true;
-        if (actionData == null) return false;
-
-        if (actionData.category == ActionCategory.System) return true;
-
-        float rankBonus = 0f;
-        if (currentRank != null)
-        {
-            rankBonus = currentRank.rankLevel * 0.02f;
-        }
-
-        float skillModifier = 0f;
-        if(skills != null && actionData.primarySkill != null)
-        {
-            skillModifier = skills.GetSkillValue(actionData.primarySkill.skill) * actionData.primarySkill.strength;
-            if (actionData.useSecondarySkill && actionData.secondarySkill != null)
-            {
-                skillModifier += skills.GetSkillValue(actionData.secondarySkill.skill) * actionData.secondarySkill.strength;
-            }
-        }
-        
-        float initialChance = actionData.baseSuccessChance + skillModifier + rankBonus - frustration;
-        float finalChance = Mathf.Clamp(initialChance, actionData.minSuccessChance, actionData.maxSuccessChance);
-        
-        return Random.value <= finalChance;
-    }
-    #endregion
-    
-    #region Abstract and Virtual Methods
-    public abstract bool IsOnBreak();
-    public virtual string GetStatusInfo() => "Статус не определен";
-    public virtual string GetCurrentStateName() => "Unknown";
-    public virtual IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival)
-    {
-        agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
-        yield return new WaitUntil(() => !agentMover.IsMoving());
-    }
-    public virtual void Initialize(RoleData data)
-    {
-        // Получаем ссылки, если еще не получены
-        if (visuals == null) visuals = GetComponent<CharacterVisuals>();
-        if (agentMover == null) agentMover = GetComponent<AgentMover>();
-
-        // Проверки на null для надежности
-        if (data == null) {
-            Debug.LogError($"Initialize вызван с null RoleData для {gameObject.name}!");
-            return;
-        }
-        if (visuals == null) {
-             Debug.LogError($"CharacterVisuals не найден на {gameObject.name} во время Initialize!");
-             // Можно решить, продолжать ли инициализацию без визуала
-        }
-        if (agentMover == null) {
-            Debug.LogError($"AgentMover не найден на {gameObject.name} во время Initialize!");
-            // Можно решить, продолжать ли инициализацию без движения
-        }
-
-        currentRole = data.roleType;
-        voiceProfile = gender == Gender.Male ? data.maleVoice : data.femaleVoice;
-
-        // Настраиваем внешний вид через CharacterVisuals, передавая RoleData
-        // Этот вызов УЖЕ настроит и спрайт тела, и спрайты анимации в AgentMover
-        visuals?.SetupFromRoleData(data, this.gender);
-
-        // Настраиваем параметры движения из RoleData
-        if (agentMover != null)
-        {
-            // --- ИЗМЕНЕНИЕ НАЧАЛО: Удаляем устаревший вызов SetAnimationSprites ---
-            // agentMover.SetAnimationSprites(data.idleSprite, data.walkSprite1, data.walkSprite2); // <<<< УДАЛИТЬ ЭТУ СТРОКУ
-            // --- ИЗМЕНЕНИЕ КОНЕЦ ---
-
-            // Устанавливаем скорость и приоритет из RoleData
-            agentMover.moveSpeed = data.moveSpeed;
-			agentMover.animationSpeed = data.animationSpeed;
-            agentMover.priority = data.priority;
-            // Обновляем базовую скорость на случай, если moveSpeed изменился
-            agentMover.ApplySpeedMultiplier(1f); // Вызовем с множителем 1, чтобы обновить baseMoveSpeed, если нужно
-        }
-         // Дополнительные инициализации (если нужны для ВСЕХ StaffController) можно добавить здесь
-    }
-    #endregion
-
-    #region Standard Methods
-    public bool IsOnDuty() => isOnDuty;
-    public float GetCurrentFrustration() => frustration;
-    public void SetCurrentFrustration(float value) => frustration = Mathf.Clamp01(value);
-    
-    public void ForceInitializeBaseComponents(AgentMover am, CharacterVisuals cv, CharacterStateLogger csl)
-    {
-        agentMover = am;
-        visuals = cv;
-        logger = csl;
-        thoughtBubble = GetComponent<ThoughtBubbleController>();
-    }
-
-    public virtual void StartShift()
-    {
-        if (isOnDuty)
-            return;
-        
-        isOnDuty = true;
-        if (startShiftSound != null) AudioSource.PlayClipAtPoint(startShiftSound, transform.position);
-
-        if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
-        actionDecisionCoroutine = StartCoroutine(ShiftRoutine());
-
-        if (needsUpdateCoroutine != null) StopCoroutine(needsUpdateCoroutine);
-        needsUpdateCoroutine = StartCoroutine(NeedsUpdateRoutine());
-    }
-
-    public virtual void EndShift()
-    {
-        if (!isOnDuty) return;
-        isOnDuty = false;
-        
-        if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
-        if (needsUpdateCoroutine != null) StopCoroutine(needsUpdateCoroutine);
-        actionDecisionCoroutine = null;
-        needsUpdateCoroutine = null;
-
-        if (currentExecutor != null)
-        {
-            Destroy(currentExecutor);
-            currentExecutor = null;
-        }
-        StartCoroutine(GoHomeRoutine());
-    }
-    
     protected virtual void Awake()
     {
         agentMover = GetComponent<AgentMover>();
+        thoughtBubble = GetComponent<ThoughtBubbleController>();
         logger = GetComponent<CharacterStateLogger>();
         visuals = GetComponent<CharacterVisuals>();
-        thoughtBubble = GetComponent<ThoughtBubbleController>();
+        if (systemActionDatabase == null) systemActionDatabase = Resources.Load<ActionDatabase>("Databases/ActionDatabase");
+    }
+
+    public virtual IEnumerator MoveToTarget(Vector3 targetPosition, string stateOnArrival)
+    {
+        if (agentMover != null) { agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject)); while (agentMover.IsMoving()) yield return null; }
+        yield return null;
+    }
+    public virtual IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival) => MoveToTarget((Vector3)targetPosition, stateOnArrival);
+
+    public virtual string GetStatusInfo() => "Idle";
+    public virtual string GetCurrentStateName() => "Idle";
+    public virtual float GetCurrentFrustration() => frustration;
+
+    public void ChangeEnergy(float amount) => energy = Mathf.Clamp(energy + amount, 0, 100);
+    public void ChangeStress(float amount) => stress = Mathf.Clamp(stress + amount, 0, 100);
+    public void SetCurrentFrustration(float val) => frustration = val;
+
+    public virtual void StartShift() { if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На работу!", 2f, Color.white); }
+    public virtual void EndShift() { if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Домой...", 2f, Color.white); }
+    public virtual bool IsOnBreak() => false; 
+
+    public bool IsOnDuty()
+    {
+        if (TimeManager.Instance == null) return true;
+        var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
+        return (WorkShiftMask & currentPeriod) != 0 && !IsOnBreak();
+    }
+
+    public virtual void Initialize(string name, Role role, RankData rank, Gender gender, CharacterSkillsWrapper skills)
+    {
+        this.characterName = name;
+        this.role = role;
+        this.currentRankData = rank;
+        this.gender = gender;
+        this.skills = skills ?? new CharacterSkillsWrapper();
+    }
+
+    public void Initialize(string name, Role role, int rankLevel, Gender gender, CharacterSkillsWrapper skills) 
+    {
+         this.characterName = name;
+         this.role = role;
+         this.gender = gender;
+         this.skills = skills;
+    }
+
+    public virtual void InitializeFromData(RoleData data)
+    {
+        this.roleData = data;
+        if (data != null && agentMover != null) { agentMover.moveSpeed = data.moveSpeed; agentMover.priority = data.priority; }
+        if (data != null && visuals != null) visuals.SetupFromRoleData(data, gender);
     }
     
-    public bool ExecuteAction(StaffAction actionToExecute)
-    {
-        System.Type executorType = actionToExecute.GetExecutorType();
-        if (executorType == null) return false;
-        
-        currentExecutor = gameObject.AddComponent(executorType) as ActionExecutor;
-        if (currentExecutor != null)
-        {
-            currentExecutor.Execute(this, actionToExecute);
-            SetActionCooldown(actionToExecute.actionType, actionToExecute.actionCooldown);
-            return true;
-        }
-        return false;
+    public void ForceInitializeBaseComponents(AgentMover mover, CharacterVisuals vis, CharacterStateLogger log) 
+    { 
+        agentMover = mover;
+        visuals = vis;
+        logger = log;
+    }
+    public void ForceInitializeBaseComponents(string name, Role role, RankData rank) 
+    { 
+        this.characterName = name; this.role = role; this.currentRankData = rank; Awake(); 
     }
 
-    public void OnActionFinished()
+    public void AddExperienceAndCheckForPromotion(float amount) { experiencePoints += amount; }
+    public void FireAndGoHome() { Destroy(gameObject); }
+    public void OnActionFinished(StaffAction action = null, bool success = true) { }
+    public void ExecuteAction(StaffAction action)
     {
-        if(currentExecutor != null && currentExecutor.actionData.category == ActionCategory.Tactic)
+        if (action == null) return;
+        var executorType = action.GetExecutorType();
+        if (executorType != null)
         {
-            UpdateFrustration(true);
+            currentAction = action;
+            var executor = gameObject.AddComponent(executorType) as ActionExecutor;
+            currentExecutor = executor;
+            executor.Execute(this, action);
         }
-        this.currentExecutor = null;
     }
     
-    public void SetActionCooldown(ActionType type, float duration)
-    {
-        if (duration > 0)
-        {
-            actionCooldowns[type] = Time.time + duration;
-        }
+    public Role currentRole 
+    { 
+        get => role; 
+        set => role = value; 
     }
-
-    protected void UpdateFrustration(bool wasCycleSuccessful)
-    {
-        if (wasCycleSuccessful)
-        {
-            float resistance = (skills != null) ? skills.GetSkillValue(frustrationResistanceSkill) : 0f;
-            float frustrationGain = baseFrustrationGain * (1f - resistance * 0.5f);
-            frustration = Mathf.Clamp01(frustration + frustrationGain);
-        }
-    }
-    #endregion
     
-    private IEnumerator NeedsUpdateRoutine()
-    {
-        while (isOnDuty)
-        {
-            yield return new WaitForSeconds(10f);
-            if (currentExecutor != null && !currentExecutor.IsInterruptible) continue;
-            
-            bladder = Mathf.Clamp01(bladder + 0.05f);
-            if (skills != null)
-            {
-                energy = Mathf.Clamp01(energy - (0.02f * (1f - skills.sedentaryResilience * 0.5f)));
-                morale = Mathf.Clamp01(morale - (0.03f * (1f - skills.pedantry)));
-            }
-        }
-    }
-
-    #region Utility Methods
-    private IEnumerator GoHomeRoutine()
-    {
-        if (unpaidPeriods > 0)
-        {
-            var salaryStack = ScenePointsRegistry.Instance?.salaryStackPoint;
-            if (salaryStack != null)
-            {
-                thoughtBubble?.ShowPriorityMessage("За зарплатой...", 3f, Color.yellow);
-                AgentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, salaryStack.transform.position, this.gameObject));
-                yield return new WaitUntil(() => !AgentMover.IsMoving());
-
-                if (salaryStack.TakeOneEnvelope())
-                {
-                    int salaryToPay = salaryPerPeriod * unpaidPeriods;
-                    if (PlayerWallet.Instance.GetCurrentMoney() >= salaryToPay)
-                    {
-                        PlayerWallet.Instance.AddMoney(-salaryToPay, $"Зарплата: {characterName}");
-                        unpaidPeriods = 0;
-                        missedPaymentCount = 0;
-                        thoughtBubble?.ShowPriorityMessage("Отлично!", 2f, Color.green);
-                    }
-                    else
-                    {
-                        salaryStack.AddEnvelope(); 
-                        missedPaymentCount++;
-                        thoughtBubble?.ShowPriorityMessage("В казне пусто?!", 3f, Color.red);
-                    }
-                }
-                else
-                {
-                    thoughtBubble?.ShowPriorityMessage("Где мой конверт?!", 4f, Color.red);
-                    yield return new WaitForSeconds(10f);
-                    missedPaymentCount++;
-                }
-
-                if (missedPaymentCount >= 2)
-                {
-                    DirectorManager.Instance?.AddStrike();
-                    FireAndGoHome(); 
-                    yield break;
-                }
-            }
-        }
-
-        var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
-        if (homeZone != null)
-        {
-            Vector2 targetPos = homeZone.GetRandomPointInside();
-            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPos, this.gameObject));
-            yield return new WaitUntil(() => !agentMover.IsMoving());
-            if (endShiftSound != null) AudioSource.PlayClipAtPoint(endShiftSound, transform.position);
-        }
-    }
-	
-	public void FireAndGoHome()
-    {
-        isOnDuty = false;
-        if (actionDecisionCoroutine != null) StopCoroutine(actionDecisionCoroutine);
-        if (currentExecutor != null) Destroy(currentExecutor);
-        actionDecisionCoroutine = null;
-        currentExecutor = null;
-        StartCoroutine(GoHomeAndDespawnRoutine());
-    }
-
-    private IEnumerator GoHomeAndDespawnRoutine()
-    {
-        yield return StartCoroutine(GoHomeRoutine());
-        Destroy(gameObject);
-    }
-    #endregion
-	
-	/// <summary>
-    /// Начисляет опыт сотруднику и немедленно проверяет, доступно ли повышение.
-    /// Если повышение стало доступно ТОЛЬКО ЧТО, проигрывает эффект.
-    /// </summary>
-    public void AddExperienceAndCheckForPromotion(int xpGained)
-    {
-        if (xpGained <= 0) return; 
-
-        // Если мы уже показали уведомление об этом уровне, не повторяем
-        if (promotionAvailableNotificationPlayed) return; 
-
-        if (currentRank == null || currentRank.possiblePromotions == null || !currentRank.possiblePromotions.Any())
-        {
-            this.experiencePoints += xpGained;
-            return;
-        }
-
-        // 1. Запоминаем, мог ли он повыситься ДО начисления опыта
-        bool couldBePromotedBefore = currentRank.possiblePromotions
-            .Any(rank => this.experiencePoints >= rank.experienceRequired);
-
-        // 2. Начисляем опыт
-        this.experiencePoints += xpGained;
-
-        // 3. Проверяем, может ли он повыситься СЕЙЧАС
-        bool canBePromotedNow = currentRank.possiblePromotions
-            .Any(rank => this.experiencePoints >= rank.experienceRequired);
-
-        // 4. Если раньше не мог, а теперь может — ВРЕМЯ ЭФФЕКТА!
-        if (canBePromotedNow && !couldBePromotedBefore)
-        {
-            // <<< ВОТ ЗАПРОШЕННЫЙ ЛОГ >>>
-            Debug.Log($"<color=yellow>[Level Up!] Сотрудник {characterName} (ID: {this.gameObject.GetInstanceID()}) ГОТОВ К ПОВЫШЕНИЮ. (Опыт: {this.experiencePoints}).</color>", this.gameObject);
-            
-            // <<< ДОБАВИМ ЛОГИ ДЛЯ ПРОВЕРКИ VISUALS >>>
-            if (visuals == null)
-            {
-                Debug.LogError($"[Level Up!] ОШИБКА: 'visuals' (CharacterVisuals) равен NULL для {characterName}. Не могу проиграть эффект.", this.gameObject);
-            }
-            else
-            {
-                Debug.Log($"[Level Up!] 'visuals' НАЙДЕН. Вызов PlayLevelUpEffect() для {characterName}...", this.gameObject);
-                visuals?.PlayLevelUpEffect(); // [cite: 596]
-            }
-            // <<< КОНЕЦ ДОПОЛНИТЕЛЬНЫХ ЛОГОВ >>>
-            
-            // Устанавливаем флаг, чтобы больше не спамить эффектом
-            promotionAvailableNotificationPlayed = true;
-        }
-    }
-	
+    // Свойства для доступа к AgentMover, чтобы исправить ошибки CS1061
+    public AgentMover AgentMover => agentMover;
+    public bool IsMoving => agentMover != null && agentMover.IsMoving();
 }

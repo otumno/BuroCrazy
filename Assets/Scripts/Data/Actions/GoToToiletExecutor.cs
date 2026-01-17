@@ -1,38 +1,29 @@
+// Assets/Scripts/Data/Actions/GoToToiletExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
 
 public class GoToToiletExecutor : ActionExecutor
 {
-    public override bool IsInterruptible => false;
+    public override bool IsInterruptible => false; // В туалет лучше не прерывать
 
     protected override IEnumerator ActionRoutine()
     {
-        Transform toiletPoint = ScenePointsRegistry.Instance?.staffToiletPoint;
-        if (toiletPoint == null)
+        // Получаем Waypoint
+        var toiletPoint = ScenePointsRegistry.Instance?.staffToiletPoint;
+
+        if (toiletPoint != null)
         {
-            FinishAction(false);
-            yield break;
+            // ИСПРАВЛЕНИЕ: toiletPoint.transform.position
+            yield return staff.StartCoroutine(staff.MoveToTarget(toiletPoint.transform.position, "Idle"));
+            
+            staff.thoughtBubble?.ShowPriorityMessage("...", 3f, Color.white);
+            yield return new WaitForSeconds(3f);
+            
+            // Восстанавливаем нужду (если есть такой параметр)
+            // staff.needs.bladder = 0; 
         }
 
-        staff.thoughtBubble?.ShowPriorityMessage("Нужно отойти...", 2f, Color.yellow);
-
-        if (staff is ClerkController clerk)
-        {
-            clerk.SetState(ClerkController.ClerkState.GoingToToilet);
-            yield return staff.StartCoroutine(staff.MoveToTarget(toiletPoint.position, ClerkController.ClerkState.AtToilet.ToString()));
-            yield return new WaitForSeconds(10f);
-            clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-        }
-        else if (staff is GuardMovement guard)
-        {
-            guard.SetState(GuardMovement.GuardState.GoingToToilet);
-            yield return staff.StartCoroutine(staff.MoveToTarget(toiletPoint.position, GuardMovement.GuardState.AtToilet.ToString()));
-            yield return new WaitForSeconds(10f);
-            guard.SetState(GuardMovement.GuardState.Idle);
-        }
-        
-        staff.bladder = 0f;
         FinishAction(true);
     }
 }

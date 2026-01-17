@@ -70,3 +70,49 @@ MonoBehaviour:
     FadeOutDuration: 0
     FadeOutEase: 1
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 18
+    clips:
+    - {fileID: 8300000, guid: ee2af51ca6eeec843b9bfe29a3de928d, type: 3}
+    - {fileID: 8300000, guid: 94a2dff933be1fb408af0ec189c74c89, type: 3}
+    - {fileID: 8300000, guid: 3d2185f5945e60c409df7e8a87ddc0ee, type: 3}
+    - {fileID: 8300000, guid: a0f6b6c05ffa8ac48b520263eb82e702, type: 3}
+    volume: 0.8
+    pitch: 1
+    pitchDelta: 0.1
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 1
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 19
+    clips:
+    - {fileID: 8300000, guid: 1af47e416cefef14193bd9d38e0c453c, type: 3}
+    - {fileID: 8300000, guid: b968761687273e845a0915a9dd4d9229, type: 3}
+    - {fileID: 8300000, guid: a9eac376f37efe040a85575cd3a7c3e0, type: 3}
+    - {fileID: 8300000, guid: e9f013bba019d8e438455d184119e156, type: 3}
+    - {fileID: 8300000, guid: af82f321102cb18429b7826300a0cede, type: 3}
+    - {fileID: 8300000, guid: c060c960d2103864289e35cfe5b5f9ea, type: 3}
+    - {fileID: 8300000, guid: 2f6f5f60978bb02428467043c700ca22, type: 3}
+    - {fileID: 8300000, guid: 8ceb3c6fbd806fb4bbd43e293d02016f, type: 3}
+    volume: 0.6
+    pitch: 1
+    pitchDelta: 0.1
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 1
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}

@@ -4,56 +4,54 @@ using Scriptables.Progression;
 
 namespace Data.Documents
 {
-    public enum ProjectDocumentType
-    {
-        RegionUnlock,   // Приказ о захвате региона
-        JobPromotion,   // Приказ о повышении директора
-        FacilityUpgrade // Приказ о закупке (апгрейд)
-    }
-
-    /// <summary>
-    /// Этот класс описывает содержание важного документа (не клиентского).
-    /// Экземпляр этого класса будет жить внутри физической папки на столе.
-    /// </summary>
     [System.Serializable]
     public class ProjectDocumentDefinition
     {
-        public string documentName; // Название для UI ("Приказ №66")
-        public ProjectDocumentType docType;
+        public string documentName; 
+        public ProjectDocumentType docType; // Ссылка на глобальный Enum
         
-        // Ссылки на данные (заполняется только одно поле в зависимости от типа)
         public RegionData targetRegion;
         public JobTitleData targetJob;
-        public string targetUpgradeID; // ID апгрейда из UpgradeManager
+        public string targetUpgradeID; 
 
-        // Статус прохождения инстанций (для визуализации печатей на документе)
-        public bool signedByDirector;
-        public bool processedByRegistrar;
-        public bool paidAtCashier;
-        public bool archived; // Финальная стадия
+        // --- ФЛАГИ СОСТОЯНИЯ ---
+        public bool signedByDirector;      
+        public bool processedByRegistrar;  
+        public bool paidAtCashier;          
+        public bool archived;               
 
-        // Конструктор для Региона
+        public ProjectDocumentDefinition() { }
+
         public ProjectDocumentDefinition(RegionData region)
         {
             docType = ProjectDocumentType.RegionUnlock;
             targetRegion = region;
-            documentName = $"Приказ о реновации: {region.displayName}";
+            documentName = region != null ? $"Приказ о реновации: {region.displayName}" : "Реновация";
         }
 
-        // Конструктор для Должности
         public ProjectDocumentDefinition(JobTitleData job)
         {
             docType = ProjectDocumentType.JobPromotion;
             targetJob = job;
-            documentName = $"Приказ о назначении: {job.titleName}";
+            documentName = job != null ? $"Приказ о назначении: {job.titleName}" : "Назначение";
         }
         
-        // Конструктор для Апгрейда
         public ProjectDocumentDefinition(string upgradeID, string upgradeName)
         {
             docType = ProjectDocumentType.FacilityUpgrade;
             targetUpgradeID = upgradeID;
             documentName = $"Закупка: {upgradeName}";
+        }
+
+        public ProjectDocumentDefinition(string policyID, string policyTitle, bool isPolicy)
+        {
+            docType = ProjectDocumentType.Policy;
+            targetUpgradeID = policyID;
+            documentName = policyTitle;
+            signedByDirector = false;
+            processedByRegistrar = true;
+            paidAtCashier = true;
+            archived = false;
         }
     }
 }

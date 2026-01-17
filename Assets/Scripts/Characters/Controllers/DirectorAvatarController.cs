@@ -30,6 +30,9 @@ public class DirectorAvatarController : StaffController, IServiceProvider
 	
 	[Header("UI Эффекты")]
 	public GameObject processingIconPrefab;
+	
+	public EmotionSpriteCollection spriteCollection;
+	public StateEmotionMap stateEmotionMap;
 
     private DirectorState currentState = DirectorState.Idle;
     private ServicePoint currentWorkstation;
@@ -361,58 +364,73 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     /// <summary>
     /// Корутина для работы Директора на назначенной станции (ServicePoint).
     /// </summary>
+    /// <summary>
+    /// Корутина для работы Директора на назначенной станции (ServicePoint).
+    /// </summary>
     private IEnumerator WorkAtStationRoutine(ServicePoint workstation)
     {
          if (workstation == null) {
               Debug.LogError("WorkAtStationRoutine: workstation is null!");
-              isManuallyWorking = false; // Сбрасываем флаг, если станция невалидна
+              isManuallyWorking = false;
               yield break;
          }
 
         currentWorkstation = workstation;
-        // Регистрируем Директора как поставщика услуг на этом столе
+        
+        // --- ИЗНОС: Проверка перед началом ---
+        var durability = workstation.GetComponent<Gameplay.OfficeObjectDurability>();
+        if (durability != null && !durability.IsUsable())
+        {
+            thoughtBubble?.ShowPriorityMessage("Здесь всё сломано!\nНе могу работать.", 3f, Color.red);
+            isManuallyWorking = false;
+            yield break;
+        }
+        // ------------------------------------
+
         ClientSpawner.AssignServiceProviderToDesk(this, workstation.deskId);
-        isManuallyWorking = true; // Устанавливаем флаг ручной работы
-         Debug.Log($"[DirectorController] {characterName} назначен на {workstation.name} (ID: {workstation.deskId}). Начало движения...");
+        isManuallyWorking = true; 
+        Debug.Log($"[DirectorController] {characterName} назначен на {workstation.name}.");
 
-
-        // Двигаемся к точке ожидания сотрудника на этой станции
         if (workstation.clerkStandPoint != null) {
-            yield return StartCoroutine(MoveToTargetRoutine(workstation.clerkStandPoint.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
+            yield return StartCoroutine(MoveToTargetRoutine(workstation.clerkStandPoint.position)); 
         } else {
-             Debug.LogError($"У workstation {workstation.name} не назначен clerkStandPoint!");
-             StopManualWork(false); // Отменяем работу, если точка не найдена
+             StopManualWork(false);
              yield break;
         }
 
-
-        // Устанавливаем состояние "Работает на станции"
         SetState(DirectorState.WorkingAtStation);
-        Debug.Log($"[DirectorController] {characterName} прибыл и работает на {workstation.name}.");
 
-        // Цикл ожидания и обслуживания клиентов
-        while (isManuallyWorking) // Продолжаем, пока флаг ручной работы активен
+        while (isManuallyWorking) 
         {
-            // Находим зону, к которой относится наша станция
+            // --- ИЗНОС: Периодическая проверка и Эффективность ---
+            if (durability != null && !durability.IsUsable())
+            {
+                thoughtBubble?.ShowPriorityMessage("Стол сломался!", 2f, Color.red);
+                StopManualWork(true); // Автоматически встаем и отходим
+                yield break;
+            }
+            float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
+            // -----------------------------------------------------
+
             var zone = ClientSpawner.GetZoneByDeskId(workstation.deskId);
-            // Ищем первого клиента, который занял место в этой зоне
             var clientToServe = zone?.GetOccupyingClients().FirstOrDefault();
 
-            // Если есть клиент для обслуживания и мы сейчас не обслуживаем другого
             if (clientToServe != null && clientBeingServed == null)
             {
-                 // Проверяем, что клиент действительно ждет обслуживания в этой зоне
                   if (clientToServe.stateMachine != null && clientToServe.stateMachine.GetTargetZone() == zone) {
-                    // Запускаем корутину обслуживания этого клиента
+                    
+                    // Запускаем обслуживание
                     yield return StartCoroutine(DirectorServiceRoutine(clientToServe));
-                 } else {
-                      // Клиент есть в зоне, но его цель другая (редкий случай)
-                      Debug.LogWarning($"{characterName} видит {clientToServe.name} в зоне {zone.name}, но цель клиента другая ({clientToServe.stateMachine?.GetTargetZone()?.name}).");
-                 }
-
+                    
+                    // --- ИЗНОС: Наносим урон ПОСЛЕ обслуживания ---
+                    // Урон зависит от эффективности (чем хуже стол, тем больше усилий и урона)
+                    if (durability != null) durability.Degrade(Random.Range(2f, 4f));
+                    
+                    // Дополнительная задержка из-за плохой эффективности
+                    if (efficiency < 1.0f) yield return new WaitForSeconds(1.0f);
+                 } 
             }
 
-            // Небольшая пауза перед следующей проверкой
             yield return new WaitForSeconds(0.5f);
         }
          Debug.Log($"[DirectorController] {characterName} закончил ручную работу на {workstation?.name}.");
@@ -461,7 +479,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     private IEnumerator OperateBarrierRoutine()
     {
         SetUninterruptible(true); // Блокируем другие действия
-        var barrier = SecurityBarrier.Instance;
+        var barrier = Managers.GuardManager.Instance.securityBarrier;
         // Проверяем наличие барьера и точки взаимодействия
         if (barrier == null || barrier.guardInteractionPoint == null)
         {

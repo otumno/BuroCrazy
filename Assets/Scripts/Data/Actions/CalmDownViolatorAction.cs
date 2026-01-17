@@ -1,19 +1,17 @@
-using Managers;
+// Assets/Scripts/Data/Actions/CalmDownViolatorAction.cs
 using UnityEngine;
+using Managers;
 
-[CreateAssetMenu(fileName = "Action_CalmDownViolator", menuName = "Bureau/Actions/CalmDownViolator")]
+[CreateAssetMenu(fileName = "Action_CalmDownViolator", menuName = "Bureau/Actions/Guard/CalmDownViolator")]
 public class CalmDownViolatorAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        // Проверяем, что это охранник и он НЕ на перерыве/в туалете
-        if (!(staff is GuardMovement guard) || guard.IsOnBreak())
-        {
-            return false;
-        }
+        // ИСПРАВЛЕНИЕ: GetComponent
+        var guard = staff.GetComponent<GuardMovement>();
+        if (guard == null || guard.IsOnBreak()) return false;
 
-        // Главное условие: есть ли в данный момент нарушитель, которого нужно успокоить?
-        return GuardManager.Instance != null && GuardManager.Instance.GetViolatorToHandle() != null;
+        return GuardManager.Instance != null && GuardManager.Instance.currentViolator != null;
     }
 
     public override System.Type GetExecutorType()

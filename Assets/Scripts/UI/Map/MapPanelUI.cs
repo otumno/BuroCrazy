@@ -87,12 +87,21 @@ namespace UI.Map
             r_Desc.text = $"{region.description}\n\n<color=yellow>Бонусы:</color>{bonusText}";
 
             bool isUnlocked = ProgressionManager.Instance.IsRegionUnlocked(region.regionID);
+            
+            // --- ПРОВЕРКА НА АКТИВНЫЙ ПРИКАЗ ---
+            bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(region.regionID);
 
             if (isUnlocked)
             {
                 r_Cost.text = "<color=green>ТЕРРИТОРИЯ ПОД КОНТРОЛЕМ</color>";
                 r_ActionButton.interactable = false;
                 r_ButtonText.text = "Собственность";
+            }
+            else if (isPending)
+            {
+                r_Cost.text = "<color=yellow>ОФОРМЛЕНИЕ ДОКУМЕНТОВ...</color>";
+                r_ActionButton.interactable = false;
+                r_ButtonText.text = "В пути";
             }
             else
             {
@@ -143,12 +152,21 @@ namespace UI.Map
 
             bool isUnlocked = ProgressionManager.Instance.IsJobUnlocked(job.jobID);
             bool canStart = ProgressionManager.Instance.CanStartUnlockJob(job);
+            
+            // --- ПРОВЕРКА НА АКТИВНЫЙ ПРИКАЗ ---
+            bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(job.jobID);
 
             if (isUnlocked)
             {
                 j_Cost.text = "<color=green>ТЕКУЩАЯ ДОЛЖНОСТЬ</color>";
                 j_ActionButton.interactable = false;
                 j_ButtonText.text = "Получено";
+            }
+            else if (isPending)
+            {
+                j_Cost.text = "<color=yellow>РАССМОТРЕНИЕ...</color>";
+                j_ActionButton.interactable = false;
+                j_ButtonText.text = "Ждите";
             }
             else
             {

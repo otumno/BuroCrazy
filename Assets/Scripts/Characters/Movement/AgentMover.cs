@@ -17,6 +17,8 @@ public class AgentMover : MonoBehaviour
     public Sprite walkSprite1; // First walking frame
     public Sprite walkSprite2; // Second walking frame
     public float animationSpeed = 0.3f; // Time (in seconds) between walk frame changes
+	[Tooltip("Угол покачивания при ходьбе (в градусах). Например, 5.")]
+    public float walkWaddleAngle = 3f;
     private float animationTimer = 0f;
     private bool isFirstWalkSprite = true;
 
@@ -315,32 +317,42 @@ public class AgentMover : MonoBehaviour
     /// </summary>
     private void HandleWalkAnimation()
     {
-        // Check if all required components/sprites are assigned
+        // Проверяем наличие ссылок
         if (characterSpriteRenderer == null || idleSprite == null || walkSprite1 == null || walkSprite2 == null) return;
 
-        // Animate only if moving and not slipping
+        // Анимируем, только если движемся и не падаем/лежим
         if (rb.linearVelocity.magnitude > 0.1f && !isSlipping)
         {
-            animationTimer += Time.deltaTime; // Increment timer
-            // If timer exceeds the speed, switch sprite and reset timer
+            animationTimer += Time.deltaTime;
+            
             if (animationTimer >= animationSpeed)
             {
                 animationTimer = 0f;
-                isFirstWalkSprite = !isFirstWalkSprite; // Toggle between walk sprites
+                isFirstWalkSprite = !isFirstWalkSprite;
                 characterSpriteRenderer.sprite = isFirstWalkSprite ? walkSprite1 : walkSprite2;
+
+                // --- НОВАЯ ЛОГИКА ПОВОРОТА ---
+                // Если первый кадр - поворачиваем в одну сторону, если второй - в другую
+                float targetAngle = isFirstWalkSprite ? walkWaddleAngle : -walkWaddleAngle;
+                characterSpriteRenderer.transform.localRotation = Quaternion.Euler(0, 0, targetAngle);
+                // -----------------------------
             }
         }
-        else // If standing still or slipping
+        else // Если стоим или упали
         {
-            // Show idle sprite only if NOT slipping (otherwise keep the fallen rotation/sprite)
+            // Сбрасываем спрайт и поворот, ТОЛЬКО если не упали (при падении там своя логика поворота)
             if (!isSlipping)
             {
-                 // Ensure sprite is idle only if we are truly stopped, prevent flickering during brief pauses
-                 if (rb.linearVelocity.magnitude < 0.05f) {
+                 if (rb.linearVelocity.magnitude < 0.05f) 
+                 {
                      characterSpriteRenderer.sprite = idleSprite;
+                     
+                     // --- СБРОС ПОВОРОТА ---
+                     characterSpriteRenderer.transform.localRotation = Quaternion.identity;
+                     // ----------------------
                  }
             }
-            animationTimer = 0f; // Reset animation timer
+            animationTimer = 0f; 
         }
     }
 
@@ -671,6 +683,13 @@ public class AgentMover : MonoBehaviour
       Debug.Log($"{gameObject.name} поднялся после падения.");
     // --- End Recovery ---
 }
+
+	public void SetTarget(Vector3 targetPosition)
+    {
+        // Используем утилиту для построения пути и передаем результат в SetPath
+        var calculatedPath = Utilities.PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject);
+        SetPath(calculatedPath);
+    }
     // --- End Slip and Recover ---
 
 } // End of AgentMover class

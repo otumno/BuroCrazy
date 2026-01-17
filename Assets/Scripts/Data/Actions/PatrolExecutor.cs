@@ -1,39 +1,27 @@
+// Assets/Scripts/Data/Actions/PatrolExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
 
 public class PatrolExecutor : ActionExecutor
 {
+    public override bool IsInterruptible => true;
+
     protected override IEnumerator ActionRoutine()
     {
-        GuardMovement guard = staff as GuardMovement;
-        if (guard == null)
+        // ИСПРАВЛЕНИЕ: GetComponent вместо is GuardMovement
+        var guard = staff.GetComponent<GuardMovement>();
+        if (guard == null) 
         {
             FinishAction(false);
             yield break;
         }
 
-        guard.SetState(GuardMovement.GuardState.Patrolling);
-        int pointsToVisit = actionData.patrolPointsToVisit;
-        if (pointsToVisit <= 0) pointsToVisit = 1;
+        // Запускаем корутину патруля, которая прописана внутри GuardMovement
+        // Мы ждем, пока она не прервется извне (этот Action прерываемый)
+        yield return staff.StartCoroutine(guard.PatrolRoutine());
 
-        for (int i = 0; i < pointsToVisit; i++)
-        {
-            var patrolTarget = guard.SelectNewPatrolPoint();
-            if (patrolTarget != null)
-            {
-                yield return staff.StartCoroutine(guard.MoveToTarget(patrolTarget.position, GuardMovement.GuardState.WaitingAtWaypoint));
-                ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-                yield return new WaitForSeconds(Random.Range(guard.minWaitTime, guard.maxWaitTime));
-            }
-            else
-            {
-                yield return new WaitForSeconds(3f);
-                break;
-            }
-        }
-
-        guard.unwrittenReportPoints++;
+        // Если PatrolRoutine завершилась сама (например, точек нет)
         FinishAction(true);
     }
 }

@@ -1,10 +1,11 @@
-// Файл: Assets/Scripts/DialogueSystem/Data/DialogueNode.cs
+// Assets/Scripts/DialogueSystem/Data/DialogueNode.cs
 using UnityEngine;
 using System.Collections.Generic;
 
 namespace DialogueSystem.Data
 {
-    public enum NodeType { Start, Phrase, Choice, Event, Random, End }
+    // Добавляем 'Condition' в конец списка
+    public enum NodeType { Start, Phrase, Choice, Event, Random, End, Condition }
 
     public abstract class DialogueNode : ScriptableObject
     {

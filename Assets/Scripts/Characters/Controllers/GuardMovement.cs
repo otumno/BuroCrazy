@@ -1,137 +1,108 @@
-// Файл: Assets/Scripts/Characters/Controllers/GuardMovement.cs
+// Assets/Scripts/Characters/Controllers/GuardMovement.cs
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using Managers;
-using Utilities;
 
-[RequireComponent(typeof(Rigidbody2D), typeof(AgentMover), typeof(CharacterStateLogger))]
-public class GuardMovement : StaffController
+public class GuardMovement : MonoBehaviour
 {
     public enum GuardState
     {
         Idle,
         Patrolling,
-        WaitingAtWaypoint,
         Chasing,
-        Talking,
+        ChasingThief,
+        Investigating,
+        ReturningToPost,
+        AtPost,
         OnPost,
-        GoingToBreak,
+        OperatingBarrier,
+        WritingReport,
+        Talking,
+        EscortingThief,
         OnBreak,
+        GoingToBreak,
         GoingToToilet,
         AtToilet,
         OffDuty,
-        ChasingThief,
-        EscortingThief,
-        Evicting,
-        StressedOut,
-        WritingReport,
-        OperatingBarrier
+        WaitingAtWaypoint
     }
+
+    [Header("Состояние")]
+    public GuardState currentState = GuardState.Idle;
     
-    [Header("Состояние Охранника")]
-    private GuardState currentState = GuardState.OffDuty;
-    [Header("Механика Протоколов")]
     public int unwrittenReportPoints = 0;
+    public float chaseSpeedMultiplier = 1.5f;
+    public float talkTime = 5f;
+    public float minWaitTime = 2f;
+    public float maxWaitTime = 5f;
+    
+    // ИСПРАВЛЕНИЕ: Light2D требует правильного namespace
+    public UnityEngine.Rendering.Universal.Light2D nightLight; 
 
-    [Header("Объекты (Prefab)")]
-    public GameObject nightLight;
-    [Header("Уникальные параметры Охранника")]
-    public float minWaitTime;
-    public float maxWaitTime;
-    public float chaseSpeedMultiplier;
-    public float talkTime;
-    public float timeInToilet;
-    public float maxStress;
-    public float stressGainPerViolator;
-    public float stressReliefRate;
-	
-	public float minIdleWait;
-	public float maxIdleWait;
-    private StaffAction writeReportAction;
+    private StaffController staff;
 
-    protected override void Awake()
+    private void Awake()
     {
-        base.Awake();
-        writeReportAction = Resources.Load<StaffAction>("Actions/Action_WriteReport");
-        if (writeReportAction == null)
-        {
-            Debug.LogError("Не удалось загрузить Action_WriteReport из папки Resources/Actions!");
-        }
-        
-        var references = GetComponent<StaffPrefabReferences>();
-        if (references != null)
-        {
-            this.nightLight = references.nightLight;
-        }
+        staff = GetComponent<StaffController>();
     }
 
-    // --- УСТАРЕВШИЙ МЕТОД TryToStartConfiguredAction() БЫЛ ПОЛНОСТЬЮ УДАЛЕН ---
+    // --- МОСТЫ ---
 
-    // --- Остальные методы класса ---
+    public string characterName => staff != null ? staff.characterName : "Guard";
+    public AgentMover AgentMover => staff.agentMover;
+    public ThoughtBubbleController thoughtBubble => staff.thoughtBubble;
+    public bool IsOnBreak() => staff.IsOnBreak();
+    public bool IsOnDuty() => !staff.IsOnBreak();
+    public void ChangeEnergy(float amount) => staff.ChangeEnergy(amount);
+    public void ChangeStress(float amount) => staff.ChangeStress(amount);
+    
+    // --- ИСПРАВЛЕНИЕ: Добавлен недостающий метод ---
+    public GuardState GetCurrentState() => currentState;
+    // -----------------------------------------------
+
+    public IEnumerator MoveToTarget(Vector3 pos, GuardState state)
+    {
+        SetState(state);
+        return staff.MoveToTarget(pos, state.ToString());
+    }
+
+    public IEnumerator MoveToTarget(Vector3 pos, string state) => staff.MoveToTarget(pos, state);
+
+    public string GetStatusInfo() => currentState.ToString();
+    public GuardState GetCurrentStateEnum() => currentState;
+    public float GetCurrentFrustration() => staff.frustration;
+
+    public void InitializeFromData(RoleData data) { }
 
     public void SetState(GuardState newState)
     {
-        if (currentState == newState) return;
         currentState = newState;
-        logger?.LogState(GetStatusInfo());
-        if(visuals != null && stateEmotionMap != null)
+    }
+
+    public IEnumerator PatrolRoutine()
+    {
+        currentState = GuardState.Patrolling;
+        var points = ScenePointsRegistry.Instance?.guardPatrolPoints;
+        
+        if (points == null || points.Count == 0) 
         {
-            visuals.SetEmotionForState(newState);
+            currentState = GuardState.Idle;
+            yield break;
+        }
+
+        int index = 0;
+        while (true)
+        {
+            var target = points[index];
+            if (target != null)
+            {
+                yield return StartCoroutine(MoveToTarget(target.transform.position, GuardState.Patrolling));
+                yield return new WaitForSeconds(2f);
+            }
+            index = (index + 1) % points.Count;
+            yield return null;
         }
     }
-
-    public GuardState GetCurrentState()
-    {
-        return currentState;
-    }
-
-    public override string GetCurrentStateName()
-    {
-        return currentState.ToString();
-    }
-
-    public Transform SelectNewPatrolPoint()
-    {
-        var points = ScenePointsRegistry.Instance?.guardPatrolPoints;
-        if (points == null || !points.Any()) return null;
-        return points[Random.Range(0, points.Count)];
-    }
     
-    public IEnumerator MoveToTarget(Vector2 targetPosition, GuardState stateOnArrival)
-    {
-        AgentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, this.gameObject));
-        yield return new WaitUntil(() => !AgentMover.IsMoving());
-        SetState(stateOnArrival);
-    }
-
-    public override bool IsOnBreak()
-    {
-        return currentState == GuardState.OnBreak ||
-               currentState == GuardState.GoingToBreak ||
-               currentState == GuardState.AtToilet ||
-               currentState == GuardState.GoingToToilet ||
-               currentState == GuardState.StressedOut ||
-               currentState == GuardState.OnPost;
-    }
-
-    public override string GetStatusInfo()
-    {
-        return currentState.ToString();
-    }
-
-    public void InitializeFromData(RoleData data)
-    {
-        this.minWaitTime = data.guard_minWaitTime;
-        this.maxWaitTime = data.guard_maxWaitTime;
-        this.chaseSpeedMultiplier = data.guard_chaseSpeedMultiplier;
-        this.talkTime = data.guard_talkTime;
-        this.timeInToilet = data.guard_timeInToilet;
-        this.maxStress = data.guard_maxStress;
-        this.stressGainPerViolator = data.guard_stressGainPerViolator;
-        this.stressReliefRate = data.guard_stressReliefRate;
-		this.minIdleWait = data.minIdleWait;
-		this.maxIdleWait = data.maxIdleWait;
-    }
+    public void SelectNewPatrolPoint() { }
 }

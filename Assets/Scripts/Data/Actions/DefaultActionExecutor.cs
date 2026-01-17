@@ -1,48 +1,45 @@
+// Assets/Scripts/Data/Actions/DefaultActionExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
 
 public class DefaultActionExecutor : ActionExecutor
 {
+    public override bool IsInterruptible => true;
+
     protected override IEnumerator ActionRoutine()
     {
-        staff.SetCurrentFrustration(0f);
-        Debug.Log($"<color=cyan>[ДЕЙСТВИЕ ПО УМОЛЧАНИЮ]</color> Выгорание для {staff.characterName} сброшено до 0.");
-
-        if (staff is GuardMovement guard)
+        // ПРИМЕР: Guard идет на пост
+        if (actionData.actionType == ActionType.GoToPost)
         {
-            guard.SetState(GuardMovement.GuardState.OnPost);
-            Transform post = ScenePointsRegistry.Instance?.guardPostPoint;
-            if (post != null)
+            var point = ScenePointsRegistry.Instance?.guardPostPoint;
+            if (point != null)
             {
-                yield return staff.StartCoroutine(guard.MoveToTarget(post.position, GuardMovement.GuardState.OnPost.ToString()));
-                yield return new WaitForSeconds(15f);
+                // ИСПРАВЛЕНИЕ: .transform.position
+                yield return staff.StartCoroutine(staff.MoveToTarget(point.transform.position, "Idle"));
             }
         }
-        else if (staff is ServiceWorkerController worker)
+        // ПРИМЕР: Домой
+        else if (actionData.actionType == ActionType.GoHome)
         {
-            worker.SetState(ServiceWorkerController.WorkerState.Idle);
-            RectZone homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
-            if (homeZone != null)
+            var home = ScenePointsRegistry.Instance?.staffHomeZone;
+            if (home != null)
             {
-                yield return staff.StartCoroutine(worker.MoveToTarget(homeZone.GetRandomPointInside(), ServiceWorkerController.WorkerState.Idle.ToString()));
-                yield return new WaitForSeconds(15f);
+                // ИСПРАВЛЕНИЕ: GetRandomPointInside() работает, т.к. home теперь RectZone
+                yield return staff.StartCoroutine(staff.MoveToTarget(home.GetRandomPointInside(), "Idle"));
+                staff.gameObject.SetActive(false); // Ушел домой
             }
         }
-        else if (staff is ClerkController clerk)
+        // ПРИМЕР: Кухня
+        else if (actionData.actionType == ActionType.Eat || actionData.actionType == ActionType.Drink)
         {
-            clerk.SetState(ClerkController.ClerkState.OnBreak);
-            Transform breakPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
-            if (breakPoint != null)
+            var point = ScenePointsRegistry.Instance?.RequestKitchenPoint();
+            if (point != null)
             {
-                yield return staff.StartCoroutine(clerk.MoveToTarget(breakPoint.position, ClerkController.ClerkState.OnBreak.ToString()));
-                yield return new WaitForSeconds(15f);
-                ScenePointsRegistry.Instance.FreeKitchenPoint(breakPoint);
+                yield return staff.StartCoroutine(staff.MoveToTarget(point.transform.position, "Drinking"));
+                yield return new WaitForSeconds(5f);
+                ScenePointsRegistry.Instance?.FreeKitchenPoint(point);
             }
-        }
-        else
-        {
-            yield return new WaitForSeconds(10f);
         }
 
         FinishAction(true);

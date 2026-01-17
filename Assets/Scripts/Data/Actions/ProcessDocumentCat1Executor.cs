@@ -1,8 +1,9 @@
-// Файл: Assets/Scripts/Data/Actions/ProcessDocumentCat1Executor.cs
+// Assets/Scripts/Data/Actions/ProcessDocumentCat1Executor.cs
 using UnityEngine;
 using System.Collections;
 using System.Linq;
 using Managers;
+using Gameplay; // Подключаем пространство имен с OfficeObjectDurability
 
 public class ProcessDocumentCat1Executor : ActionExecutor
 {
@@ -11,12 +12,40 @@ public class ProcessDocumentCat1Executor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var clerk = staff as ClerkController;
-        if (clerk == null || clerk.assignedWorkstation == null) { FinishAction(false); yield break; }
+        // Проверки на null
+        if (clerk == null || clerk.assignedWorkstation == null) 
+        { 
+            FinishAction(false); 
+            yield break; 
+        }
 
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         var client = zone?.GetOccupyingClients().FirstOrDefault();
 
-        if (client == null || client.docHolder == null) { FinishAction(false); yield break; }
+        if (client == null || client.docHolder == null) 
+        { 
+            FinishAction(false); 
+            yield break; 
+        }
+
+        // --- ИНТЕГРАЦИЯ ИЗНОСА (НАЧАЛО) ---
+        // 1. Получаем компонент прочности (если он есть)
+        var durability = clerk.assignedWorkstation.GetComponent<OfficeObjectDurability>();
+        
+        // 2. Если компонент ЕСТЬ и стол СЛОМАН -> прерываемся
+        if (durability != null && !durability.IsUsable())
+        {
+            clerk.thoughtBubble?.ShowPriorityMessage("Стол сломан!\nЗовите уборщика!", 3f, Color.red);
+            
+            // Сбрасываем состояние клерка, чтобы он не завис
+            clerk.SetState(ClerkController.ClerkState.Working); 
+            FinishAction(false);
+            yield break;
+        }
+
+        // 3. Считаем эффективность (если компонента нет, множитель будет 1.0)
+        float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
+        // --- ИНТЕГРАЦИЯ ИЗНОСА (КОНЕЦ) ---
 
         clerk.SetState(ClerkController.ClerkState.Working);
         
@@ -24,7 +53,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         if (client.docHolder.GetCurrentDocumentType() != DocumentType.Form1)
         {
             clerk.thoughtBubble?.ShowPriorityMessage("Это не тот бланк,\nвозьмите другой.", 3f, Color.yellow);
-			client.ApplyStressJump(client.stressJump_Refusal);
+            client.ApplyStressJump(client.stressJump_Refusal);
             client.stateMachine.GoGetFormAndReturn();
             FinishAction(true); // Задача выполнена (клиент отправлен)
             yield break;
@@ -39,6 +68,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
             if (Random.value < (1f - client.documentQuality) && Random.value < clerk.skills.pedantry)
             {
                 clerk.thoughtBubble?.ShowPriorityMessage("Здесь ошибка!\nНужно переделать.", 3f, Color.red);
+                client.ApplyStressJump(client.stressJump_Refusal);
                 yield return new WaitForSeconds(2f);
                 client.stateMachine.GoGetFormAndReturn();
                 FinishAction(true); // Задача выполнена (ошибка найдена)
@@ -74,21 +104,31 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         // --- Конец анимации забора ---
 
         clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 1)...", 3f, Color.white);
-			float workTime = Random.Range(2f, 4f);
+        
+        // --- ПРИМЕНЕНИЕ ЭФФЕКТИВНОСТИ ---
+        // Время работы увеличивается, если стол изношен (делим на efficiency)
+        float workTime = Random.Range(2f, 4f) / efficiency;
 
-				// Пытаемся достать префаб через ссылки клерка
-				var refs = clerk.GetComponent<StaffPrefabReferences>();
-				if (refs != null && refs.processingIconPrefab != null)
-				{
-					GameObject iconObj = Instantiate(refs.processingIconPrefab);
-					ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
-					if (animScript != null)
-					{
-						animScript.Play(clerk.transform.position, client.transform.position, workTime);
-					}
-				}
+        // Пытаемся достать префаб иконки обработки через ссылки клерка
+        var refs = clerk.GetComponent<StaffPrefabReferences>();
+        if (refs != null && refs.processingIconPrefab != null)
+        {
+            GameObject iconObj = Instantiate(refs.processingIconPrefab);
+            ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
+            if (animScript != null)
+            {
+                animScript.Play(clerk.transform.position, client.transform.position, workTime);
+            }
+        }
 
-yield return new WaitForSeconds(workTime);
+        yield return new WaitForSeconds(workTime);
+        
+        // --- НАНЕСЕНИЕ УРОНА СТОЛУ ---
+        if (durability != null)
+        {
+            durability.Degrade(Random.Range(2f, 5f)); // Наносим урон столу
+        }
+        // -----------------------------
         
         // --- 4. АНИМАЦИЯ: Выдаем сертификат ---
         if (flyingDoc != null) Destroy(flyingDoc); // Уничтожаем старый бланк на столе

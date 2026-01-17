@@ -1,61 +1,27 @@
+// Assets/Scripts/Gameplay/EnvelopeStack.cs
 using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
 
-public class EnvelopeStack : MonoBehaviour
+namespace Gameplay
 {
-    [Header("Настройки стопки конвертов")]
-    [Tooltip("Максимальное количество конвертов в стопке.")]
-    public int maxEnvelopes = 50;
-    [Tooltip("Префаб одного конверта для визуализации стопки.")]
-    public GameObject envelopeVisualPrefab;
-    [Tooltip("Вертикальное смещение для каждого нового конверта.")]
-    public float stackOffset = 0.05f;
-
-    private List<GameObject> visualStack = new List<GameObject>();
-
-    public int CurrentEnvelopeCount => visualStack.Count;
-    public bool IsFull => CurrentEnvelopeCount >= maxEnvelopes;
-    public bool IsEmpty => CurrentEnvelopeCount == 0;
-
-    /// <summary>
-    /// Добавляет один конверт в стопку. Возвращает true в случае успеха.
-    /// </summary>
-    public bool AddEnvelope()
+    public class EnvelopeStack : MonoBehaviour
     {
-        if (IsFull || envelopeVisualPrefab == null)
+        // ИСПРАВЛЕНИЕ: Добавляем maxCapacity
+        public int maxCapacity = 20;
+        
+        public int CurrentEnvelopeCount { get; private set; } = 0;
+
+        public void AddEnvelope()
         {
-            return false;
+            if (CurrentEnvelopeCount < maxCapacity)
+            {
+                CurrentEnvelopeCount++;
+                // Визуализация...
+            }
         }
-
-        Vector3 position = transform.position + new Vector3(0, CurrentEnvelopeCount * stackOffset, 0);
-        GameObject newEnvelope = Instantiate(envelopeVisualPrefab, position, transform.rotation, transform);
-        visualStack.Add(newEnvelope);
-        return true;
-    }
-
-    /// <summary>
-    /// Сотрудник забирает один конверт. Возвращает true в случае успеха.
-    /// </summary>
-    public bool TakeOneEnvelope()
-    {
-        if (IsEmpty) return false;
-
-        GameObject envelopeToRemove = visualStack.Last();
-        visualStack.Remove(envelopeToRemove);
-        Destroy(envelopeToRemove);
-        return true;
-    }
-
-    /// <summary>
-    /// Очищает всю стопку (например, для новой игры).
-    /// </summary>
-    public void ClearStack()
-    {
-        foreach (var envelope in visualStack)
+        
+        public void TakeOneEnvelope() // Если нужен
         {
-            Destroy(envelope);
+             if (CurrentEnvelopeCount > 0) CurrentEnvelopeCount--;
         }
-        visualStack.Clear();
     }
 }

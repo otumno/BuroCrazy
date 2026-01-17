@@ -1,4 +1,3 @@
-// Файл: ActionDatabase.cs
 using UnityEngine;
 using System.Collections.Generic;
 
@@ -6,4 +5,11 @@ using System.Collections.Generic;
 public class ActionDatabase : ScriptableObject
 {
     public List<StaffAction> allActions;
+
+    // --- ДОБАВЛЯЕМ ЭТОТ МЕТОД ---
+    public StaffAction GetActionByType(ActionType type)
+    {
+        if (allActions == null) return null;
+        return allActions.Find(a => a.actionType == type);
+    }
 }

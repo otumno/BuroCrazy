@@ -1,17 +1,20 @@
-using Managers;
+// Assets/Scripts/Data/Actions/CatchThiefAction.cs
 using UnityEngine;
+using Managers;
 
-[CreateAssetMenu(fileName = "Action_CatchThief", menuName = "Bureau/Actions/CatchThief")]
+[CreateAssetMenu(fileName = "Action_CatchThief", menuName = "Bureau/Actions/Guard/CatchThief")]
 public class CatchThiefAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is GuardMovement guard) || guard.IsOnBreak())
-        {
-            return false;
-        }
+        // ИСПРАВЛЕНИЕ: Получаем компонент через GetComponent
+        var guard = staff.GetComponent<GuardMovement>();
+        
+        // Проверяем, что это охранник и он на смене
+        if (guard == null || guard.IsOnBreak()) return false;
 
-        return GuardManager.Instance != null && GuardManager.Instance.GetThiefToCatch() != null;
+        // Есть ли вор?
+        return GuardManager.Instance != null && GuardManager.Instance.currentThief != null;
     }
 
     public override System.Type GetExecutorType()

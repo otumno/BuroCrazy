@@ -64,56 +64,51 @@ public class UpgradeIconUI : MonoBehaviour
     {
         if (upgradeData == null || UpgradeManager.Instance == null) return;
 
-        // --- ВОТ СТРОКА, КОТОРАЯ ТЕРЯЛАСЬ ---
-        // Сначала получаем текущий статус апгрейда
         UpgradeStatus status = UpgradeManager.Instance.GetUpgradeStatus(upgradeData);
-        // -------------------------------------
-
         bool canAfford = PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= upgradeData.cost;
+        
+        // --- НОВАЯ ПРОВЕРКА ---
+        bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(upgradeData.name);
+        // ----------------------
 
-        // Иконка: Серая для Locked/Available, цветная для Purchased
+        // Иконка
         if (iconImage != null)
         {
-            // --- ИСПРАВЛЕННАЯ ЛОГИКА ---
-            // Если апгрейд КУПЛЕН, показываем цветную иконку
             if (status == UpgradeStatus.Purchased)
-            {
-                iconImage.sprite = upgradeData.iconColor ?? upgradeData.iconGrayscale; // Стараемся показать цветную
-            }
-            // Если он НЕ КУПLEN (Locked или Available), показываем серую
+                iconImage.sprite = upgradeData.iconColor ?? upgradeData.iconGrayscale;
             else
-            {
-                iconImage.sprite = upgradeData.iconGrayscale ?? upgradeData.iconColor; // Стараемся показать серую
-            }
-            // --- КОНЕЦ ИСПРАВЛЕНИЙ ---
-
+                iconImage.sprite = upgradeData.iconGrayscale ?? upgradeData.iconColor;
+            
             iconImage.enabled = iconImage.sprite != null;
         }
 
-        // Галочка "Куплено"
-        if (purchasedCheckmark != null)
-        {
-            purchasedCheckmark.SetActive(status == UpgradeStatus.Purchased);
-        }
+        // Галочка
+        if (purchasedCheckmark != null) purchasedCheckmark.SetActive(status == UpgradeStatus.Purchased);
 
-        // Интерактивность кнопки и видимость цены
+        // Кнопка и Цена
         if (button != null)
         {
-            // Кнопка активна, только если апгрейд Доступен И хватает денег
-            button.interactable = (status == UpgradeStatus.Available && canAfford);
+            if (isPending)
+            {
+                // Если в процессе - блокируем
+                button.interactable = false;
+                if (costText != null) costText.text = "В пути..."; // Или иконка часов
+            }
+            else
+            {
+                button.interactable = (status == UpgradeStatus.Available && canAfford);
+                if (costText != null) costText.text = status == UpgradeStatus.Purchased ? "" : $"${upgradeData.cost}";
+            }
         }
-        if (costText != null)
-        {
-            // Скрываем цену, если апгрейд уже куплен
-            costText.gameObject.SetActive(status != UpgradeStatus.Purchased);
-        }
+        
+        if (costText != null) costText.gameObject.SetActive(status != UpgradeStatus.Purchased);
 
-        // Затемнение фона для Locked или если не хватает денег на Available
+        // Фон
         if (backgroundImage != null)
         {
-             backgroundImage.color = (status == UpgradeStatus.Locked || (status == UpgradeStatus.Available && !canAfford))
-                                     ? new Color(0.5f, 0.5f, 0.5f, 0.7f) // Полупрозрачный серый
-                                     : Color.white; // Обычный цвет
+            // Затемняем если недоступно, нет денег ИЛИ уже в процессе
+            bool isDark = (status == UpgradeStatus.Locked || (status == UpgradeStatus.Available && !canAfford) || isPending);
+            backgroundImage.color = isDark ? new Color(0.5f, 0.5f, 0.5f, 0.7f) : Color.white;
         }
     }
 

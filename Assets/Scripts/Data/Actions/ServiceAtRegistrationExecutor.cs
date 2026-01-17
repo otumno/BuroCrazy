@@ -1,15 +1,19 @@
-// Файл: Assets/Scripts/Data/Actions/ServiceAtRegistrationExecutor.cs
+// Assets/Scripts/Data/Actions/ServiceAtRegistrationExecutor.cs
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Managers;
+using Gameplay; // Подключаем пространство имен с OfficeObjectDurability
 
 public class ServiceAtRegistrationExecutor : ActionExecutor
 {
-    // Регистрация - важное действие, которое не должно прерываться легко,
-    // особенно когда идет взаимодействие с клиентом или ожидание архива.
+    // Регистрация - важное действие, которое не должно прерываться легко
     public override bool IsInterruptible => false;
+
+    // Сюда мы сохраним эффективность для передачи в подотряды
+    private float currentEfficiency = 1.0f;
+    private OfficeObjectDurability currentDurabilityComponent;
 
     protected override IEnumerator ActionRoutine()
     {
@@ -17,9 +21,9 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         var registrar = staff as ClerkController;
         if (registrar == null)
         {
-            Debug.LogError($"[ServiceAtRegistrationExecutor] Ошибка: Staff не является ClerkController. Staff: {staff?.name}");
-            FinishAction(false); // Завершаем с ошибкой
-            yield break; // Выходим из корутины
+            Debug.LogError($"[ServiceAtRegistrationExecutor] Ошибка: Staff не является ClerkController.");
+            FinishAction(false); 
+            yield break; 
         }
         if (registrar.assignedWorkstation == null)
         {
@@ -28,21 +32,30 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
              yield break;
         }
 
+        // --- ИНТЕГРАЦИЯ ИЗНОСА (НАЧАЛО) ---
+        currentDurabilityComponent = registrar.assignedWorkstation.GetComponent<OfficeObjectDurability>();
+        if (currentDurabilityComponent != null && !currentDurabilityComponent.IsUsable())
+        {
+            registrar.thoughtBubble?.ShowPriorityMessage("Стойка развалилась!", 3f, Color.red);
+            // Если мы не работаем, то и статус не меняем
+            FinishAction(false);
+            yield break;
+        }
+        currentEfficiency = (currentDurabilityComponent != null) ? currentDurabilityComponent.GetEfficiencyMultiplier() : 1.0f;
+        // --- ИНТЕГРАЦИЯ ИЗНОСА (КОНЕЦ) ---
 
         // 2. Находим зону обслуживания и клиента в ней
         var zone = ClientSpawner.GetZoneByDeskId(registrar.assignedWorkstation.deskId);
-        var client = zone?.GetOccupyingClients().FirstOrDefault(); // Берем первого клиента, занявшего место
+        var client = zone?.GetOccupyingClients().FirstOrDefault();
 
         // Если зона не найдена или в ней нет клиента
         if (client == null)
         {
-            // Это может случиться, если клиент ушел/был удален между проверкой условий и выполнением
-            // Debug.LogWarning($"[ServiceAtRegistrationExecutor] Нет клиента для обслуживания у {registrar.name} в момент начала действия. Зона: {zone?.name}");
-            FinishAction(false); // Завершаем, так как нет клиента
-            yield break; // Выходим
+            FinishAction(false); 
+            yield break;
         }
 
-        Debug.Log($"[ServiceAtRegistrationExecutor] {registrar.name} начинает обслуживание клиента {client.name} (Цель: {client.mainGoal})");
+        Debug.Log($"[ServiceAtRegistrationExecutor] {registrar.name} начинает обслуживание клиента {client.name}");
 
         // 3. Устанавливаем статус "Работает"
         registrar.SetState(ClerkController.ClerkState.Working);
@@ -50,33 +63,29 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         // 4. Проверяем, есть ли у регистратора активное действие "Сделать запрос в архив"
         bool canMakeArchiveRequest = registrar.activeActions != null && registrar.activeActions.Any(a => a != null && a.actionType == ActionType.MakeArchiveRequest);
 
-        // 5. Выбираем ветку логики: Архивный запрос ИЛИ Стандартная регистрация
-        // Если цель клиента - получить запись из архива И регистратор МОЖЕТ сделать запрос
+        // 5. Выбираем ветку логики
         if (client.mainGoal == ClientGoal.GetArchiveRecord && canMakeArchiveRequest)
         {
-            // Запускаем специальную корутину для обработки архивного запроса
+            // Архивный запрос
             yield return staff.StartCoroutine(HandleArchiveRequest(registrar, client));
-            // Завершение действия (FinishAction) происходит ВНУТРИ HandleArchiveRequest
         }
-        else // Во всех остальных случаях (другая цель ИЛИ регистратор не может делать запрос в архив)
+        else 
         {
-            // Запускаем стандартную корутину регистрации/направления
+            // Стандартная регистрация
             yield return staff.StartCoroutine(HandleStandardRegistration(registrar, client));
 
-            // Завершаем здесь, ТОЛЬКО если действие не завершилось внутри HandleStandardRegistration
-            // (например, при отправке архивного клиента домой)
-            // Проверяем, существует ли еще этот Executor (не был ли он уже завершен)
+            // Проверяем, существует ли еще этот Executor
             if (this != null)
             {
-                // Если Executor еще существует, значит, стандартная регистрация прошла успешно (клиент направлен)
-                registrar.ServiceComplete(); // Засчитываем обслуживание
-                ExperienceManager.Instance?.GrantXP(staff, actionData.actionType); // Даем опыт
-                FinishAction(true); // Завершаем действие успешно
-                 Debug.Log($"[ServiceAtRegistrationExecutor] Стандартное обслуживание {client.name} завершено {registrar.name}.");
-            }
-            else
-            {
-                 Debug.Log($"[ServiceAtRegistrationExecutor] Действие для {client.name} было завершено внутри HandleStandardRegistration.");
+                // Наносим урон стойке при успешном стандартном обслуживании
+                if (currentDurabilityComponent != null) 
+                {
+                    currentDurabilityComponent.Degrade(Random.Range(1f, 3f));
+                }
+
+                registrar.ServiceComplete(); 
+                ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
+                FinishAction(true); 
             }
         }
     } // Конец ActionRoutine
@@ -84,46 +93,47 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
     // Корутина для стандартной регистрации (направления клиента)
     private IEnumerator HandleStandardRegistration(ClerkController registrar, ClientPathfinding client)
     {
-        // Небольшая задержка для имитации работы
-        yield return new WaitForSeconds(Random.Range(1f, 2.5f));
+        // --- ПРИМЕНЕНИЕ ЭФФЕКТИВНОСТИ ---
+        // Задержка зависит от состояния стойки
+        float waitTime = Random.Range(1f, 2.5f) / currentEfficiency;
+        yield return new WaitForSeconds(waitTime);
 
         // Проверяем состояние клиента еще раз перед действием
          if (client == null || client.stateMachine == null) {
               Debug.LogWarning("[HandleStandardRegistration] Клиент исчез во время ожидания.");
-              FinishAction(false); // Завершаем, так как клиента больше нет
+              FinishAction(false); 
               yield break;
          }
 
         // Проверяем цель "Архив" ДО основного определения цели
         if (client.mainGoal == ClientGoal.GetArchiveRecord)
         {
-             // Если цель - архив, а мы попали сюда (т.к. canMakeArchiveRequest == false),
-             // значит, эта функция у регистратора отключена. Отправляем клиента домой.
+             // Если цель - архив, а мы здесь (архив отключен), отправляем домой
              registrar.thoughtBubble?.ShowPriorityMessage("Извините, архив\nсегодня не работает.", 3f, Color.red);
-             yield return new WaitForSeconds(1.5f); // Даем время прочитать
+             yield return new WaitForSeconds(1.5f); 
 
-             if (client == null || client.stateMachine == null) yield break; // Перепроверка
+             if (client == null || client.stateMachine == null) yield break; 
 			 
 			 client.ApplyStressJump(client.stressJump_Refusal * 1.5f);
 
-             // Снимаем с очереди, если он там был
              if (client.stateMachine.MyQueueNumber != -1)
              {
                  ClientQueueManager.Instance?.RemoveClientFromQueue(client);
              }
              client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint); // Используем безопасный доступ
+             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint); 
              client.stateMachine.SetState(ClientState.LeavingUpset);
-              Debug.Log($"[HandleStandardRegistration] Клиент {client.name} отправлен домой (архив недоступен).");
+             
+             // Наносим урон даже при отказе (поговорили же)
+             if (currentDurabilityComponent != null) currentDurabilityComponent.Degrade(1f);
 
-
-             FinishAction(true); // Завершаем Executor (действие выполнено - клиент отправлен)
-             yield break; // Выходим из корутины
+             FinishAction(true); 
+             yield break; 
         }
 
         // Определяем правильный пункт назначения для клиента
         Waypoint correctDestination = DetermineCorrectGoalForClient(client);
-        Waypoint actualDestination = correctDestination; // По умолчанию отправляем правильно
+        Waypoint actualDestination = correctDestination; 
 
         // Рассчитываем шанс ошибки при направлении
         float baseSuccessChance = 0.7f;
@@ -134,12 +144,10 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         // Проверяем, произошла ли ошибка
         if (Random.value > finalChance)
         {
-            Debug.LogWarning($"[Registration] ПРОВАЛ НАПРАВЛЕНИЯ! Регистратор {registrar.name} ошибся с клиентом {client.name}. Шанс был {finalChance:P0}");
-			
-			client.ApplyStressJump(0.05f); 
+            Debug.LogWarning($"[Registration] ПРОВАЛ НАПРАВЛЕНИЯ! Регистратор {registrar.name} ошибся.");
+            client.ApplyStressJump(0.05f); 
 			registrar.thoughtBubble?.ShowPriorityMessage("Эээ... наверное туда...", 2f, Color.yellow);
 			
-            // Собираем список возможных НЕПРАВИЛЬНЫХ пунктов назначения
             List<Waypoint> possibleDestinations = new List<Waypoint>();
             if (ClientSpawner.Instance != null) {
                 possibleDestinations.Add(ClientSpawner.GetQuietestZone(ClientSpawner.Instance.category1DeskZones)?.waitingWaypoint);
@@ -148,196 +156,136 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 if (ClientSpawner.Instance.toiletZone != null) possibleDestinations.Add(ClientSpawner.Instance.toiletZone.waitingWaypoint);
             }
              if (ClientQueueManager.Instance != null) {
-                possibleDestinations.Add(ClientQueueManager.Instance.ChooseNewGoal(client)); // Вернуться в очередь ожидания
+                possibleDestinations.Add(ClientQueueManager.Instance.ChooseNewGoal(client)); 
              }
 
-            // Убираем null значения и правильный пункт назначения
             possibleDestinations.RemoveAll(item => item == null || item == correctDestination);
 
             if (possibleDestinations.Count > 0)
             {
                 actualDestination = possibleDestinations[Random.Range(0, possibleDestinations.Count)];
-                 Debug.Log($" -> Отправлен неверно к {actualDestination.name}");
-            } else {
-                 Debug.Log(" -> Не найдено неверных точек, отправлен правильно.");
             }
-        } else {
-             Debug.Log($"[Registration] Успешное направление {client.name} регистратором {registrar.name}. Шанс был {finalChance:P0}");
         }
 
-
-         // Проверяем клиента еще раз перед отправкой
+         // Проверяем клиента еще раз
          if (client == null || client.stateMachine == null || actualDestination == null) {
-              Debug.LogWarning("[HandleStandardRegistration] Клиент или точка назначения исчезли перед отправкой.");
-              FinishAction(false); // Завершаем, так как что-то пошло не так
+              FinishAction(false); 
               yield break;
          }
 
-
-        // Формируем сообщение для клиента
         string destinationName = string.IsNullOrEmpty(actualDestination.friendlyName) ?
                                 actualDestination.name : actualDestination.friendlyName;
         string directionMessage = $"Пройдите, пожалуйста, к\n'{destinationName}'";
         registrar.thoughtBubble?.ShowPriorityMessage(directionMessage, 3f, Color.white);
 
-        // Если клиент был в основной очереди, удаляем его
         if (client.stateMachine.MyQueueNumber != -1)
         {
             ClientQueueManager.Instance?.RemoveClientFromQueue(client);
         }
 
-        // Отправляем клиента
         client.stateMachine.SetGoal(actualDestination);
         client.stateMachine.SetState(ClientState.MovingToGoal);
-         Debug.Log($" -> Клиент {client.name} отправлен к {actualDestination.name}.");
-
-        // НЕ ВЫЗЫВАЕМ FinishAction здесь, он будет вызван в основном ActionRoutine
-    } // Конец HandleStandardRegistration
+    } 
 
     // Корутина для обработки запроса в архив
     private IEnumerator HandleArchiveRequest(ClerkController registrar, ClientPathfinding client)
     {
-        // Проверяем наличие менеджера запросов
         if (ArchiveRequestManager.Instance == null) {
-            Debug.LogError("[HandleArchiveRequest] ArchiveRequestManager не найден! Невозможно обработать запрос.");
-            // Отправляем клиента домой
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
             client.stateMachine.SetState(ClientState.LeavingUpset);
-            FinishAction(true); // Завершаем действие (клиент отправлен)
+            FinishAction(true); 
             yield break;
         }
-         // Проверяем клиента
          if (client == null || client.stateMachine == null) {
-             Debug.LogWarning("[HandleArchiveRequest] Клиент исчез до создания запроса.");
              FinishAction(false);
              yield break;
          }
 
-        // Создаем запрос
         ArchiveRequestManager.Instance.CreateRequest(registrar, client);
-        Debug.Log($"[HandleArchiveRequest] Запрос создан для {client.name} регистратором {registrar.name}.");
-        // Устанавливаем состояния ожидания
         registrar.SetState(ClerkController.ClerkState.WaitingForArchive);
         client.stateMachine.SetState(ClientState.WaitingForDocument);
 
-        // Находим стол архивариуса (ID=3)
         var archivistDesk = ScenePointsRegistry.Instance?.GetServicePointByID(3);
         if (archivistDesk == null)
         {
-             Debug.LogError("[HandleArchiveRequest] Стол архивариуса (ID=3) не найден! Некуда идти за запросом.");
-            // Отправляем клиента домой
-             if (client != null && client.stateMachine != null) { // Перепроверка
+             if (client != null && client.stateMachine != null) { 
                  client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
                  client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
                  client.stateMachine.SetState(ClientState.LeavingUpset);
              }
-            // Возвращаем регистратора к работе
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
             yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
-            FinishAction(true); // Завершаем действие
+            FinishAction(true); 
             yield break;
         }
 
-        // Отправляем регистратора к столу архивариуса
-        Debug.Log($"[HandleArchiveRequest] {registrar.name} идет к столу архивариуса ({archivistDesk.name}).");
         yield return staff.StartCoroutine(registrar.MoveToTarget(archivistDesk.clerkStandPoint.position, ClerkController.ClerkState.WaitingForArchive.ToString()));
-         Debug.Log($"[HandleArchiveRequest] {registrar.name} прибыл к столу архивариуса и ожидает.");
 
-        // Ожидаем выполнения запроса (максимум 60 секунд)
+        // Ожидаем выполнения запроса
         float waitTimer = 0f;
         float maxWaitTime = 60f;
         bool requestFulfilled = false;
-        // --- ИЗМЕНЕНИЕ: Получаем СЛЕДУЮЩИЙ запрос из очереди, предполагая, что он наш ---
-        // Это менее надежно, если запросы могут обрабатываться не по порядку, но проще в реализации без GetRequestForClient
-        ArchiveRequest request = ArchiveRequestManager.Instance.GetOurRequest(registrar); // Используем гипотетический метод для поиска *нашего* запроса
-        // --- КОНЕЦ ИЗМЕНЕНИЯ ---
+        ArchiveRequest request = ArchiveRequestManager.Instance.GetOurRequest(registrar); 
 
         while(waitTimer < maxWaitTime)
         {
-             // Проверяем клиента
-             if (client == null || client.stateMachine == null) {
-                 Debug.LogWarning($"[HandleArchiveRequest] Клиент {client?.name ?? "N/A"} исчез во время ожидания архива.");
-                 // ArchiveRequestManager.Instance.CancelRequest(request); // Метод CancelRequest отсутствует
-                 // Просто выходим из ожидания
-                 break;
-             }
-             // Проверяем состояние клиента (мог уйти сам)
+             if (client == null || client.stateMachine == null) { break; }
              ClientState clientState = client.stateMachine.GetCurrentState();
-             if (clientState == ClientState.Leaving || clientState == ClientState.LeavingUpset) {
-                 Debug.LogWarning($"[HandleArchiveRequest] Клиент {client.name} ушел ({clientState}) во время ожидания архива.");
-                 // ArchiveRequestManager.Instance.CancelRequest(request); // Метод CancelRequest отсутствует
-                 break; // Выходим из ожидания
-             }
+             if (clientState == ClientState.Leaving || clientState == ClientState.LeavingUpset) { break; }
 
-             // --- ИЗМЕНЕНИЕ: Проверяем статус НАШЕГО запроса ---
             if (request != null && request.IsFulfilled)
             {
                 requestFulfilled = true;
-                Debug.Log($"[HandleArchiveRequest] Запрос для {client.name} выполнен.");
-                break; // Выходим из цикла, если запрос выполнен
+                break; 
             }
-             // Если наш запрос еще не взят или не выполнен, проверяем, есть ли вообще запросы в очереди
-             // Это нужно, чтобы GetNextRequest не "съел" чужой запрос, если наш еще не обработан
              else if (request == null && ArchiveRequestManager.Instance.HasPendingRequests())
              {
-                 // Пытаемся получить наш запрос снова, если он еще не был взят архивариусом
                  request = ArchiveRequestManager.Instance.GetOurRequest(registrar);
              }
-             // --- КОНЕЦ ИЗМЕНЕНИЯ ---
 
-            waitTimer += Time.deltaTime; // Увеличиваем таймер
-            yield return null; // Ждем следующего кадра
+            waitTimer += Time.deltaTime; 
+            yield return null; 
         }
 
-        // Обработка результата ожидания
-        if (requestFulfilled) // Запрос выполнен успешно
+        if (requestFulfilled) 
         {
-             Debug.Log($"[HandleArchiveRequest] {registrar.name} получил документ для {client.name}.");
-            registrar.GetComponent<StackHolder>()?.ShowSingleDocumentSprite(); // Показываем документ
-            registrar.SetState(ClerkController.ClerkState.ReturningToWork); // Статус "Возвращается к работе"
-            // Возвращаемся на свое рабочее место
+            registrar.GetComponent<StackHolder>()?.ShowSingleDocumentSprite(); 
+            registrar.SetState(ClerkController.ClerkState.ReturningToWork); 
             yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
-            registrar.GetComponent<StackHolder>()?.HideStack(); // Прячем документ
+            registrar.GetComponent<StackHolder>()?.HideStack(); 
 
-            // Проверяем, что клиент все еще здесь и ждет
             if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.WaitingForDocument)
             {
-                client.billToPay += 150; // Выставляем счет
-                Debug.Log($"[HandleArchiveRequest] Клиент {client.name} получил документ и отправлен в кассу (Счет: {client.billToPay}).");
-                // Отправляем клиента в кассу
-                client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint); // Безопасный доступ
+                client.billToPay += 150; 
+                client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint); 
                 client.stateMachine.SetState(ClientState.MovingToGoal);
-            } else {
-                // Если клиент ушел, пока регистратор возвращался
-                 Debug.LogWarning($"[HandleArchiveRequest] Клиент {client?.name ?? "N/A"} ушел до получения документа из архива от {registrar.name}.");
-                 // Документ просто исчезает
             }
         }
-        else // Запрос НЕ был выполнен (таймаут или клиент ушел)
+        else 
         {
-             Debug.LogWarning($"[HandleArchiveRequest] Запрос для {client?.name ?? "N/A"} не выполнен (Таймаут: {waitTimer >= maxWaitTime}).");
-             // Если клиент еще не ушел сам
              if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() != ClientState.Leaving && client.stateMachine.GetCurrentState() != ClientState.LeavingUpset)
              {
                  registrar.thoughtBubble?.ShowPriorityMessage("Архив не отвечает...\nИзвините.", 3f, Color.red);
-                 yield return new WaitForSeconds(1.0f); // Короткая пауза
-                 // Отправляем клиента домой
+                 yield return new WaitForSeconds(1.0f); 
                  client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
                  client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
                  client.stateMachine.SetState(ClientState.LeavingUpset);
-                  Debug.Log($" -> Клиент {client.name} отправлен домой из-за таймаута архива.");
              }
-             // Возвращаем регистратора к работе в любом случае
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
             yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
         }
 
-        // Завершаем действие регистратора в любом случае после возвращения
-        registrar.ServiceComplete(); // Засчитываем обслуживание (даже если клиент ушел, попытка была)
-        ExperienceManager.Instance?.GrantXP(staff, actionData.actionType); // Даем опыт
-        FinishAction(true); // Завершаем выполнение Executor'а
-        Debug.Log($"[HandleArchiveRequest] Завершение действия для регистратора {registrar.name}.");
+        // --- НАНЕСЕНИЕ УРОНА СТОЙКЕ (даже при архиве, он ее использует) ---
+        if (currentDurabilityComponent != null) 
+        {
+            currentDurabilityComponent.Degrade(Random.Range(1f, 3f));
+        }
+        // ------------------------------------------------------------------
+
+        registrar.ServiceComplete(); 
+        ExperienceManager.Instance?.GrantXP(staff, actionData.actionType); 
+        FinishAction(true); 
 
     } // Конец HandleArchiveRequest
 
@@ -345,25 +293,19 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
     // Вспомогательный метод для определения правильной цели клиента
     private Waypoint DetermineCorrectGoalForClient(ClientPathfinding client)
     {
-         // Проверка на null
         if (client == null || ClientSpawner.Instance == null) {
-            Debug.LogError("[DetermineCorrectGoal] Client или ClientSpawner == null!");
-            return ClientSpawner.Instance?.exitWaypoint; // Попытка отправить на выход в случае ошибки
+            return ClientSpawner.Instance?.exitWaypoint; 
         }
 
-
-        // Если есть неоплаченный счет, всегда отправляем в кассу
         if (client.billToPay > 0)
         {
              LimitedCapacityZone cashierZone = ClientSpawner.GetCashierZone();
              if (cashierZone == null || cashierZone.waitingWaypoint == null) {
-                 Debug.LogError($"Касса или ее точка ожидания не найдена для клиента {client.name} со счетом!");
-                 return ClientSpawner.Instance.exitWaypoint; // Отправляем домой, если кассы нет
+                 return ClientSpawner.Instance.exitWaypoint; 
              }
              return cashierZone.waitingWaypoint;
         }
 
-        // Определяем цель в зависимости от mainGoal клиента
         LimitedCapacityZone targetZone = null;
         Waypoint targetWaypoint = null;
 
@@ -372,32 +314,24 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             case ClientGoal.PayTax:
                  targetZone = ClientSpawner.GetCashierZone();
                  targetWaypoint = targetZone?.waitingWaypoint;
-                 if (targetWaypoint == null) Debug.LogError($"Цель PayTax: Касса или ее точка ожидания не найдена для {client.name}!");
                 break;
             case ClientGoal.GetCertificate1:
                  targetZone = ClientSpawner.GetDesk1Zone();
                  targetWaypoint = targetZone?.waitingWaypoint;
-                 if (targetWaypoint == null) Debug.LogError($"Цель GetCertificate1: Зона Desk1 или ее точка ожидания не найдена для {client.name}!");
                 break;
             case ClientGoal.GetCertificate2:
                  targetZone = ClientSpawner.GetDesk2Zone();
                  targetWaypoint = targetZone?.waitingWaypoint;
-                  if (targetWaypoint == null) Debug.LogError($"Цель GetCertificate2: Зона Desk2 или ее точка ожидания не найдена для {client.name}!");
                break;
-
-            // Случай GetArchiveRecord обрабатывается ранее
-            case ClientGoal.AskAndLeave: // Если цель просто спросить
-            case ClientGoal.VisitToilet: // Если цель была туалет (но он уже у регистратора)
-            default: // Все остальные неопределенные цели
+            case ClientGoal.AskAndLeave: 
+            case ClientGoal.VisitToilet: 
+            default: 
                 client.isLeavingSuccessfully = true;
                 client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-                targetWaypoint = ClientSpawner.Instance.exitWaypoint; // Отправляем на выход
-                if (targetWaypoint == null) Debug.LogError($"Точка выхода (ExitWaypoint) не найдена для {client.name}!");
+                targetWaypoint = ClientSpawner.Instance.exitWaypoint; 
                 break;
         }
 
-        // Возвращаем найденную точку или точку выхода в случае ошибки
         return targetWaypoint ?? ClientSpawner.Instance.exitWaypoint;
-    } // Конец DetermineCorrectGoalForClient
-
-} // Конец класса ServiceAtRegistrationExecutor
+    } 
+}

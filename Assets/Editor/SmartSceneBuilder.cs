@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Globalization;
 using System.Linq;
 using System.IO;
+using System.Text.RegularExpressions;
 
 public class SmartSceneBuilder : EditorWindow
 {
@@ -29,49 +30,14 @@ public class SmartSceneBuilder : EditorWindow
     int countModify = 0;
     int countAsset = 0;
 
-    private const string SYSTEM_PROMPT = @"Ты — Unity Scene Architect. Твоя задача — генерировать JSON для SmartSceneBuilder.
-!!! ПРАВИЛА !!!
-1. Unity JsonUtility НЕ понимает словари. Используй СПИСОК для свойств: ""properties"": [ { ""name"": ""x"", ""value"": ""y"" } ]
-2. СПИСКИ (List/Array): Строка в скобках ""[Path1, Path2]""
-3. ССЫЛКИ: 
-   - Если указываешь полный путь к файлу (Assets/...), знак '$' НЕ нужен.
-   - Используй '$Name' только если хочешь, чтобы я выбрал файл вручную.
-4. РЕЖИМЫ: 'create', 'modify' (Сцена) и 'create_asset' (Файлы ScriptableObject).
+    private const string SYSTEM_PROMPT = @"Ты — Unity Scene Architect. Твоя задача — генерировать JSON для SmartSceneBuilder.";
 
-ШАБЛОН:
-{
-  ""operations"": [
-    {
-      ""mode"": ""create_asset"",
-      ""targetPath"": ""Assets/Data/Region_1.asset"", 
-      ""type"": ""RegionData"",
-      ""properties"": [ { ""name"": ""id"", ""value"": ""R1"" } ]
-    },
-    {
-      ""mode"": ""modify"",
-      ""targetPath"": ""Manager"",
-      ""components"": [ { ""type"": ""GameManager"", ""properties"": [ { ""name"": ""regions"", ""value"": ""[Assets/Data/Region_1.asset]"" } ] } ]
-    }
-  ]
-}";
-
-    [MenuItem("Tools/Smart Scene Builder v6.2 (Arrays Fix)")]
+    [MenuItem("Tools/AI Toolset/Smart Scene Builder")]
     public static void ShowWindow() => GetWindow<SmartSceneBuilder>("Scene Builder");
 
     void OnGUI()
     {
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
-
-        EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-        showPromptSettings = EditorGUILayout.Foldout(showPromptSettings, "🤖 Промпт", true);
-        if (showPromptSettings) {
-            GUILayout.Label("Скопируйте в чат:", EditorStyles.miniLabel);
-            if (GUILayout.Button("📋 Скопировать")) {
-                GUIUtility.systemCopyBuffer = SYSTEM_PROMPT;
-                ShowNotification(new GUIContent("Скопировано!"));
-            }
-        }
-        EditorGUILayout.EndVertical();
 
         GUILayout.Space(10);
         GUILayout.Label("1. Настройки", EditorStyles.boldLabel);
@@ -80,17 +46,20 @@ public class SmartSceneBuilder : EditorWindow
         updateExistingObjects = EditorGUILayout.ToggleLeft("Обновлять существующие", updateExistingObjects);
 
         GUILayout.Space(10);
-        GUILayout.Label("2. JSON", EditorStyles.boldLabel);
+        GUILayout.Label("2. JSON Input", EditorStyles.boldLabel);
         GUIStyle areaStyle = new GUIStyle(EditorStyles.textArea); areaStyle.wordWrap = true;
+        
         string newJson = EditorGUILayout.TextArea(jsonInput, areaStyle, GUILayout.Height(150));
         if (newJson != jsonInput) { jsonInput = newJson; needsAnalysis = true; }
 
-        if (GUILayout.Button("🔍 Анализировать", GUILayout.Height(30))) AnalyzeJSON();
+        if (GUILayout.Button("🔍 Анализировать JSON", GUILayout.Height(30))) AnalyzeJSON();
 
         if (instructionData != null && !needsAnalysis)
         {
             GUILayout.Space(15);
-            string summary = $"Ops: {instructionData.operations.Count} | Scene: {countCreate + countModify} | Assets: {countAsset}";
+            int totalOps = (instructionData.operations != null ? instructionData.operations.Count : 0);
+            
+            string summary = $"Ops: {totalOps} | Scene: {countCreate + countModify} | Assets: {countAsset}";
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             showPreview = EditorGUILayout.Foldout(showPreview, summary, true);
             if (showPreview) {
@@ -103,12 +72,9 @@ public class SmartSceneBuilder : EditorWindow
 
             if (assetMap.Count > 0) {
                 GUILayout.Space(10);
-                GUILayout.Label($"Укажите вручную ({assetMap.Count}):", EditorStyles.boldLabel);
+                GUILayout.Label($"Укажите ссылки вручную ({assetMap.Count}):", EditorStyles.boldLabel);
                 List<string> keys = new List<string>(assetMap.Keys);
                 foreach (var key in keys) assetMap[key] = EditorGUILayout.ObjectField(key, assetMap[key], typeof(UnityEngine.Object), false);
-            }
-            else {
-                 GUILayout.Label("Ссылки автоматические или отсутствуют.", EditorStyles.miniLabel);
             }
             
             GUILayout.Space(15);
@@ -127,10 +93,20 @@ public class SmartSceneBuilder : EditorWindow
     void AnalyzeJSON()
     {
         try {
-            instructionData = JsonUtility.FromJson<InstructionData>(jsonInput);
-            assetMap.Clear(); previewLog.Clear(); countCreate = 0; countModify = 0; countAsset = 0;
+            string cleanJson = RemoveComments(jsonInput);
+            instructionData = JsonUtility.FromJson<InstructionData>(cleanJson);
+            NormalizeData(); 
 
-            if (instructionData?.operations == null) { Debug.LogError("Неверный JSON."); return; }
+            assetMap.Clear(); previewLog.Clear(); countCreate = 0;
+            countModify = 0; countAsset = 0;
+
+            if (instructionData == null) { Debug.LogError("Неверный JSON (null result)."); return; }
+            
+            if (instructionData.operations == null || instructionData.operations.Count == 0) 
+            { 
+                Debug.LogWarning("JSON валиден, но операций не найдено. Проверьте ключи ('operations' или 'ops')."); 
+                return;
+            }
 
             foreach(var op in instructionData.operations) {
                 if (op.mode == "create") countCreate++; 
@@ -147,8 +123,53 @@ public class SmartSceneBuilder : EditorWindow
         }
         catch (Exception e) { Debug.LogError($"JSON Error: {e.Message}"); }
     }
+
+    string RemoveComments(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return json;
+        var lines = json.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var filteredLines = lines.Where(l => !l.TrimStart().StartsWith("//"));
+        return string.Join("\n", filteredLines);
+    }
+
+    void NormalizeData()
+    {
+        if (instructionData == null) return;
+        if (instructionData.operations == null) instructionData.operations = new List<OperationData>();
+        if (instructionData.ops != null) instructionData.operations.AddRange(instructionData.ops);
+
+        foreach (var op in instructionData.operations)
+        {
+            if (string.IsNullOrEmpty(op.mode)) op.mode = op.m;
+            if (string.IsNullOrEmpty(op.targetPath)) op.targetPath = op.t;
+            if (string.IsNullOrEmpty(op.name)) op.name = op.n;
+            if (string.IsNullOrEmpty(op.type)) op.type = op.tp; 
+
+            if (op.components == null) op.components = new List<ComponentData>();
+            if (op.c != null) op.components.AddRange(op.c);
+
+            if (op.properties == null) op.properties = new List<PropertyData>();
+            if (op.p != null) op.properties.AddRange(op.p);
+
+            foreach (var comp in op.components)
+            {
+                if (string.IsNullOrEmpty(comp.type)) comp.type = comp.tp;
+                if (comp.properties == null) comp.properties = new List<PropertyData>();
+                if (comp.p != null) comp.properties.AddRange(comp.p);
+                foreach (var prop in comp.properties) NormalizeProperty(prop);
+            }
+            foreach (var prop in op.properties) NormalizeProperty(prop);
+        }
+    }
+
+    void NormalizeProperty(PropertyData prop)
+    {
+        if (string.IsNullOrEmpty(prop.name)) prop.name = prop.nm;
+        if (string.IsNullOrEmpty(prop.value)) prop.value = prop.v;
+    }
     
     void CollectRefs(List<PropertyData> props) {
+        if (props == null) return;
         foreach(var prop in props) {
             if(!string.IsNullOrEmpty(prop.value)) {
                 if (prop.value.StartsWith("$") && !prop.value.StartsWith("$Assets")) {
@@ -181,6 +202,17 @@ public class SmartSceneBuilder : EditorWindow
             return;
         }
 
+        // --- НОВАЯ ЛОГИКА: Работа с Префабами в папке Assets ---
+        if ((op.mode == "modify" || op.mode == "create") && 
+            !string.IsNullOrEmpty(op.targetPath) && 
+            op.targetPath.StartsWith("Assets") && 
+            op.targetPath.EndsWith(".prefab"))
+        {
+            HandleModifyPrefab(op);
+            return;
+        }
+        // -----------------------------------------------------
+
         GameObject foundTarget = ResolveTarget(op.targetPath);
         
         if (op.mode == "create") {
@@ -194,6 +226,40 @@ public class SmartSceneBuilder : EditorWindow
             HandleModifySceneObject(op, foundTarget);
         }
     }
+
+    // --- НОВЫЙ МЕТОД ДЛЯ ПРЕФАБОВ ---
+    void HandleModifyPrefab(OperationData op)
+    {
+        string path = op.targetPath;
+        if (!File.Exists(path))
+        {
+            Debug.LogError($"[PREFAB FAIL] Файл не найден: {path}");
+            return;
+        }
+
+        // Загружаем содержимое префаба во временную сцену
+        GameObject contentsRoot = PrefabUtility.LoadPrefabContents(path);
+
+        try
+        {
+            // Применяем компоненты так же, как к обычному объекту
+            ApplyComponents(contentsRoot, op.components);
+            
+            // Сохраняем изменения обратно в файл
+            PrefabUtility.SaveAsPrefabAsset(contentsRoot, path);
+            Debug.Log($"[PREFAB MODIFIED] {path}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Ошибка при изменении префаба {path}: {e.Message}");
+        }
+        finally
+        {
+            // Обязательно выгружаем
+            PrefabUtility.UnloadPrefabContents(contentsRoot);
+        }
+    }
+    // --------------------------------
 
     void HandleCreateAsset(OperationData op)
     {
@@ -219,7 +285,6 @@ public class SmartSceneBuilder : EditorWindow
         
         if (isNew) {
             Debug.Log($"[ASSET CREATED] {op.targetPath}");
-            // Важно: Импортируем сразу, чтобы другие операции могли его найти
             AssetDatabase.ImportAsset(op.targetPath);
         }
         EditorUtility.SetDirty(asset);
@@ -270,7 +335,6 @@ public class SmartSceneBuilder : EditorWindow
         }
     }
 
-    // --- FIX: УЛУЧШЕННАЯ ОБРАБОТКА МАССИВОВ ---
     void ApplyProperty(UnityEngine.Object obj, string propName, string val)
     {
         Type type = obj.GetType();
@@ -280,15 +344,11 @@ public class SmartSceneBuilder : EditorWindow
         
         if (targetType == null) return; 
 
-        // Проверяем, является ли целевой тип Списком или Массивом
         bool isList = targetType.IsGenericType && typeof(IList).IsAssignableFrom(targetType);
         bool isArray = targetType.IsArray;
 
         if (isList || isArray) {
-            // Определяем тип элемента
             Type itemType = isArray ? targetType.GetElementType() : targetType.GetGenericArguments()[0];
-            
-            // Создаем временный список для сбора данных
             var tempList = new List<object>();
 
             string cleanVal = val.Trim().Trim('[', ']');
@@ -300,19 +360,14 @@ public class SmartSceneBuilder : EditorWindow
                 }
             }
 
-            // ПРИСВАИВАНИЕ
             if (isArray) {
-                // Если это массив -> создаем Array и копируем
                 Array array = Array.CreateInstance(itemType, tempList.Count);
                 for (int i = 0; i < tempList.Count; i++) array.SetValue(tempList[i], i);
-                
                 if (field != null) field.SetValue(obj, array); else prop.SetValue(obj, array);
             }
             else {
-                // Если это List<T> -> создаем List и копируем
                 IList listInstance = (IList)Activator.CreateInstance(targetType);
                 foreach (var item in tempList) listInstance.Add(item);
-                
                 if (field != null) field.SetValue(obj, listInstance); else prop.SetValue(obj, listInstance);
             }
         }
@@ -327,10 +382,7 @@ public class SmartSceneBuilder : EditorWindow
     object ParseValue(string val, Type targetType)
     {
         if (string.IsNullOrEmpty(val)) return null;
-        
-        // AUTO-LINK
         if (val.StartsWith("$Assets")) val = val.Substring(1);
-
         if (val.StartsWith("$")) return assetMap.ContainsKey(val) ? assetMap[val] : null;
         
         if (targetType == typeof(string)) return val;
@@ -372,19 +424,54 @@ public class SmartSceneBuilder : EditorWindow
 
     Type FindType(string name) {
         if (string.IsNullOrEmpty(name)) return null;
+        
+        // 1. Прямой поиск (если указано полное имя)
         Type t = Type.GetType(name);
         if (t != null) return t;
-        foreach (var a in AppDomain.CurrentDomain.GetAssemblies()) {
-            foreach(var type in a.GetTypes()) if(type.Name == name || type.FullName == name) return type;
+
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+
+        // 2. ПРИОРИТЕТ: Ищем сначала в пользовательских скриптах (Assembly-CSharp)
+        // Это решит проблему с ServicePoint (ваш скрипт vs системный)
+        var userAssembly = assemblies.FirstOrDefault(a => a.GetName().Name == "Assembly-CSharp");
+        if (userAssembly != null) {
+            var userType = userAssembly.GetTypes().FirstOrDefault(type => type.Name == name || type.FullName == name);
+            if (userType != null) return userType;
+        }
+
+        // 3. Если не нашли у нас — ищем везде (Unity Engine, System и т.д.)
+        foreach (var a in assemblies) {
+            if (a.GetName().Name == "Assembly-CSharp") continue; // Уже проверили
+            
+            foreach(var type in a.GetTypes()) {
+                if(type.Name == name || type.FullName == name) return type;
+            }
         }
         return null;
     }
 
-    [Serializable] public class InstructionData { public List<OperationData> operations; }
-    [Serializable] public class OperationData { 
-        public string mode; public string targetPath; public string name; public string type; 
-        public List<ComponentData> components; public List<PropertyData> properties; 
+    [Serializable] public class InstructionData { 
+        public List<OperationData> operations; 
+        public List<OperationData> ops; 
     }
-    [Serializable] public class ComponentData { public string type; public List<PropertyData> properties; }
-    [Serializable] public class PropertyData { public string name; public string value; }
+    
+    [Serializable] public class OperationData { 
+        public string mode; public string m;
+        public string targetPath; public string t;
+        public string name; public string n;
+        public string type; public string tp; 
+        
+        public List<ComponentData> components; public List<ComponentData> c;
+        public List<PropertyData> properties; public List<PropertyData> p;
+    }
+    
+    [Serializable] public class ComponentData { 
+        public string type; public string tp;
+        public List<PropertyData> properties; public List<PropertyData> p;
+    }
+    
+    [Serializable] public class PropertyData { 
+        public string name; public string nm;
+        public string value; public string v;
+    }
 }

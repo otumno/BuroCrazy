@@ -1,3 +1,4 @@
+// Assets/Editor/ClipboardScriptCreator.cs
 using UnityEngine;
 using UnityEditor;
 using System.IO;
@@ -6,8 +7,8 @@ using System.Text.RegularExpressions;
 public class ClipboardScriptCreator
 {
     // Горячая клавиша: Ctrl + Alt + S
-    [MenuItem("Assets/Create/Script from Clipboard %&s")]
-    public static void CreateScriptFromClipboard()
+    [MenuItem("Assets/Create/File from Clipboard %&s")]
+    public static void CreateFileFromClipboard()
     {
         string clipboard = GUIUtility.systemCopyBuffer;
 
@@ -20,84 +21,66 @@ public class ClipboardScriptCreator
         string[] lines = clipboard.Split(new[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.None);
         string firstLine = lines[0].Trim();
         
-        string className = "";
+        string fileName = "";
         string fileContent = "";
         string finalPath = ""; 
 
         string cleanLine = firstLine.Replace("//", "").Trim();
-        bool isHeaderNaming = firstLine.StartsWith("//") && firstLine.EndsWith(".cs");
+        
+        // ПРОВЕРКА: Начинается с // и имеет расширение файла (например .cs, .asset, .json)
+        bool isHeaderNaming = firstLine.StartsWith("//") && Path.HasExtension(cleanLine);
 
         // --- 1. ПАРСИНГ ---
-        if (lines.Length == 1 && !firstLine.StartsWith("//"))
+        if (!isHeaderNaming)
         {
-            // Случай: Просто имя
-            className = Regex.Replace(firstLine, @"[^a-zA-Z0-9_]", "");
-            finalPath = Path.Combine(GetCurrentAssetDirectory(), className + ".cs");
-            
-            // Первую строку НЕ берем в файл
-            fileContent = 
+            // СТАРЫЙ РЕЖИМ: Если просто текст, создаем C# класс по умолчанию
+            if (lines.Length == 1 && Regex.IsMatch(firstLine, @"^[a-zA-Z0-9_]+$"))
+            {
+                fileName = firstLine;
+                finalPath = Path.Combine(GetCurrentAssetDirectory(), fileName + ".cs");
+                
+                fileContent = 
 $@"using UnityEngine;
 
-public class {className} : MonoBehaviour
+public class {fileName} : MonoBehaviour
 {{
     void Start() {{ }}
     void Update() {{ }}
 }}";
+            }
+            else
+            {
+                Debug.LogWarning("Формат не распознан. Первая строка должна быть '// Path/Name.ext' или просто ИмяКласса.");
+                return;
+            }
         }
-        else if (isHeaderNaming)
+        else
         {
-            // Случай: Заголовок с путем/именем
-            className = Path.GetFileNameWithoutExtension(cleanLine);
+            // НОВЫЙ РЕЖИМ: Берем путь и имя из первой строки
+            fileName = Path.GetFileNameWithoutExtension(cleanLine);
 
             if (cleanLine.Contains("/") || cleanLine.Contains("\\"))
                 finalPath = cleanLine.Replace("\\", "/");
             else
                 finalPath = Path.Combine(GetCurrentAssetDirectory(), cleanLine);
 
-            // Берем ВСЕ строки (включая заголовок)
-            fileContent = string.Join("\n", lines);
-        }
-        else
-        {
-            Debug.LogWarning("Формат не распознан. Ожидается '// Name.cs' или просто ИмяКласса.");
-            return;
-        }
-
-        // Нормализуем путь для корректного сравнения (Unity использует forward slashes)
-        finalPath = finalPath.Replace("\\", "/");
-
-
-        // --- 2. ПРОВЕРКА НА ДУРАКА (Глобальный поиск дубликатов) ---
-        // Ищем все скрипты с таким именем в проекте
-        string[] foundGuids = AssetDatabase.FindAssets($"t:MonoScript {className}");
-        
-        foreach (string guid in foundGuids)
-        {
-            string existingPath = AssetDatabase.GUIDToAssetPath(guid);
-            
-            // Проверяем, что имя файла реально совпадает (FindAssets ищет вхождения, может найти 'Player' в 'PlayerController')
-            if (Path.GetFileNameWithoutExtension(existingPath) == className)
+            // Если это .asset или другой файл данных, нам НЕ нужна первая строка с комментарием в самом файле
+            // Но для .cs она не мешает. 
+            // Для чистоты YAML/JSON лучше пропустить первую строку, если это не C# скрипт.
+            if (finalPath.EndsWith(".cs"))
             {
-                // Если файл найден, и это НЕ тот файл, который мы собираемся писать/перезаписывать
-                if (existingPath != finalPath)
-                {
-                    bool proceed = EditorUtility.DisplayDialog(
-                        "КОНФЛИКТ ИМЕН!",
-                        $"Внимание! Скрипт с классом '{className}' УЖЕ СУЩЕСТВУЕТ в другой папке:\n\n" +
-                        $"{existingPath}\n\n" +
-                        "Unity запрещает два класса с одинаковым именем.\n" +
-                        "Создание этого файла приведет к ошибке компиляции.",
-                        "Все равно создать (Риск)", // OK
-                        "Отмена"                   // Cancel
-                    );
-
-                    if (!proceed) return; // Выход, если нажали Отмена
-                }
+                 fileContent = string.Join("\n", lines);
+            }
+            else
+            {
+                // Для всех остальных файлов пропускаем строку с путем, чтобы не ломать формат (например, JSON не поддерживает //)
+                // Но YAML поддерживает #, а у нас //. Лучше убрать.
+                 fileContent = string.Join("\n", lines, 1, lines.Length - 1);
             }
         }
 
-
-        // --- 3. СОЗДАНИЕ ПАПОК ---
+        // --- 2. СОЗДАНИЕ ПАПОК ---
+        finalPath = finalPath.Replace("\\", "/");
         string directoryPath = Path.GetDirectoryName(finalPath);
         if (!string.IsNullOrEmpty(directoryPath) && !Directory.Exists(directoryPath))
         {
@@ -105,30 +88,17 @@ public class {className} : MonoBehaviour
             AssetDatabase.Refresh();
         }
 
-
-        // --- 4. ПРОВЕРКА ЛОКАЛЬНОГО ФАЙЛА (Перезапись) ---
         if (File.Exists(finalPath))
         {
-            int option = EditorUtility.DisplayDialogComplex(
-                "Файл уже существует",
-                $"Файл '{className}.cs' уже есть по этому пути. Перезаписать?",
-                "Перезаписать!",      // 0
-                "Отмена",             // 1
-                "Открыть в редакторе" // 2
-            );
-
-            switch (option)
-            {
-                case 0: break; // Продолжаем выполнение (перезапись)
-                case 1: return; 
-                case 2: 
-                    Object scriptAsset = AssetDatabase.LoadAssetAtPath<Object>(finalPath);
-                    if (scriptAsset != null) AssetDatabase.OpenAsset(scriptAsset);
-                    return; 
+            int option = EditorUtility.DisplayDialogComplex("Файл существует", $"Перезаписать {Path.GetFileName(finalPath)}?", "Да", "Отмена", "Открыть");
+            if (option == 1) return;
+            if (option == 2) { 
+                Object asset = AssetDatabase.LoadAssetAtPath<Object>(finalPath); 
+                if(asset) AssetDatabase.OpenAsset(asset); return; 
             }
         }
 
-        // --- 5. ЗАПИСЬ ---
+        // --- 3. ЗАПИСЬ ---
         File.WriteAllText(finalPath, fileContent);
         AssetDatabase.Refresh();
         
@@ -138,8 +108,7 @@ public class {className} : MonoBehaviour
             EditorGUIUtility.PingObject(createdAsset);
             Selection.activeObject = createdAsset;
         }
-        
-        Debug.Log($"Скрипт <b>{className}</b> успешно создан по пути: {finalPath}");
+        Debug.Log($"Файл <b>{Path.GetFileName(finalPath)}</b> создан: {finalPath}");
     }
 
     private static string GetCurrentAssetDirectory()
@@ -148,11 +117,8 @@ public class {className} : MonoBehaviour
         {
             string path = AssetDatabase.GetAssetPath(obj);
             if (string.IsNullOrEmpty(path)) continue;
-
-            if (Directory.Exists(path))
-                return path;
-            else if (File.Exists(path))
-                return Path.GetDirectoryName(path);
+            if (Directory.Exists(path)) return path;
+            else if (File.Exists(path)) return Path.GetDirectoryName(path);
         }
         return "Assets";
     }

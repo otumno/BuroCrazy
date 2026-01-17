@@ -10,14 +10,21 @@ using UnityEngine.SceneManagement;
 public class ProjectContextExporter : EditorWindow
 {
     // --- Настройки ---
+    private bool includeTOC = true;
     private bool includeHierarchy = true;
     private bool expandPrefabsInHierarchy = true;
     private bool includeProjectMap = true;
     private bool includeScriptContents = true;
-    private bool includeTOC = true;
+    
+    // --- НОВАЯ НАСТРОЙКА ---
+    private bool includeProjectAssets = true; // Включить структуру файлов проекта
 
     // Папки для поиска скриптов
     private List<string> scriptFolders = new List<string> { "Assets/Scripts", "Assets/Editor" };
+    
+    // Папки для сканирования ассетов (по умолчанию весь Assets)
+    private string assetRootFolder = "Assets"; 
+    
     private Vector2 scrollPos;
 
     [MenuItem("Tools/Project Context Exporter (AI Helper)")]
@@ -31,7 +38,7 @@ public class ProjectContextExporter : EditorWindow
         scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
         GUILayout.Label("Настройки Экспорта", EditorStyles.boldLabel);
 
-        // 1. Определение текущего контекста (что будем экспортировать)
+        // 1. Определение текущего контекста
         string contextMode = "All Open Scenes";
         if (PrefabStageUtility.GetCurrentPrefabStage() != null) contextMode = "Open Prefab";
         else if (Selection.activeGameObject != null) contextMode = "Selected Object Only";
@@ -40,7 +47,7 @@ public class ProjectContextExporter : EditorWindow
 
         // 2. Опции
         includeTOC = EditorGUILayout.Toggle("1. Добавить Оглавление", includeTOC);
-        includeHierarchy = EditorGUILayout.Toggle("2. Иерархия объектов", includeHierarchy);
+        includeHierarchy = EditorGUILayout.Toggle("2. Иерархия объектов (Scene)", includeHierarchy);
         if (includeHierarchy)
         {
             EditorGUI.indentLevel++;
@@ -50,12 +57,15 @@ public class ProjectContextExporter : EditorWindow
         
         includeProjectMap = EditorGUILayout.Toggle("3. Карта Связей (Refs)", includeProjectMap);
         includeScriptContents = EditorGUILayout.Toggle("4. Содержимое Скриптов", includeScriptContents);
+        
+        // --- НОВЫЙ TOGGLE ---
+        includeProjectAssets = EditorGUILayout.Toggle("5. Структура Ассетов (Project)", includeProjectAssets);
 
-        // 3. Выбор папок
+        // 3. Выбор папок скриптов
         if (includeScriptContents)
         {
             GUILayout.Space(10);
-            GUILayout.Label("Папки скриптов:", EditorStyles.boldLabel);
+            GUILayout.Label("Папки для чтения кода:", EditorStyles.boldLabel);
             for (int i = 0; i < scriptFolders.Count; i++)
             {
                 EditorGUILayout.BeginHorizontal();
@@ -63,7 +73,7 @@ public class ProjectContextExporter : EditorWindow
                 if (GUILayout.Button("X", GUILayout.Width(20))) scriptFolders.RemoveAt(i);
                 EditorGUILayout.EndHorizontal();
             }
-            if (GUILayout.Button("Добавить папку")) scriptFolders.Add("Assets/");
+            if (GUILayout.Button("Добавить папку кода")) scriptFolders.Add("Assets/");
         }
 
         GUILayout.Space(20);
@@ -93,8 +103,6 @@ public class ProjectContextExporter : EditorWindow
         {
             File.WriteAllText(path, result);
             Debug.Log($"<color=green>Файл сохранен: {path}</color>");
-            
-            // --- ДОБАВЛЕНО: Открытие папки ---
             EditorUtility.RevealInFinder(path);
         }
     }
@@ -102,7 +110,6 @@ public class ProjectContextExporter : EditorWindow
     private string GenerateFullReport()
     {
         StringBuilder sb = new StringBuilder();
-        int sourceCounter = 1;
 
         // --- Поиск скриптов ---
         List<string> scriptFiles = new List<string>();
@@ -114,8 +121,9 @@ public class ProjectContextExporter : EditorWindow
         if (includeTOC)
         {
             sb.AppendLine("=== PROJECT STRUCTURE & TOC ===");
-            if (includeHierarchy) sb.AppendLine("- HIERARCHY TREE (See below)");
+            if (includeHierarchy) sb.AppendLine("- HIERARCHY TREE (Scene View)");
             if (includeProjectMap) sb.AppendLine("- COMPONENT REFERENCE MAP");
+            if (includeProjectAssets) sb.AppendLine("- PROJECT ASSETS STRUCTURE (Folders)"); // Добавлено в TOC
             if (includeScriptContents)
             {
                 sb.AppendLine("- CODEBASE FILES:");
@@ -138,19 +146,16 @@ public class ProjectContextExporter : EditorWindow
 
             if (prefabStage != null)
             {
-                // Режим редактирования префаба
                 sb.AppendLine($"--- [PREFAB MODE: {prefabStage.prefabContentsRoot.name}] ---");
                 TraverseHierarchy(prefabStage.prefabContentsRoot.transform, sb, "", true);
             }
             else if (selectedObj != null)
             {
-                // Режим выделенного объекта
                 sb.AppendLine($"--- [SELECTED OBJECT: {selectedObj.name}] ---");
                 TraverseHierarchy(selectedObj.transform, sb, "", expandPrefabsInHierarchy);
             }
             else
             {
-                // Режим всей сцены (или нескольких)
                 for (int i = 0; i < SceneManager.sceneCount; i++)
                 {
                     Scene scene = SceneManager.GetSceneAt(i);
@@ -174,8 +179,6 @@ public class ProjectContextExporter : EditorWindow
         if (includeProjectMap)
         {
             sb.AppendLine("=== COMPONENT CONNECTIONS MAP ===");
-            
-            // Собираем список корневых объектов для анализа связей
             List<Transform> mapRoots = new List<Transform>();
 
             if (prefabStage != null) mapRoots.Add(prefabStage.prefabContentsRoot.transform);
@@ -194,6 +197,17 @@ public class ProjectContextExporter : EditorWindow
 
             foreach (var root in mapRoots) BuildReferenceMap(root, sb);
             sb.AppendLine("=================================\n");
+        }
+
+        // ==========================================
+        // 5. СТРУКТУРА АССЕТОВ (PROJECT VIEW) - НОВЫЙ БЛОК
+        // ==========================================
+        if (includeProjectAssets)
+        {
+            sb.AppendLine("=== PROJECT ASSETS STRUCTURE ===");
+            sb.AppendLine("Legend: Lists files in Assets folder (excluding .meta)");
+            TraverseProjectFolders(assetRootFolder, sb, "");
+            sb.AppendLine("================================\n");
         }
 
         // ==========================================
@@ -222,10 +236,8 @@ public class ProjectContextExporter : EditorWindow
     }
 
     // --- ЛОГИКА ОБХОДА ИЕРАРХИИ ---
-
     private void TraverseHierarchy(Transform obj, StringBuilder sb, string indent, bool expandPrefabs)
     {
-        // 1. Информация о префабе
         string prefabInfo = "";
         if (PrefabUtility.IsAnyPrefabInstanceRoot(obj.gameObject))
         {
@@ -233,24 +245,15 @@ public class ProjectContextExporter : EditorWindow
             prefabInfo = $"[PREFAB: {(source != null ? source.name : "Missing")}] ";
         }
 
-        // 2. Статусы (Inactive / Hidden)
         string activeStatus = obj.gameObject.activeSelf ? "" : "(INACTIVE) ";
-        
-        // SceneVisibilityManager позволяет узнать, скрыт ли объект "глазиком" в редакторе
         bool isHiddenInScene = SceneVisibilityManager.instance.IsHidden(obj.gameObject);
         string visibilityStatus = isHiddenInScene ? "(HIDDEN) " : "";
-
         string fullStatus = $"{activeStatus}{visibilityStatus}";
-
-        // 3. Список компонентов
         string components = GetComponentsString(obj.gameObject);
         
-        // 4. Запись строки
         sb.AppendLine($"{indent}{fullStatus}{obj.name} {prefabInfo}{components}");
 
-        // 5. Рекурсия
         bool isPrefabRoot = PrefabUtility.IsAnyPrefabInstanceRoot(obj.gameObject);
-        // Если это префаб и мы НЕ хотим их раскрывать (и это не корень экспорта), то останавливаемся
         if (isPrefabRoot && !expandPrefabs && indent.Length > 0)
         {
             sb.AppendLine($"{indent}  [...Prefab Hierarchy Hidden...]");
@@ -266,7 +269,7 @@ public class ProjectContextExporter : EditorWindow
     private string GetComponentsString(GameObject go)
     {
         var comps = go.GetComponents<Component>()
-            .Where(c => c != null && !(c is Transform)) // Исключаем Transform, он есть у всех
+            .Where(c => c != null && !(c is Transform))
             .Select(c => c.GetType().Name)
             .ToArray();
         
@@ -275,7 +278,6 @@ public class ProjectContextExporter : EditorWindow
     }
 
     // --- ЛОГИКА КАРТЫ СВЯЗЕЙ ---
-
     private void BuildReferenceMap(Transform obj, StringBuilder sb)
     {
         var components = obj.GetComponents<MonoBehaviour>();
@@ -291,11 +293,9 @@ public class ProjectContextExporter : EditorWindow
             while (prop.NextVisible(enter))
             {
                 enter = false;
-                // Ищем ссылки на объекты
                 if (prop.propertyType == SerializedPropertyType.ObjectReference && prop.objectReferenceValue != null)
                 {
-                    if (prop.name == "m_Script") continue; // Пропускаем ссылку на сам скрипт
-                    
+                    if (prop.name == "m_Script") continue;
                     refs.Add($"{prop.name} -> {prop.objectReferenceValue.name} ({prop.objectReferenceValue.GetType().Name})");
                 }
             }
@@ -317,8 +317,38 @@ public class ProjectContextExporter : EditorWindow
         }
     }
 
-    // --- ПОИСК СКРИПТОВ ---
+    // --- ЛОГИКА СТРУКТУРЫ АССЕТОВ (НОВАЯ) ---
+    private void TraverseProjectFolders(string path, StringBuilder sb, string indent)
+    {
+        if (!Directory.Exists(path)) return;
 
+        // Получаем информацию о директории
+        DirectoryInfo dirInfo = new DirectoryInfo(path);
+        
+        // Получаем подпапки
+        var dirs = dirInfo.GetDirectories();
+        foreach (var dir in dirs)
+        {
+            // Игнорируем скрытые папки или ненужные (можно расширить фильтр)
+            if (dir.Name.StartsWith(".")) continue;
+
+            sb.AppendLine($"{indent}[Folder] {dir.Name}/");
+            TraverseProjectFolders(dir.FullName, sb, indent + "  ");
+        }
+
+        // Получаем файлы
+        var files = dirInfo.GetFiles();
+        foreach (var file in files)
+        {
+            if (file.Extension == ".meta") continue; // Игнорируем .meta
+            if (file.Extension == ".DS_Store") continue;
+
+            // Выводим имя файла с расширением
+            sb.AppendLine($"{indent}- {file.Name}");
+        }
+    }
+
+    // --- ПОИСК СКРИПТОВ ---
     private List<string> FindAllScriptFiles()
     {
         List<string> files = new List<string>();
@@ -330,7 +360,6 @@ public class ProjectContextExporter : EditorWindow
                 files.AddRange(found);
             }
         }
-        // Нормализация путей
         return files.Select(f => f.Replace("\\", "/")).Distinct().ToList();
     }
 }

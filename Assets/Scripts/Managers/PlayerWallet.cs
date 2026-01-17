@@ -1,3 +1,4 @@
+// Assets/Scripts/Managers/PlayerWallet.cs
 using TMPro;
 using UnityEngine;
 
@@ -8,9 +9,15 @@ namespace Managers
         public static PlayerWallet Instance { get; private set; }
 
         [Header("Настройки")]
-        [Tooltip("Процент от официального дохода, который идет игроку (0.1 = 10%)")]
+        [Tooltip("Базовый процент от официального дохода (0.1 = 10%)")]
         [Range(0f, 1f)]
-        public float officialIncomeRate = 0.1f;
+        public float baseIncomeRate = 0.1f;
+
+        // Текущий бонус от бухгалтера
+        private float accountantBonus = 0f;
+
+        // Свойство, которое возвращает итоговый процент
+        public float officialIncomeRate => Mathf.Clamp01(baseIncomeRate + accountantBonus);
 
         [Header("UI Компоненты")]
         public TextMeshProUGUI moneyText;
@@ -27,21 +34,23 @@ namespace Managers
         {
             UpdateMoneyText();
         }
+        
+        // Метод для установки бонуса (вызывается Бухгалтером)
+        public void SetAccountantBonus(float bonus)
+        {
+            accountantBonus = bonus;
+            // Можно обновить UI, если там отображается процент
+        }
 
-        /// <summary>
-        /// Универсальный метод для изменения количества денег.
-        /// </summary>
-        /// <param name="amount">Сумма. Положительная для дохода, отрицательная для расхода.</param>
-        /// <param name="description">Описание для лога.</param>
-        /// <param name="type">Тип дохода (для положительных сумм).</param>
         public void AddMoney(int amount, string description, IncomeType type = IncomeType.Official)
         {
             int amountToWallet = 0;
 
-            if (amount > 0) // --- ЛОГИКА ДОХОДОВ ---
+            if (amount > 0) 
             {
                 if (type == IncomeType.Official)
                 {
+                    // Используем динамическое свойство officialIncomeRate
                     amountToWallet = (int)(amount * officialIncomeRate);
                     currentMoney += amountToWallet;
                     FinancialLedgerManager.Instance?.LogTransaction($"{description} (Вам {officialIncomeRate:P0})", amount, type);
@@ -53,19 +62,17 @@ namespace Managers
                     FinancialLedgerManager.Instance?.LogTransaction(description, amount, type);
                 }
             }
-            else // --- ЛОГИКА РАСХОДОВ ---
+            else // Расходы
             {
                 amountToWallet = amount;
                 currentMoney += amountToWallet;
-                FinancialLedgerManager.Instance?.LogTransaction(description, amount, IncomeType.Official); // Расходы всегда "официальные"
+                FinancialLedgerManager.Instance?.LogTransaction(description, amount, IncomeType.Official); 
             }
 
             UpdateMoneyText();
         }
 
-        // Старые методы для совместимости (можно будет потом удалить)
-        public void AddMoney(int amount, Vector3 spawnPosition) { AddMoney(amount, "Неизвестная операция"); }
-
+        // ... (остальные методы: GetCurrentMoney, SetMoney, ResetState без изменений) ...
         public int GetCurrentMoney() { return currentMoney; }
         public void SetMoney(int amount) { currentMoney = amount; UpdateMoneyText(); }
         public void ResetState(int startingMoney = 100) { currentMoney = startingMoney; UpdateMoneyText(); }

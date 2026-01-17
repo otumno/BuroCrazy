@@ -92,7 +92,7 @@ public class TeamMemberCardUI : MonoBehaviour
                 int xpForCurrentRank = assignedStaff.currentRank.experienceRequired;
                 int xpForNextRank = nextRankData.experienceRequired;
                 int totalXpForLevel = xpForNextRank - xpForCurrentRank;
-                int currentXpInLevel = assignedStaff.experiencePoints - xpForCurrentRank;
+                int currentXpInLevel = (int)assignedStaff.experiencePoints - xpForCurrentRank;
                 xpBarFill.fillAmount = totalXpForLevel > 0 ? (float)currentXpInLevel / totalXpForLevel : 1f;
                 xpText.text = $"XP: {currentXpInLevel} / {totalXpForLevel}";
             }

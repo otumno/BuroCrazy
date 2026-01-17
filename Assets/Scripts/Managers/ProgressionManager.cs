@@ -174,9 +174,9 @@ namespace Managers
                     FinalizeJobPromotion(doc.targetJob);
                     break;
                 case ProjectDocumentType.FacilityUpgrade:
-                    // Здесь мы должны связаться с UpgradeManager
-                    // UpgradeManager.Instance.UnlockUpgradeByID(doc.targetUpgradeID); // (Метод будет добавлен позже)
-                    Debug.Log($"[Progression] Апгрейд {doc.targetUpgradeID} должен быть активирован (через UpgradeManager).");
+                    // --- ИЗМЕНЕНИЕ: Теперь метод существует ---
+                    UpgradeManager.Instance.ActivateUpgradeByID(doc.targetUpgradeID);
+                    // ------------------------------------------
                     break;
             }
         }
