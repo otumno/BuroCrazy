@@ -1,8 +1,10 @@
+// Assets/Scripts/Managers/SaveLoadManager.cs
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using Gameplay; // Нужно для доступа к OfficeObjectDurability
 
 namespace Managers
 {
@@ -33,16 +35,19 @@ namespace Managers
             currentSlotIndex = slotIndex;
             SaveData data = new SaveData();
 
+            // 1. Глобальные счетчики
             data.day = CalendarManager.Instance.CurrentDay;
             data.money = PlayerWallet.Instance.GetCurrentMoney();
             data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
 
+            // 2. Приказы
             if (OrderManager.Instance != null)
             {
                 data.activePermanentOrderNames = OrderManager.Instance.activePermanentOrders.Select(order => order.name).ToList();
                 data.completedOneTimeOrderNames = OrderManager.Instance.completedOneTimeOrders.Select(order => order.name).ToList();
             }
 
+            // 3. Персонал
             data.allStaffData = new List<StaffSaveData>();
             StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
             foreach (var staffMember in allStaff)
@@ -51,28 +56,51 @@ namespace Managers
                 staffData.characterName = staffMember.gameObject.name;
                 staffData.position = staffMember.transform.position;
                 staffData.stressLevel = staffMember.GetCurrentFrustration();
-			
+            
                 staffData.assignedWorkstationId = staffMember.assignedWorkstation != null ? staffMember.assignedWorkstation.deskId : -999;
-				staffData.scheduleTrackIndex = staffMember.uiScheduleTrackIndex;
+                staffData.scheduleTrackIndex = staffMember.uiScheduleTrackIndex;
+                
+                // Сохраняем навыки и роль (если нужно глубокое сохранение, добавьте сюда поля из StaffController)
+                // staffData.role = staffMember.currentRole;
+                
                 data.allStaffData.Add(staffData);
             }
 
+            // 4. Стопки документов
             data.allDocumentStackData = new List<DocumentStackSaveData>();
             DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
             foreach (var stack in allStacks)
             {
+                // Пропускаем архив, он сохраняется отдельно
                 if (ArchiveManager.Instance != null && stack == ArchiveManager.Instance.mainDocumentStack) continue;
+                
                 DocumentStackSaveData stackData = new DocumentStackSaveData();
                 stackData.stackOwnerName = stack.gameObject.name;
                 stackData.documentCount = stack.CurrentSize;
                 data.allDocumentStackData.Add(stackData);
             }
-			
-			if (StoryStateManager.Instance != null)
-				{
-					StoryStateManager.Instance.SaveToData(data); // <--- Добавлено
-				}
-			
+            
+            // 5. Сюжет
+            if (StoryStateManager.Instance != null)
+            {
+                StoryStateManager.Instance.SaveToData(data);
+            }
+
+            // 6. [НОВОЕ] Прочность объектов (Durability)
+            data.allDurabilityData = new List<DurabilitySaveData>();
+            var allDurables = FindObjectsByType<OfficeObjectDurability>(FindObjectsSortMode.None);
+            
+            foreach (var item in allDurables)
+            {
+                DurabilitySaveData dData = new DurabilitySaveData();
+                dData.objectName = item.gameObject.name;
+                dData.position = item.transform.position;
+                dData.currentHealth = item.currentHealth;
+                
+                data.allDurabilityData.Add(dData);
+            }
+
+            // Запись на диск
             WriteSaveDataToFile(slotIndex, data);
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
             Debug.Log($"Игра сохранена в слот {slotIndex}");
@@ -83,12 +111,12 @@ namespace Managers
             isNewGame = false;
             currentSlotIndex = slotIndex;
             WriteSaveDataToFile(slotIndex, initialData);
-			
-			if (StoryStateManager.Instance != null)
-				{
-					StoryStateManager.Instance.ResetState();
-				}
-			
+            
+            if (StoryStateManager.Instance != null)
+            {
+                StoryStateManager.Instance.ResetState();
+            }
+            
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
             Debug.Log($"Новая игра создана и сохранена в слот {slotIndex}");
         }
@@ -121,19 +149,19 @@ namespace Managers
                 string json = File.ReadAllText(path);
                 SaveData data = JsonUtility.FromJson<SaveData>(json);
 
+                // 1. Восстановление глобальных данных
                 CalendarManager.Instance.SetDay(data.day);
                 PlayerWallet.Instance.SetMoney(data.money);
                 ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
-				
-				if (StoryStateManager.Instance != null)
-						{
-							StoryStateManager.Instance.LoadFromData(data); // <--- Добавлено
-						}
+                
+                if (StoryStateManager.Instance != null)
+                {
+                    StoryStateManager.Instance.LoadFromData(data);
+                }
 
+                // 2. Восстановление приказов
                 if (OrderManager.Instance != null)
                 {
-                    // <<< ВОТ ГЛАВНОЕ ИСПРАВЛЕНИЕ >>>
-                    // Используем правильный список 'allPossibleOrders'
                     var allOrders = OrderManager.Instance.allPossibleOrders;
                     OrderManager.Instance.activePermanentOrders.Clear();
                     OrderManager.Instance.completedOneTimeOrders.Clear();
@@ -163,6 +191,7 @@ namespace Managers
                     }
                 }
 
+                // 3. Восстановление персонала
                 StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
                 foreach (var staffData in data.allStaffData)
                 {
@@ -171,7 +200,7 @@ namespace Managers
                     {
                         staffMember.transform.position = staffData.position;
                         staffMember.SetCurrentFrustration(staffData.stressLevel);
-					
+                    
                         if (staffData.assignedWorkstationId != -999)
                         {
                             var workstation = ScenePointsRegistry.Instance.GetServicePointByID(staffData.assignedWorkstationId);
@@ -180,10 +209,10 @@ namespace Managers
                                 AssignmentManager.Instance.AssignStaffToWorkstation(staffMember, workstation);
                             }
                         }
-					
                     }
                 }
 
+                // 4. Восстановление документов
                 DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
                 foreach (var stackData in data.allDocumentStackData)
                 {
@@ -191,6 +220,26 @@ namespace Managers
                     if (stack != null)
                     {
                         stack.SetCount(stackData.documentCount);
+                    }
+                }
+
+                // 5. [НОВОЕ] Восстановление прочности объектов
+                if (data.allDurabilityData != null)
+                {
+                    var allDurables = FindObjectsByType<OfficeObjectDurability>(FindObjectsSortMode.None);
+                    
+                    foreach (var dData in data.allDurabilityData)
+                    {
+                        // Ищем объект по имени
+                        var targetObj = allDurables.FirstOrDefault(d => d.gameObject.name == dData.objectName);
+                        
+                        if (targetObj != null)
+                        {
+                            targetObj.currentHealth = dData.currentHealth;
+                            
+                            // Вызываем публичный метод для обновления визуалов
+                            targetObj.CheckState(); 
+                        }
                     }
                 }
 

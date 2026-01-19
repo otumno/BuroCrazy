@@ -70,7 +70,7 @@ MonoBehaviour:
     FadeOutDuration: 0
     FadeOutEase: 1
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
-  - id: 18
+  - id: 22
     clips:
     - {fileID: 8300000, guid: ee2af51ca6eeec843b9bfe29a3de928d, type: 3}
     - {fileID: 8300000, guid: 94a2dff933be1fb408af0ec189c74c89, type: 3}
@@ -91,7 +91,7 @@ MonoBehaviour:
     FadeOutDuration: 0
     FadeOutEase: 1
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
-  - id: 19
+  - id: 23
     clips:
     - {fileID: 8300000, guid: 1af47e416cefef14193bd9d38e0c453c, type: 3}
     - {fileID: 8300000, guid: b968761687273e845a0915a9dd4d9229, type: 3}
@@ -101,6 +101,46 @@ MonoBehaviour:
     - {fileID: 8300000, guid: c060c960d2103864289e35cfe5b5f9ea, type: 3}
     - {fileID: 8300000, guid: 2f6f5f60978bb02428467043c700ca22, type: 3}
     - {fileID: 8300000, guid: 8ceb3c6fbd806fb4bbd43e293d02016f, type: 3}
+    volume: 0.6
+    pitch: 1
+    pitchDelta: 0.1
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 1
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 19
+    clips:
+    - {fileID: 8300000, guid: ec998343ea7bec34696a07070a3747d9, type: 3}
+    - {fileID: 8300000, guid: 1cc7f9707e9cc9249850b24e7f28b060, type: 3}
+    - {fileID: 8300000, guid: df04774d865c96443b88278d63705047, type: 3}
+    volume: 0.6
+    pitch: 1
+    pitchDelta: 0.1
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 1
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 20
+    clips:
+    - {fileID: 8300000, guid: 9f2390ad269bb7942aa19e174f40093a, type: 3}
+    - {fileID: 8300000, guid: bce2f7082a653f74dbacca1db001f995, type: 3}
+    - {fileID: 8300000, guid: 2ae74e77e67e2b54f9bc6da8d2d7768e, type: 3}
     volume: 0.6
     pitch: 1
     pitchDelta: 0.1

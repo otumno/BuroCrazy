@@ -1,9 +1,7 @@
 // Assets/Scripts/Data/Actions/RepairObjectExecutor.cs
 using UnityEngine;
 using System.Collections;
-using System.Linq;
 using Managers;
-using Gameplay;
 using Utilities;
 
 public class RepairObjectExecutor : ActionExecutor
@@ -13,14 +11,14 @@ public class RepairObjectExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var worker = staff as ServiceWorkerController;
-        if (worker == null) { FinishAction(false); yield break; }
+        if (worker == null || DurabilityManager.Instance == null) 
+        { 
+            FinishAction(false); 
+            yield break; 
+        }
 
-        // Ищем самый сломанный объект (наименьший % здоровья)
-        var target = FindObjectsByType<OfficeObjectDurability>(FindObjectsSortMode.None)
-            .Where(d => d.currentHealth < d.maxHealth)
-            .OrderBy(d => d.currentHealth / d.maxHealth) // Сначала самые убитые
-            .ThenBy(d => Vector3.Distance(worker.transform.position, d.transform.position)) // Потом ближайшие
-            .FirstOrDefault();
+        // ОПТИМИЗАЦИЯ: Получаем самую приоритетную цель от менеджера
+        var target = DurabilityManager.Instance.GetPriorityRepairTarget(worker.transform.position);
 
         if (target == null) 
         {
@@ -29,42 +27,41 @@ public class RepairObjectExecutor : ActionExecutor
         }
 
         // 1. Идем к объекту
-        worker.SetState(ServiceWorkerController.WorkerState.GoingToMess); // Используем существующее состояние "Иду к грязи" или добавьте GoingToRepair
+        worker.SetState(ServiceWorkerController.WorkerState.GoingToMess); // Или GoingToRepair, если добавите в enum
         worker.thoughtBubble?.ShowPriorityMessage("Иду чинить!", 2f, Color.cyan);
         
-        // Ищем точку рядом с объектом
+        // Ищем точку взаимодействия (если это рабочий стол - идем к месту клерка, иначе просто к объекту)
         Vector3 targetPos = target.transform.position;
-        // Если это стол (ServicePoint), идем к точке клерка
         var sp = target.GetComponent<ServicePoint>();
         if (sp != null && sp.clerkStandPoint != null) targetPos = sp.clerkStandPoint.position;
 
         yield return staff.StartCoroutine(worker.MoveToTarget(targetPos, ServiceWorkerController.WorkerState.Cleaning));
 
-        // 2. Проверяем, не починили ли уже
-        if (target.currentHealth >= target.maxHealth)
+        // 2. Проверяем по прибытии (вдруг починили или уничтожили)
+        if (target == null || target.currentHealth >= target.maxHealth)
         {
-            FinishAction(true); // Кто-то уже починил
+            FinishAction(true); // Уже не актуально
             yield break;
         }
 
         // 3. Чиним
-        worker.SetState(ServiceWorkerController.WorkerState.Cleaning); // Анимация уборки подойдет
-        worker.thoughtBubble?.ShowPriorityMessage("*Стук молотком*", 3f, Color.gray);
+        worker.SetState(ServiceWorkerController.WorkerState.Cleaning);
+        worker.thoughtBubble?.ShowPriorityMessage("*Ремонт*", 3f, Color.gray);
         
-        // Включаем визуал (швабру или молоток, если есть)
+        // Визуал инструмента
         if (worker.broomTransform != null) worker.broomTransform.gameObject.SetActive(true);
 
-        // Время починки зависит от степени поломки (например, 5 сек на полную починку)
+        // Время починки: 5 секунд * процент повреждения
         float damagePercent = 1f - (target.currentHealth / target.maxHealth);
         float repairDuration = 5f * damagePercent;
         
         yield return new WaitForSeconds(repairDuration);
 
-        target.Repair(); // Восстанавливаем полностью
+        if (target != null) target.Repair(); // Восстанавливаем полностью
 
         if (worker.broomTransform != null) worker.broomTransform.gameObject.SetActive(false);
 
-        // Награда
+        // Награда и опыт
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         
         worker.SetState(ServiceWorkerController.WorkerState.Idle);

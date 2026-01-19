@@ -1,24 +1,31 @@
+// Assets/Scripts/Data/SaveData.cs
 using System.Collections.Generic;
 using UnityEngine;
+using Managers; // Для доступа к Enum ролей
 
 [System.Serializable]
 public class SaveData
 {
-    // Global data
+    // --- Глобальные данные ---
     public int day;
     public int money;
     public int archiveDocumentCount;
-	
-	public List<string> storyFlagKeys = new List<string>();
+    
+    // --- Сюжет и Флаги ---
+    public List<string> storyFlagKeys = new List<string>();
     public List<int> storyFlagValues = new List<int>();
 
-    // New fields for Director's Orders
+    // --- Приказы Директора ---
     public List<string> activePermanentOrderNames;
     public List<string> completedOneTimeOrderNames;
 
-    // Lists for storing data about individual objects
+    // --- Списки объектов ---
     public List<StaffSaveData> allStaffData;
     public List<DocumentStackSaveData> allDocumentStackData;
+    
+    // [НОВОЕ] Данные о прочности мебели
+    public List<DurabilitySaveData> allDurabilityData; 
+
     public HashSet<string> watchedDialogues;
 }
 
@@ -29,19 +36,22 @@ public struct StaffSaveData
     public float stressLevel;
     public Vector3 position;
     
-    // Added fields for saving
+    // Характеристики
     public StaffController.Role role;
     public Gender gender;
     public int salary;
     public int experience;
-    // Saving skills individually
+    
+    // Навыки
     public float paperworkMastery;
     public float sedentaryResilience;
     public float pedantry;
     public float softSkills;
     public float corruption;
-	public int assignedWorkstationId;
-	public int scheduleTrackIndex;
+    
+    // Рабочее место и расписание
+    public int assignedWorkstationId;
+    public int scheduleTrackIndex;
 }
 
 [System.Serializable]
@@ -49,4 +59,13 @@ public struct DocumentStackSaveData
 {
     public string stackOwnerName;
     public int documentCount;
+}
+
+// [НОВОЕ] Структура для сохранения прочности
+[System.Serializable]
+public struct DurabilitySaveData
+{
+    public string objectName;   // Уникальное имя объекта на сцене
+    public Vector3 position;    // Позиция для доп. проверки
+    public float currentHealth; // Текущее здоровье
 }

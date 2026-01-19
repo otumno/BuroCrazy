@@ -30,6 +30,9 @@ namespace Scriptables.Audio
     
         // Special
         Time_Period_Change,
+		Object_Break,       // Звук поломки
+        Object_Repair,      // Звук починки (удары молотком)
+        Object_Status_Warning, // Появление иконки
 
         // Lighting (Новые)
         Light_MasterSwitch,  // Общий щелчок рубильника (один раз)
