@@ -107,5 +107,10 @@ namespace Managers
             
             return null;
         }
+		
+		public Data.Policies.PolicyData GetPolicyById(string id)
+			{
+				return allPoliciesDatabase.FirstOrDefault(p => p.id == id);
+			}
     }
 }

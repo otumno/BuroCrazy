@@ -123,20 +123,23 @@ public class SmartSceneBuilder : EditorWindow
         {
             foreach (var go in targets)
             {
-                // Подменяем контекст на текущий объект из списка
                 contextRoot = go.transform;
-                ExecuteInstructions(false); // false = не сохранять ассеты каждый раз (медленно)
+                ExecuteInstructions(false); 
                 successCount++;
             }
-            // Сохраняем один раз в конце
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             Debug.Log($"<color=green>Успешно обновлено объектов: {successCount}</color>");
+        }
+        catch (ExitGUIException)
+        {
+            throw; // Игнорируем штатный выход
         }
         catch (Exception e)
         {
             Debug.LogError($"Batch Error: {e.Message}");
         }
+        
         Undo.CollapseUndoOperations(undoGroup);
         GUIUtility.ExitGUI();
     }
@@ -146,9 +149,20 @@ public class SmartSceneBuilder : EditorWindow
         try 
         { 
             ExecuteInstructions(true); 
-            GUIUtility.ExitGUI();
         } 
-        catch (Exception e) { Debug.LogError($"CRITICAL ERROR: {e.Message}\n{e.StackTrace}"); }
+        catch (ExitGUIException)
+        {
+            // Это нормальное прерывание Unity для перерисовки окна. 
+            // Просто пробрасываем его дальше.
+            throw;
+        }
+        catch (Exception e) 
+        { 
+            Debug.LogError($"CRITICAL ERROR: {e.Message}\n{e.StackTrace}"); 
+        }
+        
+        // Вызываем выход из GUI только если всё прошло успешно
+        GUIUtility.ExitGUI();
     }
 
     // ... (AnalyzeJSON, RemoveComments, NormalizeData, CollectRefs, ApplyProperty, ParseValue, FindType - ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ) ...

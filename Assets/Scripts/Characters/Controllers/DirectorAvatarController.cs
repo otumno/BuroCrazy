@@ -255,6 +255,30 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         StopAllCoroutines(); // Останавливаем текущие действия
         StartCoroutine(CollectAndDeliverRoutine(stack)); // Запускаем корутину сбора
     }
+	
+	public void GoToNoticeBoard(Gameplay.NoticeBoard board)
+{
+    if (board == null || board.interactionPoint == null) return;
+    
+    // Используем MoveToTargetAndSetState (который мы добавили ранее)
+    // Но нам нужен кастомный коллбек после прибытия.
+    // Поэтому запускаем корутину вручную.
+    StartCoroutine(GoToBoardRoutine(board));
+}
+
+private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
+{
+    SetUninterruptible(true);
+    SetState(DirectorState.MovingToPoint);
+    
+    yield return StartCoroutine(MoveToTargetRoutine(board.interactionPoint.position));
+    
+    SetState(DirectorState.Idle);
+    SetUninterruptible(false);
+    
+    // Открываем UI
+    board.OpenUI();
+}
 
     /// <summary>
     /// Отправляет Директора к его основному рабочему столу (креслу).
