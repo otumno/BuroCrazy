@@ -64,6 +64,7 @@ public class StartOfDayPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        Debug.Log($"<color=orange>[StartOfDayPanel] OnEnable called. _pauseCount before: {MainUIManager.Instance?.pauseCount ?? -1}</color>");
         UpdatePanelInfo();
         UpdateBackground(); // Обновляем фон при открытии
     }

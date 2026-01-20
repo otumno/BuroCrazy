@@ -16,6 +16,8 @@ namespace Managers
         [SerializeField] private string gameSceneName = "GameScene";
         [SerializeField] private string mainMenuSceneName = "MainMenuScene";
         public bool isTransitioning { get; private set; } = false;
+        private int _pauseCount = 0;
+        public int pauseCount => _pauseCount; // For debugging
 	
         private void Awake()
         {
@@ -47,7 +49,7 @@ namespace Managers
             
                 if (!isDirectorDeskOpen)
                 {
-                    bool isPaused = Time.timeScale == 0f;
+                    bool isPaused = _pauseCount > 0;
                     ShowPausePanel(!isPaused);
                 }
             }
@@ -212,6 +214,7 @@ namespace Managers
                 yield return StartCoroutine(sodp.Fade(false, false));
             }
 
+            _pauseCount = 0;
             ResumeGame();
             HiringManager.Instance?.ActivateAllScheduledStaff();
         
@@ -279,10 +282,28 @@ namespace Managers
 
         public void PauseGame(bool playMusic = true)
         {
-            Time.timeScale = 0f;
-            if (playMusic && MusicPlayer.Instance != null) MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
+            _pauseCount++;
+            Debug.Log($"<color=yellow>[Pause] _pauseCount: {_pauseCount} (PauseGame called)</color>");
+            if (_pauseCount == 1)
+            {
+                Time.timeScale = 0f;
+                Debug.Log("<color=yellow>[Pause] Time.timeScale = 0f</color>");
+                if (playMusic && MusicPlayer.Instance != null) MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
+            }
         }
 
-        public void ResumeGame() { Time.timeScale = 1f; }
+        public void ResumeGame()
+        {
+            if (_pauseCount > 0) _pauseCount--;
+            Debug.Log($"<color=yellow>[Pause] _pauseCount: {_pauseCount} (ResumeGame called)</color>");
+            if (_pauseCount == 0)
+            {
+                Time.timeScale = 1f;
+                Debug.Log("<color=yellow>[Pause] Time.timeScale = 1f</color>");
+            }
+        }
+
+        public void PushPause() => PauseGame(false);
+        public void PopPause() => ResumeGame();
     }
 }

@@ -114,6 +114,7 @@ public class ActionConfigPopupUI : MonoBehaviour
         }
 
         gameObject.SetActive(false); // Закрываем панель
+        MainUIManager.Instance.PopPause();
 
         HiringPanelUI hiringPanel = FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include);
         if (hiringPanel != null) hiringPanel.RefreshTeamList();
@@ -174,7 +175,17 @@ public class ActionConfigPopupUI : MonoBehaviour
         PopulateActionLists();
     }
 
-    public void OnCancel() => gameObject.SetActive(false);
+    private bool _isClosing = false;
+
+    public void OnCancel() {
+        if (_isClosing || !gameObject.activeInHierarchy) return;
+        _isClosing = true;
+        
+        gameObject.SetActive(false);
+        MainUIManager.Instance.PopPause();
+        
+        _isClosing = false;
+    }
 
     private void PopulateWorkstationDropdown(StaffController.Role role)
     {

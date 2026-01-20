@@ -34,11 +34,13 @@ public class HiringPanelUI : MonoBehaviour
     public void Show()
     {
         gameObject.SetActive(true);
+        MainUIManager.Instance?.PushPause();
     }
 
     public void Hide()
     {
         gameObject.SetActive(false);
+        MainUIManager.Instance?.PopPause();
     }
 
     // Метод для открытия расписания (можно привязать к кнопке в инспекторе)

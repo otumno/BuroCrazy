@@ -38,18 +38,15 @@ public class SmartSceneBuilder : EditorWindow
         GUILayout.Space(10);
         GUILayout.Label("1. Настройки", EditorStyles.boldLabel);
         
-        // Логика выбора Root
         if (contextRoot == null && Selection.activeTransform != null) 
             contextRoot = Selection.activeTransform;
             
         contextRoot = (Transform)EditorGUILayout.ObjectField("Root (Single):", contextRoot, typeof(Transform), true);
         
-        // --- НОВОЕ: Отображение мульти-выбора ---
         if (Selection.gameObjects.Length > 1)
         {
             EditorGUILayout.HelpBox($"Выбрано объектов: {Selection.gameObjects.Length}. Доступен пакетный режим.", MessageType.Info);
         }
-        // ----------------------------------------
 
         updateExistingObjects = EditorGUILayout.ToggleLeft("Обновлять существующие", updateExistingObjects);
 
@@ -87,7 +84,6 @@ public class SmartSceneBuilder : EditorWindow
             
             GUILayout.Space(15);
 
-            // --- НОВАЯ ЛОГИКА КНОПОК ---
             if (Selection.gameObjects.Length > 1)
             {
                 GUI.backgroundColor = new Color(1f, 0.8f, 0.4f);
@@ -105,12 +101,10 @@ public class SmartSceneBuilder : EditorWindow
                 }
             }
             GUI.backgroundColor = Color.white;
-            // ---------------------------
         }
         EditorGUILayout.EndScrollView();
     }
 
-    // --- НОВЫЙ МЕТОД ДЛЯ МАССОВОГО ПРИМЕНЕНИЯ ---
     void BatchExecute()
     {
         GameObject[] targets = Selection.gameObjects;
@@ -131,15 +125,11 @@ public class SmartSceneBuilder : EditorWindow
             AssetDatabase.Refresh();
             Debug.Log($"<color=green>Успешно обновлено объектов: {successCount}</color>");
         }
-        catch (ExitGUIException)
-        {
-            throw; // Игнорируем штатный выход
-        }
+        catch (ExitGUIException) { throw; }
         catch (Exception e)
         {
             Debug.LogError($"Batch Error: {e.Message}");
         }
-        
         Undo.CollapseUndoOperations(undoGroup);
         GUIUtility.ExitGUI();
     }
@@ -149,30 +139,14 @@ public class SmartSceneBuilder : EditorWindow
         try 
         { 
             ExecuteInstructions(true); 
+            GUIUtility.ExitGUI();
         } 
-        catch (ExitGUIException)
-        {
-            // Это нормальное прерывание Unity для перерисовки окна. 
-            // Просто пробрасываем его дальше.
-            throw;
-        }
-        catch (Exception e) 
-        { 
-            Debug.LogError($"CRITICAL ERROR: {e.Message}\n{e.StackTrace}"); 
-        }
-        
-        // Вызываем выход из GUI только если всё прошло успешно
-        GUIUtility.ExitGUI();
+        catch (ExitGUIException) { throw; }
+        catch (Exception e) { Debug.LogError($"CRITICAL ERROR: {e.Message}\n{e.StackTrace}"); }
     }
-
-    // ... (AnalyzeJSON, RemoveComments, NormalizeData, CollectRefs, ApplyProperty, ParseValue, FindType - ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ) ...
-    // Вставь сюда остальные методы из предыдущей версии скрипта, они не менялись.
-    // Единственное изменение ниже - добавлен аргумент saveAssets в ExecuteInstructions
 
     void AnalyzeJSON()
     {
-        // ... (Код AnalyzeJSON из прошлого ответа) ...
-        // Копирую сокращенно, чтобы не забивать ответ, логика та же
         try {
             string cleanJson = RemoveComments(jsonInput);
             instructionData = JsonUtility.FromJson<InstructionData>(cleanJson);
@@ -189,24 +163,6 @@ public class SmartSceneBuilder : EditorWindow
             needsAnalysis = false;
         } catch (Exception e) { Debug.LogError($"JSON Error: {e.Message}"); }
     }
-
-    // Добавил аргумент saveAssets
-    void ExecuteInstructions(bool saveAssets = true)
-    {
-        foreach (var op in instructionData.operations) ProcessOperation(op);
-        
-        if (saveAssets)
-        {
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            Debug.Log("Scene Builder: Завершено.");
-        }
-    }
-
-    // Остальные методы (ProcessOperation, Handle..., Apply..., Parse..., ResolveTarget, FindType)
-    // КОПИРУЮТСЯ ИЗ ПРЕДЫДУЩЕГО ОТВЕТА БЕЗ ИЗМЕНЕНИЙ.
-    
-    // --- ДЛЯ УДОБСТВА Я ВСТАВЛЮ ВАЖНЫЕ ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ НИЖЕ ---
 
     string RemoveComments(string json)
     {
@@ -234,6 +190,10 @@ public class SmartSceneBuilder : EditorWindow
                 if (comp.p != null) comp.properties.AddRange(comp.p);
                 foreach (var prop in comp.properties) NormalizeProperty(prop);
             }
+            // Add properties normalization for assets
+            if (op.properties == null) op.properties = new List<PropertyData>();
+            if (op.p != null) op.properties.AddRange(op.p);
+            foreach (var prop in op.properties) NormalizeProperty(prop);
         }
     }
     void NormalizeProperty(PropertyData prop) { if (string.IsNullOrEmpty(prop.name)) prop.name = prop.nm; if (string.IsNullOrEmpty(prop.value)) prop.value = prop.v; }
@@ -244,6 +204,12 @@ public class SmartSceneBuilder : EditorWindow
             if(!string.IsNullOrEmpty(prop.value) && prop.value.StartsWith("$") && !prop.value.StartsWith("$Assets") && !assetMap.ContainsKey(prop.value))
                 assetMap.Add(prop.value, null);
         }
+    }
+
+    void ExecuteInstructions(bool saveAssets)
+    {
+        foreach (var op in instructionData.operations) ProcessOperation(op);
+        if (saveAssets) { AssetDatabase.SaveAssets(); AssetDatabase.Refresh(); Debug.Log("Scene Builder: Завершено."); }
     }
 
     void ProcessOperation(OperationData op)
@@ -259,8 +225,45 @@ public class SmartSceneBuilder : EditorWindow
         }
     }
 
-    void HandleCreateAsset(OperationData op) { /* (Без изменений) */ }
-    void HandleModifyPrefab(OperationData op) { /* (Без изменений) */ }
+    void HandleCreateAsset(OperationData op)
+    {
+        if (string.IsNullOrEmpty(op.targetPath) || !op.targetPath.StartsWith("Assets")) return;
+        Type type = FindType(op.type);
+        if (type == null) { Debug.LogError($"Class not found: {op.type}"); return; }
+
+        string directory = Path.GetDirectoryName(op.targetPath);
+        if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
+
+        UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath(op.targetPath, type);
+        bool isNew = false;
+        
+        if (asset == null) {
+            asset = ScriptableObject.CreateInstance(type);
+            AssetDatabase.CreateAsset(asset, op.targetPath);
+            isNew = true;
+        }
+
+        Undo.RecordObject(asset, "Update Asset");
+        if (op.properties != null) foreach(var prop in op.properties) ApplyProperty(asset, prop.name, prop.value);
+        
+        if (isNew) {
+            // Debug.Log($"[ASSET CREATED] {op.targetPath}");
+            AssetDatabase.ImportAsset(op.targetPath);
+        }
+        EditorUtility.SetDirty(asset);
+    }
+
+    void HandleModifyPrefab(OperationData op) 
+    { 
+        string path = op.targetPath;
+        if (!File.Exists(path)) { Debug.LogError($"[PREFAB FAIL] {path}"); return; }
+        GameObject contentsRoot = PrefabUtility.LoadPrefabContents(path);
+        try {
+            ApplyComponents(contentsRoot, op.components);
+            PrefabUtility.SaveAsPrefabAsset(contentsRoot, path);
+        } catch (Exception e) { Debug.LogError($"Prefab Error: {e.Message}"); }
+        finally { PrefabUtility.UnloadPrefabContents(contentsRoot); }
+    }
 
     void HandleCreateSceneObject(OperationData op, Transform parent)
     {
@@ -297,6 +300,7 @@ public class SmartSceneBuilder : EditorWindow
         }
     }
 
+    // --- ОБНОВЛЕННЫЙ МЕТОД APPLY PROPERTY С ПОДДЕРЖКОЙ СЛОЖНЫХ СПИСКОВ ---
     void ApplyProperty(UnityEngine.Object obj, string propName, string val)
     {
         Type type = obj.GetType();
@@ -309,13 +313,105 @@ public class SmartSceneBuilder : EditorWindow
         bool isList = targetType.IsGenericType && typeof(IList).IsAssignableFrom(targetType);
         bool isArray = targetType.IsArray;
 
-        if (isList || isArray) { /* (Логика массивов без изменений) */ }
+        // Если это список или массив
+        if (isList || isArray) {
+            Type itemType = isArray ? targetType.GetElementType() : targetType.GetGenericArguments()[0];
+
+            // Проверка: это сложный тип (класс) или простой (число/строка)?
+            bool isComplexType = !itemType.IsPrimitive && itemType != typeof(string) && !typeof(UnityEngine.Object).IsAssignableFrom(itemType) && itemType != typeof(Vector2) && itemType != typeof(Vector3) && itemType != typeof(Color);
+            
+            // Если это сложный тип и значение похоже на JSON (начинается с [)
+            if (isComplexType && val.Trim().StartsWith("["))
+            {
+                // Используем магию JsonUtility с оберткой
+                try {
+                    ApplyComplexList(obj, field, prop, val, itemType);
+                } catch (Exception e) {
+                    Debug.LogError($"Failed to parse complex list for {propName}: {e.Message}");
+                }
+                return;
+            }
+
+            // Старая логика для простых типов и ссылок
+            var tempList = new List<object>();
+            string cleanVal = val.Trim().Trim('[', ']');
+            if (!string.IsNullOrEmpty(cleanVal)) {
+                // Улучшенный сплит: не разбиваем запятые внутри фигурных скобок {}
+                List<string> items = SplitByCommaOutsideBrackets(cleanVal);
+                foreach (string itemPath in items) {
+                    object o = ParseValue(itemPath.Trim().Trim('"'), itemType);
+                    if (o != null) tempList.Add(o);
+                }
+            }
+
+            if (isArray) {
+                Array array = Array.CreateInstance(itemType, tempList.Count);
+                for (int i = 0; i < tempList.Count; i++) array.SetValue(tempList[i], i);
+                if (field != null) field.SetValue(obj, array); else prop.SetValue(obj, array);
+            }
+            else {
+                IList listInstance = (IList)Activator.CreateInstance(targetType);
+                foreach (var item in tempList) listInstance.Add(item);
+                if (field != null) field.SetValue(obj, listInstance); else prop.SetValue(obj, listInstance);
+            }
+        }
         else {
             object finalVal = ParseValue(val, targetType);
             if (finalVal != null) {
                 if (field != null) field.SetValue(obj, finalVal); else if (prop != null && prop.CanWrite) prop.SetValue(obj, finalVal);
             }
         }
+    }
+
+    // --- НОВЫЙ МЕТОД ДЛЯ СЛОЖНЫХ СПИСКОВ ---
+    void ApplyComplexList(UnityEngine.Object obj, FieldInfo field, PropertyInfo prop, string jsonArray, Type itemType)
+    {
+        // Хак: заменяем одинарные кавычки на двойные, чтобы пользователю было удобно писать JSON
+        // и не мучиться с экранированием \"
+        string cleanJson = jsonArray.Replace("'", "\"");
+
+        // 1. Создаем generic тип обертки
+        Type wrapperType = typeof(JsonListWrapper<>).MakeGenericType(itemType);
+        
+        // 2. Оборачиваем
+        string wrappedJson = "{ \"list\": " + cleanJson + " }";
+
+        // 3. Десериализуем
+        object wrapperInstance = JsonUtility.FromJson(wrappedJson, wrapperType);
+
+        // 4. Присваиваем
+        FieldInfo listField = wrapperType.GetField("list");
+        object listValue = listField.GetValue(wrapperInstance);
+
+        if (field != null) field.SetValue(obj, listValue);
+        else if (prop != null) prop.SetValue(obj, listValue);
+    }
+
+    // Вспомогательный класс для обертки
+    [Serializable]
+    private class JsonListWrapper<T>
+    {
+        public List<T> list;
+    }
+
+    // Вспомогательный метод для разделения строки с учетом вложенности (чтобы не бить JSON внутри массива)
+    List<string> SplitByCommaOutsideBrackets(string input)
+    {
+        List<string> result = new List<string>();
+        int bracketLevel = 0;
+        int lastSplit = 0;
+        for (int i = 0; i < input.Length; i++)
+        {
+            if (input[i] == '{' || input[i] == '[') bracketLevel++;
+            else if (input[i] == '}' || input[i] == ']') bracketLevel--;
+            else if (input[i] == ',' && bracketLevel == 0)
+            {
+                result.Add(input.Substring(lastSplit, i - lastSplit));
+                lastSplit = i + 1;
+            }
+        }
+        if (lastSplit < input.Length) result.Add(input.Substring(lastSplit));
+        return result;
     }
 
     object ParseValue(string val, Type targetType)
@@ -350,6 +446,7 @@ public class SmartSceneBuilder : EditorWindow
         return null;
     }
 
+    // ... (Остальные методы: ResolveTarget, FindType, DTO классы остаются без изменений из предыдущей версии)
     GameObject ResolveTarget(string path)
     {
         if (string.IsNullOrEmpty(path)) return contextRoot ? contextRoot.gameObject : null;

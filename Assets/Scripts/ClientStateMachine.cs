@@ -289,6 +289,12 @@ public class ClientStateMachine : MonoBehaviour
             case ClientState.InsideLimitedZone:
             case ClientState.AtDesk1:
             case ClientState.AtDesk2:
+                // Спец. логика для туалета
+                if (targetZone == ClientSpawner.GetToiletZone())
+                {
+                    yield return StartCoroutine(HandleToiletVisitRoutine());
+                    break;
+                }
                 // Пассивное ожидание. Сотрудник сам пнет нас дальше.
                 yield return StartCoroutine(WaitForServiceRoutine());
                 break;
@@ -646,6 +652,47 @@ public class ClientStateMachine : MonoBehaviour
             previousGoal = currentGoal;
             SetGoal(ClientSpawner.GetToiletZone().waitingWaypoint);
             SetState(ClientState.MovingToGoal);
+        }
+    }
+
+    private IEnumerator HandleToiletVisitRoutine()
+    {
+        if (targetZone == null || occupiedWaypoint == null)
+        {
+            SetState(ClientState.Confused);
+            yield break;
+        }
+
+        float toiletDuration = Random.Range(3f, 6f);
+        yield return new WaitForSeconds(toiletDuration);
+
+        var messGenerator = GetComponent<ClientMessGenerator>();
+        if (messGenerator != null && Random.value < 0.3f)
+        {
+            messGenerator.TrySpawnPuddle();
+        }
+
+        if (targetZone != null && occupiedWaypoint != null)
+        {
+            targetZone.ReleaseWaypoint(occupiedWaypoint);
+        }
+        targetZone = null;
+        occupiedWaypoint = null;
+
+        bool shouldReturnToPrevious = previousGoal != null && parent.mainGoal != ClientGoal.VisitToilet;
+        
+        if (shouldReturnToPrevious)
+        {
+            SetGoal(previousGoal);
+            previousGoal = null;
+            SetState(ClientState.MovingToGoal);
+        }
+        else
+        {
+            SetGoal(ClientSpawner.Instance.exitWaypoint);
+            parent.isLeavingSuccessfully = true;
+            parent.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+            SetState(ClientState.Leaving);
         }
     }
 

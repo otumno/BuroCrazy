@@ -18,8 +18,8 @@ MonoBehaviour:
   priority: 1
   maleVoice: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}
   femaleVoice: {fileID: 11400000, guid: 93ce9cb2280fa83408ffdf3e7d695ec9, type: 2}
-  spriteCollection: {fileID: 0}
-  stateEmotionMap: {fileID: 0}
+  spriteCollection: {fileID: 11400000, guid: a9d91c3f0f2b929458e64fd187fbc3b5, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: eb749ec48a08bef40ae01024a4f27c97, type: 2}
   accessoryPrefab: {fileID: 0}
   idleSprite: {fileID: 0}
   walkSprite1: {fileID: 0}

@@ -22,6 +22,8 @@ public class ShowDirectorDeskButton : MonoBehaviour
 
         if (deskPanel != null)
         {
+            Debug.Log("<color=yellow>[DirectorDesk] Вызов PauseGame</color>");
+            MainUIManager.Instance.PauseGame();
             StartCoroutine(deskPanel.Fade(true, true));
             
             if (MusicPlayer.Instance != null)

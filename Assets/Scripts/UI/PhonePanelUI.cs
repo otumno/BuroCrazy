@@ -28,12 +28,14 @@ public class PhonePanelUI : MonoBehaviour
     public void Show()
     {
         gameObject.SetActive(true);
+        MainUIManager.Instance?.PushPause();
         Refresh();
     }
 
     public void Hide()
     {
         gameObject.SetActive(false);
+        MainUIManager.Instance?.PopPause();
     }
 
     public void Refresh()

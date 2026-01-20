@@ -51,6 +51,7 @@ namespace UI
             signButton.interactable = true; 
 
             gameObject.SetActive(true);
+            MainUIManager.Instance?.PushPause();
         }
 
         private void OnSignClicked()
@@ -72,6 +73,7 @@ namespace UI
         private void Hide()
         {
             gameObject.SetActive(false);
+            MainUIManager.Instance?.PopPause();
         }
     }
 }

@@ -21,7 +21,7 @@ namespace UI
         {
             closeButton.onClick.AddListener(() => {
                 gameObject.SetActive(false);
-                MainUIManager.Instance.ResumeGame(); // Снимаем паузу
+                MainUIManager.Instance.PopPause();
             });
             gameObject.SetActive(false);
             
@@ -32,7 +32,7 @@ namespace UI
         public void Show()
         {
             gameObject.SetActive(true);
-            Time.timeScale = 0f; // Пауза
+            MainUIManager.Instance.PushPause();
             RefreshList();
         }
 

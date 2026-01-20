@@ -307,7 +307,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d61ab16ecf194546822a0d13c5b160d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelUpSound: {fileID: 0}
+  levelUpSound: {fileID: 8300000, guid: 8c28600a3205ba242917538dcb24c0ce, type: 3}
 --- !u!114 &7348984956739733649
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -382,30 +382,40 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   characterName: "\u0421\u0435\u043C\u0451\u043D \u0421\u0435\u043C\u0451\u043D\u044B\u0447
     \u041F\u0435\u0447\u0430\u0442\u043A\u0438\u043D"
-  currentRank: {fileID: 0}
-  currentRole: 1
-  experiencePoints: 0
+  role: 0
+  roleData: {fileID: 0}
   gender: 0
-  skills: {fileID: 11400000, guid: 05796c8f594ceed43a520c44f439c320, type: 2}
-  promotionAvailableNotificationPlayed: 0
-  uiScheduleTrackIndex: -1
-  WorkShiftMask: -1
+  currentRankData: {fileID: 0}
   salaryPerPeriod: 15
   unpaidPeriods: 0
   missedPaymentCount: 0
-  shiftStartIndex: -1
+  experiencePoints: 0
+  promotionAvailableNotificationPlayed: 0
+  skills:
+    speed: 1
+    efficiency: 1
+    paperworkMastery: 0
+    sedentaryResilience: 0
+    pedantry: 0
+    softSkills: 0
+    corruption: 0
+  WorkShiftMask: -1
   activeActions: []
   systemActionDatabase: {fileID: 11400000, guid: c7b8428fcc6cc6249ace94ab953910d3, type: 2}
-  assignedWorkstation: {fileID: 0}
+  agentMover: {fileID: 0}
+  thoughtBubble: {fileID: 0}
+  logger: {fileID: 0}
+  visuals: {fileID: 0}
+  voiceProfile: {fileID: 0}
+  energy: 1
+  stress: 0
   frustration: 0
   bladder: 0
-  energy: 1
   morale: 1
-  baseFrustrationGain: 0.1
-  frustrationResistanceSkill: 1
-  startShiftSound: {fileID: 8300000, guid: 7df9251a62a0ec148b130536dba1b021, type: 3}
-  endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
-  voiceProfile: {fileID: 0}
+  assignedWorkstation: {fileID: 0}
+  uiScheduleTrackIndex: -1
+  currentAction: {fileID: 0}
+  currentExecutor: {fileID: 0}
   spriteCollection: {fileID: 11400000, guid: cdab1e82753fc0d4fb395149bfc4e7dc, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 785cfc11f7b6eee47a4deaaf43942ff6, type: 2}
 --- !u!114 &9101693390999189065

@@ -54,6 +54,7 @@ public class UpgradePopupUI : MonoBehaviour
         // --- Показываем попап ---
         // <<< ИЗМЕНЕНИЕ: Сначала активируем GameObject >>>
         gameObject.SetActive(true);
+        MainUIManager.Instance?.PushPause();
         SetPopupVisibility(true); // Управляем CanvasGroup
         // -------------------------
 
@@ -111,7 +112,8 @@ public class UpgradePopupUI : MonoBehaviour
     public void ClosePopup()
     {
         // <<< ИЗМЕНЕНИЕ: Выключаем GameObject >>>
-        gameObject.SetActive(false); 
+        gameObject.SetActive(false);
+        MainUIManager.Instance?.PopPause();
         // ---------------------------------
         // SetPopupVisibility(false); // Управление CanvasGroup теперь менее важно, но оставим на всякий случай
         currentUpgrade = null;

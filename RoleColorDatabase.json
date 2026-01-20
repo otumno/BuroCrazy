@@ -1,0 +1,220 @@
+{
+  "ops": [
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorDatabase",
+      "c": [
+        {
+          "tp": "RoleColorDatabase",
+          "p": [
+            {
+              "nm": "roleColors",
+              "v": "$variable=roleColors"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Intern",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Intern"
+            },
+            {
+              "nm": "color",
+              "v": "#99CC66"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Clerk",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Clerk"
+            },
+            {
+              "nm": "color",
+              "v": "#6699CC"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Registrar",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Registrar"
+            },
+            {
+              "nm": "color",
+              "v": "#B366CC"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Cashier",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Cashier"
+            },
+            {
+              "nm": "color",
+              "v": "#E6B333"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Archivist",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Archivist"
+            },
+            {
+              "nm": "color",
+              "v": "#998066"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Guard",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Guard"
+            },
+            {
+              "nm": "color",
+              "v": "#4D4D80"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Janitor",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Janitor"
+            },
+            {
+              "nm": "color",
+              "v": "#808080"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_OfficeManager",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "OfficeManager"
+            },
+            {
+              "nm": "color",
+              "v": "#E66666"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_Accountant",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "Accountant"
+            },
+            {
+              "nm": "color",
+              "v": "#33CC4D"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "m": "create",
+      "t": "Assets/Data",
+      "n": "RoleColorEntry_ServiceWorker",
+      "c": [
+        {
+          "tp": "RoleColorEntry",
+          "p": [
+            {
+              "nm": "role",
+              "v": "ServiceWorker"
+            },
+            {
+              "nm": "color",
+              "v": "#CC804D"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -37,6 +37,7 @@ public class StaffSchedulePanelUI : MonoBehaviour
 
     private void OnEnable()
     {
+        MainUIManager.Instance?.PushPause();
         // Автоматически ищем попап, если забыли привязать в инспекторе
         if (configPopup == null) 
             configPopup = FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include);
@@ -47,6 +48,7 @@ public class StaffSchedulePanelUI : MonoBehaviour
     public void Hide()
     {
         gameObject.SetActive(false);
+        MainUIManager.Instance?.PopPause();
     }
 
     // Метод, который будет вызываться при клике на имя сотрудника

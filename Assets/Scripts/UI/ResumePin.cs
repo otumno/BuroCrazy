@@ -50,17 +50,18 @@ public class ResumePin : MonoBehaviour
         if (roleText != null) roleText.text = GetRoleNameInRussian(candidate.Role);
 
         // Получаем и применяем цвет
-        Color bgColor = Color.white; // Цвет по умолчанию
+        Color bgColor = Color.white;
         if (roleColorDb != null)
         {
             bgColor = roleColorDb.GetColorForRole(candidate.Role, Color.white);
         }
-        else
+        
+        // Если цвет белый (дефолт), пробуем получить цвет по роли напрямую
+        if (bgColor == Color.white)
         {
-            // Не выводим ошибку здесь, она будет в HiringSystemUI, если что
-            // Debug.LogWarning("RoleColorDatabase не передан в ResumePin!", gameObject);
+            bgColor = GetDefaultRoleColor(candidate.Role);
         }
-
+        
         // Применяем цвет к основному фону, если он назначен
         if (backgroundImage != null)
         {
@@ -115,6 +116,24 @@ public class ResumePin : MonoBehaviour
     /// <summary>
     /// Вспомогательный метод для получения русского названия роли.
     /// </summary>
+    private Color GetDefaultRoleColor(StaffController.Role role)
+    {
+        switch (role)
+        {
+            case StaffController.Role.Intern: return new Color(0.6f, 0.8f, 0.4f); // Светло-зелёный
+            case StaffController.Role.Clerk: return new Color(0.4f, 0.6f, 0.8f); // Голубой
+            case StaffController.Role.Registrar: return new Color(0.7f, 0.5f, 0.8f); // Фиолетовый
+            case StaffController.Role.Cashier: return new Color(0.9f, 0.7f, 0.2f); // Золотой
+            case StaffController.Role.Archivist: return new Color(0.6f, 0.5f, 0.4f); // Коричневый
+            case StaffController.Role.Guard: return new Color(0.3f, 0.3f, 0.5f); // Тёмно-синий
+            case StaffController.Role.Janitor: return new Color(0.5f, 0.5f, 0.5f); // Серый
+            case StaffController.Role.OfficeManager: return new Color(0.9f, 0.4f, 0.4f); // Красный
+            case StaffController.Role.Accountant: return new Color(0.2f, 0.6f, 0.3f); // Зелёный
+            case StaffController.Role.ServiceWorker: return new Color(0.8f, 0.5f, 0.3f); // Оранжевый
+            default: return Color.white;
+        }
+    }
+
     private string GetRoleNameInRussian(StaffController.Role role)
     {
         switch (role)
@@ -126,6 +145,9 @@ public class ResumePin : MonoBehaviour
             case StaffController.Role.Archivist: return "Архивариус";
             case StaffController.Role.Guard: return "Охранник";
             case StaffController.Role.Janitor: return "Уборщик";
+            case StaffController.Role.OfficeManager: return "Офис-менеджер";
+            case StaffController.Role.Accountant: return "Бухгалтер";
+            case StaffController.Role.ServiceWorker: return "Сервисный работник";
             case StaffController.Role.Unassigned: return "Без роли";
             default: return role.ToString(); // Возвращаем системное имя, если перевод не найден
         }

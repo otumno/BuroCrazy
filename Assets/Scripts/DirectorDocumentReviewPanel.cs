@@ -130,7 +130,7 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
     public void ShowDocument(ClientPathfinding client)
     {
         currentClient = client;
-        Time.timeScale = 0f;
+        MainUIManager.Instance.PushPause();
         gameObject.SetActive(true);
         titleText.text = DocumentTitleGenerator.GenerateTitle();
         feeAndBribeText.text = $"Пошлина: ${client.directorDocumentFee} | Взятка: ${client.directorDocumentBribe}";
@@ -145,7 +145,7 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
         
         if(MainUIManager.Instance != null && !MainUIManager.Instance.isTransitioning)
         {
-            Time.timeScale = 1f;
+            MainUIManager.Instance.PopPause();
         }
     }
 

@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic; // Убедись, что эта строка есть
 using System.Linq; // Добавлено для .Count() > 0
+using Managers;
 
 public class ComicViewerUI : MonoBehaviour
 {
@@ -84,7 +85,7 @@ public class ComicViewerUI : MonoBehaviour
         currentComicPages = pages;
         currentPageIndex = 0;
         gameObject.SetActive(true);
-        Time.timeScale = 0f; 
+        MainUIManager.Instance.PushPause();
         UpdatePage();
     }
 
@@ -92,7 +93,7 @@ public class ComicViewerUI : MonoBehaviour
     private void CloseViewer()
     {
         gameObject.SetActive(false);
-        Time.timeScale = 1f; 
+        MainUIManager.Instance.PopPause();
         currentComicPages = null; 
     }
 

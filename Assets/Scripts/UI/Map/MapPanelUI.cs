@@ -51,6 +51,7 @@ namespace UI.Map
 
         private void OnEnable()
         {
+            MainUIManager.Instance?.PushPause();
             RefreshAllButtons();
             
             // Скрываем инфо-панели при открытии, чтобы не висела старая инфа
@@ -200,7 +201,7 @@ namespace UI.Map
         private void ClosePanel()
         {
             gameObject.SetActive(false);
-            if (MainUIManager.Instance != null) MainUIManager.Instance.ResumeGame(); // Снимаем паузу
+            if (MainUIManager.Instance != null) MainUIManager.Instance.PopPause();
         }
     }
 }

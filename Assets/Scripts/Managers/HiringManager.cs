@@ -367,25 +367,39 @@ namespace Managers
             int specialistsToCreate = Mathf.Max(0, Mathf.RoundToInt(specialistCountOverTime.Evaluate(currentDay)));
             float experiencedChance = Mathf.Clamp01(experiencedInternChance.Evaluate(currentDay));
 
-            for (int i = 0; i < internsToCreate; i++)
-            {
-                Candidate newIntern = CreateRandomCandidate(StaffController.Role.Intern, experiencedChance);
-                if (newIntern != null) AvailableCandidates.Add(newIntern);
-            }
-
             var specialistRoles = System.Enum.GetValues(typeof(StaffController.Role))
                 .Cast<StaffController.Role>()
                 .Where(r => r != StaffController.Role.Intern && r != StaffController.Role.Unassigned && r != StaffController.Role.Director)
                 .ToList();
 
-            if (specialistRoles.Any())
+            int totalSpecialists = specialistsToCreate;
+            
+            // Если мало кандидатов (1-3), обеспечиваем хотя бы 1 на каждую роль
+            if (totalSpecialists >= 1 && totalSpecialists <= 3)
             {
+                // Создаем по 1 кандидату каждой роли
+                foreach (var role in specialistRoles)
+                {
+                    Candidate candidate = CreateRandomCandidate(role, 0f);
+                    if (candidate != null) AvailableCandidates.Add(candidate);
+                }
+            }
+            else
+            {
+                // Обычная логика: создаем специалистов случайных ролей
                 for (int i = 0; i < specialistsToCreate; i++)
                 {
                     StaffController.Role randomRole = specialistRoles[Random.Range(0, specialistRoles.Count)];
                     Candidate newSpecialist = CreateRandomCandidate(randomRole, 0f);
                     if (newSpecialist != null) AvailableCandidates.Add(newSpecialist);
                 }
+            }
+
+            // Стажёры создаются независимо
+            for (int i = 0; i < internsToCreate; i++)
+            {
+                Candidate newIntern = CreateRandomCandidate(StaffController.Role.Intern, experiencedChance);
+                if (newIntern != null) AvailableCandidates.Add(newIntern);
             }
         }
 

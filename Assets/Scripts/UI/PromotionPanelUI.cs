@@ -101,7 +101,7 @@ public class PromotionPanelUI : MonoBehaviour
         }
         
         panelObject.SetActive(true);
-        Time.timeScale = 0f; // Ставим игру на паузу
+        MainUIManager.Instance.PushPause();
     }
 
     // Этот метод вызывается кнопкой выбора
@@ -131,6 +131,6 @@ public class PromotionPanelUI : MonoBehaviour
     public void Hide()
     {
         panelObject.SetActive(false);
-        Time.timeScale = 1f; // Снимаем игру с паузы
+        MainUIManager.Instance.PopPause();
     }
 }

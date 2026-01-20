@@ -38,13 +38,13 @@ public class BookkeepingPanelUI : MonoBehaviour
     public void Show()
     {
         gameObject.SetActive(true);
-        Time.timeScale = 0f; // Ставим игру на паузу, когда открыта бухгалтерия
+        MainUIManager.Instance.PushPause();
     }
 
     public void Hide()
     {
         gameObject.SetActive(false);
-        Time.timeScale = 1f; // Снимаем игру с паузы при закрытии
+        MainUIManager.Instance.PopPause();
     }
 
     // Главный метод для обновления всех данных на панели

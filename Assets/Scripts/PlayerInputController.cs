@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Linq;
 using System.Collections;
+using Managers;
 
 public class PlayerInputController : MonoBehaviour
 {
@@ -105,7 +106,7 @@ public class PlayerInputController : MonoBehaviour
         yield return new WaitUntil(() => !director.AgentMover.IsMoving());
 
         // 3. Ставим игру на паузу и открываем UI
-        Time.timeScale = 0f;
+        MainUIManager.Instance.PushPause();
         actionConfigPopup.OpenForStaff(targetStaff);
     }
 
