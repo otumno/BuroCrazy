@@ -234,6 +234,13 @@ public class SmartSceneBuilder : EditorWindow
         string directory = Path.GetDirectoryName(op.targetPath);
         if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
 
+        // Only support ScriptableObjects for now
+        if (!typeof(ScriptableObject).IsAssignableFrom(type))
+        {
+            Debug.LogError($"[CREATE ASSET] Cannot create {op.type} - only ScriptableObjects supported. Use create+modify instead.");
+            return;
+        }
+
         UnityEngine.Object asset = AssetDatabase.LoadAssetAtPath(op.targetPath, type);
         bool isNew = false;
         
@@ -247,7 +254,6 @@ public class SmartSceneBuilder : EditorWindow
         if (op.properties != null) foreach(var prop in op.properties) ApplyProperty(asset, prop.name, prop.value);
         
         if (isNew) {
-            // Debug.Log($"[ASSET CREATED] {op.targetPath}");
             AssetDatabase.ImportAsset(op.targetPath);
         }
         EditorUtility.SetDirty(asset);

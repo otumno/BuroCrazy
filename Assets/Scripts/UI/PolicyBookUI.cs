@@ -30,14 +30,22 @@ namespace UI
 
         private void Start()
         {
-            closeButton.onClick.AddListener(() => gameObject.SetActive(false));
+            closeButton.onClick.AddListener(Hide);
             draftButton.onClick.AddListener(OnDraftClicked);
             detailsPanel.SetActive(false);
+            gameObject.SetActive(false);
         }
 
         private void OnEnable()
         {
+            MainUIManager.Instance?.PushPause();
             RefreshList();
+        }
+
+        public void Hide()
+        {
+            gameObject.SetActive(false);
+            MainUIManager.Instance?.PopPause();
         }
 
         private void RefreshList()

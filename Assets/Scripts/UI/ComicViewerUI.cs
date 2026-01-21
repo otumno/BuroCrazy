@@ -1,10 +1,10 @@
-// Файл: Assets/Scripts/UI/ComicViewerUI.cs
+// Assets/Scripts/UI/ComicViewerUI.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic; // Убедись, что эта строка есть
-using System.Linq; // Добавлено для .Count() > 0
-using Managers;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq; // <--- Добавлено для исправления ошибки CS1061
 
 public class ComicViewerUI : MonoBehaviour
 {
@@ -12,159 +12,249 @@ public class ComicViewerUI : MonoBehaviour
     [SerializeField] private Image pageImage;
     [SerializeField] private TextMeshProUGUI pageCounterText; 
 
-    // --- НАЧАЛО ИЗМЕНЕНИЙ (Замена на списки) ---
     [Tooltip("Кнопки для перехода на СЛЕДУЮЩУЮ страницу")]
     [SerializeField] private List<Button> nextButtons;
     [Tooltip("Кнопки для перехода на ПРЕДЫДУЩУЮ страницу")]
     [SerializeField] private List<Button> prevButtons;
     [Tooltip("Кнопки для ЗАКРЫТИЯ просмотрщика")]
     [SerializeField] private List<Button> closeButtons;
-    // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+    [Header("Настройки Перехода (Анимация)")]
+    [Tooltip("Общее время перелистывания (N)")]
+    [SerializeField] private float pageTurnDuration = 0.4f;
+    
+    [Tooltip("Цвет вспышки (обычно белый). Убедитесь, что Alpha = 1.")]
+    [SerializeField] private Color flashColor = Color.white;
+    
+    [Tooltip("Image, которая лежит ПОВЕРХ страницы. Скрипт сам будет управлять её цветом и прозрачностью.")]
+    [SerializeField] private Image transitionOverlay;
+
+    [Tooltip("Image для анимации перелистывания (корешок).")]
+    [SerializeField] private Image flipAnimationImage;
+    
+    [Tooltip("3 кадра анимации перелистывания.")]
+    [SerializeField] private List<Sprite> flipFrames;
 
     [Header("Звуки")]
-    [Tooltip("AudioSource для проигрывания звуков. Если пусто, будет искаться на этом объекте.")]
     [SerializeField] private AudioSource audioSource;
-    [Tooltip("Звук, который проигрывается при открытии комикса.")]
     [SerializeField] private AudioClip openSound;
-    [Tooltip("Список звуков, которые проигрываются при перелистывании страницы (выбирается случайно).")]
     [SerializeField] private List<AudioClip> pageTurnSounds;
 
     private List<Sprite> currentComicPages;
     private int currentPageIndex = 0;
+    private bool isTransitioning = false; 
 
     void Awake()
     {
-        // --- НАЧАЛО ИЗМЕНЕНИЙ (Назначение слушателей через циклы) ---
-        
-        // Назначаем действия кнопкам "Вперед"
-        if (nextButtons != null)
-        {
-            foreach (Button button in nextButtons)
-            {
-                if (button != null) button.onClick.AddListener(NextPage);
-            }
-        }
+        // Настройка кнопок
+        if (nextButtons != null) foreach (var btn in nextButtons) if(btn) btn.onClick.AddListener(NextPage);
+        if (prevButtons != null) foreach (var btn in prevButtons) if(btn) btn.onClick.AddListener(PrevPage);
+        if (closeButtons != null) foreach (var btn in closeButtons) if(btn) btn.onClick.AddListener(CloseViewer);
 
-        // Назначаем действия кнопкам "Назад"
-        if (prevButtons != null)
-        {
-            foreach (Button button in prevButtons)
-            {
-                if (button != null) button.onClick.AddListener(PrevPage);
-            }
-        }
-
-        // Назначаем действия кнопкам "Закрыть"
-        if (closeButtons != null)
-        {
-            foreach (Button button in closeButtons)
-            {
-                if (button != null) button.onClick.AddListener(CloseViewer);
-            }
-        }
-        // --- КОНЕЦ ИЗМЕНЕНИЙ ---
-
-        // Поиск AudioSource (без изменений)
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
+        // Настройка аудио
+        if (audioSource == null) audioSource = GetComponent<AudioSource>();
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
             audioSource.playOnAwake = false;
         }
-		audioSource.ignoreListenerPause = true;
+        audioSource.ignoreListenerPause = true; // Чтобы звук работал на паузе
+        
+        // Скрываем оверлеи при старте
+        if (transitionOverlay != null) 
+        {
+            transitionOverlay.gameObject.SetActive(false);
+            transitionOverlay.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
+        }
+        if (flipAnimationImage != null) flipAnimationImage.gameObject.SetActive(false);
+    }
+    
+    private void OnDisable()
+    {
+        StopAllCoroutines();
+        isTransitioning = false;
+        if (transitionOverlay != null) transitionOverlay.gameObject.SetActive(false);
+        if (flipAnimationImage != null) flipAnimationImage.gameObject.SetActive(false);
     }
 
-    // Метод ShowComic (без изменений)
     public void ShowComic(List<Sprite> pages)
     {
         if (pages == null || pages.Count == 0) return;
+        
         PlaySound(openSound);
         currentComicPages = pages;
         currentPageIndex = 0;
+        
         gameObject.SetActive(true);
-        MainUIManager.Instance.PushPause();
-        UpdatePage();
+        Time.timeScale = 0f; // Ставим игру на паузу
+        
+        isTransitioning = false;
+        if (transitionOverlay != null)
+        {
+            transitionOverlay.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
+            transitionOverlay.gameObject.SetActive(false);
+        }
+        
+        UpdatePageVisualsInstant();
     }
 
-    // Метод CloseViewer (без изменений)
     private void CloseViewer()
     {
         gameObject.SetActive(false);
-        MainUIManager.Instance.PopPause();
-        currentComicPages = null; 
+        Time.timeScale = 1f; // Снимаем паузу
+        currentComicPages = null;
     }
 
-    // Метод NextPage (без изменений)
+    // --- Логика переключения ---
+
     private void NextPage()
     {
+        if (isTransitioning || currentComicPages == null) return;
         if (currentPageIndex < currentComicPages.Count - 1)
         {
-            currentPageIndex++;
-            UpdatePage();
-            PlayRandomPageTurnSound();
+            StartCoroutine(PageTransitionRoutine(1));
         }
     }
 
-    // Метод PrevPage (без изменений)
     private void PrevPage()
     {
+        if (isTransitioning || currentComicPages == null) return;
         if (currentPageIndex > 0)
         {
-            currentPageIndex--;
-            UpdatePage();
-            PlayRandomPageTurnSound();
+            StartCoroutine(PageTransitionRoutine(-1));
         }
     }
 
-    /// <summary>
-    /// Обновляет спрайт страницы и состояние кнопок
-    /// </summary>
-    private void UpdatePage()
+    // --- Главная Корутина Анимации ---
+    private IEnumerator PageTransitionRoutine(int direction)
     {
-        pageImage.sprite = currentComicPages[currentPageIndex];
+        isTransitioning = true;
+        SetButtonsInteractable(false);
+        PlayRandomPageTurnSound();
 
-        // --- НАЧАЛО ИЗМЕНЕНИЙ (Обновление интерактивности) ---
-        bool canGoPrev = (currentPageIndex > 0);
-        bool canGoNext = (currentPageIndex < currentComicPages.Count - 1);
+        // Запускаем анимацию корешка (параллельно)
+        StartCoroutine(RunFlipAnimation(direction));
 
-        // Обновляем все кнопки "Назад"
-        if (prevButtons != null)
+        float halfDuration = pageTurnDuration / 2f;
+        float timer = 0f;
+
+        // 1. ЗАСВЕТ (Fade In Overlay)
+        if (transitionOverlay != null)
         {
-            foreach (Button button in prevButtons)
+            transitionOverlay.gameObject.SetActive(true); // Включаем объект
+            
+            Color c = flashColor;
+            c.a = 0f;
+            transitionOverlay.color = c;
+            
+            while (timer < halfDuration)
             {
-                if (button != null) button.interactable = canGoPrev;
+                timer += Time.unscaledDeltaTime;
+                float progress = Mathf.Clamp01(timer / halfDuration);
+                
+                c.a = progress; // Альфа от 0 до 1
+                transitionOverlay.color = c;
+                
+                yield return null;
             }
+            c.a = 1f;
+            transitionOverlay.color = c;
         }
-        
-        // Обновляем все кнопки "Вперед"
-        if (nextButtons != null)
+        else
         {
-            foreach (Button button in nextButtons)
-            {
-                if (button != null) button.interactable = canGoNext;
-            }
+            yield return new WaitForSecondsRealtime(halfDuration);
         }
-        // --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
-        if (pageCounterText != null)
+        // 2. МЕНЯЕМ КАРТИНКУ (под прикрытием засвета)
+        currentPageIndex += direction;
+        if (pageImage != null && currentComicPages != null && currentPageIndex >= 0 && currentPageIndex < currentComicPages.Count)
+        {
+            pageImage.sprite = currentComicPages[currentPageIndex];
+        }
+        UpdatePageCounter();
+
+        // 3. ПРОЯВЛЕНИЕ (Fade Out Overlay)
+        timer = 0f;
+        if (transitionOverlay != null)
+        {
+            Color c = flashColor;
+            while (timer < halfDuration)
+            {
+                timer += Time.unscaledDeltaTime;
+                float progress = 1f - Mathf.Clamp01(timer / halfDuration); // Альфа от 1 до 0
+                
+                c.a = progress;
+                transitionOverlay.color = c;
+                
+                yield return null;
+            }
+            c.a = 0f;
+            transitionOverlay.color = c;
+            transitionOverlay.gameObject.SetActive(false); // Выключаем объект в конце
+        }
+        else
+        {
+            yield return new WaitForSecondsRealtime(halfDuration);
+        }
+
+        isTransitioning = false;
+        SetButtonsInteractable(true);
+    }
+
+    // --- Корутина Анимации Корешка ---
+    private IEnumerator RunFlipAnimation(int direction)
+    {
+        if (flipAnimationImage == null || flipFrames == null || flipFrames.Count < 3) yield break;
+
+        flipAnimationImage.gameObject.SetActive(true);
+
+        float timePerFrame = pageTurnDuration / 3f;
+        int[] frameIndices = (direction > 0) ? new int[] { 0, 1, 2 } : new int[] { 2, 1, 0 };
+
+        for (int i = 0; i < frameIndices.Length; i++)
+        {
+            flipAnimationImage.sprite = flipFrames[frameIndices[i]];
+            yield return new WaitForSecondsRealtime(timePerFrame);
+        }
+
+        flipAnimationImage.gameObject.SetActive(false);
+    }
+
+    // --- Вспомогательные методы ---
+
+    private void UpdatePageVisualsInstant()
+    {
+        if (pageImage != null && currentComicPages != null && currentComicPages.Count > 0)
+        {
+            pageImage.sprite = currentComicPages[currentPageIndex];
+        }
+        UpdatePageCounter();
+        SetButtonsInteractable(true);
+    }
+
+    private void UpdatePageCounter()
+    {
+        if (pageCounterText != null && currentComicPages != null)
         {
             pageCounterText.text = $"Стр {currentPageIndex + 1} / {currentComicPages.Count}";
         }
     }
 
-    // Метод PlaySound (без изменений)
-    private void PlaySound(AudioClip clip)
+    private void SetButtonsInteractable(bool interactable)
     {
-        if (audioSource != null && clip != null)
-        {
-            audioSource.PlayOneShot(clip);
-        }
+        bool canGoPrev = interactable && (currentPageIndex > 0);
+        bool canGoNext = interactable && (currentComicPages != null && currentPageIndex < currentComicPages.Count - 1);
+
+        if (prevButtons != null) foreach (var btn in prevButtons) if (btn) btn.interactable = canGoPrev;
+        if (nextButtons != null) foreach (var btn in nextButtons) if (btn) btn.interactable = canGoNext;
+        if (closeButtons != null) foreach (var btn in closeButtons) if (btn) btn.interactable = interactable;
     }
 
-    // Метод PlayRandomPageTurnSound (без изменений)
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null) audioSource.PlayOneShot(clip);
+    }
+
     private void PlayRandomPageTurnSound()
     {
         if (audioSource != null && pageTurnSounds != null && pageTurnSounds.Count > 0)
@@ -172,8 +262,7 @@ public class ComicViewerUI : MonoBehaviour
             var validSounds = pageTurnSounds.Where(s => s != null).ToList();
             if (validSounds.Count > 0)
             {
-                AudioClip clipToPlay = validSounds[Random.Range(0, validSounds.Count)];
-                audioSource.PlayOneShot(clipToPlay);
+                audioSource.PlayOneShot(validSounds[Random.Range(0, validSounds.Count)]);
             }
         }
     }

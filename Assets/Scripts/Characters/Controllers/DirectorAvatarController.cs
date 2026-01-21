@@ -287,18 +287,39 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     {
         if (directorChairPoint != null)
         {
-            // Находим ближайшую путевую точку к креслу
             var wp = FindNearestWaypointTo(directorChairPoint.position);
             if (wp != null)
             {
-                 MoveToWaypoint(wp); // Используем стандартный метод движения к точке
-            } else {
-                 Debug.LogError("Не найдена путевая точка рядом с directorChairPoint!");
-                 // Можно попробовать двигаться напрямую к креслу, но это может вызвать проблемы с навигацией
-                 // StartCoroutine(MoveToTargetAndSetState(directorChairPoint.position, DirectorState.AtDesk));
+                StartCoroutine(GoToDeskRoutine(wp));
             }
-        } else {
-             Debug.LogError("DirectorChairPoint не назначен! Невозможно отправить директора к столу.");
+            else
+            {
+                Debug.LogError("Не найдена путевая точка рядом с directorChairPoint!");
+            }
+        }
+        else
+        {
+            Debug.LogError("DirectorChairPoint не назначен! Невозможно отправить директора к столу.");
+        }
+    }
+
+    private IEnumerator GoToDeskRoutine(Waypoint wp)
+    {
+        SetUninterruptible(true);
+        SetState(DirectorState.MovingToPoint);
+        
+        yield return StartCoroutine(MoveToTargetRoutine(wp.transform.position));
+        
+        SetState(DirectorState.AtDesk);
+        SetUninterruptible(false);
+
+        // Открываем UI стола директора
+        var deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+        if (deskPanel != null)
+        {
+            MainUIManager.Instance.PauseGame();
+            StartCoroutine(deskPanel.Fade(true, true));
+            if (MusicPlayer.Instance != null) MusicPlayer.Instance.PlayDirectorsOfficeTheme();
         }
     }
 
