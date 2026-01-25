@@ -20,9 +20,6 @@ namespace Managers
         [SerializeField] private string _scrollAxis = "Mouse ScrollWheel";
         [SerializeField] private KeyCode _keyCode = KeyCode.Tab;
 
-        [Header("UI для переключения (Черный список)")]
-        public List<GameObject> allToggleableUI;
-
         private readonly ActiveRecord<bool> _shouldMuffle = new();
 
         private int? _targetIndex;
