@@ -22,10 +22,10 @@ namespace Managers
             if (staff == null || workstation == null) return;
 
             // Если сотрудник раньше был на другом месте, освобождаем его
-            if (assignments.ContainsValue(staff))
+            var oldAssignment = assignments.FirstOrDefault(kvp => kvp.Value == staff);
+            if (oldAssignment.Key != null)
             {
-                var oldWorkstation = assignments.First(kvp => kvp.Value == staff).Key;
-                assignments.Remove(oldWorkstation);
+                assignments.Remove(oldAssignment.Key);
             }
 
             assignments[workstation] = staff;
@@ -36,17 +36,35 @@ namespace Managers
         // Метод для снятия назначения
         public void UnassignStaff(StaffController staff)
         {
-            if (staff == null || !assignments.ContainsValue(staff)) return;
+            if (staff == null) return;
 
-            var workstation = assignments.First(kvp => kvp.Value == staff).Key;
-            assignments.Remove(workstation);
-            staff.assignedWorkstation = null;
-            Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} снят с рабочего места {workstation.name}");
+            var workstationAssignment = assignments.FirstOrDefault(kvp => kvp.Value == staff);
+            if (workstationAssignment.Key != null)
+            {
+                assignments.Remove(workstationAssignment.Key);
+                workstationAssignment.Key.ClearAssignedStaff();
+                staff.assignedWorkstation = null;
+                Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} снят с рабочего места {workstationAssignment.Key.name}");
+            }
+        }
+
+        // Метод для снятия назначения рабочего места
+        public void UnassignWorkstation(ServicePoint workstation)
+        {
+            if (workstation == null) return;
+            
+            if (assignments.TryGetValue(workstation, out var staff))
+            {
+                assignments.Remove(workstation);
+                staff.assignedWorkstation = null;
+                Debug.Log($"[AssignmentManager] Рабочее место {workstation.name} освобождено");
+            }
         }
 
         // Получить сотрудника, назначенного на конкретное место
         public StaffController GetAssignedStaff(ServicePoint workstation)
         {
+            if (workstation == null) return null;
             assignments.TryGetValue(workstation, out StaffController staff);
             return staff;
         }

@@ -80,7 +80,8 @@ public class ClientStateMachine : MonoBehaviour
             yield return wait;
 
             // Если уходим - стоп
-            if (IsLeavingState(currentState) || currentState == ClientState.PassedRegistration) yield break;
+            if (IsLeavingState(currentState) || currentState == ClientState.PassedRegistration || 
+                currentState == ClientState.Enraged || currentState == ClientState.Confused) yield break;
 
             // 1. Базовая скорость накопления зависит от состояния
             float currentMultiplier = parent.stressMod_Standing; // База (1.0)
@@ -319,11 +320,21 @@ public class ClientStateMachine : MonoBehaviour
             
             case ClientState.WaitingForDocument:
                 feedbackController.UpdateStateVisuals(currentState, parent.reasonForLeaving);
-                yield return new WaitUntil(() => currentState != ClientState.WaitingForDocument);
+                yield return new WaitForSeconds(30f);
+                if (currentState == ClientState.WaitingForDocument)
+                {
+                    Debug.LogWarning($"[ClientStateMachine] Клиент {parent.name} слишком долго ждал документ, переход в Confused");
+                    SetState(ClientState.Confused);
+                }
                 break;
 
             case ClientState.PassedRegistration:
                 yield return StartCoroutine(PassedRegistrationRoutine());
+                break;
+
+            default:
+                Debug.LogWarning($"[ClientStateMachine] Необработанное состояние: {currentState} для клиента {parent.name}");
+                SetState(ClientState.Confused);
                 break;
         }
 
@@ -483,15 +494,15 @@ public class ClientStateMachine : MonoBehaviour
 
         if (wasInsideZone && willBeOutsideZone && targetZone != null)
         {
-            targetZone.LeaveQueue(parent.gameObject);
+            targetZone.LeaveQueue(parent?.gameObject);
             targetZone.ReleaseWaypoint(occupiedWaypoint);
             occupiedWaypoint = null;
         }
 
         if (IsLeavingState(newState) && myQueueNumber != -1)
         {
-            if (newState != ClientState.Leaving || parent.reasonForLeaving != ClientPathfinding.LeaveReason.Processed)
-                ClientQueueManager.Instance.ServiceFinishedForNumber(myQueueNumber);
+            if (newState != ClientState.Leaving || parent?.reasonForLeaving != ClientPathfinding.LeaveReason.Processed)
+                ClientQueueManager.Instance?.ServiceFinishedForNumber(myQueueNumber);
         }
     }
 
@@ -525,6 +536,11 @@ public class ClientStateMachine : MonoBehaviour
             SetGoal(previousGoal ?? ClientQueueManager.Instance.ChooseNewGoal(parent));
             SetState(ClientState.MovingToGoal);
         }
+        else
+        {
+            SetGoal(ClientQueueManager.Instance.ChooseNewGoal(parent));
+            SetState(ClientState.MovingToGoal);
+        }
     }
 
     private IEnumerator EnragedRoutine()
@@ -554,7 +570,7 @@ public class ClientStateMachine : MonoBehaviour
         }
 
         parent.reasonForLeaving = ClientPathfinding.LeaveReason.Angry;
-        SetGoal(ClientSpawner.Instance.exitWaypoint);
+        SetGoal(ClientSpawner.Instance?.exitWaypoint);
         SetState(ClientState.Leaving);
     }
 

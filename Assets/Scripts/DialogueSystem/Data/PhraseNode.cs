@@ -15,6 +15,10 @@ namespace DialogueSystem.Data
         // НОВОЕ ПОЛЕ
         public AudioClip appearSound; // Звук при появлении фразы (например "Вжик" или "Тук")
 
+        [Header("Изображение для ноды")]
+        [Tooltip("Изображение, которое будет показано в этой ноде (необязательно)")]
+        public Sprite nodeImage;
+
         [Header("Связь")]
         public DialogueNode nextNode;
 

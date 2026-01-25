@@ -85,6 +85,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -106,6 +108,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 20
@@ -256,6 +259,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -277,6 +282,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 3
@@ -374,6 +380,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -395,6 +403,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 4
@@ -478,6 +487,8 @@ SpriteRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -499,6 +510,7 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 2
@@ -685,37 +697,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 05f77f6e38d5dec4788521f4e0ed3a1e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  workPeriods: []
-  homePoint: {fileID: 0}
-  kitchenPoints: []
-  staffToiletPoint: {fileID: 0}
-  startShiftSound: {fileID: 8300000, guid: 7df9251a62a0ec148b130536dba1b021, type: 3}
-  endShiftSound: {fileID: 8300000, guid: cfdd3e07a69e765408db50a825f15465, type: 3}
-  gender: 0
-  nightLight: {fileID: 3322908452176313420}
-  flashlightOffsetDistance: 1
-  flashlightSmoothingSpeed: 5
-  patrolRoute: []
+  currentState: 0
+  unwrittenReportPoints: 0
+  chaseSpeedMultiplier: 2
+  talkTime: 3
   minWaitTime: 1
   maxWaitTime: 3
-  chanceToGoToToilet: 0.01
-  timeInToilet: 5
-  chaseSpeedMultiplier: 2
-  directChaseDistance: 7
-  chaseShoutClip: {fileID: 8300000, guid: 8cd1dfc95f4c3e542b9b93128e4c7682, type: 3}
-  catchDistance: 1
-  talkTime: 3
-  reprimandSound: {fileID: 8300000, guid: 22f8a3d39e8b7f8419e8ca5b9cf1dafa, type: 3}
-  obstacleLayerMask:
-    serializedVersion: 2
-    m_Bits: 0
-  deskPoint: {fileID: 0}
-  protocolStack: {fileID: 0}
-  maxStress: 200
-  stressGainRate: 0.2
-  stressGainPerViolator: 10
-  stressReliefRate: 10
-  skills: {fileID: 11400000, guid: 9b5b37158e007b14a8390c11b10c3074, type: 2}
+  nightLight: {fileID: 5365146846590594943}
 --- !u!114 &7243027972721051166
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -785,10 +773,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveSpeed: 2
   stoppingDistance: 0.2
+  characterSpriteRenderer: {fileID: 0}
+  idleSprite: {fileID: 0}
+  walkSprite1: {fileID: 0}
+  walkSprite2: {fileID: 0}
+  animationSpeed: 0.3
+  walkWaddleAngle: 3
+  dynamicLight: {fileID: 0}
+  lightForwardOffset: 0.5
+  lightSmoothing: 5
   rubberBandStrength: 5
   priority: 1
   slowingDistance: 2
   movementSmoothing: 5
+  footstepSounds: []
+  footstepAudioSource: {fileID: 0}
+  minSpeedForFootsteps: 0.5
+  distanceBetweenSteps: 0.8
+  fallPivotPoint: {fileID: 0}
+  fallSound: {fileID: 0}
 --- !u!114 &8250640773204762706
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -801,10 +804,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d61ab16ecf194546822a0d13c5b160d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bodyRenderer: {fileID: 8254600904554153275}
-  faceRenderer: {fileID: 6353657022690395043}
-  spriteCollection: {fileID: 11400000, guid: beab52f1c80e8ac4c98dcb2a60a80988, type: 2}
-  stateEmotionMap: {fileID: 11400000, guid: 2e2b81eb0b087b343a2f80516527a884, type: 2}
+  levelUpSound: {fileID: 0}
 --- !u!114 &3906857994926293848
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -817,10 +817,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3d61ab16ecf194546822a0d13c5b160d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bodyRenderer: {fileID: 8254600904554153275}
-  faceRenderer: {fileID: 6353657022690395043}
-  spriteCollection: {fileID: 11400000, guid: beab52f1c80e8ac4c98dcb2a60a80988, type: 2}
-  stateEmotionMap: {fileID: 11400000, guid: 2e2b81eb0b087b343a2f80516527a884, type: 2}
+  levelUpSound: {fileID: 0}
 --- !u!1 &8061844731964319759
 GameObject:
   m_ObjectHideFlags: 0
@@ -878,6 +875,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -899,6 +898,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 3
@@ -1086,6 +1086,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 4294967295
   m_RendererPriority: 0
   m_Materials:
@@ -1107,6 +1109,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1494906833
   m_SortingLayer: 1
   m_SortingOrder: 20

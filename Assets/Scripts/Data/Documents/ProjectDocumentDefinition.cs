@@ -1,6 +1,7 @@
 // Assets/Scripts/Data/Documents/ProjectDocumentDefinition.cs
 using UnityEngine;
 using Scriptables.Progression;
+using Enums;
 
 namespace Data.Documents
 {

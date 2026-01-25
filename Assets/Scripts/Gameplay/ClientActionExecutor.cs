@@ -64,7 +64,7 @@ public class ClientActionExecutor : MonoBehaviour
 
     public IEnumerator EnterZoneRoutine(LimitedCapacityZone targetZone)
     {
-        if (targetZone == null) yield break;
+        if (targetZone == null || _client == null) yield break;
 
         _mover.Stop();
 
@@ -79,17 +79,36 @@ public class ClientActionExecutor : MonoBehaviour
             targetZone.JoinQueue(_client.gameObject);
         }
 
-        // Ждем, пока станем первыми
-        yield return new WaitUntil(() => targetZone.IsFirstInQueue(_client.gameObject));
+        // Ждем, пока станем первыми или клиент не будет уничтожен
+        yield return new WaitUntil(() => _client == null || targetZone.IsFirstInQueue(_client.gameObject));
+        
+        if (_client == null)
+        {
+            targetZone.LeaveQueue(gameObject);
+            yield break;
+        }
 
         Waypoint freeSpot = null;
         while (freeSpot == null)
         {
+            if (_client == null) 
+            {
+                targetZone.LeaveQueue(gameObject);
+                yield break;
+            }
+            
             if (CanEnterZone(targetZone))
             {
                 freeSpot = targetZone.RequestAndOccupyWaypoint(_client.gameObject);
             }
             if (freeSpot == null) yield return new WaitForSeconds(0.5f);
+        }
+
+        if (_client == null)
+        {
+            targetZone.LeaveQueue(gameObject);
+            targetZone.ReleaseWaypoint(freeSpot);
+            yield break;
         }
 
         targetZone.LeaveQueue(_client.gameObject);
@@ -98,7 +117,7 @@ public class ClientActionExecutor : MonoBehaviour
         _client.stateMachine.OnZoneEntryApproved(freeSpot, targetZone);
         
         // Спец. логика директора
-        if (_client.mainGoal == ClientGoal.DirectorApproval && targetZone == ClientSpawner.Instance.directorReceptionZone)
+        if (_client.mainGoal == ClientGoal.DirectorApproval && targetZone == ClientSpawner.Instance?.directorReceptionZone)
         {
             StartOfDayPanel.Instance?.RegisterDirectorDocument(_client);
         }

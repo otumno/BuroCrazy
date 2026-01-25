@@ -11,15 +11,24 @@ public class ProcessDocumentExecutor : ActionExecutor
     {
         if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null)
         {
+            Debug.LogWarning("[ProcessDocumentExecutor] Clerk или assignedWorkstation равен null");
             FinishAction(false);
             yield break;
         }
 
         LimitedCapacityZone myZone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        if (myZone == null)
+        {
+            Debug.LogWarning("[ProcessDocumentExecutor] Zone не найдена");
+            FinishAction(false);
+            yield break;
+        }
+
         ClientPathfinding clientToServe = myZone?.GetOccupyingClients().FirstOrDefault();
 
         if (clientToServe == null)
         {
+            Debug.LogWarning("[ProcessDocumentExecutor] Клиент для обслуживания не найден");
             FinishAction(false);
             yield break;
         }
@@ -29,10 +38,11 @@ public class ProcessDocumentExecutor : ActionExecutor
         
         clerk.AssignClient(clientToServe);
         
-        yield return new WaitUntil(() => clientToServe == null || clientToServe.stateMachine.GetTargetZone() != myZone);
+        yield return new WaitUntil(() => clientToServe == null || clientToServe.stateMachine == null || clientToServe.stateMachine.GetTargetZone() != myZone);
         
         clerk.ServiceComplete();
-        ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
+        ActionType actionForXP = actionData != null ? actionData.actionType : ActionType.CheckDocument;
+        ExperienceManager.Instance?.GrantXP(staff, actionForXP);
 
         clerk.SetState(ClerkController.ClerkState.Working);
         FinishAction(true);

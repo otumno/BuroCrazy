@@ -19,4 +19,21 @@ public class ServicePoint : MonoBehaviour
     // --- НОВОЕ ПОЛЕ ---
     [Tooltip("Точка, к которой будет подходить стажер, чтобы забрать документы со стола.")]
     public Transform internCollectionPoint; 
+
+    private StaffController assignedStaff;
+
+    public void ClearAssignedStaff()
+    {
+        assignedStaff = null;
+    }
+
+    public void SetAssignedStaff(StaffController staff)
+    {
+        assignedStaff = staff;
+    }
+
+    public StaffController GetAssignedStaff()
+    {
+        return assignedStaff;
+    }
 }

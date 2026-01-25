@@ -126,7 +126,24 @@ public class ClientQueueManager : MonoBehaviour
             if (client != null)
             {
                 RemoveClientFromQueue(client);
-                client.stateMachine.SetState(ClientState.Confused);
+                
+                // Очищаем клиента из всех зон перед переходом в Confused
+                var targetZone = client.stateMachine?.GetTargetZone();
+                if (targetZone != null)
+                {
+                    targetZone.LeaveQueue(client.gameObject);
+                    var goal = client.stateMachine?.GetCurrentGoal();
+                    if (goal != null) targetZone.ReleaseWaypoint(goal);
+                }
+                
+                // Очищаем из всех зон
+                var allZones = FindObjectsOfType<LimitedCapacityZone>();
+                foreach (var zone in allZones)
+                {
+                    zone.LeaveQueue(client.gameObject);
+                }
+                
+                client.stateMachine?.SetState(ClientState.Confused);
                 Debug.Log($"Клиент {client.name} (#{ticketNumber}) полностью удален из очереди и переведен в состояние Confused.");
             }
             else
@@ -180,14 +197,13 @@ public class ClientQueueManager : MonoBehaviour
     }
 
     public Waypoint GetToiletReturnGoal(ClientPathfinding client) 
-{ 
-    if (queue.ContainsKey(client))
-    {
-        // GetRandomStandingPoint() возвращает Transform. Нам нужно получить с него компонент Waypoint.
-        return mainWaitingZone.GetRandomStandingPoint().GetComponent<Waypoint>();
+    { 
+        if (queue.ContainsKey(client))
+        {
+            return mainWaitingZone.GetRandomStandingPoint().GetComponent<Waypoint>();
+        }
+        return ClientSpawner.Instance?.exitWaypoint ?? null; 
     }
-    return ClientSpawner.Instance.exitWaypoint; 
-}
     
     // --- КОНЕЦ БЛОКА ВОССТАНОВЛЕННЫХ МЕТОДОВ ---
     

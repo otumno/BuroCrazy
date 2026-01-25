@@ -40,7 +40,17 @@ namespace UI.Map
 
         public void UpdateState()
         {
-            if (jobData == null || ProgressionManager.Instance == null) return;
+            if (jobData == null)
+            {
+                Debug.LogWarning("[JobNodeUI] jobData is null!");
+                return;
+            }
+
+            if (ProgressionManager.Instance == null)
+            {
+                Debug.LogWarning("[JobNodeUI] ProgressionManager.Instance is null!");
+                return;
+            }
 
             bool isOwned = ProgressionManager.Instance.IsJobUnlocked(jobData.jobID);
             bool isAvailable = !isOwned && ProgressionManager.Instance.CanStartUnlockJob(jobData);
@@ -57,6 +67,15 @@ namespace UI.Map
 
         private void OnClicked()
         {
+            Debug.Log($"[JobNodeUI] OnClicked called for job: {jobData?.jobID ?? "NULL"}");
+
+            if (mapController == null)
+            {
+                Debug.LogError("[JobNodeUI] mapController is null! Make sure MapPanelUI is assigned in Inspector.");
+                return;
+            }
+
+            Debug.Log($"[JobNodeUI] Calling mapController.ShowJobInfo for {jobData?.jobID ?? "NULL"}");
             mapController.ShowJobInfo(jobData);
         }
     }

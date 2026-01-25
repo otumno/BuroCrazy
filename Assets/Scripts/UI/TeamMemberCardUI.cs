@@ -117,7 +117,34 @@ public class TeamMemberCardUI : MonoBehaviour
             promoteButton.gameObject.SetActive(canBePromoted);
         }
         
+        ApplyRoleColor(assignedStaff.currentRole);
         background.sprite = GetBackgroundForRole(assignedStaff.currentRole);
+    }
+    
+    private void ApplyRoleColor(StaffController.Role role)
+    {
+        if (background == null) return;
+        
+        Color roleColor = GetRoleColor(role);
+        background.color = roleColor;
+    }
+    
+    private Color GetRoleColor(StaffController.Role role)
+    {
+        switch (role)
+        {
+            case StaffController.Role.Intern: return new Color(0.6f, 0.8f, 0.4f, 1f);
+            case StaffController.Role.Clerk: return new Color(0.4f, 0.6f, 0.8f, 1f);
+            case StaffController.Role.Registrar: return new Color(0.7f, 0.5f, 0.8f, 1f);
+            case StaffController.Role.Cashier: return new Color(0.9f, 0.7f, 0.2f, 1f);
+            case StaffController.Role.Archivist: return new Color(0.6f, 0.5f, 0.4f, 1f);
+            case StaffController.Role.Guard: return new Color(0.3f, 0.3f, 0.5f, 1f);
+            case StaffController.Role.Janitor: return new Color(0.5f, 0.5f, 0.5f, 1f);
+            case StaffController.Role.OfficeManager: return new Color(0.9f, 0.4f, 0.4f, 1f);
+            case StaffController.Role.Accountant: return new Color(0.2f, 0.6f, 0.3f, 1f);
+            case StaffController.Role.ServiceWorker: return new Color(0.8f, 0.5f, 0.3f, 1f);
+            default: return Color.white;
+        }
     }
     
     private Sprite GetBackgroundForRole(StaffController.Role role)

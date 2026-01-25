@@ -143,7 +143,18 @@ public class InternController : StaffController, IServiceProvider
 
     private IEnumerator InternServiceRoutine(ClientPathfinding client)
     {
-        if (coveredServicePoint == null) yield break;
+        if (client == null)
+        {
+            Debug.LogWarning("[InternController] InternServiceRoutine вызван с null клиентом");
+            yield break;
+        }
+
+        if (coveredServicePoint == null)
+        {
+            Debug.LogWarning("[InternController] coveredServicePoint равен null");
+            yield break;
+        }
+
         int deskId = coveredServicePoint.deskId;
 
         // --- ИЗНОС ---
@@ -169,11 +180,15 @@ public class InternController : StaffController, IServiceProvider
             else
                 thoughtBubble?.ShowPriorityMessage($"Вам к '{destName}'", 3f, Color.white);
 
-            if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance.RemoveClientFromQueue(client);
-            if (destination != null)
+            if (client.stateMachine != null)
             {
-                client.stateMachine.SetGoal(destination);
-                client.stateMachine.SetState(ClientState.MovingToGoal);
+                if (client.stateMachine.MyQueueNumber != -1) 
+                    ClientQueueManager.Instance?.RemoveClientFromQueue(client);
+                if (destination != null)
+                {
+                    client.stateMachine.SetGoal(destination);
+                    client.stateMachine.SetState(ClientState.MovingToGoal);
+                }
             }
         }
         else if (deskId == -1) // Касса
@@ -193,13 +208,19 @@ public class InternController : StaffController, IServiceProvider
             }
             client.isLeavingSuccessfully = true;
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-            client.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
-            client.stateMachine.SetState(ClientState.Leaving);
+            client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+            client.stateMachine?.SetState(ClientState.Leaving);
         }
         else if (deskId == 1 || deskId == 2) // Клерк
         {
             thoughtBubble?.ShowPriorityMessage("Так... посмотрим...", 2f, Color.yellow);
             yield return new WaitForSeconds(1.5f / efficiency); 
+
+            if (client.docHolder == null)
+            {
+                thoughtBubble?.ShowPriorityMessage("Ошибка: нет документа!", 3f, Color.red);
+                yield break;
+            }
 
             DocumentType requiredDoc = (deskId == 1) ? DocumentType.Form1 : DocumentType.Form2;
             
@@ -207,7 +228,7 @@ public class InternController : StaffController, IServiceProvider
             {
                 thoughtBubble?.ShowPriorityMessage("У вас бланк не тот!", 3f, Color.red);
                 yield return new WaitForSeconds(2f);
-                client.stateMachine.GoGetFormAndReturn();
+                client.stateMachine?.GoGetFormAndReturn();
             }
             else
             {
@@ -223,8 +244,8 @@ public class InternController : StaffController, IServiceProvider
                 client.billToPay += (deskId == 1) ? 100 : 250;
                 
                 thoughtBubble?.ShowPriorityMessage("Готово!", 3f, Color.green);
-                client.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
-                client.stateMachine.SetState(ClientState.MovingToGoal);
+                client.stateMachine?.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
+                client.stateMachine?.SetState(ClientState.MovingToGoal);
                 
                 coveredServicePoint.documentStack?.AddDocumentToStack();
             }

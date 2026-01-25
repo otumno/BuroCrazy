@@ -1,9 +1,12 @@
 // Assets/Scripts/Enums/ProjectDocumentType.cs
-public enum ProjectDocumentType
+namespace Enums
 {
-    None,
-    RegionUnlock,   
-    JobPromotion,   
-    FacilityUpgrade,
-    Policy
+    public enum ProjectDocumentType
+    {
+        None,
+        RegionUnlock,   
+        JobPromotion,   
+        FacilityUpgrade,
+        Policy
+    }
 }

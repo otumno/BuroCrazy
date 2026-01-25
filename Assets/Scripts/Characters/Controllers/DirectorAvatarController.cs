@@ -881,10 +881,10 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                       // Если точка не найдена (ошибка конфигурации)
                       thoughtBubble?.ShowPriorityMessage("Не могу вас направить.\nИзвините.", 3f, Color.red);
                       yield return new WaitForSeconds(1.5f);
-                      if (client.stateMachine.MyQueueNumber != -1) { ClientQueueManager.Instance?.RemoveClientFromQueue(client); }
+                      if (client.stateMachine != null && client.stateMachine.MyQueueNumber != -1) { ClientQueueManager.Instance?.RemoveClientFromQueue(client); }
                       client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                      client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint); // Безопасный доступ
-                      client.stateMachine.SetState(ClientState.LeavingUpset);
+                      client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+                      client.stateMachine?.SetState(ClientState.LeavingUpset);
                        Debug.LogError($"Не найдена точка назначения для клиента {client.name} (Цель: {client.mainGoal}). Отправлен домой.");
                  }
                  jobDone = true; // Считаем действие выполненным
@@ -932,23 +932,23 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                       jobDone = true; // Считаем выполненным, т.к. оплаты и не требовалось
                  }
 
-                 // Отправляем клиента на выход
-                 client.isLeavingSuccessfully = true;
-                 client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-                 client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint); // Безопасный доступ
-                 client.stateMachine.SetState(ClientState.Leaving);
-                  Debug.Log($" -> Клиент {client.name} отправлен на выход после кассы.");
+                  // Отправляем клиента на выход
+                  client.isLeavingSuccessfully = true;
+                  client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+                  client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+                  client.stateMachine?.SetState(ClientState.Leaving);
+                   Debug.Log($" -> Клиент {client.name} отправлен на выход после кассы.");
               }
         }
         else // Неизвестный deskId
         {
              Debug.LogError($"DirectorServiceRoutine: Неизвестный deskId = {deskId} для {currentWorkstation.name}!");
              // Можно отправить клиента домой или просто завершить без jobDone = true
-              if (client != null && client.stateMachine != null) {
-                 client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                 client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-                 client.stateMachine.SetState(ClientState.LeavingUpset);
-              }
+               if (client != null && client.stateMachine != null) {
+                  client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+                  client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+                  client.stateMachine?.SetState(ClientState.LeavingUpset);
+               }
         }
 
 

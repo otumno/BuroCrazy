@@ -1,0 +1,197 @@
+{
+  "main": {
+    "id": "ece1ff1c5d8f13d5",
+    "type": "split",
+    "children": [
+      {
+        "id": "24d4f1f730bb03ea",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "15eabf0b877a9f5c",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Graph view"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "2db88404d15464ba",
+    "type": "split",
+    "children": [
+      {
+        "id": "c82fdeb5c00426ac",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9e7f0c791802fa95",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "b92b13b960a2e3e6",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "e54e3d61a9614aca",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "866341f6b49cd888",
+    "type": "split",
+    "children": [
+      {
+        "id": "80755ced262b3b88",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "bd9ca84cd66373ec",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "3f633bc86b7f6273",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "4df052caabd835e1",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "b560bf75b63e5efb",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "2562b95894c4829e",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "15eabf0b877a9f5c",
+  "lastOpenFiles": [
+    "Buro Crazy/Механики.md",
+    "Buro Crazy/Тех Доки/Карта проекта.md",
+    "Buro Crazy/Тех Доки/Архитектура Проекта и Поток Данных.md",
+    "Buro Crazy/Тех Доки/uploads/51e698ac-da58-4f53-94f9-42226e091c19/5c482665-d4fa-48c3-8026-a7d241394505/Геймплейный Цикл.png",
+    "Buro Crazy/Тех Доки.md",
+    "Buro Crazy/Сущности.md",
+    "Buro Crazy/Структура.md",
+    "Buro Crazy/Нарратив.md",
+    "Buro Crazy/Концепт.md",
+    "Buro Crazy/Контент.md",
+    "Buro Crazy/Концепт/Чего не хватает 05.01.2026.md",
+    "Buro Crazy/Концепт/Концепт документ.md",
+    "Buro Crazy/Контент/Реестр Звуковых Эффектов и Музыки.md",
+    "Buro Crazy/Контент/Реестры Контента.md",
+    "Тех. Задачки/uploads/92ef43af-2948-4113-82df-27f53a7fd643/2e737c81-f2bc-4034-89dc-8d3c50f43e95/image.png"
+  ]
+}

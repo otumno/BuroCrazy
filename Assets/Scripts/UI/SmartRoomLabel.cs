@@ -24,7 +24,7 @@ public class SmartRoomLabel : MonoBehaviour
 
     private CanvasGroup _canvasGroup;
     private bool _isHovered;
-    private float _lastHoverTime;
+    private float _lastHoverTime = -100f; // Инициализируем в прошлое чтобы в начале все было скрыто
     private Camera _mainCamera;
 
     void Awake()
@@ -36,6 +36,10 @@ public class SmartRoomLabel : MonoBehaviour
         if (roomCollider == null)
         {
             roomCollider = GetComponentInParent<Collider2D>();
+            if (roomCollider == null)
+            {
+                Debug.LogWarning($"[SmartRoomLabel] Коллайдер не найден для комнаты '{roomTitle}' на объекте {gameObject.name}");
+            }
         }
 
         // Установка заголовка
@@ -50,9 +54,10 @@ public class SmartRoomLabel : MonoBehaviour
 
     void Update()
     {
-        // 1. Проверяем Паузу
-        // (Используем Time.timeScale или вашу переменную паузы из MainUIManager)
-        bool isPaused = Time.timeScale == 0f;
+        // 1. Проверяем Паузу (Time.timeScale или MainUIManager)
+        bool isPausedByTimeScale = Time.timeScale == 0f;
+        bool isPausedByManager = MainUIManager.Instance != null && MainUIManager.Instance.pauseCount > 0;
+        bool isPaused = isPausedByTimeScale || isPausedByManager;
 
         // 2. Проверяем Мышь (Рейкаст в коллайдер комнаты)
         CheckMouseHover();
@@ -70,7 +75,11 @@ public class SmartRoomLabel : MonoBehaviour
 
     private void CheckMouseHover()
     {
-        if (_mainCamera == null || roomCollider == null) return;
+        if (_mainCamera == null || roomCollider == null)
+        {
+            _isHovered = false;
+            return;
+        }
 
         Vector2 mousePos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
         
@@ -79,8 +88,11 @@ public class SmartRoomLabel : MonoBehaviour
 
         if (hit)
         {
-            _isHovered = true;
-            _lastHoverTime = Time.time; // Обновляем таймер, пока мышка внутри
+            if (!_isHovered)
+            {
+                _isHovered = true;
+                _lastHoverTime = Time.time; // Обновляем таймер только при входе
+            }
         }
         else
         {

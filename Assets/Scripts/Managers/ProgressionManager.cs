@@ -5,6 +5,7 @@ using UnityEngine;
 using Scriptables.Progression;
 using Data.Documents;
 using Data.Calendar; 
+using Enums;
 
 namespace Managers
 {

@@ -113,14 +113,19 @@ public class ClerkController : StaffController, IServiceProvider
 
     private IEnumerator CashierServiceRoutine(ClientPathfinding client)
     {
-        // ... (код этого метода без изменений)
+        if (client == null)
+        {
+            Debug.LogWarning("[ClerkController] CashierServiceRoutine вызван с null клиентом");
+            yield break;
+        }
+
         SetState(ClerkState.Working);
         thoughtBubble?.ShowPriorityMessage($"К оплате: ${client.billToPay}", 3f, Color.white);
         yield return new WaitForSeconds(Random.Range(2f, 4f));
 
         int bill = client.billToPay;
         int totalSkimAmount = 0;
-        RoleData roleData = allRoleData.FirstOrDefault(d => d.roleType == currentRole);
+        RoleData roleData = allRoleData?.FirstOrDefault(d => d.roleType == currentRole);
         float corruptionChanceMult = 1.0f;
         float maxSkimAmount = 0.3f;
         if (roleData != null)
@@ -153,8 +158,8 @@ public class ClerkController : StaffController, IServiceProvider
         client.billToPay = 0;
         client.isLeavingSuccessfully = true;
         client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-        client.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
-        client.stateMachine.SetState(ClientState.Leaving);
+        client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+        client.stateMachine?.SetState(ClientState.Leaving);
         ServiceComplete();
     }
 }

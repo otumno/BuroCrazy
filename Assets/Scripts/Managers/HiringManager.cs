@@ -470,7 +470,17 @@ namespace Managers
             RoleData roleData = allRoleData?.FirstOrDefault(data => data != null && data.roleType == candidate.Role);
             GameObject prefabToSpawn = GetPrefabForRole(candidate.Role);
 
-            if (roleData == null || prefabToSpawn == null) return false;
+            if (roleData == null)
+            {
+                Debug.LogWarning($"[HiringManager] RoleData не найден для роли {candidate.Role}");
+                return false;
+            }
+            
+            if (prefabToSpawn == null)
+            {
+                Debug.LogWarning($"[HiringManager] Prefab не найден для роли {candidate.Role}");
+                return false;
+            }
 
             GameObject newStaffGO = Instantiate(prefabToSpawn, freePoint.position, Quaternion.identity);
             StaffController staffController = newStaffGO.GetComponent<StaffController>();
@@ -536,14 +546,38 @@ namespace Managers
             AllStaff.Remove(staffToFire);
             UnassignedStaff.Remove(staffToFire);
 
-            Transform pointToFree = occupiedPoints.FirstOrDefault(kvp => kvp.Value == staffToFire).Key;
-            if (pointToFree != null) occupiedPoints.Remove(pointToFree);
+            // Очистка occupiedPoints
+            var pointEntry = occupiedPoints.FirstOrDefault(kvp => kvp.Value == staffToFire);
+            if (pointEntry.Key != null)
+            {
+                occupiedPoints.Remove(pointEntry.Key);
+            }
 
             if (staffToFire.assignedWorkstation != null && AssignmentManager.Instance != null)
                 AssignmentManager.Instance.UnassignStaff(staffToFire);
 
             staffToFire.FireAndGoHome();
+            
+            // Очистка ссылок в staffBeingModified
+            staffBeingModified.RemoveAll(s => s == null || s == staffToFire);
+            
             FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+        }
+
+        public void RemoveStaff(StaffController staff)
+        {
+            if (staff == null) return;
+            AllStaff.Remove(staff);
+            UnassignedStaff.Remove(staff);
+            
+            // Очистка occupiedPoints
+            var pointsToRemove = occupiedPoints.Where(kvp => kvp.Value == staff).Select(kvp => kvp.Key).ToList();
+            foreach (var point in pointsToRemove)
+            {
+                occupiedPoints.Remove(point);
+            }
+            
+            staffBeingModified.RemoveAll(s => s == null || s == staff);
         }
 
         public void CheckAllStaffShiftsImmediately()

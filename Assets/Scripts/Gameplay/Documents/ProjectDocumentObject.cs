@@ -2,6 +2,7 @@
 using UnityEngine;
 using TMPro;
 using Data.Documents;
+using Enums;
 
 namespace Gameplay.Documents
 {

@@ -19,6 +19,16 @@ namespace UI
         public GameObject policyItemPrefab; // Кнопка с названием политики
         public Button closeButton;
 
+        [Header("Вкладки")]
+        public Button policiesTabButton;
+        public Button instructionsTabButton;
+        public GameObject policiesPanel;
+        public GameObject instructionsPanel;
+
+        [Header("Инструкции")]
+        public Transform instructionsContainer;
+        public GameObject instructionItemPrefab;
+
         [Header("Детали")]
         public GameObject detailsPanel;
         public TextMeshProUGUI titleText;
@@ -27,19 +37,75 @@ namespace UI
         public Button draftButton; // Кнопка "Создать приказ"
 
         private PolicyData selectedPolicy;
+        private bool showingPolicies = true;
 
         private void Start()
         {
             closeButton.onClick.AddListener(Hide);
             draftButton.onClick.AddListener(OnDraftClicked);
+
+            if (policiesTabButton != null)
+            {
+                policiesTabButton.onClick.AddListener(() => SwitchTab(true));
+            }
+
+            if (instructionsTabButton != null)
+            {
+                instructionsTabButton.onClick.AddListener(() => SwitchTab(false));
+            }
+
             detailsPanel.SetActive(false);
             gameObject.SetActive(false);
+
+            SwitchTab(true);
+        }
+
+        private void SwitchTab(bool showPolicies)
+        {
+            showingPolicies = showPolicies;
+
+            if (policiesPanel != null)
+            {
+                policiesPanel.SetActive(showPolicies);
+            }
+
+            if (instructionsPanel != null)
+            {
+                instructionsPanel.SetActive(!showPolicies);
+            }
+
+            if (policiesTabButton != null)
+            {
+                policiesTabButton.interactable = !showPolicies;
+            }
+
+            if (instructionsTabButton != null)
+            {
+                instructionsTabButton.interactable = showPolicies;
+            }
+
+            if (showPolicies)
+            {
+                RefreshList();
+            }
+            else
+            {
+                RefreshInstructions();
+            }
         }
 
         private void OnEnable()
         {
             MainUIManager.Instance?.PushPause();
-            RefreshList();
+
+            if (showingPolicies)
+            {
+                RefreshList();
+            }
+            else
+            {
+                RefreshInstructions();
+            }
         }
 
         public void Hide()
@@ -71,6 +137,26 @@ namespace UI
                 // Блокируем кнопку, если уже активно или в процессе
                 if (isActive || isPending) btn.interactable = false;
                 else btn.onClick.AddListener(() => ShowDetails(policy));
+            }
+        }
+
+        private void RefreshInstructions()
+        {
+            if (InstructionManager.Instance == null || instructionsContainer == null) return;
+
+            foreach (Transform child in instructionsContainer) Destroy(child.gameObject);
+
+            var instructions = InstructionManager.Instance.GetAllEnabledInstructions();
+
+            foreach (var instruction in instructions)
+            {
+                GameObject item = Instantiate(instructionItemPrefab, instructionsContainer);
+                var itemUI = item.GetComponent<UI.Policies.InstructionItemUI>();
+
+                if (itemUI != null)
+                {
+                    itemUI.Setup(instruction, InstructionManager.Instance);
+                }
             }
         }
 

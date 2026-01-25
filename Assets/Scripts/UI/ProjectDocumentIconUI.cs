@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Data.Documents;
 using TMPro;
+using Enums;
 
 namespace UI
 {

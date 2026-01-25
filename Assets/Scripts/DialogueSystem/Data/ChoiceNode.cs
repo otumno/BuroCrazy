@@ -24,6 +24,10 @@ namespace DialogueSystem.Data
         [TextArea(2, 3)] public string queryText; // Вопрос игроку (например "Что ответить?")
         public List<ChoiceOption> options = new List<ChoiceOption>();
 
+        [Header("Изображение для ноды")]
+        [Tooltip("Изображение, которое будет показано в этой ноде (необязательно)")]
+        public Sprite nodeImage;
+
         public override NodeType GetNodeType() => NodeType.Choice;
     }
 }

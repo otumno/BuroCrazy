@@ -690,6 +690,9 @@ public class AgentMover : MonoBehaviour
         var calculatedPath = Utilities.PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject);
         SetPath(calculatedPath);
     }
-    // --- End Slip and Recover ---
 
-} // End of AgentMover class
+    private void OnDestroy()
+    {
+        StopAllCoroutines();
+    }
+}

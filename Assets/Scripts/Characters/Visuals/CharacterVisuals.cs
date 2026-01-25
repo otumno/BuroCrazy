@@ -2,7 +2,7 @@
 using UnityEngine;
 using System.Collections; // Required for Coroutines
 
-public class CharacterVisuals : MonoBehaviour
+public partial class CharacterVisuals : MonoBehaviour
 {
     // Enum to specify attachment points
     public enum AttachPointType { Head, Hand }
@@ -370,18 +370,58 @@ public class CharacterVisuals : MonoBehaviour
 
     // Helper to find child recursively (optional, can replace Find calls in Awake)
     public static Transform FindDeepChild(Transform parent, string name) // <<<< ДОБАВЛЕНО 'static'
-{
-    if (parent == null) return null;
-    Transform result = parent.Find(name);
-    if (result != null)
-        return result;
-    foreach (Transform child in parent)
+ {
+     if (parent == null) return null;
+     Transform result = parent.Find(name);
+     if (result != null)
+         return result;
+     foreach (Transform child in parent)
+     {
+         result = FindDeepChild(child, name); // Recursive call remains the same
+         if (result != null)
+             return result;
+     }
+     return null;
+ }
+
+    /// <summary>
+    /// Настраивает визуальное разнообразие на основе архетипа клиента.
+    /// </summary>
+    public void SetupFromArchetype(global::Characters.ClientArchetype archetype)
     {
-        result = FindDeepChild(child, name); // Recursive call remains the same
-        if (result != null)
-            return result;
+        if (archetype == null) return;
+
+        if (archetype.allowedClothingColors != null && archetype.allowedClothingColors.Count > 0)
+        {
+            if (bodyRenderer != null)
+            {
+                Color randomColor = archetype.allowedClothingColors[Random.Range(0, archetype.allowedClothingColors.Count)];
+                bodyRenderer.color = randomColor;
+            }
+        }
+
+        if (archetype.allowedOutfitTypes != null && archetype.allowedOutfitTypes.Count > 0)
+        {
+            // Здесь можно добавить логику смены одежды на основе типа
+        }
+
+        Debug.Log($"[CharacterVisuals] Визуал настроен для архетипа: {archetype.displayName}");
     }
-    return null;
-}
+
+    /// <summary>
+    /// Возвращает визуальное разнообразие к базовому состоянию.
+    /// </summary>
+    public void ResetVisualDiversity()
+    {
+        if (bodyRenderer != null)
+        {
+            bodyRenderer.color = Color.white;
+        }
+    }
+
+    private void OnDestroy()
+    {
+        StopAllCoroutines();
+    }
 
 } // End of CharacterVisuals class

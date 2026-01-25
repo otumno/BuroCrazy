@@ -10,7 +10,9 @@ public class DialogueUIConnector : MonoBehaviour
 
     [Header("Портреты")]
     public Image directorPortrait;
+    public Image directorPortraitFrame;
     public Image clientPortrait;
+    public Image clientPortraitFrame;
 
     [Header("Имена (Под портретами)")]
     public TextMeshProUGUI directorNamePlate; // <--- НОВОЕ
@@ -24,6 +26,12 @@ public class DialogueUIConnector : MonoBehaviour
     [Header("Кнопки")]
     public Button nextButton;
     public Transform choiceContainer;
+
+    [Header("Изображение для ноды")]
+    [Tooltip("Контейнер с рамкой и изображением")]
+    public GameObject nodeImageContainer;
+    public Image nodeImageDisplay;
+    public Image nodeImageFrame;
 
     void Start()
     {

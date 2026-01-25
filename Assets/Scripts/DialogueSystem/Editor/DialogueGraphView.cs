@@ -64,19 +64,22 @@ namespace DialogueSystem.Editor
 			AddHelpSection("0. СОЗДАНИЕ НОД", 
                 "Основной функционал.\n" +
                 "- Правой кнопкой мыши на любом месте в окне." +
-				"- Начинаем нодой СТАРТ заканчиваем КОНЕЦ.");
+				"- Начинаем нодой СТАРТ заканчиваем КОНЕЦ.\n" +
+                "- В СТАРТе можно задать ФОН ПО УМОЛЧАНИЮ для всех нод.");
 			
             AddHelpSection("1. ФРАЗА (PHRASE)", 
                 "Базовая реплика.\n" +
                 "- Speaker ID: 'Director', 'Client' или ID из базы NPC.\n" +
                 "- Appear Sound: Звук 'вжик' при появлении.\n" +
-                "- Voice/Portrait: Можно переопределить дефолтные.");
+                "- Voice/Portrait: Можно переопределить дефолтные.\n" +
+                "- Node Image: Показать изображение в этой ноде.");
 
             AddHelpSection("2. ВЫБОР (CHOICE)", 
                 "Ветвление диалога кнопками.\n" +
                 "- Условия (Condition): Кнопка появится, ТОЛЬКО если условие верно.\n" +
                 "  Пример Key: 'MONEY', Op: '>=', Val: 100.\n" +
-                "  Пример Key: 'MET_INSPECTOR', Op: '==', Val: 1.");
+                "  Пример Key: 'MET_INSPECTOR', Op: '==', Val: 1.\n" +
+                "- Node Image: Показать изображение в этой ноде.");
 
             AddHelpSection("3. СОБЫТИЕ (EVENT)", 
                 "Изменение состояния игры.\n" +
@@ -84,7 +87,8 @@ namespace DialogueSystem.Editor
                 "  (Используется для спавна клиентов на след. день!)\n" +
                 "- AddMoney: Дать/забрать деньги (100 или -50).\n" +
                 "- AddStrike: Выдать страйк директору.\n" +
-                "- Notification: Если заполнить текст, покажет окно 'РЕЗУЛЬТАТ'.");
+                "- Notification: Если заполнить текст, покажет окно 'РЕЗУЛЬТАТ'.\n" +
+                "- Node Image: Показать изображение в этой ноде.");
 
             AddHelpSection("4. СЛУЧАЙНОСТЬ (RANDOM)", 
                 "Автоматический выбор пути.\n" +
@@ -173,6 +177,12 @@ namespace DialogueSystem.Editor
                     start.startSoundOverride = (AudioClip)EditorGUILayout.ObjectField("Звук старта:", start.startSoundOverride, typeof(AudioClip), false);
                 });
                 nodeView.extensionContainer.Add(soundContainer);
+
+                var bgContainer = new IMGUIContainer(() => {
+                    start.defaultBackground = (Sprite)EditorGUILayout.ObjectField("Фон по умолчанию:", start.defaultBackground, typeof(Sprite), false);
+                });
+                nodeView.extensionContainer.Add(bgContainer);
+                
                 nodeView.capabilities &= ~Capabilities.Deletable;
             }
             else if (nodeData is EndNode end)
@@ -203,6 +213,7 @@ namespace DialogueSystem.Editor
                     phrase.appearSound = (AudioClip)EditorGUILayout.ObjectField("Звук 'Вжик':", phrase.appearSound, typeof(AudioClip), false);
                     phrase.voiceClip = (AudioClip)EditorGUILayout.ObjectField("Спец. голос:", phrase.voiceClip, typeof(AudioClip), false);
                     phrase.speakerPortrait = (Sprite)EditorGUILayout.ObjectField("Спец. портрет:", phrase.speakerPortrait, typeof(Sprite), false);
+                    phrase.nodeImage = (Sprite)EditorGUILayout.ObjectField("Изображение ноды:", phrase.nodeImage, typeof(Sprite), false);
                 });
                 nodeView.extensionContainer.Add(extras);
             }
@@ -232,6 +243,7 @@ namespace DialogueSystem.Editor
                 
                 var soundContainer = new IMGUIContainer(() => {
                     evt.soundEffect = (AudioClip)EditorGUILayout.ObjectField("Звук эффекта:", evt.soundEffect, typeof(AudioClip), false);
+                    evt.nodeImage = (Sprite)EditorGUILayout.ObjectField("Изображение ноды:", evt.nodeImage, typeof(Sprite), false);
                 });
                 nodeView.extensionContainer.Add(soundContainer);
             }
@@ -247,6 +259,11 @@ namespace DialogueSystem.Editor
                     EditorUtility.SetDirty(choice); PopulateView(_graph);
                 }) { text = "+ Добавить вариант" };
                 nodeView.extensionContainer.Add(addBtn);
+
+                var imageContainer = new IMGUIContainer(() => {
+                    choice.nodeImage = (Sprite)EditorGUILayout.ObjectField("Изображение ноды:", choice.nodeImage, typeof(Sprite), false);
+                });
+                nodeView.extensionContainer.Add(imageContainer);
 
                 for (int i = 0; i < choice.options.Count; i++)
                 {

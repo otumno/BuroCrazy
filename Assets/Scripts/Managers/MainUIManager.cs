@@ -1,6 +1,8 @@
 // Файл: Assets/Scripts/Managers/MainUIManager.cs
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using UnityEngine.SceneManagement;
 
 namespace Managers
@@ -17,8 +19,8 @@ namespace Managers
         [SerializeField] private string mainMenuSceneName = "MainMenuScene";
         public bool isTransitioning { get; private set; } = false;
         private int _pauseCount = 0;
-        public int pauseCount => _pauseCount; // For debugging
-	
+        public int pauseCount => _pauseCount;
+
         private void Awake()
         {
             if (Instance == null)
@@ -36,8 +38,41 @@ namespace Managers
 
         private void Start()
         {
-            // Сбрасываем флаг при старте любой сцены (фикс залипания кнопок меню)
             isTransitioning = false; 
+            AutoFindPausePanel();
+        }
+
+        private void AutoFindPausePanel()
+        {
+            if (pausePanel != null) return;
+
+            var allObjects = FindObjectsOfType<GameObject>();
+            foreach (var obj in allObjects)
+            {
+                if (obj.name.Equals("pausepanel", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    pausePanel = obj;
+                    Debug.Log($"[MainUIManager] Автонайден pausePanel: {obj.name}");
+                    return;
+                }
+            }
+
+            var canvases = FindObjectsOfType<Canvas>();
+            foreach (var canvas in canvases)
+            {
+                if (canvas.name.Contains("Game") || canvas.name.Contains("HUD"))
+                {
+                    var panel = canvas.transform.Find("ingameUIbuttons/pausepanel");
+                    if (panel != null)
+                    {
+                        pausePanel = panel.gameObject;
+                        Debug.Log($"[MainUIManager] Автонайден pausePanel через Canvas: {pausePanel.name}");
+                        return;
+                    }
+                }
+            }
+
+            Debug.LogWarning("[MainUIManager] pausePanel не найден!");
         }
 	
         void Update()
@@ -104,33 +139,24 @@ namespace Managers
         {
             PauseGame(true);
 
-            // --- ИСПРАВЛЕНИЕ: ПРИНУДИТЕЛЬНЫЙ СБРОС ДАННЫХ ---
-            
-            // 1. Всегда загружаем данные из слота. 
-            // Если это "Новая игра", то в слоте УЖЕ лежат чистые данные (мы их записали при клике на кнопку),
-            // и LoadGame корректно сбросит кошелек, календарь и архивы.
             bool loadSuccess = SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
             
             if (!loadSuccess && SaveLoadManager.Instance.isNewGame)
             {
-                // Если вдруг файл не создался (маловероятно), сбрасываем вручную
                 Debug.LogError("[MainUIManager] Файл сохранения не найден для новой игры! Сбрасываем вручную.");
-                PlayerWallet.Instance.ResetState(); // 100$
-                CalendarManager.Instance.StartNewGame(); // День 1
+                PlayerWallet.Instance.ResetState();
+                CalendarManager.Instance.StartNewGame();
                 ArchiveManager.Instance.ResetState();
             }
 
-            // 2. Дополнительный сброс для систем, которые не сохраняются в JSON
             if (SaveLoadManager.Instance.isNewGame)
             {
                 Debug.Log("[MainUIManager] Новая игра: Дополнительный сброс менеджеров.");
                 DirectorManager.Instance.ResetState(); 
-                HiringManager.Instance.ResetState(); // Очищаем список сотрудников
-                OrderManager.Instance.ResetState();  // Очищаем приказы
-                // StoryStateManager сбрасывается внутри SaveLoadManager.SaveNewGame, но для надежности:
+                HiringManager.Instance.ResetState();
+                OrderManager.Instance.ResetState();
                 StoryStateManager.Instance?.ResetState(); 
             }
-            // ------------------------------------------------
 
             DirectorManager.Instance.PrepareDay();
 
@@ -189,7 +215,6 @@ namespace Managers
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
             SaveLoadManager.Instance.isNewGame = true;
             
-            // Создаем чистый сейв
             SaveData newGameData = new SaveData { day = 1, money = 1000 };
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
             
@@ -221,11 +246,9 @@ namespace Managers
             if (MusicPlayer.Instance != null)
             {
                 MusicPlayer.Instance.StartGameplayMusic();
-                // --- ДОБАВЛЕНО: Принудительно обновляем трек, если уже день ---
                 MusicPlayer.Instance.RequestNextTrack(); 
             }
 
-            // --- ДОБАВЛЕНО: Пинаем WaveManager ---
             if (WaveManager.Instance != null)
             {
                 WaveManager.Instance.ForceCheckMorningEvents();

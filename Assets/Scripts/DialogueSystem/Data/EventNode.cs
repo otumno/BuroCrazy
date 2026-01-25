@@ -23,6 +23,10 @@ namespace DialogueSystem.Data
         [Tooltip("Звук события (звон монет, удар и т.д.)")]
         public AudioClip soundEffect;
 
+        [Header("Изображение для ноды")]
+        [Tooltip("Изображение, которое будет показано в этой ноде (необязательно)")]
+        public Sprite nodeImage;
+
         [Header("Связь")]
         public DialogueNode nextNode; // Авто-переход
 

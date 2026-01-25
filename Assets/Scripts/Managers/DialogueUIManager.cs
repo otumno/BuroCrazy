@@ -18,14 +18,23 @@ namespace Managers
         private CanvasGroup panelCanvasGroup; 
         
         private Image directorPortrait;
+        private Image directorPortraitFrame;
         private TextMeshProUGUI directorNameText;
         
         private Image clientPortrait;
+        private Image clientPortraitFrame;
         private TextMeshProUGUI clientNameText;
 
         private TextMeshProUGUI dialogueText;
         private Button nextButton;
         private Transform choiceContainer;
+
+        private Image nodeImageDisplay;
+        private Image nodeImageFrame;
+        private GameObject nodeImageContainer;
+        
+        private Sprite defaultBackground;
+        private DialogueGraph currentGraph;
         
         private System.Action onDialogueComplete;
 
@@ -90,14 +99,22 @@ namespace Managers
             if (this.panelCanvasGroup == null) this.panelCanvasGroup = dialoguePanel.AddComponent<CanvasGroup>();
 
             this.directorPortrait = connector.directorPortrait;
+            this.directorPortraitFrame = connector.directorPortraitFrame;
             this.directorNameText = connector.directorNamePlate;
 
             this.clientPortrait = connector.clientPortrait;
+            this.clientPortraitFrame = connector.clientPortraitFrame;
             this.clientNameText = connector.clientNamePlate;
 
             this.dialogueText = connector.dialogueText;
             this.nextButton = connector.nextButton;
             this.choiceContainer = connector.choiceContainer;
+
+            this.nodeImageDisplay = connector.nodeImageDisplay;
+            this.nodeImageFrame = connector.nodeImageFrame;
+            this.nodeImageContainer = connector.nodeImageContainer;
+            
+            if (this.nodeImageContainer != null) this.nodeImageContainer.SetActive(false);
 
             this.nextButton.onClick.RemoveAllListeners();
             this.nextButton.onClick.AddListener(OnNextClicked);
@@ -112,6 +129,7 @@ namespace Managers
 
             this.onDialogueComplete = onComplete;
             currentClientContext = client;
+            currentGraph = graph;
             
             MainUIManager.Instance?.PauseGame(false);
             
@@ -124,6 +142,7 @@ namespace Managers
             var startNode = graph.allNodes.Find(n => n is StartNode) as StartNode;
             if (startNode != null)
             {
+                defaultBackground = startNode.defaultBackground;
                 AudioClip clip = startNode.startSoundOverride != null ? startNode.startSoundOverride : defaultStartSound;
                 PlaySystemSound(clip);
                 if (startNode.nextNode != null) ProcessNode(startNode.nextNode);
@@ -140,14 +159,14 @@ namespace Managers
             {
                 directorPortrait.gameObject.SetActive(true);
                 if(directorNameText) directorNameText.text = "Директор"; 
-                SetVisualState(directorPortrait, directorNameText, false);
+                SetVisualState(directorPortrait, directorPortraitFrame, directorNameText, false);
             }
 
             if (clientPortrait)
             {
                 clientPortrait.gameObject.SetActive(false);
                 if(clientNameText) clientNameText.text = "";
-                SetVisualState(clientPortrait, clientNameText, false);
+                SetVisualState(clientPortrait, clientPortraitFrame, clientNameText, false);
                 
                 if (client != null)
                 {
@@ -162,10 +181,49 @@ namespace Managers
             }
         }
 
+        private void UpdateNodeImage(DialogueNode node)
+        {
+            if (nodeImageContainer == null) return;
+
+            Sprite nodeSprite = null;
+
+            if (node is PhraseNode phraseNode)
+            {
+                nodeSprite = phraseNode.nodeImage;
+            }
+            else if (node is ChoiceNode choiceNode)
+            {
+                nodeSprite = choiceNode.nodeImage;
+            }
+            else if (node is EventNode eventNode)
+            {
+                nodeSprite = eventNode.nodeImage;
+            }
+
+            Sprite finalSprite = nodeSprite != null ? nodeSprite : defaultBackground;
+
+            if (finalSprite != null)
+            {
+                if (nodeImageDisplay != null)
+                {
+                    nodeImageDisplay.sprite = finalSprite;
+                    nodeImageDisplay.gameObject.SetActive(true);
+                }
+                if (nodeImageFrame != null) nodeImageFrame.gameObject.SetActive(true);
+                nodeImageContainer.SetActive(true);
+            }
+            else
+            {
+                nodeImageContainer.SetActive(false);
+            }
+        }
+
         private void ProcessNode(DialogueNode node)
         {
             currentNode = node;
             if (choiceContainer != null) foreach (Transform child in choiceContainer) Destroy(child.gameObject);
+
+            UpdateNodeImage(node);
 			
 			if (node is EndNode endNode)
             {
@@ -297,13 +355,13 @@ namespace Managers
             bool clientActive = (isDirectorActive == false);
 
             if (directorAnimCoroutine != null) StopCoroutine(directorAnimCoroutine);
-            directorAnimCoroutine = StartCoroutine(AnimateGroup(directorPortrait, directorNameText, dirActive));
+            directorAnimCoroutine = StartCoroutine(AnimateGroup(directorPortrait, directorPortraitFrame, directorNameText, dirActive));
 
             if (clientAnimCoroutine != null) StopCoroutine(clientAnimCoroutine);
-            clientAnimCoroutine = StartCoroutine(AnimateGroup(clientPortrait, clientNameText, clientActive));
+            clientAnimCoroutine = StartCoroutine(AnimateGroup(clientPortrait, clientPortraitFrame, clientNameText, clientActive));
         }
 
-        private IEnumerator AnimateGroup(Image portrait, TextMeshProUGUI nameText, bool isActive)
+        private IEnumerator AnimateGroup(Image portrait, Image frame, TextMeshProUGUI nameText, bool isActive)
         {
             if (portrait == null) yield break;
 
@@ -323,6 +381,12 @@ namespace Managers
                 
                 portrait.rectTransform.localScale = Vector3.Lerp(startScale, endScale, t);
                 portrait.color = Color.Lerp(startImgColor, endImgColor, t);
+                
+                if (frame != null)
+                {
+                    frame.rectTransform.localScale = Vector3.Lerp(startScale, endScale, t);
+                }
+                
                 if (nameText != null) nameText.color = Color.Lerp(startTextColor, endTextColor, t);
 
                 yield return null;
@@ -330,15 +394,20 @@ namespace Managers
 
             portrait.rectTransform.localScale = endScale;
             portrait.color = endImgColor;
+            if (frame != null) frame.rectTransform.localScale = endScale;
             if (nameText != null) nameText.color = endTextColor;
         }
 
-        private void SetVisualState(Image portrait, TextMeshProUGUI nameText, bool isActive)
+        private void SetVisualState(Image portrait, Image frame, TextMeshProUGUI nameText, bool isActive)
         {
             if (portrait)
             {
                 portrait.rectTransform.localScale = isActive ? activeScale : inactiveScale;
                 portrait.color = isActive ? activeColor : inactiveColor;
+            }
+            if (frame)
+            {
+                frame.rectTransform.localScale = isActive ? activeScale : inactiveScale;
             }
             if (nameText)
             {
@@ -501,6 +570,8 @@ namespace Managers
 
         private void EndDialogue()
         {
+            if (nodeImageContainer != null) nodeImageContainer.SetActive(false);
+
             if (panelAnimCoroutine != null) StopCoroutine(panelAnimCoroutine);
             panelAnimCoroutine = StartCoroutine(AnimatePanel(false));
 
@@ -513,6 +584,8 @@ namespace Managers
 
             currentClientContext = null;
             currentNode = null;
+            currentGraph = null;
+            defaultBackground = null;
 
             onDialogueComplete?.Invoke();
             onDialogueComplete = null;

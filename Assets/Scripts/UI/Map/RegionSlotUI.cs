@@ -41,7 +41,17 @@ namespace UI.Map
 
         public void UpdateState()
         {
-            if (regionData == null || ProgressionManager.Instance == null) return;
+            if (regionData == null)
+            {
+                Debug.LogWarning("[RegionSlotUI] regionData is null!");
+                return;
+            }
+
+            if (ProgressionManager.Instance == null)
+            {
+                Debug.LogWarning("[RegionSlotUI] ProgressionManager.Instance is null!");
+                return;
+            }
 
             bool isUnlocked = ProgressionManager.Instance.IsRegionUnlocked(regionData.regionID);
             
@@ -68,6 +78,15 @@ namespace UI.Map
 
         private void OnClicked()
         {
+            Debug.Log($"[RegionSlotUI] OnClicked called for region: {regionData?.regionID ?? "NULL"}");
+
+            if (mapController == null)
+            {
+                Debug.LogError("[RegionSlotUI] mapController is null! Make sure MapPanelUI is assigned in Inspector.");
+                return;
+            }
+
+            Debug.Log($"[RegionSlotUI] Calling mapController.ShowRegionInfo for {regionData?.regionID ?? "NULL"}");
             // Сообщаем контроллеру, что выбрали этот регион (чтобы показать инфо-панель)
             mapController.ShowRegionInfo(regionData);
         }

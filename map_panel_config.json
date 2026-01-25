@@ -1,0 +1,33 @@
+{
+  "operations": [
+    {
+      "mode": "modify",
+      "targetPath": "Canvas/MapPanelUI",
+      "components": [
+        {
+          "type": "MapPanelUI",
+          "properties": [
+            {"name": "closeButton", "value": "$closeButton"},
+            {"name": "regionInfoPanel", "value": "$regionInfoPanel"},
+            {"name": "r_Title", "value": "$r_Title"},
+            {"name": "r_Desc", "value": "$r_Desc"},
+            {"name": "r_Cost", "value": "$r_Cost"},
+            {"name": "r_ActionButton", "value": "$r_ActionButton"},
+            {"name": "r_ButtonText", "value": "$r_ButtonText"},
+            {"name": "regionDocPrefab", "value": "$regionDocPrefab"},
+            {"name": "jobInfoPanel", "value": "$jobInfoPanel"},
+            {"name": "j_Title", "value": "$j_Title"},
+            {"name": "j_Desc", "value": "$j_Desc"},
+            {"name": "j_Cost", "value": "$j_Cost"},
+            {"name": "j_ActionButton", "value": "$j_ActionButton"},
+            {"name": "j_ButtonText", "value": "$j_ButtonText"},
+            {"name": "jobDocPrefab", "value": "$jobDocPrefab"},
+            {"name": "directorInboxStack", "value": "$directorInboxStack"},
+            {"name": "regionSlots", "value": "$regionSlots"},
+            {"name": "jobNodes", "value": "$jobNodes"}
+          ]
+        }
+      ]
+    }
+  ]
+}

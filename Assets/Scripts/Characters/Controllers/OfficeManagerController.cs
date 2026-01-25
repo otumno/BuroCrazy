@@ -6,6 +6,7 @@ using System.Linq;
 using Managers;
 using Gameplay.Documents;
 using Utilities;
+using Enums;
 
 [RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
 public class OfficeManagerController : StaffController

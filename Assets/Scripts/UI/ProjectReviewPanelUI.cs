@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using Data.Documents;
 using Managers;
+using Enums;
 
 namespace UI
 {

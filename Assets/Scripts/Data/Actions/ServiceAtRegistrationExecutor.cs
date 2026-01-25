@@ -301,7 +301,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         {
              LimitedCapacityZone cashierZone = ClientSpawner.GetCashierZone();
              if (cashierZone == null || cashierZone.waitingWaypoint == null) {
-                 return ClientSpawner.Instance.exitWaypoint; 
+                 return ClientSpawner.Instance?.exitWaypoint ?? null; 
              }
              return cashierZone.waitingWaypoint;
         }

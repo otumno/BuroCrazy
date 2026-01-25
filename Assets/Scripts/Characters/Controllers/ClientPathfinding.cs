@@ -159,7 +159,14 @@ public class ClientPathfinding : MonoBehaviour
         if (mainGoal == default(ClientGoal))
         {
             var goals = System.Enum.GetValues(typeof(ClientGoal));
-            mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
+            if (goals.Length > 0)
+            {
+                mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
+            }
+            else
+            {
+                mainGoal = ClientGoal.AskAndLeave;
+            }
         }
 
         DocumentType startingDoc = DocumentType.None;
@@ -202,32 +209,41 @@ public class ClientPathfinding : MonoBehaviour
     }
 
     void OnDestroy()
-{
-	if (Managers.TimeManager.Instance != null)
+    {
+        if (Managers.TimeManager.Instance != null)
         {
             Managers.TimeManager.Instance.OnPeriodChanged -= OnRemotePeriodTick;
         }
 	
-    if (ClientQueueManager.Instance != null)
-    {
-        ClientQueueManager.Instance.RemoveClientFromQueue(this);
-    }
-
-    StartOfDayPanel.Instance?.RemoveDocumentIcon(this);
-
-    // --- ИЗМЕНЕНИЕ НАЧАЛО: Более надежное освобождение места ---
-    if (stateMachine != null)
-    {
-        var zone = stateMachine.GetTargetZone();
-        var goal = stateMachine.GetCurrentGoal();
-        if (zone != null && goal != null)
+        if (ClientQueueManager.Instance != null)
         {
-            // Используем прямые ссылки из стейт-машины, это надежнее
-            zone.ReleaseWaypoint(goal);
+            ClientQueueManager.Instance.RemoveClientFromQueue(this);
+        }
+
+        StartOfDayPanel.Instance?.RemoveDocumentIcon(this);
+
+        // --- Очистка зон ---
+        if (stateMachine != null)
+        {
+            var zone = stateMachine.GetTargetZone();
+            var goal = stateMachine.GetCurrentGoal();
+            if (zone != null && goal != null)
+            {
+                zone.ReleaseWaypoint(goal);
+            }
+            if (zone != null)
+            {
+                zone.LeaveQueue(gameObject);
+            }
+        }
+        
+        // Очистка из всех зон через FindObjectsOfType если нужно
+        var allZones = FindObjectsOfType<LimitedCapacityZone>();
+        foreach (var z in allZones)
+        {
+            z.LeaveQueue(gameObject);
         }
     }
-    // --- ИЗМЕНЕНИЕ КОНЕЦ ---
-}
 
 	public void InitializeRemoteLifetime(int periods)
     {
