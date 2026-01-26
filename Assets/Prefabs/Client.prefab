@@ -171,7 +171,7 @@ MonoBehaviour:
     m_TrimEdge: 0.09
     m_FlipX: 0
     m_FlipY: 0
-    m_InitialTrim: 0.03
+    m_InitialTrim: 0
   m_CastingOption: 1
   m_PreviousTrimEdge: 0.09
   m_PreviousEdgeProcessing: 1
@@ -1627,6 +1627,7 @@ GameObject:
   - component: {fileID: 3575490550390217576}
   - component: {fileID: 67531469469451518}
   - component: {fileID: 8027028625580964266}
+  - component: {fileID: 2026150567873366648}
   m_Layer: 6
   m_Name: Client
   m_TagString: Client
@@ -1812,6 +1813,9 @@ MonoBehaviour:
   maxPatienceTime: 120
   isLeavingSuccessfully: 0
   reasonForLeaving: 0
+  canGrumble: 1
+  grumblingThreshold: 0.5
+  grumblingFrequency: 0.5
   billToPay: 0
   moneyPrefab: {fileID: 6120984091807588361, guid: b29ef6a3cb0296e49ab71914be2f9c64, type: 3}
   trashPrefabs:
@@ -2084,6 +2088,7 @@ MonoBehaviour:
   form2Prefab: {fileID: 3550377790086235711, guid: b4a4385cb142e0941add6cd29c29e654, type: 3}
   certificate1Prefab: {fileID: 6963206784104080445, guid: edf11bd38fec4c84e9745075eb5f910b, type: 3}
   certificate2Prefab: {fileID: 874320401446602386, guid: 3b9e93cf316ee2d4ab8c02695b069d07, type: 3}
+  documentDatabase: []
 --- !u!114 &6402193312992014792
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2168,6 +2173,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a1b870ef5de8dfd4183285d1e89a8a0b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ClientFeedbackController
+--- !u!114 &2026150567873366648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7041728646939229016}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4dd5a748fa2c9df4bbe1d32889573626, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Managers.ClientBehaviorManager
+  behaviorMode: 1
+  useBehaviorTree: 1
+  btTickInterval: 0.1
+  debugMode: 0
+  enableFallbackToSM: 1
 --- !u!1 &7219071150885028742
 GameObject:
   m_ObjectHideFlags: 0

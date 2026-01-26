@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Managers;
 using Scriptables.Audio;
 using DialogueSystem.Data;
+using Characters;
 
 public class ClientPathfinding : MonoBehaviour
 {
@@ -81,12 +82,67 @@ public class ClientPathfinding : MonoBehaviour
 
     [Header("Настройки Терпения")]
     public float totalPatienceTime;
-    public float minPatienceTime = 60f;
-    public float maxPatienceTime = 120f;
+    public float minPatienceTime = 20f;
+    public float maxPatienceTime = 45f;
 
     public bool isLeavingSuccessfully = false;
     public LeaveReason reasonForLeaving = LeaveReason.Normal;
-    
+
+    [Header("Grumbling - Промежуточное недовольство")]
+    public bool canGrumble = true;
+    public float grumblingThreshold = 0.5f;
+    public float grumblingFrequency = 0.5f;
+    private float _lastGrumbleTime = -10f;
+    private const float GRUMBLE_INTERVAL_MIN = 4f;
+
+    /// <summary>
+    /// Возвращает эффективный порог ворчания с учётом архетипа.
+    /// Суетун: ниже порог (быстрее ворчит)
+    /// Бабушка: выше порог (дольше терпит)
+    /// </summary>
+    public float GetEffectiveGrumblingThreshold()
+    {
+        float threshold = grumblingThreshold;
+
+        // Суетун быстрее достигает порога ворчания
+        if (suetunFactor > 0.5f)
+        {
+            threshold -= 0.15f * suetunFactor;
+        }
+
+        // Бабушка дольше терпит перед ворчанием
+        if (babushkaFactor > 0.5f)
+        {
+            threshold += 0.15f * babushkaFactor;
+        }
+
+        return Mathf.Clamp(threshold, 0.2f, 0.9f);
+    }
+
+    /// <summary>
+    /// Возвращает эффективную частоту ворчания с учётом архетипа.
+    /// Суетун: реже ворчит (но быстрее срывается)
+    /// Бабушка: чаще ворчит (но терпеливо ждёт)
+    /// </summary>
+    public float GetEffectiveGrumblingFrequency()
+    {
+        float frequency = grumblingFrequency;
+
+        // Суетун ворчит реже, но быстрее срывается
+        if (suetunFactor > 0.5f)
+        {
+            frequency -= 0.3f * suetunFactor;
+        }
+
+        // Бабушка ворчит чаще, но держится
+        if (babushkaFactor > 0.5f)
+        {
+            frequency += 0.2f * babushkaFactor;
+        }
+
+        return Mathf.Clamp(frequency, 0.1f, 1f);
+    }
+
     [Header("Касса")]
     public int billToPay = 0;
     public GameObject moneyPrefab;
@@ -386,7 +442,33 @@ public class ClientPathfinding : MonoBehaviour
         // Отключаем движение
         var mover = GetComponent<AgentMover>();
         if (mover) mover.enabled = false;
-        
+
     }
-	
+
+    public void SetupGrumblingFromArchetype(ClientArchetype archetype)
+    {
+        if (archetype == null) return;
+
+        canGrumble = archetype.canGrumble;
+        grumblingThreshold = archetype.grumblingThreshold;
+        grumblingFrequency = archetype.grumblingFrequency;
+    }
+
+    public bool ShouldShowGrumble()
+    {
+        if (!canGrumble) return false;
+        if (Time.time - _lastGrumbleTime < GRUMBLE_INTERVAL_MIN) return false;
+
+        _lastGrumbleTime = Time.time;
+        return Random.value < GetEffectiveGrumblingFrequency();
+    }
+
+    public string GetGrumblingText(ClientArchetype archetype)
+    {
+        if (archetype != null)
+        {
+            return archetype.GetGrumblingResponse();
+        }
+        return "Это несносно...";
+    }
 }

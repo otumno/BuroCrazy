@@ -773,7 +773,7 @@ Spawn (на столе директора) → Регистратура → Ди
 - MainUIManager: Auto-find pausePanel
 - TeamMemberCardUI: ApplyRoleColor (12 цветов)
 
-## Статистика
+## Статистика (23.01.2026)
 
 | Метрика | Значение |
 |---------|----------|
@@ -784,5 +784,210 @@ Spawn (на столе директора) → Регистратура → Ди
 
 ---
 
+# ИЗМЕНЕНИЯ ОТ 26.01.2026
+
+## 1. Grumbling — Промежуточное состояние недовольства
+
+**Цель:** Дать игроку ранний фидбек о недовольстве клиента до того, как он перейдёт в агрессивное состояние.
+
+**Философия:** Как в жизни — суетливые люди быстро выходят из себя, но мало предупреждают. Бабушки могут долго ворчать, но терпеливо ждут.
+
+### Что добавлено:
+
+**ClientState enum:**
+- Добавлено состояние `Grumbling` между `Confused` и `Enraged`
+
+**ClientArchetype:**
+- `grumblingThreshold` — % терпения для перехода в Grumbling (0.3–0.8, по умолч. 0.5)
+- `grumblingFrequency` — частота мыслей о недовольстве (0–1)
+- `canGrumble` — может ли ворчать (false = сразу в Enraged)
+- `grumblingLines` — список реплик ворчания
+
+**ClientPathfinding:**
+- Поля `canGrumble`, `grumblingThreshold`, `grumblingFrequency`
+- `GetEffectiveGrumblingThreshold()` — порог с учётом архетипа
+- `GetEffectiveGrumblingFrequency()` — частота с учётом архетипа
+- `SetupGrumblingFromArchetype()` — настройка из архетипа
+- `ShouldShowGrumble()` — проверка частоты ворчания
+- `GetGrumblingText()` — получение текста ворчания
+
+**ClientStateMachine:**
+- `GrumblingRoutine()` — обработка состояния ворчания
+- Периодические мысли-ворчания через ThoughtBubbleController
+- Переход: Grumbling → Enraged (40%) или LeavingUpset (60%)
+
+### Баланс Grumbling по архетипу (ИСПРАВЛЕНО 26.01.2026):
+
+| Архетип | Порог входа | Частота ворчания | Поведение |
+|---------|-------------|------------------|-----------|
+| **Суетун** (suetunFactor > 0.5) | Ниже (-15%×фактор) | Ниже (-30%×фактор) | Быстро ворчит, но редко → быстро срывается в ярость |
+| **Бабушка** (babushkaFactor > 0.5) | Выше (+15%×фактор) | Выше (+20%×фактор) | Долго терпит, но часто ворчит → терпеливо ждёт |
+
+**Примеры:**
+- Суетун (фактор 0.75): порог 39%, частота 27%
+  - → Быстро начинает ворчать, но ворчит редко
+  - → Но быстро срывается в ярость
+
+- Бабушка (фактор 0.75): порог 61%, частота 65%
+  - → Медленно начинает ворчать, но ворчит часто
+  - → Терпеливо ждёт обслуживания
+
+## 2. Уменьшение терпения
+
+**Изменено в `ClientPathfinding.cs:84-85`:**
+
+| Параметр | Было | Стало |
+|----------|------|-------|
+| `minPatienceTime` | 60 сек | 20 сек |
+| `maxPatienceTime` | 120 сек | 45 сек |
+
+**Влияние на геймплей:**
+- Более динамичные очереди
+- Быстрее проявляется недовольство клиентов
+- Больше pressure на игрока
+
+## 3. Интеграция архетипов
+
+**ClientSpawnerWithArchetypes:**
+- `SetupClientWithArchetype()` теперь вызывает `client.SetupGrumblingFromArchetype()`
+- Выбор `mainGoal` из `archetype.allowedGoals` (а не рандомный)
+
+## 4. Обновлённая документация
+
+- `Клиенты.md` — добавлено описание Grumbling, обновлены параметры терпения
+- `Система Прогресса.md` — переписана в стиле GDD (убран код)
+
+---
+
+## Статистика (26.01.2026)
+
+| Метрика | Значение |
+|---------|----------|
+| Файлов изменено | 7 |
+| Новых состояний | 1 (Grumbling) |
+| Новых полей в архетипе | 4 |
+| Новых методов | 4 |
+
+---
+
+# ИЗМЕНЕНИЯ ОТ 26.01.2026 (PART 2)
+
+## 2. Behavior Tree для Клиентов
+
+**Цель:** Заменить текущую State Machine на модульную Behavior Tree для более гибкого и расширяемого поведения клиентов.
+
+### Что добавлено:
+
+**Базовые классы BT:**
+- `BTNode` - базовый класс для всех узлов
+- `BTNodeResult` - Success/Running/Failure
+- `BehaviorTree` - менеджер дерева с тиками
+
+**Composite узлы:**
+- `BTSequence` - выполнение по порядку (все дети должны успех)
+- `BTSelector` - выбор (первый успешный)
+- `BTParallel` - параллельное выполнение
+
+**Decorator узлы:**
+- `BTInvert` - инвертирует результат
+- `BTRepeat` - повторяет N раз
+- `BTTimeout` - таймаут выполнения
+- `BTCooldown` - задержка между выполнениями
+- `BTCondition` - проверка условия
+- `BTUntilFail` - повторять пока не Failure
+
+**ClientLeaf узлы (специфичные для клиента):**
+- `SetStateNode` - установить состояние
+- `SetGoalNode` - установить цель
+- `MoveToGoalNode` - идти к цели
+- `GrumbleNode` - ворчать
+- `CheckHeatLevelNode` - проверить уровень терпения
+- `ClientConditionNode` - условие из функции
+- `LeaveNode` - уйти
+- `EnrageNode` - переход в ярость
+- `JoinQueueNode` - присоединиться к очереди
+- `WaitNode` - подождать
+
+**ClientBehaviorTree:**
+- `ClientBehaviorTreeFactory` - фабрика для создания дерева
+- `ClientBehaviorTree` - менеджер дерева клиента
+
+**Интеграция:**
+- `ClientBehaviorManager` - компонент для переключения режимов
+- `ClientBehaviorMode` - StateMachineOnly / BehaviorTreeOnly / Hybrid
+
+### Структура дерева клиента:
+
+```
+ClientRoot (Selector)
+├── MainGoal (Sequence)
+│   ├── SetRegistrationGoal → MoveToRegistration
+│   ├── JoinQueue → WaitInQueue (30s timeout)
+│   ├── GetServed
+│   ├── NeedCash? → MoveToCashier → AtCashier
+│   └── LeaveSuccess
+├── AlternativePath (Sequence)
+│   ├── QueueTooLong? → CutInLine → DirectorComplaint → LeaveUpset
+├── GrumblingBehavior (Sequence)
+│   ├── IsGrumbling? → GrumbleSequence (Grumbling → Wait → Exit)
+│   └── PatienceZero? → Enrage / LeaveFrustrated
+└── LeaveBehavior (Sequence)
+    └── ShouldLeave? → MoveToExit → Leaving
+```
+
+### HeatLevel (уровни терпения):
+
+| Уровень | Терпение | Описание |
+|---------|----------|----------|
+| Calm | 0-40% | Спокойствие |
+| Grumbling | 40-70% | Ворчание |
+| Frustrated | 70-90% | Расстройство |
+| Enraged | 90-100% | Ярость |
+
+### Использование:
+
+```csharp
+// Добавьте компонент ClientBehaviorManager на префаб клиента
+[RequireComponent(typeof(ClientBehaviorManager))]
+public class ClientPathfinding : MonoBehaviour
+{
+    private ClientBehaviorManager behaviorManager;
+
+    void Start()
+    {
+        behaviorManager = GetComponent<ClientBehaviorManager>();
+        // Для использования BT:
+        behaviorManager.SwitchMode(ClientBehaviorMode.BehaviorTreeOnly);
+    }
+
+    void Update()
+    {
+        // BT обновляется автоматически через ClientBehaviorManager
+    }
+}
+```
+
+### Преимущества BT перед State Machine:
+
+1. **Модульность** - легко добавлять/удалять поведения
+2. **Расширяемость** - новые узлы без изменения существующих
+3. **Читаемость** - дерево визуально понятнее вложенных switch-case
+4. **Гибкость** - легко создавать вариации поведения
+5. **Переиспользование** - узлы можно использовать в разных деревьях
+
+### Текущий статус:
+
+| Компонент | Статус |
+|-----------|--------|
+| Базовые классы BT | ✅ Готово |
+| Composite узлы | ✅ Готово |
+| Decorator узлы | ✅ Готово |
+| ClientLeaf узлы | ✅ Готово |
+| ClientBehaviorTree | ✅ Готово |
+| Интеграция с ClientStateMachine | ✅ Готово |
+| Тестирование | ⏳ Требуется |
+
+---
+
 *Документ автоматически сгенерирован на основе проектной документации BuroCrazy.*
-*Дата создания: 23.01.2026*
+*Дата обновления: 26.01.2026*

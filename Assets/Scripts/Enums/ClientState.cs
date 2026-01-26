@@ -8,8 +8,9 @@ public enum ClientState
     GoingToCashier, AtCashier,
     Positioning, ReturningToWait, AtDesk1, AtDesk2,
     AtLimitedZoneEntrance, InsideLimitedZone,
+    Grumbling,    // Ворчание - промежуточное состояние недовольства
     Enraged,
     LeavingUpset,
     ReturningToRegistrar,
-	WaitingForDocument	// <-- ДОБАВЬТЕ ЭТУ СТРОКУ
+	WaitingForDocument
 }

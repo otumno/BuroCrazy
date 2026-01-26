@@ -18,9 +18,12 @@ public partial class CharacterVisuals : MonoBehaviour
     private EmotionSpriteCollection currentSpriteCollection;
     private StateEmotionMap currentStateEmotionMap;
     private Gender characterGender;
-    private Coroutine levelUpCoroutine; // Handle for the level-up effect coroutine
-	
-	private Sprite assignedPortrait;
+    private Coroutine levelUpCoroutine;
+
+    private Sprite assignedPortrait;
+
+    // Archetype tracking for Behavior Tree
+    public Characters.ClientArchetype currentArchetype { get; private set; }
 
     [Header("Звуки")] // Sound Effects section
     [Tooltip("Звук, проигрываемый при повышении уровня")]
@@ -390,6 +393,8 @@ public partial class CharacterVisuals : MonoBehaviour
     public void SetupFromArchetype(global::Characters.ClientArchetype archetype)
     {
         if (archetype == null) return;
+
+        currentArchetype = archetype;
 
         if (archetype.allowedClothingColors != null && archetype.allowedClothingColors.Count > 0)
         {

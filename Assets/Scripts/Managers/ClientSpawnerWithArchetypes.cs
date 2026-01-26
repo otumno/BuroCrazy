@@ -92,6 +92,13 @@ namespace Managers
                 visuals.SetupFromArchetype(archetype);
             }
 
+            client.SetupGrumblingFromArchetype(archetype);
+
+            if (archetype.allowedGoals != null && archetype.allowedGoals.Count > 0)
+            {
+                client.mainGoal = archetype.allowedGoals[Random.Range(0, archetype.allowedGoals.Count)];
+            }
+
             var stateMachine = client.stateMachine;
             if (stateMachine != null)
             {

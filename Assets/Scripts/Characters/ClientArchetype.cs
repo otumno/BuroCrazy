@@ -61,6 +61,21 @@ namespace Characters
         [Range(0.5f, 2f)]
         public float serviceTimeMultiplier = 1f;
 
+        [Header("Grumbling - Промежуточное недовольство")]
+        [Tooltip("При каком % терпения клиент начинает ворчать (0-1). 0.5 = 50%")]
+        [Range(0.3f, 0.8f)]
+        public float grumblingThreshold = 0.5f;
+
+        [Tooltip("Склонность к ворчанию (0-1): как часто показывает недовольство")]
+        [Range(0f, 1f)]
+        public float grumblingFrequency = 0.5f;
+
+        [Tooltip("Реплики при ворчании")]
+        public List<string> grumblingLines;
+
+        [Tooltip("Может ли перейти в Grumbling (false = сразу в Enraged)")]
+        public bool canGrumble = true;
+
         [Header("Особые свойства")]
         [Tooltip("Может ли этот архетип быть бездомным")]
         public bool canBeHomeless = false;
@@ -90,6 +105,12 @@ namespace Characters
         {
             if (happyResponses == null || happyResponses.Count == 0) return "Спасибо!";
             return happyResponses[Random.Range(0, happyResponses.Count)];
+        }
+
+        public string GetGrumblingResponse()
+        {
+            if (grumblingLines == null || grumblingLines.Count == 0) return "Это несносно...";
+            return grumblingLines[Random.Range(0, grumblingLines.Count)];
         }
     }
 

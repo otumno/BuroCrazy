@@ -79,8 +79,10 @@ public class ClientStateMachine : MonoBehaviour
         {
             yield return wait;
 
+            if (currentState == ClientState.Grumbling) continue;
+
             // Если уходим - стоп
-            if (IsLeavingState(currentState) || currentState == ClientState.PassedRegistration || 
+            if (IsLeavingState(currentState) || currentState == ClientState.PassedRegistration ||
                 currentState == ClientState.Enraged || currentState == ClientState.Confused) yield break;
 
             // 1. Базовая скорость накопления зависит от состояния
@@ -132,7 +134,16 @@ public class ClientStateMachine : MonoBehaviour
             // 3. Применяем стресс
             parent.AddStress(checkInterval * currentMultiplier);
 
-            // 4. Проверка срыва
+            // 4. Проверка перехода в Grumbling (промежуточное недовольство)
+            if (currentState != ClientState.Grumbling && parent.canGrumble &&
+                parent.PatienceHeat >= parent.GetEffectiveGrumblingThreshold() && parent.PatienceHeat < 1.0f)
+            {
+                Debug.Log($"<color=yellow>[ClientStateMachine]</color> {parent.name}: Начинает ворчать ({parent.PatienceHeat:P0})!");
+                SetState(ClientState.Grumbling);
+                yield break;
+            }
+
+            // 5. Проверка срыва (100%)
             if (parent.PatienceHeat >= 1.0f)
             {
                 Debug.Log($"<color=red>[ClientStateMachine]</color> {parent.name}: Терпение лопнуло (100%)!");
@@ -312,6 +323,10 @@ public class ClientStateMachine : MonoBehaviour
 
             case ClientState.Confused:
                 yield return StartCoroutine(ConfusedRoutine());
+                break;
+
+            case ClientState.Grumbling:
+                yield return StartCoroutine(GrumblingRoutine());
                 break;
 
             case ClientState.Enraged:
@@ -543,6 +558,45 @@ public class ClientStateMachine : MonoBehaviour
         }
     }
 
+    private IEnumerator GrumblingRoutine()
+    {
+        var thoughtController = GetComponent<ThoughtBubbleController>();
+        var archetype = parent.GetComponent<CharacterVisuals>()?.currentArchetype;
+
+        if (thoughtController != null && parent.ShouldShowGrumble())
+        {
+            string grumbleText = parent.GetGrumblingText(archetype);
+            thoughtController.ShowPriorityMessage(grumbleText, 2f, Color.yellow);
+        }
+
+        float checkInterval = 0.5f;
+        while (currentState == ClientState.Grumbling)
+        {
+            yield return new WaitForSeconds(checkInterval);
+
+            if (parent.PatienceHeat >= 1.0f)
+            {
+                if (Random.value < 0.4f)
+                {
+                    SetState(ClientState.Enraged);
+                }
+                else
+                {
+                    parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+                    SetGoal(ClientSpawner.Instance.exitWaypoint);
+                    SetState(ClientState.LeavingUpset);
+                }
+                yield break;
+            }
+
+            if (parent.ShouldShowGrumble() && thoughtController != null)
+            {
+                string grumbleText = parent.GetGrumblingText(archetype);
+                thoughtController.ShowPriorityMessage(grumbleText, 2f, Color.yellow);
+            }
+        }
+    }
+
     private IEnumerator EnragedRoutine()
     {
         GuardManager.Instance.ReportViolator(parent.gameObject);
@@ -752,8 +806,9 @@ public class ClientStateMachine : MonoBehaviour
     
     private bool IsLeavingState(ClientState state)
     {
-        return state == ClientState.Leaving || state == ClientState.LeavingUpset || 
-               state == ClientState.Confused || state == ClientState.Enraged;
+        return state == ClientState.Leaving || state == ClientState.LeavingUpset ||
+               state == ClientState.Confused || state == ClientState.Enraged ||
+               state == ClientState.Grumbling;
     }
 
     public string GetStatusInfo()
