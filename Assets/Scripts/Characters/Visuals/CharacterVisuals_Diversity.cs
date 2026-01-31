@@ -136,30 +136,6 @@ namespace Characters
             Debug.Log($"[{gameObject.name}] Dynamic outfit created: sprite={outfitSprite.name}, color={outfitRenderer.color}");
         }
 
-            var overlaySprite = transform.Find("VisualsContainer/OutfitOverlay");
-            Debug.Log($"[{gameObject.name}] OutfitOverlay search result: {(overlaySprite != null ? "FOUND" : "NOT FOUND")}");
-
-            if (overlaySprite != null)
-            {
-                var overlayRenderer = overlaySprite.GetComponent<SpriteRenderer>();
-                if (overlayRenderer != null)
-                {
-                    Color outfitColor = archetype.GetRandomOutfitColor();
-                    overlayRenderer.sprite = outfitSprite;
-                    overlayRenderer.color = outfitColor;
-                    Debug.Log($"[{gameObject.name}] Outfit applied: sprite={outfitSprite.name}, color={outfitColor}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[{gameObject.name}] OutfitOverlay has no SpriteRenderer!");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"[{gameObject.name}] OutfitOverlay not found under VisualsContainer!");
-            }
-        }
-
         private int GetHairSortingOrder()
         {
             var bodySprite = GetComponent<SpriteRenderer>();
