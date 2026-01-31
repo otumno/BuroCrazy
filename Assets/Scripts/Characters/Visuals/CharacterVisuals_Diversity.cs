@@ -1,88 +1,162 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Data.Visuals;
 using Characters;
 
 namespace Characters
 {
     public partial class CharacterVisuals : MonoBehaviour
     {
-        [Header("Визуальное разнообразие")]
-        [Tooltip("База данных причесок")]
-        public HairStyleDatabase hairDatabase;
-
-        [Tooltip("База данных одежды")]
-        public OutfitDatabase outfitDatabase;
-
-        [Tooltip("Текущая прическа")]
-        public HairStyleData currentHair;
-
-        [Tooltip("Текущая одежда")]
-        public OutfitData currentOutfit;
-
         private GameObject hairObject;
         private SpriteRenderer hairRenderer;
 
         public void SetupVisualDiversity(ClientArchetype archetype)
         {
-            if (archetype == null) return;
-
-            SetupHair(archetype);
-            SetupOutfit(archetype);
-        }
-
-        private void SetupHair(ClientArchetype archetype)
-        {
-            if (hairDatabase == null || hairDatabase.allHairStyles == null || hairDatabase.allHairStyles.Count == 0)
+            if (archetype == null)
             {
+                Debug.LogWarning($"[{gameObject.name}] SetupVisualDiversity: archetype is null!");
                 return;
             }
 
-            var availableHair = new List<HairStyleData>();
+            Debug.Log($"[{gameObject.name}] SetupVisualDiversity: archetype={archetype.name}, groupID={archetype.groupID}, displayName={archetype.displayName}");
 
-            foreach (var hair in hairDatabase.allHairStyles)
+            // Тело - спрайт из архетипа
+            if (archetype.bodySprite != null && bodyRenderer != null)
             {
-                if (hair != null && hair.CanBeUsedForArchetype(archetype.archetypeID))
-                {
-                    availableHair.Add(hair);
-                }
+                Debug.Log($"[{gameObject.name}] Setting body sprite from archetype: {archetype.bodySprite.name}");
+                bodyRenderer.sprite = archetype.bodySprite;
+            }
+            else
+            {
+                Debug.LogWarning($"[{gameObject.name}] Body sprite NOT set: archetype.bodySprite={(archetype.bodySprite != null)}, bodyRenderer={(bodyRenderer != null)}");
             }
 
-            if (availableHair.Count == 0)
+            // Портрет для диалогов
+            if (archetype.portraitSprite != null)
             {
-                availableHair.AddRange(hairDatabase.allHairStyles);
+                assignedPortrait = archetype.portraitSprite;
+                Debug.Log($"[{gameObject.name}] Portrait set: {archetype.portraitSprite.name}");
             }
 
-            if (availableHair.Count > 0)
-            {
-                currentHair = availableHair[Random.Range(0, availableHair.Count)];
-                ApplyHair(currentHair, archetype);
-            }
+            // Причёска - случайная из списка
+            ApplyHairFromArchetype(archetype);
+
+            // Одежда - случайная из списка
+            ApplyOutfitFromArchetype(archetype);
         }
 
-        private void ApplyHair(HairStyleData hairData, ClientArchetype archetype)
+        private void ApplyHairFromArchetype(ClientArchetype archetype)
         {
-            if (hairData == null) return;
+            Sprite hairSprite = archetype.GetRandomHairSprite();
+            Debug.Log($"[{gameObject.name}] ApplyHairFromArchetype: hairSprite={(hairSprite != null ? hairSprite.name : "NULL")}, count={archetype.hairSprites?.Count ?? 0}");
+
+            if (hairSprite == null)
+            {
+                Debug.LogWarning($"[{gameObject.name}] No hair sprite in archetype!");
+                return;
+            }
+
+            Color hairColor = archetype.GetRandomHairColor();
+            Debug.Log($"[{gameObject.name}] Hair color: {hairColor}");
 
             if (hairObject != null)
             {
                 Destroy(hairObject);
             }
 
-            if (hairData.frontSprite != null || hairData.backSprite != null)
+            hairObject = new GameObject("Hair");
+            hairObject.transform.SetParent(transform, false);
+            hairObject.transform.localPosition = Vector3.zero;
+
+            hairRenderer = hairObject.AddComponent<SpriteRenderer>();
+            hairRenderer.sprite = hairSprite;
+            hairRenderer.sortingOrder = GetHairSortingOrder();
+            hairRenderer.color = hairColor;
+
+            Debug.Log($"[{gameObject.name}] Hair created: sprite={hairSprite.name}, color={hairColor}");
+        }
+
+        private void ApplyOutfitFromArchetype(ClientArchetype archetype)
+        {
+            Sprite outfitSprite = archetype.GetRandomOutfitSprite();
+            Debug.Log($"[{gameObject.name}] ApplyOutfitFromArchetype: outfitSprite={(outfitSprite != null ? outfitSprite.name : "NULL")}, count={archetype.outfitSprites?.Count ?? 0}");
+
+            if (outfitSprite == null)
             {
-                hairObject = new GameObject("Hair");
-                hairObject.transform.SetParent(transform, false);
+                Debug.LogWarning($"[{gameObject.name}] No outfit sprite in archetype!");
+                return;
+            }
 
-                hairRenderer = hairObject.AddComponent<SpriteRenderer>();
+            // Try multiple search methods for OutfitOverlay
+            Transform overlaySprite = transform.Find("VisualsContainer/OutfitOverlay");
+            if (overlaySprite == null)
+            {
+                overlaySprite = transform.Find("OutfitOverlay");
+            }
+            if (overlaySprite == null)
+            {
+                // Deep search
+                overlaySprite = FindDeepChild(transform, "OutfitOverlay");
+            }
 
-                if (hairData.frontSprite != null)
+            Debug.Log($"[{gameObject.name}] OutfitOverlay search result: {(overlaySprite != null ? "FOUND at " + overlaySprite.name : "NOT FOUND")}");
+
+            if (overlaySprite != null)
+            {
+                var overlayRenderer = overlaySprite.GetComponent<SpriteRenderer>();
+                if (overlayRenderer != null)
                 {
-                    hairRenderer.sprite = hairData.frontSprite;
+                    Color outfitColor = archetype.GetRandomOutfitColor();
+                    overlayRenderer.sprite = outfitSprite;
+                    overlayRenderer.color = outfitColor;
+                    Debug.Log($"[{gameObject.name}] Outfit applied: sprite={outfitSprite.name}, color={outfitColor}");
                 }
+                else
+                {
+                    Debug.LogWarning($"[{gameObject.name}] OutfitOverlay has no SpriteRenderer!");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[{gameObject.name}] OutfitOverlay not found! Creating dynamic outfit...");
+                CreateDynamicOutfit(archetype, outfitSprite);
+            }
+        }
 
-                hairRenderer.sortingOrder = GetHairSortingOrder();
-                hairRenderer.color = hairData.GetRandomColor();
+        private void CreateDynamicOutfit(ClientArchetype archetype, Sprite outfitSprite)
+        {
+            var outfitObject = new GameObject("OutfitOverlay");
+            outfitObject.transform.SetParent(transform.Find("VisualsContainer"), false);
+            outfitObject.transform.localPosition = Vector3.zero;
+
+            var outfitRenderer = outfitObject.AddComponent<SpriteRenderer>();
+            outfitRenderer.sprite = outfitSprite;
+            outfitRenderer.color = archetype.GetRandomOutfitColor();
+            outfitRenderer.sortingOrder = 1;
+
+            Debug.Log($"[{gameObject.name}] Dynamic outfit created: sprite={outfitSprite.name}, color={outfitRenderer.color}");
+        }
+
+            var overlaySprite = transform.Find("VisualsContainer/OutfitOverlay");
+            Debug.Log($"[{gameObject.name}] OutfitOverlay search result: {(overlaySprite != null ? "FOUND" : "NOT FOUND")}");
+
+            if (overlaySprite != null)
+            {
+                var overlayRenderer = overlaySprite.GetComponent<SpriteRenderer>();
+                if (overlayRenderer != null)
+                {
+                    Color outfitColor = archetype.GetRandomOutfitColor();
+                    overlayRenderer.sprite = outfitSprite;
+                    overlayRenderer.color = outfitColor;
+                    Debug.Log($"[{gameObject.name}] Outfit applied: sprite={outfitSprite.name}, color={outfitColor}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[{gameObject.name}] OutfitOverlay has no SpriteRenderer!");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[{gameObject.name}] OutfitOverlay not found under VisualsContainer!");
             }
         }
 
@@ -94,79 +168,6 @@ namespace Characters
                 return bodySprite.sortingOrder + 1;
             }
             return 100;
-        }
-
-        private void SetupOutfit(ClientArchetype archetype)
-        {
-            if (outfitDatabase == null || outfitDatabase.allOutfits == null || outfitDatabase.allOutfits.Count == 0)
-            {
-                return;
-            }
-
-            var currentGender = GetGender();
-            var availableOutfits = new List<OutfitData>();
-
-            foreach (var outfit in outfitDatabase.allOutfits)
-            {
-                if (outfit != null &&
-                    outfit.CanBeUsedForArchetype(archetype.archetypeID) &&
-                    (outfit.gender == currentGender || outfit.gender == (Gender)99)) // 99 = Undefined in some enums
-                {
-                    availableOutfits.Add(outfit);
-                }
-            }
-
-            if (availableOutfits.Count > 0)
-            {
-                currentOutfit = availableOutfits[Random.Range(0, availableOutfits.Count)];
-                ApplyOutfit(currentOutfit);
-            }
-        }
-
-        private Gender GetGender()
-        {
-            // Try to get gender from the main CharacterVisuals class
-            var genderField = typeof(CharacterVisuals).GetField("gender", 
-                System.Reflection.BindingFlags.NonPublic | 
-                System.Reflection.BindingFlags.Instance);
-            
-            if (genderField != null)
-            {
-                return (Gender)genderField.GetValue(this);
-            }
-            
-            return Gender.Male; // Default
-        }
-
-        private void ApplyOutfit(OutfitData outfitData)
-        {
-            if (outfitData == null) return;
-
-            var overlaySprite = transform.Find("OutfitOverlay");
-            if (overlaySprite != null)
-            {
-                var overlayRenderer = overlaySprite.GetComponent<SpriteRenderer>();
-                if (overlayRenderer != null && outfitData.overlaySprite != null)
-                {
-                    overlayRenderer.sprite = outfitData.overlaySprite;
-                    overlayRenderer.color = outfitData.GetRandomColor();
-                }
-            }
-        }
-
-        public void RandomizeAppearance()
-        {
-            if (hairDatabase != null)
-            {
-                var randomHair = hairDatabase.allHairStyles[Random.Range(0, hairDatabase.allHairStyles.Count)];
-                currentHair = randomHair;
-            }
-
-            if (outfitDatabase != null)
-            {
-                var randomOutfit = outfitDatabase.allOutfits[Random.Range(0, outfitDatabase.allOutfits.Count)];
-                currentOutfit = randomOutfit;
-            }
         }
     }
 }

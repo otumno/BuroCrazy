@@ -3,6 +3,7 @@ using System.Collections;
 using System.Linq;
 using Managers;
 using Utilities;
+using Characters;
 
 [RequireComponent(typeof(ClientMessGenerator))]
 [RequireComponent(typeof(ClientActionExecutor))]

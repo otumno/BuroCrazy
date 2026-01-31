@@ -20,15 +20,15 @@ MonoBehaviour:
     emotion: 11
   - stateName: CarryingDocuments
     emotion: 12
-  - stateName: Supervising
+  - stateName: Idle
     emotion: 10
-  - stateName: Talking
+  - stateName: Idle
     emotion: 11
-  - stateName: Scared
+  - stateName: Idle
     emotion: 9
-  - stateName: Happy
+  - stateName: Idle
     emotion: 1
-  - stateName: Enraged
+  - stateName: Idle
     emotion: 7
   - stateName: GoingForDocuments
     emotion: 11

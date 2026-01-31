@@ -13,7 +13,7 @@ public class Action_ServiceAtRegistration : StaffAction
     
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is ClerkController clerk) || clerk.role != ClerkController.ClerkRole.Registrar || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
+        if (!(staff is ClerkController clerk) || clerk.clerkRole != ClerkController.ClerkRole.Registrar || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
         {
             return false;
         }

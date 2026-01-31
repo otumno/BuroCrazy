@@ -12,20 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c024d2d1423e2e04cb58dc0a1a4bc506, type: 3}
   m_Name: Archetype_Worker
   m_EditorClassIdentifier: Assembly-CSharp::Characters.ClientArchetype
+  groupID: Business
   archetypeID: worker
   displayName: "\u0420\u0430\u0431\u043E\u0447\u0438\u0439"
+  bodySprite: {fileID: 21300384, guid: a4db7b936ee918c4f85913f5236c69f6, type: 3}
+  portraitSprite: {fileID: 5456003906653765308, guid: c43be4c0f65383d4f9a57adc03a2acf2, type: 3}
+  hairSprites: []
+  hairColors:
+  - {r: 0.2, g: 0.1, b: 0, a: 1}
+  - {r: 0.4, g: 0.25, b: 0.1, a: 1}
+  - {r: 0.6, g: 0.4, b: 0.2, a: 1}
+  outfitSprites: []
+  outfitColors:
+  - {r: 0.3, g: 0.3, b: 0.4, a: 1}
+  - {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  - {r: 0.2, g: 0.3, b: 0.2, a: 1}
   patience: 30
-  stressResistance: 0.6
-  aggressionTendency: 0.2
+  speedMultiplier: 1
   satisfactionChance: 0.8
-  allowedGoals: 
+  grumblingThreshold: 0.5
+  grumblingFrequency: 0.5
+  allowedGoals: []
   thoughtPool: []
-  angryResponses: []
+  grumblingLines: []
   happyResponses: []
-  allowedClothingColors: []
-  allowedOutfitTypes: 
-  greetingLines: []
-  tipMultiplier: 1
-  serviceTimeMultiplier: 1
-  canBeHomeless: 0
-  requiresSpecialTreatment: 0
+  angryResponses: []

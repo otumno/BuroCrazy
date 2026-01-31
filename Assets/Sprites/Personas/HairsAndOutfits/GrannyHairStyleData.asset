@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f0cab84765bf174a9dd6ae1979d62b7, type: 3}
+  m_Name: GrannyHairStyleData
+  m_EditorClassIdentifier: Assembly-CSharp::Data.Visuals.HairStyleData
+  hairID: 
+  displayName: 
+  frontSprite: {fileID: 0}
+  backSprite: {fileID: 0}
+  isLong: 0
+  requiresHatCompatibility: 0
+  allowedArchetypeIDs: []
+  allowedColors:
+  - r: 0.3903891
+    g: 0.3295657
+    b: 0.4339623
+    a: 1
+  - r: 0.38679248
+    g: 0.3639863
+    b: 0.34118018
+    a: 1
+  - r: 0.4339623
+    g: 0.2957903
+    b: 0.15761836
+    a: 1
+  - r: 0.8
+    g: 0.7
+    b: 0.5
+    a: 1
+  - r: 0.9
+    g: 0.9
+    b: 0.85
+    a: 1
+  - r: 0.754717
+    g: 0.754717
+    b: 0.754717
+    a: 1
+  - r: 0.2264151
+    g: 0.2264151
+    b: 0.2264151
+    a: 1
+  - r: 0.05660379
+    g: 0.029102892
+    b: 0.029102892
+    a: 1
+  allowRandomTint: 1
+  allowColorReplacement: 1

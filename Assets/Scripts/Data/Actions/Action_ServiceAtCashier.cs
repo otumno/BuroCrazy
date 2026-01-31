@@ -8,7 +8,7 @@ public class Action_ServiceAtCashier : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is ClerkController clerk) || clerk.role != ClerkController.ClerkRole.Cashier || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
+        if (!(staff is ClerkController clerk) || clerk.clerkRole != ClerkController.ClerkRole.Cashier || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
         {
             return false;
         }

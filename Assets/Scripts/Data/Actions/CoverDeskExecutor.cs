@@ -26,7 +26,7 @@ public class CoverDeskExecutor : ActionExecutor
         }
 
         var clerkOnBreak = HiringManager.Instance.AllStaff.OfType<ClerkController>()
-            .FirstOrDefault(c => c.role == targetRole && c.IsOnBreak());
+            .FirstOrDefault(c => c.clerkRole == targetRole && c.IsOnBreak());
         if (clerkOnBreak == null || clerkOnBreak.assignedWorkstation == null) { FinishAction(false); yield break; }
 
         var targetPoint = clerkOnBreak.assignedWorkstation;

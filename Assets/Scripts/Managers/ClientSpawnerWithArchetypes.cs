@@ -31,10 +31,21 @@ namespace Managers
                 archetypeDatabase = Resources.Load<ArchetypeDatabase>("Databases/ArchetypeDatabase");
             }
 
+            if (spawnPoint == null)
+            {
+                spawnPoint = transform.Find("SpawnPoint");
+                if (spawnPoint == null)
+                {
+                    Debug.LogWarning($"[ClientSpawner] SpawnPoint not found on {gameObject.name}! Using transform position.");
+                }
+            }
+
             if (exitPoint == null)
             {
                 exitPoint = transform.Find("ExitPoint");
             }
+
+            Debug.Log($"[ClientSpawner] Start: spawnPoint={(spawnPoint != null ? spawnPoint.name : "NULL")}, maxClients={maxClients}");
         }
 
         private void Update()
@@ -86,10 +97,23 @@ namespace Managers
         {
             client.name = $"{archetype.displayName} #{Random.Range(100, 999)}";
 
+            // Инициализируем клиента (устанавливает gender, факторы, терпение)
+            Waypoint exitWP = exitPoint != null ? exitPoint.GetComponent<Waypoint>() : null;
+            client.Initialize(spawnPoint?.gameObject, exitWP);
+
+            // Параметры из архетипа
+            client.SetupFromArchetype(archetype);
+
             var visuals = client.GetComponent<CharacterVisuals>();
+            Debug.Log($"[ClientSpawner] SetupClientWithArchetype: client={client.name}, visuals={(visuals != null ? "FOUND" : "NULL")}");
+
             if (visuals != null)
             {
-                visuals.SetupFromArchetype(archetype);
+                visuals.SetupVisualDiversity(archetype);
+            }
+            else
+            {
+                Debug.LogWarning($"[ClientSpawner] CharacterVisuals component not found on {client.name}!");
             }
 
             client.SetupGrumblingFromArchetype(archetype);
@@ -108,6 +132,62 @@ namespace Managers
                     string thought = archetype.GetRandomThought();
                     thoughts.ShowPriorityMessage(thought, 3f, Color.white);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Создать клиента указанной группы
+        /// </summary>
+        public void SpawnByGroup(string groupID)
+        {
+            // Проверка лимита клиентов
+            if (activeClients.Count >= maxClients)
+            {
+                Debug.LogWarning($"[ClientSpawner] Достигнут лимит клиентов: {activeClients.Count}/{maxClients}");
+                return;
+            }
+
+            if (archetypeDatabase == null || clientPrefab == null)
+            {
+                Debug.LogWarning($"[ClientSpawner] archetypeDatabase={(archetypeDatabase != null)}, clientPrefab={(clientPrefab != null)}");
+                return;
+            }
+
+            ClientArchetype archetype = archetypeDatabase.GetRandomByGroup(groupID);
+            if (archetype == null)
+            {
+                Debug.LogWarning($"[ClientSpawner] Архетипы группы '{groupID}' не найдены");
+                return;
+            }
+
+            Vector3 spawnPos = spawnPoint != null ? spawnPoint.position : Vector3.zero;
+            Debug.Log($"[ClientSpawner] Spawning {archetype.displayName} at position: {spawnPos}");
+
+            GameObject clientObj = Instantiate(clientPrefab, spawnPos, Quaternion.identity);
+            ClientPathfinding client = clientObj.GetComponent<ClientPathfinding>();
+
+            if (client != null)
+            {
+                SetupClientWithArchetype(client, archetype);
+                activeClients.Add(client);
+                Debug.Log($"[ClientSpawner] Client spawned successfully: {client.name}");
+            }
+            else
+            {
+                Debug.LogError($"[ClientSpawner] ClientPathfinding component not found on prefab!");
+                Destroy(clientObj);
+            }
+        }
+
+        /// <summary>
+        /// Создать волну клиентов указанной группы
+        /// </summary>
+        public void SpawnWaveByGroup(string groupID, int count = 3)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (activeClients.Count >= maxClients) break;
+                SpawnByGroup(groupID);
             }
         }
 

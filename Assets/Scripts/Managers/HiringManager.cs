@@ -6,6 +6,7 @@ using Data.Calendar;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Utilities;
+using Characters;
 
 namespace Managers
 {
@@ -141,7 +142,7 @@ namespace Managers
             if (requiredControllerType == currentControllerType)
             {
                 staff.currentRole = newRole;
-                if (staff is ClerkController clerk) clerk.role = GetClerkRoleFromStaffRole(newRole);
+                if (staff is ClerkController clerk) clerk.clerkRole = GetClerkRoleFromStaffRole(newRole);
                 return null; 
             }
             else
@@ -228,7 +229,7 @@ namespace Managers
                     else if (newControllerReference is InternController newIntern) newIntern.InitializeFromData(dataForNewRole);
                     else if (newControllerReference is ClerkController newClerk)
                     {
-                        newClerk.role = GetClerkRoleFromStaffRole(newRole);
+                        newClerk.clerkRole = GetClerkRoleFromStaffRole(newRole);
                         newClerk.allRoleData = this.allRoleData;
                     }
                 }

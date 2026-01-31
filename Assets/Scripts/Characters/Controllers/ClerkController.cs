@@ -38,7 +38,7 @@ public class ClerkController : StaffController, IServiceProvider
     }
 
     [Header("Настройки клерка")]
-    public ClerkRole role = ClerkRole.Regular;
+    public ClerkRole clerkRole = ClerkRole.Regular;
     public List<RoleData> allRoleData;
     
     public float redirectionBonus = 0f;
@@ -104,7 +104,7 @@ public class ClerkController : StaffController, IServiceProvider
 
     public void AssignClient(ClientPathfinding client)
     {
-        if (this.role == ClerkRole.Cashier)
+        if (this.clerkRole == ClerkRole.Cashier)
         {
             StartCoroutine(CashierServiceRoutine(client));
         }

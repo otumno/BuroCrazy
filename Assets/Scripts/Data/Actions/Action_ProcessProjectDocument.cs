@@ -22,7 +22,7 @@ public class Action_ProcessProjectDocument : StaffAction
             return false;
         }
         
-        if (clerk.role != ClerkController.ClerkRole.Registrar && clerk.role != ClerkController.ClerkRole.Cashier)
+        if (clerk.clerkRole != ClerkController.ClerkRole.Registrar && clerk.clerkRole != ClerkController.ClerkRole.Cashier)
         {
             return false;
         }

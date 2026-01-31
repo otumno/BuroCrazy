@@ -19,7 +19,7 @@ public class ProcessDocumentCat2Action : StaffAction
             return false;
         }
 
-        if (!(staff is ClerkController clerk) || clerk.role != ClerkController.ClerkRole.Regular || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
+        if (!(staff is ClerkController clerk) || clerk.clerkRole != ClerkController.ClerkRole.Regular || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
         {
             return false;
         }

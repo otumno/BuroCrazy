@@ -24,7 +24,7 @@ public class DoBookkeepingAction : StaffAction
 
         // Для бухгалтера главное условие — наличие стола. 
         // Если это кассир, он может делать это только если нет клиентов (старая логика)
-        if (staff is ClerkController clerk && clerk.role == ClerkController.ClerkRole.Cashier)
+        if (staff is ClerkController clerk && clerk.clerkRole == ClerkController.ClerkRole.Cashier)
         {
              var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
              if (zone != null && zone.GetOccupyingClients().Count > 0) return false;

@@ -35,7 +35,7 @@ public class ClerkNotification : MonoBehaviour
         {
             case ClerkController.ClerkState.Working:
             case ClerkController.ClerkState.ReturningToWork:
-                if (parent.role == ClerkController.ClerkRole.Cashier) return useEmoji ? "😑" : "$";
+                if (parent.clerkRole == ClerkController.ClerkRole.Cashier) return useEmoji ? "😑" : "$";
                 return useEmoji ? "😑" : "§";
             case ClerkController.ClerkState.GoingToToilet:
             case ClerkController.ClerkState.AtToilet:

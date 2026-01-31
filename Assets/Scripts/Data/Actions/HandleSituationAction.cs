@@ -37,7 +37,7 @@ public class HandleSituationAction : StaffAction
 		
         // ----- НОВАЯ ЛОГИКА: Проверка роли -----
         // Если это регистратор, применяем особое правило
-        if (staff is ClerkController clerk && clerk.role == ClerkController.ClerkRole.Registrar)
+        if (staff is ClerkController clerk && clerk.clerkRole == ClerkController.ClerkRole.Registrar)
         {
             // Условие для регистратора: "Запутавшийся клиент находится в пределах моего радиуса помощи"
             return Vector2.Distance(staff.transform.position, confusedClient.transform.position) < remoteHelpRadius;

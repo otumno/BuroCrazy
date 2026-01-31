@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic; // Required for List<>
 using System.Linq; // May be needed if more complex logic is added
+using Characters;
 
 [RequireComponent(typeof(Rigidbody2D))] // Ensure Rigidbody2D is present
 public class AgentMover : MonoBehaviour

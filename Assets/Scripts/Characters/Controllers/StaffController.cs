@@ -1,12 +1,13 @@
 // Assets/Scripts/Characters/Controllers/StaffController.cs
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic; 
-using Gameplay; 
+using System.Collections.Generic;
+using Gameplay;
 using Managers;
-using Utilities; 
-using Data.Calendar; 
+using Utilities;
+using Data.Calendar;
 using Scriptables.Audio;
+using Characters;
 
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]

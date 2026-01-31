@@ -2,12 +2,14 @@
 using UnityEngine;
 using System.Collections; // Required for Coroutines
 
-public partial class CharacterVisuals : MonoBehaviour
+namespace Characters
 {
-    // Enum to specify attachment points
-    public enum AttachPointType { Head, Hand }
+    public partial class CharacterVisuals : MonoBehaviour
+    {
+        // Enum to specify attachment points
+        public enum AttachPointType { Head, Hand }
 
-    // Component references (assigned via StaffPrefabReferences or fallback search)
+        // Component references (assigned via StaffPrefabReferences or fallback search)
     private SpriteRenderer bodyRenderer;
     private SpriteRenderer faceRenderer;
     private Transform headAttachPoint;
@@ -15,9 +17,9 @@ public partial class CharacterVisuals : MonoBehaviour
     private SpriteRenderer levelUpEffectRenderer; // Renderer for the level-up effect sprite
 
     // Internal state
-    private EmotionSpriteCollection currentSpriteCollection;
-    private StateEmotionMap currentStateEmotionMap;
-    private Gender characterGender;
+    internal EmotionSpriteCollection currentSpriteCollection;
+    internal StateEmotionMap currentStateEmotionMap;
+    internal Gender characterGender;
     private Coroutine levelUpCoroutine;
 
     private Sprite assignedPortrait;
@@ -149,23 +151,37 @@ public partial class CharacterVisuals : MonoBehaviour
         // Get a random body animation set for the gender
         EmotionSpriteCollection.BodyAnimationSet bodySet = currentSpriteCollection.GetRandomBodySet(gender);
 
+        // Check if body sprite was already set by archetype/SetupVisualDiversity
+        bool bodySpriteAlreadySet = bodyRenderer.sprite != null;
+        Sprite existingSprite = bodyRenderer.sprite;
+
         // Apply the body sprites if the set is valid
         if (bodySet != null && bodySet.idleBody != null && bodySet.walkBody1 != null && bodySet.walkBody2 != null)
         {
-            // Set the initial body sprite (idle state)
-            bodyRenderer.sprite = bodySet.idleBody;
-            // Provide all animation sprites to the AgentMover
+            if (!bodySpriteAlreadySet)
+            {
+                // Only set body sprite if not already set by archetype
+                bodyRenderer.sprite = bodySet.idleBody;
+                Debug.Log($"[{gameObject.name}] Setup: Using random body from collection: {bodySet.idleBody.name}");
+            }
+            else
+            {
+                Debug.Log($"[{gameObject.name}] Setup: Body sprite already set by archetype, keeping: {existingSprite.name}");
+            }
+
+            // Provide all animation sprites to the AgentMover (use existing sprite if set, otherwise from bodySet)
             if (agentMover != null)
             {
-                 agentMover.SetAnimationSprites(bodySet.idleBody, bodySet.walkBody1, bodySet.walkBody2);
+                 Sprite idleSprite = bodySpriteAlreadySet ? existingSprite : bodySet.idleBody;
+                 agentMover.SetAnimationSprites(idleSprite, bodySet.walkBody1, bodySet.walkBody2);
             }
 			assignedPortrait = bodySet.portrait;
         }
         else // Handle cases where bodySet or its sprites are missing
         {
-            Debug.LogError($"Не удалось получить валидный BodyAnimationSet для пола {gender} из коллекции {currentSpriteCollection.name} у {gameObject.name}. Проверьте ассет EmotionSpriteCollection.", gameObject);
+            Debug.LogError($"Не удалось получить валидный BodyAnimationSet для пола {gender} из коллекции {currentSpriteCollection?.name ?? "null"} у {gameObject.name}.", gameObject);
             // Try setting at least the idle sprite if available, otherwise body remains unchanged
-             if (bodySet?.idleBody != null) bodyRenderer.sprite = bodySet.idleBody;
+             if (bodySet?.idleBody != null && !bodySpriteAlreadySet) bodyRenderer.sprite = bodySet.idleBody;
              // Reset or clear animation sprites in AgentMover if setup failed
              agentMover?.SetAnimationSprites(null, null, null);
         }
@@ -396,20 +412,7 @@ public partial class CharacterVisuals : MonoBehaviour
 
         currentArchetype = archetype;
 
-        if (archetype.allowedClothingColors != null && archetype.allowedClothingColors.Count > 0)
-        {
-            if (bodyRenderer != null)
-            {
-                Color randomColor = archetype.allowedClothingColors[Random.Range(0, archetype.allowedClothingColors.Count)];
-                bodyRenderer.color = randomColor;
-            }
-        }
-
-        if (archetype.allowedOutfitTypes != null && archetype.allowedOutfitTypes.Count > 0)
-        {
-            // Здесь можно добавить логику смены одежды на основе типа
-        }
-
+        // Визуал теперь настраивается через SetupVisualDiversity в CharacterVisuals_Diversity
         Debug.Log($"[CharacterVisuals] Визуал настроен для архетипа: {archetype.displayName}");
     }
 
@@ -429,4 +432,5 @@ public partial class CharacterVisuals : MonoBehaviour
         StopAllCoroutines();
     }
 
-} // End of CharacterVisuals class
+    } // End of CharacterVisuals class
+} // End of Characters namespace

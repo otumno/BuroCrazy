@@ -4,6 +4,8 @@ using Data.Calendar;
 using UnityEngine;
 using DialogueSystem.Data;
 using Scriptables.Audio;
+using Characters;
+using Data;
 
 namespace Managers
 {
@@ -16,7 +18,7 @@ namespace Managers
         public GameObject clientPrefab;
         public Transform spawnPoint;      // Дверь
         public Transform hiddenSpawnPoint; // Точка для звонков (за экраном)
-        
+
         public int maxClientsOnScene = 10;
         public float initialSpawnDelay = 5f;
 
@@ -26,6 +28,13 @@ namespace Managers
 
         [Header("Сюжет")]
         public SpecialVisitorDatabase specialVisitorsDB;
+
+        [Header("Архетипы")]
+        public ArchetypeDatabase archetypeDatabase;
+
+        [Header("=== ТЕСТОВЫЙ РЕЖИМ ===")]
+        [Tooltip("Включить автоматический спавн клиентов")]
+        public bool enableAutoSpawn = false;
 
         private Coroutine spawnCoroutine;
 
@@ -37,13 +46,25 @@ namespace Managers
 
         private void Start()
         {
+            Debug.Log("[WaveManager] === ТЕСТОВЫЙ РЕЖИМ: Авто-спавн " + (enableAutoSpawn ? "ВКЛЮЧЕН" : "ВЫКЛЮЧЕН") + " ===");
+
+            // Загружаем базу архетипов, если не назначена
+            if (archetypeDatabase == null)
+            {
+                archetypeDatabase = Resources.Load<ArchetypeDatabase>("Databases/ArchetypeDatabase");
+                if (archetypeDatabase == null)
+                {
+                    Debug.LogWarning("[WaveManager] ArchetypeDatabase не найден! Визуальное разнообразие не будет работать.");
+                }
+            }
+
             if (TimeManager.Instance != null)
             {
                 // 1. Подписываемся на будущие изменения
                 TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
 
                 // 2. --- ФИКС: Проверяем текущее состояние ПРЯМО СЕЙЧАС ---
-                // Если TimeManager уже инициализировался и сейчас утро, 
+                // Если TimeManager уже инициализировался и сейчас утро,
                 // мы могли пропустить событие. Запускаем проверку вручную.
                 var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
                 if (currentSettings != null && !currentSettings.PeriodType.IsNight())
@@ -51,34 +72,48 @@ namespace Managers
                     Debug.Log("[WaveManager] Старт сцены: Обнаружено утро, запускаем проверку событий вручную.");
                     int day = TimeManager.Instance.GetCurrentDay();
                     CheckMorningEvents(day);
-                    
-                    // Если нужно запустить и спавн обычных клиентов сразу:
-                    int clientsCount = Mathf.RoundToInt(currentSettings.clientCount.Evaluate(day));
-                    if (clientsCount > 0 && spawnCoroutine == null)
-                        spawnCoroutine = StartCoroutine(SpawnRoutine(currentSettings, clientsCount));
+
+                    // === ТЕСТОВЫЙ РЕЖИМ: Отключаем авто-спавн ===
+                    if (enableAutoSpawn)
+                    {
+                        int clientsCount = Mathf.RoundToInt(currentSettings.clientCount.Evaluate(day));
+                        if (clientsCount > 0 && spawnCoroutine == null)
+                            spawnCoroutine = StartCoroutine(SpawnRoutine(currentSettings, clientsCount));
+                    }
+                    else
+                    {
+                        Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
+                    }
                 }
             }
         }
 		
 		public void ForceCheckMorningEvents()
-    {
-        if (TimeManager.Instance == null) return;
+    	{
+        	if (TimeManager.Instance == null) return;
 
-        var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
-        if (currentSettings != null && !currentSettings.PeriodType.IsNight())
-        {
-            Debug.Log("[WaveManager] ForceCheckMorningEvents: Принудительная проверка утренних событий.");
-            int day = TimeManager.Instance.GetCurrentDay();
-            CheckMorningEvents(day);
-            
-            // Если волна еще не запущена - запускаем
-            int clientsCount = Mathf.RoundToInt(currentSettings.clientCount.Evaluate(day));
-            if (clientsCount > 0 && spawnCoroutine == null)
-            {
-                spawnCoroutine = StartCoroutine(SpawnRoutine(currentSettings, clientsCount));
-            }
-        }
-    }
+        	var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
+        	if (currentSettings != null && !currentSettings.PeriodType.IsNight())
+        	{
+            	Debug.Log("[WaveManager] ForceCheckMorningEvents: Принудительная проверка утренних событий.");
+            	int day = TimeManager.Instance.GetCurrentDay();
+            	CheckMorningEvents(day);
+
+            	// === ТЕСТОВЫЙ РЕЖИМ: Отключаем авто-спавн ===
+            	if (enableAutoSpawn)
+            	{
+                	int clientsCount = Mathf.RoundToInt(currentSettings.clientCount.Evaluate(day));
+                	if (clientsCount > 0 && spawnCoroutine == null)
+                	{
+                    	spawnCoroutine = StartCoroutine(SpawnRoutine(currentSettings, clientsCount));
+                	}
+            	}
+            	else
+            	{
+                	Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
+            	}
+        	}
+    	}
 
         private void OnPeriodChanged(PeriodSettings settings)
         {
@@ -91,10 +126,17 @@ namespace Managers
             // 1. ПРОВЕРЯЕМ УТРЕННИЕ СОБЫТИЯ (Брифинги, Звонки)
             CheckMorningEvents(day);
 
-            // 2. ЗАПУСКАЕМ ОБЫЧНУЮ ВОЛНУ
-            int clientsCount = Mathf.RoundToInt(settings.clientCount.Evaluate(day));
-            if (clientsCount > 0)
-                spawnCoroutine = StartCoroutine(SpawnRoutine(settings, clientsCount));
+            // === ТЕСТОВЫЙ РЕЖИМ: Отключаем авто-спавн ===
+            if (enableAutoSpawn)
+            {
+                int clientsCount = Mathf.RoundToInt(settings.clientCount.Evaluate(day));
+                if (clientsCount > 0)
+                    spawnCoroutine = StartCoroutine(SpawnRoutine(settings, clientsCount));
+            }
+            else
+            {
+                Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
+            }
         }
 
         // --- ПРОВЕРКА УСЛОВИЙ (СЮЖЕТНЫЕ ФЛАГИ) ---
@@ -195,9 +237,81 @@ namespace Managers
         public void SpawnClient()
         {
             if (clientPrefab == null || spawnPoint == null) return;
+
             GameObject go = Instantiate(clientPrefab, spawnPoint.position, Quaternion.identity);
             ClientPathfinding client = go.GetComponent<ClientPathfinding>();
-            if (client != null) client.Initialize(waitingZoneObject, exitWaypoint);
+
+            if (client != null)
+            {
+                client.Initialize(waitingZoneObject, exitWaypoint);
+
+                // Применяем архетип для визуального разнообразия
+                if (archetypeDatabase != null)
+                {
+                    ClientArchetype archetype = archetypeDatabase.GetRandomArchetype();
+                    if (archetype != null)
+                    {
+                        var visuals = client.GetComponent<CharacterVisuals>();
+                        if (visuals != null)
+                        {
+                            visuals.SetupVisualDiversity(archetype);
+                        }
+
+                        client.SetupFromArchetype(archetype);
+                        client.SetupGrumblingFromArchetype(archetype);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Спавн клиента с конкретным архетипом (для дебаг меню)
+        /// </summary>
+        public void SpawnClientWithArchetype(ClientArchetype archetype)
+        {
+            if (clientPrefab == null || spawnPoint == null)
+            {
+                Debug.LogWarning($"[WaveManager] SpawnClientWithArchetype: clientPrefab={(clientPrefab != null)}, spawnPoint={(spawnPoint != null)}");
+                return;
+            }
+
+            if (archetype == null)
+            {
+                Debug.LogWarning("[WaveManager] SpawnClientWithArchetype: archetype is null!");
+                return;
+            }
+
+            Vector3 spawnPos = spawnPoint.position;
+            Debug.Log($"[WaveManager] SpawnClientWithArchetype: {archetype.displayName} (groupID: {archetype.groupID}) at {spawnPos}");
+
+            GameObject go = Instantiate(clientPrefab, spawnPos, Quaternion.identity);
+            ClientPathfinding client = go.GetComponent<ClientPathfinding>();
+
+            if (client != null)
+            {
+                var visuals = client.GetComponent<CharacterVisuals>();
+                if (visuals != null)
+                {
+                    visuals.SetupVisualDiversity(archetype);
+                }
+
+                client.Initialize(waitingZoneObject, exitWaypoint);
+
+                client.SetupFromArchetype(archetype);
+                client.SetupGrumblingFromArchetype(archetype);
+
+                if (visuals != null)
+                {
+                    Debug.Log($"[WaveManager] Client configured: {archetype.displayName} | group: {archetype.groupID} | body: {(archetype.bodySprite != null ? archetype.bodySprite.name : "NULL")} | hair: {(archetype.hairSprites?.Count ?? 0)} options | outfit: {(archetype.outfitSprites?.Count ?? 0)} options");
+                }
+
+                Debug.Log($"[WaveManager] Client spawned successfully: {client.name} = {archetype.displayName} ({archetype.groupID})");
+            }
+            else
+            {
+                Debug.LogError("[WaveManager] ClientPathfinding component not found!");
+                Destroy(go);
+            }
         }
 
         private void SpawnSpecialClient(SpecialVisitorDatabase.ScheduledVisitor visitorData)
@@ -230,9 +344,27 @@ namespace Managers
             {
                 client.specificDialogue = visitorData.dialogue;
                 // Принудительно ставим цель "Аудиенция", если это не звонок
-                client.mainGoal = ClientGoal.DirectorAudience; 
-                
+                client.mainGoal = ClientGoal.DirectorAudience;
+
                 client.Initialize(waitingZoneObject, exitWaypoint);
+
+                // Применяем архетип для визуального разнообразия
+                if (archetypeDatabase != null)
+                {
+                    ClientArchetype archetype = archetypeDatabase.GetRandomArchetype();
+                    if (archetype != null)
+                    {
+                        var visuals = client.GetComponent<CharacterVisuals>();
+                        if (visuals != null)
+                        {
+                            visuals.SetupVisualDiversity(archetype);
+                        }
+
+                        client.SetupFromArchetype(archetype);
+                        client.SetupGrumblingFromArchetype(archetype);
+                    }
+                }
+
                 Debug.Log($"[WaveManager] Спавн посетителя: {visitorData.name}");
             }
         }

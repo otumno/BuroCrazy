@@ -66,13 +66,13 @@ public class ProcessProjectDocumentExecutor : ActionExecutor
         {
             var docData = targetDoc.documentData;
 
-            if (clerk.role == ClerkController.ClerkRole.Registrar)
+            if (clerk.clerkRole == ClerkController.ClerkRole.Registrar)
             {
                 docData.processedByRegistrar = true;
                 if (AudioManager.Instance != null) 
                     AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Stamp_Approve, transform.position);
             }
-            else if (clerk.role == ClerkController.ClerkRole.Cashier || clerk.role == ClerkController.ClerkRole.Accountant)
+            else if (clerk.clerkRole == ClerkController.ClerkRole.Cashier || clerk.clerkRole == ClerkController.ClerkRole.Accountant)
             {
                 int cost = 0;
                 

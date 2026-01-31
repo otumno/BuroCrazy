@@ -1,7 +1,6 @@
 using NUnit.Framework;
 using UnityEngine;
 using Characters;
-using Data.Visuals;
 
 namespace Tests
 {
@@ -36,37 +35,37 @@ namespace Tests
         }
 
         [Test]
-        public void GetRandomGreeting_ReturnsFromPool()
+        public void GetRandomHairColor_ReturnsValidColor()
         {
             var archetype = ScriptableObject.CreateInstance<ClientArchetype>();
-            archetype.greetingLines = new System.Collections.Generic.List<string>
-            {
-                "Здравствуйте!",
-                "Добрый день!",
-                "Приветствую!"
-            };
-
-            var result = archetype.GetRandomGreeting();
-
-            Assert.IsNotEmpty(result);
-            Assert.IsTrue(archetype.greetingLines.Contains(result));
-        }
-
-        [Test]
-        public void GetRandomColor_ReturnsValidColor()
-        {
-            var hair = ScriptableObject.CreateInstance<HairStyleData>();
             var brownColor = new Color(0.6f, 0.4f, 0.2f);
-            hair.allowedColors = new System.Collections.Generic.List<Color>
+            archetype.hairColors = new System.Collections.Generic.List<Color>
             {
                 Color.black,
                 brownColor,
                 Color.red
             };
 
-            var result = hair.GetRandomColor();
+            var result = archetype.GetRandomHairColor();
 
-            Assert.IsTrue(hair.allowedColors.Contains(result));
+            Assert.IsTrue(archetype.hairColors.Contains(result));
+        }
+
+        [Test]
+        public void GetRandomOutfitColor_ReturnsValidColor()
+        {
+            var archetype = ScriptableObject.CreateInstance<ClientArchetype>();
+            var blueColor = new Color(0.3f, 0.3f, 0.4f);
+            archetype.outfitColors = new System.Collections.Generic.List<Color>
+            {
+                Color.gray,
+                blueColor,
+                Color.white
+            };
+
+            var result = archetype.GetRandomOutfitColor();
+
+            Assert.IsTrue(archetype.outfitColors.Contains(result));
         }
     }
 }

@@ -6,7 +6,7 @@ public class PrioritizeDirectorDocAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is ClerkController registrar) || registrar.IsOnBreak() || registrar.role != ClerkController.ClerkRole.Registrar)
+        if (!(staff is ClerkController registrar) || registrar.IsOnBreak() || registrar.clerkRole != ClerkController.ClerkRole.Registrar)
         {
             return false;
         }

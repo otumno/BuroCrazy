@@ -29,15 +29,17 @@ MonoBehaviour:
   - stateName: SittingInWaitingArea
     emotion: 4
   - stateName: AtToilet
-    emotion: 12
+    emotion: 10
   - stateName: Leaving
     emotion: 1
   - stateName: Confused
     emotion: 3
+  - stateName: Grumbling
+    emotion: 5
   - stateName: PassedRegistration
     emotion: 11
   - stateName: GoingToCashier
-    emotion: 12
+    emotion: 0
   - stateName: AtCashier
     emotion: 2
   - stateName: Positioning
@@ -51,7 +53,7 @@ MonoBehaviour:
   - stateName: AtLimitedZoneEntrance
     emotion: 5
   - stateName: InsideLimitedZone
-    emotion: 12
+    emotion: 0
   - stateName: Enraged
     emotion: 7
   - stateName: LeavingUpset

@@ -449,7 +449,8 @@ public class ClientPathfinding : MonoBehaviour
     {
         if (archetype == null) return;
 
-        canGrumble = archetype.canGrumble;
+        // canGrumble всегда true - архетип определяет порог и частоту
+        canGrumble = true;
         grumblingThreshold = archetype.grumblingThreshold;
         grumblingFrequency = archetype.grumblingFrequency;
     }
@@ -467,8 +468,30 @@ public class ClientPathfinding : MonoBehaviour
     {
         if (archetype != null)
         {
-            return archetype.GetGrumblingResponse();
+            return archetype.GetGrumblingLine();
         }
         return "Это несносно...";
+    }
+
+    /// <summary>
+    /// Настроить параметры клиента из архетипа
+    /// </summary>
+    public void SetupFromArchetype(ClientArchetype archetype)
+    {
+        if (archetype == null) return;
+
+        // Терпение
+        totalPatienceTime = archetype.patience;
+
+        // Скорость
+        var mover = GetComponent<AgentMover>();
+        if (mover != null)
+        {
+            mover.moveSpeed = 2f * archetype.speedMultiplier;
+        }
+
+        // Grumbling параметры
+        grumblingThreshold = archetype.grumblingThreshold;
+        grumblingFrequency = archetype.grumblingFrequency;
     }
 }

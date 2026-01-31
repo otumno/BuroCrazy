@@ -91,5 +91,53 @@ namespace Data
 
             return result;
         }
+
+        public Characters.ClientArchetype GetRandomByGroup(string groupID)
+        {
+            var groupArchetypes = GetByGroup(groupID);
+            if (groupArchetypes.Count == 0)
+            {
+                Debug.LogWarning($"[ArchetypeDatabase] GetRandomByGroup('{groupID}'): Архетипы группы не найдены! Falling back to GetRandomArchetype().");
+                var fallback = GetRandomArchetype();
+                if (fallback != null)
+                {
+                    Debug.LogWarning($"[ArchetypeDatabase]   Fallback returned: {fallback.name} (groupID: {fallback.groupID})");
+                }
+                return fallback;
+            }
+
+            var selected = groupArchetypes[Random.Range(0, groupArchetypes.Count)];
+            Debug.Log($"[ArchetypeDatabase] GetRandomByGroup('{groupID}'): Selected '{selected.name}' (groupID: {selected.groupID})");
+            return selected;
+        }
+
+        public List<Characters.ClientArchetype> GetByGroup(string groupID)
+        {
+            var result = new List<Characters.ClientArchetype>();
+
+            if (allArchetypes == null)
+            {
+                Debug.LogWarning($"[ArchetypeDatabase] GetByGroup('{groupID}'): allArchetypes is null!");
+                return result;
+            }
+
+            Debug.Log($"[ArchetypeDatabase] GetByGroup('{groupID}'): Searching through {allArchetypes.Count} archetypes...");
+
+            foreach (var archetype in allArchetypes)
+            {
+                if (archetype != null)
+                {
+                    bool matches = archetype.groupID == groupID;
+                    Debug.Log($"[ArchetypeDatabase]   Archetype '{archetype.name}' has groupID '{archetype.groupID}' - Match: {matches}");
+                    if (matches)
+                    {
+                        result.Add(archetype);
+                    }
+                }
+            }
+
+            Debug.Log($"[ArchetypeDatabase] GetByGroup('{groupID}'): Found {result.Count} archetypes");
+            return result;
+        }
     }
 }

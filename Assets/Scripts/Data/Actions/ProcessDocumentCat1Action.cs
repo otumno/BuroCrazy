@@ -15,7 +15,7 @@ public class ProcessDocumentCat1Action : StaffAction
     public override bool AreConditionsMet(StaffController staff)
     {
         // Условие: я Клерк, на рабочем месте, и передо мной стоит клиент.
-        if (!(staff is ClerkController clerk) || clerk.role != ClerkController.ClerkRole.Regular || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
+        if (!(staff is ClerkController clerk) || clerk.clerkRole != ClerkController.ClerkRole.Regular || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
         {
             return false;
         }

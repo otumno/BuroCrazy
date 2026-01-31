@@ -9,79 +9,112 @@ namespace Characters
     public class ClientArchetype : ScriptableObject
     {
         [Header("Идентификация")]
+        [Tooltip("Группа для спавна: 'Elderly', 'Business', 'Student' и т.д.")]
+        public string groupID = "Default";
+
+        [Tooltip("Уникальный ID этого архетипа")]
         public string archetypeID;
+
+        [Tooltip("Отображаемое имя в UI")]
         public string displayName;
 
-        [Header("Поведенческие характеристики")]
+        [Header("Визуал - Тело")]
+        [Tooltip("Основной спрайт тела (Idle/Walk анимация)")]
+        public Sprite bodySprite;
+
+        [Tooltip("Спрайт лица для диалогов")]
+        public Sprite portraitSprite;
+
+        [Header("Визуал - Волосы")]
+        [Tooltip("Список вариантов причесок (выбирается случайно)")]
+        public List<Sprite> hairSprites = new List<Sprite>();
+
+        [Tooltip("Цвета волос для рандомизации")]
+        public List<Color> hairColors = new List<Color>
+        {
+            new Color(0.2f, 0.1f, 0f),    // Чёрный
+            new Color(0.4f, 0.25f, 0.1f), // Тёмно-коричневый
+            new Color(0.6f, 0.4f, 0.2f),  // Коричневый
+            new Color(0.8f, 0.7f, 0.5f),  // Светлый
+            new Color(0.9f, 0.9f, 0.85f), // Белый/седой
+            new Color(0.5f, 0.3f, 0.2f),  // Рыжий
+        };
+
+        [Header("Визуал - Одежда")]
+        [Tooltip("Список вариантов одежды (выбирается случайно)")]
+        public List<Sprite> outfitSprites = new List<Sprite>();
+
+        [Tooltip("Цвета одежды для рандомизации")]
+        public List<Color> outfitColors = new List<Color>
+        {
+            new Color(0.3f, 0.3f, 0.4f),  // Тёмно-синий
+            new Color(0.5f, 0.5f, 0.5f),  // Серый
+            new Color(0.6f, 0.5f, 0.4f),  // Коричневый
+            new Color(0.2f, 0.3f, 0.2f),  // Тёмно-зелёный
+            new Color(0.9f, 0.9f, 0.9f),  // Белый
+        };
+
+        [Header("Поведение")]
         [Tooltip("Терпение клиента (в секундах)")]
         public float patience = 30f;
 
-        [Tooltip("Сопротивляемость стрессу (0-1, где 1 = очень стрессоустойчивый)")]
-        [Range(0f, 1f)]
-        public float stressResistance = 0.5f;
+        [Tooltip("Множитель скорости: 1 = норма, 0.5 = медленно, 1.5 = быстро")]
+        [Range(0.3f, 2f)]
+        public float speedMultiplier = 1f;
 
-        [Tooltip("Склонность к агрессии (0-1)")]
-        [Range(0f, 1f)]
-        public float aggressionTendency = 0.2f;
-
-        [Tooltip("Вероятность уйти довольным при успешном обслуживании")]
+        [Tooltip("Вероятность уйти довольным (0-1)")]
         [Range(0f, 1f)]
         public float satisfactionChance = 0.8f;
 
-        [Header("Доступные цели")]
-        [Tooltip("Какие цели может иметь клиент этого архетипа")]
-        public List<ClientGoal> allowedGoals;
-
-        [Header("Мысли и реплики")]
-        [Tooltip("Список мыслей, которые может показывать клиент")]
-        public List<string> thoughtPool;
-
-        [Tooltip("Реплики при неудаче")]
-        public List<string> angryResponses;
-
-        [Tooltip("Реплики при успехе")]
-        public List<string> happyResponses;
-
-        [Header("Визуальные ограничения")]
-        [Tooltip("Доступные цвета одежды (RGB)")]
-        public List<Color> allowedClothingColors;
-
-        [Tooltip("Разрешенные типы одежды")]
-        public List<OutfitType> allowedOutfitTypes;
-
-        [Tooltip("Типичные фразы при разговоре")]
-        public List<string> greetingLines;
-
-        [Header("Бонусы/Штрафы")]
-        [Tooltip("Множитель чаевых (0-2)")]
-        [Range(0f, 2f)]
-        public float tipMultiplier = 1f;
-
-        [Tooltip("Множитель времени обслуживания")]
-        [Range(0.5f, 2f)]
-        public float serviceTimeMultiplier = 1f;
-
-        [Header("Grumbling - Промежуточное недовольство")]
-        [Tooltip("При каком % терпения клиент начинает ворчать (0-1). 0.5 = 50%")]
+        [Tooltip("При каком % терпения начинает ворчать")]
         [Range(0.3f, 0.8f)]
         public float grumblingThreshold = 0.5f;
 
-        [Tooltip("Склонность к ворчанию (0-1): как часто показывает недовольство")]
+        [Tooltip("Частота ворчания (0-1)")]
         [Range(0f, 1f)]
         public float grumblingFrequency = 0.5f;
+
+        [Header("Цели")]
+        [Tooltip("Какие цели может иметь этот архетип")]
+        public List<ClientGoal> allowedGoals;
+
+        [Header("Мысли и реплики")]
+        [Tooltip("Мысли при появлении")]
+        public List<string> thoughtPool;
 
         [Tooltip("Реплики при ворчании")]
         public List<string> grumblingLines;
 
-        [Tooltip("Может ли перейти в Grumbling (false = сразу в Enraged)")]
-        public bool canGrumble = true;
+        [Tooltip("Реплики при успешном обслуживании")]
+        public List<string> happyResponses;
 
-        [Header("Особые свойства")]
-        [Tooltip("Может ли этот архетип быть бездомным")]
-        public bool canBeHomeless = false;
+        [Tooltip("Реплики при уходе расстроенным")]
+        public List<string> angryResponses;
 
-        [Tooltip("Требует ли особого обращения (например, элита)")]
-        public bool requiresSpecialTreatment = false;
+        // Геттеры для визуалов
+        public Sprite GetRandomHairSprite()
+        {
+            if (hairSprites == null || hairSprites.Count == 0) return null;
+            return hairSprites[Random.Range(0, hairSprites.Count)];
+        }
+
+        public Sprite GetRandomOutfitSprite()
+        {
+            if (outfitSprites == null || outfitSprites.Count == 0) return null;
+            return outfitSprites[Random.Range(0, outfitSprites.Count)];
+        }
+
+        public Color GetRandomHairColor()
+        {
+            if (hairColors == null || hairColors.Count == 0) return Color.black;
+            return hairColors[Random.Range(0, hairColors.Count)];
+        }
+
+        public Color GetRandomOutfitColor()
+        {
+            if (outfitColors == null || outfitColors.Count == 0) return Color.white;
+            return outfitColors[Random.Range(0, outfitColors.Count)];
+        }
 
         public string GetRandomThought()
         {
@@ -89,16 +122,10 @@ namespace Characters
             return thoughtPool[Random.Range(0, thoughtPool.Count)];
         }
 
-        public string GetRandomGreeting()
+        public string GetGrumblingLine()
         {
-            if (greetingLines == null || greetingLines.Count == 0) return "Здравствуйте.";
-            return greetingLines[Random.Range(0, greetingLines.Count)];
-        }
-
-        public string GetAngryResponse()
-        {
-            if (angryResponses == null || angryResponses.Count == 0) return "Это безобразие!";
-            return angryResponses[Random.Range(0, angryResponses.Count)];
+            if (grumblingLines == null || grumblingLines.Count == 0) return "Это несносно...";
+            return grumblingLines[Random.Range(0, grumblingLines.Count)];
         }
 
         public string GetHappyResponse()
@@ -107,20 +134,10 @@ namespace Characters
             return happyResponses[Random.Range(0, happyResponses.Count)];
         }
 
-        public string GetGrumblingResponse()
+        public string GetAngryResponse()
         {
-            if (grumblingLines == null || grumblingLines.Count == 0) return "Это несносно...";
-            return grumblingLines[Random.Range(0, grumblingLines.Count)];
+            if (angryResponses == null || angryResponses.Count == 0) return "Это безобразие!";
+            return angryResponses[Random.Range(0, angryResponses.Count)];
         }
-    }
-
-    public enum OutfitType
-    {
-        Casual,
-        Formal,
-        Workwear,
-        Rags,
-        Uniform,
-        Suit
     }
 }

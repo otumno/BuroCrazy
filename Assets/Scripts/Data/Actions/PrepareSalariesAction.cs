@@ -8,7 +8,7 @@ public class PrepareSalariesAction : StaffAction
     public override bool AreConditionsMet(StaffController staff)
     {
         // Условие: это Кассир/Бухгалтер, и есть хотя бы один сотрудник с неоплаченными периодами.
-        if (!(staff is ClerkController { role: ClerkController.ClerkRole.Cashier }) || staff.IsOnBreak())
+        if (!(staff is ClerkController { clerkRole: ClerkController.ClerkRole.Cashier }) || staff.IsOnBreak())
         {
             return false;
         }

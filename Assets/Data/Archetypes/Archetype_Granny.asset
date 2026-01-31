@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c024d2d1423e2e04cb58dc0a1a4bc506, type: 3}
+  m_Name: Archetype_Granny
+  m_EditorClassIdentifier: Assembly-CSharp::Characters.ClientArchetype
+  groupID: Elderly
+  archetypeID: granny
+  displayName: "\u0411\u0430\u0431\u0443\u0448\u043A\u0430"
+  bodySprite: {fileID: -2907876690653389275, guid: b5db1ec43cfeeef4b8536b321aed15eb, type: 3}
+  portraitSprite: {fileID: 5456003906653765308, guid: c43be4c0f65383d4f9a57adc03a2acf2, type: 3}
+  hairSprites:
+  - {fileID: 7663993199557282107, guid: 8e330af8db3c83d4f884fc8211b81f9a, type: 3}
+  hairColors:
+  - {r: 0.4458044, g: 0.34999108, b: 0.5188679, a: 1}
+  - {r: 0.6698113, g: 0.5797659, b: 0.48972055, a: 1}
+  - {r: 0.5660378, g: 0.44989324, b: 0.3337487, a: 1}
+  - {r: 0.3584906, g: 0.34518513, b: 0.31959775, a: 1}
+  - {r: 0.9, g: 0.9, b: 0.85, a: 1}
+  - {r: 0.21698111, g: 0.18173032, b: 0.16478282, a: 1}
+  outfitSprites:
+  - {fileID: -6368635563090434956, guid: a4db7b936ee918c4f85913f5236c69f6, type: 3}
+  outfitColors:
+  - {r: 0.3, g: 0.3, b: 0.4, a: 1}
+  - {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  - {r: 0.6, g: 0.5, b: 0.4, a: 1}
+  - {r: 0.2, g: 0.3, b: 0.2, a: 1}
+  - {r: 0.9, g: 0.9, b: 0.9, a: 1}
+  patience: 60
+  speedMultiplier: 1
+  satisfactionChance: 0.8
+  grumblingThreshold: 0.5
+  grumblingFrequency: 0.5
+  allowedGoals: 
+  thoughtPool: []
+  grumblingLines: []
+  happyResponses: []
+  angryResponses: []

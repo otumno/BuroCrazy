@@ -12,7 +12,7 @@ public class TakeOverClientAction : StaffAction
     public override bool AreConditionsMet(StaffController staff)
     {
         // THE FIX IS HERE: We now compare ClerkController.ClerkRole with ClerkController.ClerkRole
-        if (!(staff is ClerkController registrar) || registrar.IsOnBreak() || registrar.role != ClerkController.ClerkRole.Registrar)
+        if (!(staff is ClerkController registrar) || registrar.IsOnBreak() || registrar.clerkRole != ClerkController.ClerkRole.Registrar)
         {
             return false;
         }

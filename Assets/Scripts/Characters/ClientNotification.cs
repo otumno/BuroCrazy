@@ -2,6 +2,7 @@
 using UnityEngine;
 using TMPro;
 using System.Linq;
+using Characters;
 
 public class ClientNotification : MonoBehaviour
 {
