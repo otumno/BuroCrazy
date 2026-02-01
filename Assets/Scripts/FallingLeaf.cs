@@ -6,6 +6,8 @@ using Managers;
 [RequireComponent(typeof(Image))]
 public class FallingLeaf : MonoBehaviour
 {
+    public float movementDuration { get; private set; }
+    
     private Image leafImage;
     private Color originalColor;
     private RectTransform rectTransform;
@@ -13,7 +15,6 @@ public class FallingLeaf : MonoBehaviour
     // <<< НОВОЕ: Переменные для запоминания пути >>>
     private Vector3 startPosition;
     private Vector3 endPosition;
-    private float movementDuration;
     private bool useEaseInForMovement;
 
     void Awake()
@@ -37,10 +38,10 @@ public class FallingLeaf : MonoBehaviour
     public IEnumerator AnimateMovement(Vector3 startPos, Vector3 endPos, float duration, bool useEaseIn)
     {
         // <<< ИЗМЕНЕНИЕ: Запоминаем параметры для обратного пути >>>
-        this.startPosition = startPos;
-        this.endPosition = endPos;
-        this.movementDuration = duration;
-        this.useEaseInForMovement = useEaseIn;
+        startPosition = startPos;
+        endPosition = endPos;
+        movementDuration = duration;
+        useEaseInForMovement = useEaseIn;
 
         float timer = 0f;
         rectTransform.position = startPos;
@@ -72,7 +73,8 @@ public class FallingLeaf : MonoBehaviour
 
         while (timer < movementDuration)
         {
-            if (this == null || rectTransform == null) yield break;
+            if (this == null || rectTransform == null)
+                yield break;
 
             timer += Time.unscaledDeltaTime;
             float progress = Mathf.Clamp01(timer / movementDuration);

@@ -218,6 +218,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   blackoutCanvasGroup: {fileID: 2063886894}
   leavesContainer: {fileID: 1556624907}
+  loadScreenRaycaster: {fileID: 8306906582853188637}
   audioSource: {fileID: 96204286}
   leafPrefab: {fileID: 2016514429891180889, guid: ca02e6d2f0e798146b3baa3e6da06ca8, type: 3}
   numberOfLeaves: 25
@@ -5476,7 +5477,7 @@ GameObject:
   - component: {fileID: 1332152950}
   - component: {fileID: 1332152949}
   m_Layer: 0
-  m_Name: BlackoutPanel (1)
+  m_Name: BlackoutPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5515,7 +5516,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 0, g: 0, b: 0, a: 0.78431374}
-  m_RaycastTarget: 0
+  m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -11184,6 +11185,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2329025650815340842, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2374780437463014961, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_PlayOnAwake
       value: 0
@@ -11191,6 +11196,14 @@ PrefabInstance:
     - target: {fileID: 2719027149029451108, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_Color.a
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2719027149029451108, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_RaycastTarget
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2980457272053435897, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_SortingOrder
+      value: 10000
       objectReference: {fileID: 0}
     - target: {fileID: 2980457272053435897, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_VertexColorAlwaysGammaSpace
@@ -11596,8 +11609,14 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2063886893}
     - targetCorrespondingSourceObject: {fileID: 3227675422700464172, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      insertIndex: 2
+      addedObject: {fileID: 8306906582853188638}
+    - targetCorrespondingSourceObject: {fileID: 3227675422700464172, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8306906582853188636}
+    - targetCorrespondingSourceObject: {fileID: 3227675422700464172, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8306906582853188637}
   m_SourcePrefab: {fileID: 100100000, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
 --- !u!1 &8306906582853188635 stripped
 GameObject:
@@ -11627,6 +11646,39 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 0
+--- !u!114 &8306906582853188637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8306906582853188635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
+  m_IgnoreReversedGraphics: 0
+  m_BlockingObjects: 3
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+--- !u!114 &8306906582853188638
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8306906582853188635}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 01414e4350b82b14cb7cbe6e1060d056, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Utilities.NonDrawingGraphic
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace Managers
 {
@@ -19,6 +21,8 @@ namespace Managers
         [SerializeField] private CanvasGroup blackoutCanvasGroup;
         [Tooltip("RectTransform контейнера, куда будут добавляться листья")]
         [SerializeField] private RectTransform leavesContainer;
+        [Tooltip("Не даёт прокликать сквозь экран загрузки, пока идёт анимация")]
+        [SerializeField] private GraphicRaycaster loadScreenRaycaster;
         [Tooltip("AudioSource для проигрывания звуков перехода")]
         [SerializeField] private AudioSource audioSource;
         [Tooltip("Префаб одного листа (должен иметь компонент FallingLeaf)")]
@@ -50,14 +54,16 @@ namespace Managers
         [Tooltip("Звук, который проигрывается, когда листья улетают")]
         [SerializeField] private AudioClip leavesExitSound;
 
+        private readonly WaitForSeconds _waitForSeconds = new WaitForSeconds(0.05f);
+
         private void Awake()
         {
             // Singleton implementation
             if (Instance == null)
             {
                 Instance = this;
-                //DontDestroyOnLoad(gameObject); // Make this object persistent across scenes
                 GlobalFadeValue = 1f; // Ensure visibility on first load
+                
                 // Ensure AudioSource exists if sounds are assigned
                 if ((leavesSound != null || leavesExitSound != null) && audioSource == null) {
                     audioSource = GetComponent<AudioSource>();
@@ -68,6 +74,8 @@ namespace Managers
                     audioSource.ignoreListenerPause = true;
                     audioSource.ignoreListenerVolume = true; // Use its own volume settings maybe
                 }
+                
+                loadScreenRaycaster.enabled = false;
             }
             else if (Instance != this)
             {
@@ -81,22 +89,15 @@ namespace Managers
         /// </summary>
         /// <param name="sceneName">The name of the scene to load.</param>
         /// <returns>Coroutine handle for the transition.</returns>
-        public Coroutine TransitionToScene(string sceneName)
-        {
-            // Check if a transition is already in progress (optional)
-            // if (IsTransitioning) {
-            //     Debug.LogWarning("Transition already in progress.");
-            //     return null;
-            // }
-            return StartCoroutine(TransitionRoutine(sceneName));
-        }
+        public Coroutine TransitionToScene(string sceneName) => StartCoroutine(TransitionRoutine(sceneName));
 
         /// <summary>
         /// The main coroutine managing the entire transition sequence.
         /// </summary>
         private IEnumerator TransitionRoutine(string sceneName)
         {
-            // isTransitioning = true; // Optional flag to prevent double transitions
+            // включаем рейкаст, чтобы нельзя было кликнуть сквозь экран загрузки
+            loadScreenRaycaster.enabled = true;
 
             // 1. Spawn leaves and play sound
             SpawnLeaves();
@@ -112,11 +113,13 @@ namespace Managers
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
             asyncLoad.allowSceneActivation = true; // Allow immediate activation once loaded
 
-            // Wait until scene loading is mostly done (optional, can just wait for hold duration)
-            // while (!asyncLoad.isDone) {
-            //     // You could update a loading bar here using asyncLoad.progress
-            //     yield return null;
-            // }
+            // ждём пока сцена загрузится! не переходим дальше, если сцена не готова
+            while (!asyncLoad.isDone)
+            {
+                // You could update a loading bar here using asyncLoad.progress
+                yield return _waitForSeconds;
+            }
+            
             Debug.Log($"[TransitionManager] Сцена {sceneName} загружена.");
 
             // 4. Hold the black screen for a moment
@@ -126,13 +129,14 @@ namespace Managers
             Debug.Log("[TransitionManager] Начало проявления (FadeToVisible)...");
             yield return StartCoroutine(Fade(0f, 1f, fadeToVisibleDuration)); // Fade GlobalFadeValue from 0 (black) to 1 (visible)
             Debug.Log("[TransitionManager] Проявление завершено.");
-
-
+            
             // 6. Trigger leaves to fly off screen
-            TriggerLeavesExit();
+            yield return TriggerLeavesExit();
 
-            // isTransitioning = false; // Reset flag
             Debug.Log($"[TransitionManager] Переход к сцене {sceneName} завершен.");
+
+            // выключаем рейкаст, чтобы можно было кликать через экран загрузки
+            loadScreenRaycaster.enabled = false;
         }
 
         /// <summary>
@@ -256,7 +260,7 @@ namespace Managers
         /// <summary>
         /// Initiates the exit animation for all active leaves.
         /// </summary>
-        private void TriggerLeavesExit()
+        private IEnumerator TriggerLeavesExit()
         {
             // Play the exit sound
             if (audioSource != null && leavesExitSound != null) audioSource.PlayOneShot(leavesExitSound);
@@ -266,24 +270,30 @@ namespace Managers
             activeLeaves.Clear(); // Clear the main tracking list immediately
 
             int exitCount = 0;
+            var maxDuration = 0f;
             foreach (var leafGO in leavesToExit)
             {
-                if (leafGO != null) // Check if the leaf wasn't destroyed prematurely
+                if (leafGO == null)
+                    continue;
+                
+                FallingLeaf leaf = leafGO.GetComponent<FallingLeaf>();
+                if (leaf != null)
                 {
-                    FallingLeaf leaf = leafGO.GetComponent<FallingLeaf>();
-                    if (leaf != null)
-                    {
-                        // Start the exit coroutine for each leaf
-                        StartCoroutine(leaf.AnimateExit());
-                        exitCount++;
-                    }
-                    else {
-                        // If component is missing, just destroy the object
-                        Destroy(leafGO);
-                    }
+                    if (maxDuration < leaf.movementDuration)
+                        maxDuration = leaf.movementDuration;
+                    
+                    // Start the exit coroutine for each leaf
+                    StartCoroutine(leaf.AnimateExit());
+                    exitCount++;
+                }
+                else {
+                    // If component is missing, just destroy the object
+                    Destroy(leafGO);
                 }
             }
+            
             Debug.Log($"[TransitionManager] Запущено улетание для {exitCount} листьев.");
+            yield return new WaitForSecondsRealtime(maxDuration);
         }
 
         /// <summary>
