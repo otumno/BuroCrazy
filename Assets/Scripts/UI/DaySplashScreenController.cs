@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using Managers;
 
 [RequireComponent(typeof(CanvasGroup))]
 public class DaySplashScreenController : MonoBehaviour
@@ -19,7 +20,7 @@ public class DaySplashScreenController : MonoBehaviour
 
     private CanvasGroup canvasGroup;
 
-    void Awake()
+    private void Awake()
     {
         // --- НОВАЯ ЛОГИКА "СИНГЛТОНА" ---
         // Делаем его "одиночкой", чтобы избежать дубликатов при загрузке сцен
@@ -37,6 +38,12 @@ public class DaySplashScreenController : MonoBehaviour
         // ---------------------------------
 
         canvasGroup = GetComponent<CanvasGroup>();
+    }
+
+    private void Start()
+    {
+        Setup(CalendarManager.Instance.CurrentDay);
+        canvasGroup.alpha = 1f;
     }
 
     public void Setup(int dayNumber)

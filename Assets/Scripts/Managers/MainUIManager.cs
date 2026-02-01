@@ -135,7 +135,7 @@ namespace Managers
             }
         }
     
-        private IEnumerator UnveilSequence(StartOfDayPanel startOfDayPanel, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController)
+        private IEnumerator UnveilSequence(StartOfDayPanel _, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController)
         {
             PauseGame(true);
 
@@ -166,13 +166,6 @@ namespace Managers
                 directorController.TeleportTo(directorController.directorChairPoint.position);
                 directorController.ForceSetAtDeskState(true);
             }
-        
-            if (daySplashScreenController != null)
-            {
-                daySplashScreenController.gameObject.SetActive(true);
-                daySplashScreenController.Setup(CalendarManager.Instance.CurrentDay); 
-                daySplashScreenController.GetComponent<CanvasGroup>().alpha = 1f;
-            }
 
             if (orderSelectionUI != null)
             {
@@ -186,7 +179,10 @@ namespace Managers
 
             yield return new WaitForSecondsRealtime(splashScreenDwellTime);
 
-            if (daySplashScreenController != null) { yield return daySplashScreenController.Fade(false); }
+            if (daySplashScreenController != null)
+            {
+                yield return daySplashScreenController.Fade(false);
+            }
 
             if (orderSelectionUI != null) {
                 var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
