@@ -51,12 +51,37 @@ namespace UI.Map
 
         private void OnEnable()
         {
+            Debug.Log("[MapPanelUI] OnEnable called");
             MainUIManager.Instance?.PushPause();
             RefreshAllButtons();
-            
+
             // Скрываем инфо-панели при открытии, чтобы не висела старая инфа
-            if(regionInfoPanel) regionInfoPanel.SetActive(false);
+            if(regionInfoPanel) 
+            {
+                Debug.Log("[MapPanelUI] regionInfoPanel exists, setting to false");
+                regionInfoPanel.SetActive(false);
+            }
+            else
+            {
+                Debug.LogWarning("[MapPanelUI] regionInfoPanel is NULL!");
+            }
+            
             if(jobInfoPanel) jobInfoPanel.SetActive(false);
+
+            // Показываем информацию о первом регионе если есть
+            if (regionSlots != null && regionSlots.Count > 0)
+            {
+                var firstSlot = regionSlots.Find(s => s != null && s.regionData != null);
+                if (firstSlot != null)
+                {
+                    Debug.Log($"[MapPanelUI] Showing info for first region: {firstSlot.regionData.displayName}");
+                    ShowRegionInfo(firstSlot.regionData);
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[MapPanelUI] regionSlots is null or empty!");
+            }
         }
 
         public void RefreshAllButtons()
@@ -99,21 +124,247 @@ namespace UI.Map
                 return;
             }
 
+            // Проверяем что панель включена
+            bool wasActive = regionInfoPanel.activeSelf;
+            Debug.Log($"[MapPanelUI] regionInfoPanel was active: {wasActive}");
+
+            Debug.Log($"[MapPanelUI] UI Elements Check:");
+            Debug.Log($"  r_Title: {(r_Title != null ? "assigned" : "NULL!")}");
+            Debug.Log($"  r_Desc: {(r_Desc != null ? "assigned" : "NULL!")}");
+            Debug.Log($"  r_Cost: {(r_Cost != null ? "assigned" : "NULL!")}");
+            Debug.Log($"  r_ActionButton: {(r_ActionButton != null ? "assigned" : "NULL!")}");
+
+            // Проверяем текст ДО изменения
+            if (r_Title != null)
+            {
+                Debug.Log($"[MapPanelUI] r_Title text BEFORE: '{r_Title.text}'");
+            }
+            if (r_Desc != null)
+            {
+                Debug.Log($"[MapPanelUI] r_Desc text BEFORE: '{r_Desc.text}'");
+            }
+
             Debug.Log($"[MapPanelUI] Activating regionInfoPanel for {selectedRegion.displayName}");
             regionInfoPanel.SetActive(true);
 
-            if (r_Title != null) r_Title.text = region.displayName ?? "Unknown";
-
-            // Формируем описание бонусов
-            string bonusText = "";
-            if (region.spawnBonuses != null)
+            // Force TMP to rebuild immediately
+            if (regionInfoPanel.TryGetComponent<RectTransform>(out var rect))
             {
-                foreach(var b in region.spawnBonuses)
-                    bonusText += $"\n • +{b.additionalClients} клиентов ({b.period})";
+                UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(rect);
             }
 
+            // Всегда обновляем текст, даже если панель была активна
+            if (r_Title != null)
+            {
+                r_Title.text = region.displayName ?? "Unknown";
+                r_Title.ForceMeshUpdate();
+                Debug.Log($"[MapPanelUI] r_Title AFTER: '{r_Title.text}'");
+            }
+
+            if (ProgressionManager.Instance != null)
+            {
+                var runtimeState = ProgressionManager.Instance.GetRegionRuntimeState(region);
+
+                if (runtimeState != null && runtimeState.isUnlocked)
+                {
+                    int currentFlow = runtimeState.currentDailyTarget;
+                    int maxFlow = region.maxDailyFlow;
+                    float progress = runtimeState.GetFlowPercentage();
+
+                    r_Title.text = region.displayName ?? "Unknown";
+                    r_Title.ForceMeshUpdate();
+
+                    string archetypeInfo = "";
+                    if (region.groupWeights != null && region.groupWeights.Count > 0)
+                    {
+                        archetypeInfo = $"\n<color=magenta>👥 Типы посетителей:</color>";
+                        foreach (var gw in region.groupWeights)
+                        {
+                            int groupFlow = Mathf.RoundToInt(currentFlow * gw.weight);
+                            archetypeInfo += $"\n  • {gw.groupID}: ~{groupFlow} чел ({gw.weight * 100:F0}%)";
+                        }
+                    }
+
+                    string progressInfo = "";
+                    if (!runtimeState.IsAtFullCapacity())
+                    {
+                        int daysLeft = region.rampUpDays - runtimeState.daysOwned;
+                        progressInfo = $"\n<color=green>⏱️ До полного потока: {daysLeft} дн.</color>";
+                    }
+                    else
+                    {
+                        progressInfo = $"\n<color=green>✅ Полный поток достигнут!</color>";
+                    }
+
+                    string flowInfo = $"\n\n<color=cyan>📊 Поток клиентов:</color>\n" +
+                        $"  Текущий: <color=yellow>{currentFlow}</color> чел/день\n" +
+                        $"  Максимум: {maxFlow} чел/день\n" +
+                        $"  Прогресс: {progress * 100:F0}%";
+
+                    string fullDescription = $"{region.description}{flowInfo}{archetypeInfo}{progressInfo}";
+
+                    if (r_Desc != null)
+                    {
+                        r_Desc.text = fullDescription;
+                        r_Desc.ForceMeshUpdate();
+                        Debug.Log($"[MapPanelUI] r_Desc AFTER: '{r_Desc.text.Substring(0, Mathf.Min(50, r_Desc.text.Length))}...'");
+                    }
+                }
+            }
+
+            if (r_Cost != null)
+            {
+                r_Cost.ForceMeshUpdate();
+                Debug.Log($"[MapPanelUI] r_Cost AFTER: '{r_Cost.text}'");
+            }
+
+            if (r_ActionButton != null)
+            {
+                // Update button state
+                bool isUnlocked = ProgressionManager.Instance != null && ProgressionManager.Instance.IsRegionUnlocked(region.regionID);
+                bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(region.regionID);
+
+                r_ActionButton.interactable = false;
+
+                if (isUnlocked)
+                {
+                    r_ActionButton.interactable = false;
+                    if (r_ButtonText != null) r_ButtonText.text = "Собственность";
+                }
+                else if (isPending)
+                {
+                    r_ActionButton.interactable = false;
+                    if (r_ButtonText != null) r_ButtonText.text = "В пути";
+                }
+                else
+                {
+                    bool enoughMoney = PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= region.unlockCostMoney;
+                    bool enoughInf = ProgressionManager.Instance != null && ProgressionManager.Instance.GetInfluence() >= region.unlockCostInfluence;
+
+                    r_ActionButton.interactable = enoughMoney && enoughInf;
+                    if (r_ButtonText != null) r_ButtonText.text = "Подготовить приказ";
+                }
+
+                r_ActionButton.ForceUpdateLayout();
+            }
+
+            Debug.Log($"[MapPanelUI] ShowRegionInfo COMPLETED for {region.displayName}");
+        }
+
+            // Проверка что панель существует
+            if (regionInfoPanel == null)
+            {
+                Debug.LogError("[MapPanelUI] regionInfoPanel is NOT assigned in Inspector! This is why no info appears.");
+                return;
+            }
+
+            // Логи для диагностики UI элементов
+            Debug.Log($"[MapPanelUI] UI Elements Check:");
+            Debug.Log($"  r_Title: {(r_Title != null ? "assigned" : "NULL!")}");
+            Debug.Log($"  r_Desc: {(r_Desc != null ? "assigned" : "NULL!")}");
+            Debug.Log($"  r_Cost: {(r_Cost != null ? "assigned" : "NULL!")}");
+            Debug.Log($"  r_ActionButton: {(r_ActionButton != null ? "assigned" : "NULL!")}");
+
+            // Проверяем текст ДО изменения
+            if (r_Title != null)
+            {
+                Debug.Log($"[MapPanelUI] r_Title text BEFORE: '{r_Title.text}'");
+            }
             if (r_Desc != null)
-                r_Desc.text = $"{region.description}\n\n<color=yellow>Бонусы:</color>{bonusText}";
+            {
+                Debug.Log($"[MapPanelUI] r_Desc text BEFORE: '{r_Desc.text}'");
+            }
+
+            Debug.Log($"[MapPanelUI] Activating regionInfoPanel for {selectedRegion.displayName}");
+            regionInfoPanel.SetActive(true);
+
+            // Force TMP to rebuild immediately
+            UnityEngine.UI.LayoutRebuilder.ForceRebuildLayoutImmediate(regionInfoPanel.GetComponent<RectTransform>());
+
+            if (r_Title != null)
+            {
+                r_Title.text = region.displayName ?? "Unknown";
+                r_Title.ForceMeshUpdate();
+                Debug.Log($"[MapPanelUI] r_Title AFTER: '{r_Title.text}'");
+            }
+            else Debug.LogWarning("[MapPanelUI] r_Title is NULL - cannot set title!");
+
+            // Получаем информацию о потоке если регион открыт
+            string flowInfo = "";
+            string archetypeInfo = "";
+            string progressInfo = "";
+
+            if (ProgressionManager.Instance != null)
+            {
+                var runtimeState = ProgressionManager.Instance.GetRegionRuntimeState(region);
+
+                if (runtimeState != null && runtimeState.isUnlocked)
+                {
+                    // Информация о потоке
+                    int currentFlow = runtimeState.currentDailyTarget;
+                    int maxFlow = region.maxDailyFlow;
+                    float progress = runtimeState.GetFlowPercentage();
+
+                    flowInfo = $"\n\n<color=cyan>📊 Поток клиентов:</color>\n" +
+                               $"  Текущий: <color=yellow>{currentFlow}</color> чел/день\n" +
+                               $"  Максимум: {maxFlow} чел/день\n" +
+                               $"  Прогресс: {progress * 100:F0}%";
+
+                    // Информация об архетипах
+                    if (region.groupWeights != null && region.groupWeights.Count > 0)
+                    {
+                        archetypeInfo = $"\n<color=magenta>👥 Типы посетителей:</color>";
+                        foreach (var gw in region.groupWeights)
+                        {
+                            int groupFlow = Mathf.RoundToInt(currentFlow * gw.weight);
+                            archetypeInfo += $"\n  • {gw.groupID}: ~{groupFlow} чел ({gw.weight * 100:F0}%)";
+                        }
+                    }
+
+                    // Прогресс разогрева
+                    if (!runtimeState.IsAtFullCapacity())
+                    {
+                        int daysLeft = region.rampUpDays - runtimeState.daysOwned;
+                        progressInfo = $"\n<color=green>⏱️ До полного потока: {daysLeft} дн.</color>";
+                    }
+                    else
+                    {
+                        progressInfo = $"\n<color=green>✅ Полный поток достигнут!</color>";
+                    }
+                }
+                else if (region.maxDailyFlow > 0)
+                {
+                    // Регион закрыт, но показываем потенциал
+                    flowInfo = $"\n\n<color=cyan>📊 Потенциал:</color>\n" +
+                               $"  Максимум: {region.maxDailyFlow} чел/день\n" +
+                               $"  Прогрев: {region.rampUpDays} дней";
+
+                    if (region.groupWeights != null && region.groupWeights.Count > 0)
+                    {
+                        archetypeInfo = $"\n<color=magenta>👥 Типы посетителей:</color>";
+                        foreach (var gw in region.groupWeights)
+                        {
+                            archetypeInfo += $"\n  • {gw.groupID}: {gw.weight * 100:F0}%";
+                        }
+                    }
+                }
+            }
+
+            // Формируем полное описание
+            string fullDescription = $"{region.description}{flowInfo}{archetypeInfo}{progressInfo}";
+
+            if (r_Desc != null)
+            {
+                r_Desc.text = fullDescription;
+                r_Desc.ForceMeshUpdate();
+                Debug.Log($"[MapPanelUI] r_Desc AFTER: '{r_Desc.text.Substring(0, Mathf.Min(50, r_Desc.text.Length))}...'");
+            }
+
+            if (r_Cost != null)
+            {
+                r_Cost.ForceMeshUpdate();
+                Debug.Log($"[MapPanelUI] r_Cost AFTER: '{r_Cost.text}'");
+            }
 
             if (ProgressionManager.Instance == null)
             {

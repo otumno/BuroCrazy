@@ -41,7 +41,7 @@ namespace Tools
             panelRect.anchorMax = new Vector2(0, 0);
             panelRect.pivot = new Vector2(0, 0);
             panelRect.anchoredPosition = new Vector2(10, 10);
-            panelRect.sizeDelta = new Vector2(250, 280);
+            panelRect.sizeDelta = new Vector2(250, 430);
 
             var panelImage = panel.AddComponent<Image>();
             panelImage.color = new Color(0, 0, 0, 0.8f);
@@ -154,35 +154,100 @@ namespace Tools
 
             yPos -= 25;
 
-            // Кнопка "+100" для быстрого спавна
-            var spawn100BtnGO = new GameObject("Btn_Spawn100");
-            spawn100BtnGO.transform.SetParent(panel.transform, false);
-            var spawn100BtnRect = spawn100BtnGO.AddComponent<RectTransform>();
-            spawn100BtnRect.anchorMin = new Vector2(0, 1);
-            spawn100BtnRect.anchorMax = new Vector2(1, 1);
-            spawn100BtnRect.pivot = new Vector2(0.5f, 1);
-            spawn100BtnRect.anchoredPosition = new Vector2(0, yPos);
-            spawn100BtnRect.sizeDelta = new Vector2(-20, 22);
+            // === КНОПКИ ДЛЯ ПОЖИЛЫХ (ELDERLY) ===
+            // Кнопка "Спавн пожилого 1"
+            var spawnElderly1BtnGO = new GameObject("Btn_Elderly_1");
+            spawnElderly1BtnGO.transform.SetParent(panel.transform, false);
+            var spawnElderly1BtnRect = spawnElderly1BtnGO.AddComponent<RectTransform>();
+            spawnElderly1BtnRect.anchorMin = new Vector2(0, 1);
+            spawnElderly1BtnRect.anchorMax = new Vector2(1, 1);
+            spawnElderly1BtnRect.pivot = new Vector2(0.5f, 1);
+            spawnElderly1BtnRect.anchoredPosition = new Vector2(0, yPos);
+            spawnElderly1BtnRect.sizeDelta = new Vector2(-20, 22);
 
-            var spawn100BtnImage = spawn100BtnGO.AddComponent<Image>();
-            spawn100BtnImage.color = new Color(0.6f, 0.3f, 0.2f, 1f);
+            var spawnElderly1BtnImage = spawnElderly1BtnGO.AddComponent<Image>();
+            spawnElderly1BtnImage.color = new Color(0.5f, 0.3f, 0.6f, 1f);
 
-            var spawn100Btn = spawn100BtnGO.AddComponent<Button>();
-            spawn100Btn.onClick.AddListener(() => debugMenu.SpawnMultiple(100));
+            var spawnElderly1Btn = spawnElderly1BtnGO.AddComponent<Button>();
+            spawnElderly1Btn.onClick.AddListener(() => debugMenu.SpawnElderly());
 
-            var spawn100TextGO = new GameObject("Text");
-            spawn100TextGO.transform.SetParent(spawn100BtnGO.transform, false);
-            var spawn100TextRect = spawn100TextGO.AddComponent<RectTransform>();
-            spawn100TextRect.anchorMin = Vector2.zero;
-            spawn100TextRect.anchorMax = Vector2.one;
-            spawn100TextRect.sizeDelta = Vector2.zero;
+            var spawnElderly1TextGO = new GameObject("Text");
+            spawnElderly1TextGO.transform.SetParent(spawnElderly1BtnGO.transform, false);
+            var spawnElderly1TextRect = spawnElderly1TextGO.AddComponent<RectTransform>();
+            spawnElderly1TextRect.anchorMin = Vector2.zero;
+            spawnElderly1TextRect.anchorMax = Vector2.one;
+            spawnElderly1TextRect.sizeDelta = Vector2.zero;
 
-            var spawn100Text = spawn100TextGO.AddComponent<Text>();
-            spawn100Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            spawn100Text.fontSize = 12;
-            spawn100Text.color = Color.white;
-            spawn100Text.alignment = TextAnchor.MiddleCenter;
-            spawn100Text.text = "+100 клиентов";
+            var spawnElderly1Text = spawnElderly1TextGO.AddComponent<Text>();
+            spawnElderly1Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            spawnElderly1Text.fontSize = 12;
+            spawnElderly1Text.color = Color.white;
+            spawnElderly1Text.alignment = TextAnchor.MiddleCenter;
+            spawnElderly1Text.text = "Спавн пожилого 1";
+
+            yPos -= 25;
+
+            // Кнопка "Спавн пожилого 10"
+            var spawnElderly10BtnGO = new GameObject("Btn_Elderly_10");
+            spawnElderly10BtnGO.transform.SetParent(panel.transform, false);
+            var spawnElderly10BtnRect = spawnElderly10BtnGO.AddComponent<RectTransform>();
+            spawnElderly10BtnRect.anchorMin = new Vector2(0, 1);
+            spawnElderly10BtnRect.anchorMax = new Vector2(1, 1);
+            spawnElderly10BtnRect.pivot = new Vector2(0.5f, 1);
+            spawnElderly10BtnRect.anchoredPosition = new Vector2(0, yPos);
+            spawnElderly10BtnRect.sizeDelta = new Vector2(-20, 22);
+
+            var spawnElderly10BtnImage = spawnElderly10BtnGO.AddComponent<Image>();
+            spawnElderly10BtnImage.color = new Color(0.4f, 0.25f, 0.5f, 1f);
+
+            var spawnElderly10Btn = spawnElderly10BtnGO.AddComponent<Button>();
+            spawnElderly10Btn.onClick.AddListener(() => debugMenu.SpawnElderlyMultiple(10));
+
+            var spawnElderly10TextGO = new GameObject("Text");
+            spawnElderly10TextGO.transform.SetParent(spawnElderly10BtnGO.transform, false);
+            var spawnElderly10TextRect = spawnElderly10TextGO.AddComponent<RectTransform>();
+            spawnElderly10TextRect.anchorMin = Vector2.zero;
+            spawnElderly10TextRect.anchorMax = Vector2.one;
+            spawnElderly10TextRect.sizeDelta = Vector2.zero;
+
+            var spawnElderly10Text = spawnElderly10TextGO.AddComponent<Text>();
+            spawnElderly10Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            spawnElderly10Text.fontSize = 12;
+            spawnElderly10Text.color = Color.white;
+            spawnElderly10Text.alignment = TextAnchor.MiddleCenter;
+            spawnElderly10Text.text = "Спавн пожилого 10";
+
+            yPos -= 25;
+
+            // Кнопка "Спавн пожилого 100"
+            var spawnElderly100BtnGO = new GameObject("Btn_Elderly_100");
+            spawnElderly100BtnGO.transform.SetParent(panel.transform, false);
+            var spawnElderly100BtnRect = spawnElderly100BtnGO.AddComponent<RectTransform>();
+            spawnElderly100BtnRect.anchorMin = new Vector2(0, 1);
+            spawnElderly100BtnRect.anchorMax = new Vector2(1, 1);
+            spawnElderly100BtnRect.pivot = new Vector2(0.5f, 1);
+            spawnElderly100BtnRect.anchoredPosition = new Vector2(0, yPos);
+            spawnElderly100BtnRect.sizeDelta = new Vector2(-20, 22);
+
+            var spawnElderly100BtnImage = spawnElderly100BtnGO.AddComponent<Image>();
+            spawnElderly100BtnImage.color = new Color(0.3f, 0.2f, 0.4f, 1f);
+
+            var spawnElderly100Btn = spawnElderly100BtnGO.AddComponent<Button>();
+            spawnElderly100Btn.onClick.AddListener(() => debugMenu.SpawnElderlyMultiple(100));
+
+            var spawnElderly100TextGO = new GameObject("Text");
+            spawnElderly100TextGO.transform.SetParent(spawnElderly100BtnGO.transform, false);
+            var spawnElderly100TextRect = spawnElderly100TextGO.AddComponent<RectTransform>();
+            spawnElderly100TextRect.anchorMin = Vector2.zero;
+            spawnElderly100TextRect.anchorMax = Vector2.one;
+            spawnElderly100TextRect.sizeDelta = Vector2.zero;
+
+            var spawnElderly100Text = spawnElderly100TextGO.AddComponent<Text>();
+            spawnElderly100Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            spawnElderly100Text.fontSize = 12;
+            spawnElderly100Text.color = Color.white;
+            spawnElderly100Text.alignment = TextAnchor.MiddleCenter;
+            spawnElderly100Text.text = "Спавн пожилого 100";
 
             yPos -= 25;
 

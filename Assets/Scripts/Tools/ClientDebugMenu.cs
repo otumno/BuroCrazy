@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Characters;
 using Data;
+using Data.Calendar;
 using Managers;
 
 namespace Tools
@@ -100,7 +101,26 @@ namespace Tools
             string info = "=== BuroCrazy Debug ===\n\n";
             int activeClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length;
             info += $"Active clients: {activeClients}\n";
-            info += $"Selected group: {(string.IsNullOrEmpty(currentSelectedGroup) ? "(none)" : currentSelectedGroup)}\n\n";
+            info += $"Office capacity: {waveManager.officeCapacity}\n";
+
+            // Информация об очереди
+            if (waveManager.pendingSpawnQueue != null)
+            {
+                info += $"Waiting queue: {waveManager.pendingSpawnQueue.Count}/{waveManager.maxQueueSize}\n";
+                info += $"Overflow count: {waveManager.overflowClientsCount}\n";
+            }
+
+            info += $"Selected group: {(string.IsNullOrEmpty(currentSelectedGroup) ? "(none)" : currentSelectedGroup)}\n";
+
+            // Время
+            if (TimeManager.Instance != null)
+            {
+                var period = TimeManager.Instance.GetCurrentPeriodType();
+                bool isNight = period.IsNight();
+                info += $"Period: {period} {(isNight ? "(NIGHT)" : "")}\n";
+            }
+
+            info += "\n";
 
             // Показываем группы архетипов
             if (archetypeDB != null && archetypeDB.allArchetypes != null)
@@ -164,6 +184,12 @@ namespace Tools
                 return;
             }
 
+            if (waveManager.IsNightTime())
+            {
+                Debug.LogWarning($"[ClientDebugMenu] НОЧЬ! Клиенты не спавнятся ночью.");
+                return;
+            }
+
             currentSelectedGroup = groupID;
             Debug.Log($"[ClientDebugMenu] SpawnByGroup('{groupID}'): Using local archetypeDB...");
 
@@ -183,10 +209,69 @@ namespace Tools
         }
 
         /// <summary>
+        /// Спавн клиента группы "Elderly" (пожилые)
+        /// </summary>
+        public void SpawnElderly()
+        {
+            SpawnByGroup("Elderly");
+        }
+
+        /// <summary>
+        /// Спавн нескольких клиентов группы "Elderly" (пожилые)
+        /// </summary>
+        public void SpawnElderlyMultiple(int count)
+        {
+            if (waveManager.IsNightTime())
+            {
+                Debug.LogWarning($"[ClientDebugMenu] НОЧЬ! Клиенты не спавнятся ночью.");
+                return;
+            }
+
+            if (archetypeDB == null)
+            {
+                Debug.LogWarning($"[ClientDebugMenu] archetypeDB is null!");
+                return;
+            }
+
+            // Проверяем что группа существует
+            var elderlyArchetypes = archetypeDB.GetByGroup("Elderly");
+            if (elderlyArchetypes.Count == 0)
+            {
+                Debug.LogWarning($"[ClientDebugMenu] Группа 'Elderly' не найдена в базе архетипов!");
+                return;
+            }
+
+            Debug.Log($"[ClientDebugMenu] SpawnElderlyMultiple({count}): Starting...");
+
+            for (int i = 0; i < count; i++)
+            {
+                ClientArchetype archetype = archetypeDB.GetRandomByGroup("Elderly");
+                if (archetype != null)
+                {
+                    Debug.Log($"[ClientDebugMenu] [{i+1}/{count}] Spawning Elderly: {archetype.displayName} (ID: {archetype.archetypeID})");
+                    waveManager.SpawnClientWithArchetype(archetype);
+                }
+                else
+                {
+                    Debug.LogWarning($"[ClientDebugMenu] [{i+1}/{count}] Failed to get archetype for group 'Elderly'");
+                }
+            }
+
+            Debug.Log($"[ClientDebugMenu] SpawnElderlyMultiple({count}): Completed");
+            RefreshInfo();
+        }
+
+        /// <summary>
         /// Спавн нескольких клиентов текущей выбранной группы
         /// </summary>
         public void SpawnMultiple(int count)
         {
+            if (waveManager.IsNightTime())
+            {
+                Debug.LogWarning($"[ClientDebugMenu] НОЧЬ! Клиенты не спавнятся ночью.");
+                return;
+            }
+
             if (archetypeDB == null || archetypeDB.allArchetypes == null || archetypeDB.allArchetypes.Count == 0)
             {
                 Debug.LogWarning($"[ClientDebugMenu] SpawnMultiple: archetypeDB is null or empty!");

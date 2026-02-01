@@ -24,22 +24,116 @@ namespace Managers
         // Храним ID открытых регионов и должностей (строки легче сохранять в JSON)
         private HashSet<string> unlockedRegionIDs = new HashSet<string>();
         private HashSet<string> unlockedJobIDs = new HashSet<string>();
-        
+
+        // --- Состояние регионов для системы потоков ---
+        [Header("Потоки клиентов")]
+        [Tooltip("Runtime состояние всех регионов (автоматически создаётся при старте)")]
+        public List<Scriptables.Progression.RegionRuntimeState> regionRuntimeStates = new List<Scriptables.Progression.RegionRuntimeState>();
+
         // События для UI
         public event System.Action<int> OnInfluenceChanged;
         public event System.Action OnProgressionUpdated; // Срабатывает при любом открытии региона/должности
+        public event System.Action OnDailyFlowUpdated; // Срабатывает при обновлении потоков в новый день
 
         private void Awake()
         {
             if (Instance == null)
             {
                 Instance = this;
-                // DontDestroyOnLoad не нужен, так как родительский объект [SYSTEMS] уже помечен как DontDestroyOnLoad в SystemsBootstrapper.
             }
             else
             {
                 Destroy(gameObject);
             }
+        }
+
+        private void Start()
+        {
+            // Инициализируем состояние регионов
+            InitializeRegionStates();
+
+            // Подписываемся на смену дня
+            if (TimeManager.Instance != null)
+            {
+                TimeManager.Instance.OnDayChanged += OnDayChanged;
+                Debug.Log("[ProgressionManager] Подписан на TimeManager.OnDayChanged");
+            }
+            else
+            {
+                Debug.LogWarning("[ProgressionManager] TimeManager.Instance не найден! Daily flow не будет обновляться.");
+            }
+        }
+
+        /// <summary>
+        /// Инициализирует runtime состояния для всех регионов из базы
+        /// </summary>
+        private void InitializeRegionStates()
+        {
+            regionRuntimeStates.Clear();
+
+            if (allRegionsDatabase == null || allRegionsDatabase.Count == 0)
+            {
+                Debug.LogWarning("[ProgressionManager] allRegionsDatabase пуст!");
+                return;
+            }
+
+            int currentDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 1;
+
+            foreach (var region in allRegionsDatabase)
+            {
+                if (region == null) continue;
+
+                var state = new Scriptables.Progression.RegionRuntimeState
+                {
+                    data = region,
+                    isUnlocked = false,
+                    daysOwned = 0,
+                    currentDailyTarget = 0
+                };
+
+                // Если регион уже открыт (например, стартовый регион)
+                if (IsRegionUnlocked(region.regionID))
+                {
+                    // Восстанавливаем состояние на основе количества захваченных дней
+                    // Для стартового региона считаем что он был захвачен в день 1
+                    state = Scriptables.Progression.RegionRuntimeState.CreateUnlocked(region, currentDay);
+                    state.daysOwned = Mathf.Min(state.daysOwned, region.rampUpDays);
+                    state.currentDailyTarget = Scriptables.Progression.RegionRuntimeState.CalculateDailyTarget(region, state.daysOwned);
+
+                    Debug.Log($"[ProgressionManager] Восстановлено состояние '{region.displayName}': " +
+                              $"daysOwned={state.daysOwned}, target={state.currentDailyTarget}");
+                }
+
+                regionRuntimeStates.Add(state);
+            }
+
+            Debug.Log($"[ProgressionManager] Инициализировано {regionRuntimeStates.Count} регионов");
+        }
+
+        /// <summary>
+        /// Вызывается при смене дня - обновляет потоки всех регионов
+        /// </summary>
+        private void OnDayChanged(int newDay)
+        {
+            Debug.Log($"[ProgressionManager] === Новый день: {newDay} ===");
+
+            int totalDailyFlow = 0;
+
+            foreach (var state in regionRuntimeStates)
+            {
+                if (state.isUnlocked)
+                {
+                    // Увеличиваем daysOwned и пересчитываем цель
+                    state.OnNewDay(state.daysOwned + 1);
+                    totalDailyFlow += state.currentDailyTarget;
+
+                    Debug.Log($"[ProgressionManager] Регион '{state.data?.displayName}': " +
+                              $"{state.previousDayFlow} -> {state.currentDailyTarget} клиентов/день");
+                }
+            }
+
+            Debug.Log($"[ProgressionManager] Общий дневной поток: {totalDailyFlow} клиентов");
+            OnDailyFlowUpdated?.Invoke();
         }
 
         #region Influence Logic
@@ -83,10 +177,187 @@ namespace Managers
 
             unlockedRegionIDs.Add(region.regionID);
             Debug.Log($"<color=green>[Progression] РЕГИОН ЗАХВАЧЕН: {region.displayName}</color>");
-            
+
+            // Создаём runtime state для региона
+            CreateRegionRuntimeState(region);
+
             OnProgressionUpdated?.Invoke();
-            
+
             // Здесь в будущем можно вызвать NotificationUI
+        }
+
+        /// <summary>
+        /// Создаёт runtime state для региона и добавляет в коллекцию
+        /// </summary>
+        private void CreateRegionRuntimeState(RegionData region)
+        {
+            // Проверяем не существует ли уже state для этого региона
+            var existingState = regionRuntimeStates.Find(s => s.data == region);
+            if (existingState != null)
+            {
+                existingState.isUnlocked = true;
+                existingState.daysOwned = 1; // Первый день - 25%
+                existingState.currentDailyTarget = Scriptables.Progression.RegionRuntimeState.CalculateDailyTarget(region, 1);
+                existingState.unlockTime = Time.time;
+                existingState.unlockDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 1;
+
+                Debug.Log($"[ProgressionManager] Обновлён существующий state для '{region.displayName}': " +
+                          $"target={existingState.currentDailyTarget}");
+            }
+            else
+            {
+                // Создаём новый state
+                int currentDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 1;
+                var newState = Scriptables.Progression.RegionRuntimeState.CreateUnlocked(region, currentDay);
+                regionRuntimeStates.Add(newState);
+
+                Debug.Log($"[ProgressionManager] Создан новый state для '{region.displayName}'");
+            }
+
+            // Уведомляем об изменении потоков
+            OnDailyFlowUpdated?.Invoke();
+        }
+
+        /// <summary>
+        /// Получает runtime state для конкретного региона
+        /// </summary>
+        public Scriptables.Progression.RegionRuntimeState GetRegionRuntimeState(string regionID)
+        {
+            return regionRuntimeStates.Find(s => s.data != null && s.data.regionID == regionID);
+        }
+
+        /// <summary>
+        /// Получает runtime state для конкретного региона по данным
+        /// </summary>
+        public Scriptables.Progression.RegionRuntimeState GetRegionRuntimeState(RegionData region)
+        {
+            if (region == null) return null;
+            return regionRuntimeStates.Find(s => s.data == region);
+        }
+
+        /// <summary>
+        /// Получает все активные (разблокированные) регионы
+        /// </summary>
+        public List<Scriptables.Progression.RegionRuntimeState> GetActiveRegions()
+        {
+            return regionRuntimeStates.FindAll(s => s.isUnlocked);
+        }
+
+        /// <summary>
+        /// Получает общее количество клиентов в день от всех регионов
+        /// </summary>
+        public int GetTotalDailyFlow()
+        {
+            int total = 0;
+            foreach (var state in regionRuntimeStates)
+            {
+                if (state.isUnlocked)
+                {
+                    total += state.currentDailyTarget;
+                }
+            }
+            return total;
+        }
+
+        /// <summary>
+        /// Получает общее количество клиентов в день для конкретной группы архетипов
+        /// </summary>
+        public int GetDailyFlowForGroup(string groupID)
+        {
+            int total = 0;
+
+            // Проверяем есть ли такая группа в данных региона
+            var regionState = regionRuntimeStates.Find(s =>
+                s.isUnlocked &&
+                s.data != null &&
+                s.data.archetypeGroups != null &&
+                s.data.archetypeGroups.Contains(groupID));
+
+            if (regionState == null)
+            {
+                // Группа может быть в нескольких регионах - суммируем
+                foreach (var state in regionRuntimeStates)
+                {
+                    if (state.isUnlocked && state.data != null && state.data.groupWeights != null)
+                    {
+                        var weight = state.data.groupWeights.Find(w => w.groupID == groupID);
+                        if (weight != null)
+                        {
+                            // Пропорционально весу группы
+                            total += Mathf.RoundToInt(state.currentDailyTarget * weight.weight);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // Простой случай - группа принадлежит одному региону
+                var weight = regionState.data.groupWeights?.Find(w => w.groupID == groupID);
+                if (weight != null)
+                {
+                    total = Mathf.RoundToInt(regionState.currentDailyTarget * weight.weight);
+                }
+            }
+
+            return total;
+        }
+
+        /// <summary>
+        /// Получает суммарные веса групп из всех активных регионов
+        /// </summary>
+        public Dictionary<string, float> GetCombinedGroupWeights()
+        {
+            var combined = new Dictionary<string, float>();
+
+            foreach (var state in regionRuntimeStates)
+            {
+                if (!state.isUnlocked) continue;
+                if (state.data == null || state.data.groupWeights == null) continue;
+
+                foreach (var weight in state.data.groupWeights)
+                {
+                    if (combined.ContainsKey(weight.groupID))
+                    {
+                        combined[weight.groupID] += weight.weight;
+                    }
+                    else
+                    {
+                        combined[weight.groupID] = weight.weight;
+                    }
+                }
+            }
+
+            return combined;
+        }
+
+        /// <summary>
+        /// Выбирает группу архетипов с учётом весов всех регионов
+        /// </summary>
+        public string SelectArchetypeGroupWeighted()
+        {
+            var weights = GetCombinedGroupWeights();
+            if (weights.Count == 0) return "Default";
+
+            // Weighted random
+            float totalWeight = 0f;
+            foreach (var kvp in weights)
+            {
+                totalWeight += kvp.Value;
+            }
+
+            float randomPoint = UnityEngine.Random.Range(0, totalWeight);
+            float currentWeight = 0f;
+
+            foreach (var kvp in weights)
+            {
+                currentWeight += kvp.Value;
+                if (randomPoint <= currentWeight)
+                {
+                    return kvp.Key;
+                }
+            }
+
+            return "Default";
         }
 
         // Метод для WaveManager: подсчет бонусов к спавну от всех открытых регионов
@@ -190,7 +461,8 @@ namespace Managers
             currentInfluence = 0;
             unlockedRegionIDs.Clear();
             unlockedJobIDs.Clear();
-            
+            regionRuntimeStates.Clear();
+
             // Автоматически открываем стартовый регион и должность, если они есть
             if (allRegionsDatabase.Count > 0)
             {
@@ -202,11 +474,21 @@ namespace Managers
                 // Открываем стартовую должность (Директор)
                 unlockedJobIDs.Add(allJobsDatabase[0].jobID);
             }
-            
+
+            // Пересоздаём runtime states для открытых регионов
+            InitializeRegionStates();
+
             OnInfluenceChanged?.Invoke(currentInfluence);
             OnProgressionUpdated?.Invoke();
         }
-        
-        // TODO: Добавить методы Save/Load, интегрируемые в SaveLoadManager
+
+        private void OnDestroy()
+        {
+            // Отписываемся от событий
+            if (TimeManager.Instance != null)
+            {
+                TimeManager.Instance.OnDayChanged -= OnDayChanged;
+            }
+        }
     }
 }

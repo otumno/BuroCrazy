@@ -24,3 +24,11 @@ MonoBehaviour:
   unlockCostInfluence: 50
   unlockCostMoney: 100
   spawnBonuses: []
+  archetypeGroups:
+  - Elderly
+  groupWeights:
+  - groupID: Elderly
+    weight: 1
+  maxDailyFlow: 26
+  flowVariance: 0.1
+  rampUpDays: 4

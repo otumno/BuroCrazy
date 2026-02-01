@@ -97,13 +97,8 @@ namespace Data
             var groupArchetypes = GetByGroup(groupID);
             if (groupArchetypes.Count == 0)
             {
-                Debug.LogWarning($"[ArchetypeDatabase] GetRandomByGroup('{groupID}'): Архетипы группы не найдены! Falling back to GetRandomArchetype().");
-                var fallback = GetRandomArchetype();
-                if (fallback != null)
-                {
-                    Debug.LogWarning($"[ArchetypeDatabase]   Fallback returned: {fallback.name} (groupID: {fallback.groupID})");
-                }
-                return fallback;
+                Debug.LogWarning($"[ArchetypeDatabase] GetRandomByGroup('{groupID}'): Архетипы группы не найдены! Returning null.");
+                return null;
             }
 
             var selected = groupArchetypes[Random.Range(0, groupArchetypes.Count)];

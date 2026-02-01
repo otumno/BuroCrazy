@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Enums;
+using Data.Calendar;
 using Data.Documents;
 
 namespace Characters
@@ -90,6 +91,52 @@ namespace Characters
 
         [Tooltip("Реплики при уходе расстроенным")]
         public List<string> angryResponses;
+
+        [Header("Временные предпочтения спавна")]
+        [Tooltip("Кривая предпочтений по времени суток (0-1). 1 = максимальная вероятность появления.")]
+        public AnimationCurve timeOfDayPreference = new AnimationCurve(
+            new Keyframe(0f, 0f),    // StartNight
+            new Keyframe(0.2f, 0.3f), // Evening/LateDay
+            new Keyframe(0.4f, 0.6f), // Day
+            new Keyframe(0.6f, 0.8f), // Noon
+            new Keyframe(0.8f, 1.0f), // EarlyDay
+            new Keyframe(0.9f, 1.0f), // Morning - ПИК для пожилых!
+            new Keyframe(1f, 0f)      // EndNight
+        );
+
+        /// <summary>
+        /// Проверяет, насколько архетип предпочитает текущий период для спавна (0-1)
+        /// </summary>
+        public float GetTimePreferenceScore(CalendarDayPeriodType currentPeriod)
+        {
+            float normalizedTime = GetNormalizedTimeFromPeriod(currentPeriod);
+            return timeOfDayPreference.Evaluate(normalizedTime);
+        }
+
+        /// <summary>
+        /// Конвертирует период дня в нормализованное время (0-1) для кривой
+        /// </summary>
+        private float GetNormalizedTimeFromPeriod(CalendarDayPeriodType period)
+        {
+            if ((period & CalendarDayPeriodType.StartNight) != 0) return 0f;
+            if ((period & CalendarDayPeriodType.EndNight) != 0) return 1f;
+            if ((period & CalendarDayPeriodType.Evening) != 0) return 0.1f;
+            if ((period & CalendarDayPeriodType.LateDay) != 0) return 0.25f;
+            if ((period & CalendarDayPeriodType.Day) != 0) return 0.4f;
+            if ((period & CalendarDayPeriodType.Noon) != 0) return 0.6f;
+            if ((period & CalendarDayPeriodType.EarlyDay) != 0) return 0.8f;
+            if ((period & CalendarDayPeriodType.Morning) != 0) return 0.95f;
+            return 0.5f; // Default
+        }
+
+        /// <summary>
+        /// Проверяет, может ли архетип появиться в текущий период (учитывая мин. порог)
+        /// </summary>
+        public bool CanSpawnInPeriod(CalendarDayPeriodType currentPeriod, float minThreshold = 0.1f)
+        {
+            if (currentPeriod.IsNight()) return false;
+            return GetTimePreferenceScore(currentPeriod) >= minThreshold;
+        }
 
         // Геттеры для визуалов
         public Sprite GetRandomHairSprite()

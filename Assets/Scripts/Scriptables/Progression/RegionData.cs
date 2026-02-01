@@ -23,11 +23,27 @@ namespace Scriptables.Progression
         public int unlockCostMoney = 500;
 
         [Header("Влияние на Геймплей")]
-        // Список бонусов к спавну клиентов в разные периоды дня.
-        // WaveManager будет читать это через ProgressionManager.
         public List<PeriodBonus> spawnBonuses;
 
-        // public List<ArchetypeData> allowedArchetypes; // Заготовка под будущие архетипы
+        [Header("Группы архетипов")]
+        [Tooltip("Какие группы архетипов приходят из этого региона")]
+        public List<string> archetypeGroups = new List<string>();
+
+        [Tooltip("Вес каждой группы (сумма должна быть ~1 или 100)")]
+        public List<ArchetypeGroupWeight> groupWeights;
+
+        [Header("Поток клиентов")]
+        [Tooltip("Максимальное количество клиентов в день (100% поток)")]
+        [Range(1, 200)]
+        public int maxDailyFlow = 26;
+
+        [Tooltip("Разброс потока (+/- процент от maxDailyFlow)")]
+        [Range(0f, 0.3f)]
+        public float flowVariance = 0.1f; // 10%
+
+        [Tooltip("Задержка выхода на полный поток (дней). 1й день = 25%, 2й = 50%, 3й = 75%, 4й = 100%")]
+        [Range(1, 10)]
+        public int rampUpDays = 4;
     }
 
     [System.Serializable]
@@ -37,5 +53,16 @@ namespace Scriptables.Progression
         public CalendarDayPeriodType period;
         [Tooltip("Сколько дополнительных клиентов добавляется к базовой волне")]
         public int additionalClients;
+    }
+
+    [System.Serializable]
+    public class ArchetypeGroupWeight
+    {
+        [Tooltip("ID группы архетипа (например 'Elderly', 'Business', 'Student')")]
+        public string groupID;
+
+        [Tooltip("Вес этой группы при выборе (чем выше, тем чаще появляется)")]
+        [Range(0f, 1f)]
+        public float weight = 0.25f;
     }
 }
