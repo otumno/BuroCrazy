@@ -26,6 +26,9 @@ namespace Characters
         [Tooltip("Спрайт лица для диалогов")]
         public Sprite portraitSprite;
 
+        [Tooltip("Коллекция спрайтов для эмоций лица")]
+        public EmotionSpriteCollection spriteCollection;
+
         [Header("Визуал - Волосы")]
         [Tooltip("Список вариантов причесок (выбирается случайно)")]
         public List<Sprite> hairSprites = new List<Sprite>();

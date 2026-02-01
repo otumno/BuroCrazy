@@ -27,43 +27,60 @@ namespace Characters
     // Archetype tracking for Behavior Tree
     public Characters.ClientArchetype currentArchetype { get; private set; }
 
+    // Flag to prevent visuals.Setup() from overwriting archetype body sprite
+    private bool bodySpriteSetByArchetype = false;
+
     [Header("Звуки")] // Sound Effects section
     [Tooltip("Звук, проигрываемый при повышении уровня")]
     public AudioClip levelUpSound; // Sound clip for level up
 
     void Awake()
     {
-        // Try to get references from StaffPrefabReferences first
+        // Ищем Body и Face ВСЕГДА в VisualsContainer (игнорируем StaffPrefabReferences для них)
+        // Это критически важно для правильной работы архетипов!
+        Transform visualsContainer = transform.Find("VisualsContainer");
+
+        // Body - ищем в VisualsContainer
+        Transform bodyTF = visualsContainer != null ? visualsContainer.Find("Body") : transform.Find("Body");
+        if (bodyTF != null)
+        {
+            bodyRenderer = bodyTF.GetComponent<SpriteRenderer>();
+            if (bodyRenderer == null) Debug.LogError("Body found but has no SpriteRenderer!", gameObject);
+        }
+        else
+        {
+            Debug.LogError("Body not found in VisualsContainer!", gameObject);
+        }
+
+        // Face - ищем в VisualsContainer
+        Transform faceTF = visualsContainer != null ? visualsContainer.Find("Face") : FindDeepChild(transform, "Face");
+        if (faceTF != null)
+        {
+            faceRenderer = faceTF.GetComponent<SpriteRenderer>();
+            if (faceRenderer == null) Debug.LogError("Face found but has no SpriteRenderer!", gameObject);
+        }
+        else
+        {
+            Debug.LogError("Face not found in VisualsContainer!", gameObject);
+        }
+
+        Debug.Log($"[CharacterVisuals] BodyRenderer: {(bodyRenderer != null ? bodyRenderer.gameObject.name : "NULL")}, FaceRenderer: {(faceRenderer != null ? faceRenderer.gameObject.name : "NULL")}");
+
+        // Для остальных компонентов используем StaffPrefabReferences (Hand, HeadAttachPoint, etc)
         StaffPrefabReferences references = GetComponent<StaffPrefabReferences>();
         if (references != null)
         {
-            this.bodyRenderer = references.bodyRenderer;
-            this.faceRenderer = references.faceRenderer;
             this.headAttachPoint = references.headAttachPoint;
             this.handAttachPoint = references.handAttachPoint;
             this.levelUpEffectRenderer = references.levelUpEffectRenderer;
-			this.levelUpSound = references.levelUpSound;			// Get level up effect renderer
+			this.levelUpSound = references.levelUpSound;
         }
 
-        // --- Fallback Search & Initial State ---
-        // If references weren't found via StaffPrefabReferences, try finding by name (less reliable)
-        if (bodyRenderer == null) {
-            Transform bodyTF = transform.Find("BodySprite"); // Adjust name if needed
-            if (bodyTF != null) bodyRenderer = bodyTF.GetComponent<SpriteRenderer>();
-            if (bodyRenderer == null) Debug.LogError("BodyRenderer не назначен и не найден по имени 'BodySprite'!", gameObject);
-        }
-         if (faceRenderer == null) {
-            Transform faceTF = FindDeepChild(transform, "FaceSprite"); // Example of searching deeper if needed
-            if (faceTF != null) faceRenderer = faceTF.GetComponent<SpriteRenderer>();
-            if (faceRenderer == null) Debug.LogError("FaceRenderer не назначен и не найден по имени 'FaceSprite'!", gameObject);
-        }
          if (headAttachPoint == null) {
-             headAttachPoint = transform.Find("HeadAttachPoint"); // Adjust name if needed
-             if (headAttachPoint == null) Debug.LogWarning("HeadAttachPoint не назначен и не найден по имени!", gameObject);
+             Debug.LogWarning("HeadAttachPoint not found!", gameObject);
          }
          if (handAttachPoint == null) {
-             handAttachPoint = transform.Find("HandAttachPoint"); // Adjust name if needed
-             if (handAttachPoint == null) Debug.LogWarning("HandAttachPoint не назначен и не найден по имени!", gameObject);
+             Debug.LogWarning("HandAttachPoint not found!", gameObject);
          }
 
 
@@ -130,7 +147,14 @@ namespace Characters
     public void Setup(Gender gender, EmotionSpriteCollection collection, StateEmotionMap emotionMap)
     {
         this.characterGender = gender;
-        this.currentSpriteCollection = collection;
+
+        // Always set currentSpriteCollection - if archetype already set it, preserve it
+        // Otherwise use the provided collection (or null if not provided)
+        if (this.currentSpriteCollection == null && collection != null)
+        {
+            this.currentSpriteCollection = collection;
+        }
+
         this.currentStateEmotionMap = emotionMap;
 
         // Validations
@@ -152,7 +176,7 @@ namespace Characters
         EmotionSpriteCollection.BodyAnimationSet bodySet = currentSpriteCollection.GetRandomBodySet(gender);
 
         // Check if body sprite was already set by archetype/SetupVisualDiversity
-        bool bodySpriteAlreadySet = bodyRenderer.sprite != null;
+        bool bodySpriteAlreadySet = bodySpriteSetByArchetype;
         Sprite existingSprite = bodyRenderer.sprite;
 
         // Apply the body sprites if the set is valid
@@ -166,13 +190,13 @@ namespace Characters
             }
             else
             {
-                Debug.Log($"[{gameObject.name}] Setup: Body sprite already set by archetype, keeping: {existingSprite.name}");
+                Debug.Log($"[{gameObject.name}] Setup: Body sprite already set by archetype, keeping: {existingSprite?.name ?? "NULL"}");
             }
 
             // Provide all animation sprites to the AgentMover (use existing sprite if set, otherwise from bodySet)
             if (agentMover != null)
             {
-                 Sprite idleSprite = bodySpriteAlreadySet ? existingSprite : bodySet.idleBody;
+                 Sprite idleSprite = bodySpriteAlreadySet && existingSprite != null ? existingSprite : bodySet.idleBody;
                  agentMover.SetAnimationSprites(idleSprite, bodySet.walkBody1, bodySet.walkBody2);
             }
 			assignedPortrait = bodySet.portrait;
@@ -197,6 +221,14 @@ namespace Characters
         
         // Если нет — возвращаем хотя бы тело (чтобы не было пустоты)
         return bodyRenderer != null ? bodyRenderer.sprite : null;
+    }
+
+    /// <summary>
+    /// Returns the body renderer for external access.
+    /// </summary>
+    public SpriteRenderer GetBodyRenderer()
+    {
+        return bodyRenderer;
     }
 
     /// <summary>
@@ -412,8 +444,28 @@ namespace Characters
 
         currentArchetype = archetype;
 
-        // Визуал теперь настраивается через SetupVisualDiversity в CharacterVisuals_Diversity
-        Debug.Log($"[CharacterVisuals] Визуал настроен для архетипа: {archetype.displayName}");
+        // CRITICAL: Set flag AND actual sprite so visuals.Setup() works correctly
+        bodySpriteSetByArchetype = true;
+
+        // Set spriteCollection for face emotions
+        if (archetype.spriteCollection != null)
+        {
+            currentSpriteCollection = archetype.spriteCollection;
+        }
+
+        // Set the body sprite now - this is what Setup() checks with bodySpriteAlreadySet = bodySpriteSetByArchetype
+        // And SetupVisualDiversity() will also set it, but this ensures it works even if SetupVisualDiversity is called later
+        if (bodyRenderer != null && archetype.bodySprite != null)
+        {
+            bodyRenderer.sprite = archetype.bodySprite;
+            Debug.Log($"[CharacterVisuals] SetupFromArchetype: body sprite set to {archetype.bodySprite.name}");
+        }
+        else if (bodyRenderer != null)
+        {
+            Debug.LogWarning($"[CharacterVisuals] SetupFromArchetype: archetype.bodySprite is null!");
+        }
+
+        Debug.Log($"[CharacterVisuals] SetupFromArchetype: {archetype.displayName}, spriteCollection={(currentSpriteCollection != null ? currentSpriteCollection.name : "NULL")}");
     }
 
     /// <summary>

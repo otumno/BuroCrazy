@@ -8,6 +8,8 @@ namespace Characters
     {
         private GameObject hairObject;
         private SpriteRenderer hairRenderer;
+        private GameObject outfitObject;
+        private SpriteRenderer outfitRenderer;
 
         public void SetupVisualDiversity(ClientArchetype archetype)
         {
@@ -19,15 +21,21 @@ namespace Characters
 
             Debug.Log($"[{gameObject.name}] SetupVisualDiversity: archetype={archetype.name}, groupID={archetype.groupID}, displayName={archetype.displayName}");
 
+            if (bodyRenderer == null)
+            {
+                Debug.LogError($"[{gameObject.name}] bodyRenderer is null! Cannot setup visual diversity.");
+                return;
+            }
+
             // Тело - спрайт из архетипа
-            if (archetype.bodySprite != null && bodyRenderer != null)
+            if (archetype.bodySprite != null)
             {
                 Debug.Log($"[{gameObject.name}] Setting body sprite from archetype: {archetype.bodySprite.name}");
                 bodyRenderer.sprite = archetype.bodySprite;
             }
             else
             {
-                Debug.LogWarning($"[{gameObject.name}] Body sprite NOT set: archetype.bodySprite={(archetype.bodySprite != null)}, bodyRenderer={(bodyRenderer != null)}");
+                Debug.LogWarning($"[{gameObject.name}] Body sprite NOT set: archetype.bodySprite is null!");
             }
 
             // Портрет для диалогов
@@ -37,11 +45,17 @@ namespace Characters
                 Debug.Log($"[{gameObject.name}] Portrait set: {archetype.portraitSprite.name}");
             }
 
-            // Причёска - случайная из списка
+            // Одежда - СНАЧАЛА чтобы Hair мог получить правильную сортировку
+            ApplyOutfitFromArchetype(archetype);
+
+            // Причёска - ПОТОМ чтобы наследовать сортировку от обновлённого OutfitOverlay
             ApplyHairFromArchetype(archetype);
 
-            // Одежда - случайная из списка
-            ApplyOutfitFromArchetype(archetype);
+            // Face - ПОСЛЕДНИМ чтобы быть поверх волос
+            ApplyFaceSortingFromHair();
+
+            // Примечание: эмоции лица устанавливаются через visuals.Setup() в Initialize()
+            // который вызывает SetEmotion(Neutral). Для работы эмоций нужен currentSpriteCollection.
         }
 
         private void ApplyHairFromArchetype(ClientArchetype archetype)
@@ -64,15 +78,65 @@ namespace Characters
             }
 
             hairObject = new GameObject("Hair");
-            hairObject.transform.SetParent(transform, false);
+
+            // Родитель - VisualsContainer
+            Transform visualsContainer = transform.Find("VisualsContainer");
+            if (visualsContainer != null)
+            {
+                hairObject.transform.SetParent(visualsContainer, false);
+            }
+            else
+            {
+                hairObject.transform.SetParent(transform, false);
+                Debug.LogWarning($"[{gameObject.name}] VisualsContainer not found! Using root.");
+            }
+
             hairObject.transform.localPosition = Vector3.zero;
 
             hairRenderer = hairObject.AddComponent<SpriteRenderer>();
             hairRenderer.sprite = hairSprite;
-            hairRenderer.sortingOrder = GetHairSortingOrder();
             hairRenderer.color = hairColor;
 
-            Debug.Log($"[{gameObject.name}] Hair created: sprite={hairSprite.name}, color={hairColor}");
+            // Наследуем sorting от OutfitOverlay (который уже обновлён)
+            // СНАЧАЛА ищем существующий OutfitOverlay
+            Transform outfitOverlayForSorting = transform.Find("VisualsContainer/OutfitOverlay");
+            if (outfitOverlayForSorting == null)
+            {
+                outfitOverlayForSorting = transform.Find("OutfitOverlay");
+            }
+            if (outfitOverlayForSorting == null)
+            {
+                outfitOverlayForSorting = FindDeepChild(transform, "OutfitOverlay");
+            }
+
+            string outfitLayer = bodyRenderer != null ? bodyRenderer.sortingLayerName : "Default";
+            int outfitOrder = bodyRenderer != null ? bodyRenderer.sortingOrder : 0;
+
+            if (outfitOverlayForSorting != null)
+            {
+                var outfitRendererForSorting = outfitOverlayForSorting.GetComponent<SpriteRenderer>();
+                if (outfitRendererForSorting != null)
+                {
+                    outfitLayer = outfitRendererForSorting.sortingLayerName;
+                    outfitOrder = outfitRendererForSorting.sortingOrder;
+                }
+            }
+
+            hairRenderer.sortingLayerName = outfitLayer;
+            hairRenderer.sortingOrder = outfitOrder + 1;
+
+            Debug.Log($"[{gameObject.name}] Hair created: sorting from OutfitOverlay: layer={outfitLayer}, order={outfitOrder}, hairOrder={hairRenderer.sortingOrder}");
+        }
+
+        private void ApplyFaceSortingFromHair()
+        {
+            if (faceRenderer == null || hairRenderer == null) return;
+
+            // Face должен быть поверх волос
+            faceRenderer.sortingLayerName = hairRenderer.sortingLayerName;
+            faceRenderer.sortingOrder = hairRenderer.sortingOrder + 1;
+
+            Debug.Log($"[{gameObject.name}] Face sorting set: layer={faceRenderer.sortingLayerName}, order={faceRenderer.sortingOrder} (above hair)");
         }
 
         private void ApplyOutfitFromArchetype(ClientArchetype archetype)
@@ -86,64 +150,114 @@ namespace Characters
                 return;
             }
 
-            // Try multiple search methods for OutfitOverlay
-            Transform overlaySprite = transform.Find("VisualsContainer/OutfitOverlay");
-            if (overlaySprite == null)
+            // СНАЧАЛА ищем существующий OutfitOverlay
+            Transform existingOverlay = transform.Find("VisualsContainer/OutfitOverlay");
+            if (existingOverlay == null)
             {
-                overlaySprite = transform.Find("OutfitOverlay");
+                existingOverlay = transform.Find("OutfitOverlay");
             }
-            if (overlaySprite == null)
+            if (existingOverlay == null)
             {
-                // Deep search
-                overlaySprite = FindDeepChild(transform, "OutfitOverlay");
+                existingOverlay = FindDeepChild(transform, "OutfitOverlay");
             }
 
-            Debug.Log($"[{gameObject.name}] OutfitOverlay search result: {(overlaySprite != null ? "FOUND at " + overlaySprite.name : "NOT FOUND")}");
+            Debug.Log($"[{gameObject.name}] Existing OutfitOverlay search: {(existingOverlay != null ? "FOUND at " + GetFullPath(existingOverlay) : "NOT FOUND")}");
 
-            if (overlaySprite != null)
+            if (existingOverlay != null)
             {
-                var overlayRenderer = overlaySprite.GetComponent<SpriteRenderer>();
-                if (overlayRenderer != null)
+                // Получаем сортировку из существующего
+                var existingRenderer = existingOverlay.GetComponent<SpriteRenderer>();
+                string outfitLayer = "Default";
+                int outfitOrder = 0;
+
+                if (existingRenderer != null)
                 {
-                    Color outfitColor = archetype.GetRandomOutfitColor();
-                    overlayRenderer.sprite = outfitSprite;
-                    overlayRenderer.color = outfitColor;
-                    Debug.Log($"[{gameObject.name}] Outfit applied: sprite={outfitSprite.name}, color={outfitColor}");
+                    outfitLayer = existingRenderer.sortingLayerName;
+                    outfitOrder = existingRenderer.sortingOrder;
+                    Debug.Log($"[{gameObject.name}] Original OutfitOverlay sorting: layer={outfitLayer}, order={outfitOrder}");
                 }
-                else
-                {
-                    Debug.LogWarning($"[{gameObject.name}] OutfitOverlay has no SpriteRenderer!");
-                }
+
+                // Обновляем существующий OutfitOverlay
+                outfitRenderer = existingRenderer;
+                outfitRenderer.sprite = outfitSprite;
+                outfitRenderer.color = archetype.GetRandomOutfitColor();
+                outfitRenderer.sortingLayerName = outfitLayer;
+                outfitRenderer.sortingOrder = outfitOrder;
+
+                Debug.Log($"[{gameObject.name}] OutfitOverlay updated: sprite={outfitSprite.name}, layer={outfitLayer}, order={outfitOrder}");
             }
             else
             {
-                Debug.LogWarning($"[{gameObject.name}] OutfitOverlay not found! Creating dynamic outfit...");
-                CreateDynamicOutfit(archetype, outfitSprite);
+                // Создаем новый если нет
+                Debug.LogWarning($"[{gameObject.name}] OutfitOverlay NOT FOUND, creating new one!");
+
+                if (outfitObject != null)
+                {
+                    Destroy(outfitObject);
+                }
+
+                outfitObject = new GameObject("OutfitOverlay");
+
+                Transform visualsContainer = transform.Find("VisualsContainer");
+                if (visualsContainer != null)
+                {
+                    outfitObject.transform.SetParent(visualsContainer, false);
+                }
+                else
+                {
+                    outfitObject.transform.SetParent(transform, false);
+                }
+
+                outfitObject.transform.localPosition = Vector3.zero;
+
+                outfitRenderer = outfitObject.AddComponent<SpriteRenderer>();
+                outfitRenderer.sprite = outfitSprite;
+                outfitRenderer.color = archetype.GetRandomOutfitColor();
+                outfitRenderer.sortingLayerName = bodyRenderer != null ? bodyRenderer.sortingLayerName : "Default";
+                outfitRenderer.sortingOrder = bodyRenderer != null ? bodyRenderer.sortingOrder + 1 : 1;
+
+                Debug.Log($"[{gameObject.name}] OutfitOverlay created: parent={visualsContainer?.name ?? "root"}, sprite={outfitSprite.name}, layer={outfitRenderer.sortingLayerName}, order={outfitRenderer.sortingOrder}");
             }
         }
 
-        private void CreateDynamicOutfit(ClientArchetype archetype, Sprite outfitSprite)
+        private string GetFullPath(Transform t)
         {
-            var outfitObject = new GameObject("OutfitOverlay");
-            outfitObject.transform.SetParent(transform.Find("VisualsContainer"), false);
-            outfitObject.transform.localPosition = Vector3.zero;
-
-            var outfitRenderer = outfitObject.AddComponent<SpriteRenderer>();
-            outfitRenderer.sprite = outfitSprite;
-            outfitRenderer.color = archetype.GetRandomOutfitColor();
-            outfitRenderer.sortingOrder = 1;
-
-            Debug.Log($"[{gameObject.name}] Dynamic outfit created: sprite={outfitSprite.name}, color={outfitRenderer.color}");
-        }
-
-        private int GetHairSortingOrder()
-        {
-            var bodySprite = GetComponent<SpriteRenderer>();
-            if (bodySprite != null)
+            string path = t.name;
+            while (t.parent != null)
             {
-                return bodySprite.sortingOrder + 1;
+                t = t.parent;
+                path = t.name + "/" + path;
             }
-            return 100;
+            return path;
         }
+
+        // OLD METHOD - DEPRECATED
+        // private void GetOutfitSorting(SpriteRenderer currentOutfit, out string layer, out int order)
+        // {
+        //     // По умолчанию из bodyRenderer
+        //     layer = bodyRenderer != null ? bodyRenderer.sortingLayerName : "Default";
+        //     order = bodyRenderer != null ? bodyRenderer.sortingOrder : 0;
+        //
+        //     // Ищем OutfitOverlay для получения правильных настроек
+        //     Transform overlay = transform.Find("VisualsContainer/OutfitOverlay");
+        //     if (overlay == null)
+        //     {
+        //         overlay = transform.Find("OutfitOverlay");
+        //     }
+        //     if (overlay == null)
+        //     {
+        //         overlay = FindDeepChild(transform, "OutfitOverlay");
+        //     }
+        //
+        //     if (overlay != null)
+        //     {
+        //         var renderer = overlay.GetComponent<SpriteRenderer>();
+        //         if (renderer != null)
+        //         {
+        //             layer = renderer.sortingLayerName;
+        //             order = renderer.sortingOrder;
+        //         }
+        //     }
+        // }
     }
 }

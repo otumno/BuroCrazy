@@ -51,19 +51,41 @@ namespace UI.Map
         private void OnEnable()
         {
             MainUIManager.Instance?.PushPause();
+            InitializeSlots();
             RefreshAllButtons();
 
-            if (regionInfoPanel) regionInfoPanel.SetActive(false);
-            if (jobInfoPanel) jobInfoPanel.SetActive(false);
-
-            if (regionSlots != null && regionSlots.Count > 0)
+            if (regionInfoPanel) 
             {
-                var firstSlot = regionSlots.Find(s => s != null && s.regionData != null);
-                if (firstSlot != null)
-                {
-                    ShowRegionInfo(firstSlot.regionData);
-                }
+                regionInfoPanel.SetActive(true);
+                // Показываем плейсхолдер
+                if (r_Title != null) r_Title.text = "КАРТА";
+                if (r_Desc != null) r_Desc.text = "<color=yellow>Нажмите на район</color> для получения информации.\n\n" +
+                    "Районы приносят клиентов в ваше бюро.\n" +
+                    "Захватывайте новые районы чтобы увеличить поток посетителей.";
+                if (r_Cost != null) r_Cost.text = "Выберите район";
+                if (r_ActionButton != null) r_ActionButton.interactable = false;
             }
+            
+            if (jobInfoPanel) 
+            {
+                jobInfoPanel.SetActive(true);
+                if (j_Title != null) j_Title.text = "КАРЬЕРА";
+                if (j_Desc != null) j_Desc.text = "<color=yellow>Нажмите на должность</color> для получения информации.\n\n" +
+                    "Повышайте свой статус чтобы получить доступ к новым возможностям.";
+                if (j_Cost != null) j_Cost.text = "Выберите должность";
+                if (j_ActionButton != null) j_ActionButton.interactable = false;
+            }
+
+            // НЕ выбираем автоматически первый слот - показываем дефолтный текст
+            // Если нужно выбирать первый слот, раскомментируй код ниже:
+            // if (regionSlots != null && regionSlots.Count > 0)
+            // {
+            //     var firstSlot = regionSlots.Find(s => s != null && s.regionData != null);
+            //     if (firstSlot != null)
+            //     {
+            //         ShowRegionInfo(firstSlot.regionData);
+            //     }
+            // }
         }
 
         public void RefreshAllButtons()
@@ -77,6 +99,18 @@ namespace UI.Map
             foreach (var node in jobNodes)
             {
                 if (node != null) node.UpdateState();
+            }
+        }
+
+        private void InitializeSlots()
+        {
+            foreach (var slot in regionSlots)
+            {
+                if (slot != null) slot.Setup(slot.regionData, this);
+            }
+            foreach (var node in jobNodes)
+            {
+                if (node != null) node.Setup(node.jobData, this);
             }
         }
 

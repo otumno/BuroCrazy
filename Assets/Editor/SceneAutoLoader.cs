@@ -24,11 +24,11 @@ namespace Editor
                 // Запоминаем, из какой сцены мы стартовали, чтобы вернуться в нее
                 EditorPrefs.SetString("SceneAutoLoader.PreviousScene", SceneManager.GetActiveScene().path);
 
-                // Ищем нашу главную сцену в настройках билда
+                // Ищем сцену GameScene в настройках билда
                 Scene sceneToLoad = default;
                 foreach (var scene in EditorBuildSettings.scenes)
                 {
-                    if (scene.path.Contains("MainMenuScene"))
+                    if (scene.path.Contains("GameScene"))
                     {
                         sceneToLoad = SceneManager.GetSceneByPath(scene.path);
                         break;

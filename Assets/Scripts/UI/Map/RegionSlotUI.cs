@@ -33,8 +33,11 @@ namespace UI.Map
                 regionImage.sprite = regionData.mapVisual;
             }
 
-            selectButton.onClick.RemoveAllListeners();
-            selectButton.onClick.AddListener(OnClicked);
+            if (selectButton != null)
+            {
+                selectButton.onClick.RemoveAllListeners();
+                selectButton.onClick.AddListener(OnClicked);
+            }
 
             UpdateState();
         }

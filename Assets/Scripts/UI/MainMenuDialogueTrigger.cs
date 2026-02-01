@@ -17,11 +17,8 @@ public class MainMenuDialogueTrigger : MonoBehaviour
 
     private void Awake()
     {
-        // 1. Проверяем состояние СРАЗУ при загрузке объекта
         _hasSeen = PlayerPrefs.HasKey(saveKey) && !DebugSettings.IsDebug;
 
-        // 2. Если мы еще НЕ видели интро — жестко гасим маскота, 
-        // чтобы он даже не успел пикнуть.
         if (!_hasSeen && helpSystemObject != null)
         {
             helpSystemObject.SetActive(false);
@@ -30,16 +27,12 @@ public class MainMenuDialogueTrigger : MonoBehaviour
 
     private void Start()
     {
-        // 3. Логика запуска
         if (!_hasSeen)
         {
-            // Ждем чуть-чуть, чтобы сцена прогрузилась, и запускаем диалог
             Invoke(nameof(StartIntro), 0.5f);
         }
         else
         {
-            // ОТВЕТ НА ВОПРОС 2:
-            // Если интро уже видели — убеждаемся, что маскот включен
             if (helpSystemObject != null && !helpSystemObject.activeSelf) 
             {
                 helpSystemObject.SetActive(true);
@@ -51,13 +44,10 @@ public class MainMenuDialogueTrigger : MonoBehaviour
     {
         if (introDialogue != null && DialogueUIManager.Instance != null)
         {
-            // Запускаем диалог с Callback-ом
             DialogueUIManager.Instance.StartDialogue(introDialogue, null, () => 
             {
                 Debug.Log("Интро завершено. Активируем помощника.");
                 
-                // ОТВЕТ НА ВОПРОС 1:
-                // Включаем маскота обратно. Он "проснется" и начнет работать.
                 if (helpSystemObject != null) 
                 {
                     helpSystemObject.SetActive(true);
@@ -76,8 +66,6 @@ public class MainMenuDialogueTrigger : MonoBehaviour
         }
         else
         {
-            // Если что-то пошло не так (нет менеджера), на всякий случай включаем маскота,
-            // чтобы игрок не остался без UI.
             if (helpSystemObject != null) helpSystemObject.SetActive(true);
         }
     }

@@ -32,8 +32,11 @@ namespace UI.Map
 
             if (titleText != null) titleText.text = data.titleName;
 
-            selectButton.onClick.RemoveAllListeners();
-            selectButton.onClick.AddListener(OnClicked);
+            if (selectButton != null)
+            {
+                selectButton.onClick.RemoveAllListeners();
+                selectButton.onClick.AddListener(OnClicked);
+            }
 
             UpdateState();
         }

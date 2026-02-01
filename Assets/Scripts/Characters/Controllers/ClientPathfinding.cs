@@ -181,28 +181,42 @@ public class ClientPathfinding : MonoBehaviour
     public CharacterVisuals GetVisuals() => visuals;
     
     public void Initialize(GameObject wZ, Waypoint eW)
-{
-    totalClients++;
-    stateMachine = gameObject.GetComponent<ClientStateMachine>();
-    movement = gameObject.GetComponent<ClientMovement>();
-	var agent = GetComponent<AgentMover>();
-    if (agent != null)
     {
-        agent.animationSpeed = this.animationSpeed;
-    }
-    notification = gameObject.GetComponent<ClientNotification>();
-    docHolder = gameObject.GetComponent<DocumentHolder>();
-    visuals = gameObject.GetComponent<CharacterVisuals>();
-    if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null)
-    {
-        Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!", gameObject);
-        enabled = false;
-        return;
-    }
+        totalClients++;
+        stateMachine = gameObject.GetComponent<ClientStateMachine>();
+        movement = gameObject.GetComponent<ClientMovement>();
+        var agent = GetComponent<AgentMover>();
+        if (agent != null)
+        {
+            agent.animationSpeed = this.animationSpeed;
+        }
+        notification = gameObject.GetComponent<ClientNotification>();
+        docHolder = gameObject.GetComponent<DocumentHolder>();
+        visuals = gameObject.GetComponent<CharacterVisuals>();
+        if (stateMachine == null || movement == null || notification == null || docHolder == null || visuals == null)
+        {
+            Debug.LogError($"Критическая ошибка инициализации на клиенте {gameObject.name}!", gameObject);
+            enabled = false;
+            return;
+        }
 
-    gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
-    
-    visuals.Setup(gender, this.spriteCollection, this.stateEmotionMap);
+        // Если spriteCollection уже был установлен архетипом через SetupFromArchetype(),
+        // то НЕ вызываем visuals.Setup() - это перезаписало бы спрайт тела на дефолтный!
+        if (this.spriteCollection == null)
+        {
+            gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
+            visuals.Setup(gender, this.spriteCollection, this.stateEmotionMap);
+        }
+        else
+        {
+            // Архетип уже настроил визуал - просто обновляем анимацию в AgentMover
+            var bodyRenderer = visuals.GetBodyRenderer();
+            if (bodyRenderer != null && agent != null)
+            {
+                // AgentMover получит спрайты из CharacterVisuals.SetupVisualDiversity
+            }
+            Debug.Log($"[{gameObject.name}] Initialize: visuals already configured by archetype, skipping Setup()");
+        }
     
     babushkaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
         suetunFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
@@ -493,5 +507,12 @@ public class ClientPathfinding : MonoBehaviour
         // Grumbling параметры
         grumblingThreshold = archetype.grumblingThreshold;
         grumblingFrequency = archetype.grumblingFrequency;
+
+        // Настройка визуалов CharacterVisuals
+        var visuals = GetComponent<CharacterVisuals>();
+        if (visuals != null)
+        {
+            visuals.SetupFromArchetype(archetype);
+        }
     }
 }

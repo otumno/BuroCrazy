@@ -630,16 +630,19 @@ namespace Managers
 
             if (client != null)
             {
+                // СНАЧАЛА применяем архетип - это устанавливает spriteCollection и gender
+                client.SetupFromArchetype(archetype);
+                client.SetupGrumblingFromArchetype(archetype);
+
+                // СНАЧАЛА настраиваем визуал - body sprite установится в archetype body sprite
                 var visuals = client.GetComponent<CharacterVisuals>();
                 if (visuals != null)
                 {
                     visuals.SetupVisualDiversity(archetype);
                 }
 
+                // ПОТОМ инициализируем - теперь bodySpriteAlreadySet = true и спрайт НЕ будет перезаписан
                 client.Initialize(waitingZoneObject, exitWaypoint);
-
-                client.SetupFromArchetype(archetype);
-                client.SetupGrumblingFromArchetype(archetype);
 
                 if (visuals != null)
                 {
