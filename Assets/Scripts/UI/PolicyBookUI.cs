@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.Collections.Generic;
 using Data.Policies;
 using Managers;
+using Managers.Teletype;
 using TMPro;
 
 namespace UI

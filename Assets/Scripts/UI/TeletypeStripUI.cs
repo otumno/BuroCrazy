@@ -2,8 +2,10 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using Data.Calendar;
 using DG.Tweening;
 using Managers;
+using Managers.Teletype;
 
 namespace UI
 {
@@ -22,7 +24,7 @@ namespace UI
         private class MessageItem
         {
             public GameObject go;
-            public TeletypeManager.TeletypeMessageType type;
+            public TeletypeMessageType type;
         }
 
         private void Awake()
@@ -33,7 +35,7 @@ namespace UI
             }
         }
 
-        public void AddMessage(TeletypeManager.TeletypeMessage msg)
+        public void AddMessage(TeletypeMessage msg)
         {
             if (messagePrefab == null || messagesContainer == null) return;
 
@@ -42,8 +44,9 @@ namespace UI
             
             if (textComponent != null)
             {
-                string periodPrefix = GetPeriodPrefix();
-                string typeColor = GetTypeColor(msg.type);
+                var period = TimeManager.Instance.GetCurrentPeriodType();
+                string periodPrefix = period.GetLocalization();
+                string typeColor = msg.type.GetColor();
                 textComponent.text = $"<color={typeColor}>[{periodPrefix}]</color> {msg.text}";
             }
 
@@ -76,32 +79,6 @@ namespace UI
         private void OnScroll(Vector2 pos)
         {
             // Можно добавить логику для показа/скрытия кнопок навигации
-        }
-
-        private string GetPeriodPrefix()
-        {
-            if (TimeManager.Instance != null)
-            {
-                var period = TimeManager.Instance.GetCurrentPeriodType();
-                if ((period & Data.Calendar.CalendarDayPeriodType.Morning) != 0) return "УТРО";
-                if ((period & Data.Calendar.CalendarDayPeriodType.Day) != 0) return "ДЕНЬ";
-                if ((period & Data.Calendar.CalendarDayPeriodType.LateDay) != 0) return "ВЕЧЕР";
-                if ((period & Data.Calendar.CalendarDayPeriodType.StartNight) != 0) return "НОЧЬ";
-                if ((period & Data.Calendar.CalendarDayPeriodType.EndNight) != 0) return "НОЧЬ";
-            }
-            return "ДЕНЬ";
-        }
-
-        private string GetTypeColor(TeletypeManager.TeletypeMessageType type)
-        {
-            switch (type)
-            {
-                case TeletypeManager.TeletypeMessageType.Warning: return "#FFAA00";
-                case TeletypeManager.TeletypeMessageType.Success: return "#44FF44";
-                case TeletypeManager.TeletypeMessageType.Important: return "#FF4444";
-                case TeletypeManager.TeletypeMessageType.Policy: return "#AA44FF";
-                default: return "#FFFFFF";
-            }
         }
     }
 }

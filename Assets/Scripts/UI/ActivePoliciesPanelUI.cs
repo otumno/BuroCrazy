@@ -5,6 +5,7 @@ using TMPro;
 using Managers;
 using Data.Policies;
 using System.Linq;
+using Managers.Teletype;
 
 namespace UI
 {

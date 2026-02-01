@@ -3,6 +3,7 @@ using UnityEngine;
 using Managers;
 using Gameplay.Documents;
 using System.Collections.Generic;
+using Managers.Teletype;
 using UI; // Для ActivePoliciesPanelUI
 
 namespace Gameplay

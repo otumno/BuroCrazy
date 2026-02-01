@@ -1,11 +1,9 @@
-using UnityEngine;
 using System.Collections.Generic;
-using TMPro;
 using System.Linq;
-using Data.Calendar;
 using UI;
+using UnityEngine;
 
-namespace Managers
+namespace Managers.Teletype
 {
     public class TeletypeManager : MonoBehaviour
     {
@@ -18,19 +16,10 @@ namespace Managers
         [SerializeField] private int maxHistoryCount = 50;
         [SerializeField] private int visibleCount = 3;
 
-        private Queue<TeletypeMessage> messageQueue = new Queue<TeletypeMessage>();
-        private List<TeletypeMessage> messageHistory = new List<TeletypeMessage>();
         private bool isProcessing = false;
 
-        public class TeletypeMessage
-        {
-            public string text;
-            public TeletypeMessageType type;
-            public System.DateTime timestamp;
-            public bool persist;
-        }
-
-        public enum TeletypeMessageType { Info, Warning, Success, Important, Policy }
+        private readonly Queue<TeletypeMessage> messageQueue = new();
+        private readonly List<TeletypeMessage> messageHistory = new();
 
         public void Awake()
         {
@@ -38,19 +27,9 @@ namespace Managers
             else if (Instance != this) Destroy(gameObject);
         }
 
-        public void Log(string message, bool persist = false)
+        public void Log(string message, bool persist = false, TeletypeMessageType messageType = TeletypeMessageType.Info)
         {
-            EnqueueMessage(message, TeletypeMessageType.Info, persist);
-        }
-
-        public void LogWarning(string message, bool persist = false)
-        {
-            EnqueueMessage(message, TeletypeMessageType.Warning, persist);
-        }
-
-        public void LogSuccess(string message, bool persist = false)
-        {
-            EnqueueMessage(message, TeletypeMessageType.Success, persist);
+            EnqueueMessage(message, messageType, persist);
         }
 
         public void LogImportant(string message, bool persist = true)
@@ -91,7 +70,9 @@ namespace Managers
                 var msg = messageQueue.Dequeue();
                 
                 AddToHistory(msg);
-                stripUI?.AddMessage(msg);
+                
+                if (stripUI)
+                    stripUI.AddMessage(msg);
 
                 yield return new WaitForSeconds(0.3f);
             }
@@ -103,7 +84,8 @@ namespace Managers
         {
             messageHistory.Add(msg);
             
-            while (messageHistory.Count > maxHistoryCount)
+            // вайл не нужзе
+            if (messageHistory.Count > maxHistoryCount)
             {
                 var oldest = messageHistory.FirstOrDefault(m => !m.persist);
                 if (oldest != null)

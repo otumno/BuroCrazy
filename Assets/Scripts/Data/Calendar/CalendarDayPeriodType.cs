@@ -32,5 +32,37 @@ namespace Data.Calendar
 
         public static bool IsNight(this CalendarDayPeriodType type) =>
             (type & FullNight) != 0; // Проверка битовой маски
+
+        public static string GetLocalization(this CalendarDayPeriodType type)
+        {
+            switch (type)
+            {
+                default:
+                case CalendarDayPeriodType.None:
+                {
+                    return "Out of range";
+                }
+                case CalendarDayPeriodType.Morning:
+                case CalendarDayPeriodType.EarlyDay:
+                case CalendarDayPeriodType.Noon:
+                {
+                    return "УТРО";
+                }
+                case CalendarDayPeriodType.Day:
+                case CalendarDayPeriodType.LateDay:
+                {
+                    return "ДЕНЬ";
+                }
+                case CalendarDayPeriodType.Evening:
+                {
+                    return "ВЕЧЕР";
+                }
+                case CalendarDayPeriodType.StartNight:
+                case CalendarDayPeriodType.EndNight:
+                {
+                    return "НОЧЬ";
+                }
+            }
+        }
     }
 }
