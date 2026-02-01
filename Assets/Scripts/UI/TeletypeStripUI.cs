@@ -46,11 +46,11 @@ namespace UI
             {
                 var period = TimeManager.Instance.GetCurrentPeriodType();
                 string periodPrefix = period.GetLocalization();
-                string typeColor = msg.type.GetColor();
-                textComponent.text = $"<color={typeColor}>[{periodPrefix}]</color> {msg.text}";
+                string typeColor = msg.Type.GetColor();
+                textComponent.text = $"<color={typeColor}>[{periodPrefix}]</color> {msg.Text}";
             }
 
-            activeMessages.Add(new MessageItem { go = go, type = msg.type });
+            activeMessages.Add(new MessageItem { go = go, type = msg.Type });
 
             // Анимация появления
             go.transform.localScale = new Vector3(0.8f, 0f, 0.8f);

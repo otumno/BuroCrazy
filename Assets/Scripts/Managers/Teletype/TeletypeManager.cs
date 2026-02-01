@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UI;
@@ -18,8 +19,8 @@ namespace Managers.Teletype
 
         private bool isProcessing = false;
 
-        private readonly Queue<TeletypeMessage> messageQueue = new();
-        private readonly List<TeletypeMessage> messageHistory = new();
+        private readonly Queue<TeletypeMessage> _messageQueue = new();
+        private readonly List<TeletypeMessage> _messageHistory = new();
 
         public void Awake()
         {
@@ -45,15 +46,8 @@ namespace Managers.Teletype
 
         private void EnqueueMessage(string text, TeletypeMessageType type, bool persist)
         {
-            var msg = new TeletypeMessage
-            {
-                text = text,
-                type = type,
-                timestamp = System.DateTime.Now,
-                persist = persist
-            };
-
-            messageQueue.Enqueue(msg);
+            var msg = new TeletypeMessage(text, type, DateTime.Now, persist);
+            _messageQueue.Enqueue(msg);
             
             if (!isProcessing)
             {
@@ -65,9 +59,9 @@ namespace Managers.Teletype
         {
             isProcessing = true;
 
-            while (messageQueue.Count > 0)
+            while (_messageQueue.Count > 0)
             {
-                var msg = messageQueue.Dequeue();
+                var msg = _messageQueue.Dequeue();
                 
                 AddToHistory(msg);
                 
@@ -82,31 +76,29 @@ namespace Managers.Teletype
 
         private void AddToHistory(TeletypeMessage msg)
         {
-            messageHistory.Add(msg);
+            _messageHistory.Add(msg);
+            if (_messageHistory.Count <= maxHistoryCount)
+                return;
             
-            // вайл не нужзе
-            if (messageHistory.Count > maxHistoryCount)
+            var oldest = _messageHistory.FirstOrDefault(m => !m.Persistant);
+            if (oldest != null)
             {
-                var oldest = messageHistory.FirstOrDefault(m => !m.persist);
-                if (oldest != null)
-                {
-                    messageHistory.Remove(oldest);
-                }
-                else
-                {
-                    messageHistory.RemoveAt(0);
-                }
+                _messageHistory.Remove(oldest);
+            }
+            else
+            {
+                _messageHistory.RemoveAt(0);
             }
         }
 
         public List<TeletypeMessage> GetVisibleMessages()
         {
-            return messageHistory.TakeLast(visibleCount).ToList();
+            return _messageHistory.TakeLast(visibleCount).ToList();
         }
 
         public List<TeletypeMessage> GetAllHistory()
         {
-            return messageHistory.ToList();
+            return _messageHistory.ToList();
         }
     }
 }
