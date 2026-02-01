@@ -54,7 +54,9 @@ namespace Managers
         [Tooltip("Звук, который проигрывается, когда листья улетают")]
         [SerializeField] private AudioClip leavesExitSound;
 
-        private readonly WaitForSeconds _waitForSeconds = new WaitForSeconds(0.05f);
+        private readonly WaitForSeconds _waitForSeconds = new(0.05f);
+
+        public bool isTransitioning => loadScreenRaycaster.enabled;
 
         private void Awake()
         {
