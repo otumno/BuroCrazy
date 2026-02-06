@@ -42,9 +42,30 @@ namespace UI.Teletype
             var resizer = go.GetComponent<MessageStripResizer>();
             var textComp = go.GetComponentInChildren<TextMeshProUGUI>();
 
-            string periodPrefix = TimeManager.Instance.GetCurrentPeriodType().GetLocalization();
+            string finalMessageText = msg.Text;
+            string periodPrefix = "";
+
+            // --- ОБРАБОТКА СПЕЦИАЛЬНЫХ СООБЩЕНИЙ ---
+            if (msg.Text.StartsWith("PERIOD_START:"))
+            {
+                finalMessageText = $"Настало: {msg.Text.Substring("PERIOD_START:".Length).Trim()}";
+                // Убираем все, что может быть в других полях TeletypeMessage, и игнорируем время/период.
+            }
+            else if (msg.Text.StartsWith("MUSIC_TRACK:"))
+            {
+                string trackName = msg.Text.Substring("MUSIC_TRACK:".Length).Trim().Replace('_', ' ');
+                finalMessageText = $"Играет: 🎵 {trackName}";
+            }
+            else
+            {
+                // Обычное сообщение (клиент/система)
+                periodPrefix = TimeManager.Instance.GetCurrentPeriodType().GetLocalization();
+                finalMessageText = $"{msg.Text}"; // Убираем время и период
+            }
+            // --- КОНЕЦ ОБРАБОТКИ СПЕЦИАЛЬНЫХ СООБЩЕНИЙ ---
+
             if (textComp != null) {
-                textComp.text = $"[{msg.Timestamp:HH:mm}] [{periodPrefix}] {msg.Text}";
+                textComp.text = finalMessageText;
                 textComp.color = Color.black;
             }
 
