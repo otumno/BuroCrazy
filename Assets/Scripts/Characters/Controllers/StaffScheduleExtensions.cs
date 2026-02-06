@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Managers;
+using Managers.Teletype;
 
 namespace Characters
 {
@@ -9,9 +10,9 @@ namespace Characters
         public static void UpdateSchedule(this StaffController staff)
         {
             if (staff == null) return;
-            
+
             // Проверяем есть ли поле shiftStartTime, если нет - создаем
-            var shiftStartField = typeof(StaffController).GetField("shiftStartTime", 
+            var shiftStartField = typeof(StaffController).GetField("shiftStartTime",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             
             if (shiftStartField == null)
@@ -214,21 +215,23 @@ namespace Characters
         public static void StartShift(this StaffController staff)
         {
             if (staff == null) return;
-            
+
             staff.UpdateSchedule();
-            
+
             var thoughtBubble = staff.GetComponent<ThoughtBubbleController>();
             if (thoughtBubble != null)
             {
                 thoughtBubble.ShowPriorityMessage("На работу!", 2f, Color.white);
             }
-            
+
+            TeletypeManager.Instance?.LogStaffWork(staff.characterName, staff.role.ToString(), isStartShift: true);
+
             SetPrivateField(staff, "hasArrivedToday", false);
             SetPrivateField(staff, "hasLeftToday", false);
             SetPrivateField(staff, "currentLateness", 0f);
             SetPrivateField(staff, "currentEarlyLeave", 0f);
             SetPrivateField(staff, "HasTakenBreakToday", false);
-            
+
             staff.CalculateArrivalTime();
         }
 

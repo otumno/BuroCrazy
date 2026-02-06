@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Data.Calendar;
+using Managers.Teletype;
 using UnityEngine;
 
 namespace Managers
@@ -81,6 +82,7 @@ namespace Managers
             // Ставим таймер так, чтобы до конца периода оставалось 10 секунд
             periodTimer = Mathf.Max(0, currentPeriodSettings.durationInSeconds - 10f);
 
+            LogPeriodStart();
             OnPeriodChanged?.Invoke(currentPeriodSettings);
         }
 
@@ -102,6 +104,7 @@ namespace Managers
                 OnDayChanged?.Invoke(dayCounter);
             }
 
+            LogPeriodStart();
             OnPeriodChanged?.Invoke(currentPeriodSettings);
         }
 
@@ -111,6 +114,26 @@ namespace Managers
         public PeriodSettings GetCurrentPeriodSettings() => currentPeriodSettings;
         public float GetPeriodTimer() => periodTimer;
         public bool IsNight() => currentPeriodType.IsNight();
+
+        private string GetPeriodDisplayName(CalendarDayPeriodType periodType)
+        {
+            return periodType switch
+            {
+                CalendarDayPeriodType.Morning => "УТРО",
+                CalendarDayPeriodType.Day => "ДЕНЬ",
+                CalendarDayPeriodType.Evening => "ВЕЧЕР",
+                CalendarDayPeriodType.StartNight => "НОЧЬ",
+                CalendarDayPeriodType.EndNight => "НОЧЬ",
+                _ => periodType.ToString().ToUpper()
+            };
+        }
+
+        private void LogPeriodStart()
+        {
+            if (TeletypeManager.Instance == null) return;
+            string periodName = GetPeriodDisplayName(currentPeriodType);
+            TeletypeManager.Instance.Log(periodName, false, Managers.Teletype.TeletypeMessageType.Info);
+        }
         
         public PeriodSettings GetPreviousPeriodSettings()
         {

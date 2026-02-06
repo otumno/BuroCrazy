@@ -8,7 +8,6 @@ public class OperateBarrierExecutor : ActionExecutor
 {
     protected override IEnumerator ActionRoutine()
     {
-        // ИСПРАВЛЕНИЕ: GetComponent вместо pattern matching
         var guard = staff.GetComponent<GuardMovement>();
         if (guard == null)
         {
@@ -17,23 +16,36 @@ public class OperateBarrierExecutor : ActionExecutor
         }
 
         var barrier = GuardManager.Instance?.securityBarrier;
-        // ИСПРАВЛЕНИЕ: Ищем interactionPoint (или guardInteractionPoint через алиас)
         if (barrier == null || barrier.interactionPoint == null)
         {
             FinishAction(false);
             yield break;
         }
-        
+
         guard.SetState(GuardMovement.GuardState.OperatingBarrier);
-        
-        // ИСПРАВЛЕНИЕ: Передаем Enum (GuardMovement теперь умеет это обрабатывать)
+
         yield return staff.StartCoroutine(guard.MoveToTarget(barrier.interactionPoint.position, GuardMovement.GuardState.OperatingBarrier));
-        
+
+        var mover = staff.GetComponent<AgentMover>();
+        if (mover != null && mover.IsSlipping)
+        {
+            Debug.Log($"[OperateBarrierExecutor] {staff.characterName} упал, операция отменена.");
+            guard.SetState(GuardMovement.GuardState.Idle);
+            FinishAction(false);
+            yield break;
+        }
+
         yield return new WaitForSeconds(2.0f);
-        
-        // Логика времени... (упрощенно)
-        // var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
-        // ... barrier.ActivateBarrier();
+
+        if (mover != null && mover.IsSlipping)
+        {
+            Debug.Log($"[OperateBarrierExecutor] {staff.characterName} упал, операция отменена.");
+            guard.SetState(GuardMovement.GuardState.Idle);
+            FinishAction(false);
+            yield break;
+        }
+
+        barrier.ToggleBarrier();
 
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(true);

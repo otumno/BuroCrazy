@@ -9,6 +9,10 @@ public class MainMenuDialogueTrigger : MonoBehaviour
     public DialogueGraph introDialogue;
     public string saveKey = "HAS_SEEN_INTRO";
 
+    [Header("Настройки")]
+    [Tooltip("Включить — показывать приветствие каждый раз при запуске")]
+    public bool alwaysShowIntro = false;
+
     [Header("Система, которую надо задержать")]
     [Tooltip("Ссылка на объект HelpSystem или TutorialManager")]
     public GameObject helpSystemObject; 
@@ -17,7 +21,7 @@ public class MainMenuDialogueTrigger : MonoBehaviour
 
     private void Awake()
     {
-        _hasSeen = PlayerPrefs.HasKey(saveKey) && !DebugSettings.IsDebug;
+        _hasSeen = PlayerPrefs.HasKey(saveKey) && !alwaysShowIntro;
 
         if (!_hasSeen && helpSystemObject != null)
         {

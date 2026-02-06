@@ -91,7 +91,7 @@ public class AchievementListUI : MonoBehaviour
         {
             // Пропускаем секретные ачивки, которые еще не открыты
             bool isUnlocked = AchievementManager.Instance.IsAchievementUnlocked(achData.achievementID);
-            if (achData.isSecret && !isUnlocked)
+            if (achData.isSecret && !isUnlocked && !achData.alwaysAvailable)
             {
                 continue; // Пропускаем
             }

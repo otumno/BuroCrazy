@@ -19,9 +19,22 @@ namespace Characters
         [Tooltip("Отображаемое имя в UI")]
         public string displayName;
 
+        [Header("Пол")]
+        [Tooltip("Пол архетипа: -1 = любой/универсальный, 0 = женский, 1 = мужской")]
+        [Range(-1, 1)] public int gender = -1;
+
+        [Tooltip("Использовать gender-specific списки реплик")]
+        public bool useGenderSpecificLines = false;
+
         [Header("Визуал - Тело")]
-        [Tooltip("Основной спрайт тела (Idle/Walk анимация)")]
+        [Tooltip("Основной спрайт тела (Idle)")]
         public Sprite bodySprite;
+
+        [Tooltip("Спрайт тела - кадр 1 ходьбы (если null = bodySprite)")]
+        public Sprite bodySpriteWalk1;
+
+        [Tooltip("Спрайт тела - кадр 2 ходьбы (если null = bodySprite)")]
+        public Sprite bodySpriteWalk2;
 
         [Tooltip("Спрайт лица для диалогов")]
         public Sprite portraitSprite;
@@ -82,7 +95,7 @@ namespace Characters
         [Tooltip("Какие цели может иметь этот архетип")]
         public List<ClientGoal> allowedGoals;
 
-        [Header("Мысли и реплики")]
+        [Header("Мысли и реплики (универсальные)")]
         [Tooltip("Мысли при появлении")]
         public List<string> thoughtPool;
 
@@ -94,6 +107,119 @@ namespace Characters
 
         [Tooltip("Реплики при уходе расстроенным")]
         public List<string> angryResponses;
+
+        [Header("Мысли (gender-specific) - для Elderly")]
+        [TextArea(2, 4)] public List<string> thoughtsFemale = new List<string>();
+        [TextArea(2, 4)] public List<string> thoughtsMale = new List<string>();
+
+        [Header("Ворчание (gender-specific) - для Elderly")]
+        [TextArea(2, 4)] public List<string> grumblingFemale = new List<string>();
+        [TextArea(2, 4)] public List<string> grumblingMale = new List<string>();
+
+        [Header("Счастливые ответы (gender-specific) - для Elderly")]
+        [TextArea(2, 4)] public List<string> happyFemale = new List<string>();
+        [TextArea(2, 4)] public List<string> happyMale = new List<string>();
+
+        [Header("Грустные ответы (gender-specific) - для Elderly")]
+        [TextArea(2, 4)] public List<string> sadFemale = new List<string>();
+        [TextArea(2, 4)] public List<string> sadMale = new List<string>();
+
+        [Header("Small talk между клиентами (group-specific)")]
+        [TextArea(2, 4)] public List<string> smallTalkElderly = new List<string>();
+        [TextArea(2, 4)] public List<string> smallTalkBusiness = new List<string>();
+        [TextArea(2, 4)] public List<string> smallTalkStudent = new List<string>();
+        [TextArea(2, 4)] public List<string> smallTalkWorker = new List<string>();
+
+        // === МЕТОДЫ ДЛЯ ГЕНДЕР-СПЕЦИФИЧНЫХ РЕПЛИК ===
+
+        public string GetThought(int clientGender)
+        {
+            // Приоритет: gender-specific > universal
+            if (useGenderSpecificLines)
+            {
+                if (clientGender == 0 && thoughtsFemale.Count > 0)
+                    return GetRandom(thoughtsFemale);
+                if (clientGender == 1 && thoughtsMale.Count > 0)
+                    return GetRandom(thoughtsMale);
+            }
+
+            return GetRandomThought();
+        }
+
+        public string GetGrumbling(int clientGender)
+        {
+            if (useGenderSpecificLines)
+            {
+                if (clientGender == 0 && grumblingFemale.Count > 0)
+                    return GetRandom(grumblingFemale);
+                if (clientGender == 1 && grumblingMale.Count > 0)
+                    return GetRandom(grumblingMale);
+            }
+
+            return GetGrumblingLine();
+        }
+
+        public string GetHappy(int clientGender)
+        {
+            if (useGenderSpecificLines)
+            {
+                if (clientGender == 0 && happyFemale.Count > 0)
+                    return GetRandom(happyFemale);
+                if (clientGender == 1 && happyMale.Count > 0)
+                    return GetRandom(happyMale);
+            }
+
+            return GetHappyResponse();
+        }
+
+        public string GetSad(int clientGender)
+        {
+            if (useGenderSpecificLines)
+            {
+                if (clientGender == 0 && sadFemale.Count > 0)
+                    return GetRandom(sadFemale);
+                if (clientGender == 1 && sadMale.Count > 0)
+                    return GetRandom(sadMale);
+            }
+
+            return GetAngryResponse(); // Fallback
+        }
+
+        public string GetSmallTalk()
+        {
+            return groupID switch
+            {
+                "Elderly" when smallTalkElderly.Count > 0 => GetRandom(smallTalkElderly),
+                "Business" when smallTalkBusiness.Count > 0 => GetRandom(smallTalkBusiness),
+                "Student" when smallTalkStudent.Count > 0 => GetRandom(smallTalkStudent),
+                "Worker" when smallTalkWorker.Count > 0 => GetRandom(smallTalkWorker),
+                _ => GetRandomThought() // Fallback
+            };
+        }
+
+        // === МЕТОДЫ ДЛЯ АНИМАЦИИ ХОДЬБЫ ===
+        public Sprite GetIdleSprite() => bodySprite;
+
+        public Sprite GetWalkSprite(int frame)
+        {
+            // frame 1 = walk1, frame 2 = walk2
+            if (frame == 1 && bodySpriteWalk1 != null) return bodySpriteWalk1;
+            if (frame == 2 && bodySpriteWalk2 != null) return bodySpriteWalk2;
+            return bodySprite ?? bodySpriteWalk1 ?? bodySpriteWalk2;
+        }
+
+        public Sprite GetAnyWalkSprite()
+        {
+            if (bodySpriteWalk1 != null) return bodySpriteWalk1;
+            if (bodySpriteWalk2 != null) return bodySpriteWalk2;
+            return bodySprite;
+        }
+
+        private string GetRandom(List<string> list)
+        {
+            if (list == null || list.Count == 0) return "...";
+            return list[Random.Range(0, list.Count)];
+        }
 
         [Header("Временные предпочтения спавна")]
         [Tooltip("Кривая предпочтений по времени суток (0-1). 1 = максимальная вероятность появления.")]

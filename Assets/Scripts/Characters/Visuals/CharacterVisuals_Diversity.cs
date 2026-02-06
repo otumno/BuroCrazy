@@ -38,6 +38,20 @@ namespace Characters
                 Debug.LogWarning($"[{gameObject.name}] Body sprite NOT set: archetype.bodySprite is null!");
             }
 
+            // Устанавливаем анимационные спрайты в AgentMover
+            var mover = GetComponent<AgentMover>();
+            if (mover != null && archetype.bodySprite != null)
+            {
+                Sprite walk1 = archetype.bodySpriteWalk1 != null ? archetype.bodySpriteWalk1 : archetype.bodySprite;
+                Sprite walk2 = archetype.bodySpriteWalk2 != null ? archetype.bodySpriteWalk2 : archetype.bodySprite;
+                mover.SetAnimationSprites(archetype.bodySprite, walk1, walk2);
+
+                // Устанавливаем ссылку на characterSpriteRenderer для покачивания при ходьбе
+                mover.characterSpriteRenderer = bodyRenderer;
+
+                Debug.Log($"[{gameObject.name}] Animation: idle={archetype.bodySprite.name}, walk1={walk1.name}, walk2={walk2.name}, waddleAngle={mover.walkWaddleAngle}");
+            }
+
             // Портрет для диалогов
             if (archetype.portraitSprite != null)
             {

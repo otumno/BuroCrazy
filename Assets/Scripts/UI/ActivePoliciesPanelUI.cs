@@ -71,8 +71,12 @@ namespace UI
         private void RevokePolicy(string id)
         {
             PolicyManager.Instance.DeactivatePolicy(id);
-            TeletypeManager.Instance?.Log($"УКАЗ ОТМЕНЕН: {PolicyManager.Instance.GetPolicyById(id)?.displayName}");
-            
+            var policy = PolicyManager.Instance.GetPolicyById(id);
+            if (policy != null)
+            {
+                TeletypeManager.Instance?.LogPolicy(policy.displayName, isActivation: false);
+            }
+
             // Убираем одну визуальную бумажку с доски
             if (linkedBoard != null) linkedBoard.RemoveVisualDoc();
 

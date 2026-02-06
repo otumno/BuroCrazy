@@ -8,6 +8,7 @@ using Utilities;
 using Data.Calendar;
 using Scriptables.Audio;
 using Characters;
+using Managers.Teletype;
 
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]
@@ -191,12 +192,36 @@ public class StaffController : MonoBehaviour
         currentEarlyLeave = 0f;
         HasTakenBreakToday = false;
 
+        TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: true);
+
         CalculateArrivalTime();
+
+        if (assignedWorkstation != null)
+        {
+            StartCoroutine(GoToWorkstationRoutine());
+        }
+    }
+
+    protected virtual IEnumerator GoToWorkstationRoutine()
+    {
+        if (assignedWorkstation == null || assignedWorkstation.clerkStandPoint == null) yield break;
+
+        var targetPos = assignedWorkstation.clerkStandPoint.position;
+        if (agentMover != null)
+        {
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPos, gameObject));
+            while (agentMover.IsMoving()) yield return null;
+        }
+
+        hasArrivedToday = true;
     }
 
     public virtual void EndShift()
     {
         if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Домой...", 2f, Color.white);
+
+        TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: false);
+
         hasLeftToday = true;
         currentEarlyLeave = CalculateEarlyLeave();
     }

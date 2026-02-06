@@ -524,28 +524,40 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     /// </summary>
     private IEnumerator OperateBarrierRoutine()
     {
-        SetUninterruptible(true); // Блокируем другие действия
+        SetUninterruptible(true);
         var barrier = Managers.GuardManager.Instance.securityBarrier;
-        // Проверяем наличие барьера и точки взаимодействия
         if (barrier == null || barrier.guardInteractionPoint == null)
         {
             Debug.LogError("SecurityBarrier или его guardInteractionPoint не найдены!");
-            SetUninterruptible(false); // Снимаем блокировку
-            yield break; // Выходим
+            SetUninterruptible(false);
+            yield break;
         }
 
-        // Двигаемся к точке взаимодействия
-        yield return StartCoroutine(MoveToTargetRoutine(barrier.guardInteractionPoint.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
-        SetState(DirectorState.MovingToPoint); // Устанавливаем состояние после движения
+        yield return StartCoroutine(MoveToTargetRoutine(barrier.guardInteractionPoint.position));
+        SetState(DirectorState.MovingToPoint);
 
-        // Небольшая пауза для имитации действия
+        if (agentMover != null && agentMover.IsSlipping)
+        {
+            Debug.Log($"[DirectorController] {characterName} упал по пути к двери, операция отменена.");
+            SetState(DirectorState.Idle);
+            SetUninterruptible(false);
+            yield break;
+        }
+
         yield return new WaitForSeconds(1.5f);
 
-        // Переключаем состояние барьера
+        if (agentMover != null && agentMover.IsSlipping)
+        {
+            Debug.Log($"[DirectorController] {characterName} упал, операция отменена.");
+            SetState(DirectorState.Idle);
+            SetUninterruptible(false);
+            yield break;
+        }
+
         barrier.ToggleBarrier();
 
-        SetState(DirectorState.Idle); // Возвращаемся в состояние бездействия
-        SetUninterruptible(false); // Снимаем блокировку
+        SetState(DirectorState.Idle);
+        SetUninterruptible(false);
     }
 
     /// <summary>

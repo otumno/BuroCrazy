@@ -15,10 +15,10 @@ MonoBehaviour:
   id: 3777875b-1020-4725-b476-67aef321a615
   graphPosition:
     serializedVersion: 2
-    x: 1500
-    y: 250
-    width: 0
-    height: 0
+    x: 5900
+    y: -295
+    width: 450
+    height: 545
   queryText: "(\u0410\u0440\u0445\u0438\u0442\u0435\u043A\u0442\u043E\u0440 \u043F\u0440\u043E\u0442\u044F\u0433\u0438\u0432\u0430\u0435\u0442
     \u0440\u0443\u0447\u043A\u0443. \u041E\u043D\u0430 \u0445\u043E\u043B\u043E\u0434\u043D\u0430\u044F
     \u043A\u0430\u043A \u043B\u0435\u0434.)"
@@ -42,6 +42,7 @@ MonoBehaviour:
     conditionKey: 
     operation: ==
     conditionValue: 0
+  nodeImage: {fileID: 0}
 --- !u!114 &-7151687494198837378
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -57,10 +58,10 @@ MonoBehaviour:
   id: 331f2470-a897-4d55-b55e-8d1bfe31236b
   graphPosition:
     serializedVersion: 2
-    x: 1200
-    y: 0
-    width: 0
-    height: 0
+    x: 1388
+    y: -1137
+    width: 709
+    height: 314
   speakerID: Architect
   text: "\u0423\u0431\u043E\u0440\u0449\u0438\u043A \u0442\u0443\u0442 \u0431\u0435\u0441\u0441\u0438\u043B\u0435\u043D.
     \u042D\u0442\u043E \u043D\u0435 \u0433\u0440\u044F\u0437\u044C, \u044D\u0442\u043E
@@ -70,6 +71,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -5123605053959303700}
 --- !u!114 &-7013927677214054624
 MonoBehaviour:
@@ -86,10 +88,10 @@ MonoBehaviour:
   id: 760fc3e3-dd00-4e4c-9ba2-95ef12692bf3
   graphPosition:
     serializedVersion: 2
-    x: 900
-    y: 500
-    width: 0
-    height: 0
+    x: 7886
+    y: -274
+    width: 488
+    height: 244
   eventType: 2
   flagKey: 
   intValue: 1
@@ -97,6 +99,7 @@ MonoBehaviour:
     \u043F\u043E\u0434\u0430\u043B \u043D\u0430 \u0432\u0430\u0441 \u0436\u0430\u043B\u043E\u0431\u0443
     \u0432\u044B\u0448\u0435\u0441\u0442\u043E\u044F\u0449\u0435\u043C\u0443 \u0440\u0443\u043A\u043E\u0432\u043E\u0434\u0441\u0442\u0432\u0443."
   soundEffect: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -1674375403690128749}
 --- !u!114 &-6581253019594956867
 MonoBehaviour:
@@ -113,10 +116,10 @@ MonoBehaviour:
   id: 904bf2f6-2443-4654-9762-e0e384d20e5f
   graphPosition:
     serializedVersion: 2
-    x: 1500
-    y: 500
-    width: 0
-    height: 0
+    x: 7886
+    y: 575
+    width: 429
+    height: 244
   eventType: 1
   flagKey: 
   intValue: 200
@@ -124,6 +127,7 @@ MonoBehaviour:
     \u043E\u0442\u043A\u0430\u0442 \u0437\u0430 '\u044D\u043A\u043E\u043D\u043E\u043C\u0438\u044E
     \u0441\u0442\u0440\u043E\u0439\u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u043E\u0432'."
   soundEffect: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -2035467165796561687}
 --- !u!114 &-5123605053959303700
 MonoBehaviour:
@@ -140,10 +144,10 @@ MonoBehaviour:
   id: ad64c422-2cec-4270-b0fc-ca854a49e7e9
   graphPosition:
     serializedVersion: 2
-    x: 0
-    y: 250
-    width: 0
-    height: 0
+    x: 2508
+    y: -431
+    width: 990
+    height: 314
   speakerID: Architect
   text: "\u042F \u0440\u0430\u0437\u0440\u0430\u0431\u043E\u0442\u0430\u043B \u043F\u0440\u043E\u0435\u043A\u0442
     \u0440\u0435\u043D\u043E\u0432\u0430\u0446\u0438\u0438. '\u041F\u0440\u043E\u0442\u043E\u043A\u043E\u043B
@@ -156,6 +160,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: 4611735770343134993}
 --- !u!114 &-2520061136928121243
 MonoBehaviour:
@@ -172,10 +177,10 @@ MonoBehaviour:
   id: 45ee3725-4c0e-452b-ae17-67903a1e9be6
   graphPosition:
     serializedVersion: 2
-    x: 1200
-    y: 500
-    width: 0
-    height: 0
+    x: 6680
+    y: 306
+    width: 676
+    height: 314
   speakerID: Architect
   text: "\u0425\u043C. \u041F\u0440\u043E\u0441\u0442\u043E \u0437\u0430\u043C\u0443\u0440\u043E\u0432\u0430\u0442\u044C?
     \u0414\u0435\u0448\u0435\u0432\u043E. \u0421\u0435\u0440\u0434\u0438\u0442\u043E.
@@ -185,6 +190,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -6581253019594956867}
 --- !u!114 &-2035467165796561687
 MonoBehaviour:
@@ -201,10 +207,10 @@ MonoBehaviour:
   id: 87aa5bf1-0a87-4c07-85a0-3feba7a30bc9
   graphPosition:
     serializedVersion: 2
-    x: 600
-    y: 750
-    width: 0
-    height: 0
+    x: 8540
+    y: 575
+    width: 213
+    height: 107
   endSound: {fileID: 0}
 --- !u!114 &-1674375403690128749
 MonoBehaviour:
@@ -221,10 +227,10 @@ MonoBehaviour:
   id: 39f7232c-2140-412d-806a-f1373fe81794
   graphPosition:
     serializedVersion: 2
-    x: 300
-    y: 750
-    width: 0
-    height: 0
+    x: 8572
+    y: -274
+    width: 213
+    height: 107
   endSound: {fileID: 0}
 --- !u!114 &-385745028484245965
 MonoBehaviour:
@@ -241,16 +247,17 @@ MonoBehaviour:
   id: d008bb6d-568f-4ea2-8886-202987c67b91
   graphPosition:
     serializedVersion: 2
-    x: 300
-    y: 500
-    width: 0
-    height: 0
+    x: 7886
+    y: -807
+    width: 353
+    height: 244
   eventType: 1
   flagKey: 
   intValue: 500
   notificationText: "\u0412\u044B \u0441\u044D\u043A\u043E\u043D\u043E\u043C\u0438\u043B\u0438
     \u0431\u044E\u0434\u0436\u0435\u0442 \u043D\u0430 \u0437\u0430\u0440\u043F\u043B\u0430\u0442\u0430\u0445."
   soundEffect: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: 6277486832380188848}
 --- !u!114 &-373025287610595870
 MonoBehaviour:
@@ -267,10 +274,10 @@ MonoBehaviour:
   id: 3722fbad-825f-45e8-a7dc-e6e8387a4d16
   graphPosition:
     serializedVersion: 2
-    x: 900
-    y: 250
-    width: 0
-    height: 0
+    x: 4683
+    y: 383
+    width: 695
+    height: 314
   speakerID: Architect
   text: "\u0411\u044E\u0434\u0436\u0435\u0442 \u043D\u0443\u043B\u0435\u0432\u043E\u0439.
     \u041C\u0430\u0442\u0435\u0440\u0438\u0430\u043B\u044B \u043C\u044B \u0432\u043E\u0437\u044C\u043C\u0435\u043C
@@ -280,6 +287,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -9004920804495711498}
 --- !u!114 &11400000
 MonoBehaviour:
@@ -330,10 +338,10 @@ MonoBehaviour:
   id: 68b43b34-5987-491f-839c-aaa1f0b18058
   graphPosition:
     serializedVersion: 2
-    x: 600
-    y: 250
-    width: 0
-    height: 0
+    x: 4492
+    y: -378
+    width: 715
+    height: 314
   speakerID: Architect
   text: "\u041B\u044E\u0434\u0438? \u041E, \u0432\u044B \u0438\u043C\u0435\u0435\u0442\u0435
     \u0432 \u0432\u0438\u0434\u0443 '\u0431\u0438\u043E-\u0435\u0434\u0438\u043D\u0438\u0446\u044B'.
@@ -343,6 +351,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -9004920804495711498}
 --- !u!114 &1205271435810621573
 MonoBehaviour:
@@ -359,10 +368,10 @@ MonoBehaviour:
   id: 2528a15c-0eaf-43ef-a9a8-0795071fc550
   graphPosition:
     serializedVersion: 2
-    x: 600
-    y: 500
-    width: 0
-    height: 0
+    x: 6680
+    y: -274
+    width: 744
+    height: 314
   speakerID: Architect
   text: "\u0416\u0430\u043B\u044C. \u0413\u0443\u043C\u0430\u043D\u0438\u0437\u043C
     \u2014 \u044D\u0442\u043E \u0440\u0436\u0430\u0432\u0447\u0438\u043D\u0430 \u043D\u0430
@@ -373,6 +382,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -7013927677214054624}
 --- !u!114 &1416355111029271584
 MonoBehaviour:
@@ -389,10 +399,10 @@ MonoBehaviour:
   id: aec506b3-074d-424a-88f8-f73b8920336c
   graphPosition:
     serializedVersion: 2
-    x: 900
-    y: 0
-    width: 0
-    height: 0
+    x: 653
+    y: -520
+    width: 420
+    height: 545
   queryText: "(\u041E\u043D \u043A\u043B\u0430\u0434\u0435\u0442 \u043D\u0430 \u0441\u0442\u043E\u043B
     \u0447\u0435\u0440\u0442\u0435\u0436, \u043F\u043E\u0445\u043E\u0436\u0438\u0439
     \u043D\u0430 \u043B\u0430\u0431\u0438\u0440\u0438\u043D\u0442)"
@@ -417,6 +427,7 @@ MonoBehaviour:
     conditionKey: 
     operation: ==
     conditionValue: 0
+  nodeImage: {fileID: 0}
 --- !u!114 &1991666536903957891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -432,10 +443,10 @@ MonoBehaviour:
   id: 9e5a4d46-9c11-4e2f-a2ad-254912fcef14
   graphPosition:
     serializedVersion: 2
-    x: 1200
-    y: 250
-    width: 0
-    height: 0
+    x: 4514
+    y: -8
+    width: 910
+    height: 314
   speakerID: Architect
   text: "\u0417\u0430\u043F\u0440\u0435\u0442 \u043D\u0435\u0432\u043E\u0437\u043C\u043E\u0436\u0435\u043D.
     \u0413\u0435\u043E\u043C\u0435\u0442\u0440\u0438\u044F \u0443\u0436\u0435 \u043D\u0430\u0447\u0430\u043B\u0430
@@ -447,6 +458,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -9004920804495711498}
 --- !u!114 &2596512397009662977
 MonoBehaviour:
@@ -463,10 +475,10 @@ MonoBehaviour:
   id: ec97b6ec-d9e0-416c-afb7-77b4d572f296
   graphPosition:
     serializedVersion: 2
-    x: 571
-    y: 2
-    width: 729
-    height: 248
+    x: -366
+    y: -588
+    width: 733
+    height: 314
   speakerID: Architect
   text: "\u0413\u043E\u0441\u043F\u043E\u0434\u0438\u043D \u0414\u0438\u0440\u0435\u043A\u0442\u043E\u0440.
     \u0421\u0442\u0440\u0443\u043A\u0442\u0443\u0440\u043D\u0430\u044F \u0446\u0435\u043B\u043E\u0441\u0442\u043D\u043E\u0441\u0442\u044C
@@ -476,6 +488,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: 1416355111029271584}
 --- !u!114 &3181261902969693027
 MonoBehaviour:
@@ -492,11 +505,12 @@ MonoBehaviour:
   id: c3e6631b-6655-477b-ab91-4e806be85249
   graphPosition:
     serializedVersion: 2
-    x: 300
-    y: 0
-    width: 0
-    height: 0
+    x: -927
+    y: -792
+    width: 213
+    height: 166
   startSoundOverride: {fileID: 0}
+  defaultBackground: {fileID: 0}
   nextNode: {fileID: 2596512397009662977}
 --- !u!114 &3400739840693958834
 MonoBehaviour:
@@ -513,10 +527,10 @@ MonoBehaviour:
   id: 04621998-3bb1-409b-8284-9b2d2cf59ab6
   graphPosition:
     serializedVersion: 2
-    x: 0
-    y: 500
-    width: 0
-    height: 0
+    x: 6854
+    y: -807
+    width: 502
+    height: 314
   speakerID: Architect
   text: "\u041C\u0443\u0434\u0440\u043E\u0435 \u0440\u0435\u0448\u0435\u043D\u0438\u0435.
     \u0412\u044B \u043D\u0435 \u0443\u0441\u043B\u044B\u0448\u0438\u0442\u0435 \u043A\u0440\u0438\u043A\u043E\u0432.
@@ -524,6 +538,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -385745028484245965}
 --- !u!114 &4611735770343134993
 MonoBehaviour:
@@ -540,10 +555,10 @@ MonoBehaviour:
   id: 2f034af2-6550-4f2c-8a17-15a27f797fb5
   graphPosition:
     serializedVersion: 2
-    x: 300
-    y: 250
-    width: 0
-    height: 0
+    x: 3772
+    y: -336
+    width: 325
+    height: 545
   queryText: "(\u0417\u0432\u0443\u0447\u0438\u0442 \u0436\u0443\u0442\u043A\u043E,
     \u043D\u043E \u044D\u0444\u0444\u0435\u043A\u0442\u0438\u0432\u043D\u043E...)"
   options:
@@ -565,6 +580,7 @@ MonoBehaviour:
     conditionKey: 
     operation: ==
     conditionValue: 0
+  nodeImage: {fileID: 0}
 --- !u!114 &4717985086137380430
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -580,10 +596,10 @@ MonoBehaviour:
   id: 66b38fbe-28fc-4aed-a470-c87a1551ad1f
   graphPosition:
     serializedVersion: 2
-    x: 1500
-    y: 0
-    width: 0
-    height: 0
+    x: 1452
+    y: -650
+    width: 760
+    height: 314
   speakerID: Architect
   text: "\u0420\u0430\u0437\u0443\u043C\u0435\u0435\u0442\u0441\u044F, \u043E\u0444\u0438\u0446\u0438\u0430\u043B\u044C\u043D\u043E
     \u0435\u0433\u043E \u043D\u0435\u0442. \u0422\u0430\u043C \u043C\u044B \u0445\u0440\u0430\u043D\u0438\u043C
@@ -594,6 +610,7 @@ MonoBehaviour:
   speakerPortrait: {fileID: 0}
   voiceClip: {fileID: 0}
   appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
   nextNode: {fileID: -5123605053959303700}
 --- !u!114 &6277486832380188848
 MonoBehaviour:
@@ -610,8 +627,8 @@ MonoBehaviour:
   id: f9c7fdf9-4f31-40a8-9e74-5271cf0ac448
   graphPosition:
     serializedVersion: 2
-    x: 0
-    y: 750
+    x: 8540
+    y: -807
     width: 213
     height: 107
   endSound: {fileID: 0}

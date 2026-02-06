@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Data.Calendar;
+using Managers.Teletype;
 using Scriptables.Audio;
 
 namespace Managers
@@ -189,6 +190,7 @@ namespace Managers
             if (night)
             {
                 Debug.Log("[MusicPlayer] Включаю ночной трек.");
+                LogTrackChange(nightTrack?.name);
                 PlayTrack(nightTrack);
             }
             else
@@ -199,25 +201,32 @@ namespace Managers
             }
         }
 
+        private void LogTrackChange(string trackName)
+        {
+            if (TeletypeManager.Instance == null || string.IsNullOrEmpty(trackName)) return;
+            TeletypeManager.Instance.Log($"♪ {trackName}", false, Managers.Teletype.TeletypeMessageType.Music);
+        }
+
         private void PlayRandomDayTrack()
         {
-            if (dayTracks.Length == 0) 
+            if (dayTracks.Length == 0)
             {
                 Debug.LogError("[MusicPlayer] ОШИБКА: Список dayTracks пуст!");
                 return;
             }
-            
+
             // ... (старая логика выбора индекса) ...
             int newIndex;
             if (dayTracks.Length == 1) newIndex = 0;
-            else 
+            else
             {
                 do { newIndex = Random.Range(0, dayTracks.Length); } while (newIndex == lastTrackIndex);
             }
             lastTrackIndex = newIndex;
-            
+
             lastPlayedGameplayTrack = dayTracks[lastTrackIndex];
             Debug.Log($"[MusicPlayer] Выбран трек: {lastPlayedGameplayTrack?.name}");
+            LogTrackChange(lastPlayedGameplayTrack?.name);
             PlayTrack(lastPlayedGameplayTrack);
         }
 

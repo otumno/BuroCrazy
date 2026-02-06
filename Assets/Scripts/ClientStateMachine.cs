@@ -315,11 +315,11 @@ public class ClientStateMachine : MonoBehaviour
             case ClientState.SittingInWaitingArea:
             case ClientState.AtWaitingArea:
                 //ClientQueueManager.Instance.StartPatienceTimer(parent);
-                // Если стоим - можем слоняться
+                // Если стоим - можем слоняться и разговаривать
                 if (currentState == ClientState.AtWaitingArea) 
-                    yield return StartCoroutine(MillAroundRoutine());
+                    yield return StartCoroutine(MillAroundWithChatRoutine());
                 else 
-                    yield return new WaitUntil(() => currentState != ClientState.SittingInWaitingArea);
+                    yield return StartCoroutine(WaitingInSeatWithChatRoutine());
                 break;
 
             case ClientState.Confused:
@@ -466,6 +466,10 @@ public class ClientStateMachine : MonoBehaviour
                 targetZone = owningZone;
                 occupiedWaypoint = dest;
                 SetState(ClientState.InsideLimitedZone);
+
+                // Попытаться поприветствовать работника за стойкой
+                TryGreetWorkerAtServicePoint(dest);
+
                 return;
             }
         }
@@ -649,6 +653,54 @@ public class ClientStateMachine : MonoBehaviour
             yield return new WaitForSeconds(Random.Range(2f, 4f));
         }
     }
+
+    private IEnumerator MillAroundWithChatRoutine()
+    {
+        float lastChatAttempt = 0f;
+        const float CHAT_INTERVAL = 5f;
+
+        while (currentState == ClientState.AtWaitingArea)
+        {
+            // Пытаемся поговорить с соседями
+            if (Time.time - lastChatAttempt > CHAT_INTERVAL)
+            {
+                parent.TryChatWithNearbyClients();
+                lastChatAttempt = Time.time;
+            }
+
+            Transform freeSeat = ClientQueueManager.Instance.FindSeatForClient(parent);
+            if (freeSeat != null)
+            {
+                GoToSeat(freeSeat);
+                yield break;
+            }
+            Waypoint randomPoint = ClientQueueManager.Instance.ChooseNewGoal(parent);
+            if (randomPoint != null)
+            {
+                SetGoal(randomPoint);
+                yield return StartCoroutine(actionExecutor.MoveToGoalRoutine(randomPoint));
+            }
+            yield return new WaitForSeconds(Random.Range(2f, 4f));
+        }
+    }
+
+    private IEnumerator WaitingInSeatWithChatRoutine()
+    {
+        float lastChatAttempt = 0f;
+        const float CHAT_INTERVAL = 5f;
+
+        while (currentState == ClientState.SittingInWaitingArea)
+        {
+            // Пытаемся поговорить с соседями
+            if (Time.time - lastChatAttempt > CHAT_INTERVAL)
+            {
+                parent.TryChatWithNearbyClients();
+                lastChatAttempt = Time.time;
+            }
+
+            yield return new WaitForSeconds(2f);
+        }
+    }
     
     private IEnumerator PassedRegistrationRoutine() 
     { 
@@ -816,5 +868,39 @@ public class ClientStateMachine : MonoBehaviour
     {
         if (parent == null) return "No data";
         return $"{currentState} (Goal: {currentGoal?.name})";
+    }
+
+    // --- Система приветствий ---
+    private void TryGreetWorkerAtServicePoint(Waypoint servicePoint)
+    {
+        if (parent == null) return;
+
+        // Ищем работника за этой стойкой
+        var servicePointComponent = servicePoint.GetComponentInParent<ServicePoint>();
+        if (servicePointComponent == null) return;
+
+        StaffController worker = null;
+
+        // Пробуем разные способы найти работника
+        var workstation = servicePointComponent as IServiceProvider;
+        if (workstation != null)
+        {
+            worker = workstation.GetWorkstation()?.GetComponent<StaffController>();
+        }
+
+        if (worker == null)
+        {
+            // Fallback: ищем StaffController в зоне
+            var zone = servicePoint.GetComponentInParent<LimitedCapacityZone>();
+            if (zone != null)
+            {
+                worker = zone.GetComponentInChildren<StaffController>();
+            }
+        }
+
+        if (worker != null)
+        {
+            parent.TryGreetStaff(worker);
+        }
     }
 }

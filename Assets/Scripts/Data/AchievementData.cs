@@ -26,6 +26,9 @@ public class AchievementData : ScriptableObject
     [Tooltip("Если true, достижение не будет видно в списке, пока не будет разблокировано")]
     public bool isSecret = false;
 
+    [Tooltip("Если true, книга будет видна в списке ВСЕГДА, даже если не разблокирована")]
+    public bool alwaysAvailable = false;
+
     [Header("Награда - Комикс")]
     [Tooltip("Список спрайтов (страниц), которые будут показаны в просмотрщике комиксов")]
     public List<Sprite> comicPages;

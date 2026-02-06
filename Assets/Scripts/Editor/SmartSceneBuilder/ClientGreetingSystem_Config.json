@@ -1,0 +1,372 @@
+// Smart Scene Builder - Client Greeting System Configuration
+// Use: Tools → AI Toolset → Smart Scene Builder → Paste JSON → Execute
+
+{
+  "operations": [
+    // ==========================================
+    // CLIENT GREETING DATABASE
+    // ==========================================
+    {
+      "mode": "create_asset",
+      "assetPath": "Assets/Resources/ClientGreetingDatabase.asset",
+      "assetType": "Data.ClientGreetingDatabase",
+      "properties": {
+        "greetingsToRegistrar": [
+          "Здравствуйте!",
+          "Добрый день!",
+          "Можно к регистратуре?",
+          "Мне бы записаться...",
+          "Здравствуйте, мне нужно к регистратуре.",
+          "Подскажите, что мне нужно?",
+          "День добрый! Я первый раз тут.",
+          "Здравствуйте, хотел бы узнать...",
+          "Можно войти?",
+          "Добрый день! Подскажите порядок действий."
+        ],
+        "greetingsToClerk": [
+          "Здравствуйте!",
+          "Добрый день!",
+          "Мне бы помочь с документами...",
+          "Здравствуйте, можно к вам?",
+          "Мне бы консультацию...",
+          "День добрый! У меня вопрос...",
+          "Здравствуйте, я по поводу...",
+          "Подскажите, куда мне обратиться?",
+          "Добрый день! Помогите разобраться...",
+          "Здравствуйте, у меня дело..."
+        ],
+        "greetingsToCashier": [
+          "День добрый!",
+          "Деньги принёс!",
+          "Плачу!",
+          "Здравствуйте, вот оплата.",
+          "Добрый день! Квитанция на оплату.",
+          "Здравствуйте, сколько с меня?",
+          "День добрый! Принимаете картой?",
+          "Вот, держите!",
+          "Оплата!",
+          "Добрый день! Наличными можно?"
+        ],
+        "greetingsToDirector": [
+          "Здравствуйте!",
+          "Добрый день!",
+          "Ооо, здравствуйте!",
+          "День добрый!",
+          "Здравствуйте, не знал что вы тут...",
+          "Добрый день! Простите, не заметил...",
+          "Здравствуйте!",
+          "Добрый день! Рад видеть!"
+        ],
+        "farewellsHappy": [
+          "Спасибо большое!",
+          "Спасибо, выручили!",
+          "До свидания!",
+          "Благодарю!",
+          "Спасибо вам!",
+          "Вы мне очень помогли!",
+          "Всего доброго!",
+          "Спасибо за помощь!",
+          "Очень признателен!",
+          "До свидания, всего хорошего!",
+          "Спасибо, добрый человек!",
+          "Вы спасли мой день!",
+          "Премного благодарен!",
+          "Ценю вашу помощь!",
+          "Спасибочки!",
+          "Вот спасибочко!",
+          "Дай бог здоровья!",
+          "Славно сработали!",
+          "Всё отлично!",
+          "Вы лучший!"
+        ],
+        "farewellsNeutral": [
+          "Ну ладно, до свидания...",
+          "До свидания...",
+          "Пока...",
+          "Ну что ж, пойду...",
+          "Ладно, справился сам...",
+          "Эх, разобрался как-то...",
+          "Ну и ладно...",
+          "Сам справился...",
+          "До встречи...",
+          "Ну что, нормально...",
+          "Ладно, пойду отсюда...",
+          "Справился как-то...",
+          "Ну и день прошёл...",
+          "Вот так вот...",
+          "Ничего особенного..."
+        ],
+        "farewellsSad": [
+          "Ну и ну...",
+          "Как всегда...",
+          "Никогда тут ничего просто...",
+          "Эх, лучше бы не приходил...",
+          "Что ж, справился, но какой ценой...",
+          "В следующий раз лучше не приду...",
+          "Ну и дела...",
+          "Это было ужасно...",
+          "Так себе сервис...",
+          "Ну и зачем это было...",
+          "В другой раз постараюсь не приходить...",
+          "Господи, зачем это всё...",
+          "Ужас просто...",
+          "Вот так вот...",
+          "Ну и денёк...",
+          "Ну и ну...",
+          "Печально...",
+          "Неприятно...",
+          "Грустно...",
+          "Ну ладно..."
+        ],
+        "farewellsEnraged": [
+          "Это безобразие!",
+          "Я вам это припомню!",
+          "Худшее место!",
+          "Позор!",
+          "Безобразие полное!",
+          "Никогда больше!",
+          "Я в шоке!",
+          "Это КОШМАР!",
+          "ПРОСТО УЖАС!",
+          "Никакого уважения!",
+          "Вот ведь чёрт!",
+          "Ну и гадство!",
+          "Стыд и срам!",
+          "Обращусь куда следует!",
+          "Надо ж было так облажаться!",
+          "Вот зачем вы работаете вообще?",
+          "Я в бешенстве!",
+          "ИЗДЕВАТЕЛЬСТВО!",
+          "ПРОКЛЯТЬЕ!",
+          "СГОРИТЕ ВСЕ!"
+        ],
+        "smallTalkQueue": [
+          "Долго ждать?",
+          "А вы по талону?",
+          "Нервный нынче народ...",
+          "Как думаете, долго ещё?",
+          "Очередь не уменьшается...",
+          "Сколько уже стоим...",
+          "Надеюсь, не до вечера...",
+          "Вы в какой очереди?",
+          "Талоны ещё остались?",
+          "Кто последний?",
+          "А без очереди нельзя?",
+          "Всего один сотрудник работает?",
+          "Почему так медленно?",
+          "Ну и система...",
+          "Электронная очередь, а толку...",
+          "Это надолго?",
+          "Кто-нибудь знает, куда идти?",
+          "А мне сначала куда?",
+          "Первый раз тут, подскажите...",
+          "Народу сегодня много..."
+        ],
+        "smallTalkWeather": [
+          "Дождь-то как польёт...",
+          "Свежо сегодня...",
+          "Жара просто...",
+          "Холодно на улице...",
+          "Снег идёт...",
+          "Солнце вышло...",
+          "Ветрено...",
+          "Слякоть...",
+          "Народу сегодня...",
+          "Праздники скоро...",
+          "Грибной сезон...",
+          "Урожай нынче...",
+          "Слышали новости?",
+          "Вот и лето прошло...",
+          "Осень на дворе...",
+          "Зима близко...",
+          "Весна пришла...",
+          "Хороший денёк...",
+          "Непогода...",
+          "Духота какая..."
+        ],
+        "smallTalkStaff": [
+          "А чего это директор не выходит?",
+          "Слышали, нового клерка взяли?",
+          "А старый куда делся?",
+          "Почему один работает, а другие стоят?",
+          "Это кто такой?",
+          "А где обычно тут сидят?",
+          "Кого ждать-то?",
+          "А это точно нужная очередь?",
+          "Кто принимает вон там?",
+          "Мне к кому идти?"
+        ]
+      }
+    },
+
+    // ==========================================
+    // CLIENT SCENE: CONFLICT IN QUEUE
+    // ==========================================
+    {
+      "mode": "create_asset",
+      "assetPath": "Assets/Resources/ClientScenes/Scene_ConflictInQueue.asset",
+      "assetType": "Data.ClientSceneData",
+      "properties": {
+        "sceneID": "conflict_queue",
+        "sceneName": "Конфликт в очереди",
+        "sceneType": 0,  // ClientConflict
+        "minClientsInZone": 3,
+        "minTimeInZone": 30.0,
+        "triggerChance": 0.1,
+        "checkInterval": 5.0,
+        "sceneCooldown": 120.0,
+        "allowedArchetypes": [],
+        "excludeArchetypes": ["Guard", "Director"],
+        "lines": [
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Вы не в очередь встали!" },
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Я тут стоял! Вы ошиблись." },
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Какое нахальство! Я была первая!" },
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Блин, хватит уже..." }
+        ],
+        "lineDelay": 2.0,
+        "lineDuration": 3.0,
+        "causeGrumbling": true,
+        "grumblingMultiplier": 1.3,
+        "affectEmotions": false,
+        "postSceneEmotion": 0,
+        "debugMode": false
+      }
+    },
+
+    // ==========================================
+    // CLIENT SCENE: WEATHER COMMENT
+    // ==========================================
+    {
+      "mode": "create_asset",
+      "assetPath": "Assets/Resources/ClientScenes/Scene_WeatherComment.asset",
+      "assetType": "Data.ClientSceneData",
+      "properties": {
+        "sceneID": "weather_comment",
+        "sceneName": "Комментарий о погоде",
+        "sceneType": 3,  // WeatherComment
+        "minClientsInZone": 1,
+        "minTimeInZone": 10.0,
+        "triggerChance": 0.03,
+        "checkInterval": 10.0,
+        "sceneCooldown": 300.0,
+        "allowedArchetypes": ["Elderly"],
+        "excludeArchetypes": [],
+        "lines": [
+          { "speakerArchetypeID": "Elderly", "requiredGender": -1, "text": "Дождь-то как польёт..." }
+        ],
+        "lineDelay": 1.0,
+        "lineDuration": 4.0,
+        "causeGrumbling": false,
+        "grumblingMultiplier": 1.0,
+        "affectEmotions": false,
+        "postSceneEmotion": 0,
+        "debugMode": false
+      }
+    },
+
+    // ==========================================
+    // CLIENT SCENE: DIRECTOR APPEARS
+    // ==========================================
+    {
+      "mode": "create_asset",
+      "assetPath": "Assets/Resources/ClientScenes/Scene_DirectorAppears.asset",
+      "assetType": "Data.ClientSceneData",
+      "properties": {
+        "sceneID": "director_appears",
+        "sceneName": "Появление директора",
+        "sceneType": 4,  // DirectorAppears
+        "minClientsInZone": 2,
+        "minTimeInZone": 5.0,
+        "triggerChance": 0.5,
+        "checkInterval": 2.0,
+        "sceneCooldown": 180.0,
+        "allowedArchetypes": [],
+        "excludeArchetypes": [],
+        "lines": [
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Ооо, директор вышел!" },
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Тише, тише..." }
+        ],
+        "lineDelay": 1.5,
+        "lineDuration": 3.0,
+        "causeGrumbling": false,
+        "grumblingMultiplier": 1.0,
+        "affectEmotions": true,
+        "postSceneEmotion": 1,  // Neutral
+        "debugMode": false
+      }
+    },
+
+    // ==========================================
+    // CLIENT SCENE: GROUP GRUMBLE
+    // ==========================================
+    {
+      "mode": "create_asset",
+      "assetPath": "Assets/Resources/ClientScenes/Scene_GroupGrumble.asset",
+      "assetType": "Data.ClientSceneData",
+      "properties": {
+        "sceneID": "group_grumble",
+        "sceneName": "Коллективное ворчание",
+        "sceneType": 6,  // GroupGrumble
+        "minClientsInZone": 4,
+        "minTimeInZone": 45.0,
+        "triggerChance": 0.08,
+        "checkInterval": 8.0,
+        "sceneCooldown": 180.0,
+        "allowedArchetypes": ["Elderly"],
+        "excludeArchetypes": [],
+        "timePreference": {
+          "m_Curve": [
+            { "time": 0.0, "value": 0.5, "inSlope": 0.0, "outSlope": 0.0 },
+            { "time": 0.5, "value": 1.0, "inSlope": 0.0, "outSlope": 0.0 },
+            { "time": 1.0, "value": 0.5, "inSlope": 0.0, "outSlope": 0.0 }
+          ],
+          "m_PreInfinity": 2, "m_PostInfinity": 2
+        },
+        "lines": [
+          { "speakerArchetypeID": "Elderly", "requiredGender": 0, "text": "Ой, тяжело стоять, ноги болят..." },
+          { "speakerArchetypeID": "Elderly", "requiredGender": 1, "text": "Никакого стульчика для стариков!" },
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Вот в наше время очередь была почитаемой..." }
+        ],
+        "lineDelay": 2.5,
+        "lineDuration": 4.0,
+        "causeGrumbling": true,
+        "grumblingMultiplier": 1.5,
+        "affectEmotions": true,
+        "postSceneEmotion": 4,  // Irritated
+        "debugMode": false
+      }
+    },
+
+    // ==========================================
+    // CLIENT SCENE: HAPPY EXIT (RARE)
+    // ==========================================
+    {
+      "mode": "create_asset",
+      "assetPath": "Assets/Resources/ClientScenes/Scene_HappyExit.asset",
+      "assetType": "Data.ClientSceneData",
+      "properties": {
+        "sceneID": "happy_exit",
+        "sceneName": "Счастливый уход",
+        "sceneType": 5,  // HappyExit
+        "minClientsInZone": 2,
+        "minTimeInZone": 20.0,
+        "triggerChance": 0.02,
+        "checkInterval": 5.0,
+        "sceneCooldown": 600.0,
+        "allowedArchetypes": [],
+        "excludeArchetypes": [],
+        "lines": [
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Спасибо, выручили!" },
+          { "speakerArchetypeID": "", "requiredGender": -1, "text": "Вот за это плачу!" }
+        ],
+        "lineDelay": 2.0,
+        "lineDuration": 3.0,
+        "causeGrumbling": false,
+        "grumblingMultiplier": 1.0,
+        "affectEmotions": true,
+        "postSceneEmotion": 1,  // Happy
+        "debugMode": false
+      }
+    }
+  ]
+}
