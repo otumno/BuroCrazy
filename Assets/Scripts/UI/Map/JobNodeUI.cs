@@ -1,4 +1,6 @@
 // Assets/Scripts/UI/Map/JobNodeUI.cs
+
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -23,20 +25,14 @@ namespace UI.Map
         [SerializeField] private Color availableColor = Color.yellow;
         [SerializeField] private Color lockedColor = Color.gray;
 
-        private MapPanelUI mapController;
-
-        public void Setup(JobTitleData data, MapPanelUI controller)
+        public void Setup(JobTitleData data, Action<JobTitleData> onClick)
         {
             jobData = data;
-            mapController = controller;
 
-            if (titleText != null) titleText.text = data.titleName;
+            titleText.text = data.titleName;
 
-            if (selectButton != null)
-            {
-                selectButton.onClick.RemoveAllListeners();
-                selectButton.onClick.AddListener(OnClicked);
-            }
+            selectButton.onClick.RemoveAllListeners();
+            selectButton.onClick.AddListener(() => onClick?.Invoke(jobData));
 
             UpdateState();
         }
@@ -58,28 +54,20 @@ namespace UI.Map
             bool isOwned = ProgressionManager.Instance.IsJobUnlocked(jobData.jobID);
             bool isAvailable = !isOwned && ProgressionManager.Instance.CanStartUnlockJob(jobData);
 
-            if (lockedOverlay != null) lockedOverlay.SetActive(!isOwned && !isAvailable);
+            lockedOverlay.SetActive(!isOwned && !isAvailable);
 
-            if (bgImage != null)
+            if (isOwned)
             {
-                if (isOwned) bgImage.color = ownedColor;
-                else if (isAvailable) bgImage.color = availableColor;
-                else bgImage.color = lockedColor;
+                bgImage.color = ownedColor;
             }
-        }
-
-        private void OnClicked()
-        {
-            Debug.Log($"[JobNodeUI] OnClicked called for job: {jobData?.jobID ?? "NULL"}");
-
-            if (mapController == null)
+            else if (isAvailable)
             {
-                Debug.LogError("[JobNodeUI] mapController is null! Make sure MapPanelUI is assigned in Inspector.");
-                return;
+                bgImage.color = availableColor;
             }
-
-            Debug.Log($"[JobNodeUI] Calling mapController.ShowJobInfo for {jobData?.jobID ?? "NULL"}");
-            mapController.ShowJobInfo(jobData);
+            else
+            {
+                bgImage.color = lockedColor;
+            }
         }
     }
 }

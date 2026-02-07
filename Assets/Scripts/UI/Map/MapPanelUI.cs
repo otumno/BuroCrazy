@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using Scriptables.Progression;
 using Data.Documents;
 using Managers;
-using Gameplay.Documents;
 
 namespace UI.Map
 {
@@ -110,11 +109,11 @@ namespace UI.Map
         {
             foreach (var slot in regionSlots)
             {
-                if (slot != null) slot.Setup(slot.regionData, this);
+                if (slot != null) slot.Setup(slot.regionData, ShowRegionInfo);
             }
             foreach (var node in jobNodes)
             {
-                if (node != null) node.Setup(node.jobData, this);
+                if (node != null) node.Setup(node.jobData, ShowJobInfo);
             }
         }
 
