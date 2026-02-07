@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using System.Linq;
 using System.Text;
 using Managers;
+using UI.Bookkeeping;
 
 [RequireComponent(typeof(Button))]
 public class BookkeepingButtonController : MonoBehaviour

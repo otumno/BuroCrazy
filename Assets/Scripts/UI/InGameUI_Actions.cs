@@ -1,8 +1,7 @@
 // Файл: InGameUI_Actions.cs
 using UnityEngine;
-using UnityEngine.UI;
-using System.Collections;
 using Managers;
+using UI.Bookkeeping;
 
 public class InGameUI_Actions : MonoBehaviour
 {

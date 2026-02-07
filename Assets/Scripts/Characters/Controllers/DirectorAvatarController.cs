@@ -6,6 +6,7 @@ using System.Linq;
 using Managers;
 using Utilities;
 using Characters;
+using UI.Bookkeeping;
 
 [RequireComponent(typeof(AgentMover), typeof(CharacterVisuals), typeof(ThoughtBubbleController))]
 public class DirectorAvatarController : StaffController, IServiceProvider
