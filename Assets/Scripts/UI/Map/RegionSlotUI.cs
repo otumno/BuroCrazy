@@ -13,8 +13,8 @@ namespace UI.Map
         public RegionData regionData;
 
         [Header("UI Компоненты")]
-        [SerializeField] private Image regionImage; // Картинка региона
-        [SerializeField] private Image lockIcon;    // Иконка замка
+        [SerializeField] private Image regionImage;
+        [SerializeField] private Image lockIcon;
         [SerializeField] private Button selectButton;
         
         [Header("Цвета")]
