@@ -33,41 +33,40 @@ namespace Managers
             else if (Instance != this) { Destroy(gameObject); }
         }
 
-        // --- ЛОГИКА ПАУЗЫ С ЗАЩИТОЙ РЕДАКТОРА ---
+        // --- ЛОГИКА ПАУЗЫ (ИСПРАВЛЕНО: Мгновенная остановка) ---
 
         public void PauseGame(bool playMusic = true)
         {
             _pauseCount++;
+            
+            // Если это первая блокировка - останавливаем время СРАЗУ
             if (_pauseCount == 1)
             {
-                StartCoroutine(SafePauseRoutine(playMusic));
+                Time.timeScale = 0f; // Мгновенно! Никаких корутин.
+                
+                Debug.Log("<color=yellow>[MainUIManager] Game Paused (TimeScale = 0)</color>");
+                
+                if (playMusic && MusicPlayer.Instance != null) 
+                    MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
             }
-        }
-
-        private IEnumerator SafePauseRoutine(bool playMusic)
-        {
-            yield return null; // Пропускаем один кадр инициализации для стабильности Play Mode
-            Time.timeScale = 0f;
-            if (playMusic && MusicPlayer.Instance != null) 
-                MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
-            
-            Debug.Log("<color=yellow>[MainUIManager] Safe Pause Applied</color>");
         }
 
         public void ResumeGame()
         {
             if (_pauseCount > 0) _pauseCount--;
+            
+            // Если блокировок больше нет - запускаем время
             if (_pauseCount == 0)
             {
-                StopAllCoroutines(); 
                 Time.timeScale = 1f;
+                Debug.Log("<color=yellow>[MainUIManager] Game Resumed (TimeScale = 1)</color>");
             }
         }
 
         public void PushPause() => PauseGame(false);
         public void PopPause() => ResumeGame();
 
-        // --- ВОССТАНОВЛЕННЫЕ МЕТОДЫ ДЛЯ СЦЕНЫ И СОХРАНЕНИЙ ---
+        // --- МЕТОДЫ УПРАВЛЕНИЯ UI ---
 
         public void ShowPausePanel(bool show)
         {
@@ -127,6 +126,8 @@ namespace Managers
         public void StartOrResumeGameplay()
         {
             if (isTransitioning) return;
+            
+            // Активируем телетайп только сейчас
             if (Managers.Teletype.TeletypeManager.Instance != null)
                 Managers.Teletype.TeletypeManager.Instance.ActivateSystem();
 
@@ -141,8 +142,21 @@ namespace Managers
             StartOfDayPanel sodp = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); 
             if (sodp != null) yield return StartCoroutine(sodp.Fade(false, false));
 
+            // Принудительно сбрасываем все паузы перед стартом
             _pauseCount = 0;
-            ResumeGame();
+            Time.timeScale = 1f; 
+            
+            if (MusicPlayer.Instance != null)
+            {
+                MusicPlayer.Instance.StartGameplayMusic();
+                MusicPlayer.Instance.RequestNextTrack(); 
+            }
+
+            if (WaveManager.Instance != null)
+            {
+                WaveManager.Instance.ForceCheckMorningEvents();
+            }
+
             isTransitioning = false;
         }
 
@@ -153,8 +167,89 @@ namespace Managers
                 yield return TransitionManager.Instance.TransitionToScene(sceneName);
             else
                 yield return SceneManager.LoadSceneAsync(sceneName);
-            
-            // Логика инициализации после загрузки GameScene может быть добавлена здесь
+
+            // Специфичная логика для GameScene
+            if (sceneName == gameSceneName)
+            {
+                StartOfDayPanel startOfDayPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+                OrderSelectionUI orderSelectionUI = FindFirstObjectByType<OrderSelectionUI>(FindObjectsInactive.Include);
+                DaySplashScreenController daySplashScreenController = FindFirstObjectByType<DaySplashScreenController>(FindObjectsInactive.Include);
+                
+                yield return StartCoroutine(UnveilSequence(startOfDayPanel, orderSelectionUI, daySplashScreenController));
+            }
+            else
+            {
+                isTransitioning = false;
+            }
+        }
+        
+        private IEnumerator UnveilSequence(StartOfDayPanel _, OrderSelectionUI orderSelectionUI, DaySplashScreenController daySplashScreenController)
+        {
+            // !!! ВАЖНО !!! Ставим паузу ДО любых действий
+            PauseGame(true);
+
+            // Загрузка данных
+            bool loadSuccess = SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
+            if (!loadSuccess && SaveLoadManager.Instance.isNewGame)
+            {
+                PlayerWallet.Instance.ResetState();
+                CalendarManager.Instance.StartNewGame();
+                ArchiveManager.Instance.ResetState();
+            }
+
+            if (SaveLoadManager.Instance.isNewGame)
+            {
+                DirectorManager.Instance.ResetState(); 
+                HiringManager.Instance.ResetState();
+                OrderManager.Instance.ResetState();
+                StoryStateManager.Instance?.ResetState(); 
+            }
+
+            DirectorManager.Instance.PrepareDay();
+
+            // Телепортация директора
+            DirectorAvatarController directorController = FindFirstObjectByType<DirectorAvatarController>();
+            if (directorController != null && directorController.directorChairPoint != null)
+            {
+                directorController.TeleportTo(directorController.directorChairPoint.position);
+                directorController.ForceSetAtDeskState(true);
+            }
+
+            // Настройка UI
+            if (orderSelectionUI != null)
+            {
+                orderSelectionUI.gameObject.SetActive(true);
+                orderSelectionUI.Setup();
+                // Блокируем взаимодействие пока идет заставка
+                var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
+                if(orderCG) 
+                {
+                    orderCG.alpha = 1f;
+                    orderCG.interactable = false;
+                    orderCG.blocksRaycasts = false;
+                }
+            }
+
+            // Ждем на заставке (Realtime, т.к. игра на паузе)
+            yield return new WaitForSecondsRealtime(splashScreenDwellTime);
+
+            // Убираем сплэш
+            if (daySplashScreenController != null)
+            {
+                yield return daySplashScreenController.Fade(false);
+            }
+
+            // Разрешаем выбирать приказы
+            if (orderSelectionUI != null) 
+            {
+                var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
+                if(orderCG) 
+                {
+                    orderCG.interactable = true;
+                    orderCG.blocksRaycasts = true;
+                }
+            }
+
             isTransitioning = false;
         }
     }

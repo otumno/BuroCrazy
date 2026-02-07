@@ -120,10 +120,12 @@ namespace Managers
             return periodType switch
             {
                 CalendarDayPeriodType.Morning => "УТРО",
+                CalendarDayPeriodType.EarlyDay => "НАЧАЛО ДНЯ",
+                CalendarDayPeriodType.Noon => "ОБЕД",
                 CalendarDayPeriodType.Day => "ДЕНЬ",
+                CalendarDayPeriodType.LateDay => "КОНЕЦ ДНЯ",
                 CalendarDayPeriodType.Evening => "ВЕЧЕР",
-                CalendarDayPeriodType.StartNight => "НОЧЬ",
-                CalendarDayPeriodType.EndNight => "НОЧЬ",
+                CalendarDayPeriodType.StartNight or CalendarDayPeriodType.EndNight => "НОЧЬ",
                 _ => periodType.ToString().ToUpper()
             };
         }

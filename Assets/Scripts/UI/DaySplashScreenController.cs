@@ -44,6 +44,12 @@ public class DaySplashScreenController : MonoBehaviour
     {
         Setup(CalendarManager.Instance.CurrentDay);
         canvasGroup.alpha = 1f;
+
+        // Отладка
+        var canvas = GetComponentInChildren<Canvas>();
+        Debug.Log($"[DaySplashScreen] Start: alpha={canvasGroup.alpha}, " +
+                  $"activeInHierarchy={gameObject.activeInHierarchy}, " +
+                  $"canvasSortingOrder={canvas?.sortingOrder ?? -1}");
     }
 
     public void Setup(int dayNumber)
