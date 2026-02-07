@@ -246,3 +246,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c31883250ee3f444a99bb6ae7dea676f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BookkeepingLog
+  _text: {fileID: 4379962150901422933}

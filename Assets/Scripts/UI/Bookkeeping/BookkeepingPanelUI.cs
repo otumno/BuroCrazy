@@ -135,7 +135,6 @@ namespace UI.Bookkeeping
                 var textColor = ColorUtility.ToHtmlStringRGB(color);
                 var text = $"<color=#{textColor}>{transaction.description}: {sign}${transaction.amount}</color>";
                 entryText.Init(text);
-                    
             }
         }
     }
