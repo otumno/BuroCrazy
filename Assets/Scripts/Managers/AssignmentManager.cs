@@ -1,6 +1,8 @@
+// Assets/Scripts/Managers/AssignmentManager.cs
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Characters; // Для доступа к StaffController.Role
 
 namespace Managers
 {
@@ -27,11 +29,77 @@ namespace Managers
             {
                 assignments.Remove(oldAssignment.Key);
             }
+            
+            // Если место было занято кем-то другим, снимаем того человека
+            if (assignments.ContainsKey(workstation))
+            {
+                var previousOwner = assignments[workstation];
+                if (previousOwner != null)
+                {
+                    previousOwner.assignedWorkstation = null;
+                }
+                assignments.Remove(workstation);
+            }
 
             assignments[workstation] = staff;
             staff.assignedWorkstation = workstation;
             Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} назначен на {workstation.name}");
         }
+
+        // --- НОВЫЙ МЕТОД: Автоматическое назначение ---
+        public bool AutoAssignStaff(StaffController staff)
+        {
+            if (staff == null) return false;
+
+            // Если уже есть место, ничего не делаем
+            if (staff.assignedWorkstation != null) return true;
+
+            // Ищем все точки
+            var allPoints = ScenePointsRegistry.Instance.allServicePoints;
+            
+            // Фильтруем точки, подходящие по роли
+            var suitablePoints = allPoints.Where(p => IsPointSuitableForRole(p, staff.currentRole)).ToList();
+
+            // Ищем первую свободную
+            foreach (var point in suitablePoints)
+            {
+                if (!assignments.ContainsKey(point) || assignments[point] == null)
+                {
+                    AssignStaffToWorkstation(staff, point);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool IsPointSuitableForRole(ServicePoint point, StaffController.Role role)
+        {
+            // Хардкод ID столов согласно вашей конфигурации сцены
+            switch (role)
+            {
+                case StaffController.Role.Registrar: 
+                    return point.deskId == 0;
+                
+                case StaffController.Role.Clerk: 
+                    return point.deskId == 1 || point.deskId == 2;
+                
+                case StaffController.Role.Cashier: 
+                case StaffController.Role.Accountant: // Бухгалтер тоже может сидеть в кассе
+                    return point.deskId == -1 || point.deskId == 4;
+                
+                case StaffController.Role.Archivist: 
+                    return point.deskId == 3;
+                
+                case StaffController.Role.Guard:
+                    // Охранник привязывается к посту, если это ServicePoint
+                    return point == ScenePointsRegistry.Instance.guardPostPoint;
+
+                default: 
+                    return false;
+            }
+        }
+        // ----------------------------------------------
 
         // Метод для снятия назначения
         public void UnassignStaff(StaffController staff)
@@ -56,7 +124,7 @@ namespace Managers
             if (assignments.TryGetValue(workstation, out var staff))
             {
                 assignments.Remove(workstation);
-                staff.assignedWorkstation = null;
+                if(staff != null) staff.assignedWorkstation = null;
                 Debug.Log($"[AssignmentManager] Рабочее место {workstation.name} освобождено");
             }
         }

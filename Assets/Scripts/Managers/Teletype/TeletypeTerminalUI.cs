@@ -54,7 +54,7 @@ namespace UI.Teletype
             else if (msg.Text.StartsWith("MUSIC_TRACK:"))
             {
                 string trackName = msg.Text.Substring("MUSIC_TRACK:".Length).Trim().Replace('_', ' ');
-                finalMessageText = $"Играет: 🎵 {trackName}";
+                finalMessageText = $"Играет: {trackName}";
             }
             else
             {

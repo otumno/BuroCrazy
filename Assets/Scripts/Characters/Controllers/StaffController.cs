@@ -22,9 +22,9 @@ public class StaffController : MonoBehaviour
 
     [Header("Базовые настройки")]
     public string characterName = "Сотрудник";
-    public Role role = Role.Unassigned; 
+    public Role role = Role.Unassigned;
     public RoleData roleData; 
-    public Gender gender; // ИСПОЛЬЗУЕМ ВАШ ГЛОБАЛЬНЫЙ ENUM GENDER
+    public Gender gender;
 
     [Header("Карьера")]
     public RankData currentRankData; 
@@ -84,45 +84,29 @@ public class StaffController : MonoBehaviour
     [Header("График работы")]
     public CalendarDayPeriodType WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
 
-    [Header("Пунктуальность (расширенная система)")]
-    [Tooltip("Педантичность (0-1). Наследуется из навыков или задается отдельно.")]
+    [Header("Пунктуальность")]
+    [Tooltip("Педантичность (0-1).")]
     [Range(0f, 1f)]
     public float punctuality = 0.5f;
-
-    [Tooltip("Максимальное время опоздания в секундах")]
     public float maxLateness = 30f;
-
-    [Tooltip("Базовый разброс времени опоздания (секунды)")]
     public float latenessVariance = 5f;
 
-    [Header("Время прихода/ухода (runtime)")]
-    [Tooltip("Время начала смены")]
+    [Header("Время прихода/ухода")]
     public float shiftStartTime = 0f;
-
-    [Tooltip("Текущее опоздание в секундах")]
     public float currentLateness = 0f;
-
-    [Tooltip("Ранний уход в секундах")]
     public float currentEarlyLeave = 0f;
-
-    [Tooltip("Пришел ли сегодня")]
     public bool hasArrivedToday = false;
-
-    [Tooltip("Ушел ли сегодня")]
     public bool hasLeftToday = false;
 
     [Header("Обед и перерывы")]
-    [Tooltip("Есть ли обед (для стажеров - нет)")]
     public bool hasLunchBreak = true;
-
-    [Tooltip("Продолжительность перерыва в секундах")]
     public float breakDuration = 900f;
-
-    [Tooltip("Время начала перерыва от начала смены")]
     public float breakStartTime = 14400f;
-
-    [Tooltip("Взял ли обед сегодня")]
     public bool HasTakenBreakToday { get; protected set; }
+    
+    // --- ВОТ ПЕРЕМЕННАЯ, КОТОРАЯ ВЫЗЫВАЛА ОШИБКУ ---
+    public bool isOnBreak = false; 
+    // -----------------------------------------------
 
     [Header("Действия")]
     public List<StaffAction> activeActions = new List<StaffAction>();
@@ -132,8 +116,6 @@ public class StaffController : MonoBehaviour
     public AgentMover agentMover; 
     public ThoughtBubbleController thoughtBubble;
     public CharacterStateLogger logger;
-    
-    // ИСПРАВЛЕНИЕ: Используем CharacterVisuals вместо StaffPrefabReferences
     public CharacterVisuals visuals; 
     public VoiceData voiceProfile; 
 
@@ -147,9 +129,10 @@ public class StaffController : MonoBehaviour
     public ServicePoint assignedWorkstation; 
     public int uiScheduleTrackIndex = -1;
 
-    // Для совместимости с Executor-ами
     public StaffAction currentAction; 
     public ActionExecutor currentExecutor; 
+
+    private Coroutine aiLoopCoroutine;
 
     protected virtual void Awake()
     {
@@ -160,28 +143,10 @@ public class StaffController : MonoBehaviour
         if (systemActionDatabase == null)
         {
             systemActionDatabase = Resources.Load<ActionDatabase>("Databases/ActionDatabase");
-            if (systemActionDatabase == null)
-            {
-                Debug.LogWarning($"[StaffController] ActionDatabase не найден для {characterName}");
-            }
         }
     }
 
-    public virtual IEnumerator MoveToTarget(Vector3 targetPosition, string stateOnArrival)
-    {
-        if (agentMover != null) { agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject)); while (agentMover.IsMoving()) yield return null; }
-        yield return null;
-    }
-    public virtual IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival) => MoveToTarget((Vector3)targetPosition, stateOnArrival);
-
-    public virtual string GetStatusInfo() => "Idle";
-    public virtual string GetCurrentStateName() => "Idle";
-    public virtual float GetCurrentFrustration() => frustration;
-
-    public void ChangeEnergy(float amount) => energy = Mathf.Clamp(energy + amount, 0, 100);
-    public void ChangeStress(float amount) => stress = Mathf.Clamp(stress + amount, 0, 100);
-    public void SetCurrentFrustration(float val) => frustration = val;
-
+    // --- StartShift с новой логикой ---
     public virtual void StartShift()
     {
         if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На работу!", 2f, Color.white);
@@ -191,15 +156,34 @@ public class StaffController : MonoBehaviour
         currentLateness = 0f;
         currentEarlyLeave = 0f;
         HasTakenBreakToday = false;
+        
+        gameObject.SetActive(true); // Включаем, если был выключен
 
         TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: true);
 
         CalculateArrivalTime();
 
+        // 1. Попытка авто-назначения
+        if (assignedWorkstation == null)
+        {
+            AssignmentManager.Instance?.AutoAssignStaff(this);
+        }
+
+        // 2. Логика прибытия
         if (assignedWorkstation != null)
         {
+            Debug.Log($"[StaffController] {characterName}: Иду на место {assignedWorkstation.name}");
             StartCoroutine(GoToWorkstationRoutine());
         }
+        else
+        {
+             Debug.Log($"[StaffController] {characterName}: Нет места, иду в зону ожидания");
+             StartCoroutine(GoToHangoutRoutine());
+        }
+
+        // 3. Запуск "Мозга"
+        if (aiLoopCoroutine != null) StopCoroutine(aiLoopCoroutine);
+        aiLoopCoroutine = StartCoroutine(AIUpdateLoop());
     }
 
     protected virtual IEnumerator GoToWorkstationRoutine()
@@ -216,120 +200,119 @@ public class StaffController : MonoBehaviour
         hasArrivedToday = true;
     }
 
-    public virtual void EndShift()
+    protected virtual IEnumerator GoToHangoutRoutine()
     {
-        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Домой...", 2f, Color.white);
-
-        TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: false);
-
-        hasLeftToday = true;
-        currentEarlyLeave = CalculateEarlyLeave();
-    }
-
-    protected virtual void CalculateArrivalTime()
-    {
-        if (hasArrivedToday) return;
-
-        punctuality = skills.pedantry;
-
-        float lateness = CalculateLateness();
-        currentLateness = lateness;
-
-        if (Time.time >= shiftStartTime + lateness)
+        Vector3 targetPos = transform.position; 
+        
+        var kitchenPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
+        if (kitchenPoint != null)
         {
-            hasArrivedToday = true;
-            currentLateness = 0f;
-        }
-    }
-
-    protected float CalculateLateness()
-    {
-        if (punctuality >= 1f)
-        {
-            return Random.Range(0f, 2f);
-        }
-
-        float noLatenessChance = punctuality;
-        float randomValue = Random.value;
-
-        if (randomValue < noLatenessChance)
-        {
-            return Random.Range(0f, 2f);
+            targetPos = kitchenPoint.transform.position;
         }
         else
         {
-            float latenessChance = 1f - noLatenessChance;
-            float latenessMultiplier = latenessChance * (1f - punctuality * 0.5f);
-            float maxLatenessAdjusted = maxLateness * (1f + latenessMultiplier);
-
-            return Random.Range(0f, maxLatenessAdjusted);
+            var homeZone = ScenePointsRegistry.Instance?.staffHomeZone;
+            if (homeZone != null)
+            {
+                targetPos = homeZone.GetRandomPointInside();
+            }
         }
-    }
-
-    protected float CalculateEarlyLeave()
-    {
-        float earlyLeaveChance = (1f - punctuality) * 0.3f;
-
-        if (Random.value > earlyLeaveChance)
-        {
-            return 0f;
-        }
-
-        return currentLateness;
-    }
-
-    protected virtual void UpdateBreakLogic()
-    {
-        if (IsOnBreak()) return;
-
-        if (!hasLunchBreak) return;
-
-        if (TimeManager.Instance == null) return;
-
-        float shiftDuration = 480f; // Значение по умолчанию
         
-        if (HiringManager.Instance != null)
+        if (agentMover != null)
         {
-            // Попытка найти shiftDuration через reflection
-            var shiftDurationField = typeof(HiringManager).GetField("shiftDuration", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (shiftDurationField != null)
-            {
-                shiftDuration = (float)shiftDurationField.GetValue(HiringManager.Instance);
-            }
-            else
-            {
-                // Если поле не найдено, пробуем свойство
-                var shiftDurationProp = typeof(HiringManager).GetProperty("shiftDuration", 
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                if (shiftDurationProp != null)
-                {
-                    shiftDuration = (float)shiftDurationProp.GetValue(HiringManager.Instance);
-                }
-            }
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPos, gameObject));
+            while (agentMover.IsMoving()) yield return null;
         }
+        
+        hasArrivedToday = true;
+    }
 
-        if (shiftDuration <= 0) shiftDuration = 480f;
-
-        float timeInShift = Time.time - shiftStartTime;
-        float lunchTime = shiftDuration / 2f;
-
-        if (timeInShift >= lunchTime && !HasTakenBreakToday)
+    // --- AI Loop ---
+    protected virtual IEnumerator AIUpdateLoop()
+    {
+        while (IsOnDuty())
         {
-            GoToBreak(breakDuration);
-            HasTakenBreakToday = true;
+            yield return new WaitForSeconds(2f); // Проверка раз в 2 секунды
+
+            if (currentExecutor != null) continue;
+            if (agentMover != null && agentMover.IsMoving()) continue;
+            if (IsOnBreak()) continue;
+
+            // Если без стола - пробуем найти снова
+            if (assignedWorkstation == null)
+            {
+                if (AssignmentManager.Instance != null && AssignmentManager.Instance.AutoAssignStaff(this))
+                {
+                    StartCoroutine(GoToWorkstationRoutine());
+                }
+                continue;
+            }
+            
+            TryPickAction();
         }
     }
 
-    [Header("Перерывы")]
-    public bool isOnBreak = false;
+    protected void TryPickAction()
+    {
+        if (activeActions == null || activeActions.Count == 0) return;
+
+        var shuffledActions = new List<StaffAction>(activeActions);
+        // Shuffle
+        for (int i = 0; i < shuffledActions.Count; i++)
+        {
+             var temp = shuffledActions[i];
+             int randomIndex = Random.Range(i, shuffledActions.Count);
+             shuffledActions[i] = shuffledActions[randomIndex];
+             shuffledActions[randomIndex] = temp;
+        }
+
+        foreach (var action in shuffledActions)
+        {
+            if (action.AreConditionsMet(this))
+            {
+                ExecuteAction(action);
+                break;
+            }
+        }
+    }
+    
+    public virtual void EndShift()
+    {
+        if (aiLoopCoroutine != null) StopCoroutine(aiLoopCoroutine);
+
+        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Домой...", 2f, Color.white);
+        TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: false);
+        hasLeftToday = true;
+        currentEarlyLeave = CalculateEarlyLeave();
+        
+        if (ScenePointsRegistry.Instance != null && ScenePointsRegistry.Instance.staffHomeZone != null)
+        {
+            Vector3 exitPos = ScenePointsRegistry.Instance.staffHomeZone.GetRandomPointInside();
+            StartCoroutine(ExitRoutine(exitPos));
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
+    }
+    
+    private IEnumerator ExitRoutine(Vector3 target)
+    {
+        if (agentMover != null)
+        {
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, target, gameObject));
+            while (agentMover.IsMoving()) yield return null;
+        }
+        gameObject.SetActive(false);
+    }
+
+    // --- Методы состояния ---
 
     public virtual bool IsOnBreak() => isOnBreak;
 
     public virtual void GoToBreak(float duration)
     {
         if (IsOnBreak()) return;
-
         isOnBreak = true;
         breakStartTime = Time.time;
         breakDuration = duration;
@@ -338,7 +321,6 @@ public class StaffController : MonoBehaviour
     protected virtual void EndBreak()
     {
         isOnBreak = false;
-
         if (thoughtBubble != null)
         {
             thoughtBubble.ShowPriorityMessage("Перерыв окончен", 2f, Color.white);
@@ -352,6 +334,41 @@ public class StaffController : MonoBehaviour
         return (WorkShiftMask & currentPeriod) != 0 && !IsOnBreak();
     }
 
+    // --- Вспомогательные методы ---
+
+    public virtual IEnumerator MoveToTarget(Vector3 targetPosition, string stateOnArrival)
+    {
+        if (agentMover != null) 
+        { 
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject)); 
+            while (agentMover.IsMoving()) yield return null; 
+        }
+        yield return null;
+    }
+    
+    // Перегрузка для удобства
+    public virtual IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival) => MoveToTarget((Vector3)targetPosition, stateOnArrival);
+
+    public virtual string GetStatusInfo() => "Idle";
+    public virtual string GetCurrentStateName() => "Idle";
+    public virtual float GetCurrentFrustration() => frustration;
+    public void ChangeEnergy(float amount) => energy = Mathf.Clamp(energy + amount, 0, 100);
+    public void ChangeStress(float amount) => stress = Mathf.Clamp(stress + amount, 0, 100);
+    public void SetCurrentFrustration(float val) => frustration = val;
+
+    protected virtual void CalculateArrivalTime()
+    {
+        // Простая заглушка, реальная логика в расширениях или наследниках
+    }
+
+    protected float CalculateLateness() => 0f; 
+    protected float CalculateEarlyLeave() => 0f;
+
+    protected virtual void UpdateBreakLogic()
+    {
+        // Базовая логика перерывов (можно вызвать extension method если нужно)
+    }
+
     public virtual void Initialize(string name, Role role, RankData rank, Gender gender, CharacterSkillsWrapper skills)
     {
         this.characterName = name;
@@ -359,14 +376,6 @@ public class StaffController : MonoBehaviour
         this.currentRankData = rank;
         this.gender = gender;
         this.skills = skills ?? new CharacterSkillsWrapper();
-    }
-
-    public void Initialize(string name, Role role, int rankLevel, Gender gender, CharacterSkillsWrapper skills) 
-    {
-         this.characterName = name;
-         this.role = role;
-         this.gender = gender;
-         this.skills = skills;
     }
 
     public virtual void InitializeFromData(RoleData data)
@@ -382,16 +391,11 @@ public class StaffController : MonoBehaviour
         visuals = vis;
         logger = log;
     }
-    public void ForceInitializeBaseComponents(string name, Role role, RankData rank) 
-    { 
-        this.characterName = name; this.role = role; this.currentRankData = rank; Awake(); 
-    }
 
     public void AddExperienceAndCheckForPromotion(float amount) { experiencePoints += amount; }
     
     public void FireAndGoHome()
     {
-        // Очистка перед уничтожением
         if (assignedWorkstation != null)
         {
             assignedWorkstation.ClearAssignedStaff();
@@ -400,20 +404,16 @@ public class StaffController : MonoBehaviour
                 AssignmentManager.Instance.UnassignWorkstation(assignedWorkstation);
             }
         }
-        
-        // Остановка всех корутин
         StopAllCoroutines();
-        
-        // Удаление из HiringManager
         if (HiringManager.Instance != null)
         {
             HiringManager.Instance.RemoveStaff(this);
         }
-        
         Destroy(gameObject);
     }
     
-    public void OnActionFinished(StaffAction action = null, bool success = true) { }
+    public void OnActionFinished(StaffAction action = null, bool success = true) { currentExecutor = null; }
+    
     public void ExecuteAction(StaffAction action)
     {
         if (action == null) return;
@@ -433,7 +433,7 @@ public class StaffController : MonoBehaviour
         set => role = value; 
     }
     
-    // Свойства для доступа к AgentMover, чтобы исправить ошибки CS1061
+    // Свойства для доступа
     public AgentMover AgentMover => agentMover;
     public bool IsMoving => agentMover != null && agentMover.IsMoving();
 }

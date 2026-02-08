@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Managers;
+using Managers.Teletype; // <--- ДОБАВЛЕНО
 using Utilities;
 using Characters;
 
@@ -32,13 +33,90 @@ public class InternController : StaffController, IServiceProvider
     
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;
-    private ServicePoint coveredServicePoint; // Стол, который стажер сейчас подменяет
+    private ServicePoint coveredServicePoint; 
 
-    // --- ПОЛЯ, КОТОРЫЕ ИСКАЛ HIRING MANAGER ---
     public EmotionSpriteCollection spriteCollection;
     public StateEmotionMap stateEmotionMap;
-    // ------------------------------------------
+    
+    // --- ПЕРЕОПРЕДЕЛЕНИЕ СТАРТА СМЕНЫ ---
+    public override void StartShift()
+    {
+        // Не вызываем base.StartShift(), так как стажеру не нужно искать стол
+        
+        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На стажировку!", 2f, Color.white);
+        gameObject.SetActive(true);
+        hasArrivedToday = false;
+        
+        // Теперь TeletypeManager будет найден благодаря добавленному using
+        TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: true);
+        
+        // Стажер всегда "прибыл" сразу, так как спавнится в зоне стажеров/холле
+        hasArrivedToday = true;
 
+        // Запускаем уникальную логику стажера
+        StartCoroutine(InternLogicLoop());
+    }
+
+    private IEnumerator InternLogicLoop()
+    {
+        yield return new WaitForSeconds(1f);
+        
+        while (IsOnDuty())
+        {
+            // Если занят (выполняет Executor), ждем
+            if (currentExecutor != null) 
+            {
+                yield return new WaitForSeconds(1f);
+                continue;
+            }
+
+            // Если не патрулирует и не выполняет действие -> Ищем, что делать
+            if (currentState == InternState.Inactive || currentState == InternState.Patrolling)
+            {
+                // Приоритет 1: Подмена (Cover Desk)
+                var coverAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.CoverClerk || a.actionType == ActionType.CoverRegistrar);
+                if (coverAction != null && coverAction.AreConditionsMet(this))
+                {
+                    ExecuteAction(coverAction);
+                    continue;
+                }
+
+                // Приоритет 2: Помощь (Help Confused)
+                var helpAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.HelpConfusedClient);
+                if (helpAction != null && helpAction.AreConditionsMet(this))
+                {
+                    ExecuteAction(helpAction);
+                    continue;
+                }
+
+                // Приоритет 3: Патруль (если ничего другого нет и мы не патрулируем)
+                if (currentExecutor == null)
+                {
+                    var patrolAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.InternPatrol) 
+                                       ?? systemActionDatabase?.allActions.FirstOrDefault(a => a.actionType == ActionType.InternPatrol);
+                    
+                    if (patrolAction != null)
+                    {
+                        ExecuteAction(patrolAction);
+                    }
+                    else
+                    {
+                        // Фолбэк, если экшена нет - просто гуляем
+                        SetState(InternState.Patrolling);
+                        var points = ScenePointsRegistry.Instance?.internPatrolPoints;
+                        if (points != null && points.Count > 0)
+                        {
+                             var p = points[Random.Range(0, points.Count)];
+                             yield return StartCoroutine(MoveToTarget(p.transform.position, InternState.Patrolling));
+                        }
+                    }
+                }
+            }
+            
+            yield return new WaitForSeconds(2f);
+        }
+    }
+    
     public void SetState(InternState newState)
     {
         if (currentState == newState) return;
@@ -46,7 +124,6 @@ public class InternController : StaffController, IServiceProvider
         logger?.LogState(GetStatusInfo());
         if(visuals != null)
         {
-            // Здесь visuals это CharacterVisuals, у него есть метод SetEmotionForState
             visuals.SetEmotionForState(newState);
         }
     }
@@ -66,7 +143,6 @@ public class InternController : StaffController, IServiceProvider
     {
         if (System.Enum.TryParse<InternState>(stateOnArrival, out InternState newState))
         {
-            // Используем SetTarget (если добавили в AgentMover) или старый способ
             if(agentMover != null) 
                 agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject));
             
@@ -144,21 +220,11 @@ public class InternController : StaffController, IServiceProvider
 
     private IEnumerator InternServiceRoutine(ClientPathfinding client)
     {
-        if (client == null)
-        {
-            Debug.LogWarning("[InternController] InternServiceRoutine вызван с null клиентом");
-            yield break;
-        }
-
-        if (coveredServicePoint == null)
-        {
-            Debug.LogWarning("[InternController] coveredServicePoint равен null");
-            yield break;
-        }
+        if (client == null || coveredServicePoint == null) yield break;
 
         int deskId = coveredServicePoint.deskId;
 
-        // --- ИЗНОС ---
+        // ИЗНОС
         var durability = coveredServicePoint.GetComponent<Gameplay.OfficeObjectDurability>();
         if (durability != null && !durability.IsUsable())
         {
@@ -202,9 +268,7 @@ public class InternController : StaffController, IServiceProvider
                 PlayerWallet.Instance?.AddMoney(client.billToPay, "Оплата (Стажер)");
                 if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
                 client.billToPay = 0;
-                
                 coveredServicePoint.documentStack?.AddDocumentToStack();
-                
                 thoughtBubble?.ShowPriorityMessage("Оплачено!", 2f, Color.green);
             }
             client.isLeavingSuccessfully = true;
