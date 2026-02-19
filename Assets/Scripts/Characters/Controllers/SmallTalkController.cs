@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Data;
 using Managers;
 
-[RequireComponent(typeof(StaffController), typeof(ThoughtBubbleController))]
 public class SmallTalkController : MonoBehaviour
 {
     [Header("Настройки")]

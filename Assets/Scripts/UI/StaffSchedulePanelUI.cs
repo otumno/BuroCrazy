@@ -51,6 +51,15 @@ public class StaffSchedulePanelUI : MonoBehaviour
         MainUIManager.Instance?.PopPause();
     }
 
+    // Публичный метод для принудительного обновления
+    public void RefreshTable()
+    {
+        if (gameObject.activeInHierarchy)
+        {
+            RebuildTable();
+        }
+    }
+
     // Метод, который будет вызываться при клике на имя сотрудника
     private void OnStaffNameClicked(StaffController staff)
     {

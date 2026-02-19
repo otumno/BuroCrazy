@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Utilities;
 using Characters;
+using UI;
 
 namespace Managers
 {
@@ -185,12 +186,39 @@ namespace Managers
             var targetType = GetControllerTypeForRole(candidate.Role);
             if (targetType != null && staffController.GetType() != targetType)
             {
-                DestroyImmediate(staffController);
-                staffController = (StaffController)newStaffGO.AddComponent(targetType);
+                // Удаляем InternNotification если конвертируем из Intern во что-то другое
+                if (staffController.GetType() == typeof(InternController) && targetType != typeof(InternController))
+                {
+                    var internNotification = newStaffGO.GetComponent<InternNotification>();
+                    if (internNotification != null) DestroyImmediate(internNotification);
+                }
+                
+                // Удаляем старый контроллер если это не StaffController
+                var currentType = staffController.GetType();
+                if (currentType != typeof(StaffController))
+                {
+                    DestroyImmediate(staffController);
+                    staffController = (StaffController)newStaffGO.AddComponent(targetType);
+                }
+                else if (newStaffGO.GetComponent(targetType) == null)
+                {
+                    // StaffController (базовый) остаётся, добавляем нужный тип
+                    newStaffGO.AddComponent(targetType);
+                    staffController = newStaffGO.GetComponent<StaffController>();
+                }
             }
 
             if (staffController != null)
             {
+                // Инициализируем базовые компоненты как для существующих сотрудников
+                var agentMover = newStaffGO.GetComponent<AgentMover>();
+                var visuals = newStaffGO.GetComponent<CharacterVisuals>();
+                var logger = newStaffGO.GetComponent<CharacterStateLogger>();
+                if (agentMover != null && visuals != null && logger != null)
+                {
+                    staffController.ForceInitializeBaseComponents(agentMover, visuals, logger);
+                }
+
                 staffController.characterName = candidate.Name;
                 staffController.skills = candidate.Skills;
                 staffController.gender = candidate.Gender;
@@ -203,18 +231,38 @@ namespace Managers
                 
                 if (roleData != null) staffController.InitializeFromData(roleData);
                 
-                // Дефолтная маска смен из ранга
-                staffController.WorkShiftMask = 0; 
-                if (Managers.TimeManager.Instance?.mainCalendarDay?.periodSettings != null)
+                // График работы: по умолчанию - УТРО (Morning)
+                // Для Intern ставим только УТРО, для остальных - если не указан в Rank, тоже только УТРО
+                if (candidate.Role == StaffController.Role.Intern)
                 {
-                    var allPeriods = Managers.TimeManager.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
-                    int duration = candidate.Rank != null ? candidate.Rank.workPeriodsCount : 3;
-                    for (int i = 0; i < duration; i++)
+                    staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
+                }
+                else
+                {
+                    // Для остальных ролей: если Rank не указывает график, ставим УТРО
+                    if (candidate.Rank == null || candidate.Rank.workPeriodsCount <= 0)
                     {
-                        if (i < allPeriods.Count) staffController.WorkShiftMask |= allPeriods[i];
+                        staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
+                    }
+                    else
+                    {
+                        // Используем график из Rank (существующая логика)
+                        staffController.WorkShiftMask = 0;
+                        if (Managers.TimeManager.Instance?.mainCalendarDay?.periodSettings != null)
+                        {
+                            var allPeriods = Managers.TimeManager.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
+                            int duration = candidate.Rank.workPeriodsCount;
+                            for (int i = 0; i < duration; i++)
+                            {
+                                if (i < allPeriods.Count) staffController.WorkShiftMask |= allPeriods[i];
+                            }
+                        }
+                        else
+                        {
+                            staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
+                        }
                     }
                 }
-                else staffController.WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
 
                 AllStaff.Add(staffController);
                 UnassignedStaff.Add(staffController);
@@ -224,25 +272,42 @@ namespace Managers
 
                 PlayerWallet.Instance.AddMoney(-candidate.HiringCost, $"Наём: {candidate.Name}");
 
+                // Сначала добавляем в AllStaff ЧТОБЫ таблица расписания видела сотрудника
+                // Потом уже запускаем смену
+                
                 // ----- ИСПРАВЛЕНИЕ ЗДЕСЬ -----
-                // Не вызываем StartShift() безусловно! Проверяем расписание.
-                
-                var periodType = TimeManager.Instance.GetCurrentPeriodType();
-                bool isScheduled = (staffController.WorkShiftMask & periodType) != 0;
-                
-                if (isScheduled)
+                // Intern всегда выходит на работу сразу после найма
+                bool isIntern = candidate.Role == StaffController.Role.Intern;
+
+                // Проверяем расписание для не-Intern
+                bool isScheduled = true;
+                if (!isIntern)
                 {
-                    Debug.Log($"[HiringManager] Нанят {staffController.characterName}. Текущее время совпадает с графиком. Выходит на смену.");
-                    staffController.StartShift();
+                    var periodType = TimeManager.Instance.GetCurrentPeriodType();
+                    isScheduled = (staffController.WorkShiftMask & periodType) != 0;
                 }
-                else
+
+                // Вызываем StartShift() чтобы сотрудник инициализировался
+                Debug.Log($"[HiringManager] Нанят {staffController.characterName}. Инициализация смены.");
+                staffController.StartShift();
+
+                // Для Intern - всегда visible, для остальных - проверяем расписание
+                if (!isScheduled)
                 {
-                    Debug.Log($"[HiringManager] Нанят {staffController.characterName}. Сейчас не его смена. Отправлен домой.");
-                    staffController.gameObject.SetActive(false); // Прячем до начала смены
+                    Debug.Log($"[HiringManager] {staffController.characterName}: Сейчас не его смена. Скрываем до начала работы.");
+                    staffController.gameObject.SetActive(false);
                 }
                 // -----------------------------
 
                 FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+
+                // Обновляем панель расписания если она открыта
+                var schedulePanel = FindFirstObjectByType<StaffSchedulePanelUI>(FindObjectsInactive.Include);
+                if (schedulePanel != null)
+                {
+                    schedulePanel.RefreshTable();
+                }
+
                 return true;
             }
             

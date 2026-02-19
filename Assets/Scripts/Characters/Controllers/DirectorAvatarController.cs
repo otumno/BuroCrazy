@@ -465,17 +465,23 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             if (clientToServe != null && clientBeingServed == null)
             {
                   if (clientToServe.stateMachine != null && clientToServe.stateMachine.GetTargetZone() == zone) {
-                    
-                    // Запускаем обслуживание
-                    yield return StartCoroutine(DirectorServiceRoutine(clientToServe));
-                    
-                    // --- ИЗНОС: Наносим урон ПОСЛЕ обслуживания ---
-                    // Урон зависит от эффективности (чем хуже стол, тем больше усилий и урона)
-                    if (durability != null) durability.Degrade(Random.Range(2f, 4f));
-                    
-                    // Дополнительная задержка из-за плохой эффективности
-                    if (efficiency < 1.0f) yield return new WaitForSeconds(1.0f);
-                 } 
+
+                      // Сбрасываем клиента перед обслуживанием для безопасности
+                      clientBeingServed = null;
+
+                      // Запускаем обслуживание
+                      yield return StartCoroutine(DirectorServiceRoutine(clientToServe));
+
+                      // Явно сбрасываем после обслуживания
+                      clientBeingServed = null;
+
+                      // --- ИЗНОС: Наносим урон ПОСЛЕ обслуживания ---
+                      // Урон зависит от эффективности (чем хуже стол, тем больше усилий и урона)
+                      if (durability != null) durability.Degrade(Random.Range(2f, 4f));
+
+                      // Дополнительная задержка из-за плохой эффективности
+                      if (efficiency < 1.0f) yield return new WaitForSeconds(1.0f);
+                   }
             }
 
             yield return new WaitForSeconds(0.5f);
@@ -690,292 +696,277 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     /// </summary>
     private IEnumerator DirectorServiceRoutine(ClientPathfinding client)
     {
-         // Проверки на null
-         if (client == null || client.stateMachine == null || currentWorkstation == null) {
-              Debug.LogError($"DirectorServiceRoutine: client ({client?.name}) или currentWorkstation ({currentWorkstation?.name}) равен null!");
-              clientBeingServed = null; // Освобождаем директора
-              SetState(DirectorState.WorkingAtStation); // Возвращаемся в ожидание
-              yield break;
-         }
-
-        // Проверяем, не заняты ли мы уже другим клиентом (на всякий случай)
-        if (clientBeingServed != null && clientBeingServed != client)
+        if (client == null || client.stateMachine == null || currentWorkstation == null)
         {
-             Debug.LogWarning($"DirectorServiceRoutine: Попытка обслужить {client.name}, когда уже обслуживается {clientBeingServed.name}.");
-            yield break; // Выходим, если уже заняты
+            Debug.LogError($"DirectorServiceRoutine: client ({client?.name}) или currentWorkstation ({currentWorkstation?.name}) равен null!");
+            clientBeingServed = null;
+            SetState(DirectorState.WorkingAtStation);
+            yield break;
         }
 
-        clientBeingServed = client; // Запоминаем клиента, которого обслуживаем
-        SetState(DirectorState.ServingClient); // Устанавливаем состояние "Обслуживает клиента"
+        if (clientBeingServed != null && clientBeingServed != client)
+        {
+            Debug.LogWarning($"DirectorServiceRoutine: Попытка обслужить {client.name}, когда уже обслуживается {clientBeingServed.name}.");
+            yield break;
+        }
+
+        clientBeingServed = client;
+        SetState(DirectorState.ServingClient);
         Debug.Log($"<color=#00FFFF>ДИРЕКТОР:</color> {characterName} начал обслуживание {client.name} (Цель: {client.mainGoal}) на {currentWorkstation.name} (ID: {currentWorkstation.deskId}).");
 
-        int deskId = currentWorkstation.deskId; // Получаем ID стола
-        bool jobDone = false; // Флаг успешного завершения основной задачи
-        GameObject flyingDoc = null; // Переменная для анимации документа
+        int deskId = currentWorkstation.deskId;
+        bool jobDone = false;
+        GameObject flyingDoc = null;
 
         // --- Логика для столов Клерков (ID 1 и 2) ---
         if (deskId == 1 || deskId == 2)
         {
-            thoughtBubble?.ShowPriorityMessage("Так... посмотрим...", 2f, Color.yellow);
+            thoughtBubble?.ShowPriorityMessage("Так... посмотрю...", 2f, Color.yellow);
             yield return new WaitForSeconds(1.0f);
 
-            // Определяем нужный тип бланка и сертификата для этого стола
             DocumentType requiredDocType = (deskId == 1) ? DocumentType.Form1 : DocumentType.Form2;
-            GameObject requiredPrefab = (deskId == 1) ? form1Prefab : form2Prefab; // Не используется напрямую, но для справки
-             GameObject certificatePrefab = (deskId == 1) ? certificate1Prefab : certificate2Prefab;
+            GameObject certificatePrefab = (deskId == 1) ? certificate1Prefab : certificate2Prefab;
             DocumentType certificateType = (deskId == 1) ? DocumentType.Certificate1 : DocumentType.Certificate2;
             int serviceCost = (deskId == 1) ? 100 : 250;
 
-            // 1. Проверяем, правильный ли документ у клиента
-            if (client.docHolder == null) { // Доп. проверка
-                 Debug.LogError($"У клиента {client.name} отсутствует DocumentHolder!");
-            }
-             else if (client.docHolder.GetCurrentDocumentType() != requiredDocType)
+            if (client.docHolder == null)
             {
-                // Не тот бланк - отправляем клиента за новым
+                Debug.LogError($"У клиента {client.name} отсутствует DocumentHolder!");
+            }
+            else if (client.docHolder.GetCurrentDocumentType() != requiredDocType)
+            {
                 thoughtBubble?.ShowPriorityMessage("У вас бланк не тот!\nВозьмите другой.", 3f, Color.red);
                 yield return new WaitForSeconds(1.5f);
-                if (client != null && client.stateMachine != null) client.stateMachine.GoGetFormAndReturn(); // Безопасный вызов
-                jobDone = true; // Считаем действие выполненным (клиент отправлен)
-                 Debug.Log($" -> Клиент {client.name} отправлен за другим бланком.");
+                client.stateMachine?.GoGetFormAndReturn();
+                jobDone = true;
+                Debug.Log($" -> Клиент {client.name} отправлен за другим бланком.");
             }
-            else // Бланк правильный
+            else
             {
-                 Debug.Log($" -> У клиента {client.name} правильный бланк ({requiredDocType}). Начинаем обработку...");
-                // --- Анимация: Забираем документ у клиента ---
+                Debug.Log($" -> У клиента {client.name} правильный бланк ({requiredDocType}). Начинаем обработку...");
                 DocumentHolder clientDocHolder = client.docHolder;
                 Transform clientHand = clientDocHolder?.handPoint;
                 Transform deskPoint = currentWorkstation.documentPointOnDesk;
                 GameObject currentClientDocObject = (clientHand != null && clientHand.childCount > 0) ? clientHand.GetChild(0).gameObject : null;
 
                 if (currentClientDocObject != null && deskPoint != null)
-                 {
-                    clientDocHolder.SetDocument(DocumentType.None); // Убираем документ из данных
+                {
+                    clientDocHolder.SetDocument(DocumentType.None);
                     DocumentMover mover = currentClientDocObject.AddComponent<DocumentMover>();
                     bool arrived = false;
                     mover.StartMove(deskPoint, () => { arrived = true; });
                     yield return new WaitUntil(() => arrived);
-                    flyingDoc = currentClientDocObject; // Запоминаем документ на столе
-                      // Проверка, что объект еще существует
-                     if (flyingDoc != null) {
-                         flyingDoc.transform.SetParent(deskPoint);
-                         flyingDoc.transform.localPosition = Vector3.zero;
-                         flyingDoc.transform.localRotation = Quaternion.identity;
-                          Debug.Log($" -> Документ {flyingDoc.name} перемещен на стол.");
-                     } else {
-                          Debug.LogWarning($" -> Документ клиента исчез во время перемещения на стол.");
-                     }
-                } else {
-                      Debug.LogWarning($" -> Не удалось анимировать забор документа у {client.name} (объект/точки не найдены).");
+                    flyingDoc = currentClientDocObject;
+                    if (flyingDoc != null)
+                    {
+                        flyingDoc.transform.SetParent(deskPoint);
+                        flyingDoc.transform.localPosition = Vector3.zero;
+                        flyingDoc.transform.localRotation = Quaternion.identity;
+                        Debug.Log($" -> Документ {flyingDoc.name} перемещен на стол.");
+                    }
                 }
-                 // --- Конец анимации забора ---
 
                 thoughtBubble?.ShowPriorityMessage("Обрабатываю...", 3f, Color.white);
+                float processTime = Random.Range(2.5f, 4.0f);
 
-					float processTime = Random.Range(2.5f, 4.0f); // Вычисляем время заранее
+                if (processingIconPrefab != null)
+                {
+                    GameObject iconObj = Instantiate(processingIconPrefab);
+                    ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
+                    if (animScript != null)
+                    {
+                        animScript.Play(transform.position, client.transform.position, processTime);
+                    }
+                }
 
-						// Запускаем иконку
-						if (processingIconPrefab != null)
-						{
-							GameObject iconObj = Instantiate(processingIconPrefab);
-							ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
-							if (animScript != null)
-							{
-								// Позиция А - Директор, Позиция Б - Клиент
-								animScript.Play(transform.position, client.transform.position, processTime);
-							}
-						}
+                yield return new WaitForSeconds(processTime);
 
-					// Ждем ровно столько, сколько длится анимация
-					yield return new WaitForSeconds(processTime);
+                if (client == null || client.stateMachine == null || currentWorkstation == null)
+                {
+                    Debug.LogWarning("Клиент или рабочее место исчезли во время обработки документа.");
+                    if (flyingDoc != null) Destroy(flyingDoc);
+                    jobDone = false;
+                }
+                else
+                {
+                    if (flyingDoc != null) Destroy(flyingDoc);
+                    deskPoint = currentWorkstation.documentPointOnDesk;
+                    clientHand = client.docHolder?.handPoint;
 
-                 // Проверяем клиента и стол перед выдачей
-                 if (client == null || client.stateMachine == null || currentWorkstation == null) {
-                     Debug.LogWarning("Клиент или рабочее место исчезли во время обработки документа.");
-                     if (flyingDoc != null) Destroy(flyingDoc); // Убираем документ со стола
-                     jobDone = false; // Задача не выполнена
-                 } else {
-                     // --- Анимация: Выдаем сертификат ---
-                     if (flyingDoc != null) Destroy(flyingDoc); // Уничтожаем старый документ на столе
+                    if (certificatePrefab != null && deskPoint != null && clientHand != null)
+                    {
+                        GameObject newCertGO = Instantiate(certificatePrefab, deskPoint.position, deskPoint.rotation);
+                        DocumentMover mover = newCertGO.AddComponent<DocumentMover>();
+                        bool arrived = false;
+                        mover.StartMove(clientHand, () => { arrived = true; });
+                        yield return new WaitUntil(() => arrived);
 
-                     deskPoint = currentWorkstation.documentPointOnDesk; // Переполучаем на всякий случай
-                     clientHand = client.docHolder?.handPoint;
+                        if (client != null && client.docHolder != null)
+                        {
+                            client.docHolder.ReceiveTransferredDocument(certificateType, newCertGO);
+                            Debug.Log($" -> Сертификат {newCertGO.name} передан клиенту {client.name}.");
+                        }
+                    }
 
-                     if (certificatePrefab != null && deskPoint != null && clientHand != null)
-                     {
-                         GameObject newCertGO = Instantiate(certificatePrefab, deskPoint.position, deskPoint.rotation);
-                         DocumentMover mover = newCertGO.AddComponent<DocumentMover>();
-                         bool arrived = false;
-                         mover.StartMove(clientHand, () => {
-                             // По прибытии вызываем метод у клиента
-                              // Проверяем клиента еще раз перед передачей
-                              if (client != null && client.docHolder != null) {
-                                 client.docHolder.ReceiveTransferredDocument(certificateType, newCertGO);
-                                 Debug.Log($" -> Сертификат {newCertGO.name} передан клиенту {client.name}.");
-                              } else {
-                                   Debug.LogWarning($" -> Клиент {client?.name} исчез перед получением сертификата. Уничтожаем сертификат.");
-                                   Destroy(newCertGO); // Уничтожаем, если клиент ушел
-                              }
-                              arrived = true;
-                         });
-                         yield return new WaitUntil(() => arrived);
-                     } else {
-                          // Если анимация невозможна, просто даем документ
-                          Debug.LogWarning($" -> Не удалось анимировать выдачу сертификата клиенту {client.name}. Документ выдан без анимации.");
-                          if (client != null && client.docHolder != null) client.docHolder.SetDocument(certificateType);
-                     }
-                     // --- Конец анимации выдачи ---
-
-                      // Выставляем счет, если клиент еще здесь
-                      if (client != null && client.stateMachine != null) {
-                         client.billToPay += serviceCost;
-                         thoughtBubble?.ShowPriorityMessage("Готово! Теперь в кассу.", 3f, Color.green);
-                          Debug.Log($" -> Клиент {client.name} отправлен в кассу (Счет: {client.billToPay}).");
-                         // Отправляем в кассу
-                         client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
-                         client.stateMachine.SetState(ClientState.MovingToGoal);
-                      }
-                     jobDone = true; // Считаем работу выполненной
-                 }
+                    if (client != null && client.stateMachine != null)
+                    {
+                        client.billToPay += serviceCost;
+                        thoughtBubble?.ShowPriorityMessage("Готово! Теперь в кассу.", 3f, Color.green);
+                        Debug.Log($" -> Клиент {client.name} отправлен в кассу (Счет: {client.billToPay}).");
+                        client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
+                        client.stateMachine.SetState(ClientState.MovingToGoal);
+                    }
+                    jobDone = true;
+                }
             }
         }
-         // --- Логика для Регистратуры (ID 0) ---
+        // --- Логика для Регистратуры (ID 0) ---
         else if (deskId == 0)
         {
             thoughtBubble?.ShowPriorityMessage("Смотрю, куда вас направить...", 2f, Color.cyan);
             yield return new WaitForSeconds(Random.Range(1.0f, 2.0f));
 
-            // Проверяем клиента перед направлением
-             if (client == null || client.stateMachine == null) {
-                 Debug.LogWarning("Клиент исчез во время обработки в регистратуре.");
-                 jobDone = false;
-             } else {
-                 Waypoint destination = null;
-                 bool leavingUpset = false;
+            if (client == null || client.stateMachine == null)
+            {
+                Debug.LogWarning("Клиент исчез во время обработки в регистратуре.");
+                jobDone = false;
+            }
+            else
+            {
+                Waypoint destination = null;
+                bool leavingUpset = false;
 
-                 // Определяем пункт назначения
-                 if (client.billToPay > 0) { destination = ClientSpawner.GetCashierZone()?.waitingWaypoint; }
-                 else
-                 {
-                     switch (client.mainGoal)
-                     {
-                         case ClientGoal.PayTax: destination = ClientSpawner.GetCashierZone()?.waitingWaypoint; break;
-                         case ClientGoal.GetCertificate1: destination = ClientSpawner.GetDesk1Zone()?.waitingWaypoint; break;
-                         case ClientGoal.GetCertificate2: destination = ClientSpawner.GetDesk2Zone()?.waitingWaypoint; break;
-                         case ClientGoal.GetArchiveRecord:
-                             // Если цель - архив, но у директора нет Action'а
-                             thoughtBubble?.ShowPriorityMessage("Архив недоступен.\nИзвините.", 3f, Color.red);
-                             yield return new WaitForSeconds(1.5f);
-                             destination = ClientSpawner.Instance?.exitWaypoint;
-                             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                             leavingUpset = true; // Ставим флаг для смены состояния
-                             break;
-                         default: // AskAndLeave, VisitToilet (уже здесь), etc.
-                              client.isLeavingSuccessfully = true;
-                              client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-                             destination = ClientSpawner.Instance?.exitWaypoint;
-                              break;
-                     }
-                 }
+                if (client.billToPay > 0)
+                {
+                    destination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+                }
+                else
+                {
+                    switch (client.mainGoal)
+                    {
+                        case ClientGoal.PayTax:
+                            destination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+                            break;
+                        case ClientGoal.GetCertificate1:
+                            destination = ClientSpawner.GetDesk1Zone()?.waitingWaypoint;
+                            break;
+                        case ClientGoal.GetCertificate2:
+                            destination = ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
+                            break;
+                        case ClientGoal.GetArchiveRecord:
+                            thoughtBubble?.ShowPriorityMessage("Архив недоступен.\nИзвините.", 3f, Color.red);
+                            yield return new WaitForSeconds(1.5f);
+                            destination = ClientSpawner.Instance?.exitWaypoint;
+                            client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+                            leavingUpset = true;
+                            break;
+                        default:
+                            client.isLeavingSuccessfully = true;
+                            client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+                            destination = ClientSpawner.Instance?.exitWaypoint;
+                            break;
+                    }
+                }
 
-                 // Проверяем, что точка назначения найдена
-                 if (destination != null) {
-                     string destinationName = string.IsNullOrEmpty(destination.friendlyName) ? destination.name : destination.friendlyName;
-                     // Показываем сообщение только если не отправляем домой из-за архива
-                     if (!leavingUpset) thoughtBubble?.ShowPriorityMessage($"Пройдите к\n'{destinationName}'", 3f, Color.white);
+                if (destination != null)
+                {
+                    string destinationName = string.IsNullOrEmpty(destination.friendlyName) ? destination.name : destination.friendlyName;
+                    if (!leavingUpset) thoughtBubble?.ShowPriorityMessage($"Пройдите к\n'{destinationName}'", 3f, Color.white);
 
-                     // Снимаем с очереди
-                     if (client.stateMachine.MyQueueNumber != -1) { ClientQueueManager.Instance?.RemoveClientFromQueue(client); }
+                    if (client.stateMachine.MyQueueNumber != -1)
+                    {
+                        ClientQueueManager.Instance?.RemoveClientFromQueue(client);
+                    }
 
-                     // Устанавливаем цель и состояние
-                     client.stateMachine.SetGoal(destination);
-                      client.stateMachine.SetState(leavingUpset ? ClientState.LeavingUpset : ClientState.MovingToGoal);
-                      Debug.Log($" -> Клиент {client.name} отправлен к {destinationName} (Состояние: {(leavingUpset ? ClientState.LeavingUpset : ClientState.MovingToGoal)}).");
-                 } else {
-                      // Если точка не найдена (ошибка конфигурации)
-                      thoughtBubble?.ShowPriorityMessage("Не могу вас направить.\nИзвините.", 3f, Color.red);
-                      yield return new WaitForSeconds(1.5f);
-                      if (client.stateMachine != null && client.stateMachine.MyQueueNumber != -1) { ClientQueueManager.Instance?.RemoveClientFromQueue(client); }
-                      client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                      client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-                      client.stateMachine?.SetState(ClientState.LeavingUpset);
-                       Debug.LogError($"Не найдена точка назначения для клиента {client.name} (Цель: {client.mainGoal}). Отправлен домой.");
-                 }
-                 jobDone = true; // Считаем действие выполненным
-             }
+                    client.stateMachine.SetGoal(destination);
+                    client.stateMachine.SetState(leavingUpset ? ClientState.LeavingUpset : ClientState.MovingToGoal);
+                    Debug.Log($" -> Клиент {client.name} отправлен к {destinationName}.");
+                }
+                else
+                {
+                    thoughtBubble?.ShowPriorityMessage("Не могу вас направить.\nИзвините.", 3f, Color.red);
+                    yield return new WaitForSeconds(1.5f);
+                    if (client.stateMachine != null && client.stateMachine.MyQueueNumber != -1)
+                    {
+                        ClientQueueManager.Instance?.RemoveClientFromQueue(client);
+                    }
+                    client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+                    client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+                    client.stateMachine?.SetState(ClientState.LeavingUpset);
+                    Debug.LogError($"Не найдена точка назначения для клиента {client.name}.");
+                }
+                jobDone = true;
+            }
         }
         // --- Логика для Кассы (ID -1 или 4) ---
         else if (deskId == -1 || deskId == 4)
         {
-             thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
-             yield return new WaitForSeconds(Random.Range(2.0f, 3.5f));
+            thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
+            yield return new WaitForSeconds(Random.Range(2.0f, 3.5f));
 
-              // Проверяем клиента перед оплатой
-              if (client == null || client.stateMachine == null) {
-                  Debug.LogWarning("Клиент исчез во время ожидания оплаты.");
-                  jobDone = false;
-              } else {
-                  // Назначаем счет за налог, если нужно
-                 if (client.billToPay == 0 && client.mainGoal == ClientGoal.PayTax)
-                 {
-                     client.billToPay = Random.Range(20, 121);
-                      Debug.Log($" -> Назначен счет за налог для {client.name}: ${client.billToPay}");
-                 }
+            if (client == null || client.stateMachine == null)
+            {
+                Debug.LogWarning("Клиент исчез во время ожидания оплаты.");
+                jobDone = false;
+            }
+            else
+            {
+                if (client.billToPay == 0 && client.mainGoal == ClientGoal.PayTax)
+                {
+                    client.billToPay = Random.Range(20, 121);
+                    Debug.Log($" -> Назначен счет за налог для {client.name}: ${client.billToPay}");
+                }
 
-                 // Обрабатываем оплату
-                 if (PlayerWallet.Instance != null && client.billToPay > 0)
-                 {
-                     // --- Анимация денег ---
-                     if (client.moneyPrefab != null && PlayerWallet.Instance.moneyText != null)
-                     {
-                         GameObject moneyEffect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
-                         MoneyMover mover = moneyEffect.GetComponent<MoneyMover>();
-                         if (mover != null) mover.StartMove(PlayerWallet.Instance.moneyText.transform);
-                         else Destroy(moneyEffect);
-                     }
-                     // ---
+                if (PlayerWallet.Instance != null && client.billToPay > 0)
+                {
+                    if (client.moneyPrefab != null)
+                    {
+                        GameObject moneyEffect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
+                        MoneyMover mover = moneyEffect.GetComponent<MoneyMover>();
+                        if (mover != null) mover.StartMove(this.transform);
+                        else Destroy(moneyEffect);
+                    }
 
-                     PlayerWallet.Instance.AddMoney(client.billToPay, $"Оплата услуги Директором ({client.name})", IncomeType.Official);
-                      Debug.Log($" -> Получена оплата от {client.name}: ${client.billToPay}");
+                    PlayerWallet.Instance.AddMoney(client.billToPay, $"Оплата услуги ({client.name})", IncomeType.Official);
+                    Debug.Log($" -> Получена оплата от {client.name}: ${client.billToPay}");
 
-                     if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
-                     client.billToPay = 0; // Обнуляем счет
-                     jobDone = true; // Считаем оплату успешной
-                 } else if (client.billToPay <= 0) {
-                      Debug.Log($" -> У клиента {client.name} нет счета для оплаты.");
-                      jobDone = true; // Считаем выполненным, т.к. оплаты и не требовалось
-                 }
+                    if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
+                    client.billToPay = 0;
+                    jobDone = true;
+                }
+                else if (client.billToPay <= 0)
+                {
+                    Debug.Log($" -> У клиента {client.name} нет счета для оплаты.");
+                    jobDone = true;
+                }
 
-                  // Отправляем клиента на выход
-                  client.isLeavingSuccessfully = true;
-                  client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-                  client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-                  client.stateMachine?.SetState(ClientState.Leaving);
-                   Debug.Log($" -> Клиент {client.name} отправлен на выход после кассы.");
-              }
+                client.isLeavingSuccessfully = true;
+                client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+                client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+                client.stateMachine?.SetState(ClientState.Leaving);
+                Debug.Log($" -> Клиент {client.name} отправлен на выход после кассы.");
+            }
         }
-        else // Неизвестный deskId
+        else
         {
-             Debug.LogError($"DirectorServiceRoutine: Неизвестный deskId = {deskId} для {currentWorkstation.name}!");
-             // Можно отправить клиента домой или просто завершить без jobDone = true
-               if (client != null && client.stateMachine != null) {
-                  client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                  client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-                  client.stateMachine?.SetState(ClientState.LeavingUpset);
-               }
+            Debug.LogError($"DirectorServiceRoutine: Неизвестный deskId = {deskId} для {currentWorkstation.name}!");
+            if (client != null && client.stateMachine != null)
+            {
+                client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+                client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+                client.stateMachine?.SetState(ClientState.LeavingUpset);
+            }
         }
-
 
         // --- Завершение обслуживания ---
         if (jobDone && currentWorkstation?.documentStack != null)
         {
-            // Добавляем "обработанный" документ в стопку на столе, если основная задача была выполнена
             currentWorkstation.documentStack.AddDocumentToStack();
         }
 
-        clientBeingServed = null; // Освобождаем директора для следующего клиента
-        SetState(DirectorState.WorkingAtStation); // Возвращаемся в состояние ожидания на станции
-         Debug.Log($"[DirectorController] {characterName} завершил обслуживание {client?.name} на {currentWorkstation?.name}.");
-    } // Конец DirectorServiceRoutine
+        clientBeingServed = null;
+        SetState(DirectorState.WorkingAtStation);
+        Debug.Log($"[DirectorController] {characterName} завершил обслуживание {client?.name}.");
+    }
     #endregion
 } // Конец класса DirectorAvatarController

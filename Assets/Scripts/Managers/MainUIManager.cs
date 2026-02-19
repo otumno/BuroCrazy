@@ -148,6 +148,7 @@ namespace Managers
             
             if (MusicPlayer.Instance != null)
             {
+                MusicPlayer.Instance.OnGameStarted();
                 MusicPlayer.Instance.StartGameplayMusic();
                 MusicPlayer.Instance.RequestNextTrack(); 
             }

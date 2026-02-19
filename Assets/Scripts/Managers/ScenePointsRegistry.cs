@@ -31,6 +31,7 @@ namespace Managers
         [Header("Точки нужд")]
         public List<Waypoint> kitchenPoints = new List<Waypoint>();
         public List<Waypoint> toiletPoints = new List<Waypoint>();
+        public Transform waterCoolerPoint; // Точка кулера для стажёров
 
         [Header("Патруль")]
         public List<Waypoint> guardPatrolPoints = new List<Waypoint>();

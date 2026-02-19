@@ -79,9 +79,17 @@ public class ServiceWorkerController : StaffController
     {
         if(agentMover != null)
             agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject));
-        
+
         yield return new WaitUntil(() => agentMover == null || !agentMover.IsMoving());
         SetState(stateOnArrival);
+    }
+
+    protected override void SetArrivalState(string stateName)
+    {
+        if (System.Enum.TryParse<WorkerState>(stateName, out WorkerState newState))
+        {
+            SetState(newState);
+        }
     }
     
     public override bool IsOnBreak()

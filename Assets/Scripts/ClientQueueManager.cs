@@ -44,65 +44,90 @@ public class ClientQueueManager : MonoBehaviour
     }
     
     private void ProcessNextClientCall()
-{
-    IServiceProvider registrar = ClientSpawner.GetServiceProviderAtDesk(0);
-    if (registrar == null || !registrar.IsAvailableToServe) return;
-    
-    var nextInQueue = queue
-        .Where(c => c.Key != null && !currentlyCalledNumbers.Contains(c.Value))
-        .OrderBy(kvp => kvp.Value)
-        .FirstOrDefault();
-    
-    ClientPathfinding nextClient = nextInQueue.Key;
-
-    if (nextClient != null)
     {
-        // ----- НАЧАЛО ИЗМЕНЕНИЙ: БОЛЕЕ НАДЕЖНОЕ ПОЛУЧЕНИЕ ТОЧКИ НАЗНАЧЕНИЯ -----
+        // Ищем доступного работника на любом столе (не только desk 0)
+        IServiceProvider availableWorker = FindAvailableWorker();
 
-        // 1. Сначала получаем рабочее место (ServicePoint) регистратора.
-        ServicePoint workstation = registrar.GetWorkstation();
-        if (workstation == null)
+        if (availableWorker == null || !availableWorker.IsAvailableToServe) return;
+
+        var nextInQueue = queue
+            .Where(c => c.Key != null && !currentlyCalledNumbers.Contains(c.Value))
+            .OrderBy(kvp => kvp.Value)
+            .FirstOrDefault();
+
+        ClientPathfinding nextClient = nextInQueue.Key;
+
+        if (nextClient != null)
         {
-            Debug.LogError($"[ClientQueueManager] Регистратор {((MonoBehaviour)registrar).name} доступен, но у него не назначено рабочее место (GetWorkstation вернул null)!", (MonoBehaviour)registrar);
-            return;
+            // 1. Получаем рабочее место работника
+            ServicePoint workstation = availableWorker.GetWorkstation();
+            if (workstation == null)
+            {
+                Debug.LogError($"[ClientQueueManager] Работник {((MonoBehaviour)availableWorker).name} доступен, но у него не назначено рабочее место!", (MonoBehaviour)availableWorker);
+                return;
+            }
+
+            // 2. Получаем точку назначения
+            Waypoint destination = workstation.clientStandPoint;
+            if (destination == null)
+            {
+                Debug.LogError($"[ClientQueueManager] У рабочего места {workstation.name} не назначена точка для клиента!", workstation);
+                return;
+            }
+
+            lastCallTime = Time.time;
+            if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, ((MonoBehaviour)availableWorker).transform.position);
+
+            int calledNumber = nextInQueue.Value;
+            currentlyCalledNumbers.Add(calledNumber);
+            clientsAwaitingResponse.Add(calledNumber, Time.time);
+
+            Debug.Log($"<color=yellow>ОЧЕРЕДЬ:</color> Работник {((MonoBehaviour)availableWorker).name} вызывает клиента #{calledNumber} ({nextClient.name})");
+
+            // 3. Вызываем клиента к конкретному столу
+            nextClient.stateMachine.GetCalledToSpecificDesk(destination, calledNumber, availableWorker);
         }
-
-        // 2. Затем получаем точку назначения (Waypoint) с этого рабочего места.
-        Waypoint destination = workstation.clientStandPoint;
-        if (destination == null)
-        {
-            Debug.LogError($"[ClientQueueManager] У рабочего места {workstation.name} не назначена точка для клиента (clientStandPoint)!", workstation);
-            return;
-        }
-        
-        // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
-
-        lastCallTime = Time.time;
-        if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, ((MonoBehaviour)registrar).transform.position);
-        
-        int calledNumber = nextInQueue.Value;
-        currentlyCalledNumbers.Add(calledNumber);
-        clientsAwaitingResponse.Add(calledNumber, Time.time);
-        
-        Debug.Log($"<color=yellow>ОЧЕРЕДЬ:</color> Работник {((MonoBehaviour)registrar).name} вызывает клиента #{calledNumber} ({nextClient.name})");
-
-        // 3. Передаем клиенту гарантированно существующую точку назначения.
-        nextClient.stateMachine.GetCalledToSpecificDesk(destination, calledNumber, registrar);
     }
-}
-    
+
+    private IServiceProvider FindAvailableWorker()
+    {
+        // Проверяем все столы и ищем доступного работника
+        // Desk 0 - регистратура
+        var registrar = ClientSpawner.GetServiceProviderAtDesk(0);
+        if (registrar != null && registrar.IsAvailableToServe) return registrar;
+
+        // Desk 1 - клерк 1
+        var clerk1 = ClientSpawner.GetServiceProviderAtDesk(1);
+        if (clerk1 != null && clerk1.IsAvailableToServe) return clerk1;
+
+        // Desk 2 - клерк 2
+        var clerk2 = ClientSpawner.GetServiceProviderAtDesk(2);
+        if (clerk2 != null && clerk2.IsAvailableToServe) return clerk2;
+
+        // Desk -1 - касса
+        var cashier = ClientSpawner.GetServiceProviderAtDesk(-1);
+        if (cashier != null && cashier.IsAvailableToServe) return cashier;
+
+        return null;
+    }
+
     private bool CanCallClient()
     {
         if (queue.Count == 0) return false;
 
-        IServiceProvider registrar = ClientSpawner.GetServiceProviderAtDesk(0);
-        if (registrar == null || !registrar.IsAvailableToServe) return false;
+        // Проверяем есть ли доступный работник
+        IServiceProvider availableWorker = FindAvailableWorker();
+        if (availableWorker == null || !availableWorker.IsAvailableToServe) return false;
 
-        LimitedCapacityZone registrationZone = ClientSpawner.GetRegistrationZone();
-        if (registrationZone != null)
+        // Проверяем зону доступного работника
+        var workstation = availableWorker.GetWorkstation();
+        if (workstation == null) return false;
+
+        var zone = ClientSpawner.GetZoneByDeskId(workstation.deskId);
+        if (zone != null)
         {
             int clientsMovingToZone = currentlyCalledNumbers.Count;
-            if (clientsMovingToZone >= registrationZone.capacity)
+            if (clientsMovingToZone >= zone.capacity)
             {
                 return false;
             }

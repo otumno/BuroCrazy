@@ -3,8 +3,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Data.Calendar;
 using Managers;
-using Managers.Teletype; // <--- ДОБАВЛЕНО
+using Managers.Teletype;
 using Utilities;
 using Characters;
 
@@ -30,138 +31,240 @@ public class InternController : StaffController, IServiceProvider
         TalkingToConfused,
         TakingStackToArchive
     }
-    
+
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;
-    private ServicePoint coveredServicePoint; 
+    private ServicePoint coveredServicePoint;
 
     public EmotionSpriteCollection spriteCollection;
     public StateEmotionMap stateEmotionMap;
-    
+
+    protected override void Awake()
+    {
+        base.Awake();
+        smallTalk = GetComponent<SmallTalkController>();
+    }
+
     // --- ПЕРЕОПРЕДЕЛЕНИЕ СТАРТА СМЕНЫ ---
     public override void StartShift()
     {
-        // Не вызываем base.StartShift(), так как стажеру не нужно искать стол
-        
-        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На стажировку!", 2f, Color.white);
+        if (WorkShiftMask == 0 || WorkShiftMask == CalendarDayPeriodType.None)
+        {
+            WorkShiftMask = CalendarDayPeriodType.Morning;
+        }
+
+        Debug.Log($"[InternController] {characterName}: Найм. WorkShiftMask={WorkShiftMask}, Текущий период={TimeManager.Instance.GetCurrentPeriodType()}");
+
         gameObject.SetActive(true);
         hasArrivedToday = false;
-        
-        // Теперь TeletypeManager будет найден благодаря добавленному using
-        TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: true);
-        
-        // Стажер всегда "прибыл" сразу, так как спавнится в зоне стажеров/холле
-        hasArrivedToday = true;
+        currentState = InternState.Inactive;
 
-        // Запускаем уникальную логику стажера
+        if (systemActionDatabase == null)
+        {
+            systemActionDatabase = Resources.Load<ActionDatabase>("Databases/ActionDatabase");
+        }
+
+        if (agentMover == null)
+        {
+            agentMover = GetComponent<AgentMover>();
+        }
+
+        StartCoroutine(WaitForShiftAndStart());
+    }
+
+    private IEnumerator WaitForShiftAndStart()
+    {
+        var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
+        var periodMatches = (WorkShiftMask & currentPeriod) != 0;
+
+        Debug.Log($"[InternController] {characterName}: Ожидание смены. Период={currentPeriod}, Совпадение={periodMatches}");
+
+        while (!periodMatches)
+        {
+            yield return new WaitForSeconds(1f);
+            currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
+            periodMatches = (WorkShiftMask & currentPeriod) != 0;
+
+            if (currentState == InternState.Inactive && periodMatches)
+            {
+                Debug.Log($"[InternController] {characterName}: Период начался! Начинаю работу.");
+                break;
+            }
+        }
+
         StartCoroutine(InternLogicLoop());
     }
 
+    private SmallTalkController smallTalk;
+    private float stressReactionCooldown = 0f;
+
     private IEnumerator InternLogicLoop()
     {
-        yield return new WaitForSeconds(1f);
-        
+        TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: true);
+        hasArrivedToday = true;
+        currentState = InternState.Patrolling;
+
+        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Вышел на смену!", 2f, Color.white);
+
+        Debug.Log($"[InternController] {characterName}: Начал работу. WorkShiftMask={WorkShiftMask}, IsOnDuty={IsOnDuty()}");
+
         while (IsOnDuty())
         {
-            // Если занят (выполняет Executor), ждем
-            if (currentExecutor != null) 
+            if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На дежурстве", 2f, Color.white);
+
+            if (CheckAndHandleBreaks())
             {
                 yield return new WaitForSeconds(1f);
                 continue;
             }
 
-            // Если не патрулирует и не выполняет действие -> Ищем, что делать
-            if (currentState == InternState.Inactive || currentState == InternState.Patrolling)
+            if (currentExecutor != null)
             {
-                // Приоритет 1: Подмена (Cover Desk)
-                var coverAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.CoverClerk || a.actionType == ActionType.CoverRegistrar);
-                if (coverAction != null && coverAction.AreConditionsMet(this))
-                {
-                    ExecuteAction(coverAction);
-                    continue;
-                }
+                yield return new WaitForSeconds(1f);
+                continue;
+            }
 
-                // Приоритет 2: Помощь (Help Confused)
-                var helpAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.HelpConfusedClient);
-                if (helpAction != null && helpAction.AreConditionsMet(this))
-                {
-                    ExecuteAction(helpAction);
-                    continue;
-                }
+            if (agentMover != null && agentMover.IsMoving())
+            {
+                yield return new WaitForSeconds(0.5f);
+                continue;
+            }
 
-                // Приоритет 3: Патруль (если ничего другого нет и мы не патрулируем)
-                if (currentExecutor == null)
+            // --- РАБОТА СТАЖЁРА ---
+            var coolerAction = activeActions.FirstOrDefault(a => a is Action_GoToCooler);
+            if (coolerAction != null && ((Action_GoToCooler)coolerAction).AreConditionsMet(this))
+            {
+                Debug.Log($"[InternController] {characterName}: Выполняю кулер");
+                ExecuteAction(coolerAction);
+                continue;
+            }
+
+            var coverAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.CoverClerk || a.actionType == ActionType.CoverRegistrar);
+            if (coverAction != null && coverAction.AreConditionsMet(this))
+            {
+                Debug.Log($"[InternController] {characterName}: Выполняю Cover Desk");
+                ExecuteAction(coverAction);
+                continue;
+            }
+
+            var helpAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.HelpConfusedClient);
+            if (helpAction != null && helpAction.AreConditionsMet(this))
+            {
+                Debug.Log($"[InternController] {characterName}: Выполняю Help Confused");
+                ExecuteAction(helpAction);
+                continue;
+            }
+
+            // Патруль
+            var patrolAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.InternPatrol)
+                               ?? systemActionDatabase?.allActions.FirstOrDefault(a => a.actionType == ActionType.InternPatrol);
+
+            var points = ScenePointsRegistry.Instance?.internPatrolPoints;
+            bool hasPatrolPoints = points != null && points.Count > 0;
+
+            if (patrolAction != null && hasPatrolPoints)
+            {
+                Debug.Log($"[InternController] {characterName}: Выполняю патруль через action");
+                ExecuteAction(patrolAction);
+            }
+            else
+            {
+                SetState(InternState.Patrolling);
+
+                if (!hasPatrolPoints)
                 {
-                    var patrolAction = activeActions.FirstOrDefault(a => a.actionType == ActionType.InternPatrol) 
-                                       ?? systemActionDatabase?.allActions.FirstOrDefault(a => a.actionType == ActionType.InternPatrol);
-                    
-                    if (patrolAction != null)
+                    var kitchenPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
+                    if (kitchenPoint != null)
                     {
-                        ExecuteAction(patrolAction);
+                        Debug.Log($"[InternController] {characterName}: Точки патруля не настроены, иду на кухню");
+                        SetState(InternState.GoingToBreak);
+                        yield return StartCoroutine(MoveToTarget(kitchenPoint.transform.position, InternState.OnBreak));
+                        yield return new WaitForSeconds(Random.Range(10f, 20f));
                     }
                     else
                     {
-                        // Фолбэк, если экшена нет - просто гуляем
-                        SetState(InternState.Patrolling);
-                        var points = ScenePointsRegistry.Instance?.internPatrolPoints;
-                        if (points != null && points.Count > 0)
-                        {
-                             var p = points[Random.Range(0, points.Count)];
-                             yield return StartCoroutine(MoveToTarget(p.transform.position, InternState.Patrolling));
-                        }
+                        Debug.LogWarning($"[InternController] {characterName}: Точки патруля НЕ НАСТРОЕНЫ и кухня недоступна!");
+                        yield return new WaitForSeconds(2f);
+                    }
+                    continue;
+                }
+
+                Debug.Log($"[InternController] {characterName}: Патрулирую вручную. Точек: {points.Count}");
+
+                while (IsOnDuty())
+                {
+                    if (CheckAndHandleBreaks()) break;
+                    if (currentExecutor != null) break;
+
+                    var p = points[Random.Range(0, points.Count)];
+                    if (p != null && p.transform != null)
+                    {
+                        Debug.Log($"[InternController] {characterName}: Иду к точке {p.name}");
+                        yield return StartCoroutine(MoveToTarget(p.transform.position, InternState.Patrolling));
+                        yield return new WaitForSeconds(Random.Range(3f, 7f));
+                    }
+                    else
+                    {
+                        yield return new WaitForSeconds(2f);
                     }
                 }
             }
-            
-            yield return new WaitForSeconds(2f);
+
+            yield return new WaitForSeconds(0.5f);
         }
+
+        Debug.Log($"[InternController] {characterName}: Смена закончилась (IsOnDuty={IsOnDuty()})");
     }
-    
+
     public void SetState(InternState newState)
     {
         if (currentState == newState) return;
         currentState = newState;
         logger?.LogState(GetStatusInfo());
-        if(visuals != null)
-        {
-            visuals.SetEmotionForState(newState);
-        }
+        if (visuals != null) visuals.SetEmotionForState(newState);
     }
-    
+
     public void AssignCoveredWorkstation(ServicePoint point)
     {
         coveredServicePoint = point;
     }
-    
+
     public InternState GetCurrentState()
     {
         return currentState;
     }
-    
-    // Переопределяем метод из базового класса
+
     public override IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival)
     {
         if (System.Enum.TryParse<InternState>(stateOnArrival, out InternState newState))
         {
-            if(agentMover != null) 
+            if (agentMover != null)
                 agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject));
-            
+
             yield return new WaitUntil(() => agentMover == null || !agentMover.IsMoving());
             SetState(newState);
         }
         else
         {
-             yield return base.MoveToTarget(targetPosition, stateOnArrival);
+            yield return base.MoveToTarget(targetPosition, stateOnArrival);
         }
     }
 
     public IEnumerator MoveToTarget(Vector2 targetPosition, InternState stateOnArrival)
     {
-        if(agentMover != null)
+        if (agentMover != null)
             agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPosition, gameObject));
-        
+
         yield return new WaitUntil(() => agentMover == null || !agentMover.IsMoving());
         SetState(stateOnArrival);
+    }
+
+    protected override void SetArrivalState(string stateName)
+    {
+        if (System.Enum.TryParse<InternState>(stateName, out InternState newState))
+        {
+            SetState(newState);
+        }
     }
 
     public override string GetCurrentStateName()
@@ -181,7 +284,7 @@ public class InternController : StaffController, IServiceProvider
     {
         return currentState.ToString();
     }
-    
+
     public void InitializeFromData(RoleData data)
     {
         if (agentMover != null)
@@ -189,16 +292,16 @@ public class InternController : StaffController, IServiceProvider
             agentMover.moveSpeed = data.moveSpeed;
             agentMover.priority = data.priority;
         }
-        
+
         this.spriteCollection = data.spriteCollection;
         this.stateEmotionMap = data.stateEmotionMap;
-        
-        if(visuals != null)
+
+        if (visuals != null)
         {
             visuals.EquipAccessory(data.accessoryPrefab);
         }
     }
-    
+
     #region IServiceProvider Implementation
 
     public bool IsAvailableToServe => GetCurrentState() == InternState.CoveringDesk;
@@ -224,7 +327,6 @@ public class InternController : StaffController, IServiceProvider
 
         int deskId = coveredServicePoint.deskId;
 
-        // ИЗНОС
         var durability = coveredServicePoint.GetComponent<Gameplay.OfficeObjectDurability>();
         if (durability != null && !durability.IsUsable())
         {
@@ -233,23 +335,22 @@ public class InternController : StaffController, IServiceProvider
         }
         float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
 
-        if (deskId == 0) // Регистратура
+        if (deskId == 0)
         {
             thoughtBubble?.ShowPriorityMessage("Попробую помочь...", 2f, Color.yellow);
-            yield return new WaitForSeconds(3f / efficiency); 
+            yield return new WaitForSeconds(3f / efficiency);
 
             Waypoint destination = DetermineCorrectGoalForClient(client);
-            string destName = (destination != null) ? destination.name : "Выход";
 
             float errorChance = 0.4f * (1f - skills.pedantry);
-            if(Random.value < errorChance)
+            if (Random.value < errorChance)
                 thoughtBubble?.ShowPriorityMessage("Ой, кажется, вам\nтуда...", 3f, Color.red);
             else
-                thoughtBubble?.ShowPriorityMessage($"Вам к '{destName}'", 3f, Color.white);
+                thoughtBubble?.ShowPriorityMessage($"Вам к '{(destination != null ? destination.name : "Выход")}'", 3f, Color.white);
 
             if (client.stateMachine != null)
             {
-                if (client.stateMachine.MyQueueNumber != -1) 
+                if (client.stateMachine.MyQueueNumber != -1)
                     ClientQueueManager.Instance?.RemoveClientFromQueue(client);
                 if (destination != null)
                 {
@@ -258,7 +359,7 @@ public class InternController : StaffController, IServiceProvider
                 }
             }
         }
-        else if (deskId == -1) // Касса
+        else if (deskId == -1)
         {
             thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
             yield return new WaitForSeconds(3f / efficiency);
@@ -276,10 +377,10 @@ public class InternController : StaffController, IServiceProvider
             client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
             client.stateMachine?.SetState(ClientState.Leaving);
         }
-        else if (deskId == 1 || deskId == 2) // Клерк
+        else if (deskId == 1 || deskId == 2)
         {
             thoughtBubble?.ShowPriorityMessage("Так... посмотрим...", 2f, Color.yellow);
-            yield return new WaitForSeconds(1.5f / efficiency); 
+            yield return new WaitForSeconds(1.5f / efficiency);
 
             if (client.docHolder == null)
             {
@@ -288,7 +389,7 @@ public class InternController : StaffController, IServiceProvider
             }
 
             DocumentType requiredDoc = (deskId == 1) ? DocumentType.Form1 : DocumentType.Form2;
-            
+
             if (client.docHolder.GetCurrentDocumentType() != requiredDoc)
             {
                 thoughtBubble?.ShowPriorityMessage("У вас бланк не тот!", 3f, Color.red);
@@ -297,21 +398,21 @@ public class InternController : StaffController, IServiceProvider
             }
             else
             {
-                float processingTime = Random.Range(5f, 8f) / efficiency; 
+                float processingTime = Random.Range(5f, 8f) / efficiency;
                 yield return new WaitForSeconds(processingTime);
 
                 client.docHolder.SetDocument(DocumentType.None);
                 if (client.stampSound != null) AudioSource.PlayClipAtPoint(client.stampSound, transform.position);
                 yield return new WaitForSeconds(1f);
-                
+
                 DocumentType newDocType = (deskId == 1) ? DocumentType.Certificate1 : DocumentType.Certificate2;
                 client.docHolder.SetDocument(newDocType);
                 client.billToPay += (deskId == 1) ? 100 : 250;
-                
+
                 thoughtBubble?.ShowPriorityMessage("Готово!", 3f, Color.green);
                 client.stateMachine?.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
                 client.stateMachine?.SetState(ClientState.MovingToGoal);
-                
+
                 coveredServicePoint.documentStack?.AddDocumentToStack();
             }
         }

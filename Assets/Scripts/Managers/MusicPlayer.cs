@@ -11,10 +11,16 @@ namespace Managers
         public static MusicPlayer Instance { get; private set; }
 
         [Header("Музыкальные темы")]
+        public AudioClip firstMenuTrack;
         public AudioClip menuTheme;
         public AudioClip directorsOfficeTheme;
         public AudioClip pauseTheme;
         public AudioClip archiveTheme;
+        
+        [Header("Плейлисты")]
+        public AudioClip[] menuTracks;
+        public AudioClip[] directorTracks;
+        public AudioClip[] archiveTracks;
         
         [Header("Внутри-игровые плейлисты")]
         public AudioClip[] dayTracks;
@@ -29,10 +35,16 @@ namespace Managers
         private int lastTrackIndex = -1;
         private bool isGameplayMusicActive = false;
         private AudioClip lastPlayedGameplayTrack;
-		private float _savedTrackTime = 0f;
+        private float _savedTrackTime = 0f;
         private AudioClip _savedTrackClip;
 
         private bool isMuffled = false;
+        
+        private bool _hasPlayedGame = false;
+        private int _lastMenuTrackIndex = -1;
+        private int _lastDirectorTrackIndex = -1;
+        private int _lastArchiveTrackIndex = -1;
+        private bool _shouldRefreshMenuTrack = false;
 
         void Awake()
         {
@@ -59,7 +71,10 @@ namespace Managers
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            if (scene.name == "MainMenuScene") PlayMenuTheme();
+            if (scene.name == "MainMenuScene") 
+            {
+                PlayMenuTheme();
+            }
             else if (scene.name == "GameScene") PlayDirectorsOfficeTheme();
         }
         
@@ -84,25 +99,97 @@ namespace Managers
         public void PlayMenuTheme()
         {
             isGameplayMusicActive = false;
-            PlayTrack(menuTheme);
+            
+            AudioClip trackToPlay;
+            
+            if (!_hasPlayedGame && firstMenuTrack != null)
+            {
+                trackToPlay = firstMenuTrack;
+            }
+            else if (menuTracks != null && menuTracks.Length > 0)
+            {
+                trackToPlay = GetRandomTrack(menuTracks, ref _lastMenuTrackIndex);
+            }
+            else
+            {
+                trackToPlay = menuTheme;
+            }
+            
+            PlayTrack(trackToPlay);
             SetMuffled(false);
+        }
+        
+        public void OnGameStarted()
+        {
+            _hasPlayedGame = true;
+            _shouldRefreshMenuTrack = true;
+        }
+        
+        public void RefreshMenuTrackIfNeeded()
+        {
+            if (_shouldRefreshMenuTrack)
+            {
+                _shouldRefreshMenuTrack = false;
+                _lastMenuTrackIndex = -1;
+                PlayMenuTheme();
+            }
         }
 
         public void PlayDirectorsOfficeTheme()
         {
             isGameplayMusicActive = false;
-            PlayTrack(directorsOfficeTheme);
+            
+            AudioClip trackToPlay;
+            if (directorTracks != null && directorTracks.Length > 0)
+            {
+                trackToPlay = GetRandomTrack(directorTracks, ref _lastDirectorTrackIndex);
+            }
+            else
+            {
+                trackToPlay = directorsOfficeTheme;
+            }
+            
+            PlayTrack(trackToPlay);
             SetMuffled(true); 
         }
 
-        // --- ДОБАВЛЕНО: Метод для Архива ---
         public void PlayArchiveTheme()
         {
             isGameplayMusicActive = false;
-            PlayTrack(archiveTheme);
+            
+            AudioClip trackToPlay;
+            if (archiveTracks != null && archiveTracks.Length > 0)
+            {
+                trackToPlay = GetRandomTrack(archiveTracks, ref _lastArchiveTrackIndex);
+            }
+            else
+            {
+                trackToPlay = archiveTheme;
+            }
+            
+            PlayTrack(trackToPlay);
             SetMuffled(false);
         }
-        // ----------------------------------
+        
+        private AudioClip GetRandomTrack(AudioClip[] tracks, ref int lastIndex)
+        {
+            if (tracks == null || tracks.Length == 0) return null;
+            
+            if (tracks.Length == 1)
+            {
+                lastIndex = 0;
+                return tracks[0];
+            }
+            
+            int newIndex;
+            do 
+            {
+                newIndex = Random.Range(0, tracks.Length);
+            } while (newIndex == lastIndex);
+            
+            lastIndex = newIndex;
+            return tracks[newIndex];
+        }
         
         public void StartGameplayMusic()
         {

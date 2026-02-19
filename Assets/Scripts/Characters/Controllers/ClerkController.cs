@@ -73,6 +73,14 @@ public class ClerkController : StaffController, IServiceProvider
              yield return base.MoveToTarget(targetPosition, stateOnArrival);
         }
     }
+
+    protected override void SetArrivalState(string stateName)
+    {
+        if (System.Enum.TryParse<ClerkState>(stateName, out ClerkState newState))
+        {
+            SetState(newState);
+        }
+    }
     // ----- КОНЕЦ ИЗМЕНЕНИЙ -----
 
     public void ServiceComplete()
@@ -142,6 +150,19 @@ public class ClerkController : StaffController, IServiceProvider
             yield return new WaitForSeconds(2f);
         }
 
+        // --- Анимация денег ---
+        if (client.moneyPrefab != null && bill > 0)
+        {
+            GameObject moneyEffect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
+            MoneyMover mover = moneyEffect.GetComponent<MoneyMover>();
+
+            // Используем позицию кассира как цель
+            Transform moneyTarget = this.transform;
+            if (mover != null) mover.StartMove(moneyTarget);
+            else Destroy(moneyEffect);
+        }
+        // ---
+
         int officialAmount = bill - totalSkimAmount;
         if (officialAmount > 0)
         {
@@ -153,7 +174,7 @@ public class ClerkController : StaffController, IServiceProvider
         {
             PlayerWallet.Instance?.AddMoney(playerSkimCut, $"Доля от махинации ({name})", IncomeType.Shadow);
         }
-        
+
         if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
         client.billToPay = 0;
         client.isLeavingSuccessfully = true;

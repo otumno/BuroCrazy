@@ -72,6 +72,14 @@ public class GuardMovement : MonoBehaviour
 
     public IEnumerator MoveToTarget(Vector3 pos, string state) => staff?.MoveToTarget(pos, state) ?? null;
 
+    public void SetArrivalState(string stateName)
+    {
+        if (System.Enum.TryParse<GuardState>(stateName, out GuardState newState))
+        {
+            SetState(newState);
+        }
+    }
+
     public string GetStatusInfo() => currentState.ToString();
     public GuardState GetCurrentStateEnum() => currentState;
     public float GetCurrentFrustration() => staff?.frustration ?? 0f;

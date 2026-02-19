@@ -49,6 +49,14 @@ public class OfficeManagerController : StaffController
         SetState(stateOnArrival);
     }
 
+    protected override void SetArrivalState(string stateName)
+    {
+        if (System.Enum.TryParse<ManagerState>(stateName, out ManagerState newState))
+        {
+            SetState(newState);
+        }
+    }
+
     public override bool IsOnBreak()
     {
         return currentState == ManagerState.OnBreak || currentState == ManagerState.AtToilet;

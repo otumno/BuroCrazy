@@ -75,7 +75,6 @@ namespace Managers
 
         private bool IsPointSuitableForRole(ServicePoint point, StaffController.Role role)
         {
-            // Хардкод ID столов согласно вашей конфигурации сцены
             switch (role)
             {
                 case StaffController.Role.Registrar: 
@@ -85,16 +84,20 @@ namespace Managers
                     return point.deskId == 1 || point.deskId == 2;
                 
                 case StaffController.Role.Cashier: 
-                case StaffController.Role.Accountant: // Бухгалтер тоже может сидеть в кассе
-                    return point.deskId == -1 || point.deskId == 4;
+                    return point.deskId == -1;
+                
+                case StaffController.Role.Accountant: 
+                    return point.deskId == 4;
                 
                 case StaffController.Role.Archivist: 
                     return point.deskId == 3;
-                
-                case StaffController.Role.Guard:
-                    // Охранник привязывается к посту, если это ServicePoint
-                    return point == ScenePointsRegistry.Instance.guardPostPoint;
 
+                // Офис-менеджер, Уборщик, Охранник, Стажер - НЕ имеют постоянного стола
+                // Они используют патрульные точки или зоны
+                case StaffController.Role.OfficeManager:
+                case StaffController.Role.Janitor:
+                case StaffController.Role.Guard:
+                case StaffController.Role.Intern:
                 default: 
                     return false;
             }

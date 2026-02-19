@@ -17,17 +17,20 @@ public class InternPatrolExecutor : ActionExecutor
             yield break;
         }
 
-        while (true)
+        while (staff.IsOnDuty())
         {
-            // Случайная точка
             var target = points[Random.Range(0, points.Count)];
             if (target != null)
             {
-                // ИСПРАВЛЕНИЕ: target.transform.position
                 yield return staff.StartCoroutine(staff.MoveToTarget(target.transform.position, "Patrolling"));
                 yield return new WaitForSeconds(Random.Range(3f, 7f));
             }
-            yield return null;
+
+            // Небольшая пауза между точками
+            yield return new WaitForSeconds(0.5f);
         }
+
+        // Смена закончилась - завершаем действие
+        FinishAction(true);
     }
 }

@@ -51,7 +51,6 @@ public class MainMenuActions : MonoBehaviour
             continueButton.gameObject.SetActive(SaveLoadManager.Instance.DoesAnySaveExist());
         }
         ShowPanel(mainMenuPanel);
-		MusicPlayer.Instance?.PlayMenuTheme();
     }
 
     // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ КНОПОК ---
@@ -60,7 +59,6 @@ public class MainMenuActions : MonoBehaviour
     {
         Debug.Log("<b><color=cyan>[MainMenuActions] ==> Открываю панель выбора слотов...</color></b>");
         ShowPanel(saveLoadPanel);
-		MusicPlayer.Instance?.PlayMenuTheme();
     }
 
     // --- <<< НОВЫЙ МЕТОД >>> ---
@@ -89,7 +87,7 @@ public class MainMenuActions : MonoBehaviour
     {
         Debug.Log("<b><color=orange>[MainMenuActions] ==> Возвращаюсь в главное меню...</color></b>");
         ShowPanel(mainMenuPanel);
-		MusicPlayer.Instance?.PlayMenuTheme();
+        MusicPlayer.Instance?.PlayMenuTheme();
     }
 
     public void Action_QuitGame()
