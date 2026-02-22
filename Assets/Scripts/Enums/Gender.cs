@@ -1,5 +1,8 @@
-public enum Gender
+namespace Enums
 {
-    Male,
-    Female
+    public enum Gender
+    {
+        Male,
+        Female
+    }
 }

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Characters;
+using Enums;
 
 namespace Data.Creation
 {
@@ -10,6 +11,11 @@ namespace Data.Creation
         [Header("Ресурсы")]
         public int startingMoney = 100;
         public int startingInfluence = 0;
+
+        [Header("Директор")]
+        public Gender startingGender = Gender.Male;
+        public int startingStrikes = 0;
+        public string spriteCollectionID = "";
 
         [Header("Стартовые работники")]
         public List<StaffSpawnData> startingStaff = new List<StaffSpawnData>();

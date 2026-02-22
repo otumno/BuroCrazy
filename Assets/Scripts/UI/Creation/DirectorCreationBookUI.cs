@@ -1,47 +1,76 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using Data.Creation;
 using Characters;
+using Managers;
+using TMPro;
+using Enums;
 
 namespace UI.Creation
 {
     public class DirectorCreationBookUI : MonoBehaviour
     {
         [Header("UI ссылки")]
-        public Transform pagesContainer;
-        public GameObject pagePrefab;
+        public Transform choicesContainer;
         public GameObject choiceButtonPrefab;
         public BookPageData currentPage;
 
         [Header("Навигация")]
-        public UnityEngine.UI.Button nextPageButton;
-        public UnityEngine.UI.Button previousPageButton;
-        public UnityEngine.UI.Button finishButton;
+        public Button previousPageButton;
+        public Button nextPageButton;
+        public Button finishButton;
+        public Button startGameButton;
 
         [Header("Визуал")]
-        public UnityEngine.UI.Image backgroundImage;
-        public UnityEngine.UI.Image characterImage;
-        public TMPro.TextMeshProUGUI storyText;
+        public Image backgroundImage;
+        public Image characterImage;
+        public TextMeshProUGUI storyText;
+        public TextMeshProUGUI resultText;
+
+        [Header("Звук")]
+        public AudioSource audioSource;
 
         [Header("Сохраненные данные")]
         public DirectorInitialState initialState;
 
+        [Header("Код создания")]
+        [Tooltip("Сгенерированный код (A1B2C1D3E3)")]
+        public string creationCode = "";
+
         private Stack<BookPageData> pageHistory = new Stack<BookPageData>();
         private List<BookPageData> allPages;
+        private string currentPageLetter = "";
+        private bool showingResult = false;
 
         private void Start()
         {
             if (BookPageDatabase.Instance != null)
             {
                 allPages = BookPageDatabase.Instance.allPages;
-                ShowPage(allPages[0]); // Показываем первую страницу
+                if (allPages.Count > 0)
+                {
+                    currentPageLetter = GetPageLetter(0);
+                    ShowPage(allPages[0]);
+                }
             }
             else
             {
                 Debug.LogError("[DirectorCreationBookUI] BookPageDatabase не найден!");
             }
 
-            initialState = new DirectorInitialState();
+            initialState = ScriptableObject.CreateInstance<DirectorInitialState>();
+            ResetCode();
+        }
+
+        private string GetPageLetter(int index)
+        {
+            return ((char)('A' + index)).ToString();
+        }
+
+        private void ResetCode()
+        {
+            creationCode = "";
         }
 
         public void ShowPage(string pageID)
@@ -49,12 +78,16 @@ namespace UI.Creation
             var page = allPages.Find(p => p.pageID == pageID);
             if (page != null)
             {
+                int idx = allPages.IndexOf(page);
+                currentPageLetter = GetPageLetter(idx);
                 ShowPage(page);
             }
         }
 
         private void ShowPage(BookPageData page)
         {
+            showingResult = false;
+
             if (currentPage != null)
             {
                 pageHistory.Push(currentPage);
@@ -62,13 +95,12 @@ namespace UI.Creation
 
             currentPage = page;
 
-            // Обновляем визуал
             if (backgroundImage != null && page.backgroundImage != null)
             {
                 backgroundImage.sprite = page.backgroundImage;
             }
 
-            if (characterImage != null && page.characterIllustration != null)
+            if (characterImage != null)
             {
                 characterImage.sprite = page.characterIllustration;
             }
@@ -78,10 +110,14 @@ namespace UI.Creation
                 storyText.text = page.storyText;
             }
 
-            // Очищаем старые кнопки выбора
+            if (resultText != null)
+            {
+                resultText.text = "";
+                resultText.gameObject.SetActive(false);
+            }
+
             ClearChoices();
 
-            // Создаем кнопки выбора
             if (page.choices != null)
             {
                 foreach (var choice in page.choices)
@@ -90,15 +126,16 @@ namespace UI.Creation
                 }
             }
 
-            // Обновляем кнопки навигации
+            PlayPageMusic(page);
+
             UpdateNavigationButtons();
         }
 
         private void CreateChoiceButton(BookPageData.BookChoice choice)
         {
-            var buttonObj = Instantiate(choiceButtonPrefab, pagesContainer);
-            var button = buttonObj.GetComponent<UnityEngine.UI.Button>();
-            var text = buttonObj.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            var buttonObj = Instantiate(choiceButtonPrefab, choicesContainer);
+            var button = buttonObj.GetComponent<Button>();
+            var text = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
 
             if (text != null)
             {
@@ -110,31 +147,63 @@ namespace UI.Creation
 
         private void ClearChoices()
         {
-            foreach (Transform child in pagesContainer)
+            foreach (Transform child in choicesContainer)
             {
-                if (child.gameObject != characterImage?.gameObject &&
-                    child.gameObject != storyText?.gameObject)
-                {
-                    Destroy(child.gameObject);
-                }
+                Destroy(child.gameObject);
             }
         }
 
         private void OnChoiceSelected(BookPageData.BookChoice choice)
         {
-            // Применяем эффекты
-            ApplyChoiceEffects(choice.effects);
+            if (showingResult) return;
+            showingResult = true;
 
-            // Переходим на следующую страницу
-            if (!string.IsNullOrEmpty(choice.nextPageID))
+            ApplyChoiceEffects(choice.effects);
+            AppendToCode(choice);
+
+            if (resultText != null && !string.IsNullOrEmpty(choice.resultText))
             {
-                ShowPage(choice.nextPageID);
+                resultText.text = choice.resultText;
+                resultText.gameObject.SetActive(true);
             }
-            else if (choice.nextPageID == null && currentPage != null)
+
+            if (characterImage != null && choice.resultImage != null)
             {
-                // Конец книги - переход к созданию персонажа
-                FinishBook();
+                characterImage.sprite = choice.resultImage;
             }
+
+            if (currentPage.isFinalPage)
+            {
+                if (finishButton != null)
+                {
+                    finishButton.gameObject.SetActive(true);
+                }
+
+                if (startGameButton != null)
+                {
+                    startGameButton.gameObject.SetActive(true);
+                }
+
+                if (currentPage.finalMusic != null)
+                {
+                    PlayMusic(currentPage.finalMusic);
+                }
+            }
+            else
+            {
+                if (nextPageButton != null)
+                {
+                    nextPageButton.gameObject.SetActive(true);
+                }
+            }
+
+            UpdateNavigationButtons();
+        }
+
+        private void AppendToCode(BookPageData.BookChoice choice)
+        {
+            int choiceIndex = currentPage.choices.IndexOf(choice) + 1;
+            creationCode += currentPageLetter + choiceIndex;
         }
 
         private void ApplyChoiceEffects(List<BookPageData.ChoiceEffect> effects)
@@ -178,6 +247,28 @@ namespace UI.Creation
                             initialState.activePolicyIDs.Add(effect.targetID);
                         }
                         break;
+
+                    case BookPageData.EffectType.SetGender:
+                        if (System.Enum.TryParse<Gender>(effect.targetID, out var gender))
+                        {
+                            initialState.startingGender = gender;
+                        }
+                        break;
+
+                    case BookPageData.EffectType.SetStrikes:
+                        initialState.startingStrikes = Mathf.Clamp(effect.value, 0, 3);
+                        break;
+
+                    case BookPageData.EffectType.UnlockRegion:
+                        if (!initialState.unlockedRegions.Contains(effect.targetID))
+                        {
+                            initialState.unlockedRegions.Add(effect.targetID);
+                        }
+                        break;
+
+                    case BookPageData.EffectType.SetSpriteCollection:
+                        initialState.spriteCollectionID = effect.targetID;
+                        break;
                 }
             }
         }
@@ -200,17 +291,68 @@ namespace UI.Creation
             }
         }
 
+        private void PlayPageMusic(BookPageData page)
+        {
+            if (page.pageMusic != null && audioSource != null)
+            {
+                audioSource.clip = page.pageMusic;
+                audioSource.loop = true;
+                audioSource.Play();
+            }
+        }
+
+        private void PlayMusic(AudioClip clip)
+        {
+            if (clip != null && audioSource != null)
+            {
+                audioSource.clip = clip;
+                audioSource.loop = true;
+                audioSource.Play();
+            }
+        }
+
+        private void StopMusic()
+        {
+            if (audioSource != null)
+            {
+                audioSource.Stop();
+            }
+        }
+
+        public void OnNextPageClicked()
+        {
+            if (!showingResult) return;
+
+            if (!string.IsNullOrEmpty(currentPage.choices[currentPage.choices.Count - 1].nextPageID))
+            {
+                ShowPage(currentPage.choices[currentPage.choices.Count - 1].nextPageID);
+            }
+            else
+            {
+                int currentIndex = allPages.IndexOf(currentPage);
+                if (currentIndex < allPages.Count - 1)
+                {
+                    currentPageLetter = GetPageLetter(currentIndex + 1);
+                    ShowPage(allPages[currentIndex + 1]);
+                }
+            }
+        }
+
         private void FinishBook()
         {
-            Debug.Log("[DirectorCreationBookUI] Книга завершена. Начальное состояние директора:");
+            Debug.Log("[DirectorCreationBookUI] Книга завершена.");
+            Debug.Log($"  Код создания: {creationCode}");
             Debug.Log($"  Деньги: {initialState.startingMoney}");
             Debug.Log($"  Влияние: {initialState.startingInfluence}");
             Debug.Log($"  Работники: {initialState.startingStaff.Count}");
-            Debug.Log($"  Апгрейды: {initialState.unlockedUpgradeNames.Count}");
-            Debug.Log($"  Политики: {initialState.activePolicyIDs.Count}");
 
-            // Вызываем событие завершения
-            OnBookFinished?.Invoke(initialState);
+            OnBookFinished?.Invoke(initialState, creationCode);
+        }
+
+        public void OnStartGameClicked()
+        {
+            StopMusic();
+            FinishBook();
         }
 
         public void GoBack()
@@ -218,7 +360,9 @@ namespace UI.Creation
             if (pageHistory.Count > 0)
             {
                 var previousPage = pageHistory.Pop();
-                currentPage = null; // Чтобы не сохранять текущую в историю
+                currentPage = null;
+                int idx = allPages.IndexOf(previousPage);
+                currentPageLetter = GetPageLetter(idx);
                 ShowPage(previousPage);
             }
         }
@@ -227,10 +371,34 @@ namespace UI.Creation
         {
             if (previousPageButton != null)
             {
-                previousPageButton.interactable = pageHistory.Count > 0;
+                previousPageButton.interactable = pageHistory.Count > 0 && !showingResult;
+            }
+
+            if (nextPageButton != null)
+            {
+                nextPageButton.gameObject.SetActive(showingResult && !currentPage.isFinalPage);
+            }
+
+            if (finishButton != null)
+            {
+                finishButton.gameObject.SetActive(false);
+            }
+
+            if (startGameButton != null)
+            {
+                startGameButton.gameObject.SetActive(false);
             }
         }
 
-        public event System.Action<DirectorInitialState> OnBookFinished;
+        public void SetActive(bool active)
+        {
+            gameObject.SetActive(active);
+            if (!active)
+            {
+                StopMusic();
+            }
+        }
+
+        public event System.Action<DirectorInitialState, string> OnBookFinished;
     }
 }

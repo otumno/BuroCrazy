@@ -1,26 +1,33 @@
 // Файл: Scripts/UI/MainMenuActions.cs --- ОБНОВЛЕННАЯ ВЕРСИЯ ---
 
+using System.Collections;
 using Managers;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro; 
+using TMPro;
+using UI.Creation;
 
 public class MainMenuActions : MonoBehaviour
 {
     [Header("Панели интерфейса")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject saveLoadPanel;
-    
-    // --- <<< НОВАЯ СТРОКА >>> ---
-    [SerializeField] private GameObject achievementListPanel; // Перетащи сюда [UI] AchievementListPanel
-    // --- <<< КОНЕЦ НОВОЙ СТРОКИ >>> ---
+    [SerializeField] private GameObject achievementListPanel;
+    [SerializeField] private GameObject directorCreationPanel;
+
+    [Header("Boot Fade Effect")]
+    [SerializeField] private BootFadeEffect bootFadeEffect;
+
+    [Header("Director Creation")]
+    [SerializeField] private DirectorCreationBookUI directorCreationBook;
 
 	[SerializeField] private Button continueButton;
 
-    // ... (остальные поля и Awake() остаются как были) ...
     [Header("Главная кнопка")]
     [SerializeField] private Button primaryActionButton; 
     private TextMeshProUGUI primaryActionButtonText; 
+
+    private int selectedSlotIndex = -1;
 
     void Awake()
     {
@@ -29,9 +36,13 @@ public class MainMenuActions : MonoBehaviour
             primaryActionButtonText = primaryActionButton.GetComponentInChildren<TextMeshProUGUI>();
         }
         primaryActionButton.onClick.AddListener(Action_OpenSaveLoadPanel);
+        
+        if (directorCreationBook != null)
+        {
+            directorCreationBook.OnBookFinished += OnDirectorCreationFinished;
+        }
     }
     
-    // ... (Start() остается как был) ...
     void Start()
     {
         bool hasSaves = SaveLoadManager.Instance != null && SaveLoadManager.Instance.DoesAnySaveExist();
@@ -61,21 +72,15 @@ public class MainMenuActions : MonoBehaviour
         ShowPanel(saveLoadPanel);
     }
 
-    // --- <<< НОВЫЙ МЕТОД >>> ---
-    /// <summary>
-    /// Вызывается кнопкой "Архив" из главного меню.
-    /// </summary>
     public void Action_OpenAchievementList()
     {
         Debug.Log("<b><color=green>[MainMenuActions] ==> Открываю Архив Ачивок...</color></b>");
         ShowPanel(achievementListPanel);
 		MusicPlayer.Instance?.PlayArchiveTheme();
     }
-    // --- <<< КОНЕЦ НОВОГО МЕТОДА >>> ---
 
     public void Action_Continue()
     {
-        // ... (код без изменений) ...
         int latestSaveSlot = SaveLoadManager.Instance.GetLatestSaveSlotIndex();
         if (latestSaveSlot != -1)
         {
@@ -95,19 +100,67 @@ public class MainMenuActions : MonoBehaviour
         Debug.Log("<b><color=grey>[MainMenuActions] ==> Выход из игры...</color></b>");
         Application.Quit();
     }
+
+    public void Action_StartNewGameWithDirectorCreation(int slotIndex)
+    {
+        selectedSlotIndex = slotIndex;
+        StartCoroutine(NewGameDirectorCreationFlow());
+    }
+
+    private IEnumerator NewGameDirectorCreationFlow()
+    {
+        ShowPanel(null);
+
+        if (bootFadeEffect != null)
+        {
+            yield return new WaitForSeconds(0.3f);
+            bootFadeEffect.PlayInverseFade();
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        if (directorCreationPanel != null)
+        {
+            directorCreationPanel.SetActive(true);
+        }
+
+        if (directorCreationBook != null)
+        {
+            directorCreationBook.gameObject.SetActive(true);
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        if (bootFadeEffect != null)
+        {
+            bootFadeEffect.PlayFade();
+        }
+    }
+
+    private void OnDirectorCreationFinished(Data.Creation.DirectorInitialState initialState, string creationCode)
+    {
+        Debug.Log($"[MainMenuActions] Director Creation finished. Code: {creationCode}");
+
+        if (directorCreationPanel != null)
+        {
+            directorCreationPanel.SetActive(false);
+        }
+
+        if (selectedSlotIndex >= 0)
+        {
+            MainUIManager.Instance.StartNewGameWithDirectorCreation(selectedSlotIndex, initialState, creationCode);
+        }
+    }
     
     private void ShowPanel(GameObject panelToShow)
     {
-        // --- <<< ОБНОВЛЕННЫЙ МЕТОД >>> ---
-        // Теперь он знает о трех панелях
         if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
         if (saveLoadPanel != null) saveLoadPanel.SetActive(false);
-        if (achievementListPanel != null) achievementListPanel.SetActive(false); // Прячем и ачивки
+        if (achievementListPanel != null) achievementListPanel.SetActive(false);
+        if (directorCreationPanel != null) directorCreationPanel.SetActive(false);
 
         if (panelToShow != null)
         {
             panelToShow.SetActive(true);
         }
-        // --- <<< КОНЕЦ ОБНОВЛЕНИЯ >>> ---
     }
 }

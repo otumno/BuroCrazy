@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using Managers;
+using Enums;
+using Data.Creation;
 
 public class AchievementListUI : MonoBehaviour
 {
@@ -117,14 +119,42 @@ public class AchievementListUI : MonoBehaviour
         }
         // --- КОНЕЦ ---
 
-        // Если у ачивки есть комикс, показываем его
-        if (data.comicPages != null && data.comicPages.Count > 0)
+        if (data.bookType == BookType.Director)
+        {
+            ShowDirectorBook(data);
+        }
+        else if (data.comicPages != null && data.comicPages.Count > 0)
         {
             comicViewer.ShowComic(data.comicPages);
         }
         else
         {
             Debug.LogWarning($"У ачивки '{data.displayName}' нет страниц комикса.");
+        }
+    }
+
+    private void ShowDirectorBook(AchievementData data)
+    {
+        List<Sprite> pages = new List<Sprite>();
+
+        if (data.directorBookPages != null && data.directorBookPages.Count > 0)
+        {
+            foreach (var page in data.directorBookPages)
+            {
+                if (page.characterIllustration != null)
+                {
+                    pages.Add(page.characterIllustration);
+                }
+            }
+        }
+
+        if (pages.Count > 0 && comicViewer != null)
+        {
+            comicViewer.ShowComic(pages);
+        }
+        else
+        {
+            Debug.LogWarning($"У книги директора '{data.displayName}' нет страниц для отображения.");
         }
     }
     

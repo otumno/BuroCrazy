@@ -9,6 +9,7 @@ using Scriptables.Audio;
 using DialogueSystem.Data;
 using Characters;
 using Data;
+using Enums;
 
 public class ClientPathfinding : MonoBehaviour
 {

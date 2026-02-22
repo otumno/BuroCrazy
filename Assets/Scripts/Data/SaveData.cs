@@ -1,7 +1,8 @@
 // Assets/Scripts/Data/SaveData.cs
 using System.Collections.Generic;
 using UnityEngine;
-using Managers; // Для доступа к Enum ролей
+using Managers;
+using Enums;
 
 [System.Serializable]
 public class SaveData
@@ -10,6 +11,10 @@ public class SaveData
     public int day;
     public int money;
     public int archiveDocumentCount;
+    
+    // --- Создание директора ---
+    [Tooltip("Код создания директора (A1B2C1D3E3)")]
+    public string directorCreationCode = "";
     
     // --- Сюжет и Флаги ---
     public List<string> storyFlagKeys = new List<string>();

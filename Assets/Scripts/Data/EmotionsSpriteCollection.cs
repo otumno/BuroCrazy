@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using Enums;
 
 [CreateAssetMenu(fileName = "EmotionCollection", menuName = "My Game/Emotion Sprite Collection")]
 public class EmotionSpriteCollection : ScriptableObject

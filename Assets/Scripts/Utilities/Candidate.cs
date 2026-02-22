@@ -1,6 +1,7 @@
 // Файл: Candidate.cs
 
 using System.Collections.Generic;
+using Enums;
 
 namespace Utilities
 {

@@ -8,6 +8,7 @@ using UnityEngine.SceneManagement;
 using Utilities;
 using Characters;
 using UI;
+using Enums;
 
 namespace Managers
 {
@@ -513,6 +514,42 @@ namespace Managers
             UnassignedStaff.Clear();
             AllStaff.Clear();
             staffBeingModified.Clear();
+        }
+
+        public void SpawnStaff(StaffController.Role role, string customName, int skillLevel)
+        {
+            if (internPrefab == null)
+            {
+                Debug.LogError("[HiringManager] internPrefab не назначен!");
+                return;
+            }
+
+            Transform freePoint = unassignedStaffPoints.FirstOrDefault(p => p != null && !occupiedPoints.ContainsKey(p));
+            Vector3 spawnPos = freePoint != null ? freePoint.position : Vector3.zero;
+
+            GameObject newStaffGO = Instantiate(internPrefab, spawnPos, Quaternion.identity);
+            StaffController staffController = newStaffGO.GetComponent<StaffController>();
+            
+            if (staffController == null)
+            {
+                staffController = newStaffGO.AddComponent<StaffController>();
+            }
+
+            staffController.role = role;
+            if (!string.IsNullOrEmpty(customName))
+            {
+                staffController.characterName = customName;
+            }
+
+            if (skillLevel > 0)
+            {
+                staffController.experiencePoints = skillLevel * 100;
+            }
+
+            AllStaff.Add(staffController);
+            UnassignedStaff.Add(staffController);
+
+            Debug.Log($"[HiringManager] Спавн сотрудника: {role}, Имя: {customName}, Навык: {skillLevel}");
         }
 
         private void FindSceneSpecificReferences()

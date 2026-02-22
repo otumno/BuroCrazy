@@ -23,6 +23,12 @@ namespace Managers
             Debug.Log($"[DirectorManager] Получена ошибка! Всего ошибок: {currentStrikes}");
         }
 
+        public void SetStrikes(int strikes)
+        {
+            currentStrikes = Mathf.Clamp(strikes, 0, 3);
+            Debug.Log($"[DirectorManager] Установлено ошибок: {currentStrikes}");
+        }
+
         public void PrepareDay()
         {
             // Логика подготовки к новому дню

@@ -2,6 +2,8 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Data.Creation;
+using Enums;
 
 namespace Managers
 {
@@ -21,6 +23,9 @@ namespace Managers
         private int _pauseCount = 0;
         public int pauseCount => _pauseCount;
         public bool isTransitioning { get; private set; }
+
+        private static DirectorInitialState _pendingDirectorInitialState;
+        private static string _pendingDirectorCreationCode;
 
         private void Awake()
         {
@@ -110,6 +115,42 @@ namespace Managers
             SaveData newGameData = new SaveData { day = 1, money = 1000 };
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
             StartCoroutine(LoadSceneRoutine(gameSceneName));
+        }
+
+        public void StartNewGameWithDirectorCreation(int slotIndex, DirectorInitialState initialState, string creationCode)
+        {
+            if (isTransitioning) return;
+            SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
+            SaveLoadManager.Instance.isNewGame = true;
+            
+            _pendingDirectorInitialState = initialState;
+            _pendingDirectorCreationCode = creationCode;
+            
+            SaveData newGameData = new SaveData 
+            { 
+                day = 1, 
+                money = initialState.startingMoney,
+                directorCreationCode = creationCode
+            };
+            
+            SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
+            StartCoroutine(LoadSceneRoutine(gameSceneName));
+        }
+
+        public static DirectorInitialState GetPendingDirectorInitialState()
+        {
+            return _pendingDirectorInitialState;
+        }
+
+        public static string GetPendingDirectorCreationCode()
+        {
+            return _pendingDirectorCreationCode;
+        }
+
+        public static void ClearPendingDirectorData()
+        {
+            _pendingDirectorInitialState = null;
+            _pendingDirectorCreationCode = null;
         }
 
         public void GoToMainMenu()
@@ -204,6 +245,8 @@ namespace Managers
                 HiringManager.Instance.ResetState();
                 OrderManager.Instance.ResetState();
                 StoryStateManager.Instance?.ResetState(); 
+
+                ApplyDirectorCreationSettings();
             }
 
             DirectorManager.Instance.PrepareDay();
@@ -252,6 +295,58 @@ namespace Managers
             }
 
             isTransitioning = false;
+        }
+
+        private void ApplyDirectorCreationSettings()
+        {
+            var initialState = GetPendingDirectorInitialState();
+            if (initialState == null)
+            {
+                Debug.Log("[MainUIManager] Нет данных о создании директора, используем настройки по умолчанию.");
+                return;
+            }
+
+            Debug.Log($"[MainUIManager] Применяем настройки создания директора: {GetPendingDirectorCreationCode()}");
+
+            if (PlayerWallet.Instance != null)
+            {
+                PlayerWallet.Instance.ResetState(initialState.startingMoney);
+            }
+
+            if (ProgressionManager.Instance != null)
+            {
+                ProgressionManager.Instance.AddInfluence(initialState.startingInfluence);
+
+                foreach (var regionID in initialState.unlockedRegions)
+                {
+                    ProgressionManager.Instance.UnlockRegion(regionID);
+                }
+            }
+
+            if (DirectorManager.Instance != null)
+            {
+                DirectorManager.Instance.SetStrikes(initialState.startingStrikes);
+            }
+
+            if (initialState.startingStaff.Count > 0 && HiringManager.Instance != null)
+            {
+                foreach (var staffData in initialState.startingStaff)
+                {
+                    HiringManager.Instance.SpawnStaff(staffData.role, staffData.customName, staffData.skillLevel);
+                }
+            }
+
+            if (DirectorAvatarController.Instance != null && !string.IsNullOrEmpty(initialState.spriteCollectionID))
+            {
+                ApplyDirectorAppearance(initialState.spriteCollectionID, initialState.startingGender);
+            }
+
+            ClearPendingDirectorData();
+        }
+
+        private void ApplyDirectorAppearance(string spriteCollectionID, Enums.Gender gender)
+        {
+            Debug.Log($"[MainUIManager] Применяем внешний вид директора: {spriteCollectionID}, Gender: {gender}");
         }
     }
 }

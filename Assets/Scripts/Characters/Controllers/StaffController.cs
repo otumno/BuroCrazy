@@ -9,6 +9,7 @@ using Data.Calendar;
 using Scriptables.Audio;
 using Characters;
 using Managers.Teletype;
+using Enums;
 
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]

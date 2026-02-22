@@ -11,26 +11,24 @@ public class SaveSlotUI : MonoBehaviour
     [SerializeField] private Button deleteButton;
     [SerializeField] private TextMeshProUGUI infoText;
 
+    private MainMenuActions _mainMenuActions;
+
     public void Setup(int index)
     {
         slotIndex = index;
 
-        // Проверяем, что все ссылки на кнопки и текст установлены в префабе
         if (continueButton == null || newGameButton == null || deleteButton == null || infoText == null)
         {
             Debug.LogError($"[SaveSlotUI #{slotIndex}] Ошибка! Не все поля (кнопки, текст) назначены в инспекторе префаба!");
             return;
         }
 
+        _mainMenuActions = FindFirstObjectByType<MainMenuActions>();
+
         bool slotInUse = SaveLoadManager.Instance.DoesSaveExist(slotIndex);
         Debug.Log($"[SaveSlotUI #{slotIndex}] Слот используется: {slotInUse}");
-		
-		newGameButton.onClick.AddListener(() => {
-			Debug.Log($"КЛИК: Новая игра (Слот {slotIndex})...");
-			if(MainUIManager.Instance == null) Debug.LogError("MainUIManager is NULL");
-			else if(MainUIManager.Instance.isTransitioning) Debug.LogWarning("MainUIManager is Transitioning");
-			else MainUIManager.Instance.OnNewGameClicked(slotIndex);
-		});
+
+        SetupButtonListeners();
 
         if (slotInUse)
         {
@@ -48,13 +46,29 @@ public class SaveSlotUI : MonoBehaviour
             deleteButton.gameObject.SetActive(false);
             infoText.text = "Пустой слот";
         }
+    }
 
+    private void SetupButtonListeners()
+    {
         continueButton.onClick.RemoveAllListeners();
         newGameButton.onClick.RemoveAllListeners();
         deleteButton.onClick.RemoveAllListeners();
 
         continueButton.onClick.AddListener(() => MainUIManager.Instance.OnSaveSlotClicked(slotIndex));
-        newGameButton.onClick.AddListener(() => MainUIManager.Instance.OnNewGameClicked(slotIndex));
+        
+        newGameButton.onClick.AddListener(() => {
+            Debug.Log($"КЛИК: Новая игра (Слот {slotIndex})...");
+            
+            if (_mainMenuActions != null)
+            {
+                _mainMenuActions.Action_StartNewGameWithDirectorCreation(slotIndex);
+            }
+            else
+            {
+                MainUIManager.Instance.OnNewGameClicked(slotIndex);
+            }
+        });
+        
         deleteButton.onClick.AddListener(() =>
         {
             SaveLoadManager.Instance.DeleteSave(slotIndex);

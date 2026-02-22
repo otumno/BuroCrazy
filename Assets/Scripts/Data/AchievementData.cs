@@ -1,6 +1,8 @@
 // Файл: Assets/Scripts/Data/AchievementData.cs
 using UnityEngine;
 using System.Collections.Generic;
+using Enums;
+using Data.Creation;
 
 [CreateAssetMenu(fileName = "Achv_", menuName = "Bureau/Achievement Data")]
 public class AchievementData : ScriptableObject
@@ -15,6 +17,10 @@ public class AchievementData : ScriptableObject
     [Tooltip("Описание, которое увидит игрок")]
     [TextArea(2, 4)]
     public string description;
+
+    [Header("Тип")]
+    [Tooltip("Тип элемента: Achievement - стандартная ачивка, Book - книга")]
+    public BookType bookType = BookType.Achievement;
 
     [Header("Иконки")]
     [Tooltip("Иконка, которая показывается, когда ачивка ЗАБЛОКИРОВАНА (Ч/Б)")]
@@ -32,4 +38,12 @@ public class AchievementData : ScriptableObject
     [Header("Награда - Комикс")]
     [Tooltip("Список спрайтов (страниц), которые будут показаны в просмотрщике комиксов")]
     public List<Sprite> comicPages;
+
+    [Header("Награда - Книга директора")]
+    [Tooltip("Ссылка на книгу директора (для bookType = Director)")]
+    public List<BookPageData> directorBookPages;
+
+    [Header("Код книги директора")]
+    [Tooltip("Код для генерации страниц (A1B2C1D3E3) - используется если directorBookPages пуст")]
+    public string directorBookCode = "";
 }

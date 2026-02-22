@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using Managers;
 using Utilities;
+using Enums;
 
 public class TeamMemberCardUI : MonoBehaviour
 {

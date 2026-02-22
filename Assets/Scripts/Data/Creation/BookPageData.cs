@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Enums;
 
 namespace Data.Creation
 {
@@ -9,6 +10,10 @@ namespace Data.Creation
         [Header("Идентификация")]
         public string pageID;
         public int pageNumber;
+
+        [Header("Тип книги")]
+        [Tooltip("Achievement - ачивка с книгой, Director - книга директора, Manual - инструкция")]
+        public BookType bookType = BookType.Achievement;
 
         [Header("Содержание")]
         [TextArea(3, 8)]
@@ -22,6 +27,16 @@ namespace Data.Creation
         [Header("Выборы")]
         public List<BookChoice> choices;
 
+        [Header("Музыка")]
+        [Tooltip("Музыка, которая играет на этой странице")]
+        public AudioClip pageMusic;
+        [Tooltip("Музыка после выбора на финальной странице")]
+        public AudioClip finalMusic;
+
+        [Header("Настройки")]
+        [Tooltip("Это финальная страница (E)")]
+        public bool isFinalPage = false;
+
         [System.Serializable]
         public class BookChoice
         {
@@ -29,6 +44,13 @@ namespace Data.Creation
             [TextArea(2, 4)]
             public string choiceText;
             public Sprite choiceIcon;
+
+            [Header("После выбора")]
+            [Tooltip("Картинка, которая показывается ПОСЛЕ выбора (A0 → A1)")]
+            public Sprite resultImage;
+            [Tooltip("Текст, который показывается после выбора")]
+            [TextArea(2, 6)]
+            public string resultText;
 
             [Header("Эффекты выбора")]
             public List<ChoiceEffect> effects;
@@ -59,7 +81,11 @@ namespace Data.Creation
             SetPolicy,
             AddTrait,
             RemoveTrait,
-            SetStartingScenario
+            SetStartingScenario,
+            SetGender,
+            SetStrikes,
+            UnlockRegion,
+            SetSpriteCollection
         }
     }
 }

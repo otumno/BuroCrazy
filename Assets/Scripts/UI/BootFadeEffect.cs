@@ -35,6 +35,11 @@ public class BootFadeEffect : MonoBehaviour
         }
     }
 
+    public void PlayFade()
+    {
+        StartCoroutine(PlayFadeSequence());
+    }
+
     private IEnumerator PlayFadeSequence()
     {
         PlayFadeSound();

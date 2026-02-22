@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Characters/Visuals/CharacterVisuals.cs
 using UnityEngine;
-using System.Collections; // Required for Coroutines
+using System.Collections;
+using Enums; // Required for Coroutines
 
 namespace Characters
 {

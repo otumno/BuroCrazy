@@ -167,6 +167,27 @@ namespace Managers
 
         public bool IsRegionUnlocked(string regionID) => unlockedRegionIDs.Contains(regionID);
 
+        public void UnlockRegion(string regionID)
+        {
+            if (string.IsNullOrEmpty(regionID)) return;
+            if (IsRegionUnlocked(regionID)) 
+            {
+                Debug.Log($"[ProgressionManager] Район {regionID} уже открыт.");
+                return;
+            }
+
+            RegionData region = allRegionsDatabase?.Find(r => r != null && r.regionID == regionID);
+            if (region != null)
+            {
+                FinalizeRegionUnlock(region);
+                Debug.Log($"[ProgressionManager] Район {regionID} открыт через создание директора.");
+            }
+            else
+            {
+                Debug.LogWarning($"[ProgressionManager] RegionData не найден для ID: {regionID}");
+            }
+        }
+
         public int GetCapturedRegionsCount() => unlockedRegionIDs.Count;
 
         // Этот метод будет вызываться, когда документ о захвате успешно обработан
