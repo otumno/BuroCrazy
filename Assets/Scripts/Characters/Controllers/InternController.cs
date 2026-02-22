@@ -160,7 +160,10 @@ public class InternController : StaffController, IServiceProvider
                                ?? systemActionDatabase?.allActions.FirstOrDefault(a => a.actionType == ActionType.InternPatrol);
 
             var points = ScenePointsRegistry.Instance?.internPatrolPoints;
-            bool hasPatrolPoints = points != null && points.Count > 0;
+            var validPoints = points?.Where(p => p != null && p.transform != null).ToList();
+            bool hasPatrolPoints = validPoints != null && validPoints.Count > 0;
+
+            Debug.Log($"[InternController] {characterName}: Проверка патруля. action={(patrolAction != null)}, points=(всего:{points?.Count ?? 0}, валидных:{validPoints?.Count ?? 0})");
 
             if (patrolAction != null && hasPatrolPoints)
             {
@@ -173,30 +176,32 @@ public class InternController : StaffController, IServiceProvider
 
                 if (!hasPatrolPoints)
                 {
+                    Debug.LogWarning($"[InternController] {characterName}: Нет точек патруля! action={patrolAction != null}, validPoints={validPoints?.Count ?? 0}");
+                    
                     var kitchenPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
                     if (kitchenPoint != null)
                     {
-                        Debug.Log($"[InternController] {characterName}: Точки патруля не настроены, иду на кухню");
+                        Debug.Log($"[InternController] {characterName}: Иду на кухню как fallback");
                         SetState(InternState.GoingToBreak);
                         yield return StartCoroutine(MoveToTarget(kitchenPoint.transform.position, InternState.OnBreak));
                         yield return new WaitForSeconds(Random.Range(10f, 20f));
                     }
                     else
                     {
-                        Debug.LogWarning($"[InternController] {characterName}: Точки патруля НЕ НАСТРОЕНЫ и кухня недоступна!");
+                        Debug.LogError($"[InternController] {characterName}: НЕТ точек патруля И кухня недоступна! Стажёр завис!");
                         yield return new WaitForSeconds(2f);
                     }
                     continue;
                 }
 
-                Debug.Log($"[InternController] {characterName}: Патрулирую вручную. Точек: {points.Count}");
+                Debug.Log($"[InternController] {characterName}: Патрулирую вручную. Точек: {validPoints.Count}");
 
                 while (IsOnDuty())
                 {
                     if (CheckAndHandleBreaks()) break;
                     if (currentExecutor != null) break;
 
-                    var p = points[Random.Range(0, points.Count)];
+                    var p = validPoints[Random.Range(0, validPoints.Count)];
                     if (p != null && p.transform != null)
                     {
                         Debug.Log($"[InternController] {characterName}: Иду к точке {p.name}");
@@ -205,6 +210,7 @@ public class InternController : StaffController, IServiceProvider
                     }
                     else
                     {
+                        Debug.LogWarning($"[InternController] {characterName}: Точка null при патруле");
                         yield return new WaitForSeconds(2f);
                     }
                 }

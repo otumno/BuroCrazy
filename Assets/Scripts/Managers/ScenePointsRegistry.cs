@@ -57,8 +57,20 @@ namespace Managers
 
         public Waypoint RequestKitchenPoint()
         {
-            if (kitchenPoints == null || kitchenPoints.Count == 0) return null;
-            return kitchenPoints[Random.Range(0, kitchenPoints.Count)];
+            if (kitchenPoints == null || kitchenPoints.Count == 0) 
+            {
+                Debug.LogWarning("[ScenePointsRegistry] kitchenPoints пуст или null");
+                return null;
+            }
+            
+            var validPoints = kitchenPoints.Where(p => p != null).ToList();
+            if (validPoints.Count == 0)
+            {
+                Debug.LogWarning("[ScenePointsRegistry] Все kitchenPoints == null");
+                return null;
+            }
+            
+            return validPoints[Random.Range(0, validPoints.Count)];
         }
         
         public void FreeKitchenPoint(Waypoint wp) { }
@@ -68,8 +80,42 @@ namespace Managers
             get
             {
                 if (toiletPoints == null || toiletPoints.Count == 0) return null;
-                return toiletPoints[Random.Range(0, toiletPoints.Count)];
+                
+                var validPoints = toiletPoints.Where(p => p != null).ToList();
+                if (validPoints.Count == 0) return null;
+                
+                return validPoints[Random.Range(0, validPoints.Count)];
             }
+        }
+
+        [ContextMenu("ValidateAllPoints")]
+        public void ValidateAllPoints()
+        {
+            Debug.Log("=== ScenePointsRegistry Validation ===");
+            Debug.Log($"kitchenPoints: {CountValid(kitchenPoints)}/{kitchenPoints?.Count ?? 0}");
+            Debug.Log($"toiletPoints: {CountValid(toiletPoints)}/{toiletPoints?.Count ?? 0}");
+            Debug.Log($"internPatrolPoints: {CountValid(internPatrolPoints)}/{internPatrolPoints?.Count ?? 0}");
+            Debug.Log($"guardPatrolPoints: {CountValid(guardPatrolPoints)}/{guardPatrolPoints?.Count ?? 0}");
+            Debug.Log($"janitorPatrolPoints: {CountValid(janitorPatrolPoints)}/{janitorPatrolPoints?.Count ?? 0}");
+            Debug.Log($"allServicePoints: {CountValidServicePoints(allServicePoints)}/{allServicePoints?.Count ?? 0}");
+            Debug.Log("======================================");
+        }
+
+        private int CountValid(List<Waypoint> list)
+        {
+            if (list == null) return 0;
+            return list.Count(p => p != null);
+        }
+
+        private int CountValidServicePoints(List<ServicePoint> list)
+        {
+            if (list == null) return 0;
+            return list.Count(p => p != null);
+        }
+
+        void Start()
+        {
+            ValidateAllPoints();
         }
     }
 }

@@ -77,3 +77,5 @@ LinkedResources.meta
 AndroidLogcatSettings.asset
 Assets/Resources/embeddedCommandLineArgs.txt
 Assets/Resources/embeddedCommandLineArgs.txt.meta
+nul
+opencode.json

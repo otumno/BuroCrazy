@@ -161,9 +161,9 @@ namespace UI.Creation
             ApplyChoiceEffects(choice.effects);
             AppendToCode(choice);
 
-            if (resultText != null && !string.IsNullOrEmpty(choice.resultText))
+            if (resultText != null)
             {
-                resultText.text = choice.resultText;
+                resultText.text = GetChoiceResultText(choice);
                 resultText.gameObject.SetActive(true);
             }
 
@@ -289,6 +289,52 @@ namespace UI.Creation
                     });
                 }
             }
+        }
+
+        private string GetChoiceResultText(BookPageData.BookChoice choice)
+        {
+            string result = "";
+
+            if (!string.IsNullOrEmpty(choice.resultText))
+            {
+                result += choice.resultText + "\n\n";
+            }
+
+            if (choice.effects != null && choice.effects.Count > 0)
+            {
+                result += "<color=yellow>Итог:</color>\n";
+                foreach (var effect in choice.effects)
+                {
+                    switch (effect.type)
+                    {
+                        case BookPageData.EffectType.AddMoney:
+                            result += $"+{effect.value} денег ";
+                            break;
+                        case BookPageData.EffectType.SetMoney:
+                            result += $"{effect.value} денег ";
+                            break;
+                        case BookPageData.EffectType.AddInfluence:
+                            result += $"+{effect.value} влияния ";
+                            break;
+                        case BookPageData.EffectType.SetInfluence:
+                            result += $"{effect.value} влияния ";
+                            break;
+                        case BookPageData.EffectType.AddStaff:
+                            result += $"+{effect.value} сотрудников ";
+                            break;
+                        case BookPageData.EffectType.SetGender:
+                            result += $"Пол: {effect.targetID} ";
+                            break;
+                        case BookPageData.EffectType.SetStrikes:
+                            result += $"Ошибки: {effect.value} ";
+                            break;
+                        case BookPageData.EffectType.UnlockRegion:
+                            result += $"Район: {effect.targetID} ";
+                            break;
+                    }
+                }
+            }
+            return result;
         }
 
         private void PlayPageMusic(BookPageData page)
