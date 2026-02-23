@@ -23,7 +23,7 @@ MonoBehaviour:
     \u043B\u0435\u0433\u0435\u043D\u0434\u044B. \u041A\u0430\u043A\u043E\u0432\u0430
     \u0431\u044B\u043B\u0430 \u0442\u0435\u043C\u0430 \u0432\u0430\u0448\u0435\u0439
     \u0434\u0438\u043F\u043B\u043E\u043C\u043D\u043E\u0439 \u0440\u0430\u0431\u043E\u0442\u044B?"
-  backgroundImage: {fileID: 0}
+  backgroundImage: {fileID: 5587136436146751524, guid: 376a69b5029777648b4b60eca9af9aa7, type: 3}
   characterIllustration: {fileID: 8300128826282271223, guid: af44e577471ada0479e100fe5c7946f0, type: 3}
   textColor: {r: 0, g: 0, b: 0, a: 1}
   choices:

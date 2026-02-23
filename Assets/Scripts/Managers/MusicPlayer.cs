@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using Data.Calendar;
 using Managers.Teletype;
 using Scriptables.Audio;
+using UI;
 
 namespace Managers
 {
@@ -298,8 +299,10 @@ namespace Managers
 
         private void LogTrackChange(string trackName)
         {
-            if (TeletypeManager.Instance == null || string.IsNullOrEmpty(trackName)) return;
-            TeletypeManager.Instance.Log($"♪ {trackName}", false, Managers.Teletype.TeletypeMessageType.Music);
+            if (RadioMusicNotification.Instance != null && isGameplayMusicActive)
+            {
+                RadioMusicNotification.Instance.ShowMusicNotification(trackName);
+            }
         }
 
         private void PlayRandomDayTrack()

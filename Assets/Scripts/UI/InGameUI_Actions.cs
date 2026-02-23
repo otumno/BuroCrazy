@@ -2,6 +2,7 @@
 using UnityEngine;
 using Managers;
 using UI.Bookkeeping;
+using UI;
 
 public class InGameUI_Actions : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class InGameUI_Actions : MonoBehaviour
 	
     public void OnRadioButtonClick()
     {
+        if (RadioMusicNotification.Instance != null)
+            RadioMusicNotification.Instance.ClearNotification();
+        
         MusicPlayer.Instance?.RequestNextTrack();
     }
 

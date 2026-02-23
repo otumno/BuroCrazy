@@ -148,6 +148,7 @@ GameObject:
   - component: {fileID: 404615745852767605}
   - component: {fileID: 8716433826656910726}
   - component: {fileID: 6104984849295503976}
+  - component: {fileID: 1234567890123456789}
   m_Layer: 0
   m_Name: DialogueChoiceButton
   m_TagString: Untagged
@@ -257,3 +258,18 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1234567890123456789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_GameObject: {fileID: 6641948219214280999}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e160eed3bfacb0d448daf97219619bd7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hoverSound: 2
+  clickSound: 1
+  enableHover: 1
+  enableClick: 1

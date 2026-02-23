@@ -181,6 +181,9 @@ namespace UI.Creation
             if (showingResult) return;
             showingResult = true;
 
+            if (choicesContainer != null)
+                choicesContainer.gameObject.SetActive(false);
+
             ApplyChoiceEffects(choice.effects);
             AppendToCode(choice);
 
@@ -474,9 +477,15 @@ namespace UI.Creation
 
         private void InitializeBook()
         {
-            if (BookPageDatabase.Instance != null)
+            var database = BookPageDatabase.Instance;
+            if (database == null)
             {
-                allPages = BookPageDatabase.Instance.allPages;
+                database = Resources.Load<BookPageDatabase>("DirectorBook/DirectorBookPageDatabase");
+            }
+            
+            if (database != null)
+            {
+                allPages = database.allPages;
                 Debug.Log($"[DirectorCreationBookUI] Найдено страниц: {allPages.Count}");
                 
                 if (allPages.Count > 0)

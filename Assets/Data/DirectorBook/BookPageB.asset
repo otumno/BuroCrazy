@@ -24,7 +24,7 @@ MonoBehaviour:
     \u043A \u0441\u0435\u0431\u0435 \u0434\u0438\u0440\u0435\u043A\u0442\u043E\u0440
     \u0448\u043A\u043E\u043B\u044B \u0438\u0437-\u0437\u0430 \u0440\u0430\u0437\u0431\u0438\u0442\u043E\u0433\u043E
     \u0432 \u043A\u043E\u0440\u0438\u0434\u043E\u0440\u0435 \u043E\u043A\u043D\u0430..."
-  backgroundImage: {fileID: 0}
+  backgroundImage: {fileID: -8731060601174031703, guid: b3101e35494b995438a9c90b29508221, type: 3}
   characterIllustration: {fileID: 1714691764687907500, guid: 132dfcfc01cc424489cafb1e3269b5e7, type: 3}
   textColor: {r: 0, g: 0, b: 0, a: 1}
   choices:
