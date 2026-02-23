@@ -3061,10 +3061,10 @@ RectTransform:
   - {fileID: 1091919208}
   - {fileID: 1581954209}
   - {fileID: 655123496}
-  - {fileID: 2113328999}
-  - {fileID: 771709645}
-  - {fileID: 1901312688}
   - {fileID: 1077123791}
+  - {fileID: 1901312688}
+  - {fileID: 771709645}
+  - {fileID: 2113328999}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6579,7 +6579,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!223 &1217081403
 Canvas:
   m_ObjectHideFlags: 0
@@ -7254,7 +7254,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1351160081
 RectTransform:
   m_ObjectHideFlags: 0
@@ -8615,6 +8615,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1549110397}
+  - component: {fileID: 1549110398}
   m_Layer: 0
   m_Name: ChoicesContainer
   m_TagString: Untagged
@@ -8641,6 +8642,32 @@ RectTransform:
   m_AnchoredPosition: {x: 262.3656, y: -170.12}
   m_SizeDelta: {x: 474.2526, y: 340.24}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1549110398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1549110396}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 1
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!224 &1556624907 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2329025650815340842, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -13844,7 +13871,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
   m_IgnoreReversedGraphics: 0
-  m_BlockingObjects: 3
+  m_BlockingObjects: 0
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -13870,9 +13897,9 @@ SceneRoots:
   m_Roots:
   - {fileID: 1389421143}
   - {fileID: 2085123111}
-  - {fileID: 656131211}
   - {fileID: 1902055743}
   - {fileID: 1742699901}
   - {fileID: 8306906582853188634}
   - {fileID: 5044551281937521761}
   - {fileID: 1217081406}
+  - {fileID: 656131211}

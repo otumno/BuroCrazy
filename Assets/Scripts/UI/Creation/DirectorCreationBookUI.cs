@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using Data.Creation;
 using Characters;
 using Managers;
@@ -45,22 +46,8 @@ namespace UI.Creation
 
         private void Start()
         {
-            if (BookPageDatabase.Instance != null)
-            {
-                allPages = BookPageDatabase.Instance.allPages;
-                if (allPages.Count > 0)
-                {
-                    currentPageLetter = GetPageLetter(0);
-                    ShowPage(allPages[0]);
-                }
-            }
-            else
-            {
-                Debug.LogError("[DirectorCreationBookUI] BookPageDatabase не найден!");
-            }
-
-            initialState = ScriptableObject.CreateInstance<DirectorInitialState>();
-            ResetCode();
+            Debug.Log("[DirectorCreationBookUI] Start вызван!");
+            InitializeBook();
         }
 
         private string GetPageLetter(int index)
@@ -86,6 +73,14 @@ namespace UI.Creation
 
         private void ShowPage(BookPageData page)
         {
+            Debug.Log($"[DirectorCreationBookUI] ShowPage: {page.pageID}");
+
+            if (choicesContainer != null)
+            {
+                choicesContainer.gameObject.SetActive(true);
+                Debug.Log($"[DirectorCreationBookUI] ChoicesContainer включен: {choicesContainer.gameObject.activeInHierarchy}");
+            }
+
             showingResult = false;
 
             if (currentPage != null)
@@ -136,13 +131,41 @@ namespace UI.Creation
             var buttonObj = Instantiate(choiceButtonPrefab, choicesContainer);
             var button = buttonObj.GetComponent<Button>();
             var text = buttonObj.GetComponentInChildren<TextMeshProUGUI>();
+            var image = buttonObj.GetComponent<Image>();
+            var rect = buttonObj.GetComponent<RectTransform>();
+            
+            var containerRect = choicesContainer.GetComponent<RectTransform>();
+            int buttonIndex = choicesContainer.childCount - 1;
+            float spacing = 15f;
+            float buttonHeight = 120f;
+            float startY = -50f;
+            
+            float yPos = startY - (buttonIndex * (buttonHeight + spacing));
+            rect.anchoredPosition = new Vector2(0, yPos);
+            rect.sizeDelta = new Vector2(900, buttonHeight);
+            
+            Debug.Log($"[DirectorCreationBookUI] Button #{buttonIndex} positioned at Y: {yPos}");
+
+            Debug.Log($"[DirectorCreationBookUI] Создана кнопка: {choice.choiceText}, Interactable: {button.interactable}");
+            
+            if (image != null)
+            {
+                image.raycastTarget = true;
+            }
 
             if (text != null)
             {
                 text.text = choice.choiceText;
+                text.fontSize = 26;
             }
 
-            button.onClick.AddListener(() => OnChoiceSelected(choice));
+            button.interactable = true;
+            
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => {
+                Debug.Log($"[DirectorCreationBookUI] ====> НАЖАТА кнопка: {choice.choiceText}");
+                OnChoiceSelected(choice);
+            });
         }
 
         private void ClearChoices()
@@ -436,13 +459,39 @@ namespace UI.Creation
             }
         }
 
-        public void SetActive(bool active)
+        public void OpenBook()
         {
-            gameObject.SetActive(active);
-            if (!active)
+            gameObject.SetActive(true);
+            Debug.Log("[DirectorCreationBookUI] OpenBook() - запускаем инициализацию");
+            InitializeBook();
+        }
+
+        public void CloseBook()
+        {
+            gameObject.SetActive(false);
+            StopMusic();
+        }
+
+        private void InitializeBook()
+        {
+            if (BookPageDatabase.Instance != null)
             {
-                StopMusic();
+                allPages = BookPageDatabase.Instance.allPages;
+                Debug.Log($"[DirectorCreationBookUI] Найдено страниц: {allPages.Count}");
+                
+                if (allPages.Count > 0)
+                {
+                    currentPageLetter = GetPageLetter(0);
+                    ShowPage(allPages[0]);
+                }
             }
+            else
+            {
+                Debug.LogError("[DirectorCreationBookUI] BookPageDatabase не найден!");
+            }
+
+            initialState = ScriptableObject.CreateInstance<DirectorInitialState>();
+            ResetCode();
         }
 
         public event System.Action<DirectorInitialState, string> OnBookFinished;

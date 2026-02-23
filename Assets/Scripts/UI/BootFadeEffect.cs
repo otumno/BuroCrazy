@@ -5,22 +5,24 @@ using UnityEngine.UI;
 using Managers;
 using Scriptables.Audio;
 
-public class BootFadeEffect : MonoBehaviour
-{
-    [Header("Панели для затемнения (верхняя → нижняя)")]
-    [SerializeField] private List<Image> fadePanels;
+    public class BootFadeEffect : MonoBehaviour
+    {
+        [Header("Панели для затемнения (верхняя → нижняя)")]
+        [SerializeField] private List<Image> fadePanels;
 
-    [Header("Настройки")]
-    [SerializeField] private float fadeSpeed = 0.6f;
+        [Header("Настройки")]
+        [SerializeField] private float fadeSpeed = 0.6f;
 
-    [Header("Звуки")]
-    [SerializeField] private SoundID fadeSound = SoundID.None;
+        [Header("Звуки")]
+        [SerializeField] private SoundID fadeSound = SoundID.None;
 
-    [Header("Inverse Fade (появление)")]
-    [SerializeField] private List<Image> inversePanels;
-    [SerializeField] private SoundID inverseFadeSound = SoundID.None;
+        [Header("Inverse Fade (появление)")]
+        [SerializeField] private List<Image> inversePanels;
+        [SerializeField] private SoundID inverseFadeSound = SoundID.None;
 
-    private const string BOOT_FADE_PLAYED_KEY = "BootFadeEffect_Played";
+        private const string BOOT_FADE_PLAYED_KEY = "BootFadeEffect_Played";
+        
+        private bool isFadingOut = false;
 
     private void Awake()
     {
@@ -77,7 +79,33 @@ public class BootFadeEffect : MonoBehaviour
 
     public void PlayInverseFade(System.Action onComplete = null)
     {
+        foreach (Image panel in inversePanels)
+        {
+            if (panel != null)
+            {
+                panel.gameObject.SetActive(true);
+                panel.raycastTarget = true;
+            }
+        }
         StartCoroutine(PlayInverseFadeSequence(onComplete));
+    }
+    
+    public void DisableRaycastOnInversePanels()
+    {
+        foreach (Image panel in inversePanels)
+        {
+            if (panel != null)
+            {
+                panel.raycastTarget = false;
+            }
+        }
+        foreach (Image panel in fadePanels)
+        {
+            if (panel != null)
+            {
+                panel.raycastTarget = false;
+            }
+        }
     }
 
     private IEnumerator PlayInverseFadeSequence(System.Action onComplete)

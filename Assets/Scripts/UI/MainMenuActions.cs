@@ -28,6 +28,7 @@ public class MainMenuActions : MonoBehaviour
     private TextMeshProUGUI primaryActionButtonText; 
 
     private int selectedSlotIndex = -1;
+    private bool isDirectorCreationActive = false;
 
     void Awake()
     {
@@ -103,13 +104,51 @@ public class MainMenuActions : MonoBehaviour
 
     public void Action_StartNewGameWithDirectorCreation(int slotIndex)
     {
+        if (isDirectorCreationActive)
+        {
+            Debug.LogWarning("[MainMenuActions] Director Creation уже запущен, игнорируем повторный вызов");
+            return;
+        }
+        
+        isDirectorCreationActive = true;
         selectedSlotIndex = slotIndex;
         StartCoroutine(NewGameDirectorCreationFlow());
     }
 
     private IEnumerator NewGameDirectorCreationFlow()
     {
-        ShowPanel(null);
+        if (saveLoadPanel != null)
+        {
+            saveLoadPanel.SetActive(false);
+            Debug.Log("[MainMenuActions] SaveLoadPanel закрыт");
+        }
+        
+        if (mainMenuPanel != null)
+        {
+            mainMenuPanel.SetActive(false);
+            Debug.Log("[MainMenuActions] MainMenuPanel закрыт");
+        }
+        
+        var mascot = FindFirstObjectByType<Utilities.TutorialMascot>();
+        if (mascot != null)
+        {
+            mascot.gameObject.SetActive(false);
+        }
+
+        if (MusicPlayer.Instance != null)
+        {
+            MusicPlayer.Instance.StopMusic();
+        }
+
+        if (bootFadeEffect != null && !bootFadeEffect.gameObject.activeInHierarchy)
+        {
+            bootFadeEffect.gameObject.SetActive(true);
+        }
+
+        if (directorCreationPanel != null)
+        {
+            directorCreationPanel.SetActive(false);
+        }
 
         if (bootFadeEffect != null)
         {
@@ -121,11 +160,18 @@ public class MainMenuActions : MonoBehaviour
         if (directorCreationPanel != null)
         {
             directorCreationPanel.SetActive(true);
+            Debug.Log("[MainMenuActions] DirectorCreationPanel включен");
         }
 
         if (directorCreationBook != null)
         {
-            directorCreationBook.gameObject.SetActive(true);
+            directorCreationBook.OpenBook();
+            Debug.Log("[MainMenuActions] DirectorCreationBook открыт");
+        }
+        
+        if (bootFadeEffect != null)
+        {
+            bootFadeEffect.DisableRaycastOnInversePanels();
         }
 
         yield return new WaitForSeconds(0.3f);
@@ -139,6 +185,8 @@ public class MainMenuActions : MonoBehaviour
     private void OnDirectorCreationFinished(Data.Creation.DirectorInitialState initialState, string creationCode)
     {
         Debug.Log($"[MainMenuActions] Director Creation finished. Code: {creationCode}");
+        
+        isDirectorCreationActive = false;
 
         if (directorCreationPanel != null)
         {

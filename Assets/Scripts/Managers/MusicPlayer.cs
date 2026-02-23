@@ -96,6 +96,14 @@ namespace Managers
             }
         }
 
+        public void StopMusic()
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.StopMusic();
+            }
+        }
+
         public void PlayMenuTheme()
         {
             isGameplayMusicActive = false;
