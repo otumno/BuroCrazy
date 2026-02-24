@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,6 +8,7 @@ using Characters;
 using Managers;
 using TMPro;
 using Enums;
+using UnityEngine.SceneManagement;
 
 namespace UI.Creation
 {
@@ -29,8 +31,22 @@ namespace UI.Creation
         public TextMeshProUGUI storyText;
         public TextMeshProUGUI resultText;
 
+        [Header("Перелистывание (эффект)")]
+        [Tooltip("Оверлей для засвета при перелистывании")]
+        public Image transitionOverlay;
+        [Tooltip("Картинка для анимации корешка")]
+        public Image flipAnimationImage;
+        [Tooltip("3 кадра анимации перелистывания")]
+        public List<Sprite> flipFrames;
+        [Tooltip("Время перелистывания")]
+        public float pageTurnDuration = 0.4f;
+        [Tooltip("Цвет вспышки")]
+        public Color flashColor = Color.white;
+
         [Header("Звук")]
         public AudioSource audioSource;
+        [Tooltip("Звуки перелистывания страниц")]
+        public List<AudioClip> pageTurnSounds;
 
         [Header("Сохраненные данные")]
         public DirectorInitialState initialState;
@@ -39,14 +55,37 @@ namespace UI.Creation
         [Tooltip("Сгенерированный код (A1B2C1D3E3)")]
         public string creationCode = "";
 
+        [Header("Настройки")]
+        [Tooltip("Имя сцены для запуска игры")]
+        public string gameSceneName = "GameScene";
+
         private Stack<BookPageData> pageHistory = new Stack<BookPageData>();
         private List<BookPageData> allPages;
         private string currentPageLetter = "";
         private bool showingResult = false;
+        private bool isTransitioning = false;
 
         private void Start()
         {
             Debug.Log("[DirectorCreationBookUI] Start вызван!");
+            
+            if (nextPageButton != null)
+            {
+                nextPageButton.onClick.AddListener(OnNextPageClicked);
+            }
+
+            if (startGameButton != null)
+            {
+                startGameButton.onClick.AddListener(OnStartGameClicked);
+            }
+
+            if (transitionOverlay != null)
+            {
+                transitionOverlay.gameObject.SetActive(false);
+                transitionOverlay.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
+            }
+            if (flipAnimationImage != null) flipAnimationImage.gameObject.SetActive(false);
+
             InitializeBook();
         }
 
@@ -203,19 +242,26 @@ namespace UI.Creation
 
             if (characterImage != null && choice.resultImage != null)
             {
+                Debug.Log($"[DirectorCreationBookUI] Меняем иллюстрацию на: {choice.resultImage.name}");
                 characterImage.sprite = choice.resultImage;
+            }
+            else
+            {
+                Debug.Log($"[DirectorCreationBookUI] resultImage = {(choice.resultImage != null ? choice.resultImage.name : "NULL")}");
             }
 
             if (currentPage.isFinalPage)
             {
-                if (finishButton != null)
-                {
-                    finishButton.gameObject.SetActive(true);
-                }
+                Debug.Log($"[DirectorCreationBookUI] Финальная страница! isFinalPage = {currentPage.isFinalPage}");
 
                 if (startGameButton != null)
                 {
                     startGameButton.gameObject.SetActive(true);
+                    Debug.Log("[DirectorCreationBookUI] startGameButton активирован");
+                }
+                else
+                {
+                    Debug.LogWarning("[DirectorCreationBookUI] startGameButton = NULL!");
                 }
 
                 if (currentPage.finalMusic != null)
@@ -399,23 +445,135 @@ namespace UI.Creation
             }
         }
 
+        private void PlayRandomPageTurnSound()
+        {
+            if (audioSource == null)
+            {
+                Debug.LogWarning("[DirectorCreationBookUI] audioSource = NULL!");
+                return;
+            }
+            if (pageTurnSounds == null || pageTurnSounds.Count == 0)
+            {
+                Debug.LogWarning("[DirectorCreationBookUI] pageTurnSounds пустой или null!");
+                return;
+            }
+            
+            var validSounds = pageTurnSounds.FindAll(s => s != null);
+            if (validSounds.Count > 0)
+            {
+                Debug.Log($"[DirectorCreationBookUI] Воспроизводим звук перелистывания: {validSounds[0].name}");
+                audioSource.PlayOneShot(validSounds[Random.Range(0, validSounds.Count)]);
+            }
+        }
+
         public void OnNextPageClicked()
         {
-            if (!showingResult) return;
+            if (!showingResult || isTransitioning) return;
 
+            string nextPageId = null;
             if (!string.IsNullOrEmpty(currentPage.choices[currentPage.choices.Count - 1].nextPageID))
             {
-                ShowPage(currentPage.choices[currentPage.choices.Count - 1].nextPageID);
+                nextPageId = currentPage.choices[currentPage.choices.Count - 1].nextPageID;
             }
             else
             {
                 int currentIndex = allPages.IndexOf(currentPage);
                 if (currentIndex < allPages.Count - 1)
                 {
-                    currentPageLetter = GetPageLetter(currentIndex + 1);
-                    ShowPage(allPages[currentIndex + 1]);
+                    nextPageId = allPages[currentIndex + 1].pageID;
                 }
             }
+
+            if (!string.IsNullOrEmpty(nextPageId))
+            {
+                StartCoroutine(PageTransitionRoutine(nextPageId));
+            }
+        }
+
+        private IEnumerator PageTransitionRoutine(string nextPageId)
+        {
+            isTransitioning = true;
+            SetButtonsInteractable(false);
+
+            StartCoroutine(RunFlipAnimation(1));
+            PlayRandomPageTurnSound();
+
+            float halfDuration = pageTurnDuration / 2f;
+            float timer = 0f;
+
+            if (transitionOverlay != null)
+            {
+                transitionOverlay.gameObject.SetActive(true);
+                Color c = flashColor;
+                c.a = 0f;
+                transitionOverlay.color = c;
+                
+                while (timer < halfDuration)
+                {
+                    timer += Time.unscaledDeltaTime;
+                    float progress = Mathf.Clamp01(timer / halfDuration);
+                    c.a = progress;
+                    transitionOverlay.color = c;
+                    yield return null;
+                }
+                c.a = 1f;
+                transitionOverlay.color = c;
+            }
+            else
+            {
+                yield return new WaitForSecondsRealtime(halfDuration);
+            }
+
+            currentPageLetter = GetPageLetter(allPages.FindIndex(p => p.pageID == nextPageId));
+            ShowPage(nextPageId);
+
+            timer = 0f;
+            if (transitionOverlay != null)
+            {
+                Color c = flashColor;
+                while (timer < halfDuration)
+                {
+                    timer += Time.unscaledDeltaTime;
+                    float progress = 1f - Mathf.Clamp01(timer / halfDuration);
+                    c.a = progress;
+                    transitionOverlay.color = c;
+                    yield return null;
+                }
+                c.a = 0f;
+                transitionOverlay.color = c;
+                transitionOverlay.gameObject.SetActive(false);
+            }
+            else
+            {
+                yield return new WaitForSecondsRealtime(halfDuration);
+            }
+
+            isTransitioning = false;
+            SetButtonsInteractable(true);
+        }
+
+        private IEnumerator RunFlipAnimation(int direction)
+        {
+            if (flipAnimationImage == null || flipFrames == null || flipFrames.Count < 3) yield break;
+
+            flipAnimationImage.gameObject.SetActive(true);
+            float timePerFrame = pageTurnDuration / 3f;
+            int[] frameIndices = (direction > 0) ? new int[] { 0, 1, 2 } : new int[] { 2, 1, 0 };
+
+            for (int i = 0; i < frameIndices.Length; i++)
+            {
+                flipAnimationImage.sprite = flipFrames[frameIndices[i]];
+                yield return new WaitForSecondsRealtime(timePerFrame);
+            }
+
+            flipAnimationImage.gameObject.SetActive(false);
+        }
+
+        private void SetButtonsInteractable(bool interactable)
+        {
+            if (previousPageButton != null) previousPageButton.interactable = interactable;
+            if (nextPageButton != null) nextPageButton.interactable = interactable;
+            if (finishButton != null) finishButton.interactable = interactable;
         }
 
         private void FinishBook()
@@ -433,6 +591,9 @@ namespace UI.Creation
         {
             StopMusic();
             FinishBook();
+            
+            Debug.Log($"[DirectorCreationBookUI] Загрузка сцены: {gameSceneName}");
+            SceneManager.LoadScene(gameSceneName);
         }
 
         public void GoBack()
