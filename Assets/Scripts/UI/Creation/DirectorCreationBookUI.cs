@@ -113,6 +113,9 @@ namespace UI.Creation
 
             ClearChoices();
 
+            Debug.Log($"[DirectorCreationBookUI] ShowPage: choices count = {page.choices?.Count ?? 0}");
+            Debug.Log($"[DirectorCreationBookUI] choicesContainer active = {choicesContainer.gameObject.activeInHierarchy}");
+
             if (page.choices != null)
             {
                 foreach (var choice in page.choices)
@@ -120,6 +123,8 @@ namespace UI.Creation
                     CreateChoiceButton(choice);
                 }
             }
+
+            Debug.Log($"[DirectorCreationBookUI] Created buttons: {choicesContainer.childCount}");
 
             PlayPageMusic(page);
 
@@ -134,24 +139,27 @@ namespace UI.Creation
             var image = buttonObj.GetComponent<Image>();
             var rect = buttonObj.GetComponent<RectTransform>();
             
-            var containerRect = choicesContainer.GetComponent<RectTransform>();
-            int buttonIndex = choicesContainer.childCount - 1;
-            float spacing = 15f;
-            float buttonHeight = 120f;
-            float startY = -50f;
+            rect.sizeDelta = new Vector2(900, 120);
             
-            float yPos = startY - (buttonIndex * (buttonHeight + spacing));
-            rect.anchoredPosition = new Vector2(0, yPos);
-            rect.sizeDelta = new Vector2(900, buttonHeight);
-            
-            Debug.Log($"[DirectorCreationBookUI] Button #{buttonIndex} positioned at Y: {yPos}");
+            var canvasGroup = buttonObj.GetComponent<CanvasGroup>();
+            if (canvasGroup == null) canvasGroup = buttonObj.AddComponent<CanvasGroup>();
+            canvasGroup.blocksRaycasts = true;
+            canvasGroup.interactable = true;
+            canvasGroup.alpha = 1;
 
-            Debug.Log($"[DirectorCreationBookUI] Создана кнопка: {choice.choiceText}, Interactable: {button.interactable}");
-            
-            if (image != null)
+            var canvas = buttonObj.GetComponentInParent<Canvas>();
+            if (canvas != null)
             {
-                image.raycastTarget = true;
+                canvas.overrideSorting = true;
+                canvas.sortingOrder = 15;
             }
+
+            foreach (var graphic in buttonObj.GetComponentsInChildren<UnityEngine.UI.Graphic>())
+            {
+                graphic.raycastTarget = true;
+            }
+
+            buttonObj.layer = LayerMask.NameToLayer("UI");
 
             if (text != null)
             {

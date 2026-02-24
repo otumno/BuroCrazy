@@ -6571,7 +6571,6 @@ GameObject:
   - component: {fileID: 1217081406}
   - component: {fileID: 1217081405}
   - component: {fileID: 1217081404}
-  - component: {fileID: 1217081403}
   - component: {fileID: 1217081407}
   m_Layer: 0
   m_Name: DirectorCreationPanel
@@ -6580,29 +6579,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!223 &1217081403
-Canvas:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1217081402}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_RenderMode: 0
-  m_Camera: {fileID: 0}
-  m_PlaneDistance: 100
-  m_PixelPerfect: 0
-  m_ReceivesEvents: 1
-  m_OverrideSorting: 0
-  m_OverridePixelPerfect: 0
-  m_SortingBucketNormalizedSize: 0
-  m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 25
-  m_UpdateRectTransformForStandalone: 0
-  m_SortingLayerID: 0
-  m_SortingOrder: 1
-  m_TargetDisplay: 0
 --- !u!114 &1217081404
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6639,7 +6615,7 @@ CanvasGroup:
   m_Enabled: 1
   m_Alpha: 1
   m_Interactable: 1
-  m_BlocksRaycasts: 1
+  m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
 --- !u!224 &1217081406
 RectTransform:
@@ -6648,9 +6624,9 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1217081402}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 771297284}
@@ -6661,13 +6637,13 @@ RectTransform:
   - {fileID: 1021598828}
   - {fileID: 990393487}
   - {fileID: 937287403}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 2085123111}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 1331.7452, y: 409.3327}
+  m_SizeDelta: {x: 1331.745, y: 409.333}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!82 &1217081407
 AudioSource:
   m_ObjectHideFlags: 0
@@ -11680,6 +11656,7 @@ RectTransform:
   - {fileID: 1708293351}
   - {fileID: 1351160081}
   - {fileID: 1544168337}
+  - {fileID: 1217081406}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -13901,5 +13878,4 @@ SceneRoots:
   - {fileID: 1742699901}
   - {fileID: 8306906582853188634}
   - {fileID: 5044551281937521761}
-  - {fileID: 1217081406}
   - {fileID: 656131211}

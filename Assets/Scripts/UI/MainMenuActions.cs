@@ -180,6 +180,15 @@ public class MainMenuActions : MonoBehaviour
         {
             bootFadeEffect.PlayFade();
         }
+
+        yield return new WaitForSeconds(0.6f);
+
+        var canvasBoot = GameObject.Find("CanvasBoot");
+        if (canvasBoot != null)
+        {
+            canvasBoot.SetActive(false);
+            Debug.Log("[MainMenuActions] CanvasBoot отключен");
+        }
     }
 
     private void OnDirectorCreationFinished(Data.Creation.DirectorInitialState initialState, string creationCode)
