@@ -1,0 +1,20 @@
+name: Telegram Notification
+
+on: [push]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Message to Telegram
+        uses: appleboy/telegram-action@master
+        with:
+          # Указываем оба ID через запятую
+          to: ${{ secrets.TELEGRAM_CHAT_ID }},${{ secrets.GROUP_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: markdown
+          message: |
+            🚀 **Новый пуш в репозиторий!**
+            
+            👤 **Автор:** @${{ github.actor }}
+            📝 **Коммит:** ${{ github.
