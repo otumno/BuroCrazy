@@ -33,6 +33,10 @@ namespace Data.Creation
         [Tooltip("Музыка после выбора на финальной странице")]
         public AudioClip finalMusic;
 
+        [Header("Финальная страница")]
+        [Tooltip("Фон, который показывается после выбора на финальной странице")]
+        public Sprite finalBackgroundImage;
+
         [Header("Настройки")]
         [Tooltip("Это финальная страница (E)")]
         public bool isFinalPage = false;

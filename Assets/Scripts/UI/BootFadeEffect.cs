@@ -1,3 +1,4 @@
+// Assets/Scripts/UI/BootFadeEffect.cs
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,143 +6,90 @@ using UnityEngine.UI;
 using Managers;
 using Scriptables.Audio;
 
-    public class BootFadeEffect : MonoBehaviour
-    {
-        [Header("Панели для затемнения (верхняя → нижняя)")]
-        [SerializeField] private List<Image> fadePanels;
+public class BootFadeEffect : MonoBehaviour
+{
+    [Header("Последовательность ОТКРЫТИЯ (Fade)")]
+    [Tooltip("Кадры: 4(Черный) -> 3(3/4) -> 2(2/4) -> 1(1/4) -> ВЫКЛ")]
+    [SerializeField] private List<Image> fadePanels;
 
-        [Header("Настройки")]
-        [SerializeField] private float fadeSpeed = 0.6f;
+    [Header("Последовательность ЗАКРЫТИЯ (Inverse)")]
+    [Tooltip("Кадры: 5(Черный) -> 6(открыто 1/4) -> 7(2/4) -> 8(3/4)")]
+    [SerializeField] private List<Image> inversePanels;
 
-        [Header("Звуки")]
-        [SerializeField] private SoundID fadeSound = SoundID.None;
+    [SerializeField] private float frameDuration = 0.08f;
+    [SerializeField] private SoundID fadeSound = SoundID.BootFade;
 
-        [Header("Inverse Fade (появление)")]
-        [SerializeField] private List<Image> inversePanels;
-        [SerializeField] private SoundID inverseFadeSound = SoundID.None;
+    public bool IsFading { get; private set; }
 
-        private const string BOOT_FADE_PLAYED_KEY = "BootFadeEffect_Played";
-        
-        private bool isFadingOut = false;
-
-    private void Awake()
-    {
-        DontDestroyOnLoad(gameObject);
+    private void Awake() {
+        DisableAllPanels();
     }
 
     private void Start()
     {
-        if (gameObject.activeSelf)
+        if (!IsFading)
         {
-            StartCoroutine(PlayFadeSequence());
+            if (fadePanels != null && fadePanels.Count > 0)
+                fadePanels[0].gameObject.SetActive(true);
+
+            PlayFade(null);
         }
     }
 
-    public void PlayFade()
+    public void PlayFade(System.Action onComplete = null)
     {
-        StartCoroutine(PlayFadeSequence());
+        if (IsFading) return;
+        StartCoroutine(FadeSequence(onComplete));
     }
 
-    private IEnumerator PlayFadeSequence()
+    private IEnumerator FadeSequence(System.Action onComplete)
     {
-        PlayFadeSound();
-
-        foreach (Image panel in fadePanels)
+        IsFading = true;
+        for (int i = 0; i < fadePanels.Count; i++)
         {
-            if (panel != null)
-            {
-                Color startColor = panel.color;
-                Color targetColor = new Color(startColor.r, startColor.g, startColor.b, 0f);
-
-                float t = 0f;
-                while (t < 1f)
-                {
-                    t += Time.deltaTime / fadeSpeed;
-                    panel.color = Color.Lerp(startColor, targetColor, t);
-                    yield return null;
-                }
-
-                panel.color = targetColor;
-                panel.gameObject.SetActive(false);
-            }
+            DisableAllPanels();
+            if (fadePanels[i] != null) fadePanels[i].gameObject.SetActive(true);
+            yield return new WaitForSecondsRealtime(frameDuration);
         }
-
-        gameObject.SetActive(false);
-    }
-
-    private void PlayFadeSound()
-    {
-        if (fadeSound != SoundID.None && AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySound(fadeSound);
-        }
-    }
-
-    public void PlayInverseFade(System.Action onComplete = null)
-    {
-        foreach (Image panel in inversePanels)
-        {
-            if (panel != null)
-            {
-                panel.gameObject.SetActive(true);
-                panel.raycastTarget = true;
-            }
-        }
-        StartCoroutine(PlayInverseFadeSequence(onComplete));
-    }
-    
-    public void DisableRaycastOnInversePanels()
-    {
-        foreach (Image panel in inversePanels)
-        {
-            if (panel != null)
-            {
-                panel.raycastTarget = false;
-            }
-        }
-        foreach (Image panel in fadePanels)
-        {
-            if (panel != null)
-            {
-                panel.raycastTarget = false;
-            }
-        }
-    }
-
-    private IEnumerator PlayInverseFadeSequence(System.Action onComplete)
-    {
-        foreach (Image panel in inversePanels)
-        {
-            if (panel != null)
-            {
-                panel.gameObject.SetActive(true);
-                Color startColor = panel.color;
-                Color targetColor = new Color(startColor.r, startColor.g, startColor.b, 1f);
-
-                float t = 0f;
-                while (t < 1f)
-                {
-                    t += Time.deltaTime / fadeSpeed;
-                    panel.color = Color.Lerp(startColor, targetColor, t);
-                    yield return null;
-                }
-
-                panel.color = targetColor;
-            }
-        }
-
-        if (inverseFadeSound != SoundID.None && AudioManager.Instance != null)
-        {
-            AudioManager.Instance.PlaySound(inverseFadeSound);
-        }
-
+        DisableAllPanels();
         onComplete?.Invoke();
+        IsFading = false;
     }
 
-    [ContextMenu("Сбросить флаг запуска")]
-    public void ResetBootFlag()
-    {
-        PlayerPrefs.DeleteKey(BOOT_FADE_PLAYED_KEY);
-        Debug.Log("[BootFadeEffect] Флаг сброшен. Эффект будет при следующем запуске.");
+    private void DisableAllPanels() {
+        if (fadePanels != null) foreach (var p in fadePanels) if (p) p.gameObject.SetActive(false);
+        if (inversePanels != null) foreach (var p in inversePanels) if (p) p.gameObject.SetActive(false);
+    }
+
+    // ЛОГИКА: ЧЕРНЫЙ -> ПРОЗРАЧНЫЙ
+    public IEnumerator PlayFadeRoutine() {
+        IsFading = true;
+        Debug.Log("[BootFade] ОТКРЫТИЕ ЭКРАНА (Fade)");
+        
+        for (int i = 0; i < fadePanels.Count; i++) {
+            DisableAllPanels();
+            if (fadePanels[i] != null) fadePanels[i].gameObject.SetActive(true);
+            yield return new WaitForSecondsRealtime(frameDuration);
+        }
+
+        DisableAllPanels();
+        IsFading = false;
+    }
+
+    // ЛОГИКА: ПРОЗРАЧНЫЙ -> ЧЕРНЫЙ
+    public IEnumerator PlayInverseFadeRoutine() {
+        IsFading = true;
+        Debug.Log("[BootFade] ЗАКРЫТИЕ ЭКРАНА (Inverse)");
+
+        if (fadeSound != SoundID.None && AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound(fadeSound);
+
+        for (int i = 0; i < inversePanels.Count; i++) {
+            DisableAllPanels();
+            if (inversePanels[i] != null) inversePanels[i].gameObject.SetActive(true);
+            yield return new WaitForSecondsRealtime(frameDuration);
+        }
+        
+        IsFading = false;
     }
 }

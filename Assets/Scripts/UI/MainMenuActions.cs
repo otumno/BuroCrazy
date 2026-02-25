@@ -117,78 +117,38 @@ public class MainMenuActions : MonoBehaviour
 
     private IEnumerator NewGameDirectorCreationFlow()
     {
-        if (saveLoadPanel != null)
-        {
-            saveLoadPanel.SetActive(false);
-            Debug.Log("[MainMenuActions] SaveLoadPanel закрыт");
-        }
-        
-        if (mainMenuPanel != null)
-        {
-            mainMenuPanel.SetActive(false);
-            Debug.Log("[MainMenuActions] MainMenuPanel закрыт");
-        }
-        
         var mascot = FindFirstObjectByType<Utilities.TutorialMascot>();
-        if (mascot != null)
-        {
-            mascot.gameObject.SetActive(false);
-        }
+        if (mascot != null) mascot.gameObject.SetActive(false);
+        if (MusicPlayer.Instance != null) MusicPlayer.Instance.StopMusic();
 
-        if (MusicPlayer.Instance != null)
-        {
-            MusicPlayer.Instance.StopMusic();
-        }
-
-        if (bootFadeEffect != null && !bootFadeEffect.gameObject.activeInHierarchy)
+        if (bootFadeEffect != null)
         {
             bootFadeEffect.gameObject.SetActive(true);
+            yield return StartCoroutine(PlayBootSequence());
         }
-
-        if (directorCreationPanel != null)
+        else
         {
-            directorCreationPanel.SetActive(false);
+            SwitchToDirectorCreation();
         }
+    }
 
-        if (bootFadeEffect != null)
-        {
-            yield return new WaitForSeconds(0.3f);
-            bootFadeEffect.PlayInverseFade();
-            yield return new WaitForSeconds(0.5f);
-        }
+    private IEnumerator PlayBootSequence()
+    {
+        yield return StartCoroutine(bootFadeEffect.PlayInverseFadeRoutine());
 
-        if (directorCreationPanel != null)
-        {
-            directorCreationPanel.SetActive(true);
-            Debug.Log("[MainMenuActions] DirectorCreationPanel включен");
-        }
+        SwitchToDirectorCreation();
 
-        if (directorCreationBook != null)
-        {
-            directorCreationBook.OpenBook();
-            Debug.Log("[MainMenuActions] DirectorCreationBook открыт");
-        }
-        
-        if (bootFadeEffect != null)
-        {
-            bootFadeEffect.DisableRaycastOnInversePanels();
-        }
+        yield return new WaitForSecondsRealtime(0.1f);
 
-        yield return new WaitForSeconds(0.3f);
+        yield return StartCoroutine(bootFadeEffect.PlayFadeRoutine());
+    }
 
-        if (bootFadeEffect != null)
-        {
-            bootFadeEffect.PlayFade();
-        }
-
-        yield return new WaitForSeconds(0.6f);
-
-        var canvasBoot = GameObject.Find("CanvasBoot");
-        if (canvasBoot != null)
-        {
-            canvasBoot.SetActive(false);
-            Debug.Log("[MainMenuActions] CanvasBoot отключен");
-        }
+    private void SwitchToDirectorCreation()
+    {
+        if (saveLoadPanel != null) saveLoadPanel.SetActive(false);
+        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
+        if (directorCreationPanel != null) directorCreationPanel.SetActive(true);
+        if (directorCreationBook != null) directorCreationBook.OpenBook();
     }
 
     private void OnDirectorCreationFinished(Data.Creation.DirectorInitialState initialState, string creationCode)
@@ -196,11 +156,6 @@ public class MainMenuActions : MonoBehaviour
         Debug.Log($"[MainMenuActions] Director Creation finished. Code: {creationCode}");
         
         isDirectorCreationActive = false;
-
-        if (directorCreationPanel != null)
-        {
-            directorCreationPanel.SetActive(false);
-        }
 
         if (selectedSlotIndex >= 0)
         {

@@ -3124,13 +3124,13 @@ MonoBehaviour:
   - {fileID: 1581954207}
   - {fileID: 1091919206}
   - {fileID: 633770009}
+  fadeSpeed: 0.15
+  fadeSound: 24
   inversePanels:
   - {fileID: 1077123792}
   - {fileID: 1901312689}
   - {fileID: 771709646}
   - {fileID: 2113329000}
-  frameDuration: 0.1
-  fadeSound: 24
   inverseFadeSound: 24
 --- !u!114 &656131208
 MonoBehaviour:
@@ -3193,7 +3193,7 @@ Canvas:
   m_AdditionalShaderChannelsFlag: 0
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
-  m_SortingOrder: 30
+  m_SortingOrder: 10
   m_TargetDisplay: 0
 --- !u!224 &656131211
 RectTransform:
@@ -14043,6 +14043,6 @@ SceneRoots:
   - {fileID: 2085123111}
   - {fileID: 1902055743}
   - {fileID: 1742699901}
-  - {fileID: 656131211}
   - {fileID: 8306906582853188634}
   - {fileID: 5044551281937521761}
+  - {fileID: 656131211}

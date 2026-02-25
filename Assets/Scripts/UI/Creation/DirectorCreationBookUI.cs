@@ -254,19 +254,15 @@ namespace UI.Creation
             {
                 Debug.Log($"[DirectorCreationBookUI] Финальная страница! isFinalPage = {currentPage.isFinalPage}");
 
-                if (startGameButton != null)
-                {
-                    startGameButton.gameObject.SetActive(true);
-                    Debug.Log("[DirectorCreationBookUI] startGameButton активирован");
-                }
-                else
-                {
-                    Debug.LogWarning("[DirectorCreationBookUI] startGameButton = NULL!");
-                }
-
                 if (currentPage.finalMusic != null)
                 {
                     PlayMusic(currentPage.finalMusic);
+                }
+
+                if (backgroundImage != null && currentPage.finalBackgroundImage != null)
+                {
+                    Debug.Log($"[DirectorCreationBookUI] Меняем фон на finalBackgroundImage: {currentPage.finalBackgroundImage.name}");
+                    backgroundImage.sprite = currentPage.finalBackgroundImage;
                 }
             }
             else
@@ -589,11 +585,11 @@ namespace UI.Creation
 
         public void OnStartGameClicked()
         {
+            Debug.Log("[DirectorCreationBookUI] OnStartGameClicked вызван!");
             StopMusic();
             FinishBook();
             
-            Debug.Log($"[DirectorCreationBookUI] Загрузка сцены: {gameSceneName}");
-            SceneManager.LoadScene(gameSceneName);
+            Debug.Log($"[DirectorCreationBookUI] Переход управляется MainMenuActions");
         }
 
         public void GoBack()
@@ -620,14 +616,9 @@ namespace UI.Creation
                 nextPageButton.gameObject.SetActive(showingResult && !currentPage.isFinalPage);
             }
 
-            if (finishButton != null)
-            {
-                finishButton.gameObject.SetActive(false);
-            }
-
             if (startGameButton != null)
             {
-                startGameButton.gameObject.SetActive(false);
+                startGameButton.gameObject.SetActive(showingResult && currentPage.isFinalPage);
             }
         }
 
