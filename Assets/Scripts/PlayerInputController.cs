@@ -32,6 +32,37 @@ public class PlayerInputController : MonoBehaviour
 
     void Update()
     {
+        // --- ПРОБЕЛ (ПАУЗА) ---
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            if (MainUIManager.Instance != null && MusicPlayer.Instance != null)
+            {
+                bool isCurrentlyPaused = Time.timeScale == 0f;
+                bool isBlockingUIOpen = MainUIManager.Instance.pauseCount > 0;
+                bool isDirectorDeskOpen = StartOfDayPanel.Instance != null && StartOfDayPanel.Instance.gameObject.activeInHierarchy;
+
+                if (!isBlockingUIOpen && !isDirectorDeskOpen)
+                {
+                    if (isCurrentlyPaused)
+                    {
+                        Debug.Log("[PlayerInputController] Снимаем ручную паузу");
+                        MainUIManager.Instance.ResumeGame();
+                        MusicPlayer.Instance.ResumeGameplayMusicFromManualPause();
+                    }
+                    else
+                    {
+                        Debug.Log("[PlayerInputController] Ставим ручную паузу");
+                        Time.timeScale = 0f;
+                        MusicPlayer.Instance.PauseGameplayMusicForManualPause();
+                    }
+                }
+                else
+                {
+                    Debug.Log($"[PlayerInputController] Пробел игнорируется: UI открыт ({isBlockingUIOpen}) или Стол открыт ({isDirectorDeskOpen})");
+                }
+            }
+        }
+
         DirectorAvatarController director = DirectorAvatarController.Instance;
     AgentMover directorMover = director?.GetComponent<AgentMover>(); // Безопасно получаем AgentMover
 

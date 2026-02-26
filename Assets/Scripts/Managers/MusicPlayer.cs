@@ -81,9 +81,61 @@ namespace Managers
         
         private void OnPeriodChanged(PeriodSettings settings)
         {
-            if (isGameplayMusicActive)
+            if (!isGameplayMusicActive) return;
+
+            bool isNightNow = settings.PeriodType.IsNight();
+            
+            var previousSettings = TimeManager.Instance.GetPreviousPeriodSettings();
+            bool wasNight = previousSettings != null && previousSettings.PeriodType.IsNight();
+
+            if (wasNight && !isNightNow)
             {
-                PlayCorrectTrackForCurrentTime();
+                Debug.Log("<color=orange>[MusicPlayer]</color> СИГНАЛ: Переход НОЧЬ -> ДЕНЬ. Принудительная смена плейлиста.");
+                ForceSwitchToDayMusic();
+            }
+            else if (!wasNight && isNightNow)
+            {
+                Debug.Log("<color=blue>[MusicPlayer]</color> СИГНАЛ: Переход ДЕНЬ -> НОЧЬ. Включаем ночной трек.");
+                ForceSwitchToNightMusic();
+            }
+        }
+
+        private void ForceSwitchToDayMusic()
+        {
+            lastPlayedGameplayTrack = null; 
+            
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.musicSource.Stop();
+                AudioManager.Instance.musicSource.clip = null;
+            }
+
+            PlayRandomDayTrack();
+        }
+
+        private void ForceSwitchToNightMusic()
+        {
+            if (AudioManager.Instance != null)
+            {
+                AudioManager.Instance.musicSource.Stop();
+            }
+            
+            LogTrackChange(nightTrack?.name);
+            PlayTrack(nightTrack);
+        }
+
+        private void Update()
+        {
+            if (Time.frameCount % 60 == 0 && isGameplayMusicActive)
+            {
+                bool isNightTime = TimeManager.Instance.IsNight();
+                bool isPlayingNightClip = AudioManager.Instance.musicSource.clip == nightTrack;
+
+                if (!isNightTime && isPlayingNightClip)
+                {
+                    Debug.LogWarning("[MusicPlayer] Update-контроль: Обнаружен ночной трек ДНЕМ. Исправляю.");
+                    ForceSwitchToDayMusic();
+                }
             }
         }
 
@@ -204,15 +256,7 @@ namespace Managers
         {
             isGameplayMusicActive = true;
             SetMuffled(false);
-
-            if (lastPlayedGameplayTrack != null && !IsNightTime())
-            {
-                PlayTrack(lastPlayedGameplayTrack);
-            }
-            else
-            {
-                PlayCorrectTrackForCurrentTime();
-            }
+            PlayCorrectTrackForCurrentTime();
         }
         
         public void PauseGameplayMusicAndPlayOfficeTheme()

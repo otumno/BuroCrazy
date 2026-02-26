@@ -3204,8 +3204,8 @@ MonoBehaviour:
   - {fileID: 1901312689}
   - {fileID: 771709646}
   - {fileID: 2113329000}
-  frameDuration: 0.1
-  fadeSound: 24
+  frameDuration: 0.2
+  frameSwitchSound: 24
 --- !u!114 &656131208
 MonoBehaviour:
   m_ObjectHideFlags: 0

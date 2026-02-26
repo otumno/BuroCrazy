@@ -158,7 +158,12 @@ MonoBehaviour:
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   - id: 24
     clips:
-    - {fileID: 8300000, guid: 7e6a35fa62700e049aad989da57c0973, type: 3}
+    - {fileID: 8300000, guid: aac08f29af449104a854342260259fe2, type: 3}
+    - {fileID: 8300000, guid: d48a9efa73ca02f45b54ef8d423f4bc0, type: 3}
+    - {fileID: 8300000, guid: f6e60d52a1cd9f842aa84a99fb1c790c, type: 3}
+    - {fileID: 8300000, guid: 8957b88c3c2da1943b3b7fc232a405e1, type: 3}
+    - {fileID: 8300000, guid: da67ecfdb2f7d7244bf200833953d7fc, type: 3}
+    - {fileID: 8300000, guid: b32890a7a8192c84682bcfc612a582f5, type: 3}
     volume: 0.6
     pitch: 1
     pitchDelta: 0.1
