@@ -149,7 +149,10 @@ public class StartOfDayPanel : MonoBehaviour
             buttonText.text = isMidDayPause ? "Продолжить день" : "Начать день";
 
             startDayButton.onClick.RemoveAllListeners();
-            startDayButton.onClick.AddListener(() => MainUIManager.Instance.StartOrResumeGameplay());
+            startDayButton.onClick.AddListener(() => {
+                MainUIManager.Instance.HideDirectorDesk();
+                MainUIManager.Instance.StartOrResumeGameplay();
+            });
         }
 
         if (directorDeskButton != null)

@@ -3194,19 +3194,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 10bdb6b5aac0610409de1226deddf2da, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BootFadeEffect
-  openSequence:
+  fadePanels:
   - {fileID: 655123494}
   - {fileID: 1581954207}
   - {fileID: 1091919206}
   - {fileID: 633770009}
-  closeSequence:
+  inversePanels:
   - {fileID: 1077123792}
   - {fileID: 1901312689}
   - {fileID: 771709646}
   - {fileID: 2113329000}
   frameDuration: 0.2
-  frameSound: 24
-  playOpenAtStart: 1
+  frameSwitchSound: 24
 --- !u!114 &656131208
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3565,7 +3564,7 @@ GameObject:
   - component: {fileID: 771709647}
   - component: {fileID: 771709646}
   m_Layer: 5
-  m_Name: Bootimage7
+  m_Name: Bootimage3 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5849,7 +5848,7 @@ GameObject:
   - component: {fileID: 1077123793}
   - component: {fileID: 1077123792}
   m_Layer: 5
-  m_Name: Bootimage5
+  m_Name: Bootimage1 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10973,7 +10972,7 @@ GameObject:
   - component: {fileID: 1901312690}
   - component: {fileID: 1901312689}
   m_Layer: 5
-  m_Name: Bootimage6
+  m_Name: Bootimage2 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -12849,7 +12848,7 @@ GameObject:
   - component: {fileID: 2113329001}
   - component: {fileID: 2113329000}
   m_Layer: 5
-  m_Name: Bootimage8
+  m_Name: Bootimage4 (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

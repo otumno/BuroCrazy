@@ -134,13 +134,13 @@ public class MainMenuActions : MonoBehaviour
 
     private IEnumerator PlayBootSequence()
     {
-        yield return StartCoroutine(bootFadeEffect.PlayInverseFadeRoutine());
+        yield return StartCoroutine(bootFadeEffect.PlayCloseRoutine());
 
         SwitchToDirectorCreation();
 
         yield return new WaitForSecondsRealtime(0.1f);
 
-        yield return StartCoroutine(bootFadeEffect.PlayFadeRoutine());
+        yield return StartCoroutine(bootFadeEffect.PlayOpenRoutine());
     }
 
     private void SwitchToDirectorCreation()

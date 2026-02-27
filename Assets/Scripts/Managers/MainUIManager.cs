@@ -22,6 +22,10 @@ namespace Managers
         
         private int _pauseCount = 0;
         public int pauseCount => _pauseCount;
+        private BootFadeEffect _currentSceneFade;
+        private bool _isTransitioning = false;
+        
+        public void RegisterSceneFade(BootFadeEffect fade) => _currentSceneFade = fade;
         public bool isTransitioning { get; private set; }
 
         private static DirectorInitialState _pendingDirectorInitialState;
@@ -91,11 +95,57 @@ namespace Managers
         public void ShowDirectorDesk()
         {
             if (isTransitioning) return;
-            StartOfDayPanel deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
-            if (deskPanel != null)
+            StartCoroutine(DirectorDeskTransitionRoutine(true));
+        }
+
+        public void HideDirectorDesk()
+        {
+            if (isTransitioning) return;
+            StartCoroutine(DirectorDeskTransitionRoutine(false));
+        }
+
+        private IEnumerator DirectorDeskTransitionRoutine(bool open)
+        {
+            if (_isTransitioning) yield break;
+            _isTransitioning = true;
+
+            if (_currentSceneFade != null)
+                yield return StartCoroutine(_currentSceneFade.PlayCloseRoutine());
+
+            if (open) 
             {
                 PauseGame(true);
-                StartCoroutine(deskPanel.Fade(true, true));
+                if (StartOfDayPanel.Instance != null) StartOfDayPanel.Instance.gameObject.SetActive(true);
+                MusicPlayer.Instance.PlayDirectorsOfficeTheme();
+            } 
+            else 
+            {
+                if (StartOfDayPanel.Instance != null) StartOfDayPanel.Instance.gameObject.SetActive(false);
+                MusicPlayer.Instance.StartGameplayMusic();
+                ResumeGame();
+                Debug.Log("<color=green>[MainUIManager]</color> Игра запущена!");
+            }
+
+            if (_currentSceneFade != null)
+            {
+                StartCoroutine(_currentSceneFade.PlayOpenRoutine());
+            }
+
+            _isTransitioning = false;
+        }
+
+        private void ExecuteDeskSwitch(bool open)
+        {
+            if (open) {
+                PauseGame(true);
+                if (StartOfDayPanel.Instance != null) 
+                    StartOfDayPanel.Instance.gameObject.SetActive(true);
+                MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
+            } else {
+                if (StartOfDayPanel.Instance != null) 
+                    StartOfDayPanel.Instance.gameObject.SetActive(false);
+                
+                MusicPlayer.Instance.StartGameplayMusic();
             }
         }
 
