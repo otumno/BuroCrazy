@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic;
 using Managers;
 
 public class PhonePanelUI : MonoBehaviour
@@ -22,7 +21,6 @@ public class PhonePanelUI : MonoBehaviour
     private void Start()
     {
         closeButton.onClick.AddListener(Hide);
-        gameObject.SetActive(false);
     }
 
     public void Show()

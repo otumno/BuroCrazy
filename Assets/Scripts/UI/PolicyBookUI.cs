@@ -56,7 +56,6 @@ namespace UI
             }
 
             detailsPanel.SetActive(false);
-            gameObject.SetActive(false);
 
             SwitchTab(true);
         }
