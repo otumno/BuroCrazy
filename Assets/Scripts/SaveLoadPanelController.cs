@@ -8,56 +8,46 @@ public class SaveLoadPanelController : MonoBehaviour
     [Tooltip("Перетащите сюда пустые объекты, в которых должны появиться слоты")]
     [SerializeField] private List<Transform> slotPositions;
 
+    private readonly List<SaveSlotUI> _saveSlots = new();
+
     private void OnEnable()
     {
+        if (SaveLoadManager.Instance.numberOfSlots != slotPositions.Count)
+        {
+            Debug.LogError($"Число логических слотов для сохранений не равно количеству слотов на экране!" +
+                           $" {SaveLoadManager.Instance.numberOfSlots} != {slotPositions.Count}");
+            return;
+        }
+        
         RefreshSlots();
     }
 
     public void RefreshSlots()
     {
-        foreach (Transform position in slotPositions)
-        {
-            if (position.childCount > 0)
-            {
-                Destroy(position.GetChild(0).gameObject);
-            }
-        }
+        // clear instantiated slot prefabs
+        _saveSlots.ForEach(t => Destroy(t.gameObject));
+        _saveSlots.Clear();
 
-        // --- ДИАГНОСТИКА ---
         if (SaveLoadManager.Instance == null)
         {
-            Debug.LogError("SaveLoadManager НЕ НАЙДЕН! Слоты не могут быть созданы.");
-            return;
-        }
-        if (slotPrefab == null)
-        {
-            Debug.LogError("ПРЕФАБ слота не назначен в инспекторе! Слоты не могут быть созданы.");
+            Debug.LogError("SaveLoadManager НЕ НАЙДЕН. Смотри порядок инициализации!");
             return;
         }
 
-        Debug.Log($"[SaveLoadPanel] Начинаем создание слотов. Количество слотов в менеджере: {SaveLoadManager.Instance.numberOfSlots}. Количество позиций: {slotPositions.Count}");
-        // --- КОНЕЦ ДИАГНОСТИКИ ---
-
+        _saveSlots.Capacity = SaveLoadManager.Instance.numberOfSlots;
         for (int i = 0; i < slotPositions.Count; i++)
         {
-            if (i >= SaveLoadManager.Instance.numberOfSlots)
+            var slotGo = Instantiate(slotPrefab, slotPositions[i], worldPositionStays: false);
+            var saveSlotUi = slotGo.GetComponent<SaveSlotUI>();
+            if (saveSlotUi == null)
             {
-                Debug.LogWarning($"Позиция {i} пропущена, так как в SaveLoadManager указано только {SaveLoadManager.Instance.numberOfSlots} слотов.");
-                break;
+                Debug.LogError("...ОШИБКА! На префабе слота отсутствует скрипт SaveSlotUI!");
+                Destroy(slotGo);
+                continue;
             }
-
-            Debug.Log($"Создаем слот #{i} в позиции '{slotPositions[i].name}'...");
-            GameObject newSlot = Instantiate(slotPrefab, slotPositions[i]);
-            SaveSlotUI slotUI = newSlot.GetComponent<SaveSlotUI>();
-            if (slotUI != null)
-            {
-                slotUI.Setup(i);
-                Debug.Log($"...Слот #{i} успешно настроен.");
-            }
-            else
-            {
-                Debug.LogError($"...ОШИБКА! На префабе слота отсутствует скрипт SaveSlotUI!");
-            }
+            
+            saveSlotUi.Setup(i);
+            _saveSlots.Add(saveSlotUi);
         }
     }
 }
