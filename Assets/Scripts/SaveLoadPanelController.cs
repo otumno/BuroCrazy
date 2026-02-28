@@ -14,7 +14,7 @@ public class SaveLoadPanelController : MonoBehaviour
     {
         if (SaveLoadManager.Instance.numberOfSlots != slotPositions.Count)
         {
-            Debug.LogError($"Число логических слотов для сохранений не равно количеству слотов на экране!" +
+            Debug.LogError($"Число логических слотов для сохранений не равно количеству слотов в UI" +
                            $" {SaveLoadManager.Instance.numberOfSlots} != {slotPositions.Count}");
             return;
         }
@@ -30,7 +30,7 @@ public class SaveLoadPanelController : MonoBehaviour
 
         if (SaveLoadManager.Instance == null)
         {
-            Debug.LogError("SaveLoadManager НЕ НАЙДЕН. Смотри порядок инициализации!");
+            Debug.LogError("SaveLoadManager == null. Смотри порядок инициализации!");
             return;
         }
 
@@ -41,7 +41,7 @@ public class SaveLoadPanelController : MonoBehaviour
             var saveSlotUi = slotGo.GetComponent<SaveSlotUI>();
             if (saveSlotUi == null)
             {
-                Debug.LogError("...ОШИБКА! На префабе слота отсутствует скрипт SaveSlotUI!");
+                Debug.LogError("На префабе Save Slot Entry нет скрипта SaveSlotUI");
                 Destroy(slotGo);
                 continue;
             }
