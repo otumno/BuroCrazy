@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/UI/AchievementListUI.cs
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 using Managers;
 using Enums;
@@ -49,24 +50,51 @@ public class AchievementListUI : MonoBehaviour
         // --- КОНЕЦ ДОБАВЛЕНИЙ ---
     }
 
-    void OnEnable()
+    void Start()
     {
-        // Подписываемся на событие сброса
         if (AchievementManager.Instance != null)
         {
-            AchievementManager.Instance.OnAchievementsReset += PopulateList;
+            AchievementManager.Instance.OnAchievementsReset += RefreshData;
+            // Подпишемся на единичные ачивки, чтобы список обновлялся сам
+            AchievementManager.Instance.OnAchievementUnlocked += (data) => RefreshData();
         }
-        
-         // Каждый раз при открытии панели, мы перестраиваем список
-        PopulateList();
+        RefreshData();
     }
-    
-    void OnDisable()
+
+    void OnDestroy()
     {
-        // ОБЯЗАТЕЛЬНО отписываемся
         if (AchievementManager.Instance != null)
         {
-            AchievementManager.Instance.OnAchievementsReset -= PopulateList;
+            AchievementManager.Instance.OnAchievementsReset -= RefreshData;
+            AchievementManager.Instance.OnAchievementUnlocked -= (data) => RefreshData();
+        }
+    }
+
+    public void RefreshData()
+    {
+        StopAllCoroutines();
+        StartCoroutine(PopulateListRoutine());
+    }
+
+    private IEnumerator PopulateListRoutine()
+    {
+        // Даем окну 0.35 сек на красивое появление без лагов
+        yield return new WaitForSecondsRealtime(0.35f);
+
+        if (AchievementManager.Instance == null || contentContainer == null || achievementItemPrefab == null) yield break;
+
+        foreach (Transform child in contentContainer) Destroy(child.gameObject);
+
+        List<AchievementData> allAchievements = AchievementManager.Instance.allAchievementsDatabase;
+
+        foreach (AchievementData achData in allAchievements)
+        {
+            bool isUnlocked = AchievementManager.Instance.IsAchievementUnlocked(achData.achievementID);
+            if (achData.isSecret && !isUnlocked && !achData.alwaysAvailable) continue;
+
+            GameObject itemGO = Instantiate(achievementItemPrefab, contentContainer);
+            AchievementItemUI itemUI = itemGO.GetComponent<AchievementItemUI>();
+            itemUI.Setup(achData, this, isUnlocked);
         }
     }
 
@@ -170,17 +198,19 @@ public class AchievementListUI : MonoBehaviour
 
     private void HidePanel()
     {
-        // Ищем MainMenuActions на сцене
-        MainMenuActions menu = FindFirstObjectByType<MainMenuActions>();
-        if (menu != null)
+        // Мы НЕ закрываем себя сами. Мы просим роутер (MainMenuActions) вернуть нас в меню.
+        // Роутер сам вызовет наш UIWindowAnimator.Close()!
+        MainMenuActions menu = FindFirstObjectByType<MainMenuActions>(FindObjectsInactive.Include);
+        if (menu != null) 
         {
             menu.Action_BackToMainMenu();
         }
-        else
+        else 
         {
-            // Запасной вариант, если что-то пошло не так
-            Debug.LogError("Не удалось найти MainMenuActions, чтобы вернуться назад!");
-            gameObject.SetActive(false);
+            // Фоллбэк на случай ошибки
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null) animator.Close();
+            else gameObject.SetActive(false);
         }
     }
 }

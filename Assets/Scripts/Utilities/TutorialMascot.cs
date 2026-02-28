@@ -217,9 +217,7 @@ namespace Utilities
             
                 if (currentConfig.contextGroups != null)
                 {
-                    activeContextGroup = currentConfig.contextGroups.LastOrDefault(
-                        g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
-                    );
+                    activeContextGroup = currentConfig.contextGroups.LastOrDefault(g => IsContextActive(g));
                 }
 
                 if (tutorialCoroutine != null) 
@@ -272,9 +270,7 @@ namespace Utilities
             TutorialContextGroup newContext = null;
             if (currentConfig.contextGroups != null)
             {
-                newContext = currentConfig.contextGroups.LastOrDefault(
-                    g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
-                );
+                newContext = currentConfig.contextGroups.LastOrDefault(g => IsContextActive(g));
             }
 
             if (sceneLoadCoroutine != null)
@@ -706,9 +702,7 @@ namespace Utilities
         
             if (activeContextGroup == null && currentConfig != null && currentConfig.contextGroups != null)
             {
-                activeContextGroup = currentConfig.contextGroups.LastOrDefault(
-                    g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
-                );
+                activeContextGroup = currentConfig.contextGroups.LastOrDefault(g => IsContextActive(g));
             }
         
             if (activeContextGroup != null)
@@ -780,9 +774,7 @@ namespace Utilities
 
             if (currentConfig != null && currentConfig.contextGroups != null)
             {
-                activeContextGroup = currentConfig.contextGroups.LastOrDefault(
-                    g => g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy
-                );
+                activeContextGroup = currentConfig.contextGroups.LastOrDefault(g => IsContextActive(g));
             }
             else
             {
@@ -912,6 +904,11 @@ namespace Utilities
         }
 
         private void LoadVisitedState() { }
+
+        private bool IsContextActive(TutorialContextGroup g)
+        {
+            return g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy && g.contextPanel.GetComponent<CanvasGroup>()?.alpha > 0.01f;
+        }
         #endregion
     }
 

@@ -1933,6 +1933,7 @@ Transform:
   - {fileID: 6393219160300706207}
   - {fileID: 870064151362820002}
   - {fileID: 3889224730123984928}
+  - {fileID: 8364274383878045763}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6323726595607129623
@@ -2031,6 +2032,54 @@ RectTransform:
   m_AnchoredPosition: {x: 460.5, y: -459.49988}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!1 &7711469033166023755
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8364274383878045763}
+  - component: {fileID: 5956366104858927862}
+  m_Layer: 0
+  m_Name: UIGlobalSettingsManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8364274383878045763
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7711469033166023755}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1664084752037518102}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5956366104858927862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7711469033166023755}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 63e689c03a037e44ca395ab87542beca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Managers.UIGlobalSettingsManager
+  globalDuration: 0.25
+  globalStartScale: 0.95
+  globalShowEase: 27
+  globalHideEase: 8
 --- !u!1 &7778612619835768913
 GameObject:
   m_ObjectHideFlags: 0
@@ -2316,10 +2365,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b4140768b136a649b5afca5c4bad3f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  firstMenuTrack: {fileID: 0}
   menuTheme: {fileID: 8300000, guid: 94963549d0fe0aa42918c15fc01bdcba, type: 3}
   directorsOfficeTheme: {fileID: 8300000, guid: 50249d13f99b8c24d8f7b40cf6c5c4f2, type: 3}
   pauseTheme: {fileID: 8300000, guid: ab6632915c0ea944f8064f0dbd6dc4cc, type: 3}
   archiveTheme: {fileID: 8300000, guid: 1d86d32d2dc0b46478937adb975d407b, type: 3}
+  menuTracks: []
+  directorTracks: []
+  archiveTracks: []
   dayTracks:
   - {fileID: 8300000, guid: 822cd65ba3f20b948b3eba634bbfa4e7, type: 3}
   - {fileID: 8300000, guid: 233b2a9b427429a49b0c5e542393fd62, type: 3}
@@ -2403,6 +2456,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6b5ab1b480378254ea939188135c5c70, type: 2}
   allJobsDatabase:
   - {fileID: 11400000, guid: c1e14a88f48100445906024f6aeb56d9, type: 2}
+  regionRuntimeStates: []
 --- !u!1 &8763085085291328836
 GameObject:
   m_ObjectHideFlags: 0

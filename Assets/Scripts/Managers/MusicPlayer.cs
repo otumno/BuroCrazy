@@ -231,6 +231,42 @@ namespace Managers
             PlayTrack(trackToPlay);
             SetMuffled(false);
         }
+
+        public void PlayThemeWithResume(AudioClip newTheme)
+        {
+            if (AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
+            {
+                _savedTrackClip = AudioManager.Instance.musicSource.clip;
+                _savedTrackTime = AudioManager.Instance.musicSource.time;
+            }
+            PlayTrack(newTheme);
+        }
+
+        public void ResumeSavedTrack()
+        {
+            if (_savedTrackClip != null)
+            {
+                PlayTrack(_savedTrackClip);
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.musicSource.time = _savedTrackTime;
+                }
+            }
+            else
+            {
+                PlayMenuTheme();
+            }
+        }
+
+        public void OpenArchiveMusic()
+        {
+            PlayThemeWithResume(archiveTheme);
+        }
+
+        public void CloseArchiveMusic()
+        {
+            ResumeSavedTrack();
+        }
         
         private AudioClip GetRandomTrack(AudioClip[] tracks, ref int lastIndex)
         {

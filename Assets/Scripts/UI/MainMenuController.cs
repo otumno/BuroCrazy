@@ -88,15 +88,48 @@ public class MainMenuController : MonoBehaviour
 
     private void ShowPanel(GameObject panelToShow)
     {
-        // Сначала принудительно выключаем обе панели. Это сбрасывает любое "сломанное" состояние.
-        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
-        if (saveLoadPanel != null) saveLoadPanel.SetActive(false);
+        GameObject[] allPanels = new GameObject[] { mainMenuPanel, saveLoadPanel };
 
-        // Если нужно показать какую-то панель, включаем ее.
-        // Если panelToShow == null, обе панели останутся выключенными.
+        // 1. ГАРАНТИРОВАННО Включаем целевую панель
         if (panelToShow != null)
         {
-            panelToShow.SetActive(true);
+            panelToShow.SetActive(true); // Страховка, если объект был выключен в Инспекторе
+            var animator = panelToShow.GetComponent<UIWindowAnimator>();
+            if (animator != null) 
+            {
+                animator.Open();
+            }
+            else
+            {
+                var cg = panelToShow.GetComponent<CanvasGroup>();
+                if (cg != null) { cg.alpha = 1f; cg.interactable = true; cg.blocksRaycasts = true; }
+            }
+        }
+
+        // 2. Красиво прячем все остальные
+        foreach (var panel in allPanels)
+        {
+            if (panel == null || panel == panelToShow) continue;
+
+            var cg = panel.GetComponent<CanvasGroup>();
+            // Считаем видимым, если есть альфа ИЛИ объект активен
+            bool isVisible = (cg != null && cg.alpha > 0.01f) || panel.activeSelf;
+
+            if (isVisible)
+            {
+                var animator = panel.GetComponent<UIWindowAnimator>();
+                if (animator != null)
+                {
+                    animator.Close();
+                }
+                else if (cg != null)
+                {
+                    // Мгновенное скрытие без SetActive(false)
+                    cg.alpha = 0f;
+                    cg.interactable = false;
+                    cg.blocksRaycasts = false;
+                }
+            }
         }
     }
 }

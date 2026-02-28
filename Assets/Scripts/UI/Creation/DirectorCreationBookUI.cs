@@ -85,8 +85,6 @@ namespace UI.Creation
                 transitionOverlay.color = new Color(flashColor.r, flashColor.g, flashColor.b, 0f);
             }
             if (flipAnimationImage != null) flipAnimationImage.gameObject.SetActive(false);
-
-            InitializeBook();
         }
 
         private string GetPageLetter(int index)
@@ -624,15 +622,43 @@ namespace UI.Creation
 
         public void OpenBook()
         {
-            gameObject.SetActive(true);
+            var animator = GetComponent<Managers.UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Open();
+            }
+            else
+            {
+                var canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = 1f;
+                    canvasGroup.interactable = true;
+                    canvasGroup.blocksRaycasts = true;
+                }
+            }
             Debug.Log("[DirectorCreationBookUI] OpenBook() - запускаем инициализацию");
             InitializeBook();
         }
 
         public void CloseBook()
         {
-            gameObject.SetActive(false);
             StopMusic();
+            var animator = GetComponent<Managers.UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Close();
+            }
+            else
+            {
+                var canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = 0f;
+                    canvasGroup.interactable = false;
+                    canvasGroup.blocksRaycasts = false;
+                }
+            }
         }
 
         private void InitializeBook()

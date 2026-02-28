@@ -77,7 +77,6 @@ public class MainMenuActions : MonoBehaviour
     {
         Debug.Log("<b><color=green>[MainMenuActions] ==> Открываю Архив Ачивок...</color></b>");
         ShowPanel(achievementListPanel);
-		MusicPlayer.Instance?.PlayArchiveTheme();
     }
 
     public void Action_Continue()
@@ -93,7 +92,6 @@ public class MainMenuActions : MonoBehaviour
     {
         Debug.Log("<b><color=orange>[MainMenuActions] ==> Возвращаюсь в главное меню...</color></b>");
         ShowPanel(mainMenuPanel);
-        MusicPlayer.Instance?.PlayMenuTheme();
     }
 
     public void Action_QuitGame()
@@ -145,9 +143,53 @@ public class MainMenuActions : MonoBehaviour
 
     private void SwitchToDirectorCreation()
     {
-        if (saveLoadPanel != null) saveLoadPanel.SetActive(false);
-        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
-        if (directorCreationPanel != null) directorCreationPanel.SetActive(true);
+        GameObject[] allPanels = new GameObject[] { mainMenuPanel, saveLoadPanel, achievementListPanel, directorCreationPanel };
+        
+        if (directorCreationPanel != null)
+        {
+            var animator = directorCreationPanel.GetComponent<Managers.UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Open();
+            }
+            else
+            {
+                directorCreationPanel.SetActive(true);
+                var canvasGroup = directorCreationPanel.GetComponent<CanvasGroup>();
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = 1f;
+                    canvasGroup.interactable = true;
+                    canvasGroup.blocksRaycasts = true;
+                }
+            }
+        }
+        
+        foreach (var panel in allPanels)
+        {
+            if (panel == null || panel == directorCreationPanel) continue;
+            
+            bool isVisible = panel.activeInHierarchy;
+            if (!isVisible)
+            {
+                var cg = panel.GetComponent<CanvasGroup>();
+                if (cg != null) isVisible = cg.alpha > 0.01f;
+            }
+            
+            if (isVisible)
+            {
+                var animator = panel.GetComponent<Managers.UIWindowAnimator>();
+                if (animator != null)
+                {
+                    animator.Close();
+                }
+                else
+                {
+                    panel.SetActive(false);
+                }
+            }
+        }
+        
         if (directorCreationBook != null) directorCreationBook.OpenBook();
     }
 
@@ -165,14 +207,48 @@ public class MainMenuActions : MonoBehaviour
     
     private void ShowPanel(GameObject panelToShow)
     {
-        if (mainMenuPanel != null) mainMenuPanel.SetActive(false);
-        if (saveLoadPanel != null) saveLoadPanel.SetActive(false);
-        if (achievementListPanel != null) achievementListPanel.SetActive(false);
-        if (directorCreationPanel != null) directorCreationPanel.SetActive(false);
+        GameObject[] allPanels = new GameObject[] { mainMenuPanel, saveLoadPanel, achievementListPanel, directorCreationPanel };
 
+        // 1. ГАРАНТИРОВАННО Включаем целевую панель
         if (panelToShow != null)
         {
-            panelToShow.SetActive(true);
+            panelToShow.SetActive(true); // Страховка, если объект был выключен в Инспекторе
+            var animator = panelToShow.GetComponent<UIWindowAnimator>();
+            if (animator != null) 
+            {
+                animator.Open();
+            }
+            else
+            {
+                var cg = panelToShow.GetComponent<CanvasGroup>();
+                if (cg != null) { cg.alpha = 1f; cg.interactable = true; cg.blocksRaycasts = true; }
+            }
+        }
+
+        // 2. Красиво прячем все остальные
+        foreach (var panel in allPanels)
+        {
+            if (panel == null || panel == panelToShow) continue;
+
+            var cg = panel.GetComponent<CanvasGroup>();
+            // Считаем видимым, если есть альфа ИЛИ объект активен
+            bool isVisible = (cg != null && cg.alpha > 0.01f) || panel.activeSelf;
+
+            if (isVisible)
+            {
+                var animator = panel.GetComponent<UIWindowAnimator>();
+                if (animator != null)
+                {
+                    animator.Close();
+                }
+                else if (cg != null)
+                {
+                    // Мгновенное скрытие без SetActive(false)
+                    cg.alpha = 0f;
+                    cg.interactable = false;
+                    cg.blocksRaycasts = false;
+                }
+            }
         }
     }
 }
