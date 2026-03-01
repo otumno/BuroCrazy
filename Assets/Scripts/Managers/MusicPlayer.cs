@@ -7,6 +7,15 @@ using UI;
 
 namespace Managers
 {
+    public enum MusicState
+    {
+        None,
+        Menu,
+        Office,
+        Gameplay,
+        Archive
+    }
+
     public class MusicPlayer : MonoBehaviour
     {
         public static MusicPlayer Instance { get; private set; }
@@ -38,6 +47,8 @@ namespace Managers
         private AudioClip lastPlayedGameplayTrack;
         private float _savedTrackTime = 0f;
         private AudioClip _savedTrackClip;
+        
+        private MusicState currentState = MusicState.Menu;
 
         private bool isMuffled = false;
         
@@ -126,15 +137,60 @@ namespace Managers
 
         private void Update()
         {
-            if (Time.frameCount % 60 == 0 && isGameplayMusicActive)
+            // Проверка каждую секунду (примерно 60 кадров)
+            if (Time.frameCount % 60 == 0 && AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
             {
-                bool isNightTime = TimeManager.Instance.IsNight();
-                bool isPlayingNightClip = AudioManager.Instance.musicSource.clip == nightTrack;
-
-                if (!isNightTime && isPlayingNightClip)
+                bool isPlaying = AudioManager.Instance.musicSource.isPlaying;
+                
+                // Если музыка не играет и мы в нужном состоянии - запускаем следующий трек
+                if (!isPlaying)
                 {
-                    Debug.LogWarning("[MusicPlayer] Update-контроль: Обнаружен ночной трек ДНЕМ. Исправляю.");
-                    ForceSwitchToDayMusic();
+                    if (currentState == MusicState.Menu)
+                    {
+                        // Автопереключение для меню
+                        if (menuTracks != null && menuTracks.Length > 0)
+                        {
+                            PlayTrack(GetRandomTrack(menuTracks, ref _lastMenuTrackIndex));
+                        }
+                        else if (menuTheme != null)
+                        {
+                            PlayTrack(menuTheme);
+                        }
+                    }
+                    else if (currentState == MusicState.Archive)
+                    {
+                        // Автопереключение для архива
+                        if (archiveTracks != null && archiveTracks.Length > 0)
+                        {
+                            PlayTrack(GetRandomTrack(archiveTracks, ref _lastArchiveTrackIndex));
+                        }
+                        else if (archiveTheme != null)
+                        {
+                            PlayTrack(archiveTheme);
+                        }
+                    }
+                    else if (isGameplayMusicActive && currentState == MusicState.Gameplay)
+                    {
+                        // Автопереключение для геймплея (день)
+                        bool isNightTime = TimeManager.Instance != null && TimeManager.Instance.IsNight();
+                        if (!isNightTime && dayTracks != null && dayTracks.Length > 0)
+                        {
+                            PlayRandomDayTrack();
+                        }
+                    }
+                }
+                
+                // Дополнительная проверка для геймплея
+                if (isGameplayMusicActive)
+                {
+                    bool isNightTime = TimeManager.Instance.IsNight();
+                    bool isPlayingNightClip = AudioManager.Instance.musicSource.clip == nightTrack;
+
+                    if (!isNightTime && isPlayingNightClip)
+                    {
+                        Debug.LogWarning("[MusicPlayer] Update-контроль: Обнаружен ночной трек ДНЕМ. Исправляю.");
+                        ForceSwitchToDayMusic();
+                    }
                 }
             }
         }
@@ -145,12 +201,16 @@ namespace Managers
         {
             if (AudioManager.Instance != null)
             {
+                // Выключаем loop, чтобы мы могли отслеживать конец трека для автопереключения
+                AudioManager.Instance.musicSource.loop = false;
                 AudioManager.Instance.PlayMusic(clip);
             }
         }
 
         public void StopMusic()
         {
+            currentState = MusicState.None; // Останавливает авто-переключение
+
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.StopMusic();
@@ -160,6 +220,7 @@ namespace Managers
         public void PlayMenuTheme()
         {
             isGameplayMusicActive = false;
+            currentState = MusicState.Menu;
             
             AudioClip trackToPlay;
             
@@ -246,11 +307,24 @@ namespace Managers
         {
             if (_savedTrackClip != null)
             {
-                PlayTrack(_savedTrackClip);
+                // Восстанавливаем время
                 if (AudioManager.Instance != null)
                 {
                     AudioManager.Instance.musicSource.time = _savedTrackTime;
                 }
+                
+                // Восстанавливаем state в зависимости от сцены
+                string currentScene = SceneManager.GetActiveScene().name;
+                if (currentScene == "GameScene")
+                {
+                    currentState = MusicState.Office;
+                }
+                else
+                {
+                    currentState = MusicState.Menu;
+                }
+                
+                PlayTrack(_savedTrackClip);
             }
             else
             {
@@ -260,7 +334,28 @@ namespace Managers
 
         public void OpenArchiveMusic()
         {
-            PlayThemeWithResume(archiveTheme);
+            // Запоминаем текущий трек и время
+            if (AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
+            {
+                _savedTrackClip = AudioManager.Instance.musicSource.clip;
+                _savedTrackTime = AudioManager.Instance.musicSource.time;
+            }
+            
+            currentState = MusicState.Archive;
+            
+            // Запускаем случайный трек из архива
+            AudioClip trackToPlay;
+            if (archiveTracks != null && archiveTracks.Length > 0)
+            {
+                trackToPlay = GetRandomTrack(archiveTracks, ref _lastArchiveTrackIndex);
+            }
+            else
+            {
+                trackToPlay = archiveTheme;
+            }
+            
+            PlayTrack(trackToPlay);
+            SetMuffled(false);
         }
 
         public void CloseArchiveMusic()

@@ -319,8 +319,27 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         var deskPanel = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
         if (deskPanel != null)
         {
-            MainUIManager.Instance.PauseGame();
-            StartCoroutine(deskPanel.Fade(true, true));
+            MainUIManager.Instance.PushPause();
+            
+            // Используем UIWindowAnimator для анимации
+            var animator = deskPanel.GetComponent<UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Open();
+            }
+            else
+            {
+                // Фоллбэк если нет аниматора
+                deskPanel.gameObject.SetActive(true);
+                var cg = deskPanel.GetComponent<CanvasGroup>();
+                if (cg != null)
+                {
+                    cg.alpha = 1f;
+                    cg.interactable = true;
+                    cg.blocksRaycasts = true;
+                }
+            }
+            
             if (MusicPlayer.Instance != null) MusicPlayer.Instance.PlayDirectorsOfficeTheme();
         }
     }

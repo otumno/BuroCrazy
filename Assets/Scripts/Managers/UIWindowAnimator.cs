@@ -90,5 +90,17 @@ public class UIWindowAnimator : MonoBehaviour
         canvasGroup.blocksRaycasts = false;
         transform.localScale = originalScale * (useGlobalSettings && UIGlobalSettingsManager.Instance ? UIGlobalSettingsManager.Instance.globalStartScale : localStartScale);
     }
+
+    public void ShowInstant()
+    {
+        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+        transform.DOKill();
+        canvasGroup.DOKill();
+        
+        transform.localScale = originalScale;
+        canvasGroup.alpha = 1f;
+        canvasGroup.interactable = true;
+        canvasGroup.blocksRaycasts = true;
+    }
 }
 }

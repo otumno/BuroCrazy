@@ -143,54 +143,15 @@ public class MainMenuActions : MonoBehaviour
 
     private void SwitchToDirectorCreation()
     {
-        GameObject[] allPanels = new GameObject[] { mainMenuPanel, saveLoadPanel, achievementListPanel, directorCreationPanel };
-        
-        if (directorCreationPanel != null)
+        // 1. Используем наш умный роутер! Он сам плавно скроет MainMenuPanel в альфу 0
+        ShowPanel(directorCreationPanel);
+
+
+        // 2. Инициализируем саму книгу
+        if (directorCreationBook != null) 
         {
-            var animator = directorCreationPanel.GetComponent<Managers.UIWindowAnimator>();
-            if (animator != null)
-            {
-                animator.Open();
-            }
-            else
-            {
-                directorCreationPanel.SetActive(true);
-                var canvasGroup = directorCreationPanel.GetComponent<CanvasGroup>();
-                if (canvasGroup != null)
-                {
-                    canvasGroup.alpha = 1f;
-                    canvasGroup.interactable = true;
-                    canvasGroup.blocksRaycasts = true;
-                }
-            }
+            directorCreationBook.OpenBook();
         }
-        
-        foreach (var panel in allPanels)
-        {
-            if (panel == null || panel == directorCreationPanel) continue;
-            
-            bool isVisible = panel.activeInHierarchy;
-            if (!isVisible)
-            {
-                var cg = panel.GetComponent<CanvasGroup>();
-                if (cg != null) isVisible = cg.alpha > 0.01f;
-            }
-            
-            if (isVisible)
-            {
-                var animator = panel.GetComponent<Managers.UIWindowAnimator>();
-                if (animator != null)
-                {
-                    animator.Close();
-                }
-                else
-                {
-                    panel.SetActive(false);
-                }
-            }
-        }
-        
-        if (directorCreationBook != null) directorCreationBook.OpenBook();
     }
 
     private void OnDirectorCreationFinished(Data.Creation.DirectorInitialState initialState, string creationCode)

@@ -1,24 +1,34 @@
-// Assets/Scripts/UI/UISingletonProxy.cs
 using UnityEngine;
+using System.Collections;
 using Managers;
 
 
 namespace UI
 {
-    /// <summary>
-    /// Скрипт-посредник. Позволяет вызывать методы Синглтонов через UnityEvent в Инспекторе, 
-    /// даже если самого Синглтона нет на сцене в момент редактирования.
-    /// </summary>
     public class UISingletonProxy : MonoBehaviour
     {
         // === Музыка (Music Player) ===
 
+        // Вызываем из OnOpen аниматора
         public void Music_PlayArchiveTheme()
         {
-            if (MusicPlayer.Instance != null) MusicPlayer.Instance.OpenArchiveMusic();
+            StartCoroutine(DelayedPlayArchive());
         }
 
 
+        private IEnumerator DelayedPlayArchive()
+        {
+            // Ждем 0.15 секунд реального времени, чтобы DOTween успел плавно начать анимацию окна
+            yield return new WaitForSecondsRealtime(0.15f);
+            
+            if (MusicPlayer.Instance != null) 
+            {
+                MusicPlayer.Instance.OpenArchiveMusic();
+            }
+        }
+
+
+        // Закрытие можно не задерживать, так как окно просто растворяется
         public void Music_CloseArchiveTheme()
         {
             if (MusicPlayer.Instance != null) MusicPlayer.Instance.CloseArchiveMusic();
@@ -35,7 +45,6 @@ namespace UI
 
         public void Audio_PlayClickSound()
         {
-            // Пример: если захотите звук клика на кнопку закрытия
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Click_Default);
         }
 

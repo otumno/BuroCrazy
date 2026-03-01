@@ -95,58 +95,42 @@ namespace Managers
         public void ShowDirectorDesk()
         {
             if (isTransitioning) return;
-            StartCoroutine(DirectorDeskTransitionRoutine(true));
+            
+            // Ставим игру на паузу через PushPause()
+            PushPause();
+            
+            // Находим StartOfDayPanel
+            var sodp = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+            if (sodp != null)
+            {
+                // Используем UIWindowAnimator если есть, иначе мгновенно включаем
+                var animator = sodp.GetComponent<UIWindowAnimator>();
+                if (animator != null)
+                {
+                    sodp.gameObject.SetActive(true);
+                    animator.Open();
+                }
+                else
+                {
+                    sodp.gameObject.SetActive(true);
+                    var cg = sodp.GetComponent<CanvasGroup>();
+                    if (cg != null)
+                    {
+                        cg.alpha = 1f;
+                        cg.interactable = true;
+                        cg.blocksRaycasts = true;
+                    }
+                }
+            }
+            
+            // Включаем музыку офиса
+            MusicPlayer.Instance?.PlayDirectorsOfficeTheme();
         }
 
         public void HideDirectorDesk()
         {
             if (isTransitioning) return;
-            StartCoroutine(DirectorDeskTransitionRoutine(false));
-        }
-
-        private IEnumerator DirectorDeskTransitionRoutine(bool open)
-        {
-            if (_isTransitioning) yield break;
-            _isTransitioning = true;
-
-            if (_currentSceneFade != null)
-                yield return StartCoroutine(_currentSceneFade.PlayCloseRoutine());
-
-            if (open) 
-            {
-                PauseGame(true);
-                if (StartOfDayPanel.Instance != null) StartOfDayPanel.Instance.gameObject.SetActive(true);
-                MusicPlayer.Instance.PlayDirectorsOfficeTheme();
-            } 
-            else 
-            {
-                if (StartOfDayPanel.Instance != null) StartOfDayPanel.Instance.gameObject.SetActive(false);
-                MusicPlayer.Instance.StartGameplayMusic();
-                ResumeGame();
-                Debug.Log("<color=green>[MainUIManager]</color> Игра запущена!");
-            }
-
-            if (_currentSceneFade != null)
-            {
-                StartCoroutine(_currentSceneFade.PlayOpenRoutine());
-            }
-
-            _isTransitioning = false;
-        }
-
-        private void ExecuteDeskSwitch(bool open)
-        {
-            if (open) {
-                PauseGame(true);
-                if (StartOfDayPanel.Instance != null) 
-                    StartOfDayPanel.Instance.gameObject.SetActive(true);
-                MusicPlayer.Instance.PauseGameplayMusicAndPlayOfficeTheme();
-            } else {
-                if (StartOfDayPanel.Instance != null) 
-                    StartOfDayPanel.Instance.gameObject.SetActive(false);
-                
-                MusicPlayer.Instance.StartGameplayMusic();
-            }
+            StartOrResumeGameplay();
         }
 
         public void OnSaveSlotClicked(int slotIndex)
@@ -218,25 +202,40 @@ namespace Managers
         {
             if (isTransitioning) return;
             
-            // Активируем телетайп только сейчас
+            // Запускаем телетайп
             if (Managers.Teletype.TeletypeManager.Instance != null)
                 Managers.Teletype.TeletypeManager.Instance.ActivateSystem();
 
-            StartCoroutine(StartGameplaySequence());
-        }
 
-        private IEnumerator StartGameplaySequence()
-        {
             isTransitioning = true;
             if (pausePanel != null) pausePanel.SetActive(false);
 
-            StartOfDayPanel sodp = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); 
-            if (sodp != null) yield return StartCoroutine(sodp.Fade(false, false));
 
-            // Принудительно сбрасываем все паузы перед стартом
-            _pauseCount = 0;
-            Time.timeScale = 1f; 
-            
+            // 1. Прячем стол директора
+            var desk = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); 
+            if (desk != null) 
+            {
+                var anim = desk.GetComponent<UIWindowAnimator>();
+                if (anim != null) 
+                {
+                    // ВАЖНО: Аниматор сам вызовет PopPause() через 0.25 сек, когда стол полностью исчезнет!
+                    anim.Close(); 
+                }
+                else 
+                {
+                    // Запасной вариант
+                    var cg = desk.GetComponent<CanvasGroup>();
+                    if (cg != null) { cg.alpha = 0f; cg.interactable = false; cg.blocksRaycasts = false; }
+                    PopPause(); 
+                }
+            }
+            else
+            {
+                PopPause();
+            }
+
+
+            // 2. Включаем игровую музыку
             if (MusicPlayer.Instance != null)
             {
                 MusicPlayer.Instance.OnGameStarted();
@@ -244,10 +243,13 @@ namespace Managers
                 MusicPlayer.Instance.RequestNextTrack(); 
             }
 
+
+            // 3. Запускаем утренние спавны
             if (WaveManager.Instance != null)
             {
                 WaveManager.Instance.ForceCheckMorningEvents();
             }
+
 
             isTransitioning = false;
         }
@@ -309,40 +311,53 @@ namespace Managers
                 directorController.ForceSetAtDeskState(true);
             }
 
-            // Настройка UI
+            // 1. Мгновенно показываем стол (он будет лежать на дне)
+            var desk = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+            if (desk != null)
+            {
+                desk.gameObject.SetActive(true);
+                var anim = desk.GetComponent<UIWindowAnimator>();
+                if (anim != null) anim.ShowInstant();
+                else 
+                { 
+                    var cg = desk.GetComponent<CanvasGroup>(); 
+                    if (cg != null) { cg.alpha = 1f; cg.interactable = true; cg.blocksRaycasts = true; } 
+                }
+            }
+
+
+            // 2. Мгновенно показываем Приказы и выносим их ПОВЕРХ стола
             if (orderSelectionUI != null)
             {
                 orderSelectionUI.gameObject.SetActive(true);
+                // orderSelectionUI.transform.SetAsLastSibling(); // УДАЛЕНО: UIWindowAnimator сам управляет порядком
                 orderSelectionUI.Setup();
-                // Блокируем взаимодействие пока идет заставка
                 var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
-                if(orderCG) 
-                {
-                    orderCG.alpha = 1f;
-                    orderCG.interactable = false;
-                    orderCG.blocksRaycasts = false;
-                }
+                if(orderCG) { orderCG.alpha = 1f; orderCG.interactable = false; orderCG.blocksRaycasts = false; }
             }
 
-            // Ждем на заставке (Realtime, т.к. игра на паузе)
-            yield return new WaitForSecondsRealtime(splashScreenDwellTime);
 
-            // Убираем сплэш
-            if (daySplashScreenController != null)
+            // 3. Ждем скипа заставки (сплэш-скрина)
+            float timer = 0f;
+            while (timer < splashScreenDwellTime)
             {
-                yield return daySplashScreenController.Fade(false);
+                timer += Time.unscaledDeltaTime;
+                if (Input.GetMouseButtonDown(0)) break;
+                yield return null;
             }
 
-            // Разрешаем выбирать приказы
+
+            // 4. Убираем сплэш
+            if (daySplashScreenController != null) yield return daySplashScreenController.Fade(false);
+
+
+            // 5. Разрешаем кликать по приказам
             if (orderSelectionUI != null) 
             {
                 var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
-                if(orderCG) 
-                {
-                    orderCG.interactable = true;
-                    orderCG.blocksRaycasts = true;
-                }
+                if(orderCG) { orderCG.interactable = true; orderCG.blocksRaycasts = true; }
             }
+
 
             isTransitioning = false;
         }

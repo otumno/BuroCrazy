@@ -150,7 +150,6 @@ public class StartOfDayPanel : MonoBehaviour
 
             startDayButton.onClick.RemoveAllListeners();
             startDayButton.onClick.AddListener(() => {
-                MainUIManager.Instance.HideDirectorDesk();
                 MainUIManager.Instance.StartOrResumeGameplay();
             });
         }
@@ -247,60 +246,4 @@ public class StartOfDayPanel : MonoBehaviour
     }
 
     public int GetWaitingDocumentCount() { return waitingDocumentIcons.Count + activeProjectIcons.Count; }
-
-    public IEnumerator Fade(bool fadeIn, bool interactableAfterFade)
-    {
-        if (canvasGroup == null) yield break;
-        
-        if (fadeIn) UpdateBackground(); 
-
-        float startAlpha = fadeIn ? 0f : 1f;
-        float endAlpha = fadeIn ? 1f : 0f;
-        float fadeDuration = 0.3f;
-        canvasGroup.interactable = false;
-        canvasGroup.blocksRaycasts = true; 
-        
-        if (fadeIn) { gameObject.SetActive(true); }
-        
-        float timer = 0f;
-        while (timer < fadeDuration)
-        {
-            timer += Time.unscaledDeltaTime;
-            canvasGroup.alpha = Mathf.Lerp(startAlpha, endAlpha, timer / fadeDuration);
-            yield return null;
-        }
-        canvasGroup.alpha = endAlpha;
-        canvasGroup.interactable = interactableAfterFade;
-        
-        if (!fadeIn) { gameObject.SetActive(false); }
-    }
-
-    public IEnumerator FadeDoTween(bool fadeIn, bool interactableAfterFade)
-    {
-        if (_sequence.IsActive()) _sequence.Kill();
-
-        if (canvasGroup == null) yield break;
-        
-        if (fadeIn) UpdateBackground();
-        
-        var startAlpha = fadeIn ? 0f : 1f;
-        var endAlpha = fadeIn ? 1f : 0f;
-
-        _sequence = DOTween.Sequence()
-            .OnStart(() =>
-            {
-                canvasGroup.interactable = false;
-                canvasGroup.alpha = startAlpha;
-                if (fadeIn) gameObject.SetActive(true);
-            })
-            .Append(canvasGroup.DOFade(endAlpha, _fadeDuration))
-            .OnComplete(() =>
-            {
-                canvasGroup.interactable = interactableAfterFade;
-                if (!fadeIn) gameObject.SetActive(false);
-            })
-            .Play();
-
-        while (_sequence.IsActive()) yield return new WaitForSeconds(0.01f);
-    }
 }
