@@ -622,7 +622,7 @@ namespace UI.Creation
 
         public void OpenBook()
         {
-            var animator = GetComponent<Managers.UIWindowAnimator>();
+            var animator = GetComponent<UIWindowAnimator>();
             if (animator != null)
             {
                 animator.Open();
@@ -644,7 +644,7 @@ namespace UI.Creation
         public void CloseBook()
         {
             StopMusic();
-            var animator = GetComponent<Managers.UIWindowAnimator>();
+            var animator = GetComponent<UIWindowAnimator>();
             if (animator != null)
             {
                 animator.Close();

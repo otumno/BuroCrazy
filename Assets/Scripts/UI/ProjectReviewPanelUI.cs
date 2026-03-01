@@ -46,12 +46,14 @@ namespace UI
                 costText.text = $"Стоимость: {doc.targetJob.costMoney}$ / {doc.targetJob.costInfluence} Влияния";
             }
 
-            // Проверка ресурсов (Визуальная). Реальное списание будет в Кассе, но директор должен знать.
-            // Можно сделать кнопку серой, если ресурсов совсем нет, но по логике "Волокиты" 
-            // директор может подписать, а кассир потом откажет. Оставим кнопку активной.
+            // Проверка ресурсов (Визуальная)
             signButton.interactable = true; 
 
-            gameObject.SetActive(true);
+            // Используем паттерн Smart UI
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null) animator.Open();
+            else gameObject.SetActive(true);
+
             MainUIManager.Instance?.PushPause();
         }
 
@@ -73,8 +75,16 @@ namespace UI
 
         private void Hide()
         {
-            gameObject.SetActive(false);
-            MainUIManager.Instance?.PopPause();
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Close();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+                MainUIManager.Instance?.PopPause();
+            }
         }
     }
 }

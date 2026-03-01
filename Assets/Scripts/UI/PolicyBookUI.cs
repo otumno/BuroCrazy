@@ -94,8 +94,12 @@ namespace UI
             }
         }
 
-        private void OnEnable()
+        public void Show()
         {
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null) animator.Open();
+            else gameObject.SetActive(true);
+
             MainUIManager.Instance?.PushPause();
 
             if (showingPolicies)
@@ -110,8 +114,16 @@ namespace UI
 
         public void Hide()
         {
-            gameObject.SetActive(false);
-            MainUIManager.Instance?.PopPause();
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Close();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+                MainUIManager.Instance?.PopPause();
+            }
         }
 
         private void RefreshList()

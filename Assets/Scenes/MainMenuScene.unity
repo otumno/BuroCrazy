@@ -6544,6 +6544,10 @@ MonoBehaviour:
   localStartScale: 0.9
   localShowEase: 9
   localHideEase: 8
+  playSounds: 1
+  useGlobalSounds: 1
+  localOpenSound: 0
+  localCloseSound: 0
   OnOpen:
     m_PersistentCalls:
       m_Calls: []
@@ -9318,6 +9322,10 @@ MonoBehaviour:
   localStartScale: 0.9
   localShowEase: 9
   localHideEase: 8
+  playSounds: 1
+  useGlobalSounds: 1
+  localOpenSound: 0
+  localCloseSound: 0
   OnOpen:
     m_PersistentCalls:
       m_Calls:
@@ -10052,6 +10060,10 @@ MonoBehaviour:
   localStartScale: 0.9
   localShowEase: 9
   localHideEase: 8
+  playSounds: 1
+  useGlobalSounds: 1
+  localOpenSound: 0
+  localCloseSound: 0
   OnOpen:
     m_PersistentCalls:
       m_Calls: []
@@ -12926,6 +12938,14 @@ PrefabInstance:
     - target: {fileID: 5147576532701257959, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5956366104858927862, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: defaultOpenSound
+      value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 5956366104858927862, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: defaultCloseSound
+      value: 26
       objectReference: {fileID: 0}
     - target: {fileID: 7573636373502958441, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_Name

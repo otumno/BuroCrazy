@@ -20,10 +20,7 @@ namespace UI
 
         private void Start()
         {
-            closeButton.onClick.AddListener(() => {
-                gameObject.SetActive(false);
-                MainUIManager.Instance.PopPause();
-            });
+            closeButton.onClick.AddListener(Hide);
             gameObject.SetActive(false);
             
             // Находим доску, если не привязана
@@ -32,9 +29,26 @@ namespace UI
 
         public void Show()
         {
-            gameObject.SetActive(true);
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null) animator.Open();
+            else gameObject.SetActive(true);
+
             MainUIManager.Instance.PushPause();
             RefreshList();
+        }
+
+        public void Hide()
+        {
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Close();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+                MainUIManager.Instance.PopPause();
+            }
         }
 
         private void RefreshList()

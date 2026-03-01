@@ -24,23 +24,32 @@ public class HiringPanelUI : MonoBehaviour
     
     private List<TeamMemberCardUI> activeCards = new List<TeamMemberCardUI>();
 
-    void OnEnable()
+    public void Show()
     {
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null) animator.Open();
+        else gameObject.SetActive(true);
+
+        MainUIManager.Instance?.PushPause();
+
+        // Переносим логику из OnEnable в конец Show
         currentSortMode = SortMode.ByName;
         isSortAscending = true;
         RefreshTeamList();
     }
-    
-    public void Show()
-    {
-        gameObject.SetActive(true);
-        MainUIManager.Instance?.PushPause();
-    }
 
     public void Hide()
     {
-        gameObject.SetActive(false);
-        MainUIManager.Instance?.PopPause();
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null)
+        {
+            animator.Close();
+        }
+        else
+        {
+            gameObject.SetActive(false);
+            MainUIManager.Instance?.PopPause();
+        }
     }
 
     // Метод для открытия расписания (можно привязать к кнопке в инспекторе)
@@ -48,8 +57,7 @@ public class HiringPanelUI : MonoBehaviour
     {
         if (schedulePanel != null)
         {
-            schedulePanel.gameObject.SetActive(true);
-            // schedulePanel.RebuildTable(); // Обычно вызывается в OnEnable самой панели
+            schedulePanel.Show();
         }
     }
 

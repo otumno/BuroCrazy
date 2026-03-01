@@ -64,17 +64,18 @@ namespace UI.Policies
             var policyUI = FindFirstObjectByType<UI.PolicyBookUI>(FindObjectsInactive.Include);
             if (policyUI != null)
             {
-                if (policyUI.gameObject.activeSelf)
+                // Проверяем видимость через CanvasGroup, а не через activeSelf
+                var cg = policyUI.GetComponent<CanvasGroup>();
+                bool isVisible = cg != null && cg.alpha > 0.01f;
+
+
+                if (isVisible)
                 {
                     policyUI.Hide();
                 }
                 else
                 {
-                    policyUI.gameObject.SetActive(true);
-                    // Вызываем OnEnable принудительно, если объект был выключен
-                    var method = policyUI.GetType().GetMethod("OnEnable", 
-                        System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                    method?.Invoke(policyUI, null);
+                    policyUI.Show();
                 }
             }
             else

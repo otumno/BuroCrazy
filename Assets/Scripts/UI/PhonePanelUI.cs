@@ -25,15 +25,26 @@ public class PhonePanelUI : MonoBehaviour
 
     public void Show()
     {
-        gameObject.SetActive(true);
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null) animator.Open();
+        else gameObject.SetActive(true);
+
         MainUIManager.Instance?.PushPause();
         Refresh();
     }
 
     public void Hide()
     {
-        gameObject.SetActive(false);
-        MainUIManager.Instance?.PopPause();
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null)
+        {
+            animator.Close();
+        }
+        else
+        {
+            gameObject.SetActive(false);
+            MainUIManager.Instance?.PopPause();
+        }
     }
 
     public void Refresh()

@@ -101,6 +101,10 @@ public class PromotionPanelUI : MonoBehaviour
         }
         
         panelObject.SetActive(true);
+        
+        var animator = panelObject.GetComponent<UIWindowAnimator>();
+        if (animator != null) animator.Open();
+        
         MainUIManager.Instance.PushPause();
     }
 
@@ -130,7 +134,15 @@ public class PromotionPanelUI : MonoBehaviour
 
     public void Hide()
     {
-        panelObject.SetActive(false);
-        MainUIManager.Instance.PopPause();
+        var animator = panelObject.GetComponent<UIWindowAnimator>();
+        if (animator != null)
+        {
+            animator.Close();
+        }
+        else
+        {
+            panelObject.SetActive(false);
+            MainUIManager.Instance.PopPause();
+        }
     }
 }

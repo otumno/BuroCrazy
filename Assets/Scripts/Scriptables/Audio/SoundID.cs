@@ -38,6 +38,8 @@ namespace Scriptables.Audio
         Light_MasterSwitch,  // Общий щелчок рубильника (один раз)
         Light_LampTwinkle,    // Звук разгорания/потухания отдельной лампы
 		
-		BootFade
+		BootFade,
+		Panel_open,
+		Panel_close
     }
 }

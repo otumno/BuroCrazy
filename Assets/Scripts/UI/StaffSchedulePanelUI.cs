@@ -35,9 +35,16 @@ public class StaffSchedulePanelUI : MonoBehaviour
         if (backgroundButton != null) backgroundButton.onClick.AddListener(Hide);
     }
 
-    private void OnEnable()
+    // Создаем публичный метод Show() - переносим логику из OnEnable
+    public void Show()
     {
+        // Паттерн Smart UI: сначала аниматор
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null) animator.Open();
+        else gameObject.SetActive(true);
+        
         MainUIManager.Instance?.PushPause();
+        
         // Автоматически ищем попап, если забыли привязать в инспекторе
         if (configPopup == null) 
             configPopup = FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include);
@@ -47,8 +54,16 @@ public class StaffSchedulePanelUI : MonoBehaviour
 
     public void Hide()
     {
-        gameObject.SetActive(false);
-        MainUIManager.Instance?.PopPause();
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null)
+        {
+            animator.Close();
+        }
+        else
+        {
+            gameObject.SetActive(false);
+            MainUIManager.Instance?.PopPause();
+        }
     }
 
     // Публичный метод для принудительного обновления

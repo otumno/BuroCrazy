@@ -31,22 +31,28 @@ namespace UI.Bookkeeping
             closeButton.onClick.AddListener(Hide);
         }
 
-        private void OnEnable()
-        {
-            // При каждом открытии панели обновляем всю информацию
-            UpdateAllData();
-        }
-
         public void Show()
         {
-            gameObject.SetActive(true);
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null) animator.Open();
+            else gameObject.SetActive(true);
+
             MainUIManager.Instance.PushPause();
+            UpdateAllData();
         }
 
         public void Hide()
         {
-            gameObject.SetActive(false);
-            MainUIManager.Instance.PopPause();
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Close();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+                MainUIManager.Instance.PopPause();
+            }
         }
 
         // Главный метод для обновления всех данных на панели

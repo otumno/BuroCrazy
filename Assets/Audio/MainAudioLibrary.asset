@@ -33,7 +33,7 @@ MonoBehaviour:
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   - id: 2
     clips:
-    - {fileID: 8300000, guid: 387007d5365a63547b93076288408824, type: 3}
+    - {fileID: 8300000, guid: 2c46e6bfee90f2140bea5458a50836bd, type: 3}
     volume: 1
     pitch: 1
     pitchDelta: 0.2
@@ -164,6 +164,42 @@ MonoBehaviour:
     - {fileID: 8300000, guid: 8957b88c3c2da1943b3b7fc232a405e1, type: 3}
     - {fileID: 8300000, guid: da67ecfdb2f7d7244bf200833953d7fc, type: 3}
     - {fileID: 8300000, guid: b32890a7a8192c84682bcfc612a582f5, type: 3}
+    volume: 0.6
+    pitch: 1
+    pitchDelta: 0.1
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 1
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 25
+    clips:
+    - {fileID: 8300000, guid: b18d1c2ff15eade428244d74f3848b3a, type: 3}
+    volume: 0.6
+    pitch: 1
+    pitchDelta: 0.1
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 1
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 26
+    clips:
+    - {fileID: 8300000, guid: f44790c23711957469a0a834503c2a36, type: 3}
     volume: 0.6
     pitch: 1
     pitchDelta: 0.1

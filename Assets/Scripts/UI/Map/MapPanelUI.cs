@@ -47,8 +47,12 @@ namespace UI.Map
             if (closeButton != null) closeButton.onClick.AddListener(ClosePanel);
         }
 
-        private void OnEnable()
+        public void Show()
         {
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null) animator.Open();
+            else gameObject.SetActive(true);
+
             MainUIManager.Instance?.PushPause();
             InitializeSlots();
             RefreshAllButtons();
@@ -56,7 +60,6 @@ namespace UI.Map
             if (regionInfoPanel) 
             {
                 regionInfoPanel.SetActive(true);
-                // Показываем плейсхолдер
                 if (r_Title != null) r_Title.text = "КАРТА";
                 if (r_Desc != null) r_Desc.text = "<color=yellow>Нажмите на район</color> для получения информации.\n\n" +
                     "Районы приносят клиентов в ваше бюро.\n" +
@@ -74,21 +77,6 @@ namespace UI.Map
                 if (j_Cost != null) j_Cost.text = "Выберите должность";
                 if (j_ActionButton != null) j_ActionButton.interactable = false;
             }
-
-            // todo:
-            // тут лучше игроку будет показывать какая у него текущая должность и за какой район он сейчас дерётся, собственно,
-            // а не дефолтные выбирать. а если никакой не выбран, то можно выбирать начальнцый.
-            
-            // НЕ выбираем автоматически первый слот - показываем дефолтный текст
-            // Если нужно выбирать первый слот, раскомментируй код ниже:
-            // if (regionSlots != null && regionSlots.Count > 0)
-            // {
-            //     var firstSlot = regionSlots.Find(s => s != null && s.regionData != null);
-            //     if (firstSlot != null)
-            //     {
-            //         ShowRegionInfo(firstSlot.regionData);
-            //     }
-            // }
         }
 
         public void RefreshAllButtons()
@@ -411,8 +399,16 @@ namespace UI.Map
 
         private void ClosePanel()
         {
-            gameObject.SetActive(false);
-            if (MainUIManager.Instance != null) MainUIManager.Instance.PopPause();
+            var animator = GetComponent<UIWindowAnimator>();
+            if (animator != null)
+            {
+                animator.Close();
+            }
+            else
+            {
+                gameObject.SetActive(false);
+                MainUIManager.Instance?.PopPause();
+            }
         }
     }
 }

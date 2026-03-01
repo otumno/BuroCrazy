@@ -1,19 +1,25 @@
 using UnityEngine;
 using DG.Tweening;
 using UnityEngine.Events;
+using Managers;
 using UnityEngine.SceneManagement;
+using Scriptables.Audio;
 
-namespace Managers
-{
 [RequireComponent(typeof(CanvasGroup))]
 public class UIWindowAnimator : MonoBehaviour
 {
-    [Header("Настройки")]
+    [Header("Настройки Анимации")]
     public bool useGlobalSettings = true;
     public float localDuration = 0.25f;
     public float localStartScale = 0.9f;
     public Ease localShowEase = Ease.OutCubic;
     public Ease localHideEase = Ease.InCubic;
+
+    [Header("Настройки Звука")]
+    public bool playSounds = true;
+    public bool useGlobalSounds = true;
+    public SoundID localOpenSound = SoundID.None;
+    public SoundID localCloseSound = SoundID.None;
 
     [Header("События")]
     public UnityEvent OnOpen;
@@ -34,9 +40,19 @@ public class UIWindowAnimator : MonoBehaviour
     {
         if (isClosing) return;
         
-        transform.SetAsLastSibling();
         transform.DOKill();
         canvasGroup.DOKill();
+
+        // Логика звука открытия
+        if (playSounds && AudioManager.Instance != null)
+        {
+            SoundID soundToPlay = (useGlobalSounds && UIGlobalSettingsManager.Instance != null) 
+                ? UIGlobalSettingsManager.Instance.defaultOpenSound 
+                : localOpenSound;
+                
+            if (soundToPlay != SoundID.None)
+                AudioManager.Instance.PlaySound(soundToPlay);
+        }
 
         float d = useGlobalSettings && UIGlobalSettingsManager.Instance ? UIGlobalSettingsManager.Instance.globalDuration : localDuration;
         float s = useGlobalSettings && UIGlobalSettingsManager.Instance ? UIGlobalSettingsManager.Instance.globalStartScale : localStartScale;
@@ -65,6 +81,17 @@ public class UIWindowAnimator : MonoBehaviour
         transform.DOKill();
         canvasGroup.DOKill();
 
+        // Логика звука закрытия
+        if (playSounds && AudioManager.Instance != null)
+        {
+            SoundID soundToPlay = (useGlobalSounds && UIGlobalSettingsManager.Instance != null) 
+                ? UIGlobalSettingsManager.Instance.defaultCloseSound 
+                : localCloseSound;
+                
+            if (soundToPlay != SoundID.None)
+                AudioManager.Instance.PlaySound(soundToPlay);
+        }
+
         float d = useGlobalSettings && UIGlobalSettingsManager.Instance ? UIGlobalSettingsManager.Instance.globalDuration : localDuration;
         float s = useGlobalSettings && UIGlobalSettingsManager.Instance ? UIGlobalSettingsManager.Instance.globalStartScale : localStartScale;
         Ease ease = useGlobalSettings && UIGlobalSettingsManager.Instance ? UIGlobalSettingsManager.Instance.globalHideEase : localHideEase;
@@ -90,7 +117,7 @@ public class UIWindowAnimator : MonoBehaviour
         canvasGroup.blocksRaycasts = false;
         transform.localScale = originalScale * (useGlobalSettings && UIGlobalSettingsManager.Instance ? UIGlobalSettingsManager.Instance.globalStartScale : localStartScale);
     }
-
+    
     public void ShowInstant()
     {
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
@@ -102,5 +129,4 @@ public class UIWindowAnimator : MonoBehaviour
         canvasGroup.interactable = true;
         canvasGroup.blocksRaycasts = true;
     }
-}
 }

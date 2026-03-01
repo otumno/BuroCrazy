@@ -24,6 +24,7 @@ namespace Managers
         public int pauseCount => _pauseCount;
         private BootFadeEffect _currentSceneFade;
         private bool _isTransitioning = false;
+        private bool _isUserPaused = false;
         
         public void RegisterSceneFade(BootFadeEffect fade) => _currentSceneFade = fade;
         public bool isTransitioning { get; private set; }
@@ -74,6 +75,63 @@ namespace Managers
 
         public void PushPause() => PauseGame(false);
         public void PopPause() => ResumeGame();
+
+        private void Update()
+        {
+            // Если идет анимация загрузки или смена дня - игнорируем нажатия
+            if (isTransitioning) return;
+
+
+            // Ручная пауза на пробел
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                ToggleUserPause();
+            }
+        }
+
+
+        public void ToggleUserPause()
+        {
+            // 1. Проверяем, не сидим ли мы за столом Директора
+            var desk = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
+            if (desk != null)
+            {
+                var cg = desk.GetComponent<CanvasGroup>();
+                if (cg != null && cg.alpha > 0.01f) return; 
+            }
+
+
+            // 2. Игнорируем пробел, если открыто окно (Карта, Бухгалтерия и т.д.)
+            if (!_isUserPaused && _pauseCount > 0) return; 
+
+
+            // 3. Переключаем ручную паузу
+            _isUserPaused = !_isUserPaused;
+
+
+            if (_isUserPaused)
+            {
+                PushPause();
+                if (pausePanel != null) pausePanel.SetActive(true);
+                
+                // 🎵 Плавно уводим игру в паузу (с сохранением времени трека)
+                if (MusicPlayer.Instance != null)
+                {
+                    MusicPlayer.Instance.PauseGameplayMusicForManualPause(); 
+                }
+            }
+            else
+            {
+                PopPause();
+                if (pausePanel != null) pausePanel.SetActive(false);
+                
+                // 🎵 Возвращаем игровую музыку ровно с того места, где остановились
+                if (MusicPlayer.Instance != null)
+                {
+                    MusicPlayer.Instance.ResumeGameplayMusicFromManualPause();
+                }
+            }
+        }
 
         // --- МЕТОДЫ УПРАВЛЕНИЯ UI ---
 
@@ -202,7 +260,6 @@ namespace Managers
         {
             if (isTransitioning) return;
             
-            // Запускаем телетайп
             if (Managers.Teletype.TeletypeManager.Instance != null)
                 Managers.Teletype.TeletypeManager.Instance.ActivateSystem();
 
@@ -211,31 +268,25 @@ namespace Managers
             if (pausePanel != null) pausePanel.SetActive(false);
 
 
-            // 1. Прячем стол директора
+            // 1. Прячем стол
             var desk = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); 
             if (desk != null) 
             {
                 var anim = desk.GetComponent<UIWindowAnimator>();
-                if (anim != null) 
-                {
-                    // ВАЖНО: Аниматор сам вызовет PopPause() через 0.25 сек, когда стол полностью исчезнет!
-                    anim.Close(); 
-                }
+                if (anim != null) anim.Close(); 
                 else 
                 {
-                    // Запасной вариант
                     var cg = desk.GetComponent<CanvasGroup>();
                     if (cg != null) { cg.alpha = 0f; cg.interactable = false; cg.blocksRaycasts = false; }
-                    PopPause(); 
                 }
             }
-            else
-            {
-                PopPause();
-            }
 
 
-            // 2. Включаем игровую музыку
+            // 2. Запускаем корутину, которая сбросит паузу, когда стол исчезнет
+            StartCoroutine(HardResetPauseRoutine());
+
+
+            // 3. Запускаем фоновые системы
             if (MusicPlayer.Instance != null)
             {
                 MusicPlayer.Instance.OnGameStarted();
@@ -244,14 +295,24 @@ namespace Managers
             }
 
 
-            // 3. Запускаем утренние спавны
-            if (WaveManager.Instance != null)
-            {
-                WaveManager.Instance.ForceCheckMorningEvents();
-            }
+            if (WaveManager.Instance != null) WaveManager.Instance.ForceCheckMorningEvents();
 
 
             isTransitioning = false;
+        }
+
+
+        // НОВЫЙ МЕТОД
+        private System.Collections.IEnumerator HardResetPauseRoutine()
+        {
+            // Ждем 0.3 секунды реального времени (пока аниматор прячет стол)
+            yield return new WaitForSecondsRealtime(0.3f);
+            
+            // Жестко сбрасываем счетчик и запускаем время
+            _pauseCount = 0;
+            _isUserPaused = false; // Сбрасываем флаг ручной паузы
+            Time.timeScale = 1f;
+            Debug.Log("<color=green>[MainUIManager] Время запущено, _pauseCount сброшен на 0.</color>");
         }
 
         private IEnumerator LoadSceneRoutine(string sceneName)

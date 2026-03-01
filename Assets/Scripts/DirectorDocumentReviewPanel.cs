@@ -130,8 +130,14 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
     public void ShowDocument(ClientPathfinding client)
     {
         currentClient = client;
-        MainUIManager.Instance.PushPause();
-        gameObject.SetActive(true);
+        
+        // Паттерн Smart UI: сначала аниматор, потом пауза
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null) animator.Open();
+        else gameObject.SetActive(true);
+        
+        MainUIManager.Instance?.PushPause();
+        
         titleText.text = DocumentTitleGenerator.GenerateTitle();
         feeAndBribeText.text = $"Пошлина: ${client.directorDocumentFee} | Взятка: ${client.directorDocumentBribe}";
         approveWithBribeButton.gameObject.SetActive(client.directorDocumentBribe > 0);
@@ -141,11 +147,18 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
 
     private void ClosePanel()
     {
-        gameObject.SetActive(false);
-        
-        if(MainUIManager.Instance != null && !MainUIManager.Instance.isTransitioning)
+        var animator = GetComponent<UIWindowAnimator>();
+        if (animator != null)
         {
-            MainUIManager.Instance.PopPause();
+            animator.Close(); // Аниматор сам вызовет PopPause
+        }
+        else
+        {
+            gameObject.SetActive(false);
+            if(MainUIManager.Instance != null && !MainUIManager.Instance.isTransitioning)
+            {
+                MainUIManager.Instance.PopPause();
+            }
         }
     }
 
