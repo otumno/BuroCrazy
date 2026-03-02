@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 9dc3a9cf69f47b049b7f6246f27b5b60
+guid: 88f9ae386053b164f9c5a8052440b6cb
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8780593346731505800
-    second: ClientFBase4Outfit1_0
-  - first:
-      213: -1631505113882354247
-    second: ClientFBase4Outfit1_1
+      213: -3552518057582720221
+    second: InternFBase1_Outfit_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,7 +37,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -54,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 1350
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -103,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ClientFBase4Outfit1_0
+      name: InternFBase1_Outfit_0
       rect:
         serializedVersion: 2
         x: 0
@@ -118,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 87709ea6fd0152680800000000000000
-      internalID: -8780593346731505800
+      spriteID: 32b0f9f06abe2bec0800000000000000
+      internalID: -3552518057582720221
       vertices: []
       indices: 
       edges: []
@@ -128,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: d1633a5767455eb4cab038947d55a735
+    spriteID: a78afe1093de4714ab0952f6dafae9a0
     internalID: 0
     vertices: []
     indices: 
@@ -138,8 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ClientFBase4Outfit1_0: -8780593346731505800
-      ClientFBase4Outfit1_1: -1631505113882354247
+      InternFBase1_Outfit_0: -3552518057582720221
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

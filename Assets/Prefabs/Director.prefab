@@ -55,6 +55,7 @@ GameObject:
   - component: {fileID: 6049552469313363215}
   - component: {fileID: 2575685442653680293}
   - component: {fileID: -3817331557553524234}
+  - component: {fileID: 7848037004066070806}
   m_Layer: 6
   m_Name: Director
   m_TagString: Clerk
@@ -201,8 +202,8 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
-  m_Radius: 0.23
+  m_Offset: {x: 0, y: -0.26114607}
+  m_Radius: 0.18876642
 --- !u!114 &-8398573153687907481
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -314,33 +315,64 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3e669a32d9e094a408d4f0a259cfcc35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterName: "\u0411\u0435\u0437\u044B\u043C\u044F\u043D\u043D\u044B\u0439"
-  currentRank: {fileID: 0}
-  currentRole: 7
-  experiencePoints: 0
+  nameData:
+    firstName: 
+    lastName: 
+    patronymic: 
+    shortName: 
+    diminutiveName: 
+  role: 0
+  roleData: {fileID: 0}
   gender: 0
-  skills: {fileID: 0}
-  promotionAvailableNotificationPlayed: 0
-  uiScheduleTrackIndex: -1
-  WorkShiftMask: 0
+  currentRankData: {fileID: 0}
   salaryPerPeriod: 15
   unpaidPeriods: 0
   missedPaymentCount: 0
-  shiftStartIndex: -1
+  experiencePoints: 0
+  promotionAvailableNotificationPlayed: 0
+  skills:
+    speed: 1
+    efficiency: 1
+    paperworkMastery: 0
+    sedentaryResilience: 0
+    pedantry: 0
+    softSkills: 0
+    corruption: 0
+  WorkShiftMask: 0
+  punctuality: 0.5
+  maxLateness: 30
+  latenessVariance: 5
+  shiftStartTime: 0
+  currentLateness: 0
+  currentEarlyLeave: 0
+  hasArrivedToday: 0
+  hasLeftToday: 0
+  hasLunchBreak: 1
+  isOnBreak: 0
+  breakStartTime: 0
+  stressThresholdToilet: 0.9
+  stressThresholdBreak: 0.6
+  baseBreakChancePerPeriod: 0.15
+  breakDuration: 120
+  toiletBreakCooldown: 300
+  breakCheckInterval: 30
+  breakCheckVariation: 15
   activeActions: []
   systemActionDatabase: {fileID: 0}
-  assignedWorkstation: {fileID: 0}
+  agentMover: {fileID: 0}
+  thoughtBubble: {fileID: 0}
+  logger: {fileID: 0}
+  visuals: {fileID: 0}
+  voiceProfile: {fileID: 11400000, guid: 886bf9ee27f40ff4cb5f1d97124c19e2, type: 2}
+  energy: 1
+  stress: 0
   frustration: 0
   bladder: 0
-  energy: 1
   morale: 1
-  baseFrustrationGain: 0.1
-  frustrationResistanceSkill: 1
-  startShiftSound: {fileID: 0}
-  endShiftSound: {fileID: 0}
-  voiceProfile: {fileID: 11400000, guid: 886bf9ee27f40ff4cb5f1d97124c19e2, type: 2}
-  spriteCollection: {fileID: 11400000, guid: b1c9cb1dc26e5434fbe42e9b72b2c7b6, type: 2}
-  stateEmotionMap: {fileID: 11400000, guid: 18bb2c0b09d19b84ca27c4993ea9a97d, type: 2}
+  assignedWorkstation: {fileID: 0}
+  uiScheduleTrackIndex: -1
+  currentAction: {fileID: 0}
+  currentExecutor: {fileID: 0}
   directorChairPoint: {fileID: 0}
   form1Prefab: {fileID: 798599227355505824, guid: 8641538397a01fe43af7274ec4931f4d, type: 3}
   form2Prefab: {fileID: 3550377790086235711, guid: b4a4385cb142e0941add6cd29c29e654, type: 3}
@@ -348,6 +380,8 @@ MonoBehaviour:
   certificate2Prefab: {fileID: 874320401446602386, guid: 3b9e93cf316ee2d4ab8c02695b069d07, type: 3}
   nightLight: {fileID: 6540925649609091333}
   processingIconPrefab: {fileID: 8302179308828539902, guid: 2082aa1967a44324cb451698f5122270, type: 3}
+  spriteCollection: {fileID: 11400000, guid: b1c9cb1dc26e5434fbe42e9b72b2c7b6, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: 18bb2c0b09d19b84ca27c4993ea9a97d, type: 2}
 --- !u!114 &4228081369415377242
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -500,6 +534,19 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &7848037004066070806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2985711966202016409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d289a7c96ccc4464983b41546414db0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterStateLogger
+  maxHistory: 15
 --- !u!1 &3455213251003331974
 GameObject:
   m_ObjectHideFlags: 0
@@ -1407,7 +1454,7 @@ MonoBehaviour:
     m_TrimEdge: 0.09
     m_FlipX: 0
     m_FlipY: 0
-    m_InitialTrim: 0.02
+    m_InitialTrim: 0
   m_CastingOption: 1
   m_PreviousTrimEdge: 0.09
   m_PreviousEdgeProcessing: 1

@@ -53,7 +53,8 @@ namespace Managers
             foreach (var staffMember in allStaff)
             {
                 StaffSaveData staffData = new StaffSaveData();
-                staffData.characterName = staffMember.gameObject.name;
+                staffData.gameObjectName = staffMember.gameObject.name;
+                staffData.nameData = staffMember.nameData;
                 staffData.position = staffMember.transform.position;
                 staffData.stressLevel = staffMember.GetCurrentFrustration();
             
@@ -195,11 +196,12 @@ namespace Managers
                 StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
                 foreach (var staffData in data.allStaffData)
                 {
-                    StaffController staffMember = allStaff.FirstOrDefault(s => s.gameObject.name == staffData.characterName);
+                    StaffController staffMember = allStaff.FirstOrDefault(s => s.gameObject.name == staffData.gameObjectName);
                     if (staffMember != null)
                     {
                         staffMember.transform.position = staffData.position;
                         staffMember.SetCurrentFrustration(staffData.stressLevel);
+                        staffMember.nameData = staffData.nameData;
                     
                         if (staffData.assignedWorkstationId != -999)
                         {

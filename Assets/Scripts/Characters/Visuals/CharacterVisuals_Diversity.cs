@@ -68,8 +68,150 @@ namespace Characters
             // Face - ПОСЛЕДНИМ чтобы быть поверх волос
             ApplyFaceSortingFromHair();
 
-            // Примечание: эмоции лица устанавливаются через visuals.Setup() в Initialize()
+        // Примечание: эмоции лица устанавливаются через visuals.Setup() в Initialize()
             // который вызывает SetEmotion(Neutral). Для работы эмоций нужен currentSpriteCollection.
+        }
+
+        /// <summary>
+        /// Настраивает визуальное разнообразие для сотрудника на основе BodyAnimationSet.
+        /// </summary>
+        public void SetupStaffVisualDiversity()
+        {
+            if (currentBodySet == null)
+            {
+                Debug.LogWarning($"[{gameObject.name}] SetupStaffVisualDiversity: currentBodySet is null!");
+                return;
+            }
+
+            Debug.Log($"[{gameObject.name}] SetupStaffVisualDiversity applied from BodyAnimationSet");
+
+            ApplyStaffOutfit(currentBodySet);
+            ApplyStaffHair(currentBodySet);
+            ApplyFaceSortingFromHair();
+        }
+
+        private void ApplyStaffHair(EmotionSpriteCollection.BodyAnimationSet bodySet)
+        {
+            if (bodySet.hairSprites == null || bodySet.hairSprites.Count == 0) 
+            {
+                if (hairObject != null) Destroy(hairObject);
+                hairObject = null;
+                hairRenderer = null;
+                return;
+            }
+
+            Sprite hairSprite = bodySet.hairSprites[Random.Range(0, bodySet.hairSprites.Count)];
+            Color hairColor = bodySet.hairColors != null && bodySet.hairColors.Count > 0 
+                ? bodySet.hairColors[Random.Range(0, bodySet.hairColors.Count)] 
+                : Color.black;
+
+            if (hairObject != null)
+            {
+                Destroy(hairObject);
+            }
+
+            hairObject = new GameObject("Hair");
+
+            Transform visualsContainer = transform.Find("VisualsContainer");
+            if (visualsContainer != null)
+            {
+                hairObject.transform.SetParent(visualsContainer, false);
+            }
+            else
+            {
+                hairObject.transform.SetParent(transform, false);
+            }
+
+            hairObject.transform.localPosition = Vector3.zero;
+
+            hairRenderer = hairObject.AddComponent<SpriteRenderer>();
+            hairRenderer.sprite = hairSprite;
+            hairRenderer.color = hairColor;
+
+            // Наследуем sorting от OutfitOverlay или body
+            Transform outfitOverlay = transform.Find("VisualsContainer/OutfitOverlay");
+            if (outfitOverlay == null) outfitOverlay = transform.Find("OutfitOverlay");
+            if (outfitOverlay == null) outfitOverlay = FindDeepChild(transform, "OutfitOverlay");
+
+            string hairLayer = bodyRenderer != null ? bodyRenderer.sortingLayerName : "Default";
+            int hairOrder = bodyRenderer != null ? bodyRenderer.sortingOrder : 0;
+
+            if (outfitOverlay != null)
+            {
+                var outfitSr = outfitOverlay.GetComponent<SpriteRenderer>();
+                if (outfitSr != null)
+                {
+                    hairLayer = outfitSr.sortingLayerName;
+                    hairOrder = outfitSr.sortingOrder;
+                }
+            }
+
+            hairRenderer.sortingLayerName = hairLayer;
+            hairRenderer.sortingOrder = hairOrder + 1;
+
+            Debug.Log($"[{gameObject.name}] Staff Hair created: sprite={hairSprite.name}, layer={hairLayer}, order={hairOrder + 1}");
+        }
+
+        private void ApplyStaffOutfit(EmotionSpriteCollection.BodyAnimationSet bodySet)
+        {
+            if (bodySet.outfitSprites == null || bodySet.outfitSprites.Count == 0) 
+            {
+                if (outfitObject != null) Destroy(outfitObject);
+                outfitObject = null;
+                outfitRenderer = null;
+                return;
+            }
+
+            Sprite outfitSprite = bodySet.outfitSprites[Random.Range(0, bodySet.outfitSprites.Count)];
+            Color outfitColor = bodySet.outfitColors != null && bodySet.outfitColors.Count > 0 
+                ? bodySet.outfitColors[Random.Range(0, bodySet.outfitColors.Count)] 
+                : Color.white;
+
+            // Ищем существующий OutfitOverlay
+            Transform existingOverlay = transform.Find("VisualsContainer/OutfitOverlay");
+            if (existingOverlay == null) existingOverlay = transform.Find("OutfitOverlay");
+            if (existingOverlay == null) existingOverlay = FindDeepChild(transform, "OutfitOverlay");
+
+            if (existingOverlay != null)
+            {
+                outfitRenderer = existingOverlay.GetComponent<SpriteRenderer>();
+                outfitRenderer.sprite = outfitSprite;
+                outfitRenderer.color = outfitColor;
+                outfitRenderer.sortingLayerName = bodyRenderer != null ? bodyRenderer.sortingLayerName : "Default";
+                outfitRenderer.sortingOrder = bodyRenderer != null ? bodyRenderer.sortingOrder + 1 : 1;
+                outfitObject = existingOverlay.gameObject;
+
+                Debug.Log($"[{gameObject.name}] Staff Outfit updated: sprite={outfitSprite.name}");
+            }
+            else
+            {
+                if (outfitObject != null)
+                {
+                    Destroy(outfitObject);
+                }
+
+                outfitObject = new GameObject("OutfitOverlay");
+
+                Transform visualsContainer = transform.Find("VisualsContainer");
+                if (visualsContainer != null)
+                {
+                    outfitObject.transform.SetParent(visualsContainer, false);
+                }
+                else
+                {
+                    outfitObject.transform.SetParent(transform, false);
+                }
+
+                outfitObject.transform.localPosition = Vector3.zero;
+
+                outfitRenderer = outfitObject.AddComponent<SpriteRenderer>();
+                outfitRenderer.sprite = outfitSprite;
+                outfitRenderer.color = outfitColor;
+                outfitRenderer.sortingLayerName = bodyRenderer != null ? bodyRenderer.sortingLayerName : "Default";
+                outfitRenderer.sortingOrder = bodyRenderer != null ? bodyRenderer.sortingOrder + 1 : 1;
+
+                Debug.Log($"[{gameObject.name}] Staff Outfit created: sprite={outfitSprite.name}");
+            }
         }
 
         private void ApplyHairFromArchetype(ClientArchetype archetype)

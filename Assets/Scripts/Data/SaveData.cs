@@ -37,7 +37,8 @@ public class SaveData
 [System.Serializable]
 public struct StaffSaveData
 {
-    public string characterName;
+    public string gameObjectName;
+    public StaffController.StaffNameData nameData;
     public float stressLevel;
     public Vector3 position;
     

@@ -1,5 +1,6 @@
 // Файл: Scripts/Data/RoleData.cs
 
+using System.Collections.Generic;
 using Scriptables.Audio;
 using UnityEngine;
 

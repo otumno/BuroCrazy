@@ -1,13 +1,16 @@
 fileFormatVersion: 2
-guid: 9dc3a9cf69f47b049b7f6246f27b5b60
+guid: 2fcd20726258452428a373c5b4de9c3e
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -8780593346731505800
-    second: ClientFBase4Outfit1_0
+      213: 4634149273121024449
+    second: InternFBase1_Hair_0
   - first:
-      213: -1631505113882354247
-    second: ClientFBase4Outfit1_1
+      213: -8031617845884146996
+    second: InternFBase1_Hair_1
+  - first:
+      213: 7997267366094017032
+    second: InternFBase1_Hair_2
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -40,7 +43,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -54,7 +57,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 1350
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -103,7 +106,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ClientFBase4Outfit1_0
+      name: InternFBase1_Hair_0
       rect:
         serializedVersion: 2
         x: 0
@@ -118,8 +121,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 87709ea6fd0152680800000000000000
-      internalID: -8780593346731505800
+      spriteID: 1c9638c063ecf4040800000000000000
+      internalID: 4634149273121024449
       vertices: []
       indices: 
       edges: []
@@ -128,7 +131,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: d1633a5767455eb4cab038947d55a735
+    spriteID: d0373ce4d0ebb9a4185a42d9a9ea9cdd
     internalID: 0
     vertices: []
     indices: 
@@ -138,8 +141,9 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      ClientFBase4Outfit1_0: -8780593346731505800
-      ClientFBase4Outfit1_1: -1631505113882354247
+      InternFBase1_Hair_0: 4634149273121024449
+      InternFBase1_Hair_1: -8031617845884146996
+      InternFBase1_Hair_2: 7997267366094017032
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

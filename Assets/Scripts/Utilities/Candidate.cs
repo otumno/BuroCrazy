@@ -2,6 +2,8 @@
 
 using System.Collections.Generic;
 using Enums;
+using Characters;
+using Managers;
 
 namespace Utilities
 {
@@ -19,5 +21,6 @@ namespace Utilities
         public StaffController.Role Role; // Будущая роль
         public RankData Rank;             // Начальный ранг
         public int Experience;           // Начальный опыт
+        public StaffController.StaffNameData NameData;   // Данные об имени для динамического отображения
     }
 }

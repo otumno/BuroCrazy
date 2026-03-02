@@ -19,6 +19,7 @@ namespace Characters
 
     // Internal state
     internal EmotionSpriteCollection currentSpriteCollection;
+    internal EmotionSpriteCollection.BodyAnimationSet currentBodySet;
     internal StateEmotionMap currentStateEmotionMap;
     internal Gender characterGender;
     private Coroutine levelUpCoroutine;
@@ -140,6 +141,8 @@ namespace Characters
         Setup(gender, data.spriteCollection, data.stateEmotionMap);
         // Equip the accessory defined in RoleData
         EquipAccessory(data.accessoryPrefab);
+        // Настраиваем визуальное разнообразие для сотрудника (использует currentBodySet)
+        SetupStaffVisualDiversity();
     }
 
     /// <summary>
@@ -175,6 +178,7 @@ namespace Characters
 
         // Get a random body animation set for the gender
         EmotionSpriteCollection.BodyAnimationSet bodySet = currentSpriteCollection.GetRandomBodySet(gender);
+        currentBodySet = bodySet; // Save for visual diversity
 
         // Check if body sprite was already set by archetype/SetupVisualDiversity
         bool bodySpriteAlreadySet = bodySpriteSetByArchetype;

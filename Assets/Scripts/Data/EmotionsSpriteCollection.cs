@@ -31,6 +31,19 @@ public class EmotionSpriteCollection : ScriptableObject
         public Sprite walkBody1;
         [Tooltip("Второй спрайт ходьбы для этого тела")]
         public Sprite walkBody2;
+
+        [Header("Визуальное разнообразие (Опционально)")]
+        [Tooltip("Список причесок, подходящих именно этому телу")]
+        public List<Sprite> hairSprites = new List<Sprite>();
+        public List<Color> hairColors = new List<Color> 
+        { 
+            new Color(0.2f, 0.1f, 0f), new Color(0.4f, 0.25f, 0.1f), 
+            new Color(0.6f, 0.4f, 0.2f), new Color(0.8f, 0.7f, 0.5f), new Color(0.9f, 0.9f, 0.85f) 
+        };
+
+        [Tooltip("Униформа, подходящая именно этому телу")]
+        public List<Sprite> outfitSprites = new List<Sprite>();
+        public List<Color> outfitColors = new List<Color> { Color.white };
     }
     // --- Конец структуры ---
 

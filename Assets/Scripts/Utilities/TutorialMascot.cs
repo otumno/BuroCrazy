@@ -907,7 +907,18 @@ namespace Utilities
 
         private bool IsContextActive(TutorialContextGroup g)
         {
-            return g != null && g.contextPanel != null && g.contextPanel.activeInHierarchy && g.contextPanel.GetComponent<CanvasGroup>()?.alpha > 0.01f;
+            if (g == null || g.contextPanel == null || !g.contextPanel.activeInHierarchy) 
+                return false;
+                
+            var cg = g.contextPanel.GetComponent<CanvasGroup>();
+            if (cg != null)
+            {
+                // Если CanvasGroup есть, окно считается активным только если оно не прозрачное
+                return cg.alpha > 0.01f;
+            }
+            
+            // Если CanvasGroup нет, но объект включен в иерархии — считаем его активным
+            return true;
         }
         #endregion
     }

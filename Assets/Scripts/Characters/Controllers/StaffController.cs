@@ -21,8 +21,39 @@ public class StaffController : MonoBehaviour
         Unassigned, Intern, Registrar, Cashier, Archivist, Guard, Janitor, Clerk, OfficeManager, Accountant, ServiceWorker, Director
     }
 
+    [System.Serializable]
+    public class StaffNameData
+    {
+        public string firstName;
+        public string lastName;
+        public string patronymic;
+        public string shortName;
+        public string diminutiveName;
+
+        public string GetDisplayName(StaffController.Role role, Enums.Gender gender)
+        {
+            string elderPrefix = (gender == Enums.Gender.Male) ? "Дядя" : "Тётя";
+            switch (role)
+            {
+                case StaffController.Role.Janitor:
+                case StaffController.Role.ServiceWorker: return $"{elderPrefix} {shortName}";
+                case StaffController.Role.Guard: return shortName;
+                case StaffController.Role.Intern: return diminutiveName;
+                case StaffController.Role.Clerk:
+                case StaffController.Role.OfficeManager:
+                case StaffController.Role.Archivist: return $"{firstName} {lastName}";
+                case StaffController.Role.Cashier:
+                case StaffController.Role.Accountant:
+                case StaffController.Role.Registrar:
+                case StaffController.Role.Director: return $"{firstName} {patronymic}";
+                default: return $"{firstName} {lastName}";
+            }
+        }
+    }
+
     [Header("Базовые настройки")]
-    public string characterName = "Сотрудник";
+    public StaffNameData nameData;
+    public string characterName => nameData != null ? nameData.GetDisplayName(currentRole, gender) : "Сотрудник";
     public Role role = Role.Unassigned;
     public RoleData roleData; 
     public Gender gender;
@@ -542,7 +573,16 @@ public class StaffController : MonoBehaviour
 
     public virtual void Initialize(string name, Role role, RankData rank, Gender gender, CharacterSkillsWrapper skills)
     {
-        this.characterName = name;
+        // characterName is now computed dynamically from nameData
+        // For backward compatibility, create a basic nameData from the name string
+        this.nameData = new StaffNameData
+        {
+            firstName = name,
+            lastName = "",
+            patronymic = "",
+            shortName = name,
+            diminutiveName = name
+        };
         this.role = role;
         this.currentRankData = rank;
         this.gender = gender;
