@@ -1585,6 +1585,7 @@ GameObject:
   - component: {fileID: 406308818}
   - component: {fileID: 406308817}
   - component: {fileID: 406308820}
+  - component: {fileID: 406308821}
   m_Layer: 5
   m_Name: ButtonNext
   m_TagString: Untagged
@@ -1710,6 +1711,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &406308821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 406308815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &408755277 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8741942393181219749, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -1962,6 +1978,7 @@ GameObject:
   - component: {fileID: 478472464}
   - component: {fileID: 478472463}
   - component: {fileID: 478472466}
+  - component: {fileID: 478472467}
   m_Layer: 5
   m_Name: ButtonArchive
   m_TagString: Untagged
@@ -2099,6 +2116,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &478472467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 478472461}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &489261262 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8617718523363541995, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -3336,6 +3368,7 @@ GameObject:
   - component: {fileID: 785134921}
   - component: {fileID: 785134920}
   - component: {fileID: 785134923}
+  - component: {fileID: 785134924}
   m_Layer: 5
   m_Name: ButtonPrev
   m_TagString: Untagged
@@ -3461,6 +3494,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &785134924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 785134918}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1 &790967864
 GameObject:
   m_ObjectHideFlags: 0
@@ -3776,6 +3824,7 @@ GameObject:
   - component: {fileID: 852333784}
   - component: {fileID: 852333783}
   - component: {fileID: 852333786}
+  - component: {fileID: 852333787}
   m_Layer: 5
   m_Name: ButtonPrev (1)
   m_TagString: Untagged
@@ -3901,6 +3950,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &852333787
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 852333781}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1 &861701566
 GameObject:
   m_ObjectHideFlags: 0
@@ -4411,6 +4475,7 @@ GameObject:
   - component: {fileID: 950143299}
   - component: {fileID: 950143298}
   - component: {fileID: 950143301}
+  - component: {fileID: 950143302}
   m_Layer: 5
   m_Name: ButtonNext (1)
   m_TagString: Untagged
@@ -4536,6 +4601,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &950143302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 950143296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1001 &968560156
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4635,13 +4715,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5958048042767538420, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 968560159}
   m_SourcePrefab: {fileID: 100100000, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
 --- !u!224 &968560157 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5922612135737842112, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
   m_PrefabInstance: {fileID: 968560156}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &968560158 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5958048042767538420, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
+  m_PrefabInstance: {fileID: 968560156}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &968560159
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 968560158}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &974466651 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8517297020607969162, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
@@ -4977,6 +5080,7 @@ GameObject:
   - component: {fileID: 1004667240}
   - component: {fileID: 1004667239}
   - component: {fileID: 1004667242}
+  - component: {fileID: 1004667243}
   m_Layer: 5
   m_Name: ButtonPrimaryAction
   m_TagString: Untagged
@@ -5114,6 +5218,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &1004667243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1004667237}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1 &1011503173
 GameObject:
   m_ObjectHideFlags: 0
@@ -5207,6 +5326,7 @@ GameObject:
   - component: {fileID: 1021598831}
   - component: {fileID: 1021598830}
   - component: {fileID: 1021598829}
+  - component: {fileID: 1021598833}
   m_Layer: 5
   m_Name: StartButton
   m_TagString: Untagged
@@ -5332,6 +5452,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1021598827}
   m_CullTransparentMesh: 1
+--- !u!114 &1021598833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021598827}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1 &1023195111
 GameObject:
   m_ObjectHideFlags: 0
@@ -5552,6 +5687,7 @@ GameObject:
   - component: {fileID: 1111867531}
   - component: {fileID: 1111867530}
   - component: {fileID: 1111867533}
+  - component: {fileID: 1111867534}
   m_Layer: 5
   m_Name: ButtonExit
   m_TagString: Untagged
@@ -5689,6 +5825,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &1111867534
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1111867528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1 &1116122056
 GameObject:
   m_ObjectHideFlags: 0
@@ -6816,6 +6967,7 @@ GameObject:
   - component: {fileID: 1333994325}
   - component: {fileID: 1333994324}
   - component: {fileID: 1333994327}
+  - component: {fileID: 1333994328}
   m_Layer: 5
   m_Name: ButtonClose (1)
   m_TagString: Untagged
@@ -6941,6 +7093,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &1333994328
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1333994322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &1344806240 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7935351086392091487, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -7161,6 +7328,7 @@ GameObject:
   - component: {fileID: 1360878861}
   - component: {fileID: 1360878860}
   - component: {fileID: 1360878863}
+  - component: {fileID: 1360878864}
   m_Layer: 5
   m_Name: ButtonClose (1)
   m_TagString: Untagged
@@ -7286,6 +7454,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &1360878864
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1360878858}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1 &1372940520
 GameObject:
   m_ObjectHideFlags: 0
@@ -7885,6 +8068,7 @@ GameObject:
   - component: {fileID: 1483531253}
   - component: {fileID: 1483531252}
   - component: {fileID: 1483531255}
+  - component: {fileID: 1483531256}
   m_Layer: 5
   m_Name: ButtonContinue
   m_TagString: Untagged
@@ -8022,6 +8206,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &1483531256
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1483531250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &1494732102 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2918155431065907020, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -8413,6 +8612,7 @@ GameObject:
   - component: {fileID: 1572466310}
   - component: {fileID: 1572466309}
   - component: {fileID: 1572466308}
+  - component: {fileID: 1572466312}
   m_Layer: 5
   m_Name: ButtonNext
   m_TagString: Untagged
@@ -8538,6 +8738,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1572466306}
   m_CullTransparentMesh: 1
+--- !u!114 &1572466312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1572466306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1 &1572519596
 GameObject:
   m_ObjectHideFlags: 0
@@ -8783,6 +8998,7 @@ GameObject:
   - component: {fileID: 1638970405}
   - component: {fileID: 1638970404}
   - component: {fileID: 1638970407}
+  - component: {fileID: 1638970408}
   m_Layer: 5
   m_Name: ButtonClose
   m_TagString: Untagged
@@ -8908,6 +9124,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &1638970408
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1638970402}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &1644332469 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1899699723298230061, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
@@ -9695,6 +9926,7 @@ GameObject:
   - component: {fileID: 1766545918}
   - component: {fileID: 1766545917}
   - component: {fileID: 1766545920}
+  - component: {fileID: 1766545921}
   m_Layer: 5
   m_Name: ButtonReset
   m_TagString: Untagged
@@ -9820,6 +10052,21 @@ MonoBehaviour:
   clickSound: 1
   enableHover: 1
   enableClick: 1
+--- !u!114 &1766545921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1766545915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1001 &1794840679
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9919,13 +10166,36 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 5958048042767538420, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1794840682}
   m_SourcePrefab: {fileID: 100100000, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
 --- !u!224 &1794840680 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5922612135737842112, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
   m_PrefabInstance: {fileID: 1794840679}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1794840681 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5958048042767538420, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
+  m_PrefabInstance: {fileID: 1794840679}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1794840682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1794840681}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &1795987377 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 7713823355881645055, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
@@ -10525,6 +10795,7 @@ GameObject:
   - component: {fileID: 1944431187}
   - component: {fileID: 1944431186}
   - component: {fileID: 1944431185}
+  - component: {fileID: 1944431188}
   m_Layer: 0
   m_Name: NextButton
   m_TagString: Untagged
@@ -10634,6 +10905,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1944431183}
   m_CullTransparentMesh: 1
+--- !u!114 &1944431188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1944431183}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!224 &1956109780 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 8491502032093852444, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
@@ -12241,7 +12527,53 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 6898990656927445643, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1864426796}
+    - targetCorrespondingSourceObject: {fileID: 7181649862827808276, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1945524167150483411}
+    - targetCorrespondingSourceObject: {fileID: 3145434176842873195, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1945524167150483410}
   m_SourcePrefab: {fileID: 100100000, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
+--- !u!1 &1945524167150483408 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3145434176842873195, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
+  m_PrefabInstance: {fileID: 1945524167150483407}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1945524167150483409 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7181649862827808276, guid: 57b2353de57ab274a9660f0afe090710, type: 3}
+  m_PrefabInstance: {fileID: 1945524167150483407}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1945524167150483410
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1945524167150483408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
+--- !u!114 &1945524167150483411
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1945524167150483409}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1001 &5044551281937521761
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -12413,13 +12745,59 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2989493568901741070, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5044551281937521766}
+    - targetCorrespondingSourceObject: {fileID: 5416693638504439636, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5044551281937521765}
   m_SourcePrefab: {fileID: 100100000, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
 --- !u!1 &5044551281937521762 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 7571096873066719081, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
   m_PrefabInstance: {fileID: 5044551281937521761}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &5044551281937521763 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 5416693638504439636, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
+  m_PrefabInstance: {fileID: 5044551281937521761}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5044551281937521764 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2989493568901741070, guid: a513d28dad3e0e849a64b4e42da29223, type: 3}
+  m_PrefabInstance: {fileID: 5044551281937521761}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5044551281937521765
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5044551281937521763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
+--- !u!114 &5044551281937521766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5044551281937521764}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
 --- !u!1001 &8306906582853188634
 PrefabInstance:
   m_ObjectHideFlags: 0
