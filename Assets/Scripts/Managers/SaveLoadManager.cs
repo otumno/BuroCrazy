@@ -61,6 +61,10 @@ namespace Managers
                 staffData.assignedWorkstationId = staffMember.assignedWorkstation != null ? staffMember.assignedWorkstation.deskId : -999;
                 staffData.scheduleTrackIndex = staffMember.uiScheduleTrackIndex;
                 
+                // Сохраняем статистику посещаемости
+                staffData.totalLatenessCount = staffMember.totalLatenessCount;
+                staffData.sickDaysCount = staffMember.sickDaysCount;
+                
                 // Сохраняем навыки и роль (если нужно глубокое сохранение, добавьте сюда поля из StaffController)
                 // staffData.role = staffMember.currentRole;
                 
@@ -202,6 +206,10 @@ namespace Managers
                         staffMember.transform.position = staffData.position;
                         staffMember.SetCurrentFrustration(staffData.stressLevel);
                         staffMember.nameData = staffData.nameData;
+                        
+                        // Загружаем статистику посещаемости
+                        staffMember.totalLatenessCount = staffData.totalLatenessCount;
+                        staffMember.sickDaysCount = staffData.sickDaysCount;
                     
                         if (staffData.assignedWorkstationId != -999)
                         {

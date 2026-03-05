@@ -484,6 +484,16 @@ namespace Characters
         }
     }
 
+    public SpriteRenderer GetAccessoryRenderer()
+    {
+        if (headAttachPoint != null && headAttachPoint.childCount > 0)
+        {
+            // Accessory is usually the first child
+            return headAttachPoint.GetChild(0).GetComponentInChildren<SpriteRenderer>();
+        }
+        return null;
+    }
+
     private void OnDestroy()
     {
         StopAllCoroutines();

@@ -58,6 +58,10 @@ public struct StaffSaveData
     // Рабочее место и расписание
     public int assignedWorkstationId;
     public int scheduleTrackIndex;
+
+    // Статистика посещаемости
+    public int totalLatenessCount;
+    public int sickDaysCount;
 }
 
 [System.Serializable]

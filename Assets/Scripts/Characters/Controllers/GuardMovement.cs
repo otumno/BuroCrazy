@@ -2,29 +2,16 @@
 using UnityEngine;
 using System.Collections;
 using Managers;
+using Utilities;
 
-public class GuardMovement : MonoBehaviour
+[RequireComponent(typeof(AgentMover), typeof(CharacterStateLogger))]
+public class GuardMovement : StaffController
 {
     public enum GuardState
     {
-        Idle,
-        Patrolling,
-        Chasing,
-        ChasingThief,
-        Investigating,
-        ReturningToPost,
-        AtPost,
-        OnPost,
-        OperatingBarrier,
-        WritingReport,
-        Talking,
-        EscortingThief,
-        OnBreak,
-        GoingToBreak,
-        GoingToToilet,
-        AtToilet,
-        OffDuty,
-        WaitingAtWaypoint
+        Idle, Patrolling, Chasing, ChasingThief, Investigating, ReturningToPost, AtPost, OnPost,
+        OperatingBarrier, WritingReport, Talking, EscortingThief, OnBreak, GoingToBreak,
+        GoingToToilet, AtToilet, OffDuty, WaitingAtWaypoint
     }
 
     [Header("Состояние")]
@@ -36,81 +23,102 @@ public class GuardMovement : MonoBehaviour
     public float minWaitTime = 2f;
     public float maxWaitTime = 5f;
     
-    // ИСПРАВЛЕНИЕ: Light2D требует правильного namespace
     public UnityEngine.Rendering.Universal.Light2D nightLight; 
 
-    private StaffController staff;
-
-    private void Awake()
+    protected override void Awake()
     {
-        staff = GetComponent<StaffController>();
-        if (staff == null)
+        base.Awake();
+        var references = GetComponent<StaffPrefabReferences>();
+        if (references != null && references.nightLight != null)
         {
-            Debug.LogError("[GuardMovement] StaffController компонент не найден!");
+            nightLight = references.nightLight.GetComponent<UnityEngine.Rendering.Universal.Light2D>();
         }
     }
 
-    // --- МОСТЫ ---
-
-    public string characterName => staff != null ? staff.characterName : "Guard";
-    public AgentMover AgentMover => staff?.agentMover;
-    public ThoughtBubbleController thoughtBubble => staff?.thoughtBubble;
-    public bool IsOnBreak() => staff?.IsOnBreak() ?? false;
-    public bool IsOnDuty() => staff != null && !staff.IsOnBreak();
-    public void ChangeEnergy(float amount) => staff?.ChangeEnergy(amount);
-    public void ChangeStress(float amount) => staff?.ChangeStress(amount);
-    
-    // --- ИСПРАВЛЕНИЕ: Добавлен недостающий метод ---
     public GuardState GetCurrentState() => currentState;
-    // -----------------------------------------------
+    public GuardState GetCurrentStateEnum() => currentState;
 
-    public IEnumerator MoveToTarget(Vector3 pos, GuardState state)
+    public void SetState(GuardState newState)
     {
-        SetState(state);
-        return staff?.MoveToTarget(pos, state.ToString()) ?? null;
+        if (currentState == newState) return;
+        currentState = newState;
+        logger?.LogState(GetStatusInfo());
+        if (visuals != null) visuals.SetEmotionForState(newState);
     }
 
-    public IEnumerator MoveToTarget(Vector3 pos, string state) => staff?.MoveToTarget(pos, state) ?? null;
+    public override string GetStatusInfo() => currentState.ToString();
+    public override string GetCurrentStateName() => currentState.ToString();
+    public override float GetCurrentFrustration() => frustration;
 
-    public void SetArrivalState(string stateName)
+    public override bool IsOnBreak()
+    {
+        return currentState == GuardState.OnBreak ||
+               currentState == GuardState.GoingToBreak ||
+               currentState == GuardState.AtToilet ||
+               currentState == GuardState.GoingToToilet ||
+               currentState == GuardState.OffDuty;
+    }
+
+    public override void InitializeFromData(RoleData data)
+    {
+        base.InitializeFromData(data);
+        if (data != null)
+        {
+            chaseSpeedMultiplier = data.guard_chaseSpeedMultiplier;
+            talkTime = data.guard_talkTime;
+            minWaitTime = data.guard_minWaitTime;
+            maxWaitTime = data.guard_maxWaitTime;
+        }
+    }
+
+    public IEnumerator MoveToTarget(Vector3 pos, GuardState stateOnArrival)
+    {
+        if (agentMover != null)
+        {
+            agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, pos, gameObject));
+            yield return new WaitUntil(() => agentMover == null || !agentMover.IsMoving());
+        }
+        SetState(stateOnArrival);
+    }
+
+    public override IEnumerator MoveToTarget(Vector2 targetPosition, string stateOnArrival)
+    {
+        if (System.Enum.TryParse<GuardState>(stateOnArrival, out GuardState newState))
+        {
+            yield return StartCoroutine(MoveToTarget((Vector3)targetPosition, newState));
+        }
+        else
+        {
+            yield return base.MoveToTarget(targetPosition, stateOnArrival);
+        }
+    }
+
+    protected override void SetArrivalState(string stateName)
     {
         if (System.Enum.TryParse<GuardState>(stateName, out GuardState newState))
         {
             SetState(newState);
         }
-    }
-
-    public string GetStatusInfo() => currentState.ToString();
-    public GuardState GetCurrentStateEnum() => currentState;
-    public float GetCurrentFrustration() => staff?.frustration ?? 0f;
-
-    public void InitializeFromData(RoleData data) { }
-
-    public void SetState(GuardState newState)
-    {
-        currentState = newState;
+        else
+        {
+            base.SetArrivalState(stateName);
+        }
     }
 
     public IEnumerator PatrolRoutine()
     {
-        if (staff == null)
-        {
-            Debug.LogWarning("[GuardMovement] PatrolRoutine: staff равен null");
-            yield break;
-        }
-
         currentState = GuardState.Patrolling;
         var points = ScenePointsRegistry.Instance?.guardPatrolPoints;
         
         if (points == null || points.Count == 0) 
         {
             Debug.LogWarning("[GuardMovement] Patrol points не найдены или пусты");
-            currentState = GuardState.Idle;
+            SetState(GuardState.Idle);
             yield break;
         }
 
         int index = 0;
-        while (this != null && staff != null)
+        while (IsOnDuty())
         {
             if (index >= points.Count) index = 0;
             

@@ -83,6 +83,19 @@ namespace Characters
             }
             
             SetPrivateField(staff, "currentLateness", lateness);
+
+            // Track attendance statistics
+            if (lateness > 5f)
+            {
+                int currentLatenessCount = GetPrivateField<int>(staff, "totalLatenessCount");
+                SetPrivateField(staff, "totalLatenessCount", currentLatenessCount + 1);
+            }
+            // 2% chance to count as a sick day
+            if (Random.value < 0.02f)
+            {
+                int currentSickDays = GetPrivateField<int>(staff, "sickDaysCount");
+                SetPrivateField(staff, "sickDaysCount", currentSickDays + 1);
+            }
         }
 
         public static float GetLateness(this StaffController staff)

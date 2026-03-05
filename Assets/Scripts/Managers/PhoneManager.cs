@@ -42,6 +42,8 @@ namespace Managers
             incomingCalls.Add(dialogue);
             Debug.Log($"[PhoneManager] Входящий вызов! Всего на линии: {incomingCalls.Count}");
 
+            Managers.Teletype.TeletypeManager.Instance?.LogImportant("Входящий звонок на линии!");
+
             // Визуальные/Аудио эффекты
             if (phoneAudioSource != null && ringSound != null)
             {

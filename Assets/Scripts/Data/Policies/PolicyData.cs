@@ -30,5 +30,12 @@ namespace Data.Policies
         [Header("Визуал Документа")]
         [Tooltip("Текст, который будет написан на папке при наведении")]
         public string documentTitle = "УКАЗ №...";
+
+        [Header("Специфичные правила (Для ИИ)")]
+        [Tooltip("Роли, к которым применяется это правило (если пусто - ко всем)")]
+        public System.Collections.Generic.List<StaffController.Role> applicableRoles = new System.Collections.Generic.List<StaffController.Role>();
+
+        [Tooltip("Специальный флаг для проверки в коде (например, 'PRIORITY_ELDERLY')")]
+        public string behaviorFlag = "";
     }
 }

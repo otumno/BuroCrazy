@@ -73,6 +73,10 @@ public class StaffController : MonoBehaviour
     public float experiencePoints = 0f;
     public bool promotionAvailableNotificationPlayed = false;
 
+    [Header("Статистика посещаемости")]
+    public int totalLatenessCount = 0;
+    public int sickDaysCount = 0;
+
     // Обертка для скиллов (совместимость)
     [System.Serializable]
     public class CharacterSkillsWrapper 
@@ -263,6 +267,7 @@ public class StaffController : MonoBehaviour
         }
         
         hasArrivedToday = true;
+        Managers.Teletype.TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: true);
     }
 
     // --- AI Loop ---

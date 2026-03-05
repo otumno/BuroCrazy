@@ -415,5 +415,9 @@ namespace Characters
         //         }
         //     }
         // }
+
+        // Public getters for UI to read current visual state
+        public SpriteRenderer GetHairRenderer() => hairRenderer;
+        public SpriteRenderer GetOutfitRenderer() => outfitRenderer;
     }
 }

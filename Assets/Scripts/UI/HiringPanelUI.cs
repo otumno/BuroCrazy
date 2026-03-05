@@ -128,13 +128,19 @@ public class HiringPanelUI : MonoBehaviour
         }
     }
     
+    private float _updateTimer = 0f;
     void Update()
     {
         if (gameObject.activeInHierarchy)
         {
-            foreach (var card in activeCards)
+            _updateTimer += Time.unscaledDeltaTime;
+            if (_updateTimer >= 1f)
             {
-                if (card != null) card.UpdateCard();
+                _updateTimer = 0f;
+                foreach (var card in activeCards)
+                {
+                    if (card != null) card.UpdateCard();
+                }
             }
         }
     }

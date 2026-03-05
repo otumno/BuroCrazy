@@ -112,5 +112,23 @@ namespace Managers
 			{
 				return allPoliciesDatabase.FirstOrDefault(p => p.id == id);
 			}
+
+        public bool IsBehaviorActive(string flag, StaffController.Role role)
+        {
+            if (string.IsNullOrEmpty(flag)) return false;
+
+            foreach (var pid in activePolicyIDs)
+            {
+                var p = GetPolicyById(pid);
+                if (p != null && p.behaviorFlag == flag)
+                {
+                    if (p.applicableRoles == null || p.applicableRoles.Count == 0 || p.applicableRoles.Contains(role))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
     }
 }

@@ -29,6 +29,17 @@ public class TeamMemberCardUI : MonoBehaviour
     [SerializeField] private Image xpBarFill;
     [SerializeField] private TextMeshProUGUI xpText;
 
+    [Header("Портрет (Фото)")]
+    [SerializeField] private Image portraitBody;
+    [SerializeField] private Image portraitOutfit;
+    [SerializeField] private Image portraitHair;
+    [SerializeField] private Image portraitFace;
+    [SerializeField] private Image portraitAccessory;
+    [SerializeField] private Material grayscaleMaterial;
+
+    [Header("Посещаемость")]
+    [SerializeField] private TextMeshProUGUI attendanceText;
+
     [Header("Спрайты фонов для ролей")]
     public Sprite internBackground;
     public Sprite clerkBackground;
@@ -120,6 +131,9 @@ public class TeamMemberCardUI : MonoBehaviour
         
         ApplyRoleColor(assignedStaff.currentRole);
         background.sprite = GetBackgroundForRole(assignedStaff.currentRole);
+        
+        UpdatePortrait(assignedStaff);
+        UpdateAttendance(assignedStaff);
     }
     
     private void ApplyRoleColor(StaffController.Role role)
@@ -210,4 +224,66 @@ public class TeamMemberCardUI : MonoBehaviour
             StaffController.Role.Janitor => "Уборщик",
             _ => "Не назначено"
         };
+
+    private void UpdateAttendance(StaffController staff)
+    {
+        if (attendanceText != null)
+        {
+            attendanceText.text = $"<color=#FFAA00>Опозданий:</color> {staff.totalLatenessCount}\n" +
+                                  $"<color=#FF5555>Больничных:</color> {staff.sickDaysCount}";
+        }
+    }
+
+    private void UpdatePortrait(StaffController staff)
+    {
+        if (portraitBody == null || staff.visuals == null || staff.roleData == null) return;
+
+        // 1. Copy body, outfit, and hair directly from the staff's actual current visual state in the world
+        var bodyRen = staff.visuals.GetBodyRenderer();
+        var outfitRen = staff.visuals.GetOutfitRenderer();
+        var hairRen = staff.visuals.GetHairRenderer();
+        var accRen = staff.visuals.GetAccessoryRenderer();
+
+        SetPortraitLayer(portraitBody, bodyRen);
+        SetPortraitLayer(portraitOutfit, outfitRen);
+        SetPortraitLayer(portraitHair, hairRen);
+        SetPortraitLayer(portraitAccessory, accRen);
+
+        // 2. Calculate Dominant Emotion based on skills
+        Emotion dominantEmotion = Emotion.Neutral;
+        float maxSkill = -1f;
+        var s = staff.skills;
+        
+        if (s.softSkills > maxSkill) { maxSkill = s.softSkills; dominantEmotion = Emotion.Happy; }
+        if (s.corruption > maxSkill) { maxSkill = s.corruption; dominantEmotion = Emotion.Sly; }
+        if (s.paperworkMastery > maxSkill) { maxSkill = s.paperworkMastery; dominantEmotion = Emotion.Working; }
+        if (s.pedantry > maxSkill) { maxSkill = s.pedantry; dominantEmotion = Emotion.Thinking; }
+        if (s.sedentaryResilience > maxSkill) { maxSkill = s.sedentaryResilience; dominantEmotion = Emotion.Relaxed; }
+
+        // 3. Set Face using the collection
+        if (portraitFace != null && staff.visuals.currentSpriteCollection != null)
+        {
+            portraitFace.sprite = staff.visuals.currentSpriteCollection.GetFaceSprite(dominantEmotion, staff.gender);
+            portraitFace.color = Color.white;
+            portraitFace.enabled = portraitFace.sprite != null;
+            if (grayscaleMaterial != null) portraitFace.material = grayscaleMaterial;
+        }
+    }
+
+    private void SetPortraitLayer(Image uiImage, SpriteRenderer sourceRenderer)
+    {
+        if (uiImage == null) return;
+        
+        if (sourceRenderer != null && sourceRenderer.sprite != null)
+        {
+            uiImage.sprite = sourceRenderer.sprite;
+            uiImage.color = sourceRenderer.color; // Keep the dynamic colors!
+            uiImage.enabled = true;
+            if (grayscaleMaterial != null) uiImage.material = grayscaleMaterial;
+        }
+        else
+        {
+            uiImage.enabled = false;
+        }
+    }
 }

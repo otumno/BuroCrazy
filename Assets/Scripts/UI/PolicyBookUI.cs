@@ -1,7 +1,5 @@
-// Assets/Scripts/UI/PolicyBookUI.cs
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 using Data.Policies;
 using Managers;
 using Managers.Teletype;
@@ -11,87 +9,25 @@ namespace UI
 {
     public class PolicyBookUI : MonoBehaviour
     {
-        [Header("Данные")]
-        // Берем политики напрямую из менеджера или назначаем здесь список
-        // Лучше брать из PolicyManager.Instance.allPoliciesDatabase
-
         [Header("UI Элементы")]
         public Transform listContainer;
-        public GameObject policyItemPrefab; // Кнопка с названием политики
+        public GameObject policyItemPrefab;
         public Button closeButton;
-
-        [Header("Вкладки")]
-        public Button policiesTabButton;
-        public Button instructionsTabButton;
-        public GameObject policiesPanel;
-        public GameObject instructionsPanel;
-
-        [Header("Инструкции")]
-        public Transform instructionsContainer;
-        public GameObject instructionItemPrefab;
 
         [Header("Детали")]
         public GameObject detailsPanel;
         public TextMeshProUGUI titleText;
         public TextMeshProUGUI descText;
         public TextMeshProUGUI statsText;
-        public Button draftButton; // Кнопка "Создать приказ"
+        public Button draftButton;
 
         private PolicyData selectedPolicy;
-        private bool showingPolicies = true;
 
         private void Start()
         {
-            closeButton.onClick.AddListener(Hide);
-            draftButton.onClick.AddListener(OnDraftClicked);
-
-            if (policiesTabButton != null)
-            {
-                policiesTabButton.onClick.AddListener(() => SwitchTab(true));
-            }
-
-            if (instructionsTabButton != null)
-            {
-                instructionsTabButton.onClick.AddListener(() => SwitchTab(false));
-            }
-
+            if (closeButton != null) closeButton.onClick.AddListener(Hide);
+            if (draftButton != null) draftButton.onClick.AddListener(OnDraftClicked);
             detailsPanel.SetActive(false);
-
-            SwitchTab(true);
-        }
-
-        private void SwitchTab(bool showPolicies)
-        {
-            showingPolicies = showPolicies;
-
-            if (policiesPanel != null)
-            {
-                policiesPanel.SetActive(showPolicies);
-            }
-
-            if (instructionsPanel != null)
-            {
-                instructionsPanel.SetActive(!showPolicies);
-            }
-
-            if (policiesTabButton != null)
-            {
-                policiesTabButton.interactable = !showPolicies;
-            }
-
-            if (instructionsTabButton != null)
-            {
-                instructionsTabButton.interactable = showPolicies;
-            }
-
-            if (showPolicies)
-            {
-                RefreshList();
-            }
-            else
-            {
-                RefreshInstructions();
-            }
         }
 
         public void Show()
@@ -101,24 +37,14 @@ namespace UI
             else gameObject.SetActive(true);
 
             MainUIManager.Instance?.PushPause();
-
-            if (showingPolicies)
-            {
-                RefreshList();
-            }
-            else
-            {
-                RefreshInstructions();
-            }
+            RefreshList();
+            detailsPanel.SetActive(false);
         }
 
         public void Hide()
         {
             var animator = GetComponent<UIWindowAnimator>();
-            if (animator != null)
-            {
-                animator.Close();
-            }
+            if (animator != null) animator.Close();
             else
             {
                 gameObject.SetActive(false);
@@ -135,40 +61,20 @@ namespace UI
             var policies = PolicyManager.Instance.allPoliciesDatabase;
             foreach (var policy in policies)
             {
-                // Проверяем, не активна ли уже эта политика
+                if (policy == null) continue;
+
                 bool isActive = PolicyManager.Instance.activePolicyIDs.Contains(policy.id);
-                bool isPending = DocumentManager.Instance.IsProjectDocPending(policy.id);
+                bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(policy.id);
 
                 GameObject item = Instantiate(policyItemPrefab, listContainer);
                 var btn = item.GetComponent<Button>();
                 var txt = item.GetComponentInChildren<TextMeshProUGUI>();
                 
-                string status = isActive ? " [АКТИВНО]" : (isPending ? " [В ПУТИ]" : "");
+                string status = isActive ? " <color=green>[АКТИВНО]</color>" : (isPending ? " <color=yellow>[В ПУТИ]</color>" : "");
                 txt.text = policy.displayName + status;
 
-                // Блокируем кнопку, если уже активно или в процессе
                 if (isActive || isPending) btn.interactable = false;
                 else btn.onClick.AddListener(() => ShowDetails(policy));
-            }
-        }
-
-        private void RefreshInstructions()
-        {
-            if (InstructionManager.Instance == null || instructionsContainer == null) return;
-
-            foreach (Transform child in instructionsContainer) Destroy(child.gameObject);
-
-            var instructions = InstructionManager.Instance.GetAllEnabledInstructions();
-
-            foreach (var instruction in instructions)
-            {
-                GameObject item = Instantiate(instructionItemPrefab, instructionsContainer);
-                var itemUI = item.GetComponent<UI.Policies.InstructionItemUI>();
-
-                if (itemUI != null)
-                {
-                    itemUI.Setup(instruction, InstructionManager.Instance);
-                }
             }
         }
 
@@ -179,7 +85,13 @@ namespace UI
             
             titleText.text = policy.displayName;
             descText.text = policy.description;
-            statsText.text = $"Эффективность: {policy.workSpeedMultiplier:P0}\nСтресс: {policy.stressGrowthMultiplier:P0}\nДоход: {policy.incomeMultiplier:P0}";
+
+            string stats = "";
+            if (policy.workSpeedMultiplier != 1f) stats += $"Эффективность: {policy.workSpeedMultiplier:P0}\n";
+            if (policy.stressGrowthMultiplier != 1f) stats += $"Стресс: {policy.stressGrowthMultiplier:P0}\n";
+            if (policy.incomeMultiplier != 1f) stats += $"Доход: {policy.incomeMultiplier:P0}\n";
+            
+            statsText.text = string.IsNullOrEmpty(stats) ? "Влияет на поведение персонала." : stats;
         }
 
         private void OnDraftClicked()
@@ -187,10 +99,8 @@ namespace UI
             if (selectedPolicy != null && PolicyManager.Instance != null)
             {
                 PolicyManager.Instance.DraftPolicy(selectedPolicy.id);
-                
                 TeletypeManager.Instance?.Log($"Проект указа '{selectedPolicy.displayName}' создан.");
-                
-                gameObject.SetActive(false); // Закрываем книгу
+                Hide();
             }
         }
     }
