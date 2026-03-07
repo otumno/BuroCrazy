@@ -5,9 +5,7 @@ using UnityEngine;
 public class Action_GoToBreak : StaffAction
 {
     [Header("Настройки потребности")]
-    [Tooltip("Порог 'Энергии', ниже которого это действие становится возможным.")]
-    [Range(0f, 1f)]
-    public float energyThreshold = 0.3f; // 30%
+    [Range(0f, 1f)] public float energyThreshold = 0.3f; // 30%
 
     public Action_GoToBreak()
     {
@@ -16,18 +14,27 @@ public class Action_GoToBreak : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
-        return staff.energy <= energyThreshold && !staff.IsOnBreak();
+        // ИСПРАВЛЕНИЕ: Умножаем порог на 100, т.к. энергия 0-100
+        return staff.energy <= (energyThreshold * 100f) && !staff.IsOnBreak();
     }
 
     public override float CalculateUtility(StaffController staff)
     {
-        float need = Mathf.Clamp01(1f - staff.energy);
-        if (need < 0.2f) return 0f;
-        return Mathf.Pow(need, 2) * 80f;
+        // Считаем усталость от 0 до 1
+        float exhaustion = 1f - (staff.energy / 100f);
+        if (exhaustion < 0.2f) return 0f;
+        
+        // Экспоненциальный рост: чем больше устал, тем сильнее перевешивает работу
+        return Mathf.Pow(exhaustion, 3) * 200f; 
     }
 
-    public override System.Type GetExecutorType()
+    public override string GetDebugInfo(StaffController staff)
     {
-        return typeof(GoToBreakExecutor);
+        if (staff.IsOnBreak()) return "Уже отдыхает";
+        float exhaustion = 1f - (staff.energy / 100f);
+        if (exhaustion >= 0.95f) return "КРИТИЧНО! Падаю!";
+        return $"Усталость: {exhaustion:P0}";
     }
+
+    public override System.Type GetExecutorType() => typeof(GoToBreakExecutor);
 }

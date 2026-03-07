@@ -312,8 +312,16 @@ public class StaffController : MonoBehaviour
             energy -= (Time.deltaTime / 300f) * resilience;
             stress += (Time.deltaTime / 200f);
 
-            // 2. Если заняты делом или идем - не прерываемся на раздумья
-            if (currentExecutor != null || (agentMover != null && agentMover.IsMoving()) || IsOnBreak()) 
+            // 2. Если заняты делом - проверяем можно ли прервать
+            if (currentExecutor != null)
+            {
+                // Если действие НЕльзя прервать - пропускаем выбор
+                if (!currentExecutor.IsInterruptible)
+                    continue;
+            }
+            
+            // Если идем или на перерыве - пропускаем
+            if ((agentMover != null && agentMover.IsMoving()) || IsOnBreak())
                 continue;
 
             // 3. Авто-поиск стола, если его нет
@@ -498,6 +506,12 @@ public class StaffController : MonoBehaviour
                 
                 // Немного рандома для живости
                 utility += Random.Range(0f, 2f);
+                
+                // --- ИНЕРЦИЯ: +30 очков если это текущее действие ---
+                if (currentAction != null && action == currentAction)
+                {
+                    utility += 30f;
+                }
 
                 if (utility > highestUtility)
                 {
@@ -519,6 +533,20 @@ public class StaffController : MonoBehaviour
 
         if (bestAction != null)
         {
+            // --- ПРОВЕРКА НА ПРЕРЫВАНИЕ ---
+            // Если лучшее действие = текущему, не делаем ничего
+            if (currentAction != null && bestAction == currentAction)
+            {
+                return; // Остаемся на текущем действии
+            }
+            
+            // Если есть текущее действие и оно прерываемое - прерываем
+            if (currentExecutor != null && currentExecutor.IsInterruptible)
+            {
+                currentExecutor.Interrupt();
+            }
+            
+            // Выполняем новое действие
             // --- ЖИВЫЕ РЕАКЦИИ ПЕРЕД ВЫПОЛНЕНИЕМ ---
             if (bestAction is Action_GoToToilet && highestUtility > 80f)
             {

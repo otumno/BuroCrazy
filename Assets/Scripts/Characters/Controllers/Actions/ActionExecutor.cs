@@ -42,4 +42,20 @@ public abstract class ActionExecutor : MonoBehaviour
             staff.thoughtBubble?.ShowPriorityMessage("Эх, не вышло...", 2f, Color.red);
         }
     }
+
+    // --- НОВЫЙ МЕТОД ДЛЯ ПРЕРЫВАНИЯ ---
+    public virtual void Interrupt()
+    {
+        StopAllCoroutines();
+        staff.thoughtBubble?.ShowPriorityMessage("Бросаю всё!", 2f, Color.yellow);
+        
+        if (staff != null)
+        {
+            // Тормозим физику
+            staff.AgentMover?.Stop();
+            staff.OnActionFinished(actionData, false);
+        }
+        
+        Destroy(this);
+    }
 }

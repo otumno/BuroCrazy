@@ -5,9 +5,7 @@ using UnityEngine;
 public class Action_GoToCooler : StaffAction
 {
     [Header("Настройки потребности")]
-    [Tooltip("Порог 'Морали', ниже которого это действие становится возможным.")]
-    [Range(0f, 1f)]
-    public float moraleThreshold = 0.4f; // 40%
+    [Range(0f, 1f)] public float moraleThreshold = 0.4f;
 
     public Action_GoToCooler()
     {
@@ -16,33 +14,25 @@ public class Action_GoToCooler : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
-        // Усидчивые сотрудники реже ходят к кулеру
         float modifiedThreshold = moraleThreshold + (staff.skills.sedentaryResilience * 0.3f);
-        return staff.morale <= modifiedThreshold && !staff.IsOnBreak();
+        // ИСПРАВЛЕНИЕ: Мораль тоже от 0 до 100
+        return staff.morale <= (modifiedThreshold * 100f) && !staff.IsOnBreak();
     }
 
     public override float CalculateUtility(StaffController staff)
     {
-        float need = Mathf.Clamp01(1f - staff.morale);
-        if (need < 0.2f) return 0f;
-        return Mathf.Pow(need, 2) * 60f;
+        float thirst = 1f - (staff.morale / 100f);
+        if (thirst < 0.2f) return 0f;
+        return Mathf.Pow(thirst, 2) * 100f; // Вода менее критична, чем сон, вес поменьше
     }
 
-    public override System.Type GetExecutorType()
-    {
-        return typeof(GoToCoolerExecutor);
-    }
-
-    // Градация для дебаггера
     public override string GetDebugInfo(StaffController staff)
     {
         if (staff.IsOnBreak()) return "Уже на перерыве";
-        
-        float modifiedThreshold = moraleThreshold + (staff.skills.sedentaryResilience * 0.3f);
-        float needPercent = (1f - staff.morale) / modifiedThreshold; // Усталость переводим в проценты жажды
-        
-        if (needPercent >= 1f) return "Иду пить!";
-        
-        return $"Жажда: {needPercent:P0}";
+        float thirst = 1f - (staff.morale / 100f);
+        if (thirst >= 0.95f) return "Иду пить!";
+        return $"Жажда: {thirst:P0}";
     }
+
+    public override System.Type GetExecutorType() => typeof(GoToCoolerExecutor);
 }
