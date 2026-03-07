@@ -8,12 +8,11 @@ namespace UI.Bookkeeping
 {
     public class BookkeepingPanelUI : MonoBehaviour
     {
-        [Header("Ссылки на UI элементы")] [SerializeField]
-        private Button closeButton; // Ваша кнопка "Назад"
+        [Header("Ссылки на UI элементы")] 
+        [SerializeField] private Button closeButton;
 
-        [Header("Поля статистики")] [SerializeField]
-        private TextMeshProUGUI officialGrossText;
-
+        [Header("Поля статистики")] 
+        [SerializeField] private TextMeshProUGUI officialGrossText;
         [SerializeField] private TextMeshProUGUI playersCutText;
         [SerializeField] private TextMeshProUGUI shadowIncomeText;
         [SerializeField] private TextMeshProUGUI totalBalanceText;
@@ -22,13 +21,15 @@ namespace UI.Bookkeeping
         [SerializeField] private TextMeshProUGUI dailyExpensesText;
         [SerializeField] private Transform transactionLogContent;
 
-        [Header("Префабы и настройки")] [SerializeField]
-        private GameObject transactionLogEntryPrefab; // Префаб для одной строки лога
+        [Header("Префабы и настройки")] 
+        [SerializeField] private GameObject transactionLogEntryPrefab;
+
+        // --- УМНАЯ ПАУЗА ---
+        private bool _isPausedByMe = false;
 
         private void Awake()
         {
-            // Назначаем действие для кнопки "Назад"
-            closeButton.onClick.AddListener(Hide);
+            if (closeButton != null) closeButton.onClick.AddListener(Hide);
         }
 
         public void Show()
@@ -37,12 +38,25 @@ namespace UI.Bookkeeping
             if (animator != null) animator.Open();
             else gameObject.SetActive(true);
 
-            MainUIManager.Instance.PushPause();
+            // Ставим на паузу, только если мы сами этого еще не делали
+            if (!_isPausedByMe && MainUIManager.Instance != null)
+            {
+                MainUIManager.Instance.PushPause();
+                _isPausedByMe = true;
+            }
+
             UpdateAllData();
         }
 
         public void Hide()
         {
+            // Снимаем паузу ДО начала анимации закрытия, гарантированно и один раз
+            if (_isPausedByMe && MainUIManager.Instance != null)
+            {
+                MainUIManager.Instance.PopPause();
+                _isPausedByMe = false;
+            }
+
             var animator = GetComponent<UIWindowAnimator>();
             if (animator != null)
             {
@@ -51,11 +65,9 @@ namespace UI.Bookkeeping
             else
             {
                 gameObject.SetActive(false);
-                MainUIManager.Instance.PopPause();
             }
         }
 
-        // Главный метод для обновления всех данных на панели
         public void UpdateAllData()
         {
             var ledger = FinancialLedgerManager.Instance;
@@ -68,10 +80,8 @@ namespace UI.Bookkeeping
                 return;
             }
 
-            // --- ИСПРАВЛЕНО: Берем день из CalendarManager ---
             int currentDay = CalendarManager.Instance.CurrentDay;
 
-            // 1. Считаем доходы из лога за текущий день
             int officialGross = ledger.dailyLog
                 .Where(t => t.day == currentDay && t.type == IncomeType.Official && t.amount > 0)
                 .Sum(t => t.amount);
@@ -80,22 +90,18 @@ namespace UI.Bookkeeping
                 .Where(t => t.day == currentDay && t.type == IncomeType.Shadow)
                 .Sum(t => t.amount);
 
-            // 2. Считаем зарплатный фонд
             int estimatedPayroll = 0;
             foreach (var staff in staffList)
             {
                 if (staff != null) estimatedPayroll += staff.unpaidPeriods * staff.salaryPerPeriod;
             }
 
-            // 3. Считаем расходы за день
             int dailyExpenses = ledger.dailyLog
                 .Where(t => t.day == currentDay && t.amount < 0)
                 .Sum(t => t.amount);
 
-            // ... (дальше код обновления UI текстов без изменений)
             officialGrossText.text = $"Подотчетный доход: ${officialGross}";
-            playersCutText.text =
-                $"Ваша доля ({wallet.officialIncomeRate:P0}): ${Mathf.RoundToInt(officialGross * wallet.officialIncomeRate)}";
+            playersCutText.text = $"Ваша доля ({wallet.officialIncomeRate:P0}): ${Mathf.RoundToInt(officialGross * wallet.officialIncomeRate)}";
             shadowIncomeText.text = $"Теневой доход: ${shadowIncome}";
             totalBalanceText.text = $"Остаток на счете: ${wallet.GetCurrentMoney()}";
             salaryFundText.text = $"Зарплатный фонд (к выплате): ${estimatedPayroll}";
@@ -110,10 +116,8 @@ namespace UI.Bookkeeping
             foreach (Transform child in transactionLogContent)
                 Destroy(child.gameObject);
             
-            if (transactionLogEntryPrefab == null)
-                return;
+            if (transactionLogEntryPrefab == null) return;
             
-            // Берем последние 15 транзакций за СЕГОДНЯ
             var todayTransactions = ledger.dailyLog
                 .Where(t => t.day == currentDay)
                 .Reverse()
@@ -123,20 +127,13 @@ namespace UI.Bookkeeping
             {
                 var entryGO = Instantiate(transactionLogEntryPrefab, transactionLogContent);
                 var entryText = entryGO.GetComponent<BookkeepingLog>();
-                if (entryText == null)
-                    continue;
+                if (entryText == null) continue;
                 
                 var sign = transaction.amount >= 0 ? "+" : "";
-                
                 var color = Color.white;
-                if (transaction.amount < 0)
-                {
-                    color = Color.red;
-                }
-                else if (transaction.type == IncomeType.Shadow)
-                {
-                    color = new Color(0.8f, 0.4f, 1f);
-                }
+                
+                if (transaction.amount < 0) color = Color.red;
+                else if (transaction.type == IncomeType.Shadow) color = new Color(0.8f, 0.4f, 1f);
 
                 var textColor = ColorUtility.ToHtmlStringRGB(color);
                 var text = $"<color=#{textColor}>{transaction.description}: {sign}${transaction.amount}</color>";

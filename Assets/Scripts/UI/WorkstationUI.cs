@@ -22,6 +22,10 @@ public class WorkstationUI : MonoBehaviour
     private List<GuardMovement> allGuards = new List<GuardMovement>();
     private StringBuilder sb = new StringBuilder();
 
+    // --- НОВЫЕ ПОЛЯ ДЛЯ JUICY ЭФФЕКТА ---
+    private string lastStatusString = "";
+    private SmartRoomLabel smartLabel;
+
     private void Start()
     {
         if (statusText == null) statusText = GetComponentInChildren<TextMeshProUGUI>();
@@ -31,6 +35,9 @@ public class WorkstationUI : MonoBehaviour
             enabled = false;
             return;
         }
+
+        // Ищем SmartRoomLabel на этом же объекте или у родителей
+        smartLabel = GetComponentInParent<SmartRoomLabel>();
 
         // При старте находим нужные нам объекты на сцене
         FindTrackedObjects();
@@ -71,15 +78,8 @@ public class WorkstationUI : MonoBehaviour
 
     private void Update()
     {
-        // todo:
-        // заведи скрипт отдельный для паузы, и там внутри по-простому если,
-        // то счётчик на паузу, чтобы несколько источников могли паузу ставить
-        // int _pauseCount;
-        // if (_pauseCount > 0) => Time.timeScale = 0f;
-        // else => Time.timeScale = 1f;
-        if (Time.timeScale == 0f)
-            return;
-
+        // ИСПРАВЛЕНИЕ: Убрали проверку на паузу. UI должен обновляться всегда!
+        
         sb.Clear(); // Очищаем построитель строк перед новым циклом
 
         if (stationType == WorkstationType.GuardPost)
@@ -91,7 +91,20 @@ public class WorkstationUI : MonoBehaviour
             UpdateServicePointStatus();
         }
 
-        statusText.text = sb.ToString();
+        string newStatus = sb.ToString();
+
+        // --- ЛОГИКА "ПИНГА" ПРИ ИЗМЕНЕНИИ ---
+        if (newStatus != lastStatusString)
+        {
+            // Не пингуем при самой первой инициализации (когда lastStatusString пустой)
+            if (!string.IsNullOrEmpty(lastStatusString) && smartLabel != null)
+            {
+                smartLabel.Ping(2.5f); // Показываем надпись на 2.5 секунды
+            }
+            
+            lastStatusString = newStatus;
+            statusText.text = newStatus;
+        }
     }
 
     private void UpdateGuardPostStatus()

@@ -5,13 +5,11 @@ public class InternPatrolAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        // Условие простое: если ты стажер и не на перерыве, ты всегда можешь патрулировать.
-        // Из-за низкого приоритета это действие будет выбрано, только если больше нечего делать.
-        if (!(staff is InternController intern) || intern.IsOnBreak())
-        {
-            return false;
-        }
-        return true;
+        if (!(staff is InternController intern) || intern.IsOnBreak()) return false;
+
+        // ПРОВЕРКА: Разрешаем патруль, только если на сцене реально есть расставленные точки!
+        var points = Managers.ScenePointsRegistry.Instance?.internPatrolPoints;
+        return points != null && points.Count > 0 && points[0] != null;
     }
 
 	public InternPatrolAction()

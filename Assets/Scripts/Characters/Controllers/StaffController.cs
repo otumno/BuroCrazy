@@ -117,6 +117,18 @@ public class StaffController : MonoBehaviour
     }
     public CharacterSkillsWrapper skills = new CharacterSkillsWrapper();
 
+    // === UTILITY AI DEBUG DATA ===
+    [System.Serializable]
+    public class UtilityDebugData
+    {
+        public string ActionName;
+        public bool ConditionsMet;
+        public float Score;
+    }
+
+    [HideInInspector]
+    public List<UtilityDebugData> currentBrainDump = new List<UtilityDebugData>();
+
     [Header("График работы")]
     public CalendarDayPeriodType WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
 
@@ -203,8 +215,9 @@ public class StaffController : MonoBehaviour
 
         CalculateArrivalTime();
 
-        // 1. Попытка авто-назначения
-        if (assignedWorkstation == null)
+        // 1. Попытка авто-назначения (только для ролей, которым нужен стол)
+        bool needsDesk = (role == Role.Clerk || role == Role.Registrar || role == Role.Cashier || role == Role.Archivist || role == Role.Accountant);
+        if (needsDesk && assignedWorkstation == null)
         {
             AssignmentManager.Instance?.AutoAssignStaff(this);
         }
@@ -215,11 +228,13 @@ public class StaffController : MonoBehaviour
             Debug.Log($"[StaffController] {characterName}: Иду на место {assignedWorkstation.name}");
             StartCoroutine(GoToWorkstationRoutine());
         }
-        else
+        else if (needsDesk)
         {
+             // Только если нужен стол, но не нашли - идем в зону ожидания
              Debug.Log($"[StaffController] {characterName}: Нет места, иду в зону ожидания");
              StartCoroutine(GoToHangoutRoutine());
         }
+        // Для ролей без стола (Intern, Guard, Janitor, OfficeManager) - сразу начинаем работу
 
         // 3. Запуск "Мозга"
         if (aiLoopCoroutine != null) StopCoroutine(aiLoopCoroutine);
@@ -287,20 +302,23 @@ public class StaffController : MonoBehaviour
         
         while (IsOnDuty())
         {
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1f);
             
-            UpdatePeriodIndex();
+            // 1. Естественный рост потребностей со временем
+            float resilience = 1f - (skills.sedentaryResilience * 0.5f);
+            bladder += (Time.deltaTime / 120f) * resilience;
+            energy -= (Time.deltaTime / 300f) * resilience;
+            stress += (Time.deltaTime / 200f);
 
-            // Проверяем перерывы
-            if (CheckAndHandleBreaks()) continue;
+            // 2. Если заняты делом или идем - не прерываемся на раздумья
+            if (currentExecutor != null || (agentMover != null && agentMover.IsMoving()) || IsOnBreak()) 
+                continue;
 
-            // Пропускаем если заняты
-            if (currentExecutor != null) continue;
-            if (agentMover != null && agentMover.IsMoving()) continue;
-            if (IsOnBreak()) continue;
-
-            // Работа: если без стола - пробуем найти
-            if (assignedWorkstation == null)
+            // 3. Авто-поиск стола, если его нет
+            // --- ИСПРАВЛЕНО: Только клерки и бухгалтеры нуждаются в столах ---
+            bool needsDesk = (role == Role.Clerk || role == Role.Registrar || role == Role.Cashier || role == Role.Archivist || role == Role.Accountant);
+            
+            if (assignedWorkstation == null && needsDesk)
             {
                 if (AssignmentManager.Instance != null && AssignmentManager.Instance.AutoAssignStaff(this))
                 {
@@ -309,6 +327,7 @@ public class StaffController : MonoBehaviour
                 continue;
             }
             
+            // 4. Выбор лучшего действия (Utility AI)
             TryPickAction();
         }
     }
@@ -450,24 +469,87 @@ public class StaffController : MonoBehaviour
 
     protected void TryPickAction()
     {
-        if (activeActions == null || activeActions.Count == 0) return;
+        // Очищаем brain dump перед новым решением
+        currentBrainDump.Clear();
 
-        var shuffledActions = new List<StaffAction>(activeActions);
-        // Shuffle
-        for (int i = 0; i < shuffledActions.Count; i++)
+        // Собираем ВСЕ действия: и тактические (назначенные), и системные (базовые нужды)
+        var allAvailable = new List<StaffAction>();
+        if (activeActions != null) allAvailable.AddRange(activeActions);
+        
+        // Добавляем системные действия если есть база
+        if (systemActionDatabase != null && systemActionDatabase.allActions != null)
+            allAvailable.AddRange(systemActionDatabase.allActions);
+
+        StaffAction bestAction = null;
+        float highestUtility = -1f;
+
+        foreach (var action in allAvailable)
         {
-             var temp = shuffledActions[i];
-             int randomIndex = Random.Range(i, shuffledActions.Count);
-             shuffledActions[i] = shuffledActions[randomIndex];
-             shuffledActions[randomIndex] = temp;
+            if (action == null) continue;
+
+            bool conditionsMet = action.AreConditionsMet(this);
+            float utility = 0f;
+
+            if (conditionsMet)
+            {
+                utility = action.CalculateUtility(this);
+                
+                // Немного рандома для живости
+                utility += Random.Range(0f, 2f);
+
+                if (utility > highestUtility)
+                {
+                    highestUtility = utility;
+                    bestAction = action;
+                }
+            }
+
+            // Записываем в brain dump для отладки
+            currentBrainDump.Add(new UtilityDebugData
+            {
+                ActionName = action != null ? action.displayName : "NULL",
+                ConditionsMet = conditionsMet,
+                Score = utility
+            });
         }
 
-        foreach (var action in shuffledActions)
+        if (bestAction != null)
         {
-            if (action.AreConditionsMet(this))
+            // --- ЖИВЫЕ РЕАКЦИИ ПЕРЕД ВЫПОЛНЕНИЕМ ---
+            if (bestAction is Action_GoToToilet && highestUtility > 80f)
             {
-                ExecuteAction(action);
-                break;
+                thoughtBubble?.ShowPriorityMessage("Ой-ой, срочно отлучусь!", 3f, Color.yellow);
+            }
+            else if (bestAction.actionType == ActionType.ServiceAtRegistration || bestAction.actionType == ActionType.ProcessDocumentCat1)
+            {
+                if (highestUtility > 100f) 
+                {
+                    thoughtBubble?.ShowPriorityMessage("Ужас, какая толпа! Работаю!", 2f, new Color(1f, 0.4f, 0.4f));
+                }
+            }
+            else if (bestAction is Action_GoToCooler)
+            {
+                thoughtBubble?.ShowPriorityMessage("Горло пересохло...", 2f, Color.cyan);
+            }
+            else if (bestAction is SortPapersAction)
+            {
+                if (Random.value < 0.3f) 
+                    thoughtBubble?.ShowPriorityMessage("Пока никого нет...", 2f, Color.gray);
+            }
+
+            Debug.Log($"[Utility AI] {characterName} выбрал {bestAction.displayName} (Вес: {highestUtility:F1})");
+            ExecuteAction(bestAction);
+        }
+        else
+        {
+            if (Random.value < 0.05f)
+            {
+                // --- ИСПРАВЛЕНО: Только клерки и бухгалтеры нуждаются в столах ---
+                bool needsDesk = (role == Role.Clerk || role == Role.Registrar || role == Role.Cashier || role == Role.Archivist || role == Role.Accountant);
+                if (assignedWorkstation == null && needsDesk)
+                    thoughtBubble?.ShowPriorityMessage("Мне негде работать...", 3f, Color.red);
+                else
+                    thoughtBubble?.ShowPriorityMessage("Что бы поделать?", 2f, Color.gray);
             }
         }
     }

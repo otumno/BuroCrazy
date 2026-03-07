@@ -9,6 +9,7 @@ public class Action_ServiceAtRegistration : StaffAction
     public Action_ServiceAtRegistration()
     {
         category = ActionCategory.Tactic;
+        priority = 20;
     }
     
     public override bool AreConditionsMet(StaffController staff)
@@ -18,10 +19,32 @@ public class Action_ServiceAtRegistration : StaffAction
             return false;
         }
         
-        // --- ИЗМЕНЕНИЕ ЗДЕСЬ ---
-        // Условие теперь: "Есть ли на моем рабочем месте клиент, ожидающий обслуживания?"
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         return zone != null && zone.GetOccupyingClients().Any();
+    }
+
+    public override float CalculateUtility(StaffController staff)
+    {
+        float utility = base.CalculateUtility(staff);
+
+        if (staff is ClerkController clerk && clerk.assignedWorkstation != null)
+        {
+            var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+            if (zone != null)
+            {
+                var clients = zone.GetOccupyingClients();
+                int clientCount = clients.Count;
+
+                if (clientCount > 0)
+                {
+                    utility += clientCount * 5f;
+
+                    float maxHeat = clients.Max(c => c.PatienceHeat);
+                    utility += maxHeat * 80f;
+                }
+            }
+        }
+        return utility;
     }
 
     public override System.Type GetExecutorType()

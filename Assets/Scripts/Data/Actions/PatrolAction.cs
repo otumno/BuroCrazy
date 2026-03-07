@@ -7,9 +7,11 @@ public class PatrolAction : StaffAction
 {
     public override bool AreConditionsMet(StaffController staff)
     {
-        // У патруля почти всегда выполнены условия, если сотрудник на смене
-        // и его роль позволяет это делать (проверяется по списку applicableRoles в ассете).
-        return staff.IsOnDuty() && applicableRoles.Contains(staff.currentRole);
+        if (!staff.IsOnDuty() || !applicableRoles.Contains(staff.currentRole)) return false;
+
+        // ПРОВЕРКА ДЛЯ ОХРАНЫ
+        var points = Managers.ScenePointsRegistry.Instance?.guardPatrolPoints;
+        return points != null && points.Count > 0 && points[0] != null;
     }
 
     public override System.Type GetExecutorType()

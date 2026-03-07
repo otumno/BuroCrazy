@@ -71,8 +71,19 @@ public class PlayerInputController : MonoBehaviour
     {
         return; // Выходим из Update, не обрабатывая клики
     }
-		
-		// --- ЛЕВЫЙ КЛИК (передвижение) ---
+
+        // --- ЧИТ НА ДЕНЬГИ (КЛАВИША M) ---
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            if (PlayerWallet.Instance != null)
+            {
+                PlayerWallet.Instance.AddMoney(10000, "Чит-код разработчика", IncomeType.Shadow);
+                Debug.Log("<color=green>[ЧИТ]</color> Добавлено $10,000!");
+            }
+        }
+        // ---------------------------------
+
+  // --- ЛЕВЫЙ КЛИК (передвижение) ---
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;

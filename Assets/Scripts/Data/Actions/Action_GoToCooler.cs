@@ -21,6 +21,13 @@ public class Action_GoToCooler : StaffAction
         return staff.morale <= modifiedThreshold && !staff.IsOnBreak();
     }
 
+    public override float CalculateUtility(StaffController staff)
+    {
+        float need = Mathf.Clamp01(1f - staff.morale);
+        if (need < 0.2f) return 0f;
+        return Mathf.Pow(need, 2) * 60f;
+    }
+
     public override System.Type GetExecutorType()
     {
         return typeof(GoToCoolerExecutor);

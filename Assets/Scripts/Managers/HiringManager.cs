@@ -252,6 +252,19 @@ namespace Managers
                 staffController.currentRole = candidate.Role; // ВАЖНО!
                 
                 staffController.activeActions = new List<StaffAction>();
+
+                // ---> ИСПРАВЛЕНИЕ: ВЫДАЕМ СТАРТОВЫЕ ДЕЙСТВИЯ ИЗ РАНГА <---
+                if (candidate.Rank != null && candidate.Rank.unlockedActions != null)
+                {
+                    foreach (var action in candidate.Rank.unlockedActions)
+                    {
+                        if (action != null && action.category == ActionCategory.Tactic)
+                        {
+                            staffController.activeActions.Add(action);
+                        }
+                    }
+                }
+                // ---------------------------------------------------------
                 
                 if (roleData != null) staffController.InitializeFromData(roleData);
                 
@@ -371,15 +384,45 @@ namespace Managers
                 var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
                 var isOnDuty = staff.IsOnDuty(); 
 
-                if (isScheduledNow && !isOnDuty) 
+                if (isScheduledNow && !isOnDuty && !staff.hasArrivedToday) 
                 {
-                    if (!staff.gameObject.activeSelf) staff.gameObject.SetActive(true); // Включаем, если был выключен
-                    staff.StartShift();
+                    // Инициализируем расчеты прихода
+                    staff.CalculateArrivalTime();
+                    float lateness = staff.currentLateness;
+
+                    if (lateness == -1f) // Заболел
+                    {
+                        Managers.Teletype.TeletypeManager.Instance?.LogImportant($"ВНИМАНИЕ: {staff.characterName} взял больничный и сегодня не выйдет!");
+                        staff.hasArrivedToday = true;
+                        staff.gameObject.SetActive(false);
+                    }
+                    else if (lateness > 0f) // Опаздывает
+                    {
+                        Managers.Teletype.TeletypeManager.Instance?.Log($"{staff.characterName} задерживается на {Mathf.RoundToInt(lateness)} мин.");
+                        staff.hasArrivedToday = true;
+                        StartCoroutine(DelayedStartShift(staff, lateness));
+                    }
+                    else // Пришел вовремя
+                    {
+                        if (!staff.gameObject.activeSelf) staff.gameObject.SetActive(true);
+                        staff.StartShift();
+                    }
                 }
                 else if (!isScheduledNow && isOnDuty) 
                 {
                     staff.EndShift();
                 }
+            }
+        }
+
+        private IEnumerator DelayedStartShift(StaffController staff, float delay)
+        {
+            yield return new WaitForSeconds(delay);
+            if (staff != null)
+            {
+                if (!staff.gameObject.activeSelf) staff.gameObject.SetActive(true);
+                staff.StartShift();
+                staff.thoughtBubble?.ShowPriorityMessage("Ох, пробки...", 3f, Color.yellow);
             }
         }
         

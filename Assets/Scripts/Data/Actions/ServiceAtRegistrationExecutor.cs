@@ -90,111 +90,111 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         }
     } // Конец ActionRoutine
 
-    // Корутина для стандартной регистрации (направления клиента)
+    // Корутина для стандартной регистрации (направления клиента) - с живым диалогом
     private IEnumerator HandleStandardRegistration(ClerkController registrar, ClientPathfinding client)
     {
-        // --- ПРИМЕНЕНИЕ ЭФФЕКТИВНОСТИ ---
-        // Задержка зависит от состояния стойки
+        // 1. КЛИЕНТ ЗДОРОВАЕТСЯ
+        client.ShowThoughtBubble("Здравствуйте.", 1.5f);
+        yield return new WaitForSeconds(1.5f);
+
+        if (client == null || client.stateMachine == null) { FinishAction(false); yield break; }
+
+        // 2. РЕГИСТРАТОР ОТВЕЧАЕТ
+        string[] greetings = { "Слушаю вас.", "Какая у вас цель?", "Что вам нужно?", "Документы давайте." };
+        registrar.thoughtBubble?.ShowPriorityMessage(greetings[Random.Range(0, greetings.Length)], 2f, Color.white);
+        yield return new WaitForSeconds(2f);
+
+        // 3. КЛИЕНТ ОЗВУЧИВАЕТ ЦЕЛЬ
+        client.ShowThoughtBubble(GetClientGoalText(client.mainGoal), 2.5f);
+        yield return new WaitForSeconds(2.5f);
+
+        // 4. РЕГИСТРАТОР ИЩЕТ РЕШЕНИЕ
         float waitTime = Random.Range(1f, 2.5f) / currentEfficiency;
+        registrar.thoughtBubble?.ShowPriorityMessage("Минутку, смотрю...", waitTime, Color.cyan);
         yield return new WaitForSeconds(waitTime);
 
-        // Проверяем состояние клиента еще раз перед действием
-         if (client == null || client.stateMachine == null) {
-              Debug.LogWarning("[HandleStandardRegistration] Клиент исчез во время ожидания.");
-              FinishAction(false); 
-              yield break;
-         }
+        if (client == null || client.stateMachine == null) { FinishAction(false); yield break; }
 
-        // Проверяем цель "Архив" ДО основного определения цели
+        // Проверка цели "Архив" (если архив закрыт)
         if (client.mainGoal == ClientGoal.GetArchiveRecord)
         {
-             // Если цель - архив, а мы здесь (архив отключен), отправляем домой
              registrar.thoughtBubble?.ShowPriorityMessage("Извините, архив\nсегодня не работает.", 3f, Color.red);
-             yield return new WaitForSeconds(1.5f); 
+             yield return new WaitForSeconds(2f);
 
-             if (client == null || client.stateMachine == null) yield break; 
-			 
-			 client.ApplyStressJump(client.stressJump_Refusal * 1.5f);
-
-             if (client.stateMachine.MyQueueNumber != -1)
-             {
-                 ClientQueueManager.Instance?.RemoveClientFromQueue(client);
-             }
+             if (client == null || client.stateMachine == null) yield break;
+    
+             client.ApplyStressJump(client.stressJump_Refusal * 1.5f);
+             if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance?.RemoveClientFromQueue(client);
+          
              client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint); 
+             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
              client.stateMachine.SetState(ClientState.LeavingUpset);
              
-             // Наносим урон даже при отказе (поговорили же)
              if (currentDurabilityComponent != null) currentDurabilityComponent.Degrade(1f);
-
-             FinishAction(true); 
-             yield break; 
+             FinishAction(true);
+             yield break;
         }
 
-        // Определяем правильный пункт назначения для клиента
+        // Выбираем верное окно
         Waypoint correctDestination = DetermineCorrectGoalForClient(client);
-        Waypoint actualDestination = correctDestination; 
+        Waypoint actualDestination = correctDestination;
 
-        // Рассчитываем шанс ошибки при направлении
+        // Шанс ошибки регистратора
         float baseSuccessChance = 0.7f;
         float clientModifier = (client.babushkaFactor * 0.1f) - (client.suetunFactor * 0.2f);
         float registrarBonus = registrar.redirectionBonus;
         float finalChance = Mathf.Clamp(baseSuccessChance + clientModifier + registrarBonus, 0.3f, 0.95f);
 
-        // Проверяем, произошла ли ошибка
         if (Random.value > finalChance)
         {
-            Debug.LogWarning($"[Registration] ПРОВАЛ НАПРАВЛЕНИЯ! Регистратор {registrar.name} ошибся.");
-            client.ApplyStressJump(0.05f); 
-			registrar.thoughtBubble?.ShowPriorityMessage("Эээ... наверное туда...", 2f, Color.yellow);
-			
+            client.ApplyStressJump(0.05f);
+            registrar.thoughtBubble?.ShowPriorityMessage("Эээ... наверное туда...", 2f, Color.yellow);
+            // ... (остальной код ошибки остается без изменений)
             List<Waypoint> possibleDestinations = new List<Waypoint>();
             if (ClientSpawner.Instance != null) {
                 possibleDestinations.Add(ClientSpawner.GetQuietestZone(ClientSpawner.Instance.category1DeskZones)?.waitingWaypoint);
                 possibleDestinations.Add(ClientSpawner.GetQuietestZone(ClientSpawner.Instance.category2DeskZones)?.waitingWaypoint);
                 possibleDestinations.Add(ClientSpawner.GetQuietestZone(ClientSpawner.Instance.cashierZones)?.waitingWaypoint);
-                if (ClientSpawner.Instance.toiletZone != null) possibleDestinations.Add(ClientSpawner.Instance.toiletZone.waitingWaypoint);
             }
-             if (ClientQueueManager.Instance != null) {
-                possibleDestinations.Add(ClientQueueManager.Instance.ChooseNewGoal(client)); 
-             }
-
             possibleDestinations.RemoveAll(item => item == null || item == correctDestination);
-
-            if (possibleDestinations.Count > 0)
-            {
-                actualDestination = possibleDestinations[Random.Range(0, possibleDestinations.Count)];
-            }
+            if (possibleDestinations.Count > 0) actualDestination = possibleDestinations[Random.Range(0, possibleDestinations.Count)];
         }
 
-         // Проверяем клиента еще раз
-         if (client == null || client.stateMachine == null || actualDestination == null) {
-              FinishAction(false); 
-              yield break;
-         }
+         if (client == null || client.stateMachine == null || actualDestination == null) { FinishAction(false); yield break; }
 
-        string destinationName = string.IsNullOrEmpty(actualDestination.friendlyName) ?
-                                actualDestination.name : actualDestination.friendlyName;
-        string directionMessage = $"Пройдите, пожалуйста, к\n'{destinationName}'";
-        registrar.thoughtBubble?.ShowPriorityMessage(directionMessage, 3f, Color.white);
+        // 5. ВЕРДИКТ С РАЗНООБРАЗИЕМ
+        string destinationName = string.IsNullOrEmpty(actualDestination.friendlyName) ? actualDestination.name : actualDestination.friendlyName;
+        string[] directs = {
+            $"Вам нужно в:\n'{destinationName}'",
+            $"Пройдите к:\n'{destinationName}'",
+            $"Ожидайте у:\n'{destinationName}'",
+            $"Ваше окно -\n'{destinationName}'"
+        };
+        registrar.thoughtBubble?.ShowPriorityMessage(directs[Random.Range(0, directs.Length)], 3f, Color.green);
+        yield return new WaitForSeconds(1.5f);
+        
+        client.ShowThoughtBubble("Понял, спасибо.", 2f);
 
-        if (client.stateMachine.MyQueueNumber != -1)
-        {
-            ClientQueueManager.Instance?.RemoveClientFromQueue(client);
-        }
-
+        if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance?.RemoveClientFromQueue(client);
         client.stateMachine.SetGoal(actualDestination);
         client.stateMachine.SetState(ClientState.MovingToGoal);
-    } 
+    }
 
-    // Корутина для обработки запроса в архив
+    // Корутина для обработки запроса в архив - с живым диалогом
     private IEnumerator HandleArchiveRequest(ClerkController registrar, ClientPathfinding client)
     {
+        client.ShowThoughtBubble("Мне нужна выписка из архива.", 2.5f);
+        yield return new WaitForSeconds(2.5f);
+
+        registrar.thoughtBubble?.ShowPriorityMessage("Делаю запрос в архив.\nОжидайте.", 3f, Color.yellow);
+        yield return new WaitForSeconds(1.5f);
+
+        // ... (ваш старый код запроса без изменений) ...
         if (ArchiveRequestManager.Instance == null) {
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
             client.stateMachine.SetState(ClientState.LeavingUpset);
-            FinishAction(true); 
+            FinishAction(true);
             yield break;
         }
          if (client == null || client.stateMachine == null) {
@@ -333,5 +333,20 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         }
 
         return targetWaypoint ?? ClientSpawner.Instance.exitWaypoint;
-    } 
+    }
+
+    // --- НОВЫЙ ВСПОМОГАТЕЛЬНЫЙ МЕТОД ---
+    private string GetClientGoalText(ClientGoal goal)
+    {
+        switch(goal)
+        {
+            case ClientGoal.GetCertificate1: return "Мне нужна справка.";
+            case ClientGoal.GetCertificate2: return "Оформляю форму 2.";
+            case ClientGoal.PayTax: return "Я налоги заплатить.";
+            case ClientGoal.GetArchiveRecord: return "Мне в архив нужно.";
+            case ClientGoal.VisitToilet: return "Где тут туалет?";
+            case ClientGoal.DirectorApproval: return "Мне к директору!";
+            default: return "Я просто спросить.";
+        }
+    }
 }

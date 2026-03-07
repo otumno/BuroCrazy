@@ -1,10 +1,8 @@
-// Assets/Scripts/Managers/PolicyManager.cs
 using UnityEngine;
 using System.Collections.Generic;
 using Data.Policies;
 using System.Linq;
-using Data.Documents; // Для ProjectDocumentDefinition
-// using Characters.Controllers; // <--- УДАЛИЛ ЭТУ СТРОКУ, ОНА ВЫЗЫВАЛА ОШИБКУ
+using Data.Documents;
 
 namespace Managers
 {
@@ -15,6 +13,10 @@ namespace Managers
         [Header("База данных")]
         public List<PolicyData> allPoliciesDatabase; 
         public GameObject policyDocumentPrefab;      
+
+        [Header("Связи со сценой")]
+        [Tooltip("Перетащите сюда стопку входящих документов Директора (DirectorInboxStack)")]
+        public DocumentStack directorInboxStack;
 
         [Header("Состояние")]
         public HashSet<string> activePolicyIDs = new HashSet<string>();
@@ -40,19 +42,17 @@ namespace Managers
                 return;
             }
 
-            var directorStack = FindDirectorStack();
-
-            if (directorStack != null)
+            if (directorInboxStack != null)
             {
                 // Используем конструктор для Политик
                 ProjectDocumentDefinition docDef = new ProjectDocumentDefinition(policy.id, policy.documentTitle, true);
 
-                directorStack.AddProjectDocument(docDef, policyDocumentPrefab);
+                directorInboxStack.AddProjectDocument(docDef, policyDocumentPrefab);
                 Debug.Log($"[PolicyManager] Проект указа '{policy.displayName}' положен на стол Директора.");
             }
             else
             {
-                Debug.LogError("[PolicyManager] Не могу найти стол Директора!");
+                Debug.LogError("[PolicyManager] Не могу найти стол Директора! Поле Director Inbox Stack пустое в инспекторе.");
             }
         }
 
@@ -93,25 +93,11 @@ namespace Managers
                 }
             }
         }
-
-        private DocumentStack FindDirectorStack()
-        {
-            // DirectorAvatarController скорее всего в глобальном namespace, поэтому просто ищем его
-            // Если он не находится, попробуйте добавить "global::" перед именем класса, но обычно это не нужно
-            var director = FindFirstObjectByType<DirectorAvatarController>();
-            
-            if (director != null && director.assignedWorkstation != null)
-            {
-                return director.assignedWorkstation.documentStack;
-            }
-            
-            return null;
-        }
 		
-		public Data.Policies.PolicyData GetPolicyById(string id)
-			{
-				return allPoliciesDatabase.FirstOrDefault(p => p.id == id);
-			}
+        public Data.Policies.PolicyData GetPolicyById(string id)
+        {
+            return allPoliciesDatabase.FirstOrDefault(p => p.id == id);
+        }
 
         public bool IsBehaviorActive(string flag, StaffController.Role role)
         {

@@ -19,6 +19,13 @@ public class Action_GoToBreak : StaffAction
         return staff.energy <= energyThreshold && !staff.IsOnBreak();
     }
 
+    public override float CalculateUtility(StaffController staff)
+    {
+        float need = Mathf.Clamp01(1f - staff.energy);
+        if (need < 0.2f) return 0f;
+        return Mathf.Pow(need, 2) * 80f;
+    }
+
     public override System.Type GetExecutorType()
     {
         return typeof(GoToBreakExecutor);

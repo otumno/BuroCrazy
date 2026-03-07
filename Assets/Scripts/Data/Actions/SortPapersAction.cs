@@ -8,7 +8,8 @@ public class SortPapersAction : StaffAction
 {
     public SortPapersAction()
     {
-        category = ActionCategory.System; // Помечаем как системное
+        category = ActionCategory.System;
+        priority = 1;
     }
     
     public override bool AreConditionsMet(StaffController staff)
@@ -22,6 +23,15 @@ public class SortPapersAction : StaffAction
         if (zone == null) return false;
 
         return !zone.GetOccupyingClients().Any();
+    }
+
+    public override float CalculateUtility(StaffController staff)
+    {
+        float utility = base.CalculateUtility(staff);
+        
+        utility += staff.skills.pedantry * 15f;
+        
+        return utility;
     }
 
     public override System.Type GetExecutorType()

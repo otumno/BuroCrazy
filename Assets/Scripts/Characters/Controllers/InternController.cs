@@ -92,7 +92,8 @@ public class InternController : StaffController, IServiceProvider
             }
         }
 
-        StartCoroutine(InternLogicLoop());
+        // Используем базовый AI вместо hardcoded логики
+        StartCoroutine(AIUpdateLoop());
     }
 
     private SmallTalkController smallTalk;

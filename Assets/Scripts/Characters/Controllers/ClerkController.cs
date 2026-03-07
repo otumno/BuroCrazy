@@ -105,6 +105,21 @@ public class ClerkController : StaffController, IServiceProvider
     public override string GetCurrentStateName() => currentState.ToString();
     public void InitializeFromData(RoleData data) { /* ... */ }
 
+    // --- НОВЫЙ МЕТОД: Правильное заступление на пост ---
+    protected override IEnumerator GoToWorkstationRoutine()
+    {
+        // 1. Идем к столу (используем базовую логику)
+        yield return base.GoToWorkstationRoutine();
+        
+        // 2. Когда дошли — "включаемся" в работу
+        if (assignedWorkstation != null)
+        {
+            ClientSpawner.AssignServiceProviderToDesk(this, assignedWorkstation.deskId);
+            SetState(ClerkState.Working);
+            Debug.Log($"[ClerkController] {characterName} занял стол {assignedWorkstation.name} и готов принимать клиентов!");
+        }
+    }
+
     #region IServiceProvider Implementation
     public bool IsAvailableToServe => !IsOnBreak() && (currentState == ClerkState.Working || currentState == ClerkState.ChairPatrol);
     public Transform GetClientStandPoint() => assignedWorkstation != null ? assignedWorkstation.clientStandPoint.transform : transform;

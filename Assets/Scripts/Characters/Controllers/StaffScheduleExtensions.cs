@@ -43,59 +43,33 @@ namespace Characters
         {
             if (staff == null) return;
             
-            var punctualityField = typeof(StaffController).GetField("punctuality", 
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-            if (punctualityField == null)
-            {
-                punctualityField = typeof(StaffController).GetField("punctuality", 
-                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            }
-            
-            float punctuality = 0.5f;
-            if (punctualityField != null)
-            {
-                punctuality = (float)punctualityField.GetValue(staff);
-            }
-            
+            float punctuality = GetPrivateField<float>(staff, "punctuality");
             float maxLateness = 30f;
             
-            float lateness;
-            if (punctuality >= 1f)
-            {
-                lateness = Random.Range(0f, 2f);
-            }
-            else
-            {
-                float noLatenessChance = punctuality;
-                float randomValue = Random.value;
-
-                if (randomValue < noLatenessChance)
-                {
-                    lateness = Random.Range(0f, 2f);
-                }
-                else
-                {
-                    float latenessChance = 1f - noLatenessChance;
-                    float latenessMultiplier = latenessChance * (1f - punctuality * 0.5f);
-                    float maxLatenessAdjusted = maxLateness * (1f + latenessMultiplier);
-                    lateness = Random.Range(0f, maxLatenessAdjusted);
-                }
-            }
-            
-            SetPrivateField(staff, "currentLateness", lateness);
-
-            // Track attendance statistics
-            if (lateness > 5f)
-            {
-                int currentLatenessCount = GetPrivateField<int>(staff, "totalLatenessCount");
-                SetPrivateField(staff, "totalLatenessCount", currentLatenessCount + 1);
-            }
-            // 2% chance to count as a sick day
-            if (Random.value < 0.02f)
+            // 1. Проверка на БОЛЬНИЧНЫЙ (например, 3% шанс, уменьшается при высокой пунктуальности/морали)
+            float sickChance = 0.03f * (1f - punctuality * 0.5f);
+            if (Random.value < sickChance)
             {
                 int currentSickDays = GetPrivateField<int>(staff, "sickDaysCount");
                 SetPrivateField(staff, "sickDaysCount", currentSickDays + 1);
+                
+                // Устанавливаем маркер, что сегодня он не придет (огромное опоздание)
+                SetPrivateField(staff, "currentLateness", -1f); 
+                return;
             }
+
+            // 2. Расчет ОПОЗДАНИЯ
+            float lateness = 0f;
+            if (punctuality < 1f && Random.value >= punctuality)
+            {
+                float latenessMultiplier = (1f - punctuality) * 1.5f;
+                lateness = Random.Range(5f, maxLateness * latenessMultiplier);
+                
+                int currentLatenessCount = GetPrivateField<int>(staff, "totalLatenessCount");
+                SetPrivateField(staff, "totalLatenessCount", currentLatenessCount + 1);
+            }
+            
+            SetPrivateField(staff, "currentLateness", lateness);
         }
 
         public static float GetLateness(this StaffController staff)

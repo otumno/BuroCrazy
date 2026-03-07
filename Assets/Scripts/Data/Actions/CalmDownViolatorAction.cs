@@ -14,6 +14,11 @@ public class CalmDownViolatorAction : StaffAction
         return GuardManager.Instance != null && GuardManager.Instance.currentViolator != null;
     }
 
+    public override float CalculateUtility(StaffController staff)
+    {
+        return 1000f; 
+    }
+
     public override System.Type GetExecutorType()
     {
         return typeof(CalmDownViolatorExecutor);

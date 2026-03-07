@@ -1,30 +1,28 @@
+// Файл: Assets/Scripts/UI/SmartRoomLabel.cs
 using UnityEngine;
+using UnityEngine.EventSystems; // Обязательно для работы UI зон!
 using TMPro;
-using Managers; // Для доступа к TimeManager или проверки паузы
 
 [RequireComponent(typeof(CanvasGroup))]
-public class SmartRoomLabel : MonoBehaviour
+// Добавляем интерфейсы IPointerEnterHandler и IPointerExitHandler для отслеживания мыши над UI
+public class SmartRoomLabel : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
 {
     [Header("Настройки")]
-    [Tooltip("Статичное название комнаты (например, 'Касса')")]
     public string roomTitle = "Комната";
-    [Tooltip("Задержка перед исчезновением (сек)")]
     public float hideDelay = 0.5f;
-    [Tooltip("Скорость появления/исчезновения")]
     public float fadeSpeed = 10f;
 
     [Header("Ссылки")]
-    [Tooltip("Текстовое поле для заголовка (статичное)")]
     public TextMeshProUGUI titleText;
     
-    // Ссылки на зоны отслеживания мыши (коллайдеры комнаты)
-    // Если UI висит на том же объекте, что и коллайдер, это поле можно не заполнять вручную
-    [Tooltip("Коллайдер комнаты. Если пусто, ищет на этом же объекте или в родителях.")]
+    [Tooltip("Заполнять ТОЛЬКО если вы используете физические коллайдеры вместо UI зон")]
     public Collider2D roomCollider;
 
     private CanvasGroup _canvasGroup;
-    private bool _isHovered;
-    private float _lastHoverTime = -100f; // Инициализируем в прошлое чтобы в начале все было скрыто
+    private bool _isHoveredByUI;
+    private bool _isHoveredByPhysics;
+    private float _lastHoverTime = -100f; 
+    private float _pingEndTime = -100f; 
     private Camera _mainCamera;
 
     void Awake()
@@ -32,78 +30,73 @@ public class SmartRoomLabel : MonoBehaviour
         _canvasGroup = GetComponent<CanvasGroup>();
         _mainCamera = Camera.main;
 
-        // Автопоиск коллайдера, если не назначен
-        if (roomCollider == null)
-        {
-            roomCollider = GetComponentInParent<Collider2D>();
-            if (roomCollider == null)
-            {
-                Debug.LogWarning($"[SmartRoomLabel] Коллайдер не найден для комнаты '{roomTitle}' на объекте {gameObject.name}");
-            }
-        }
-
-        // Установка заголовка
-        if (titleText != null)
-        {
-            titleText.text = roomTitle;
-        }
+        if (titleText != null) titleText.text = roomTitle;
         
-        // Скрываем при старте
-        _canvasGroup.alpha = 0f;
+        _canvasGroup.alpha = 0f; // Принудительно скрываем на старте
     }
 
     void Update()
     {
-        // 1. Проверяем Паузу (Time.timeScale или MainUIManager)
-        bool isPausedByTimeScale = Time.timeScale == 0f;
-        bool isPausedByManager = MainUIManager.Instance != null && MainUIManager.Instance.pauseCount > 0;
-        bool isPaused = isPausedByTimeScale || isPausedByManager;
+        // 1. Проверяем Паузу (Только по TimeScale - это самый надежный способ)
+        bool isPaused = Time.timeScale <= 0.01f;
 
-        // 2. Проверяем Мышь (Рейкаст в коллайдер комнаты)
-        CheckMouseHover();
+        // 2. Проверяем физические коллайдеры (если они назначены)
+        CheckPhysicsHover();
 
-        // 3. Определяем, должны ли мы быть видны
-        // Видны, если: Пауза ИЛИ Мышь наведена ИЛИ прошло мало времени с момента ухода мыши
-        bool shouldBeVisible = isPaused || _isHovered || (Time.time < _lastHoverTime + hideDelay);
+        // 3. Общее состояние наведения (либо UI зона, либо физика)
+        bool currentlyHovered = _isHoveredByUI || _isHoveredByPhysics;
 
-        // 4. Плавная анимация прозрачности
+        if (currentlyHovered)
+        {
+            _lastHoverTime = Time.unscaledTime; // Обновляем таймер, пока мышь внутри зоны
+        }
+
+        // 4. Активен ли "Пинг" (изменение статуса)
+        bool isPingActive = Time.unscaledTime < _pingEndTime;
+
+        // 5. Итоговое решение: Видно, если Пауза ИЛИ Наведено ИЛИ Пинг ИЛИ не вышло время задержки
+        bool shouldBeVisible = isPaused || currentlyHovered || (Time.unscaledTime < _lastHoverTime + hideDelay) || isPingActive;
+
+        // Плавная анимация
         float targetAlpha = shouldBeVisible ? 1f : 0f;
-        
-        // Используем unscaledDeltaTime, чтобы анимация работала даже на паузе!
         _canvasGroup.alpha = Mathf.MoveTowards(_canvasGroup.alpha, targetAlpha, Time.unscaledDeltaTime * fadeSpeed);
     }
 
-    private void CheckMouseHover()
+    // --- СОБЫТИЯ UI (Для ваших прозрачных зон захвата мыши) ---
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        _isHoveredByUI = true;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        _isHoveredByUI = false;
+    }
+    // --------------------------------------------------------
+
+    private void CheckPhysicsHover()
     {
         if (_mainCamera == null || roomCollider == null)
         {
-            _isHovered = false;
+            _isHoveredByPhysics = false;
             return;
         }
 
         Vector2 mousePos = _mainCamera.ScreenToWorldPoint(Input.mousePosition);
-        
-        // Самая простая проверка: попадает ли точка мыши в коллайдер
-        bool hit = roomCollider.OverlapPoint(mousePos);
-
-        if (hit)
-        {
-            if (!_isHovered)
-            {
-                _isHovered = true;
-                _lastHoverTime = Time.time; // Обновляем таймер только при входе
-            }
-        }
-        else
-        {
-            _isHovered = false;
-        }
+        _isHoveredByPhysics = roomCollider.OverlapPoint(mousePos);
     }
     
-    // Метод для настройки из инспектора (если нужно менять название программно)
     public void SetTitle(string title)
     {
         roomTitle = title;
         if (titleText != null) titleText.text = roomTitle;
+    }
+
+    /// <summary>
+    /// Вызывается из других скриптов для привлечения внимания
+    /// </summary>
+    public void Ping(float duration = 2.5f)
+    {
+        _pingEndTime = Time.unscaledTime + duration;
     }
 }

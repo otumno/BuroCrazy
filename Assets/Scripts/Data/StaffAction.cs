@@ -65,4 +65,34 @@ public abstract class StaffAction : ScriptableObject
     
     public abstract bool AreConditionsMet(StaffController staff);
     public abstract System.Type GetExecutorType();
+
+    // --- НОВЫЙ МЕТОД UTILITY AI ---
+    // Базовый расчет веса действия. Наследники будут его переопределять.
+    public virtual float CalculateUtility(StaffController staff)
+    {
+        float utility = priority * 10f; // Базовый вес
+
+        // Влияние навыков на желание делать эту работу
+        if (primarySkill != null && primarySkill.skill != SkillType.PaperworkMastery)
+        {
+            float skillVal = 0f;
+            switch (primarySkill.skill)
+            {
+                case SkillType.SedentaryResilience: skillVal = staff.skills.sedentaryResilience; break;
+                case SkillType.Pedantry: skillVal = staff.skills.pedantry; break;
+                case SkillType.SoftSkills: skillVal = staff.skills.softSkills; break;
+                case SkillType.Corruption: skillVal = staff.skills.corruption; break;
+                default: skillVal = 1f; break;
+            }
+            utility += (primarySkill.isPositiveEffect ? skillVal : -skillVal) * (primarySkill.strength * 10f);
+        }
+
+        // Модификаторы от политик Директора
+        if (Managers.PolicyManager.Instance != null)
+        {
+            utility *= Managers.PolicyManager.Instance.GlobalWorkSpeedMod;
+        }
+
+        return utility;
+    }
 }

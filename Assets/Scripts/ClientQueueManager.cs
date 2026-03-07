@@ -43,12 +43,48 @@ public class ClientQueueManager : MonoBehaviour
         HandleTimedOutClients();
     }
     
+    private IServiceProvider FindAvailableWorker()
+    {
+        // Проверяем все столы: Регистратура (0), Клерк 1 (1), Клерк 2 (2), Касса (-1)
+        int[] deskIds = { 0, 1, 2, -1 };
+
+        foreach (int deskId in deskIds)
+        {
+            var worker = ClientSpawner.GetServiceProviderAtDesk(deskId);
+            if (worker != null && worker.IsAvailableToServe)
+            {
+                var zone = ClientSpawner.GetZoneByDeskId(deskId);
+                if (zone != null)
+                {
+                    // Считаем только тех клиентов, чей талон УЖЕ вызван И кто идет ИМЕННО к этому работнику
+                    int clientsMovingToThisWorker = queue.Keys.Count(c =>
+                        c != null &&
+                        c.stateMachine != null &&
+                        currentlyCalledNumbers.Contains(queue[c]) &&
+                        c.stateMachine.MyServiceProvider == worker);
+
+                    // Если к работнику идет меньше людей, чем вмещает его зона - он может взять еще одного
+                    if (clientsMovingToThisWorker < zone.capacity)
+                    {
+                        return worker;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private bool CanCallClient()
+    {
+        if (queue.Count == 0) return false;
+        // Если есть хоть один свободный работник, к которому не идет толпа — вызываем
+        return FindAvailableWorker() != null;
+    }
+
     private void ProcessNextClientCall()
     {
-        // Ищем доступного работника на любом столе (не только desk 0)
         IServiceProvider availableWorker = FindAvailableWorker();
-
-        if (availableWorker == null || !availableWorker.IsAvailableToServe) return;
+        if (availableWorker == null) return;
 
         var nextInQueue = queue
             .Where(c => c.Key != null && !currentlyCalledNumbers.Contains(c.Value))
@@ -59,21 +95,11 @@ public class ClientQueueManager : MonoBehaviour
 
         if (nextClient != null)
         {
-            // 1. Получаем рабочее место работника
             ServicePoint workstation = availableWorker.GetWorkstation();
-            if (workstation == null)
-            {
-                Debug.LogError($"[ClientQueueManager] Работник {((MonoBehaviour)availableWorker).name} доступен, но у него не назначено рабочее место!", (MonoBehaviour)availableWorker);
-                return;
-            }
+            if (workstation == null) return;
 
-            // 2. Получаем точку назначения
             Waypoint destination = workstation.clientStandPoint;
-            if (destination == null)
-            {
-                Debug.LogError($"[ClientQueueManager] У рабочего места {workstation.name} не назначена точка для клиента!", workstation);
-                return;
-            }
+            if (destination == null) return;
 
             lastCallTime = Time.time;
             if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, ((MonoBehaviour)availableWorker).transform.position);
@@ -82,57 +108,17 @@ public class ClientQueueManager : MonoBehaviour
             currentlyCalledNumbers.Add(calledNumber);
             clientsAwaitingResponse.Add(calledNumber, Time.time);
 
-            Debug.Log($"<color=yellow>ОЧЕРЕДЬ:</color> Работник {((MonoBehaviour)availableWorker).name} вызывает клиента #{calledNumber} ({nextClient.name})");
+            // --- ОЗВУЧКА ВЫЗОВА ТАЛОНА ---
+            var workerMono = availableWorker as MonoBehaviour;
+            if (workerMono != null)
+            {
+                var bubble = workerMono.GetComponent<ThoughtBubbleController>();
+                if (bubble != null) bubble.ShowPriorityMessage($"Талон №{calledNumber}, подходите!", 3f, Color.green);
+            }
+            // ------------------------------
 
-            // 3. Вызываем клиента к конкретному столу
             nextClient.stateMachine.GetCalledToSpecificDesk(destination, calledNumber, availableWorker);
         }
-    }
-
-    private IServiceProvider FindAvailableWorker()
-    {
-        // Проверяем все столы и ищем доступного работника
-        // Desk 0 - регистратура
-        var registrar = ClientSpawner.GetServiceProviderAtDesk(0);
-        if (registrar != null && registrar.IsAvailableToServe) return registrar;
-
-        // Desk 1 - клерк 1
-        var clerk1 = ClientSpawner.GetServiceProviderAtDesk(1);
-        if (clerk1 != null && clerk1.IsAvailableToServe) return clerk1;
-
-        // Desk 2 - клерк 2
-        var clerk2 = ClientSpawner.GetServiceProviderAtDesk(2);
-        if (clerk2 != null && clerk2.IsAvailableToServe) return clerk2;
-
-        // Desk -1 - касса
-        var cashier = ClientSpawner.GetServiceProviderAtDesk(-1);
-        if (cashier != null && cashier.IsAvailableToServe) return cashier;
-
-        return null;
-    }
-
-    private bool CanCallClient()
-    {
-        if (queue.Count == 0) return false;
-
-        // Проверяем есть ли доступный работник
-        IServiceProvider availableWorker = FindAvailableWorker();
-        if (availableWorker == null || !availableWorker.IsAvailableToServe) return false;
-
-        // Проверяем зону доступного работника
-        var workstation = availableWorker.GetWorkstation();
-        if (workstation == null) return false;
-
-        var zone = ClientSpawner.GetZoneByDeskId(workstation.deskId);
-        if (zone != null)
-        {
-            int clientsMovingToZone = currentlyCalledNumbers.Count;
-            if (clientsMovingToZone >= zone.capacity)
-            {
-                return false;
-            }
-        }
-        return true;
     }
 
     private void HandleTimedOutClients()
@@ -244,40 +230,49 @@ public class ClientQueueManager : MonoBehaviour
     public void AddAngryClient(ClientPathfinding client) { if (!dissatisfiedClients.Contains(client)) { dissatisfiedClients.Add(client); } }
 	
 	/// <summary>
-/// Ищет в очереди первого клиента с указанной целью и вызывает его к указанному сотруднику.
-/// </summary>
-/// <returns>Возвращает true, если клиент был найден и вызван, иначе false.</returns>
-public bool CallClientWithSpecificGoal(ClientGoal goal, IServiceProvider provider)
-{
-    if (provider == null || !provider.IsAvailableToServe) return false;
+	   /// Ищет в очереди первого клиента с указанной целью и вызывает его к указанному сотруднику.
+	   /// </summary>
+	   /// <returns>Возвращает true, если клиент был найден и вызван, иначе false.</returns>
+	   public bool CallClientWithSpecificGoal(ClientGoal goal, IServiceProvider provider)
+	   {
+	       if (provider == null || !provider.IsAvailableToServe) return false;
 
-    // Ищем в очереди первого клиента, который соответствует цели и еще не был вызван.
-    var nextInQueue = queue
-        .Where(c => c.Key != null && c.Key.mainGoal == goal && !currentlyCalledNumbers.Contains(c.Value))
-        .OrderBy(kvp => kvp.Value) // Сортируем по номеру, чтобы взять первого из подходящих
-        .FirstOrDefault();
+	       // Ищем в очереди первого клиента, который соответствует цели и еще не был вызван.
+	       var nextInQueue = queue
+	           .Where(c => c.Key != null && c.Key.mainGoal == goal && !currentlyCalledNumbers.Contains(c.Value))
+	           .OrderBy(kvp => kvp.Value)
+	           .FirstOrDefault();
 
-    ClientPathfinding targetClient = nextInQueue.Key;
+	       ClientPathfinding targetClient = nextInQueue.Key;
 
-    // Если такой клиент найден
-    if (targetClient != null)
-    {
-        lastCallTime = Time.time;
-        if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, (provider as MonoBehaviour).transform.position);
+	       // Если такой клиент найден
+	       if (targetClient != null)
+	       {
+	           lastCallTime = Time.time;
+	           if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, (provider as MonoBehaviour).transform.position);
 
-        int calledNumber = nextInQueue.Value;
-        currentlyCalledNumbers.Add(calledNumber);
-        clientsAwaitingResponse.Add(calledNumber, Time.time);
+	           int calledNumber = nextInQueue.Value;
+	           currentlyCalledNumbers.Add(calledNumber);
+	           clientsAwaitingResponse.Add(calledNumber, Time.time);
 
-        Debug.Log($"<color=cyan>ОЧЕРЕДЬ (ПРИОРИТЕТ):</color> Работник {(provider as MonoBehaviour).name} вызывает клиента #{calledNumber} ({targetClient.name}) с целью '{goal}'");
+	           // --- ОЗВУЧКА ВЫЗОВА ВНЕ ОЧЕРЕДИ ---
+	           var workerMono = provider as MonoBehaviour;
+	           if (workerMono != null)
+	           {
+	               var bubble = workerMono.GetComponent<ThoughtBubbleController>();
+	               if (bubble != null) bubble.ShowPriorityMessage($"Вне очереди, №{calledNumber}!", 3f, new Color(1f, 0.5f, 0f));
+	           }
+	           // ----------------------------------
 
-        // Вызываем клиента к стойке того, кто инициировал действие
-        targetClient.stateMachine.GetCalledToSpecificDesk(provider.GetClientStandPoint().GetComponent<Waypoint>(), calledNumber, provider);
+	           Debug.Log($"<color=cyan>ОЧЕРЕДЬ (ПРИОРИТЕТ):</color> Работник {(provider as MonoBehaviour).name} вызывает клиента #{calledNumber} ({targetClient.name}) с целью '{goal}'");
 
-        return true; // Сообщаем об успехе
-    }
+	           // Вызываем клиента к стойке того, кто инициировал действие
+	           targetClient.stateMachine.GetCalledToSpecificDesk(provider.GetClientStandPoint().GetComponent<Waypoint>(), calledNumber, provider);
 
-    return false; // Клиент с такой целью не найден
-}
+	           return true;
+	       }
+
+	       return false;
+	   }
 	
 }

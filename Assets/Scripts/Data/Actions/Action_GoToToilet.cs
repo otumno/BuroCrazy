@@ -20,6 +20,20 @@ public class Action_GoToToilet : StaffAction
         return staff.bladder >= bladderThreshold && !staff.IsOnBreak();
     }
 
+    public override float CalculateUtility(StaffController staff)
+    {
+        // Экспоненциальный рост желания. 
+        // Если нужда (bladder) = 0.5, вес = 12.5 (работа важнее).
+        // Если нужда = 0.9, вес = 72.9 (бросает работу и бежит).
+        // Педанты терпят дольше (снижаем вес).
+        float pedantryFactor = 1f - (staff.skills.pedantry * 0.3f);
+        float need = Mathf.Clamp01(staff.bladder);
+        
+        if (need < 0.3f) return 0f; // До 30% вообще не хочет
+        
+        return Mathf.Pow(need, 3) * 100f * pedantryFactor; 
+    }
+
     public override System.Type GetExecutorType()
     {
         return typeof(GoToToiletExecutor);
