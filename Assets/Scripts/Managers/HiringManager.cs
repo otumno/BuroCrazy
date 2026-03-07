@@ -408,9 +408,10 @@ namespace Managers
                         staff.StartShift();
                     }
                 }
-                else if (!isScheduledNow && isOnDuty) 
+                else if (!isScheduledNow && isOnDuty)
                 {
-                    staff.EndShift();
+                    // УБИРАЕМ принудительное завершение смены - теперь AI сам решит, когда уйти!
+                    // staff.EndShift();
                 }
             }
         }

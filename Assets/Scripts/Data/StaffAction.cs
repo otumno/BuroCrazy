@@ -95,4 +95,12 @@ public abstract class StaffAction : ScriptableObject
 
         return utility;
     }
+
+    // --- МЕТОД ДЛЯ ДЕБАГГЕРА ---
+    // Позволяет действию словами описать, почему оно доступно или недоступно
+    public virtual string GetDebugInfo(StaffController staff)
+    {
+        if (staff.IsOnBreak()) return "На перерыве";
+        return AreConditionsMet(staff) ? "Условия выполнены" : "Нет условий";
+    }
 }

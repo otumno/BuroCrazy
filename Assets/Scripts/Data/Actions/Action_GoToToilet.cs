@@ -38,4 +38,15 @@ public class Action_GoToToilet : StaffAction
     {
         return typeof(GoToToiletExecutor);
     }
+
+    // Градация для дебаггера
+    public override string GetDebugInfo(StaffController staff)
+    {
+        if (staff.IsOnBreak()) return "Уже на перерыве";
+        
+        float needPercent = staff.bladder / bladderThreshold;
+        if (needPercent >= 1f) return "КРИТИЧНО! Бегу!";
+        
+        return $"Копит: {needPercent:P0}"; // Покажет, например: "Копит: 65%"
+    }
 }

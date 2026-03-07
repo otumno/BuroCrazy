@@ -122,8 +122,10 @@ public class StaffController : MonoBehaviour
     public class UtilityDebugData
     {
         public string ActionName;
+        public string AssetName; // Имя ассета для резервного отображения
         public bool ConditionsMet;
         public float Score;
+        public string StatusMessage; // Градация от действия
     }
 
     [HideInInspector]
@@ -508,8 +510,10 @@ public class StaffController : MonoBehaviour
             currentBrainDump.Add(new UtilityDebugData
             {
                 ActionName = action != null ? action.displayName : "NULL",
+                AssetName = action != null ? action.name : "",
                 ConditionsMet = conditionsMet,
-                Score = utility
+                Score = utility,
+                StatusMessage = action != null ? action.GetDebugInfo(this) : ""
             });
         }
 
@@ -607,10 +611,9 @@ public class StaffController : MonoBehaviour
 
     public bool IsOnDuty()
     {
-        if (TimeManager.Instance == null) return true;
-        var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
-        bool result = (WorkShiftMask & currentPeriod) != 0 && !IsOnBreak();
-        return result;
+        // Сотрудник считается "на смене", пока он физически не ушел домой
+        // Теперь AI сам решит, когда уйти (на основе Action_EndShift)
+        return !hasLeftToday;
     }
 
     // --- Вспомогательные методы ---

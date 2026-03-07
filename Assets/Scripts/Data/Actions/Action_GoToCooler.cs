@@ -32,4 +32,17 @@ public class Action_GoToCooler : StaffAction
     {
         return typeof(GoToCoolerExecutor);
     }
+
+    // Градация для дебаггера
+    public override string GetDebugInfo(StaffController staff)
+    {
+        if (staff.IsOnBreak()) return "Уже на перерыве";
+        
+        float modifiedThreshold = moraleThreshold + (staff.skills.sedentaryResilience * 0.3f);
+        float needPercent = (1f - staff.morale) / modifiedThreshold; // Усталость переводим в проценты жажды
+        
+        if (needPercent >= 1f) return "Иду пить!";
+        
+        return $"Жажда: {needPercent:P0}";
+    }
 }

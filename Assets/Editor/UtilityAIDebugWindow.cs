@@ -73,6 +73,8 @@ public class UtilityAIDebugWindow : EditorWindow
         }
     }
 
+    private Vector2 actionsScrollPos;
+
     private void DrawStaffInfo()
     {
         EditorGUILayout.Space();
@@ -87,59 +89,9 @@ public class UtilityAIDebugWindow : EditorWindow
         }
 
         EditorGUILayout.Space();
-        EditorGUILayout.LabelField("--- Brain Dump (Последнее решение) ---", EditorStyles.boldLabel);
 
-        // Brain dump данные
-        if (selectedStaff.currentBrainDump != null && selectedStaff.currentBrainDump.Count > 0)
-        {
-            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, GUILayout.Height(300));
-            
-            // Сортируем по убыванию score
-            var sorted = selectedStaff.currentBrainDump.OrderByDescending(d => d.Score).ToList();
-            
-            foreach (var data in sorted)
-            {
-                EditorGUILayout.BeginHorizontal();
-                
-                // Цвет в зависимости от условий
-                GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
-                if (!data.ConditionsMet)
-                {
-                    labelStyle.normal.textColor = Color.gray;
-                    EditorGUILayout.LabelField($"❌ {data.ActionName}", labelStyle);
-                }
-                else if (data.Score <= 0)
-                {
-                    labelStyle.normal.textColor = Color.yellow;
-                    EditorGUILayout.LabelField($"⚠️ {data.ActionName}", labelStyle);
-                }
-                else
-                {
-                    labelStyle.normal.textColor = Color.green;
-                    EditorGUILayout.LabelField($"✅ {data.ActionName}", labelStyle);
-                }
-                
-                EditorGUILayout.LabelField($"Score: {data.Score:F1}", GUILayout.Width(80));
-                EditorGUILayout.LabelField($"Conditions: {(data.ConditionsMet ? "✓" : "✗")}", GUILayout.Width(80));
-                
-                EditorGUILayout.EndHorizontal();
-            }
-            
-            EditorGUILayout.EndScrollView();
-        }
-        else
-        {
-            EditorGUILayout.LabelField("Нет данных (мозг пуст)", EditorStyles.helpBox);
-            
-            // Кнопка принудительного вызова AI
-            if (GUILayout.Button("Принудительно вызвать TryPickAction"))
-            {
-                // Используем рефлексию для вызова protected метода
-                var method = typeof(StaffController).GetMethod("TryPickAction", 
-                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                method?.Invoke(selectedStaff, null);
-            }
-        }
+        // Brain dump данные - НОВАЯ ВЕРСИЯ
+        DrawBrainDump();
 
         EditorGUILayout.Space();
 
@@ -148,6 +100,73 @@ public class UtilityAIDebugWindow : EditorWindow
         EditorGUILayout.LabelField($"Энергия: {selectedStaff.energy:F1}");
         EditorGUILayout.LabelField($"Стресс: {selectedStaff.GetCurrentStress():F2}");
         EditorGUILayout.LabelField($"На перерыве: {selectedStaff.isOnBreak}");
+    }
+
+    private void DrawBrainDump()
+    {
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("ОЦЕНКА ДЕЙСТВИЙ (UTILITY AI)", EditorStyles.boldLabel);
+
+        if (selectedStaff.currentBrainDump == null || selectedStaff.currentBrainDump.Count == 0)
+        {
+            EditorGUILayout.HelpBox("Сотрудник еще не думал (или список пуст).", MessageType.Info);
+            
+            // Кнопка принудительного вызова AI
+            if (GUILayout.Button("Принудительно вызвать TryPickAction"))
+            {
+                // Используем рефлексию для вызова protected метода
+                var method = typeof(StaffController).GetMethod("TryPickAction",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                method?.Invoke(selectedStaff, null);
+            }
+            
+            EditorGUILayout.EndVertical();
+            return;
+        }
+
+        var sortedDump = selectedStaff.currentBrainDump
+            .OrderByDescending(d => d.ConditionsMet)
+            .ThenByDescending(d => d.Score)
+            .ToList();
+
+        actionsScrollPos = EditorGUILayout.BeginScrollView(actionsScrollPos, GUILayout.Height(300));
+
+        // Шапка
+        EditorGUILayout.BeginHorizontal();
+        GUILayout.Label("Действие", EditorStyles.boldLabel, GUILayout.Width(160));
+        GUILayout.Label("Статус", EditorStyles.boldLabel, GUILayout.Width(130));
+        GUILayout.Label("Вес", EditorStyles.boldLabel, GUILayout.Width(50));
+        EditorGUILayout.EndHorizontal();
+
+        foreach (var data in sortedDump)
+        {
+            EditorGUILayout.BeginHorizontal();
+            
+            // Если displayName пустое, берем имя файла ассета
+            string displayName = string.IsNullOrEmpty(data.ActionName) ? $"[{data.AssetName}]" : data.ActionName;
+            GUILayout.Label(displayName, GUILayout.Width(160));
+            
+            // Цветной статус (Градация!)
+            Color statusColor = Color.gray;
+            if (data.ConditionsMet) statusColor = Color.green;
+            else if (!string.IsNullOrEmpty(data.StatusMessage) && data.StatusMessage.Contains("%")) statusColor = new Color(0.8f, 0.6f, 0.2f); // Оранжевый для "В процессе"
+            else if (!string.IsNullOrEmpty(data.StatusMessage) && data.StatusMessage.Contains("КРИТИЧНО")) statusColor = Color.red;
+            
+            GUI.contentColor = statusColor;
+            GUILayout.Label(data.StatusMessage, EditorStyles.boldLabel, GUILayout.Width(130));
+            GUI.contentColor = Color.white;
+            
+            // Вес (если доступно)
+            GUI.color = data.ConditionsMet ? Color.cyan : new Color(0.3f, 0.3f, 0.3f);
+            string scoreText = data.ConditionsMet ? data.Score.ToString("F1") : "---";
+            GUILayout.Label(scoreText, EditorStyles.boldLabel, GUILayout.Width(50));
+            GUI.color = Color.white;
+            
+            EditorGUILayout.EndHorizontal();
+        }
+
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
     }
 
     private void Update()
