@@ -1,8 +1,7 @@
-using UnityEngine;
-using System.Collections.Generic;
 using UnityEditor;
+using UnityEngine;
 
-namespace Tools
+namespace BuroDebug
 {
     /// <summary>
     /// Утилита для настройки визуальной системы клиентов

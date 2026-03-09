@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Tools
+namespace BuroDebug
 {
     /// <summary>
     /// Автоматически создаёт Debug UI при старте

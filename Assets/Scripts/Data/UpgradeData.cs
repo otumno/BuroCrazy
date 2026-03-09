@@ -1,6 +1,7 @@
 // Файл: Assets/Scripts/Data/Upgrades/UpgradeData.cs
 using UnityEngine;
 using System.Collections.Generic;
+using Managers;
 
 [CreateAssetMenu(fileName = "Upgrade_", menuName = "Bureau/Upgrade Data")]
 public class UpgradeData : ScriptableObject
@@ -31,4 +32,6 @@ public class UpgradeData : ScriptableObject
     // public float stressReduction = 0f;
     // public StaffAction actionToUnlock;
     // public int influenceBonus = 0;
+
+    public UpgradeStatus GetUpgradeStatus() => UpgradeManager.Instance.GetUpgradeStatus(this);
 }

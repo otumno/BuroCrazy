@@ -78,6 +78,7 @@ namespace Managers
 
         // ... (остальные методы: GetCurrentMoney, SetMoney, ResetState без изменений) ...
         public int GetCurrentMoney() { return currentMoney; }
+        public bool CanAfford(int amount) => currentMoney >= amount;
         public void SetMoney(int amount) { currentMoney = amount; UpdateMoneyText(); }
         public void ResetState(int startingMoney = 100) { currentMoney = startingMoney; UpdateMoneyText(); }
 

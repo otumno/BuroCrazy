@@ -1,10 +1,9 @@
+using System.Collections.Generic;
+using Data;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
-using Characters;
-using Data;
 
-namespace Tools
+namespace BuroDebug
 {
     /// <summary>
     /// Простой UI для Debug меню (создаётся автоматически)

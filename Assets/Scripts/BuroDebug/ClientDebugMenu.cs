@@ -1,12 +1,12 @@
-using UnityEngine;
-using UnityEngine.UI;
 using System.Collections.Generic;
 using Characters;
 using Data;
 using Data.Calendar;
 using Managers;
+using UnityEngine;
+using UnityEngine.UI;
 
-namespace Tools
+namespace BuroDebug
 {
     /// <summary>
     /// Debug меню для тестирования клиентов

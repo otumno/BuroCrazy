@@ -33,9 +33,6 @@ public class UpgradePopupUI : MonoBehaviour
             cancelButton.onClick.RemoveAllListeners(); // На всякий случай
             cancelButton.onClick.AddListener(ClosePopup);
         }
-
-        // Убедимся, что попап изначально скрыт (через SetActive)
-        gameObject.SetActive(false); // <<< ИЗМЕНЕНИЕ: Используем SetActive(false) вместо ClosePopup()
     }
 
     /// <summary>
@@ -59,32 +56,14 @@ public class UpgradePopupUI : MonoBehaviour
         // -------------------------
 
         // --- Заполняем UI элементы ---
-        if (detailNameText != null)
-        {
-            detailNameText.text = currentUpgrade.upgradeName;
-        }
-        // ... (остальная часть метода ShowDetails без изменений) ...
-        if (detailDescriptionText != null)
-        {
-            detailDescriptionText.text = currentUpgrade.description;
-        }
-        if (detailCostText != null)
-        {
-            detailCostText.text = $"Стоимость: ${currentUpgrade.cost}";
-        }
-        if (detailIconImage != null)
-        {
-            detailIconImage.sprite = currentUpgrade.iconColor ?? currentUpgrade.iconGrayscale;
-            detailIconImage.enabled = detailIconImage.sprite != null;
-        }
+        detailNameText.text = currentUpgrade.upgradeName;
+        detailDescriptionText.text = currentUpgrade.description;
+        detailCostText.text = $"Стоимость: ${currentUpgrade.cost}";
+        detailIconImage.sprite = currentUpgrade.iconColor ?? currentUpgrade.iconGrayscale;
+        detailIconImage.enabled = detailIconImage.sprite != null;
 
-        if (buyButton != null)
-        {
-            bool canAfford = PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= currentUpgrade.cost;
-            bool isAvailable = UpgradeManager.Instance != null && UpgradeManager.Instance.GetUpgradeStatus(currentUpgrade) == UpgradeStatus.Available;
-
-            buyButton.interactable = isAvailable && canAfford;
-        }
+        buyButton.interactable = currentUpgrade.GetUpgradeStatus() == UpgradeStatus.Available &&
+                                 PlayerWallet.Instance.CanAfford(currentUpgrade.cost);
     }
 
     /// <summary>
