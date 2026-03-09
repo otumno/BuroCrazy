@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Linq;
 using Managers;
+using Gameplay;
 
 [CreateAssetMenu(fileName = "Action_SortPapers", menuName = "Bureau/Actions/SortPapers")]
 public class SortPapersAction : StaffAction
@@ -29,7 +30,10 @@ public class SortPapersAction : StaffAction
     {
         float utility = base.CalculateUtility(staff);
         
-        utility += staff.skills.pedantry * 15f;
+        // Добавляем бонус педантичности к сортировке бумаг
+        var aiConfig = AIBalanceConfig.Instance;
+        float pedantryBonus = aiConfig != null ? staff.skills.pedantry * aiConfig.pedantrySortBonus : 0f;
+        utility += pedantryBonus;
         
         return utility;
     }

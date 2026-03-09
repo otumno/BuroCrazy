@@ -1,4 +1,3 @@
-// Assets/Scripts/Data/Actions/GoToBreakExecutor.cs
 using UnityEngine;
 using System.Collections;
 using Managers;
@@ -10,12 +9,10 @@ public class GoToBreakExecutor : ActionExecutor
 
     protected override IEnumerator ActionRoutine()
     {
-        // Получаем точку (Waypoint)
         occupiedPoint = ScenePointsRegistry.Instance?.RequestKitchenPoint();
 
         if (occupiedPoint != null)
         {
-            // ИСПРАВЛЕНИЕ: occupiedPoint.transform.position
             yield return staff.StartCoroutine(staff.MoveToTarget(occupiedPoint.transform.position, "Break"));
 
             float breakDuration = 10f;
@@ -23,11 +20,14 @@ public class GoToBreakExecutor : ActionExecutor
             while (timer < breakDuration)
             {
                 timer += 1f;
-                staff.ChangeEnergy(2); // Восстанавливаем энергию
-                staff.ChangeStress(-2); // Снижаем стресс
+                // ИСПРАВЛЕНИЕ: Быстро восстанавливаем энергию
+                staff.energy = Mathf.Clamp(staff.energy + 10f, 0f, 100f); 
+                staff.stress = Mathf.Clamp(staff.stress - 10f, 0f, 100f); 
                 yield return new WaitForSeconds(1f);
             }
             
+            // Гарантия полной бодрости после отдыха
+            staff.energy = 100f;
             staff.thoughtBubble?.ShowPriorityMessage("Перерыв окончен", 2f, Color.white);
         }
         else
@@ -41,8 +41,6 @@ public class GoToBreakExecutor : ActionExecutor
     private void OnDestroy()
     {
         if (occupiedPoint != null && ScenePointsRegistry.Instance != null)
-        {
             ScenePointsRegistry.Instance.FreeKitchenPoint(occupiedPoint);
-        }
     }
 }

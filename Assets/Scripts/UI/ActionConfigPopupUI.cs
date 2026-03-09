@@ -148,7 +148,12 @@ public class ActionConfigPopupUI : MonoBehaviour
         {
             Transform parent = tempActiveActions.Contains(action) ? activeActionsContent : availableActionsContent;
             var icon = Instantiate(actionIconPrefab, parent).GetComponent<ActionIconUI>();
-            icon.Setup(action);
+            
+            // Показываем кнопку принуждения только для активных действий (нижняя панель)
+            bool showForceButton = (parent == activeActionsContent);
+            System.Action<StaffAction> forceCallback = showForceButton ? OnForceActionClicked : null;
+            
+            icon.Setup(action, showForceButton, forceCallback);
         }
         UpdateUIState();
     }
@@ -185,6 +190,19 @@ public class ActionConfigPopupUI : MonoBehaviour
         MainUIManager.Instance.PopPause();
         
         _isClosing = false;
+    }
+
+    /// <summary>
+    /// Обработчик нажатия на кнопку принуждения (ручной приказ)
+    /// </summary>
+    private void OnForceActionClicked(StaffAction action)
+    {
+        if (DirectorAvatarController.Instance != null && currentStaff != null)
+        {
+            DirectorAvatarController.Instance.GiveOrder(currentStaff, action);
+        }
+        gameObject.SetActive(false);
+        MainUIManager.Instance.PopPause();
     }
 
     private void PopulateWorkstationDropdown(StaffController.Role role)

@@ -6,6 +6,7 @@ using Data.Calendar;
 using Managers;
 using Utilities;
 using Scriptables.Audio;
+using Gameplay;
 
 public class GameBalanceControlPanel : EditorWindow
 {
@@ -19,7 +20,8 @@ public class GameBalanceControlPanel : EditorWindow
         VisualsCam,     // Transition, Camera, Light
         SpawnTime,      // WaveManager, TimeManager
         UI_Tutorial,    // UI Delays, Tutorial Config
-        Global_Audio    // Mandates, AudioLib, Global Settings
+        Global_Audio,   // Mandates, AudioLib, Global Settings
+        AI_Balance      // AIBalanceConfig
     }
 
     private BalanceTab currentTab = BalanceTab.Roles;
@@ -49,6 +51,9 @@ public class GameBalanceControlPanel : EditorWindow
     private TutorialScreenConfig tutorialConfig;
     private MusicPlayer musicPlayer;
     private NotificationStyleManager notificationStyleManager;
+    
+    // AI Balance
+    private AIBalanceConfig aiConfig;
 
     [MenuItem("Tools/Ultimate Balance Control Panel")]
     public static void ShowWindow()
@@ -82,10 +87,10 @@ public class GameBalanceControlPanel : EditorWindow
         EditorGUILayout.Space(5);
         
         int columns = 3; 
-        string[] tabs = new string[] { 
-            "Roles (Staff)", "Actions", "XP & Progress", 
-            "Clients", "World & Physics", "Visuals & Cam", 
-            "Spawn & Time", "UI & Tutorial", "Global & Audio" 
+        string[] tabs = new string[] {
+            "Roles (Staff)", "Actions", "XP & Progress",
+            "Clients", "World & Physics", "Visuals & Cam",
+            "Spawn & Time", "UI & Tutorial", "Global & Audio", "AI Balance"
         };
         
         currentTab = (BalanceTab)GUILayout.SelectionGrid((int)currentTab, tabs, columns);
@@ -104,6 +109,7 @@ public class GameBalanceControlPanel : EditorWindow
             case BalanceTab.SpawnTime: DrawSpawnTimeTab(); break;
             case BalanceTab.UI_Tutorial: DrawUITutorialTab(); break;
             case BalanceTab.Global_Audio: DrawGlobalAudioTab(); break;
+            case BalanceTab.AI_Balance: DrawAIBalanceTab(); break;
         }
 
         EditorGUILayout.EndScrollView();
@@ -366,6 +372,7 @@ public class GameBalanceControlPanel : EditorWindow
         allMandates = FindAssetsByType<DailyMandates>();
         xpData = FindAssetByType<ActionXPData>();
         soundLibrary = FindAssetByType<SoundLibrary>();
+        aiConfig = FindAssetByType<AIBalanceConfig>();
 
         // Объекты обновятся при отрисовке через DrawSmartManagerSettings, если они null
         
@@ -554,5 +561,60 @@ public class GameBalanceControlPanel : EditorWindow
             return AssetDatabase.LoadAssetAtPath<T>(path);
         }
         return null;
+    }
+
+    // ==========================================================================================
+    // ТАБ: AI BALANCE
+    // ==========================================================================================
+    private void DrawAIBalanceTab()
+    {
+        if (aiConfig == null)
+        {
+            EditorGUILayout.HelpBox("AIBalanceConfig не найден. Создайте ассет в Resources/Databases/", MessageType.Warning);
+            if (GUILayout.Button("Создать AIBalanceConfig"))
+            {
+                aiConfig = CreateAsset<AIBalanceConfig>("Databases/AIBalanceConfig");
+            }
+            return;
+        }
+
+        DrawSerializedObject(aiConfig, "Настройки Utility AI", (so) => {
+            // Метаболизм
+            EditorGUILayout.LabelField("=== МЕТАБОЛИЗМ (Дельты в секунду) ===", EditorStyles.boldLabel);
+            DrawProperty(so, "baseEnergyLoss");
+            DrawProperty(so, "baseBladderGain");
+            DrawProperty(so, "baseMoraleLoss");
+            DrawProperty(so, "baseStressGain");
+            
+            EditorGUILayout.Space();
+            
+            // Веса Utility AI
+            EditorGUILayout.LabelField("=== ВЕСА UTILITY AI ===", EditorStyles.boldLabel);
+            DrawProperty(so, "pedantrySortBonus");
+            DrawProperty(so, "masteryWorkMultiplier");
+            DrawProperty(so, "softSkillsHelpBonus");
+            DrawProperty(so, "corruptionCashierBonus");
+            DrawProperty(so, "stressHomeWeight");
+            DrawProperty(so, "messStressMultiplier");
+        });
+
+        if (GUI.changed)
+        {
+            EditorUtility.SetDirty(aiConfig);
+        }
+    }
+
+    private T CreateAsset<T>(string path) where T : ScriptableObject
+    {
+        T asset = CreateInstance<T>();
+        AssetDatabase.CreateAsset(asset, $"Assets/Resources/{path}.asset");
+        AssetDatabase.SaveAssets();
+        RefreshData();
+        return asset;
+    }
+
+    private void DrawProperty(SerializedObject so, string propertyName)
+    {
+        EditorGUILayout.PropertyField(so.FindProperty(propertyName));
     }
 }

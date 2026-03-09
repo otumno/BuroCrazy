@@ -66,6 +66,30 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         stackHolder = GetComponent<StackHolder>(); // Получаем компонент для отображения стопки документов
     }
 
+    // === СИСТЕМА МИКРОМЕНЕДЖМЕНТА ===
+    /// <summary>
+    /// Отдать приказ сотруднику. Директор приказывает выполнить определённое действие.
+    /// </summary>
+    public void GiveOrder(StaffController target, StaffAction action)
+    {
+        if (target == null || action == null) return;
+        
+        // Показываем реакцию директора
+        thoughtBubble?.ShowPriorityMessage("Немедленно займись этим!", 2f, Color.red);
+        
+        // Проигрываем звук (защита от NullReference)
+        if (AudioManager.Instance != null)
+        {
+            // TODO: Заменить на крик директора
+            // AudioManager.Instance.PlaySound(...);
+        }
+        
+        // Отдаём приказ сотруднику
+        target.ReceiveOrder(action);
+        
+        Debug.Log($"[MicroManagement] Директор приказал {target.characterName} выполнить: {action.displayName}");
+    }
+
     void Start()
     {
         // Инициализация навыков по умолчанию, если они не назначены

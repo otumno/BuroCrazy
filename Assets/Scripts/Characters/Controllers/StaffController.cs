@@ -1,8 +1,9 @@
 // Assets/Scripts/Characters/Controllers/StaffController.cs
 using UnityEngine;
+using Gameplay;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
-using Gameplay;
 using Managers;
 using Utilities;
 using Data.Calendar;
@@ -156,8 +157,8 @@ public class StaffController : MonoBehaviour
     
     // --- ПЕРЕРЫВЫ И ПОТРЕБНОСТИ (новая система по периодам) ---
     [Header("Перерывы и потребности")]
-    public float stressThresholdToilet = 0.9f;  // 90% стресса - срочно в туалет
-    public float stressThresholdBreak = 0.6f;    // 60% стресса - можно на перерыв
+    public float stressThresholdToilet = 90f;   // 90% стресса - срочно в туалет
+    public float stressThresholdBreak = 60f;   // 60% стресса - можно на перерыв
     public float baseBreakChancePerPeriod = 0.15f; // Базовый шанс перерыва за период
     public float breakDuration = 120f;            // Длительность перерыва (2 минуты)
     public float toiletBreakCooldown = 300f;     // 5 минут между туалетами
@@ -185,8 +186,11 @@ public class StaffController : MonoBehaviour
     public ServicePoint assignedWorkstation; 
     public int uiScheduleTrackIndex = -1;
 
-    public StaffAction currentAction; 
-    public ActionExecutor currentExecutor; 
+    public StaffAction currentAction;
+    public ActionExecutor currentExecutor;
+    
+    // === СИСТЕМА МИКРОМЕНЕДЖМЕНТА ===
+    public StaffAction forcedAction; // Принудительное действие от директора
 
     private Coroutine aiLoopCoroutine;
 
@@ -289,7 +293,7 @@ public class StaffController : MonoBehaviour
 
     // --- AI Loop ---
     // --- ПЕРЕРЫВЫ И ПОТРЕБНОСТИ ---
-    private float currentStress = 0f;
+    // Примечание: stress используется как 0-100f (публичное поле в состоянии)
     private int currentPeriodIndex = 0;          // Какой период смены сейчас (0, 1, 2...)
     private bool hasTakenBreakInCurrentPeriod = false;
     private float lastBreakCheckTime = 0f;
@@ -306,11 +310,46 @@ public class StaffController : MonoBehaviour
         {
             yield return new WaitForSeconds(1f);
             
-            // 1. Естественный рост потребностей со временем
-            float resilience = 1f - (skills.sedentaryResilience * 0.5f);
-            bladder += (Time.deltaTime / 120f) * resilience;
-            energy -= (Time.deltaTime / 300f) * resilience;
-            stress += (Time.deltaTime / 200f);
+            // === МЕТАБОЛИЗМ (каждую секунду) ===
+            var aiConfig = AIBalanceConfig.Instance;
+            if (aiConfig != null)
+            {
+                // Energy: падает, модификатор - resilience
+                float energyResilience = 1f - (skills.sedentaryResilience * 0.5f);
+                float energyDelta = aiConfig.baseEnergyLoss * energyResilience * Time.deltaTime;
+                energyDelta = ApplyTraitModifiers("Energy", energyDelta);
+                energy = Mathf.Clamp(energy - energyDelta, 0f, 100f);
+                
+                // Bladder: растет, модификатор - resilience
+                float bladderResilience = 1f - (skills.sedentaryResilience * 0.5f);
+                float bladderDelta = aiConfig.baseBladderGain * bladderResilience * Time.deltaTime;
+                bladderDelta = ApplyTraitModifiers("Bladder", bladderDelta);
+                bladder = Mathf.Clamp(bladder + bladderDelta, 0f, 100f);
+                
+                // Morale: падает, интроверты теряют медленнее
+                float moraleResilience = 1f - (skills.softSkills * 0.3f);
+                float moraleDelta = aiConfig.baseMoraleLoss * moraleResilience * Time.deltaTime;
+                moraleDelta = ApplyTraitModifiers("Morale", moraleDelta);
+                morale = Mathf.Clamp(morale - moraleDelta, 0f, 100f);
+                
+                // Stress: базовая скорость + бонус от мусора
+                float stressDelta = aiConfig.baseStressGain * Time.deltaTime;
+                
+                // Проверка мусора рядом
+                bool hasMess = false;
+                if (MessManager.Instance != null)
+                {
+                    var messList = MessManager.Instance.GetSortedMessList(transform.position);
+                    hasMess = messList != null && messList.Any(m => Vector2.Distance(transform.position, m.transform.position) < 5f);
+                }
+                
+                if (hasMess && skills.pedantry > 0.5f)
+                {
+                    stressDelta *= aiConfig.messStressMultiplier;
+                }
+                stressDelta = ApplyTraitModifiers("Stress", stressDelta);
+                stress = Mathf.Clamp(stress + stressDelta, 0f, 100f);
+            }
 
             // 2. Если заняты делом - проверяем можно ли прервать
             if (currentExecutor != null)
@@ -405,7 +444,7 @@ public class StaffController : MonoBehaviour
         float elapsed = 0f;
         while (elapsed < breakDuration && IsOnDuty())
         {
-            currentStress = Mathf.Lerp(currentStress, 0f, Time.deltaTime / 5f);
+            stress = Mathf.Lerp(stress, 0f, Time.deltaTime * 5f);
             elapsed += Time.deltaTime;
             yield return null;
         }
@@ -428,7 +467,7 @@ public class StaffController : MonoBehaviour
         yield return new WaitForSeconds(15f);
         
         lastToiletBreak = Time.time;
-        currentStress *= 0.7f; // Снимаем 30% стресса
+        stress *= 0.7f; // Снимаем 30% стресса
         
         SetBreakState(false);
         thoughtBubble?.ShowPriorityMessage("Лучше...", 2f, Color.white);
@@ -446,7 +485,7 @@ public class StaffController : MonoBehaviour
             return false;
 
         // Туалет
-        if (currentStress >= stressThresholdToilet && 
+        if (stress >= stressThresholdToilet &&
             Time.time - lastToiletBreak >= toiletBreakCooldown)
         {
             if (TryStartToiletBreak()) return true;
@@ -471,17 +510,66 @@ public class StaffController : MonoBehaviour
     public void AddStress(float amount)
     {
         if (amount == 0) return;
-        currentStress += amount;
-        currentStress = Mathf.Clamp01(currentStress);
+        stress += amount;
+        stress = Mathf.Clamp(stress, 0f, 100f);
     }
 
-    public float GetCurrentStress() => currentStress;
+    /// <summary>
+    /// Виртуальный метод для применения модификаторов от черт характера.
+    /// Переопределяется в наследниках для кастомизации метаболизма.
+    /// </summary>
+    /// <param name="vitalType">Тип потребности: "Energy", "Bladder", "Morale", "Stress"</param>
+    /// <param name="baseDelta">Базовая дельта изменения</param>
+    /// <returns>Модифицированная дельта</returns>
+    protected virtual float ApplyTraitModifiers(string vitalType, float baseDelta)
+    {
+        return baseDelta;
+    }
+
+    // === СИСТЕМА МИКРОМЕНЕДЖМЕНТА ===
+    /// <summary>
+    /// Получить приказ от директора. Принудительно заставляет сотрудника выполнить действие.
+    /// </summary>
+    public virtual void ReceiveOrder(StaffAction action)
+    {
+        if (action == null) return;
+        
+        // Записываем приказ
+        forcedAction = action;
+        
+        // Добавляем стресс от приказа
+        stress = Mathf.Clamp(stress + 15f, 0f, 100f);
+        
+        // Показываем реакцию
+        thoughtBubble?.ShowPriorityMessage("Да иду я, иду...", 2f, Color.yellow);
+        
+        // Если есть выполняемое действие и оно прерываемое - прерываем
+        if (currentExecutor != null && currentExecutor.IsInterruptible)
+        {
+            currentExecutor.Interrupt();
+        }
+        
+        Debug.Log($"[MicroManagement] {characterName} получил приказ: {action.displayName}");
+    }
+
+    public float GetCurrentStress() => stress;
 
     protected void TryPickAction()
     {
         // Очищаем brain dump перед новым решением
         currentBrainDump.Clear();
 
+        // === ГАРАНТИЯ БАЗЫ ДАННЫХ ===
+        // Если база не загружена - пробуем загрузить
+        if (systemActionDatabase == null)
+        {
+            systemActionDatabase = Resources.Load<ActionDatabase>("Databases/ActionDatabase");
+            if (systemActionDatabase == null)
+            {
+                Debug.LogWarning($"[StaffController] {characterName}: База действий не найдена! AI не может выбрать действия.");
+            }
+        }
+        
         // Собираем ВСЕ действия: и тактические (назначенные), и системные (базовые нужды)
         var allAvailable = new List<StaffAction>();
         if (activeActions != null) allAvailable.AddRange(activeActions);
@@ -503,6 +591,12 @@ public class StaffController : MonoBehaviour
             if (conditionsMet)
             {
                 utility = action.CalculateUtility(this);
+                
+                // === ПРИНУДИТЕЛЬНОЕ ДЕЙСТВИЕ (МИКРОМЕНЕДЖМЕНТ) ===
+                if (forcedAction != null && action == forcedAction)
+                {
+                    utility = 10000f; // Абсолютный приоритет
+                }
                 
                 // Немного рандома для живости
                 utility += Random.Range(0f, 2f);
@@ -571,6 +665,9 @@ public class StaffController : MonoBehaviour
 
             Debug.Log($"[Utility AI] {characterName} выбрал {bestAction.displayName} (Вес: {highestUtility:F1})");
             ExecuteAction(bestAction);
+            
+            // Сбрасываем приказ после выполнения (одноразовый приказ)
+            forcedAction = null;
         }
         else
         {

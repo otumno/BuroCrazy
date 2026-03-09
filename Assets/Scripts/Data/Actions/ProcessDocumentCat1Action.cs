@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Linq;
 using Managers;
+using Gameplay;
 
 [CreateAssetMenu(fileName = "Action_ProcessDocCat1", menuName = "Бюрократия/Тактические/Работа в офисе (Кат. 1)")]
 public class ProcessDocumentCat1Action : StaffAction
@@ -22,6 +23,18 @@ public class ProcessDocumentCat1Action : StaffAction
         
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         return zone != null && zone.GetOccupyingClients().Any();
+    }
+
+    public override float CalculateUtility(StaffController staff)
+    {
+        float utility = base.CalculateUtility(staff);
+        
+        // Добавляем бонус мастерства к обработке документов
+        var aiConfig = AIBalanceConfig.Instance;
+        float masteryBonus = aiConfig != null ? 1f + (staff.skills.paperworkMastery * aiConfig.masteryWorkMultiplier) : 1f;
+        utility *= masteryBonus;
+        
+        return utility;
     }
 
     public override System.Type GetExecutorType()

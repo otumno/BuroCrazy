@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Linq;
 using Managers;
+using Gameplay;
 
 [CreateAssetMenu(fileName = "Action_ServiceAtRegistration", menuName = "Bureau/Actions/ServiceAtRegistration")]
 public class Action_ServiceAtRegistration : StaffAction
@@ -26,6 +27,11 @@ public class Action_ServiceAtRegistration : StaffAction
     public override float CalculateUtility(StaffController staff)
     {
         float utility = base.CalculateUtility(staff);
+
+        // Добавляем бонус мастерства к обслуживанию клиентов
+        var aiConfig = AIBalanceConfig.Instance;
+        float masteryBonus = aiConfig != null ? 1f + (staff.skills.paperworkMastery * aiConfig.masteryWorkMultiplier) : 1f;
+        utility *= masteryBonus;
 
         if (staff is ClerkController clerk && clerk.assignedWorkstation != null)
         {

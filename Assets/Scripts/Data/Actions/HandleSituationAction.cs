@@ -1,6 +1,7 @@
 // Assets/Scripts/Data/Actions/HandleSituationAction.cs
 using UnityEngine;
 using System.Linq;
+using Gameplay;
 
 [CreateAssetMenu(fileName = "Action_HandleSituation", menuName = "Bureau/Actions/HandleSituation")]
 public class HandleSituationAction : StaffAction
@@ -52,7 +53,14 @@ public class HandleSituationAction : StaffAction
     // Бросаем всё и бежим помогать (вес 150+)
     public override float CalculateUtility(StaffController staff)
     {
-        return base.CalculateUtility(staff) + 100f; 
+        float utility = base.CalculateUtility(staff);
+        
+        // Добавляем бонус soft skills к помощи клиентам
+        var aiConfig = AIBalanceConfig.Instance;
+        float softSkillsBonus = aiConfig != null ? staff.skills.softSkills * aiConfig.softSkillsHelpBonus : 0f;
+        utility += softSkillsBonus;
+        
+        return utility + 100f;
     }
 
     // Рапорт для дебаггера
