@@ -42,6 +42,17 @@ public class BookkeepingButtonController : MonoBehaviour
     
     void UpdateButtonState(bool withLog)
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // --- ДЕБАГ ПРОВЕРКА ---
+        if (PlayerInputController.DebugForceBookkeeping)
+        {
+            if (!gameObject.activeSelf) gameObject.SetActive(true);
+            if (bookkeepingButton != null) bookkeepingButton.interactable = true;
+            return;
+        }
+        // ----------------------
+#endif
+
         if (HiringManager.Instance == null) return;
         
         bool isUnlocked = false;

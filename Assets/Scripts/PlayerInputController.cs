@@ -4,9 +4,16 @@ using UnityEngine.EventSystems;
 using System.Linq;
 using System.Collections;
 using Managers;
+using UI;
 
 public class PlayerInputController : MonoBehaviour
 {
+    // --- ДЕБАГ ФЛАГИ ---
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    public static bool DebugForceBookkeeping = false; // Чит для открытия бухгалтерии
+#endif
+    // --------------------
+    
     [Header("Настройки")]
     public Camera mainCamera;
     public LayerMask movementLayerMask;
@@ -82,6 +89,27 @@ public class PlayerInputController : MonoBehaviour
             }
         }
         // ---------------------------------
+        
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // --- ДЕБАГ: ОТКРЫТЬ БУХГАЛТЕРИЮ (КЛАВИША B) ---
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            DebugForceBookkeeping = !DebugForceBookkeeping;
+            Debug.Log($"<color=green>[ЧИТ]</color> Бухгалтерия принудительно {(DebugForceBookkeeping ? "ОТКРЫТА" : "ЗАКРЫТА")}!");
+
+            // 1. Принудительно пинаем калькулятор на столе, чтобы он перепроверил статус
+            var calc = FindFirstObjectByType<DeskCalculator>(FindObjectsInactive.Include);
+            if (calc != null) calc.CheckAvailability();
+
+            // 2. Принудительно ВКЛЮЧАЕМ кнопку UI, чтобы её Update() снова начал работать
+            var bookBtn = FindFirstObjectByType<BookkeepingButtonController>(FindObjectsInactive.Include);
+            if (bookBtn != null)
+            {
+                bookBtn.gameObject.SetActive(true);
+            }
+        }
+        // ----------------------------------------------
+#endif
 
   // --- ЛЕВЫЙ КЛИК (передвижение) ---
         if (Input.GetMouseButtonDown(0))

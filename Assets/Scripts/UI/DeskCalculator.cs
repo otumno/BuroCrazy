@@ -9,7 +9,19 @@ public class DeskCalculator : DeskInteractiveItem
     {
         base.CheckAvailability();
 
-        if (HiringManager.Instance == null) 
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        // --- ДЕБАГ ПРОВЕРКА ---
+        if (PlayerInputController.DebugForceBookkeeping)
+        {
+            isInteractable = true;
+            var r = GetComponent<SpriteRenderer>();
+            if (r != null) r.color = Color.white;
+            return;
+        }
+        // ----------------------
+#endif
+
+        if (HiringManager.Instance == null)
         {
             isInteractable = false;
             return;
