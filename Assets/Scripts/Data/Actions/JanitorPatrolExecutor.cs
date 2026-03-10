@@ -2,6 +2,7 @@
 using UnityEngine;
 using System.Collections;
 using Managers;
+using Utilities;
 
 public class JanitorPatrolExecutor : ActionExecutor
 {
@@ -23,8 +24,24 @@ public class JanitorPatrolExecutor : ActionExecutor
             var target = points[index];
             if (target != null)
             {
-                // ИСПРАВЛЕНИЕ: target.transform.position
-                yield return staff.StartCoroutine(staff.MoveToTarget(target.transform.position, "Cleaning"));
+                // --- ФИКС ТАЙМАУТА (КАК У СТАЖЕРА) ---
+                float moveTimeout = 15f;
+                staff.AgentMover.SetPath(PathfindingUtility.BuildPathTo(staff.transform.position, target.transform.position, staff.gameObject));
+                
+                while (staff.AgentMover.IsMoving() && moveTimeout > 0)
+                {
+                    moveTimeout -= Time.deltaTime;
+                    yield return null;
+                }
+
+                if (moveTimeout <= 0)
+                {
+                    staff.AgentMover.Stop();
+                    staff.thoughtBubble?.ShowPriorityMessage("Туда не пролезть...", 2f, Color.red);
+                    FinishAction(false);
+                    yield break;
+                }
+                // ------------------------------------
                 
                 // Имитация уборки
                 yield return new WaitForSeconds(2f);

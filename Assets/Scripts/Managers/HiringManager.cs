@@ -198,6 +198,17 @@ namespace Managers
 
             GameObject newStaffGO = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
             
+            // --- ПЕРЕМЕЩАЕМ НАЙМА В ЗОНУ ДОМА И СКРЫВАЕМ ---
+            // Переместим объект в точку дома
+            if (Managers.ScenePointsRegistry.Instance != null && Managers.ScenePointsRegistry.Instance.staffHomeZone != null)
+            {
+                newStaffGO.transform.position = Managers.ScenePointsRegistry.Instance.staffHomeZone.GetRandomPointInside();
+            }
+            
+            // Сразу выключаем объект - он появится только когда менеджер смен решит его разбудить
+            newStaffGO.SetActive(false);
+            // ----------------------------------------------------
+            
             // ВАЖНО: Удаляем старый компонент (InternController), если роль другая, и добавляем нужный
             // Или используем универсальный StaffController и Rebuild.
             // Для упрощения предположим, что префаб пустой или Rebuild сработает.
@@ -268,34 +279,8 @@ namespace Managers
                 
                 if (roleData != null) staffController.InitializeFromData(roleData);
                 
-                // График работы: по умолчанию - УТРО (Morning)
-                // Для Intern ставим только УТРО, для остальных - если не указан в Rank, тоже только УТРО
-                if (candidate.Role == StaffController.Role.Intern)
-                {
-                    staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
-                }
-                else
-                {
-                    // Для остальных ролей: если Rank не указывает график, ставим УТРО
-                    if (candidate.Rank == null || candidate.Rank.workPeriodsCount <= 0)
-                    {
-                        staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
-                    }
-                    else
-                    {
-                        // Используем график из Rank (существующая логика)
-                        staffController.WorkShiftMask = 0;
-                        if (Managers.TimeManager.Instance?.mainCalendarDay?.periodSettings != null)
-                        {
-                            var allPeriods = Managers.TimeManager.Instance.mainCalendarDay.periodSettings.Select(p => p.PeriodType).ToList();
-                            int duration = candidate.Rank.workPeriodsCount;
-                            for (int i = 0; i < duration; i++)
-                            {
-                                if (i < allPeriods.Count) staffController.WorkShiftMask |= allPeriods[i];
-                            }
-                        }
-                    }
-                }
+                // График работы: по умолчанию - УТРО (Morning) для всех сотрудников
+                staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
 
                 newStaffGO.name = $"{candidate.NameData.lastName} {candidate.NameData.firstName}";
 
@@ -382,12 +367,21 @@ namespace Managers
                 if (staff == null) continue;
                 
                 var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
-                var isOnDuty = staff.IsOnDuty(); 
+                var isOnDuty = staff.IsOnDuty();
 
-                if (isScheduledNow && !isOnDuty && !staff.hasArrivedToday) 
+                // === ИСПРАВЛЕНИЕ "ЭФФЕКТА ЛИМБА" ===
+                // Если запланирован И (выключен ИЛИ уже уходил)
+                if (isScheduledNow && (!staff.gameObject.activeSelf || staff.hasLeftToday))
                 {
-                    // Инициализируем расчеты прихода
-                    staff.CalculateArrivalTime();
+                    // Сбрасываем флаг ухода
+                    staff.hasLeftToday = false;
+                    
+                    // Если ещё не приходил - рассчитываем время прихода
+                    if (!staff.hasArrivedToday)
+                    {
+                        staff.CalculateArrivalTime();
+                    }
+                    
                     float lateness = staff.currentLateness;
 
                     if (lateness == -1f) // Заболел
@@ -398,7 +392,7 @@ namespace Managers
                     }
                     else if (lateness > 0f) // Опаздывает
                     {
-                        Managers.Teletype.TeletypeManager.Instance?.Log($"{staff.characterName} задерживается на {Mathf.RoundToInt(lateness)} мин.");
+                        Managers.Teletype.TeletypeManager.Instance?.Log($"{staff.characterName} задерживается на {Mathf.RoundToInt(lateness)}");
                         staff.hasArrivedToday = true;
                         StartCoroutine(DelayedStartShift(staff, lateness));
                     }
@@ -611,6 +605,15 @@ namespace Managers
             {
                 staffController = newStaffGO.AddComponent<StaffController>();
             }
+
+            // --- ПЕРЕМЕЩАЕМ В ЗОНУ ДОМА И СКРЫВАЕМ (как при найме) ---
+            if (Managers.ScenePointsRegistry.Instance != null && Managers.ScenePointsRegistry.Instance.staffHomeZone != null)
+            {
+                newStaffGO.transform.position = Managers.ScenePointsRegistry.Instance.staffHomeZone.GetRandomPointInside();
+            }
+            // Скрываем - проснется когда начнется его смена
+            newStaffGO.SetActive(false);
+            // ----------------------------------------------------------------
 
             staffController.role = role;
             if (!string.IsNullOrEmpty(customName))

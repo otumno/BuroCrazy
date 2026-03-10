@@ -81,6 +81,12 @@ public class AgentMover : MonoBehaviour
     private bool isSlipping = false; // Flag indicating the character is currently falling/recovering
     public bool IsSlipping => isSlipping; // Public getter for the slipping state
 
+    // --- Система "Втягивания живота" при столкновении ---
+    private Collider2D mainCollider;
+    private float originalColliderSize;
+    private float squeezeTimer = 0f;
+    private float squeezeRecoveryTimer = 0f;
+    // ----------------------------------------------------
 
     void Awake()
     {
@@ -112,6 +118,21 @@ public class AgentMover : MonoBehaviour
                 Debug.LogWarning($"AudioSource для шагов добавлен автоматически к {gameObject.name}. Настройте его параметры (громкость, 3D Sound Settings) при необходимости.");
             }
         }
+
+        // --- Инициализация коллайдера для системы "Втягивания живота" ---
+        mainCollider = GetComponent<Collider2D>();
+        if (mainCollider != null)
+        {
+            if (mainCollider is CircleCollider2D circle)
+            {
+                originalColliderSize = circle.radius;
+            }
+            else if (mainCollider is CapsuleCollider2D capsule)
+            {
+                originalColliderSize = capsule.size.x;
+            }
+        }
+        // ----------------------------------------------------------------
     }
 
 
@@ -212,6 +233,47 @@ public class AgentMover : MonoBehaviour
 
         // Handle dirt generation based on movement
         HandleDirtLogic();
+
+        // --- Логика сжатия ("Втягивание живота") в конце FixedUpdate ---
+        if (mainCollider != null && originalColliderSize > 0)
+        {
+            // Задержка сжатия зависит от наглости (priority)
+            float squeezeDelay = priority * 0.4f; // Директор/Охранник (priority=5) начнут сжиматься через 2 сек, клиенты/стажеры (priority=1) через 0.4 сек
+            
+            // Целевой размер
+            float targetSize = originalColliderSize;
+            
+            // Если долго в коллизии - сжимаемся до 30%
+            if (squeezeTimer > squeezeDelay)
+            {
+                targetSize = originalColliderSize * 0.3f;
+            }
+            
+            // Плавно меняем размер коллайдера
+            float currentSize = 0f;
+            if (mainCollider is CircleCollider2D circle)
+            {
+                currentSize = circle.radius;
+                circle.radius = Mathf.Lerp(currentSize, targetSize, Time.fixedDeltaTime * 5f);
+            }
+            else if (mainCollider is CapsuleCollider2D capsule)
+            {
+                currentSize = capsule.size.x;
+                capsule.size = new Vector2(Mathf.Lerp(currentSize, targetSize, Time.fixedDeltaTime * 5f), capsule.size.y);
+            }
+            
+            // Уменьшаем таймеры
+            if (squeezeRecoveryTimer > 0)
+            {
+                squeezeRecoveryTimer -= Time.fixedDeltaTime;
+            }
+            else
+            {
+                // Плавно уменьшаем squeezeTimer когда не в коллизии
+                squeezeTimer = Mathf.Max(0, squeezeTimer - Time.fixedDeltaTime * 0.5f);
+            }
+        }
+        // -----------------------------------------------------------------
     }
 
     /// <summary>
@@ -508,11 +570,27 @@ public class AgentMover : MonoBehaviour
         // Yield only if the other agent exists, is currently moving, and has higher or equal priority (with tie-breaking)
         if (otherMover != null && otherMover.IsMoving())
         {
+            // --- Считаем время столкновения для системы "Втягивания живота" ---
+            squeezeTimer += Time.deltaTime;
+            // -----------------------------------------------------------------
+            
             // Yield if other has higher priority OR if priorities are equal and other has a larger InstanceID (arbitrary but consistent tie-breaker)
             if (otherMover.priority > this.priority || (otherMover.priority == this.priority && otherMover.gameObject.GetInstanceID() > this.gameObject.GetInstanceID()))
             {
                 StartYielding(); // Start the yielding coroutine
             }
+        }
+    }
+
+    /// <summary>
+    /// Called when collision ends - starts recovery timer for "belly" returning to normal size.
+    /// </summary>
+    void OnCollisionExit2D(Collision2D collision)
+    {
+        // If we were colliding with another AgentMover, start recovery timer
+        if (collision.gameObject.GetComponent<AgentMover>() != null)
+        {
+            squeezeRecoveryTimer = 1.0f; // Куоолдаун перед надуванием обратно
         }
     }
 
@@ -580,6 +658,10 @@ public class AgentMover : MonoBehaviour
 {
     isSlipping = true;
     Debug.Log($"!!! {gameObject.name} НАЧАЛ СКОЛЬЗИТЬ !!!");
+
+    // --- Toggle Shadow Visibility (hide when slipping) ---
+    Transform shadow = transform.Find("VisualsContainer/Shadow");
+    if (shadow != null) shadow.gameObject.SetActive(false);
 
     // --- References and State Saving ---
     DirectorAvatarController director = GetComponent<DirectorAvatarController>(); 
@@ -673,8 +755,11 @@ public class AgentMover : MonoBehaviour
     // Snap back to the original root position before the fall
     transform.position = initialRootPosition;
 
-    rb.bodyType = RigidbodyType2D.Dynamic; 
-    isSlipping = false; 
+    rb.bodyType = RigidbodyType2D.Dynamic;
+    isSlipping = false;
+
+    // --- Toggle Shadow Visibility (re-enable after recovery) ---
+    if (shadow != null) shadow.gameObject.SetActive(true);
 
     // Unblock director actions if they weren't blocked before the fall
     if (director != null && !wasUninterruptible)

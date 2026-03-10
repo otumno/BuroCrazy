@@ -22,4 +22,5 @@ MonoBehaviour:
   associatedRole: 8
   unlockedActions:
   - {fileID: 11400000, guid: 98281d10c7c5d8348863bad71cbc4375, type: 2}
+  - {fileID: 11400000, guid: 93128e64957b5f84fb19870d7016a0b5, type: 2}
   possiblePromotions: []

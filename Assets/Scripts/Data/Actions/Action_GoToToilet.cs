@@ -16,6 +16,9 @@ public class Action_GoToToilet : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
+        // --- ФИКС: Если мы УЖЕ выполняем это действие, не отменяем его на полпути! ---
+        if (staff.currentAction == this) return true;
+        
         // Условие: потребность выше порога и сотрудник не на перерыве по другой причине
         // Шкала 0-100, поэтому делим порог на 100f
         return staff.bladder >= (bladderThreshold * 100f) && !staff.IsOnBreak();

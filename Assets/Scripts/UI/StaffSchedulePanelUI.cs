@@ -64,6 +64,9 @@ public class StaffSchedulePanelUI : MonoBehaviour
             gameObject.SetActive(false);
             MainUIManager.Instance?.PopPause();
         }
+        
+        // Применяем новое расписание сразу после закрытия панели
+        HiringManager.Instance?.CheckAllStaffShiftsImmediately();
     }
 
     // Публичный метод для принудительного обновления

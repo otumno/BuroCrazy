@@ -47,6 +47,9 @@ public class OperateBarrierExecutor : ActionExecutor
 
         barrier.ToggleBarrier();
 
+        // Записываем открытие двери в отчет
+        guard.unwrittenReportPoints++;
+
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(true);
     }

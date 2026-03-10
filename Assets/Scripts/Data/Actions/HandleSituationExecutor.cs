@@ -84,16 +84,28 @@ public class HandleSituationExecutor : ActionExecutor
         }
         // --------------------------------------
 
-        staff.thoughtBubble?.ShowPriorityMessage("Вам куда?", 3f, Color.white);
-        yield return new WaitForSeconds(2f);
+        staff.thoughtBubble?.ShowPriorityMessage("Вам куда?", 2f, Color.white);
+        yield return new WaitForSeconds(1.5f); // Слушаем клиента
 
         Waypoint goal = DetermineCorrectGoalForClient(clientToHelp);
-        clientToHelp.stateMachine.GetHelpFromIntern(goal);
+        
+        // --- ПЕРЕВОДИМ ЦЕЛЬ НА ЧЕЛОВЕЧЕСКИЙ ЯЗЫК ---
+        string destinationName = "нужное окно";
+        if (clientToHelp.billToPay > 0 || clientToHelp.mainGoal == ClientGoal.PayTax) destinationName = "Кассу";
+        else if (clientToHelp.mainGoal == ClientGoal.GetCertificate1) destinationName = "Окно №1";
+        else if (clientToHelp.mainGoal == ClientGoal.GetCertificate2) destinationName = "Окно №2";
+        else if (clientToHelp.mainGoal == ClientGoal.VisitToilet) destinationName = "Туалет";
 
-        ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
+        staff.thoughtBubble?.ShowPriorityMessage($"Вам в {destinationName}!", 2.5f, Color.green);
+        yield return new WaitForSeconds(1.5f); // Даем время прочитать и осознать
+        // ------------------------------------------
+
+        clientToHelp.stateMachine.GetHelpFromIntern(goal);
+        Managers.ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         
         if (staff is InternController i) i.SetState(InternController.InternState.Patrolling);
-        FinishAction(true);
+        
+        FinishAction(true); // Успешно закончили!
     }
 
     private Waypoint DetermineCorrectGoalForClient(ClientPathfinding client)

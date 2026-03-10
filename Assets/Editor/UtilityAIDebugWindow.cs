@@ -13,6 +13,7 @@ public class UtilityAIDebugWindow : EditorWindow
     private Vector2 staffScrollPos;
     private Vector2 clientScrollPos;
     private Vector2 actionsScrollPos;
+    private Vector2 diaryScrollPos; // Скролл для дневника задач
 
     private int selectedTab = 0;
     private readonly string[] tabs = { "🌐 Общий Обзор (Офис)", "🧠 Детальный Анализ (ИИ)" };
@@ -55,6 +56,15 @@ public class UtilityAIDebugWindow : EditorWindow
     // ============================================================================
     private void DrawOverviewMode()
     {
+        // Кнопка для копирования дампа всей бригады
+        GUI.backgroundColor = new Color(0.8f, 0.6f, 1f);
+        if (GUILayout.Button("📋 СКОПИРОВАТЬ ДНЕВНИКИ ВСЕЙ БРИГАДЫ", GUILayout.Height(35)))
+        {
+            CopyFullStateToClipboard();
+        }
+        GUI.backgroundColor = Color.white;
+        EditorGUILayout.Space();
+        
         EditorGUILayout.BeginHorizontal();
 
         // --- ЛЕВАЯ КОЛОНКА (ПЕРСОНАЛ) ---
@@ -196,6 +206,82 @@ public class UtilityAIDebugWindow : EditorWindow
         DrawVitals();
         EditorGUILayout.Space();
         DrawBrainDump();
+        EditorGUILayout.Space();
+        DrawDiary(); // Дневник задач
+    }
+
+    // ============================================================================
+    // ОТОБРАЖЕНИЕ ДНЕВНИКА ЗАДАЧ
+    // ============================================================================
+    private void DrawDiary()
+    {
+        if (selectedStaff == null) return;
+        
+        EditorGUILayout.BeginVertical("box");
+        
+        // Заголовок
+        EditorGUILayout.BeginHorizontal();
+        GUI.contentColor = new Color(1f, 0.8f, 0.4f);
+        GUILayout.Label("📔 ДНЕВНИК ЗАДАЧ", EditorStyles.boldLabel);
+        GUI.contentColor = Color.white;
+        
+        // Статистика
+        var diary = selectedStaff.taskDiary;
+        int completed = diary != null ? diary.Count(e => e.IsCompleted) : 0;
+        int total = diary != null ? diary.Count : 0;
+        GUILayout.Label($"({completed}/{total} задач)", EditorStyles.miniLabel);
+        EditorGUILayout.EndHorizontal();
+        
+        EditorGUILayout.Space();
+        
+        if (diary == null || diary.Count == 0)
+        {
+            EditorGUILayout.LabelField("Записей пока нет...", EditorStyles.miniLabel);
+            EditorGUILayout.EndVertical();
+            return;
+        }
+        
+        // Скролл для дневника
+        diaryScrollPos = EditorGUILayout.BeginScrollView(diaryScrollPos, GUILayout.Height(200));
+        
+        // Показываем записи в обратном порядке (новые сверху)
+        for (int i = diary.Count - 1; i >= 0; i--)
+        {
+            var entry = diary[i];
+            if (entry == null) continue;
+            
+            EditorGUILayout.BeginHorizontal(EditorStyles.textArea);
+            
+            // Цвет в зависимости от статуса
+            if (entry.IsCompleted)
+            {
+                // Завершённая задача
+                Color completedColor = new Color(0.2f, 0.8f, 0.4f);
+                GUI.contentColor = completedColor;
+                GUILayout.Label("✓", EditorStyles.boldLabel, GUILayout.Width(20));
+                
+                string duration = entry.Duration >= 60f
+                    ? $"{entry.Duration / 60f:F1} мин"
+                    : $"{entry.Duration:F1} сек";
+                GUILayout.Label($"{entry.TaskName}", EditorStyles.label, GUILayout.Width(180));
+                GUILayout.Label(duration, EditorStyles.miniLabel);
+            }
+            else
+            {
+                // Текущая задача (выполняется)
+                Color currentColor = new Color(1f, 0.8f, 0.2f);
+                GUI.contentColor = currentColor;
+                GUILayout.Label("▶", EditorStyles.boldLabel, GUILayout.Width(20));
+                GUILayout.Label($"{entry.TaskName}", EditorStyles.boldLabel, GUILayout.Width(180));
+                GUILayout.Label("выполняется...", EditorStyles.miniLabel);
+            }
+            
+            GUI.contentColor = Color.white;
+            EditorGUILayout.EndHorizontal();
+        }
+        
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
     }
 
     private void DrawStaffSelector()
@@ -339,8 +425,115 @@ public class UtilityAIDebugWindow : EditorWindow
         {
             sb.AppendLine("Brain dump is empty.");
         }
+        
+        // --- TASK DIARY EXPORT ---
+        sb.AppendLine("\n--- TASK DIARY ---");
+        if (selectedStaff.taskDiary != null && selectedStaff.taskDiary.Count > 0)
+        {
+            float totalTime = 0f;
+            foreach (var entry in selectedStaff.taskDiary)
+            {
+                if (entry == null) continue;
+                
+                string status = entry.IsCompleted ? "DONE" : "ACTIVE";
+                string duration = entry.Duration >= 60f
+                    ? $"{entry.Duration / 60f:F1} min"
+                    : $"{entry.Duration:F1} sec";
+                
+                sb.AppendLine($"- [{status}] {entry.TaskName,-30} | {duration}");
+                
+                if (entry.IsCompleted) totalTime += entry.Duration;
+            }
+            
+            float totalMinutes = totalTime / 60f;
+            sb.AppendLine($"Total logged time: {totalMinutes:F1} minutes");
+        }
+        else
+        {
+            sb.AppendLine("Task diary is empty.");
+        }
+        // -------------------------
 
         GUIUtility.systemCopyBuffer = sb.ToString();
         Debug.Log($"<color=green>[UAD]</color> Состояние {selectedStaff.characterName} скопировано в буфер обмена! Нажмите Ctrl+V в чате.");
+    }
+    
+    // ============================================================================
+    // ПОЛНЫЙ ДАМП ВСЕЙ БРИГАДЫ
+    // ============================================================================
+    private void CopyFullStateToClipboard()
+    {
+        var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None).ToList();
+        if (allStaff.Count == 0)
+        {
+            EditorUtility.DisplayDialog("UAD", "Нет сотрудников в игре!", "OK");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("=== FULL OFFICE DUMP ===");
+        sb.AppendLine($"Generated: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Total Staff: {allStaff.Count}");
+        sb.AppendLine();
+
+        foreach (var staff in allStaff)
+        {
+            if (staff == null) continue;
+
+            sb.AppendLine($">>> {staff.characterName} ({staff.currentRole})");
+            sb.AppendLine($"    Status: {staff.GetCurrentStateName()}");
+            sb.AppendLine($"    Energy: {staff.energy:F1}/100 (Fatigue: {100f - staff.energy:F1})");
+            sb.AppendLine($"    Morale: {staff.morale:F1}/100 (Thirst: {100f - staff.morale:F1})");
+            sb.AppendLine($"    Bladder: {staff.bladder:F1}/100");
+            sb.AppendLine($"    Stress: {staff.stress:F1}/100");
+            
+            // Текущая задача
+            string currentTask = staff.currentAction != null
+                ? staff.currentAction.displayName
+                : "IDLE";
+            sb.AppendLine($"    Current Task: {currentTask}");
+
+            // Дневник задач
+            sb.AppendLine("    --- Task Diary ---");
+            if (staff.taskDiary != null && staff.taskDiary.Count > 0)
+            {
+                float totalTime = 0f;
+                foreach (var entry in staff.taskDiary)
+                {
+                    if (entry == null) continue;
+                    
+                    string status = entry.IsCompleted ? "DONE" : "ACTIVE";
+                    string duration = entry.Duration >= 60f
+                        ? $"{entry.Duration / 60f:F1} min"
+                        : $"{entry.Duration:F1} sec";
+                    
+                    sb.AppendLine($"      [{status}] {entry.TaskName} - {duration}");
+                    
+                    if (entry.IsCompleted) totalTime += entry.Duration;
+                }
+                
+                float totalMinutes = totalTime / 60f;
+                sb.AppendLine($"    Total logged: {totalMinutes:F1} minutes");
+            }
+            else
+            {
+                sb.AppendLine("      (empty)");
+            }
+
+            // Текущая выполняемая задача (если есть)
+            if (staff.CurrentTaskEntry != null && !staff.CurrentTaskEntry.IsCompleted)
+            {
+                float currentDuration = Time.time - staff.CurrentTaskEntry.StartTime;
+                string durationStr = currentDuration >= 60f
+                    ? $"{currentDuration / 60f:F1} min"
+                    : $"{currentDuration:F1} sec";
+                sb.AppendLine($"    >> CURRENT: {staff.CurrentTaskEntry.TaskName} ({durationStr})");
+            }
+
+            sb.AppendLine();
+        }
+
+        GUIUtility.systemCopyBuffer = sb.ToString();
+        Debug.Log($"<color=green>[UAD]</color> Дамп бригады ({allStaff.Count} сотрудников) скопирован в буфер обмена!");
     }
 }

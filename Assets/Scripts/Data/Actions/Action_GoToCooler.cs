@@ -14,6 +14,9 @@ public class Action_GoToCooler : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
+        // --- ФИКС: Если мы УЖЕ выполняем это действие, не отменяем его на полпути! ---
+        if (staff.currentAction == this) return true;
+        
         float modifiedThreshold = moraleThreshold + (staff.skills.sedentaryResilience * 0.3f);
         // ИСПРАВЛЕНИЕ: Мораль тоже от 0 до 100
         return staff.morale <= (modifiedThreshold * 100f) && !staff.IsOnBreak();

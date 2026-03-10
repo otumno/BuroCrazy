@@ -132,6 +132,58 @@ public class StaffController : MonoBehaviour
     [HideInInspector]
     public List<UtilityDebugData> currentBrainDump = new List<UtilityDebugData>();
 
+    // === TASK DIARY (ДНЕВНИК ЗАДАЧ) ===
+    [System.Serializable]
+    public class TaskDiaryEntry
+    {
+        public string TaskName;
+        public float StartTime;
+        public float EndTime;
+        
+        public TaskDiaryEntry(string taskName, float startTime)
+        {
+            TaskName = taskName;
+            StartTime = startTime;
+            EndTime = 0f;
+        }
+        
+        public float Duration => EndTime > 0f ? EndTime - StartTime : 0f;
+        public bool IsCompleted => EndTime > 0f;
+    }
+    
+    [HideInInspector]
+    public List<TaskDiaryEntry> taskDiary = new List<TaskDiaryEntry>();
+    public TaskDiaryEntry CurrentTaskEntry { get; private set; }
+    
+    /// <summary>
+    /// Начинает запись новой задачи в дневнике
+    /// </summary>
+    public void LogTaskStart(string taskName)
+    {
+        // Завершаем текущую задачу если есть
+        if (CurrentTaskEntry != null && !CurrentTaskEntry.IsCompleted)
+        {
+            LogTaskEnd();
+        }
+        
+        CurrentTaskEntry = new TaskDiaryEntry(taskName, Time.time);
+        taskDiary.Add(CurrentTaskEntry);
+        Debug.Log($"[TaskDiary] {characterName} START: {taskName}");
+    }
+    
+    /// <summary>
+    /// Завершает текущую задачу
+    /// </summary>
+    public void LogTaskEnd()
+    {
+        if (CurrentTaskEntry != null && !CurrentTaskEntry.IsCompleted)
+        {
+            CurrentTaskEntry.EndTime = Time.time;
+            Debug.Log($"[TaskDiary] {characterName} END: {CurrentTaskEntry.TaskName} ({CurrentTaskEntry.Duration:F1}s)");
+            CurrentTaskEntry = null;
+        }
+    }
+
     [Header("График работы")]
     public CalendarDayPeriodType WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
 
@@ -209,6 +261,9 @@ public class StaffController : MonoBehaviour
         // --- StartShift с новой логикой ---
     public virtual void StartShift()
     {
+        // Логируем начало смены в дневнике задач
+        LogTaskStart($"Смена: {role}");
+        
         if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На работу!", 2f, Color.white);
 
         hasArrivedToday = false;
@@ -664,6 +719,11 @@ public class StaffController : MonoBehaviour
             }
 
             Debug.Log($"[Utility AI] {characterName} выбрал {bestAction.displayName} (Вес: {highestUtility:F1})");
+            
+            // Логируем начало нового действия в дневнике задач (с защитой от пустого имени)
+            string taskNameToLog = string.IsNullOrEmpty(bestAction.displayName) ? $"[{bestAction.name}]" : bestAction.displayName;
+            LogTaskStart(taskNameToLog);
+            
             ExecuteAction(bestAction);
             
             // Сбрасываем приказ после выполнения (одноразовый приказ)
@@ -685,6 +745,9 @@ public class StaffController : MonoBehaviour
     
     public virtual void EndShift()
     {
+        // Логируем окончание смены в дневнике задач
+        LogTaskEnd();
+        
         if (aiLoopCoroutine != null) StopCoroutine(aiLoopCoroutine);
 
         if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Домой...", 2f, Color.white);

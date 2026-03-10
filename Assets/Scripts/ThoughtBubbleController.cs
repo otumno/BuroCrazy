@@ -158,18 +158,24 @@ public class ThoughtBubbleController : MonoBehaviour
     // --- ПУБЛИЧНЫЙ API ---
 
     // Вызвать важное сообщение (например, "Взятка!", "Туалет!")
-    public void ShowPriorityMessage(string message, float duration = 3f, Color? textColor = null) 
-    { 
-        StopAllCoroutines(); 
-        Color colorToShow = textColor ?? Color.white; 
-        StartCoroutine(ShowSingleMessageRoutine(message, duration, colorToShow)); 
+    public void ShowPriorityMessage(string message, float duration = 3f, Color? textColor = null)
+    {
+        // Защита от вызова на отключённых объектах
+        if (!gameObject.activeInHierarchy) return;
+        
+        StopAllCoroutines();
+        Color colorToShow = textColor ?? Color.white;
+        StartCoroutine(ShowSingleMessageRoutine(message, duration, colorToShow));
     }
 
     // Вызвать критическую мысль (например, при ярости)
-    public void TriggerCriticalThought(string activityKey) 
-    { 
-        StopAllCoroutines(); 
-        string thoughtText = thoughtCollection.GetRandomThought(activityKey, 0f); 
+    public void TriggerCriticalThought(string activityKey)
+    {
+        // Защита от вызова на отключённых объектах
+        if (!gameObject.activeInHierarchy) return;
+        
+        StopAllCoroutines();
+        string thoughtText = thoughtCollection.GetRandomThought(activityKey, 0f);
         if (!string.IsNullOrEmpty(thoughtText)) 
         { 
             StartCoroutine(ShowSingleMessageRoutine(thoughtText.ToUpper(), thoughtDuration, Color.red)); 

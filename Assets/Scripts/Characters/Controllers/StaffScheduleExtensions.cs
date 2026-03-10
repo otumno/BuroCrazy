@@ -58,12 +58,12 @@ namespace Characters
                 return;
             }
 
-            // 2. Расчет ОПОЗДАНИЯ
+            // 2. Расчет ОПОЗДАНИЯ (в игровых тиках)
             float lateness = 0f;
             if (punctuality < 1f && Random.value >= punctuality)
             {
-                float latenessMultiplier = (1f - punctuality) * 1.5f;
-                lateness = Random.Range(5f, maxLateness * latenessMultiplier);
+                // Адекватные опоздания: от 3 до 15 игровых тиков
+                lateness = Random.Range(3f, 15f);
                 
                 int currentLatenessCount = GetPrivateField<int>(staff, "totalLatenessCount");
                 SetPrivateField(staff, "totalLatenessCount", currentLatenessCount + 1);

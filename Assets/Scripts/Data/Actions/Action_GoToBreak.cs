@@ -14,6 +14,9 @@ public class Action_GoToBreak : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
+        // --- ФИКС: Если мы УЖЕ выполняем это действие, не отменяем его на полпути! ---
+        if (staff.currentAction == this) return true;
+        
         // ИСПРАВЛЕНИЕ: Умножаем порог на 100, т.к. энергия 0-100
         return staff.energy <= (energyThreshold * 100f) && !staff.IsOnBreak();
     }
