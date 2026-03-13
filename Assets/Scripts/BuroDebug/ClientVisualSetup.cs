@@ -1,5 +1,7 @@
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace BuroDebug
 {
@@ -61,12 +63,15 @@ namespace BuroDebug
                 Debug.Log("✓ CharacterVisuals (Diversity) добавлен");
             }
 
-            // 4. Настраиваем ссылки на базы данных
+            // 4. Настраиваем ссылки на базы данных (только в редакторе)
+#if UNITY_EDITOR
             SetupDatabases();
+#endif
 
             Debug.Log("Настройка префаба завершена!");
         }
 
+#if UNITY_EDITOR
         private void SetupDatabases()
         {
             // Ищем или создаём Resources папку
@@ -86,6 +91,7 @@ namespace BuroDebug
             Debug.Log("- ArchetypeDatabase: Create → Bureau/Databases/Archetype Database");
             Debug.Log("- ClientArchetype: Create → Bureau/Characters/Client Archetype");
         }
+#endif
 
         [ContextMenu("Test Hair Setup")]
         public void TestHairSetup()

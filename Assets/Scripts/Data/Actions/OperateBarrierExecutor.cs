@@ -9,47 +9,33 @@ public class OperateBarrierExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var guard = staff.GetComponent<GuardMovement>();
-        if (guard == null)
-        {
-            FinishAction(false);
-            yield break;
-        }
+        if (guard == null) { FinishAction(false); yield break; }
 
         var barrier = GuardManager.Instance?.securityBarrier;
-        if (barrier == null || barrier.interactionPoint == null)
-        {
-            FinishAction(false);
-            yield break;
-        }
+        if (barrier == null || barrier.interactionPoint == null) { FinishAction(false); yield break; }
 
         guard.SetState(GuardMovement.GuardState.OperatingBarrier);
 
-        yield return staff.StartCoroutine(guard.MoveToTarget(barrier.interactionPoint.position, GuardMovement.GuardState.OperatingBarrier));
-
-        var mover = staff.GetComponent<AgentMover>();
-        if (mover != null && mover.IsSlipping)
+        // Таймаут против застревания в коллайдере двери
+        float timeout = 10f;
+        staff.AgentMover.SetPath(Utilities.PathfindingUtility.BuildPathTo(staff.transform.position, barrier.interactionPoint.position, staff.gameObject));
+        while (staff.AgentMover.IsMoving() && timeout > 0)
         {
-            Debug.Log($"[OperateBarrierExecutor] {staff.characterName} упал, операция отменена.");
-            guard.SetState(GuardMovement.GuardState.Idle);
-            FinishAction(false);
-            yield break;
+            timeout -= Time.deltaTime;
+            yield return null;
         }
+        staff.AgentMover.Stop();
 
-        yield return new WaitForSeconds(2.0f);
-
-        if (mover != null && mover.IsSlipping)
-        {
-            Debug.Log($"[OperateBarrierExecutor] {staff.characterName} упал, операция отменена.");
-            guard.SetState(GuardMovement.GuardState.Idle);
-            FinishAction(false);
-            yield break;
-        }
-
+        // Экшен вызывается только если состояние двери нужно изменить
         barrier.ToggleBarrier();
+        guard.unwrittenReportPoints++; // Отчет за работу!
+        
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Click_Default);
 
-        // Записываем открытие двери в отчет
-        guard.unwrittenReportPoints++;
+        staff.thoughtBubble?.ShowPriorityMessage("Дверь переключена!", 2f, Color.green);
 
+        yield return new WaitForSeconds(1f);
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(true);
     }

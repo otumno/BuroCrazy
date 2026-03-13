@@ -22,7 +22,19 @@ public class ProcessDocumentCat1Action : StaffAction
         }
         
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-        return zone != null && zone.GetOccupyingClients().Any();
+        
+        // Проверка по зоне
+        bool clientInZone = zone != null && zone.GetOccupyingClients().Any();
+        
+        // Проверка по физической дистанции (бронебойная)
+        bool clientPhysicallyNear = false;
+        if (clerk.assignedWorkstation.clientStandPoint != null)
+        {
+            clientPhysicallyNear = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
+                .Any(c => c != null && !c.isLeavingSuccessfully && Vector2.Distance(c.transform.position, clerk.assignedWorkstation.clientStandPoint.transform.position) < 1.2f);
+        }
+        
+        return clientInZone || clientPhysicallyNear;
     }
 
     public override float CalculateUtility(StaffController staff)

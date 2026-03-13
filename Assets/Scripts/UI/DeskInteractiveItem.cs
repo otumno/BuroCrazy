@@ -14,7 +14,7 @@ public class DeskInteractiveItem : MonoBehaviour, IPointerEnterHandler, IPointer
     [SerializeField] private GameObject outlineObject;
     
     [Tooltip("Лампочка или уведомление")]
-    [SerializeField] private GameObject notificationOverlay; 
+    [SerializeField] protected GameObject notificationOverlay;
 
     [Header("Настройки")]
     public bool isInteractable = true;
@@ -28,7 +28,7 @@ public class DeskInteractiveItem : MonoBehaviour, IPointerEnterHandler, IPointer
     [Header("События")]
     public UnityEvent OnClick;
 
-    private void Start()
+    protected virtual void Start()
     {
         if (outlineObject != null) outlineObject.SetActive(false);
         

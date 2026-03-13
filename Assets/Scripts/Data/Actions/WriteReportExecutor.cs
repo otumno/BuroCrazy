@@ -33,6 +33,15 @@ public class WriteReportExecutor : ActionExecutor
         // Сдаем отчет
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         
+        // Физически спавним рапорты на столе
+        if (desk.documentStack != null)
+        {
+            for (int i = 0; i < guard.unwrittenReportPoints; i++)
+            {
+                desk.documentStack.AddDocumentToStack();
+            }
+        }
+        
         // Сбрасываем очки
         guard.unwrittenReportPoints = 0;
         

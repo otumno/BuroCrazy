@@ -1,7 +1,7 @@
 // Assets/Scripts/Data/Actions/ManageBarrierExecutor.cs
-using UnityEngine;
 using System.Collections;
 using Managers;
+using UnityEngine;
 
 public class ManageBarrierExecutor : ActionExecutor
 {
@@ -12,37 +12,31 @@ public class ManageBarrierExecutor : ActionExecutor
         var guard = staff.GetComponent<GuardMovement>();
         if (guard == null) { FinishAction(false); yield break; }
 
-        // Находим дверь через GuardManager
         var barrier = GuardManager.Instance?.securityBarrier;
-        if (barrier == null) { FinishAction(false); yield break; }
+        if (barrier == null || barrier.interactionPoint == null) { FinishAction(false); yield break; }
 
-        // Идем к двери (точка взаимодействия должна быть рядом с дверью)
-        yield return staff.StartCoroutine(staff.MoveToTarget(barrier.interactionPoint.position, "Idle"));
+        guard.SetState(GuardMovement.GuardState.OperatingBarrier);
 
-        // Проверяем, может кто-то уже открыл ее, пока мы шли?
-        if (!barrier.IsActive())
+        // Таймаут против застревания в коллайдере двери
+        float timeout = 10f;
+        staff.AgentMover.SetPath(Utilities.PathfindingUtility.BuildPathTo(staff.transform.position, barrier.interactionPoint.position, staff.gameObject));
+        while (staff.AgentMover.IsMoving() && timeout > 0)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Открыто!", 2f, Color.green);
-            
-            // Заставляем дверь открыться в обход клика игрока
-            barrier.ToggleBarrier();
-            
-            // Записываем открытие двери в отчет
-            guard.unwrittenReportPoints++;
-            
-            // --- НОВЫЙ ЗВУК ИЗ SoundID ---
-            if (AudioManager.Instance != null)
-            {
-                // Замените SoundID.UI_Click_Default на ваш ID открытия двери (например, SoundID.Door_Open)
-                AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Click_Default);
-            }
+            timeout -= Time.deltaTime;
+            yield return null;
         }
-        else
-        {
-            staff.thoughtBubble?.ShowPriorityMessage("Уже открыто...", 2f, Color.gray);
-        }
+        staff.AgentMover.Stop();
 
-        yield return new WaitForSeconds(1f); // Небольшая пауза для солидности
+        // Экшен вызывается только если состояние двери нужно изменить
+        barrier.ToggleBarrier();
+        guard.unwrittenReportPoints++; // Отчет за работу!
+        
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Click_Default);
+
+        staff.thoughtBubble?.ShowPriorityMessage("Дверь переключена!", 2f, Color.green);
+
+        yield return new WaitForSeconds(1f);
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(true);
     }

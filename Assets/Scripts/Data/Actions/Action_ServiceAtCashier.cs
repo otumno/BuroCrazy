@@ -7,6 +7,13 @@ using Gameplay;
 [CreateAssetMenu(fileName = "Action_ServiceAtCashier", menuName = "Bureau/Actions/ServiceAtCashier")]
 public class Action_ServiceAtCashier : StaffAction
 {
+    // Конструктор для установки приоритета
+    public Action_ServiceAtCashier()
+    {
+        category = ActionCategory.Tactic;
+        priority = 30; // Выше, чем у бухгалтерии (10)
+    }
+
     public override bool AreConditionsMet(StaffController staff)
     {
         if (!(staff is ClerkController clerk) || clerk.clerkRole != ClerkController.ClerkRole.Cashier || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
@@ -16,9 +23,18 @@ public class Action_ServiceAtCashier : StaffAction
         
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
         
-        // ----- ГЛАВНОЕ ИЗМЕНЕНИЕ -----
-        // Условие теперь: "В зоне есть клиент, у которого ЕСТЬ счет ИЛИ его цель - оплатить налог".
-        return zone != null && zone.GetOccupyingClients().Any(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
+        // Проверка по зоне
+        bool clientInZone = zone != null && zone.GetOccupyingClients().Any(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
+        
+        // Проверка по физической дистанции (бронебойная)
+        bool clientPhysicallyNear = false;
+        if (clerk.assignedWorkstation.clientStandPoint != null)
+        {
+            clientPhysicallyNear = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
+                .Any(c => c != null && !c.isLeavingSuccessfully && (c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax) && Vector2.Distance(c.transform.position, clerk.assignedWorkstation.clientStandPoint.transform.position) < 1.2f);
+        }
+        
+        return clientInZone || clientPhysicallyNear;
     }
 
     public override float CalculateUtility(StaffController staff)

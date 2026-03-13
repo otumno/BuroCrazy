@@ -112,6 +112,8 @@ namespace Managers
                 return;
             }
 
+            Debug.Log($"[AudioManager] Playing: {id} | clips={soundData.clips?.Length} | volume={soundData.volume} | mixer={soundData.mixerGroup?.name}");
+
             var audioInstance = GetAvailableInstance();
             audioInstance.ResetSource();
             audioInstance.Play(soundData, linkTransform, position);

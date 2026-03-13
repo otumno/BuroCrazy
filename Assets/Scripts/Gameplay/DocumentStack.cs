@@ -182,6 +182,14 @@ public class DocumentStack : MonoBehaviour
         newDoc.transform.position = pos;
         newDoc.transform.rotation = rot;
 
+        // Fix: Set sorting order to be above desk textures
+        SpriteRenderer[] renderers = newDoc.GetComponentsInChildren<SpriteRenderer>();
+        foreach (var sr in renderers)
+        {
+            if (sr != null) sr.sortingOrder = 50 + visualStack.Count;
+        }
+        Debug.Log($"[DocumentStack] Бумага добавлена на {gameObject.name}. Всего: {visualStack.Count}");
+
         visualStack.Add(newDoc);
         return newDoc;
     }
