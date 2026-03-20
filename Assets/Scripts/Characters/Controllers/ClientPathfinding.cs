@@ -260,6 +260,14 @@ public class ClientPathfinding : MonoBehaviour
         }
 
         stateMachine.Initialize(this);
+        
+        // --- ПРИНУДИТЕЛЬНАЯ РЕГИСТРАЦИЯ В ОЧЕРЕДИ ---
+        // Обеспечиваем получение тикета при появлении клиента
+        if (ClientQueueManager.Instance != null && !ClientQueueManager.Instance.queue.ContainsKey(this))
+        {
+            ClientQueueManager.Instance.JoinQueue(this);
+            Debug.Log($"[ClientPathfinding] {gameObject.name}: зарегистрирован в очереди с номером {ClientQueueManager.Instance.queue[this]}");
+        }
         movement.Initialize(this);
         float basePatience = Random.Range(minPatienceTime, maxPatienceTime);
         totalPatienceTime = basePatience * (1 + babushkaFactor);

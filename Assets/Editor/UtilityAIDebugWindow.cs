@@ -4,19 +4,22 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Characters;
 
 public class UtilityAIDebugWindow : EditorWindow
 {
     private StaffController selectedStaff;
+    private ClientPathfinding selectedClient;
     
     // Скроллы для списков
     private Vector2 staffScrollPos;
     private Vector2 clientScrollPos;
     private Vector2 actionsScrollPos;
-    private Vector2 diaryScrollPos; // Скролл для дневника задач
+    private Vector2 diaryScrollPos; 
+    private Vector2 clientDetailsScrollPos;
 
     private int selectedTab = 0;
-    private readonly string[] tabs = { "🌐 Общий Обзор (Офис)", "🧠 Детальный Анализ (ИИ)" };
+    private readonly string[] tabs = { "🌐 Общий Обзор", "👔 Мозг (Персонал)", "👥 Анализ (Клиенты)" };
 
     [MenuItem("Tools/AI Toolset/🧠 Utility AI Debugger")]
     public static void ShowWindow()
@@ -33,7 +36,7 @@ public class UtilityAIDebugWindow : EditorWindow
     {
         if (!Application.isPlaying)
         {
-            EditorGUILayout.HelpBox("Запустите игру, чтобы начать мониторинг ИИ и клиентов.", MessageType.Info);
+            EditorGUILayout.HelpBox("Запустите игру, чтобы начать мониторинг.", MessageType.Info);
             return;
         }
 
@@ -41,127 +44,104 @@ public class UtilityAIDebugWindow : EditorWindow
         selectedTab = GUILayout.Toolbar(selectedTab, tabs, GUILayout.Height(30));
         EditorGUILayout.Space();
 
-        if (selectedTab == 0)
-        {
-            DrawOverviewMode();
-        }
-        else
-        {
-            DrawDetailedMode();
-        }
+        if (selectedTab == 0) DrawOverviewMode();
+        else if (selectedTab == 1) DrawStaffDetailedMode();
+        else if (selectedTab == 2) DrawClientDetailedMode();
     }
 
     // ============================================================================
-    // РЕЖИМ 1: ОБЩИЙ ОБЗОР (РАБОТНИКИ И КЛИЕНТЫ)
+    // РЕЖИМ 1: ОБЩИЙ ОБЗОР И ДАМПЫ
     // ============================================================================
     private void DrawOverviewMode()
     {
-        // Кнопка для копирования дампа всей бригады
+        // --- ПАНЕЛЬ ДАМПОВ ---
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("💾 ЭКСПОРТ ДАННЫХ (ДЛЯ AI)", EditorStyles.boldLabel);
+        EditorGUILayout.BeginHorizontal();
+        
+        GUI.backgroundColor = new Color(0.6f, 0.8f, 1f);
+        if (GUILayout.Button("📋 ДАМП БРИГАДЫ", GUILayout.Height(30))) CopyStaffStateToClipboard();
+        
         GUI.backgroundColor = new Color(0.8f, 0.6f, 1f);
-        if (GUILayout.Button("📋 СКОПИРОВАТЬ ДНЕВНИКИ ВСЕЙ БРИГАДЫ", GUILayout.Height(35)))
-        {
-            CopyFullStateToClipboard();
-        }
+        if (GUILayout.Button("📋 ДАМП КЛИЕНТОВ", GUILayout.Height(30))) CopyClientsStateToClipboard();
+        
+        GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
+        if (GUILayout.Button("📋 ДАМП ОФИСА (ВСЁ)", GUILayout.Height(30))) CopyFullStateToClipboard();
+        
         GUI.backgroundColor = Color.white;
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.EndVertical();
         EditorGUILayout.Space();
         
         EditorGUILayout.BeginHorizontal();
 
-        // --- ЛЕВАЯ КОЛОНКА (ПЕРСОНАЛ) ---
+        // --- КОЛОНКА ПЕРСОНАЛА ---
         EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(position.width / 2f - 5));
         GUILayout.Label("👔 ПЕРСОНАЛ", EditorStyles.boldLabel);
         
         var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None).ToList();
-        GUILayout.Label($"Активных сотрудников: {allStaff.Count}", EditorStyles.miniLabel);
-        
         staffScrollPos = EditorGUILayout.BeginScrollView(staffScrollPos);
         
         foreach (var staff in allStaff)
         {
             EditorGUILayout.BeginVertical(EditorStyles.textArea);
-            
-            // Имя и Роль
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(staff.characterName, EditorStyles.boldLabel, GUILayout.Width(120));
             GUILayout.Label(staff.currentRole.ToString(), GUILayout.Width(100));
             EditorGUILayout.EndHorizontal();
 
-            // Статус и Текущая задача
             string state = staff.GetCurrentStateName();
             string task = staff.currentAction != null ? staff.currentAction.displayName : "БЕЗДЕЛЬЕ";
             Color taskColor = staff.currentAction != null ? new Color(0.2f, 0.8f, 0.2f) : Color.yellow;
             if (staff.IsOnBreak()) taskColor = Color.cyan;
 
             EditorGUILayout.LabelField($"Статус: {state}");
-            
             GUI.contentColor = taskColor;
             EditorGUILayout.LabelField($"Задача: {task}", EditorStyles.boldLabel);
             GUI.contentColor = Color.white;
 
-            // Кнопка быстрого перехода в детали
             if (GUILayout.Button("Исследовать мозг", EditorStyles.miniButton))
             {
                 selectedStaff = staff;
-                selectedTab = 1; // Переключаемся на детальный вид
+                selectedTab = 1; 
             }
-            
             EditorGUILayout.EndVertical();
         }
         EditorGUILayout.EndScrollView();
         EditorGUILayout.EndVertical();
 
-        // --- ПРАВАЯ КОЛОНКА (КЛИЕНТЫ) ---
+        // --- КОЛОНКА КЛИЕНТОВ ---
         EditorGUILayout.BeginVertical(EditorStyles.helpBox, GUILayout.Width(position.width / 2f - 5));
         GUILayout.Label("👥 КЛИЕНТЫ", EditorStyles.boldLabel);
         
         var allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).ToList();
-        GUILayout.Label($"Клиентов в здании: {allClients.Count}", EditorStyles.miniLabel);
-
         clientScrollPos = EditorGUILayout.BeginScrollView(clientScrollPos);
         
         foreach (var client in allClients)
         {
             if (client == null || client.stateMachine == null) continue;
-
             var state = client.stateMachine.GetCurrentState();
-            bool isConfused = state == ClientState.Confused;
-            bool isEnraged = state == ClientState.Enraged;
 
-            // Подсветка проблемных клиентов
             Color bgColor = GUI.backgroundColor;
-            if (isConfused) GUI.backgroundColor = new Color(1f, 0.8f, 0.2f); // Желто-оранжевый
-            if (isEnraged) GUI.backgroundColor = new Color(1f, 0.4f, 0.4f); // Красный
+            if (state == ClientState.Confused) GUI.backgroundColor = new Color(1f, 0.8f, 0.2f); 
+            if (state == ClientState.Enraged) GUI.backgroundColor = new Color(1f, 0.4f, 0.4f); 
 
             EditorGUILayout.BeginVertical(EditorStyles.textArea);
-            
-            // Имя и Цель
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(client.name, EditorStyles.boldLabel, GUILayout.Width(120));
             GUILayout.Label(client.mainGoal.ToString(), GUILayout.Width(100));
             EditorGUILayout.EndHorizontal();
 
-            // Состояние
             EditorGUILayout.LabelField($"Состояние: {state}");
-
-            // Стресс (Терпение)
             DrawProgressBar("", client.PatienceHeat, GetHeatColor(client.PatienceHeat));
 
-            // Помощник (если есть)
-            if (client.assignedHelper != null)
+            if (GUILayout.Button("Анализ клиента", EditorStyles.miniButton))
             {
-                GUI.contentColor = Color.cyan;
-                EditorGUILayout.LabelField($"Помогает: {client.assignedHelper.characterName}", EditorStyles.boldLabel);
-                GUI.contentColor = Color.white;
+                selectedClient = client;
+                selectedTab = 2; 
             }
-            else if (isConfused)
-            {
-                GUI.contentColor = Color.red;
-                EditorGUILayout.LabelField("НИКТО НЕ ПОМОГАЕТ!", EditorStyles.boldLabel);
-                GUI.contentColor = Color.white;
-            }
-
             EditorGUILayout.EndVertical();
-            GUI.backgroundColor = bgColor; // Сброс фона
+            GUI.backgroundColor = bgColor; 
         }
         EditorGUILayout.EndScrollView();
         EditorGUILayout.EndVertical();
@@ -169,122 +149,10 @@ public class UtilityAIDebugWindow : EditorWindow
         EditorGUILayout.EndHorizontal();
     }
 
-    private Color GetHeatColor(float heat)
-    {
-        if (heat > 0.8f) return Color.red;
-        if (heat > 0.5f) return new Color(1f, 0.5f, 0f);
-        return Color.green;
-    }
-
     // ============================================================================
-    // РЕЖИМ 2: ДЕТАЛЬНЫЙ АНАЛИЗ (МОЗГ)
+    // РЕЖИМ 2: МОЗГ ПЕРСОНАЛА
     // ============================================================================
-    private void DrawDetailedMode()
-    {
-        DrawStaffSelector();
-
-        if (selectedStaff == null)
-        {
-            EditorGUILayout.HelpBox("Выберите сотрудника для мониторинга.", MessageType.Warning);
-            return;
-        }
-
-        EditorGUILayout.Space();
-
-        // --- КНОПКА КОПИРОВАНИЯ ---
-        GUI.backgroundColor = new Color(0.6f, 0.8f, 1f);
-        if (GUILayout.Button("📋 Скопировать дамп для ИИ (в буфер)", GUILayout.Height(30)))
-        {
-            CopyStateToClipboard();
-        }
-        GUI.backgroundColor = Color.white;
-        EditorGUILayout.Space();
-        // --------------------------
-
-        DrawCurrentStatus();
-        EditorGUILayout.Space();
-        DrawVitals();
-        EditorGUILayout.Space();
-        DrawBrainDump();
-        EditorGUILayout.Space();
-        DrawDiary(); // Дневник задач
-    }
-
-    // ============================================================================
-    // ОТОБРАЖЕНИЕ ДНЕВНИКА ЗАДАЧ
-    // ============================================================================
-    private void DrawDiary()
-    {
-        if (selectedStaff == null) return;
-        
-        EditorGUILayout.BeginVertical("box");
-        
-        // Заголовок
-        EditorGUILayout.BeginHorizontal();
-        GUI.contentColor = new Color(1f, 0.8f, 0.4f);
-        GUILayout.Label("📔 ДНЕВНИК ЗАДАЧ", EditorStyles.boldLabel);
-        GUI.contentColor = Color.white;
-        
-        // Статистика
-        var diary = selectedStaff.taskDiary;
-        int completed = diary != null ? diary.Count(e => e.IsCompleted) : 0;
-        int total = diary != null ? diary.Count : 0;
-        GUILayout.Label($"({completed}/{total} задач)", EditorStyles.miniLabel);
-        EditorGUILayout.EndHorizontal();
-        
-        EditorGUILayout.Space();
-        
-        if (diary == null || diary.Count == 0)
-        {
-            EditorGUILayout.LabelField("Записей пока нет...", EditorStyles.miniLabel);
-            EditorGUILayout.EndVertical();
-            return;
-        }
-        
-        // Скролл для дневника
-        diaryScrollPos = EditorGUILayout.BeginScrollView(diaryScrollPos, GUILayout.Height(200));
-        
-        // Показываем записи в обратном порядке (новые сверху)
-        for (int i = diary.Count - 1; i >= 0; i--)
-        {
-            var entry = diary[i];
-            if (entry == null) continue;
-            
-            EditorGUILayout.BeginHorizontal(EditorStyles.textArea);
-            
-            // Цвет в зависимости от статуса
-            if (entry.IsCompleted)
-            {
-                // Завершённая задача
-                Color completedColor = new Color(0.2f, 0.8f, 0.4f);
-                GUI.contentColor = completedColor;
-                GUILayout.Label("✓", EditorStyles.boldLabel, GUILayout.Width(20));
-                
-                string duration = entry.Duration >= 60f
-                    ? $"{entry.Duration / 60f:F1} мин"
-                    : $"{entry.Duration:F1} сек";
-                GUILayout.Label($"{entry.TaskName}", EditorStyles.label, GUILayout.Width(180));
-                GUILayout.Label(duration, EditorStyles.miniLabel);
-            }
-            else
-            {
-                // Текущая задача (выполняется)
-                Color currentColor = new Color(1f, 0.8f, 0.2f);
-                GUI.contentColor = currentColor;
-                GUILayout.Label("▶", EditorStyles.boldLabel, GUILayout.Width(20));
-                GUILayout.Label($"{entry.TaskName}", EditorStyles.boldLabel, GUILayout.Width(180));
-                GUILayout.Label("выполняется...", EditorStyles.miniLabel);
-            }
-            
-            GUI.contentColor = Color.white;
-            EditorGUILayout.EndHorizontal();
-        }
-        
-        EditorGUILayout.EndScrollView();
-        EditorGUILayout.EndVertical();
-    }
-
-    private void DrawStaffSelector()
+    private void DrawStaffDetailedMode()
     {
         var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None).ToList();
         if (allStaff.Count == 0) return;
@@ -292,37 +160,172 @@ public class UtilityAIDebugWindow : EditorWindow
         string[] staffNames = allStaff.Select(s => $"{s.characterName} ({s.currentRole})").ToArray();
         int currentIndex = selectedStaff != null ? allStaff.IndexOf(selectedStaff) : 0;
         if (currentIndex < 0) currentIndex = 0;
+        selectedStaff = allStaff[EditorGUILayout.Popup("Сотрудник:", currentIndex, staffNames)];
 
-        int newIndex = EditorGUILayout.Popup("Анализ мозга:", currentIndex, staffNames);
-        selectedStaff = allStaff[newIndex];
+        if (selectedStaff == null) return;
+
+        EditorGUILayout.Space();
+        DrawCurrentStatus();
+        EditorGUILayout.Space();
+        DrawVitals();
+        EditorGUILayout.Space();
+        DrawBrainDump();
+        EditorGUILayout.Space();
+        DrawDiary();
     }
 
+    // ============================================================================
+    // РЕЖИМ 3: АНАЛИЗ КЛИЕНТОВ
+    // ============================================================================
+    private void DrawClientDetailedMode()
+    {
+        var allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).ToList();
+        if (allClients.Count == 0)
+        {
+            EditorGUILayout.HelpBox("В офисе нет клиентов.", MessageType.Info);
+            return;
+        }
+
+        string[] clientNames = allClients.Select(c => $"{c.name} ({c.mainGoal})").ToArray();
+        int currentIndex = selectedClient != null ? allClients.IndexOf(selectedClient) : 0;
+        if (currentIndex < 0) currentIndex = 0;
+        selectedClient = allClients[EditorGUILayout.Popup("Клиент:", currentIndex, clientNames)];
+
+        if (selectedClient == null || selectedClient.stateMachine == null) return;
+
+        clientDetailsScrollPos = EditorGUILayout.BeginScrollView(clientDetailsScrollPos);
+
+        // --- БАЗОВАЯ ИНФО ---
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("📝 АНКЕТА КЛИЕНТА", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Имя/Тип:", selectedClient.name);
+        EditorGUILayout.LabelField("Полная цель:", selectedClient.mainGoal.ToString());
+        EditorGUILayout.LabelField("Номер талона:", selectedClient.stateMachine.MyQueueNumber > 0 ? selectedClient.stateMachine.MyQueueNumber.ToString() : "Нет талона");
+        
+        string assignedWorker = selectedClient.stateMachine.MyServiceProvider != null 
+            ? ((MonoBehaviour)selectedClient.stateMachine.MyServiceProvider).name 
+            : "Никто не назначен";
+        EditorGUILayout.LabelField("Назначенный работник:", assignedWorker);
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+
+        // --- СОСТОЯНИЕ И ПРОГРЕСС ---
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("📊 ПРОГРЕСС И ПСИХИКА", EditorStyles.boldLabel);
+        
+        float progress = selectedClient.stateMachine.GetNormalizedProgress();
+        DrawProgressBar("Прогресс услуги", progress, Color.cyan);
+        DrawProgressBar("Уровень бешенства (Стресс)", selectedClient.PatienceHeat, GetHeatColor(selectedClient.PatienceHeat));
+        
+        EditorGUILayout.LabelField($"Текущее состояние ИИ: {selectedClient.stateMachine.GetCurrentState()}", EditorStyles.boldLabel);
+        
+        string targetZone = selectedClient.stateMachine.GetTargetZone() != null ? selectedClient.stateMachine.GetTargetZone().name : "Общий зал";
+        EditorGUILayout.LabelField($"Текущая Зона: {targetZone}");
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.Space();
+
+        // --- "ДНЕВНИК" ШАГОВ ---
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("🗺️ МАРШРУТНЫЙ ЛИСТ", EditorStyles.boldLabel);
+        
+        string currentStep = "Ожидание действий...";
+        string nextStep = "Неизвестно";
+
+        var state = selectedClient.stateMachine.GetCurrentState();
+        
+        // Эвристика для отображения шагов
+        if (state == ClientState.MovingToGoal || state == ClientState.MovingToRegistrarImpolite)
+        {
+            currentStep = "Идет к точке: " + (selectedClient.stateMachine.GetCurrentGoal() != null ? selectedClient.stateMachine.GetCurrentGoal().name : "???");
+            nextStep = "Занять очередь / Подойти к столу";
+        }
+        else if (state == ClientState.AtWaitingArea || state == ClientState.SittingInWaitingArea)
+        {
+            currentStep = "Ждет вызова по талону";
+            nextStep = "Подойти к окну обслуживания по вызову";
+        }
+        else if (state == ClientState.AtRegistration)
+        {
+            currentStep = "Общается с регистратором";
+            nextStep = "Получить направление и пойти к профильному окну";
+        }
+        else if (state == ClientState.AtDesk1 || state == ClientState.AtDesk2 || state == ClientState.InsideLimitedZone)
+        {
+            currentStep = "Обслуживается у клерка";
+            nextStep = selectedClient.billToPay > 0 ? "Пойти в кассу для оплаты" : "Покинуть офис (Успех)";
+        }
+        else if (state == ClientState.AtCashier || state == ClientState.GoingToCashier)
+        {
+            currentStep = "Находится на кассе (Оплата)";
+            nextStep = "Покинуть офис (Успех)";
+        }
+        else if (state == ClientState.Confused)
+        {
+            currentStep = "СБИЛСЯ С ПУТИ (Confused)";
+            nextStep = "Попытаться найти новую цель или разозлиться";
+        }
+        else if (state == ClientState.Leaving || state == ClientState.LeavingUpset || state == ClientState.Enraged)
+        {
+            currentStep = $"Покидает офис. Причина: {selectedClient.reasonForLeaving}";
+            nextStep = "Уничтожение объекта (Despawn)";
+        }
+
+        GUI.contentColor = Color.yellow;
+        EditorGUILayout.LabelField("► СЕЙЧАС:", currentStep, EditorStyles.boldLabel);
+        GUI.contentColor = new Color(0.6f, 0.6f, 0.6f);
+        EditorGUILayout.LabelField("▷ ДАЛЕЕ:", nextStep);
+        GUI.contentColor = Color.white;
+
+        EditorGUILayout.EndVertical();
+
+        EditorGUILayout.EndScrollView();
+    }
+
+    // ============================================================================
+    // МЕТОДЫ ОТРИСОВКИ ДЕТАЛЕЙ ПЕРСОНАЛА
+    // ============================================================================
     private void DrawCurrentStatus()
     {
         EditorGUILayout.BeginVertical("box");
-        string workspace = selectedStaff.assignedWorkstation != null ? selectedStaff.assignedWorkstation.name : "НЕТ";
-        EditorGUILayout.LabelField($"Рабочее место: {workspace}");
+        GUILayout.Label("🎯 ТЕКУЩЕЕ СОСТОЯНИЕ", EditorStyles.boldLabel);
         
-        string currentTask = selectedStaff.currentAction != null ? selectedStaff.currentAction.displayName : "БЕЗДЕЛЬЕ";
-        Color taskColor = selectedStaff.currentAction != null ? new Color(0.2f, 0.8f, 0.2f) : Color.yellow;
+        EditorGUILayout.LabelField("Роль:", selectedStaff.currentRole.ToString());
+        EditorGUILayout.LabelField("Состояние:", selectedStaff.GetCurrentStateName());
         
-        GUIStyle taskStyle = new GUIStyle(EditorStyles.label) { fontStyle = FontStyle.Bold };
-        taskStyle.normal.textColor = taskColor;
+        if (selectedStaff.currentAction != null)
+        {
+            GUI.contentColor = new Color(0.2f, 0.9f, 0.2f);
+            EditorGUILayout.LabelField("Текущее действие:", selectedStaff.currentAction.displayName, EditorStyles.boldLabel);
+            GUI.contentColor = Color.white;
+        }
+        else
+        {
+            EditorGUILayout.LabelField("Действие:", "Бездействие", EditorStyles.boldLabel);
+        }
         
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.LabelField("Выполняет:", GUILayout.Width(145));
-        EditorGUILayout.LabelField(currentTask, taskStyle);
-        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.LabelField("Подзадача:", selectedStaff.CurrentSubStatus ?? "Нет");
+        
         EditorGUILayout.EndVertical();
     }
 
     private void DrawVitals()
     {
         EditorGUILayout.BeginVertical("box");
-        DrawProgressBar("Усталость", 1f - (selectedStaff.energy / 100f), new Color(0.2f, 0.6f, 1f));
-        DrawProgressBar("Жажда", 1f - selectedStaff.morale, new Color(0.2f, 0.6f, 1f));
-        DrawProgressBar("Туалет", selectedStaff.bladder, new Color(0.8f, 0.8f, 0.2f));
-        DrawProgressBar("Стресс", selectedStaff.stress, new Color(0.8f, 0.2f, 0.2f));
+        GUILayout.Label("❤️ ЖИЗНЕННЫЕ ПОКАЗАТЕЛИ", EditorStyles.boldLabel);
+        
+        // StaffController использует прямые поля, а не структуру vitals
+        float energyNorm = selectedStaff.energy / 100f;
+        float stressNorm = selectedStaff.stress / 100f;
+        float moraleNorm = selectedStaff.morale / 100f;
+        
+        DrawProgressBar("Энергия", energyNorm, GetHeatColor(1f - energyNorm));
+        DrawProgressBar("Стресс", stressNorm, GetHeatColor(stressNorm));
+        DrawProgressBar("Настроение (Morale)", moraleNorm, GetHeatColor(1f - moraleNorm));
+        
+        EditorGUILayout.LabelField($"Энергия: {selectedStaff.energy:F1}% | Стресс: {selectedStaff.stress:F1}% | Morale: {selectedStaff.morale:F1}%", EditorStyles.boldLabel);
+        
         EditorGUILayout.EndVertical();
     }
 
@@ -336,204 +339,191 @@ public class UtilityAIDebugWindow : EditorWindow
     private void DrawBrainDump()
     {
         EditorGUILayout.BeginVertical("box");
-        GUILayout.Label("ОЦЕНКА ДЕЙСТВИЙ (UTILITY AI)", EditorStyles.boldLabel);
-
-        if (selectedStaff.currentBrainDump == null || selectedStaff.currentBrainDump.Count == 0)
+        GUILayout.Label("🧠 РЕЗУЛЬТАТЫ ДУМАНИЯ", EditorStyles.boldLabel);
+        
+        // Собираем все доступные действия (активные + из базы данных)
+        var allActions = new List<StaffAction>();
+        if (selectedStaff.activeActions != null)
+            allActions.AddRange(selectedStaff.activeActions);
+        
+        // Добавляем системные действия из базы
+        if (selectedStaff.systemActionDatabase != null && selectedStaff.systemActionDatabase.allActions != null)
+            allActions.AddRange(selectedStaff.systemActionDatabase.allActions);
+        
+        if (allActions.Count == 0)
         {
-            EditorGUILayout.HelpBox("Сотрудник еще не думал.", MessageType.Info);
+            EditorGUILayout.LabelField("Нет доступных действий");
             EditorGUILayout.EndVertical();
             return;
         }
 
-        var sortedDump = selectedStaff.currentBrainDump
-            .OrderByDescending(d => d.ConditionsMet)
-            .ThenByDescending(d => d.Score)
-            .ToList();
-
-        actionsScrollPos = EditorGUILayout.BeginScrollView(actionsScrollPos);
-
-        EditorGUILayout.BeginHorizontal();
-        GUILayout.Label("Действие", EditorStyles.boldLabel, GUILayout.Width(160));
-        GUILayout.Label("Статус", EditorStyles.boldLabel, GUILayout.Width(130));
-        GUILayout.Label("Вес", EditorStyles.boldLabel, GUILayout.Width(50));
-        EditorGUILayout.EndHorizontal();
-
-        foreach (var data in sortedDump)
+        actionsScrollPos = EditorGUILayout.BeginScrollView(actionsScrollPos, GUILayout.Height(200));
+        
+        // Сортируем действия по утилите
+        var sortedActions = allActions.OrderByDescending(a =>
         {
-            EditorGUILayout.BeginHorizontal();
+            try { return a.AreConditionsMet(selectedStaff) ? a.CalculateUtility(selectedStaff) : 0f; }
+            catch { return 0f; }
+        }).ToList();
+        
+        EditorGUILayout.BeginVertical();
+        foreach (var action in sortedActions)
+        {
+            if (action == null) continue;
             
-            string displayName = string.IsNullOrEmpty(data.ActionName) ? $"[{data.AssetName}]" : data.ActionName;
-            GUILayout.Label(displayName, GUILayout.Width(160));
+            bool conditionsMet = false;
+            float utility = 0f;
+            try
+            {
+                conditionsMet = action.AreConditionsMet(selectedStaff);
+                if (conditionsMet)
+                    utility = action.CalculateUtility(selectedStaff);
+            }
+            catch { conditionsMet = false; }
             
-            Color statusColor = Color.gray;
-            if (data.ConditionsMet) statusColor = Color.green;
-            else if (data.StatusMessage != null && data.StatusMessage.Contains("%")) statusColor = new Color(0.8f, 0.6f, 0.2f);
-            else if (data.StatusMessage != null && data.StatusMessage.Contains("КРИТИЧНО")) statusColor = Color.red;
+            string info = "";
+            try { info = action.GetDebugInfo(selectedStaff); } catch {}
             
-            GUI.contentColor = statusColor;
-            GUILayout.Label(data.StatusMessage ?? "???", EditorStyles.boldLabel, GUILayout.Width(130));
-            GUI.contentColor = Color.white;
+            Color bgColor = GUI.backgroundColor;
+            if (action == selectedStaff.currentAction)
+            {
+                GUI.backgroundColor = new Color(0.2f, 0.8f, 0.2f, 0.3f);
+            }
+            else if (!conditionsMet)
+            {
+                GUI.backgroundColor = new Color(0.3f, 0.3f, 0.3f, 0.3f);
+            }
             
-            GUI.color = data.ConditionsMet ? Color.cyan : new Color(0.3f, 0.3f, 0.3f);
-            string scoreText = data.ConditionsMet ? data.Score.ToString("F1") : "---";
-            GUILayout.Label(scoreText, EditorStyles.boldLabel, GUILayout.Width(50));
-            GUI.color = Color.white;
+            string status = conditionsMet ? $"Утилита: {utility:F1}" : "Условия не выполнены";
+            
+            EditorGUILayout.BeginHorizontal("box");
+            GUILayout.Label(action.displayName, EditorStyles.boldLabel, GUILayout.Width(150));
+            GUILayout.Label(status, GUILayout.Width(130));
+            
+            if (!string.IsNullOrEmpty(info))
+            {
+                GUILayout.Label($"({info})", EditorStyles.miniLabel);
+            }
             
             EditorGUILayout.EndHorizontal();
+            GUI.backgroundColor = bgColor;
         }
-
+        
+        EditorGUILayout.EndVertical();
         EditorGUILayout.EndScrollView();
+        
         EditorGUILayout.EndVertical();
     }
 
-    // --- ЛОГИКА КОПИРОВАНИЯ ДАМПА ДЛЯ ChatGPT ---
-    private void CopyStateToClipboard()
+    private void DrawDiary()
     {
-        if (selectedStaff == null) return;
-
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"=== UAD DUMP: {selectedStaff.characterName} ({selectedStaff.currentRole}) ===");
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("📓 ДНЕВНИК ЗАДАЧ", EditorStyles.boldLabel);
         
-        string workspace = selectedStaff.assignedWorkstation != null ? selectedStaff.assignedWorkstation.name : "NONE";
-        sb.AppendLine($"Workstation: {workspace}");
-        sb.AppendLine($"State Machine: {selectedStaff.GetCurrentStateName()}");
-        sb.AppendLine($"Current Task: {(selectedStaff.currentAction != null ? selectedStaff.currentAction.displayName : "IDLE")}");
+        // Здесь можно добавить логику отображения дневника задач, если она есть
+        // Пока просто показываем текущее действие
         
-        sb.AppendLine("\n--- VITALS ---");
-        sb.AppendLine($"Energy (Fatigue): {selectedStaff.energy:F1}/100");
-        sb.AppendLine($"Morale (Thirst): {selectedStaff.morale:P0}");
-        sb.AppendLine($"Bladder (Toilet): {selectedStaff.bladder:P0}");
-        sb.AppendLine($"Stress: {selectedStaff.stress:F1}");
-        
-        sb.AppendLine("\n--- BRAIN DUMP (Sorted) ---");
-        if (selectedStaff.currentBrainDump != null && selectedStaff.currentBrainDump.Count > 0)
+        if (selectedStaff.currentAction != null)
         {
-            var sortedDump = selectedStaff.currentBrainDump
-                .OrderByDescending(d => d.ConditionsMet)
-                .ThenByDescending(d => d.Score)
-                .ToList();
-
-            foreach (var d in sortedDump)
-            {
-                string name = string.IsNullOrEmpty(d.ActionName) ? $"[{d.AssetName}]" : d.ActionName;
-                string scoreStr = d.ConditionsMet ? d.Score.ToString("F1") : "N/A";
-                string metStr = d.ConditionsMet ? "YES" : "NO ";
-                sb.AppendLine($"- [{metStr}] {name,-25} | Score: {scoreStr,-5} | Status: {d.StatusMessage}");
-            }
-        }
-        else
-        {
-            sb.AppendLine("Brain dump is empty.");
-        }
-        
-        // --- TASK DIARY EXPORT ---
-        sb.AppendLine("\n--- TASK DIARY ---");
-        if (selectedStaff.taskDiary != null && selectedStaff.taskDiary.Count > 0)
-        {
-            float totalTime = 0f;
-            foreach (var entry in selectedStaff.taskDiary)
-            {
-                if (entry == null) continue;
-                
-                string status = entry.IsCompleted ? "DONE" : "ACTIVE";
-                string duration = entry.Duration >= 60f
-                    ? $"{entry.Duration / 60f:F1} min"
-                    : $"{entry.Duration:F1} sec";
-                
-                sb.AppendLine($"- [{status}] {entry.TaskName,-30} | {duration}");
-                
-                if (entry.IsCompleted) totalTime += entry.Duration;
-            }
+            EditorGUILayout.LabelField("Выполняется:", selectedStaff.currentAction.displayName);
             
-            float totalMinutes = totalTime / 60f;
-            sb.AppendLine($"Total logged time: {totalMinutes:F1} minutes");
+            if (selectedStaff.currentExecutor != null)
+            {
+                var executor = selectedStaff.currentExecutor;
+                var actionType = executor.GetType().Name;
+                EditorGUILayout.LabelField("Executor:", actionType);
+            }
         }
-        else
-        {
-            sb.AppendLine("Task diary is empty.");
-        }
-        // -------------------------
-
-        GUIUtility.systemCopyBuffer = sb.ToString();
-        Debug.Log($"<color=green>[UAD]</color> Состояние {selectedStaff.characterName} скопировано в буфер обмена! Нажмите Ctrl+V в чате.");
+        
+        EditorGUILayout.EndVertical();
     }
-    
+
     // ============================================================================
-    // ПОЛНЫЙ ДАМП ВСЕЙ БРИГАДЫ
+    // МЕТОДЫ ДЛЯ РАБОТЫ С БУФЕРОМ ОБМЕНА
     // ============================================================================
+    private void CopyStaffStateToClipboard()
+    {
+        var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None).ToList();
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("=== STAFF DUMP ===");
+        sb.AppendLine($"Total Staff: {allStaff.Count}\n");
+
+        foreach (var s in allStaff)
+        {
+            sb.AppendLine($"[{s.characterName}]");
+            sb.AppendLine($"  Role: {s.currentRole}");
+            sb.AppendLine($"  State: {s.GetCurrentStateName()}");
+            sb.AppendLine($"  Task: {(s.currentAction != null ? s.currentAction.displayName : "IDLE")}");
+            sb.AppendLine($"  Energy: {s.energy:F1}%");
+            sb.AppendLine($"  Stress: {s.stress:F1}%");
+            sb.AppendLine($"  Morale: {s.morale:F1}%");
+            sb.AppendLine();
+        }
+        
+        GUIUtility.systemCopyBuffer = sb.ToString();
+        Debug.Log("Дамп персонала скопирован!");
+    }
+
+    private void CopyClientsStateToClipboard()
+    {
+        var allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).ToList();
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("=== CLIENTS DUMP ===");
+        sb.AppendLine($"Total Clients: {allClients.Count}\n");
+
+        foreach (var c in allClients)
+        {
+            if (c == null || c.stateMachine == null) continue;
+            sb.AppendLine($"[{c.stateMachine.MyQueueNumber}] {c.name}");
+            sb.AppendLine($"  Goal: {c.mainGoal}");
+            sb.AppendLine($"  State: {c.stateMachine.GetCurrentState()}");
+            sb.AppendLine($"  Stress: {c.PatienceHeat * 100f:F1}%");
+            sb.AppendLine($"  ReasonForLeaving: {c.reasonForLeaving}");
+            sb.AppendLine();
+        }
+        
+        GUIUtility.systemCopyBuffer = sb.ToString();
+        Debug.Log("Дамп клиентов скопирован!");
+    }
+
     private void CopyFullStateToClipboard()
     {
         var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None).ToList();
-        if (allStaff.Count == 0)
-        {
-            EditorUtility.DisplayDialog("UAD", "Нет сотрудников в игре!", "OK");
-            return;
-        }
-
+        var allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).ToList();
+        
         StringBuilder sb = new StringBuilder();
-        sb.AppendLine("=== FULL OFFICE DUMP ===");
-        sb.AppendLine($"Generated: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
-        sb.AppendLine($"Total Staff: {allStaff.Count}");
+        sb.AppendLine("=== FULL OFFICE STATE ===");
+        sb.AppendLine($"Timestamp: {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Staff: {allStaff.Count}, Clients: {allClients.Count}");
         sb.AppendLine();
-
-        foreach (var staff in allStaff)
+        
+        // Staff section
+        sb.AppendLine("--- STAFF ---");
+        foreach (var s in allStaff)
         {
-            if (staff == null) continue;
-
-            sb.AppendLine($">>> {staff.characterName} ({staff.currentRole})");
-            sb.AppendLine($"    Status: {staff.GetCurrentStateName()}");
-            sb.AppendLine($"    Energy: {staff.energy:F1}/100 (Fatigue: {100f - staff.energy:F1})");
-            sb.AppendLine($"    Morale: {staff.morale:F1}/100 (Thirst: {100f - staff.morale:F1})");
-            sb.AppendLine($"    Bladder: {staff.bladder:F1}/100");
-            sb.AppendLine($"    Stress: {staff.stress:F1}/100");
-            
-            // Текущая задача
-            string currentTask = staff.currentAction != null
-                ? staff.currentAction.displayName
-                : "IDLE";
-            sb.AppendLine($"    Current Task: {currentTask}");
-
-            // Дневник задач
-            sb.AppendLine("    --- Task Diary ---");
-            if (staff.taskDiary != null && staff.taskDiary.Count > 0)
-            {
-                float totalTime = 0f;
-                foreach (var entry in staff.taskDiary)
-                {
-                    if (entry == null) continue;
-                    
-                    string status = entry.IsCompleted ? "DONE" : "ACTIVE";
-                    string duration = entry.Duration >= 60f
-                        ? $"{entry.Duration / 60f:F1} min"
-                        : $"{entry.Duration:F1} sec";
-                    
-                    sb.AppendLine($"      [{status}] {entry.TaskName} - {duration}");
-                    
-                    if (entry.IsCompleted) totalTime += entry.Duration;
-                }
-                
-                float totalMinutes = totalTime / 60f;
-                sb.AppendLine($"    Total logged: {totalMinutes:F1} minutes");
-            }
-            else
-            {
-                sb.AppendLine("      (empty)");
-            }
-
-            // Текущая выполняемая задача (если есть)
-            if (staff.CurrentTaskEntry != null && !staff.CurrentTaskEntry.IsCompleted)
-            {
-                float currentDuration = Time.time - staff.CurrentTaskEntry.StartTime;
-                string durationStr = currentDuration >= 60f
-                    ? $"{currentDuration / 60f:F1} min"
-                    : $"{currentDuration:F1} sec";
-                sb.AppendLine($"    >> CURRENT: {staff.CurrentTaskEntry.TaskName} ({durationStr})");
-            }
-
-            sb.AppendLine();
+            sb.AppendLine($"[{s.characterName}] {s.currentRole} | State: {s.GetCurrentStateName()} | Task: {(s.currentAction != null ? s.currentAction.displayName : "IDLE")}");
         }
-
+        sb.AppendLine();
+        
+        // Clients section
+        sb.AppendLine("--- CLIENTS ---");
+        foreach (var c in allClients)
+        {
+            if (c == null || c.stateMachine == null) continue;
+            sb.AppendLine($"[{c.stateMachine.MyQueueNumber}] {c.name} | Goal: {c.mainGoal} | State: {c.stateMachine.GetCurrentState()}");
+        }
+        
         GUIUtility.systemCopyBuffer = sb.ToString();
-        Debug.Log($"<color=green>[UAD]</color> Дамп бригады ({allStaff.Count} сотрудников) скопирован в буфер обмена!");
+        Debug.Log("Полный дамп офиса скопирован!");
+    }
+
+    // ============================================================================
+    // ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ
+    // ============================================================================
+    private Color GetHeatColor(float heat)
+    {
+        if (heat > 0.8f) return Color.red;
+        if (heat > 0.5f) return new Color(1f, 0.5f, 0f);
+        return Color.green;
     }
 }

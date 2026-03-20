@@ -457,9 +457,14 @@ public class ClientStateMachine : MonoBehaviour
         Waypoint dest = GetCurrentGoal();
         if (dest == null) { SetState(ClientState.Confused); return; }
 
-        if (dest.isServicePoint)
+        // БРОНЕБОЙНЫЙ ПОИСК: Ищем ServicePoint по ссылке, даже если забыли галочку isServicePoint
+        var servicePoint = dest.GetComponentInParent<ServicePoint>() ??
+                           FindObjectsByType<ServicePoint>(FindObjectsSortMode.None).FirstOrDefault(s => s.clientStandPoint == dest);
+
+        // Если это точка обслуживания - жестко чекинимся
+        if (servicePoint != null || dest.isServicePoint)
         {
-            var owningZone = dest.GetComponentInParent<LimitedCapacityZone>();
+            var owningZone = dest.GetComponentInParent<LimitedCapacityZone>() ?? servicePoint?.GetComponentInParent<LimitedCapacityZone>();
             if (owningZone != null)
             {
                 owningZone.ManuallyOccupyWaypoint(dest, parent.gameObject);
@@ -467,23 +472,24 @@ public class ClientStateMachine : MonoBehaviour
                 occupiedWaypoint = dest;
                 SetState(ClientState.InsideLimitedZone);
 
-                // Попытаться поприветствовать работника за стойкой
                 TryGreetWorkerAtServicePoint(dest);
-
                 return;
             }
         }
 
         var newTargetZone = FindObjectsByType<LimitedCapacityZone>(FindObjectsSortMode.None)
             .FirstOrDefault(z => z.waitingWaypoint == dest);
+        bool zoneEntered = false;
+        
         if (newTargetZone != null)
         {
             targetZone = newTargetZone;
             SetState(ClientState.AtLimitedZoneEntrance);
-            return;
+            zoneEntered = true;
         }
 
-        if (ClientQueueManager.Instance.IsWaypointInWaitingZone(dest))
+        // Клиент добавляется в очередь независимо от того, вошел ли он в зону
+        if (ClientQueueManager.Instance.IsWaypointInWaitingZone(dest) || zoneEntered)
         {
             ClientQueueManager.Instance.JoinQueue(parent);
             Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
@@ -495,7 +501,7 @@ public class ClientStateMachine : MonoBehaviour
             {
                 SetState(ClientState.AtWaitingArea);
             }
-            return;
+            if (zoneEntered) return;
         }
 
         if (ClientSpawner.Instance.formTable != null && dest == ClientSpawner.Instance.formTable.tableWaypoint)
@@ -871,36 +877,35 @@ public class ClientStateMachine : MonoBehaviour
     }
 
     // --- Система приветствий ---
-    private void TryGreetWorkerAtServicePoint(Waypoint servicePoint)
+    private void TryGreetWorkerAtServicePoint(Waypoint destPoint)
     {
         if (parent == null) return;
 
-        // Ищем работника за этой стойкой
-        var servicePointComponent = servicePoint.GetComponentInParent<ServicePoint>();
-        if (servicePointComponent == null) return;
+        ServicePoint targetDesk = null;
+        if (myServiceProvider != null) targetDesk = myServiceProvider.GetWorkstation();
 
-        StaffController worker = null;
-
-        // Пробуем разные способы найти работника
-        var workstation = servicePointComponent as IServiceProvider;
-        if (workstation != null)
+        // Ищем стол напрямую через вейпоинт (самый надежный способ)
+        if (targetDesk == null)
         {
-            worker = workstation.GetWorkstation()?.GetComponent<StaffController>();
+            targetDesk = destPoint.GetComponentInParent<ServicePoint>() ??
+                         FindObjectsByType<ServicePoint>(FindObjectsSortMode.None).FirstOrDefault(d => d.clientStandPoint == destPoint);
         }
 
-        if (worker == null)
+        if (targetDesk != null)
         {
-            // Fallback: ищем StaffController в зоне
-            var zone = servicePoint.GetComponentInParent<LimitedCapacityZone>();
-            if (zone != null)
+            if (targetDesk.CurrentClient != parent) targetDesk.AssignClient(parent); // Наглый клиент садится сам
+            
+            targetDesk.SetClientReady(); // ГОВОРИМ СТОЛУ "Я ПРИШЕЛ!"
+
+            var worker = targetDesk.GetAssignedStaff();
+            if (worker != null)
             {
-                worker = zone.GetComponentInChildren<StaffController>();
+                parent.TryGreetStaff(worker);
             }
         }
-
-        if (worker != null)
+        else
         {
-            parent.TryGreetStaff(worker);
+            Debug.LogWarning($"[ClientStateMachine] Клиент {parent.name} пришел на точку {destPoint.name}, но ServicePoint не найден!");
         }
     }
 }

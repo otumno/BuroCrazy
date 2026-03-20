@@ -48,6 +48,9 @@ public class AgentMover : MonoBehaviour
     private Coroutine yieldingCoroutine; // Coroutine handle for yielding
     private float dirtTimer = 0f; // Timer for dirt generation
     private float dirtInterval = 0.25f; // How often to generate dirt while moving
+    
+    // === Счётчик дистанции для трейтов (Sloppy, Clumsy) ===
+    private float _distAcc = 0f; // Накопленная дистанция движения
 
     // --- Прямое преследование ---
     private bool isDirectChasing = false; // Flag if agent is chasing a specific point directly
@@ -153,10 +156,12 @@ public class AgentMover : MonoBehaviour
         // If the character is currently slipping/recovering, skip movement physics
         if (isSlipping)
         {
-             // Gradually reduce velocity while slipping/lying down
-             rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, Time.fixedDeltaTime * movementSmoothing * 2f); // Increased damping
-             return; // Skip the rest of FixedUpdate
+            // Gradually reduce velocity while slipping/lying down
+            rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, Vector2.zero, Time.fixedDeltaTime * movementSmoothing * 2f);
+            return; // Skip the rest of FixedUpdate
         }
+
+        // Примечание: Обработка трейтов (Clumsy, Gossip) выполняется в StaffController.ProcessTraitBehavior()
 
         Vector2 desiredVelocity; // The velocity the agent wants to achieve this frame
 
@@ -233,6 +238,23 @@ public class AgentMover : MonoBehaviour
 
         // Handle dirt generation based on movement
         HandleDirtLogic();
+
+        // === Счётчик дистанции для трейтов (Sloppy, Clumsy) ===
+        // Игнорируем Директора - у него нет трейтов (проверка по имени)
+        if (gameObject.name.Contains("Director")) {
+            // Пропускаем трейты для Директора
+        }
+        else if (rb.linearVelocity.magnitude > 0.1f) {
+            _distAcc += rb.linearVelocity.magnitude * Time.fixedDeltaTime;
+            if (_distAcc > 1.5f) { // Каждые 1.5 юнита (3 метра)
+                _distAcc = 0f;
+                var staff = GetComponent<StaffController>();
+                if (staff != null) {
+                    Debug.Log($"<color=magenta>[TRAIT FIRE]</color> Проверка трейтов в движении для {staff.name}...");
+                    staff.ProcessTraitBehavior();
+                }
+            }
+        }
 
         // --- Логика сжатия ("Втягивание живота") в конце FixedUpdate ---
         if (mainCollider != null && originalColliderSize > 0)

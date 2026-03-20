@@ -387,8 +387,13 @@ MonoBehaviour:
     shortName: 
     diminutiveName: 
   role: 0
+  CurrentSubStatus: 
   roleData: {fileID: 0}
   gender: 0
+  permanentTrait: 0
+  puddlePrefab: {fileID: 696781811648093872, guid: 36a573cee6808634fa3faf4e68dc903d, type: 3}
+  trashPrefab: {fileID: 3120465193860854178, guid: 08f147e64528d6d408eb1d7804a57525, type: 3}
+  mudPrefab: {fileID: 3725752530133082592, guid: 9022dbe0a41b7f648a8e56fcd3194a35, type: 3}
   currentRankData: {fileID: 0}
   salaryPerPeriod: 15
   unpaidPeriods: 0
@@ -405,6 +410,8 @@ MonoBehaviour:
     pedantry: 0
     softSkills: 0
     corruption: 0
+  currentBrainDump: []
+  taskDiary: []
   WorkShiftMask: -1
   punctuality: 0.5
   maxLateness: 30
@@ -440,6 +447,7 @@ MonoBehaviour:
   uiScheduleTrackIndex: -1
   currentAction: {fileID: 0}
   currentExecutor: {fileID: 0}
+  forcedAction: {fileID: 0}
   spriteCollection: {fileID: 11400000, guid: cdab1e82753fc0d4fb395149bfc4e7dc, type: 2}
   stateEmotionMap: {fileID: 11400000, guid: 785cfc11f7b6eee47a4deaaf43942ff6, type: 2}
 --- !u!114 &9101693390999189065

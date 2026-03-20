@@ -1,5 +1,6 @@
 // Файл: ServicePoint.cs
 using UnityEngine;
+using Characters;
 
 public class ServicePoint : MonoBehaviour
 {
@@ -18,9 +19,39 @@ public class ServicePoint : MonoBehaviour
     
     // --- НОВОЕ ПОЛЕ ---
     [Tooltip("Точка, к которой будет подходить стажер, чтобы забрать документы со стола.")]
-    public Transform internCollectionPoint; 
+    public Transform internCollectionPoint;
 
     private StaffController assignedStaff;
+
+    // === НОВАЯ СИСТЕМА СИНХРОНИЗАЦИИ ===
+    [Tooltip("Текущий клиент, направленный к этой стойке")]
+    public ClientPathfinding CurrentClient { get; private set; }
+    
+    [Tooltip("Клиент физически подошел к стойке")]
+    public bool IsClientPhysicallyReady { get; private set; }
+
+    public void AssignClient(ClientPathfinding client)
+    {
+        CurrentClient = client;
+        IsClientPhysicallyReady = false;
+        Debug.Log($"[ServicePoint {name}] Ожидаю клиента {client.name}");
+    }
+
+    public void SetClientReady()
+    {
+        if (CurrentClient != null)
+        {
+            IsClientPhysicallyReady = true;
+            Debug.Log($"[ServicePoint {name}] Клиент {CurrentClient.name} подошел к стойке!");
+        }
+    }
+
+    public void ClearClient()
+    {
+        CurrentClient = null;
+        IsClientPhysicallyReady = false;
+    }
+    // ===================================
 
     public void ClearAssignedStaff()
     {

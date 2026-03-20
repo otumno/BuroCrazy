@@ -93,6 +93,13 @@ public class TeamMemberCardUI : MonoBehaviour
             }
             skillsText.text = stringBuilder.ToString();
         }
+        
+        // Отображение особенности (трейта)
+        if (assignedStaff.permanentTrait != StaffController.TraitType.None)
+        {
+            var traitInfo = StaffController.TraitLibrary[assignedStaff.permanentTrait];
+            skillsText.text += $"\n<color=yellow><b>Особенность:</b> {traitInfo.Name}</color>";
+        }
 
         if (assignedStaff.currentRank != null)
         {

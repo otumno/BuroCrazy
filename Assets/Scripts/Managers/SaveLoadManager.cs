@@ -65,6 +65,9 @@ namespace Managers
                 staffData.totalLatenessCount = staffMember.totalLatenessCount;
                 staffData.sickDaysCount = staffMember.sickDaysCount;
                 
+                // Сохраняем особенность (trait)
+                staffData.trait = staffMember.permanentTrait;
+                
                 // Сохраняем навыки и роль (если нужно глубокое сохранение, добавьте сюда поля из StaffController)
                 // staffData.role = staffMember.currentRole;
                 
@@ -210,6 +213,9 @@ namespace Managers
                         // Загружаем статистику посещаемости
                         staffMember.totalLatenessCount = staffData.totalLatenessCount;
                         staffMember.sickDaysCount = staffData.sickDaysCount;
+                        
+                        // Загружаем особенность (trait)
+                        staffMember.permanentTrait = staffData.trait;
                     
                         if (staffData.assignedWorkstationId != -999)
                         {

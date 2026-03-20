@@ -89,9 +89,11 @@ public class ClientActionExecutor : MonoBehaviour
         }
 
         Waypoint freeSpot = null;
-        while (freeSpot == null)
+        float zoneTimeout = 30f;
+
+        while (freeSpot == null && zoneTimeout > 0)
         {
-            if (_client == null) 
+            if (_client == null)
             {
                 targetZone.LeaveQueue(gameObject);
                 yield break;
@@ -101,7 +103,18 @@ public class ClientActionExecutor : MonoBehaviour
             {
                 freeSpot = targetZone.RequestAndOccupyWaypoint(_client.gameObject);
             }
-            if (freeSpot == null) yield return new WaitForSeconds(0.5f);
+            if (freeSpot == null)
+            {
+                yield return new WaitForSeconds(0.5f);
+                zoneTimeout -= 0.5f;
+            }
+        }
+
+        if (freeSpot == null)
+        {
+            targetZone.LeaveQueue(gameObject);
+            _client?.stateMachine?.SetState(ClientState.Confused);
+            yield break;
         }
 
         if (_client == null)

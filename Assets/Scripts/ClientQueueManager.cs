@@ -10,7 +10,7 @@ public class ClientQueueManager : MonoBehaviour
 
     [Header("Настройки")]
     public WaitingZone mainWaitingZone;
-    public float clientResponseTimeout = 15f;
+    public float clientResponseTimeout = 45f; // Увеличили с 15 до 45 секунд!
     public float callCooldown = 5f;
     public AudioClip nextClientSound;
     public float patienceMinTime = 8f;
@@ -23,6 +23,8 @@ public class ClientQueueManager : MonoBehaviour
     private float lastCallTime = -100f;
 
     private Dictionary<int, float> clientsAwaitingResponse = new Dictionary<int, float>();
+    /// <summary>Публичное свойство для доступа к clientsAwaitingResponse (только чтение)</summary>
+    public int ClientsAwaitingResponseCount => clientsAwaitingResponse.Count;
     public List<int> currentlyCalledNumbers = new List<int>();
     public List<ClientPathfinding> dissatisfiedClients = new List<ClientPathfinding>();
 
@@ -50,6 +52,9 @@ public class ClientQueueManager : MonoBehaviour
 
         foreach (int deskId in deskIds)
         {
+            // ШАГ 1: Пропускаем авто-пуш для регистратуры (deskId=0) - она работает по Pull-модели
+            if (deskId == 0) continue;
+
             var worker = ClientSpawner.GetServiceProviderAtDesk(deskId);
             if (worker != null && worker.IsAvailableToServe)
             {
@@ -98,6 +103,9 @@ public class ClientQueueManager : MonoBehaviour
             ServicePoint workstation = availableWorker.GetWorkstation();
             if (workstation == null) return;
 
+            // === НОВАЯ СИСТЕМА: Назначаем клиента на стойку ===
+            workstation.AssignClient(nextClient);
+
             Waypoint destination = workstation.clientStandPoint;
             if (destination == null) return;
 
@@ -136,6 +144,17 @@ public class ClientQueueManager : MonoBehaviour
             
             if (client != null)
             {
+                // === НОВОЕ: Очищаем стойку, если клиент отвалился по таймауту ===
+                if (client.stateMachine != null && client.stateMachine.MyServiceProvider != null)
+                {
+                    var sp = client.stateMachine.MyServiceProvider.GetWorkstation();
+                    if (sp != null && sp.CurrentClient == client)
+                    {
+                        sp.ClearClient();
+                    }
+                }
+                // ================================================================
+
                 RemoveClientFromQueue(client);
                 
                 // Очищаем клиента из всех зон перед переходом в Confused

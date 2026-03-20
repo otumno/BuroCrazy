@@ -114,6 +114,15 @@ public class ClerkController : StaffController, IServiceProvider
         // 2. Когда дошли — "включаемся" в работу
         if (assignedWorkstation != null)
         {
+            // --- ПРИНУДИТЕЛЬНАЯ ИНЪЕКЦИЯ НАВЫКОВ ДЛЯ REGISTRAR ---
+            // Обеспечиваем минимальные навыки для корректной работы системы обслуживания
+            if (this.clerkRole == ClerkRole.Registrar)
+            {
+                if (skills.paperworkMastery < 0.5f) skills.paperworkMastery = 0.5f;
+                if (skills.softSkills < 0.5f) skills.softSkills = 0.5f;
+                Debug.Log($"[ClerkController] {characterName} (Registrar): принудительно установлены навыки paperwork={skills.paperworkMastery}, softSkills={skills.softSkills}");
+            }
+            
             ClientSpawner.AssignServiceProviderToDesk(this, assignedWorkstation.deskId);
             SetState(ClerkState.Working);
             Debug.Log($"[ClerkController] {characterName} занял стол {assignedWorkstation.name} и готов принимать клиентов!");

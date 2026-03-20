@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Managers;
 using Enums;
+using Characters;
 
 [System.Serializable]
 public class SaveData
@@ -62,6 +63,9 @@ public struct StaffSaveData
     // Статистика посещаемости
     public int totalLatenessCount;
     public int sickDaysCount;
+    
+    // Особенность (Trait)
+    public StaffController.TraitType trait;
 }
 
 [System.Serializable]

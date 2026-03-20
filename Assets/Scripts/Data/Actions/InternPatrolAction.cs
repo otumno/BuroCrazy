@@ -13,9 +13,16 @@ public class InternPatrolAction : StaffAction
     }
 
 	public InternPatrolAction()
-    {
-        category = ActionCategory.System; // Добавить эту строку
-    }
+	  {
+	      category = ActionCategory.System;
+	      priority = 50; // Основное занятие стажеров - патруль
+	  }
+	  
+	  public override float CalculateUtility(StaffController staff)
+	  {
+	      // Базовый вес 50, плюс небольшой бонус за патрулирование
+	      return 50f + Random.Range(0f, 5f);
+	  }
 
     public override System.Type GetExecutorType()
     {

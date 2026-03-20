@@ -9,6 +9,7 @@ using Utilities;
 using Characters;
 using UI;
 using Enums;
+using Managers.Teletype;
 
 namespace Managers
 {
@@ -261,6 +262,7 @@ namespace Managers
                 staffController.experiencePoints = candidate.Experience;
                 staffController.salaryPerPeriod = candidate.Rank.salaryMultiplier > 0 ? Mathf.RoundToInt(baseCost * candidate.Rank.salaryMultiplier) : baseCost;
                 staffController.currentRole = candidate.Role; // ВАЖНО!
+                staffController.permanentTrait = candidate.Trait; // Передаём трейт
                 
                 staffController.activeActions = new List<StaffAction>();
 
@@ -289,6 +291,16 @@ namespace Managers
                 newStaffGO.name = candidate.Name;
                 if(freePoint != null) occupiedPoints.Add(freePoint, staffController);
                 AvailableCandidates.Remove(candidate);
+
+                // Логирование найма с трейтом
+                string traitName = StaffController.TraitLibrary[candidate.Trait].Name;
+                Debug.Log($"<color=cyan>[HIRING]</color> Нанят сотрудник {candidate.Name}. Особенность: <b>{traitName}</b>");
+                
+                // Лог в Телетайп
+                if (TeletypeManager.Instance != null)
+                {
+                    TeletypeManager.Instance.LogImportant($"Новый сотрудник: {candidate.NameData.shortName}. Особенность: {traitName}");
+                }
 
                 PlayerWallet.Instance.AddMoney(-candidate.HiringCost, $"Наём: {candidate.Name}");
 
@@ -527,6 +539,10 @@ namespace Managers
 
             candidate.Bio = ResumeGenerator.GenerateBio();
             candidate.UniqueActionsPool = new List<StaffAction>();
+            
+            // Присваиваем случайный трейт (исключая None и ToiletRush для разнообразия)
+            var traitValues = System.Enum.GetValues(typeof(StaffController.TraitType));
+            candidate.Trait = (StaffController.TraitType)traitValues.GetValue(Random.Range(1, traitValues.Length));
 
             return candidate;
         }

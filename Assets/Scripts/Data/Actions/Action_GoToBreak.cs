@@ -23,12 +23,12 @@ public class Action_GoToBreak : StaffAction
 
     public override float CalculateUtility(StaffController staff)
     {
-        // Считаем усталость от 0 до 1
-        float exhaustion = 1f - (staff.energy / 100f);
-        if (exhaustion < 0.2f) return 0f;
+        // Инверсия: при 100 энергии желание отдыхать = 0, при 20 энергии желание = 80
+        float score = Mathf.Clamp(100f - staff.energy, 0f, 100f);
+        if (score < 20f) return 0f;
         
         // Экспоненциальный рост: чем больше устал, тем сильнее перевешивает работу
-        return Mathf.Pow(exhaustion, 3) * 200f; 
+        return Mathf.Pow(score / 100f, 3) * 200f;
     }
 
     public override string GetDebugInfo(StaffController staff)

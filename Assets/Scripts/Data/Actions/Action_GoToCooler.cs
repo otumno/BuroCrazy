@@ -24,9 +24,10 @@ public class Action_GoToCooler : StaffAction
 
     public override float CalculateUtility(StaffController staff)
     {
-        float thirst = 1f - (staff.morale / 100f);
-        if (thirst < 0.2f) return 0f;
-        return Mathf.Pow(thirst, 3) * 150f; // Вода менее критична, чем туалет
+        // Инверсия: при 100 морали желание пить = 0, при 20 морали желание = 80
+        float score = Mathf.Clamp(100f - staff.morale, 0f, 100f);
+        if (score < 20f) return 0f;
+        return Mathf.Pow(score / 100f, 3) * 150f;
     }
 
     public override string GetDebugInfo(StaffController staff)

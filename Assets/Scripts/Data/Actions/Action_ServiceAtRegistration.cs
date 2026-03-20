@@ -1,72 +1,43 @@
-// Файл: Assets/Scripts/Data/Actions/Action_ServiceAtRegistration.cs
 using UnityEngine;
 using System.Linq;
 using Managers;
-using Gameplay;
 
 [CreateAssetMenu(fileName = "Action_ServiceAtRegistration", menuName = "Bureau/Actions/ServiceAtRegistration")]
 public class Action_ServiceAtRegistration : StaffAction
 {
-    public Action_ServiceAtRegistration()
-    {
-        category = ActionCategory.Tactic;
-        priority = 20;
-    }
+    public Action_ServiceAtRegistration() { category = ActionCategory.Tactic; priority = 20; }
     
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is ClerkController clerk) || clerk.clerkRole != ClerkController.ClerkRole.Registrar || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
-        {
+        if (!(staff is ClerkController clerk) || staff.currentRole != StaffController.Role.Registrar || clerk.assignedWorkstation == null)
             return false;
-        }
-        
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-        
-        // Проверка по зоне
-        bool clientInZone = zone != null && zone.GetOccupyingClients().Any();
-        
-        // Проверка по физической дистанции (бронебойная)
-        bool clientPhysicallyNear = false;
-        if (clerk.assignedWorkstation.clientStandPoint != null)
+
+        // 1. У стола уже кто-то стоит (закреплен)
+        if (clerk.assignedWorkstation.CurrentClient != null) return true;
+
+        // 2. В глобальной очереди есть НЕВЫЗВАННЫЕ талоны
+        if (ClientQueueManager.Instance != null && ClientQueueManager.Instance.queue.Count > 0)
         {
-            clientPhysicallyNear = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
-                .Any(c => c != null && !c.isLeavingSuccessfully && Vector2.Distance(c.transform.position, clerk.assignedWorkstation.clientStandPoint.transform.position) < 1.2f);
+            bool hasUncalled = ClientQueueManager.Instance.queue.Values.Any(ticket => !ClientQueueManager.Instance.currentlyCalledNumbers.Contains(ticket));
+            if (hasUncalled) return true;
         }
-        
-        return clientInZone || clientPhysicallyNear;
+
+        // 3. Легковесная проверка: есть ли клиенты в локальной зоне регистратуры
+        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        if (zone != null && zone.GetOccupyingClients().Count > 0) return true;
+
+        return false;
     }
 
     public override float CalculateUtility(StaffController staff)
     {
         float utility = base.CalculateUtility(staff);
+        var aiConfig = Gameplay.AIBalanceConfig.Instance;
+        utility *= (aiConfig != null ? 1f + (staff.skills.paperworkMastery * aiConfig.masteryWorkMultiplier) : 1f);
 
-        // Добавляем бонус мастерства к обслуживанию клиентов
-        var aiConfig = AIBalanceConfig.Instance;
-        float masteryBonus = aiConfig != null ? 1f + (staff.skills.paperworkMastery * aiConfig.masteryWorkMultiplier) : 1f;
-        utility *= masteryBonus;
-
-        if (staff is ClerkController clerk && clerk.assignedWorkstation != null)
-        {
-            var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-            if (zone != null)
-            {
-                var clients = zone.GetOccupyingClients();
-                int clientCount = clients.Count;
-
-                if (clientCount > 0)
-                {
-                    utility += clientCount * 5f;
-
-                    float maxHeat = clients.Max(c => c.PatienceHeat);
-                    utility += maxHeat * 80f;
-                }
-            }
-        }
+        if (AreConditionsMet(staff)) utility += 2000f; 
         return utility;
     }
 
-    public override System.Type GetExecutorType()
-    {
-        return typeof(ServiceAtRegistrationExecutor);
-    }
+    public override System.Type GetExecutorType() => typeof(ServiceAtRegistrationExecutor);
 }

@@ -43,7 +43,7 @@ namespace Managers
             {
                 if (staff == null)
                 {
-                    Debug.LogError($"All staff contains null elements!");
+                    Debug.LogWarning($"[PayStaffManager] Found null staff entry in AllStaff, cleaning up...");
                     continue;
                 }
 

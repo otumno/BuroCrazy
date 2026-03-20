@@ -11,16 +11,14 @@ public class TakeOverClientAction : StaffAction
     
     public override bool AreConditionsMet(StaffController staff)
     {
-        // THE FIX IS HERE: We now compare ClerkController.ClerkRole with ClerkController.ClerkRole
-        if (!(staff is ClerkController registrar) || registrar.IsOnBreak() || registrar.clerkRole != ClerkController.ClerkRole.Registrar)
-        {
+        // ИСПОЛЬЗУЕМ staff.currentRole
+        if (!(staff is ClerkController registrar) || registrar.IsOnBreak() || staff.currentRole != StaffController.Role.Registrar)
             return false;
-        }
 
         var allClients = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
         foreach (var client in allClients)
         {
-            if (client.stateMachine.GetCurrentState() == ClientState.AtRegistration)
+            if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.AtRegistration)
             {
                 if (client.stateMachine.MyServiceProvider != null && !client.stateMachine.MyServiceProvider.IsAvailableToServe)
                 {

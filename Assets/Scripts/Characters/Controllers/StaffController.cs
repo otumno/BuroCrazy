@@ -17,8 +17,38 @@ using Enums;
 [RequireComponent(typeof(ThoughtBubbleController))]
 public class StaffController : MonoBehaviour
 {
-    public enum Role 
-    { 
+    // === TRAITS SYSTEM ===
+    public enum TraitType
+    {
+        None, Shilo, Gossip, Allergy, Sloppy, Forgetful, Clumsy, Sprinter, Panicky, Loudmouth, ToiletRush
+    }
+
+    [System.Serializable]
+    public struct TraitStaticData
+    {
+        public string Name;
+        public string Description;
+    }
+
+    public static readonly Dictionary<TraitType, TraitStaticData> TraitLibrary = new Dictionary<TraitType, TraitStaticData>
+    {
+        { TraitType.None, new TraitStaticData { Name = "", Description = "" } },
+        { TraitType.Shilo, new TraitStaticData { Name = "Шило", Description = "Не может стоять на месте" } },
+        { TraitType.Gossip, new TraitStaticData { Name = "Сплетник", Description = "Любит поболтать при встрече" } },
+        { TraitType.Allergy, new TraitStaticData { Name = "Аллергик", Description = "Чихает и расталкивает всех" } },
+        { TraitType.Sloppy, new TraitStaticData { Name = "Неряха", Description = "Оставляет после себя лужи" } },
+        { TraitType.Forgetful, new TraitStaticData { Name = "Забывчивый", Description = "Иногда теряет цель пути" } },
+        { TraitType.Clumsy, new TraitStaticData { Name = "Неуклюжий", Description = "Падает на ровном месте" } },
+        { TraitType.Sprinter, new TraitStaticData { Name = "Спринтер", Description = "Бежит быстро, но недолго" } },
+        { TraitType.Panicky, new TraitStaticData { Name = "Паникёр", Description = "Ускоряется при скоплении людей" } },
+        { TraitType.Loudmouth, new TraitStaticData { Name = "Несдержанный", Description = "Внезапно кричит от стресса" } },
+        { TraitType.ToiletRush, new TraitStaticData { Name = "Туалетная Тревога", Description = "Бежит в туалет быстрее" } }
+    };
+
+    public bool HasTrait(TraitType type) => permanentTrait == type;
+    
+    public enum Role
+    {
         Unassigned, Intern, Registrar, Cashier, Archivist, Guard, Janitor, Clerk, OfficeManager, Accountant, ServiceWorker, Director
     }
 
@@ -56,8 +86,24 @@ public class StaffController : MonoBehaviour
     public StaffNameData nameData;
     public string characterName => nameData != null ? nameData.GetDisplayName(currentRole, gender) : "Сотрудник";
     public Role role = Role.Unassigned;
-    public RoleData roleData; 
+    
+    // === Для отладки и мониторинга ===
+    /// <summary>Текущий подстатус для отображения в дебаггере (например, фазы регистрации)</summary>
+    [HideInInspector] public string CurrentSubStatus = "";
+    // ================================
+    public RoleData roleData;
     public Gender gender;
+    
+    [Header("Особенности")]
+    public TraitType permanentTrait = TraitType.None;
+
+    [Header("Префабы для трейтов (Лужи/Мусор)")]
+    [Tooltip("Префаб лужи (для трейтов Sloppy, Clumsy)")]
+    public GameObject puddlePrefab;
+    [Tooltip("Префаб мусора (для трейтов Sloppy)")]
+    public GameObject trashPrefab;
+    [Tooltip("Префаб грязи (для трейтов)")]
+    public GameObject mudPrefab;
 
     [Header("Карьера")]
     public RankData currentRankData; 
@@ -181,6 +227,9 @@ public class StaffController : MonoBehaviour
             CurrentTaskEntry.EndTime = Time.time;
             Debug.Log($"[TaskDiary] {characterName} END: {CurrentTaskEntry.TaskName} ({CurrentTaskEntry.Duration:F1}s)");
             CurrentTaskEntry = null;
+            
+            // Сбрасываем подстатус при завершении задачи
+            CurrentSubStatus = "";
         }
     }
 
@@ -273,6 +322,16 @@ public class StaffController : MonoBehaviour
         HasTakenBreakToday = false;
         
         gameObject.SetActive(true); // Включаем, если был выключен
+        
+        // Спринтер - повышаем скорость на 30%
+        if (permanentTrait == TraitType.Sprinter && agentMover != null)
+        {
+            agentMover.moveSpeed *= 1.3f;
+            if (thoughtBubble != null)
+            {
+                thoughtBubble.ShowPriorityMessage("Погнали!", 1.5f, Color.yellow);
+            }
+        }
 
         CalculateArrivalTime();
 
@@ -405,6 +464,9 @@ public class StaffController : MonoBehaviour
                 stressDelta = ApplyTraitModifiers("Stress", stressDelta);
                 stress = Mathf.Clamp(stress + stressDelta, 0f, 100f);
             }
+            
+            // === ОБРАБОТКА ТРЕЙТОВ ===
+            ProcessTraitBehavior();
 
             // 2. Если заняты делом - проверяем можно ли прервать
             if (currentExecutor != null)
@@ -452,6 +514,12 @@ public class StaffController : MonoBehaviour
         // Шанс перерыва = базовый шанс × (1 + periodIndex) × (1 - sedentaryResilience)
         // Непоседливые (низкая усидчивость) чаще хотят перерыв
         float chance = baseBreakChancePerPeriod * (1f + currentPeriodIndex) * (1f - skills.sedentaryResilience);
+        
+        // Туалетная тревога - повышает шанс перерыва на 50%
+        if (permanentTrait == TraitType.ToiletRush)
+        {
+            chance *= 1.5f;
+        }
         
         // Проверяем рандомно
         return Random.value < chance;
@@ -578,6 +646,31 @@ public class StaffController : MonoBehaviour
     /// <returns>Модифицированная дельта</returns>
     protected virtual float ApplyTraitModifiers(string vitalType, float baseDelta)
     {
+        // Модификаторы от черт характера
+        switch (permanentTrait)
+        {
+            case TraitType.Sprinter:
+                // Спринтер тратит энергию быстрее на 30%
+                if (vitalType == "Energy")
+                    return baseDelta * 1.3f;
+                break;
+            case TraitType.Sloppy:
+                // Неряха - немного повышает стресс
+                if (vitalType == "Stress")
+                    return baseDelta * 1.1f;
+                break;
+            case TraitType.Clumsy:
+                // Неуклюжий получает больше стресса
+                if (vitalType == "Stress")
+                    return baseDelta * 1.15f;
+                break;
+            case TraitType.Panicky:
+                // Паникёр получает больше стресса
+                if (vitalType == "Stress")
+                    return baseDelta * 1.25f;
+                break;
+        }
+        
         return baseDelta;
     }
 
@@ -660,6 +753,38 @@ public class StaffController : MonoBehaviour
                 if (currentAction != null && action == currentAction)
                 {
                     utility += 30f;
+                }
+                
+                // === ПРИОРИТЕТ РЕГИСТРАТОРА ===
+                // Если это Регистратор и в радиусе 2 метров есть клиент
+                if (this is ClerkController clerk && clerk.clerkRole == ClerkController.ClerkRole.Registrar)
+                {
+                    var clientStandPoint = clerk.GetClientStandPoint();
+                    if (clientStandPoint != null && Vector2.Distance(transform.position, clientStandPoint.position) <= 2f)
+                    {
+                        // Проверяем есть ли клиент на точке (не уходит)
+                        var clients = FindObjectsOfType<ClientPathfinding>();
+                        foreach (var client in clients)
+                        {
+                            if (client != null && client.stateMachine != null)
+                            {
+                                var state = client.stateMachine.GetCurrentState();
+                                // Проверяем что клиент не уходит
+                                bool isLeaving = state.ToString().Contains("Leaving") || state.ToString().Contains("AtCashier");
+                                
+                                if (!isLeaving && Vector2.Distance(client.transform.position, clientStandPoint.position) < 1.5f)
+                                {
+                                    // Клиент найден - повышаем приоритет Action_ServiceAtRegistration
+                                    if (action.displayName.Contains("Регистрац") || action.displayName.Contains("ServiceAtRegistration"))
+                                    {
+                                        utility += 2000f;
+                                        Debug.Log($"[RegistrarPriority] {characterName}: Клиент обнаружен, повышаю приоритет регистрации!");
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 if (utility > highestUtility)
@@ -925,4 +1050,409 @@ public class StaffController : MonoBehaviour
     // Свойства для доступа
     public AgentMover AgentMover => agentMover;
     public bool IsMoving => agentMover != null && agentMover.IsMoving();
+    
+    // === МЕТОДЫ ОБРАБОТКИ ТРЕЙТОВ ===
+    
+    private float _traitTimer;
+    private float _distanceAccumulated;
+    
+    public void ProcessTraitBehavior()
+    {
+        if (permanentTrait == TraitType.None) return;
+        
+        _traitTimer += Time.deltaTime;
+        
+        // === ОБРАБОТКА ПО ТАЙМЕРУ (для персонажей за столами - Allergy, Loudmouth) ===
+        // Эти трейты должны работать ВСЕГДА, не только при движении
+        if (_traitTimer >= 10f) // Каждые 10 секунд
+        {
+            _traitTimer = 0f;
+            
+            // Аллергик - каждые 10 сек проверяем
+            if (permanentTrait == TraitType.Allergy && Random.value < 0.4f)
+            {
+                ProcessAllergyTrait();
+                return;
+            }
+            // Несдержанный - каждые 10 сек проверяем
+            else if (permanentTrait == TraitType.Loudmouth && Random.value < 0.3f)
+            {
+                ProcessLoudmouthTrait();
+                return;
+            }
+        }
+        
+        // === ОБРАБОТКА ПО ДИСТАНЦИИ (для движущихся - Sloppy, Clumsy) ===
+        if (agentMover != null && agentMover.IsMoving())
+        {
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                _distanceAccumulated += rb.linearVelocity.magnitude * Time.deltaTime;
+            }
+        }
+        
+        switch (permanentTrait)
+        {
+            case TraitType.Gossip:
+                ProcessGossipTrait();
+                break;
+            case TraitType.Allergy:
+                ProcessAllergyTrait();
+                break;
+            case TraitType.Sloppy:
+                ProcessSloppyTrait();
+                break;
+            case TraitType.Forgetful:
+                ProcessForgetfulTrait();
+                break;
+            case TraitType.Clumsy:
+                ProcessClumsyTrait();
+                break;
+            case TraitType.Sprinter:
+                ProcessSprinterTrait();
+                break;
+            case TraitType.Shilo:
+                ProcessShiloTrait();
+                break;
+            case TraitType.Panicky:
+                ProcessPanickyTrait();
+                break;
+            case TraitType.Loudmouth:
+                ProcessLoudmouthTrait();
+                break;
+            case TraitType.ToiletRush:
+                ProcessToiletRushTrait();
+                break;
+        }
+    }
+    
+    private void ProcessGossipTrait()
+    {
+        // Каждые 20 секунд при встрече с другим сотрудником - болтовня
+        if (_traitTimer >= 20f)
+        {
+            _traitTimer = 0f;
+            
+            // Проверяем сотрудников в радиусе 1.5f через слой Staff
+            int staffLayer = LayerMask.NameToLayer("Staff");
+            if (staffLayer == -1) staffLayer = 0; // Фолбек на дефолтный слой
+            
+            var colliders = Physics2D.OverlapCircleAll(transform.position, 1.5f, 1 << staffLayer);
+            foreach (var col in colliders)
+            {
+                if (col.gameObject == gameObject) continue;
+                
+                var otherStaff = col.GetComponent<StaffController>();
+                if (otherStaff != null)
+                {
+                    // Проверяем что другой сотрудник тоже движется
+                    var otherMover = otherStaff.GetComponent<AgentMover>();
+                    if (otherMover != null && otherMover.IsMoving())
+                    {
+                        if (thoughtBubble != null)
+                        {
+                            thoughtBubble.ShowPriorityMessage("Слышали новость?", 3f, Color.cyan);
+                        }
+                        
+                        // Останавливаем обоих на 3 секунды
+                        if (agentMover != null) agentMover.Stop();
+                        otherMover.Stop();
+                        
+                        Debug.Log($"[Trait] {characterName} сплетничает с {otherStaff.characterName}");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    private void ProcessSloppyTrait()
+    {
+        // Срабатывание каждые 0.5f единиц дистанции (пол-метра!)
+        if (_distanceAccumulated >= 0.5f)
+        {
+            _distanceAccumulated = 0f; // Сброс после срабатывания
+            
+            // 20% шанс создать лужу
+            if (Random.value < 0.2f)
+            {
+                if (thoughtBubble != null)
+                {
+                    thoughtBubble.ShowPriorityMessage("Ой... Упс!", 3f, Color.gray);
+                }
+                
+                // Проверяем лимит MessManager перед спавном
+                if (MessManager.Instance != null && !MessManager.Instance.CanCreateMess())
+                {
+                    Debug.Log($"[Trait] {characterName} (Неряха) хотел создать беспорядок, но лимит исчерпан");
+                    return;
+                }
+                
+                // Спавн лужи или мусора
+                try {
+                    bool createPuddle = Random.value < 0.5f;
+                    GameObject prefabToSpawn = null;
+                    string messType = "";
+                    
+                    // Сначала пробуем использовать назначенные поля prefab
+                    if (createPuddle) {
+                        prefabToSpawn = puddlePrefab;
+                        messType = "лужу";
+                    } else {
+                        prefabToSpawn = trashPrefab;
+                        messType = "мусор";
+                    }
+                    
+                    // Fallback: если поля не назначены, пробуем Resources.Load
+                    if (prefabToSpawn == null) {
+                        if (createPuddle) {
+                            prefabToSpawn = Resources.Load<GameObject>("Prefabs/Whater1_0");
+                        } else {
+                            prefabToSpawn = Resources.Load<GameObject>("Prefabs/Trash_Object1");
+                        }
+                    }
+                    
+                    if (prefabToSpawn != null) {
+                        Instantiate(prefabToSpawn, transform.position, Quaternion.identity);
+                        Debug.Log($"[Trait] {characterName} (Неряха) создал {messType}!");
+                    } else {
+                        Debug.LogWarning($"[Sloppy] Не удалось найти префаб для {messType}");
+                    }
+                } catch (System.Exception e) {
+                    Debug.LogWarning($"[Sloppy] Не удалось создать лужу/мусор: {e.Message}");
+                }
+            }
+        }
+    }
+    
+    private void ProcessClumsyTrait()
+    {
+        // Срабатывание каждые 3.0f метра
+        if (_distanceAccumulated >= 3.0f)
+        {
+            _distanceAccumulated = 0f; // Сброс после срабатывания
+            
+            // 20% шанс поскользнуться
+            if (Random.value < 0.2f && agentMover != null && agentMover.IsMoving())
+            {
+                if (thoughtBubble != null)
+                {
+                    thoughtBubble.ShowPriorityMessage("БРЯК!", 3f, Color.red);
+                }
+                
+                // Вызов SlipAndRecover
+                agentMover.SlipAndRecover();
+                
+                Debug.Log($"[Trait] {characterName} (Неуклюжий) поскользнулся!");
+            }
+        }
+    }
+    
+    private void ProcessSprinterTrait()
+    {
+        // Срабатывание каждые 8.0 - 10.0 единиц дистанции
+        if (_distanceAccumulated >= 8f + Random.Range(0f, 2f))
+        {
+            _distanceAccumulated = 0f;
+            
+            // Остановка на 2 секунды
+            agentMover.Stop();
+            
+            if (thoughtBubble != null)
+            {
+                thoughtBubble.ShowPriorityMessage("Ффух...", 1.5f, Color.cyan);
+            }
+            
+            // Возврат скорости к норме (если была увеличена)
+            StartCoroutine(ResetSprinterSpeed());
+            
+            Debug.Log($"[Trait] {characterName} (Спринтер) остановился передохнуть");
+        }
+    }
+    
+    private IEnumerator ResetSprinterSpeed()
+    {
+        yield return new WaitForSeconds(2f);
+        // Скорость вернётся к норме благодаря перезапуску смены или другому механизму
+    }
+    
+    private void ProcessToiletRushTrait()
+    {
+        // Туалетная тревога - обрабатывается в ShouldTakeBreak() - уменьшаем порог
+    }
+    
+    private void ProcessAllergyTrait()
+    {
+        // Показываем бабл "А-аааПЧХИИИ!"
+        if (thoughtBubble != null)
+        {
+            thoughtBubble.ShowPriorityMessage("А-аааПЧХИИИ!", 1.5f, Color.white);
+        }
+        
+        // Звук чихания
+        AudioManager.Instance?.PlaySound(Scriptables.Audio.SoundID.Voice_Secretary, transform.position);
+        
+        // Отталкиваем всех вокруг (радиус 2.5f, сила 200f)
+        var colliders = Physics2D.OverlapCircleAll(transform.position, 2.5f);
+        foreach (var col in colliders)
+        {
+            if (col.gameObject == gameObject) continue;
+            
+            Rigidbody2D rb = col.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                Vector2 pushDirection = (col.transform.position - transform.position).normalized;
+                rb.AddForce(pushDirection * 200f, ForceMode2D.Impulse);
+            }
+        }
+        
+        Debug.Log($"[Trait] {characterName} чихнул и оттолкнул окружающих!");
+    }
+    
+    private void ProcessForgetfulTrait()
+    {
+        // 0.1% шанс в секунду при ходьбе забыть цель
+        if (agentMover.IsMoving() && Random.value < 0.001f)
+        {
+            agentMover.Stop();
+            
+            if (thoughtBubble != null)
+            {
+                thoughtBubble.ShowPriorityMessage("А я куда?", 2f, Color.yellow);
+            }
+            
+            StartCoroutine(ForgetfulRecover());
+        }
+    }
+    
+    private IEnumerator ForgetfulRecover()
+    {
+        yield return new WaitForSeconds(1f);
+        
+        // Разворот
+        if (agentMover != null)
+        {
+            Vector3 currentPos = transform.position;
+            // Идём назад 2 метра
+            Vector2 direction = -transform.right;
+            // Попробуем вернуться к цели
+            TryPickAction();
+        }
+        
+        if (thoughtBubble != null)
+        {
+            thoughtBubble.ShowPriorityMessage("А, не забыл!", 2f, Color.green);
+        }
+    }
+    
+    private void ProcessShiloTrait()
+    {
+        // Если персонаж бездельничает и стоит на месте более 5 секунд - начинает бесцельно ходить
+        if (currentAction == null && !agentMover.IsMoving() && _traitTimer >= 5f)
+        {
+            _traitTimer = 0f;
+            
+            // Генерируем случайную точку в пределах 3-7 метров от текущей позиции
+            float distance = Random.Range(3f, 7f);
+            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            
+            Vector3 currentPos = transform.position;
+            Vector3 targetPos = currentPos + new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
+            
+            Debug.Log($"[Trait] {characterName} (Шило) пошёл бесцельно бродить к точке {targetPos}");
+            
+            // Показываем мысль
+            if (thoughtBubble != null)
+            {
+                thoughtBubble.ShowPriorityMessage("Надо куда-нибудь пойти!", 1.5f, Color.yellow);
+            }
+            
+            // Запускаем перемещение
+            StartCoroutine(MoveToTarget(targetPos, "Idle"));
+        }
+    }
+    
+    private void ProcessLoudmouthTrait()
+    {
+        // 1% шанс крика в секунду ВСЕГДА при наличии трейта
+        if (Random.value < 0.01f)
+        {
+            if (thoughtBubble != null)
+            {
+                thoughtBubble.ShowPriorityMessage("ААААААА!!!", 3f, Color.red);
+            }
+            
+            // Пытаемся воспроизвести крик напрямую без AudioManager
+            try {
+                AudioClip screamClip = Resources.Load<AudioClip>("Sounds/scream_7");
+                if (screamClip != null) {
+                    AudioSource.PlayClipAtPoint(screamClip, transform.position);
+                } else {
+                    // Резервный вариант - просто меняем pitch текущего источника
+                    var audioSource = GetComponent<AudioSource>();
+                    if (audioSource != null) {
+                        audioSource.pitch = 1.5f;
+                    }
+                }
+            } catch (System.Exception e) {
+                Debug.LogWarning($"[Loudmouth] Не удалось воспроизвести крик: {e.Message}");
+            }
+            
+            // Кратковременное ускорение на 3 секунды
+            if (agentMover != null)
+            {
+                agentMover.ApplySpeedMultiplier(1.2f);
+                StartCoroutine(ResetLoudmouthSpeed());
+            }
+            
+            Debug.Log($"[Trait] {characterName} (Несдержанный) закричал!");
+        }
+    }
+    
+    private IEnumerator ResetLoudmouthSpeed()
+    {
+        yield return new WaitForSeconds(3f);
+        agentMover.ApplySpeedMultiplier(1f); // Возврат к норме
+    }
+    
+    private void ProcessPanickyTrait()
+    {
+        // При скоплении людей (более 3х в радиусе 5м) - убегает
+        int nearbyCount = 0;
+        var colliders = Physics2D.OverlapCircleAll(transform.position, 5f);
+        foreach (var col in colliders)
+        {
+            if (col.gameObject != gameObject) nearbyCount++;
+        }
+        
+        if (nearbyCount >= 3 && _traitTimer >= 5f) // Раз в 5 секунд максимум
+        {
+            _traitTimer = 0f;
+            
+            // Бабл
+            if (thoughtBubble != null)
+            {
+                thoughtBubble.ShowPriorityMessage("ИХ СЛИШКОМ МНОГО!", 1.5f, new Color(1f, 0.5f, 0f)); // Оранжевый
+            }
+            
+            // Бросаем текущее действие
+            currentAction = null;
+            
+            // Ускорение в 1.5 раза
+            agentMover.ApplySpeedMultiplier(1.5f);
+            
+            // Находим случайную точку для побега (пытаемся найти staffHomeZone)
+            // Пока просто убегаем в случайном направлении
+            float angle = Random.Range(0f, 360f) * Mathf.Deg2Rad;
+            float distance = Random.Range(5f, 10f);
+            Vector3 targetPos = transform.position + new Vector3(Mathf.Cos(angle) * distance, Mathf.Sin(angle) * distance, 0);
+            
+            // Останавливаем текущий путь и идём к новой точке
+            agentMover.Stop();
+            StartCoroutine(MoveToTarget(targetPos, "Idle"));
+            
+            Debug.Log($"[Trait] {characterName} (Паникёр) сбежал от толпы!");
+        }
+    }
 }
