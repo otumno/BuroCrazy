@@ -77,6 +77,38 @@ namespace Gameplay
         public float messStressMultiplier = 2.0f;
         #endregion
 
+        #region Бюрократия
+        [Header("🗄️ Бюрократия")]
+        [Tooltip("Сколько секунд регистратор ждет ответа от архива")]
+        public float archiveWaitTimeout = 60f;
+        
+        [Header("😤 Клиенты-Пролазы (Я только спросить!)")]
+        [Tooltip("Шанс появления наглого клиента, игнорирующего аппарат талонов")]
+        [Range(0f, 1f)] public float queueJumperChance = 0.1f;
+        [Tooltip("Во сколько раз быстрее наглецы теряют терпение")]
+        public float jumperStressMultiplier = 2.5f;
+        #endregion
+
+        #region Трейты (Особенности)
+        [Header("🎭 Трейты (Особенности)")]
+        public float traitCheckInterval = 10f;
+        
+        [Range(0f, 1f)] public float allergyChance = 0.4f;
+        public float allergyPushForce = 200f;
+        public float allergyRadius = 2.5f;
+
+        [Range(0f, 1f)] public float loudmouthChance = 0.3f;
+        
+        public float sloppyDistance = 0.5f;
+        [Range(0f, 1f)] public float sloppyChance = 0.2f;
+
+        public float clumsyDistance = 3.0f;
+        [Range(0f, 1f)] public float clumsyChance = 0.2f;
+
+        public float sprinterDistance = 8.0f;
+        public float gossipCooldown = 20f;
+        #endregion
+
         #region Debug
         [Header("🔧 Debug")]
         [Tooltip("Включить подробные логи")]

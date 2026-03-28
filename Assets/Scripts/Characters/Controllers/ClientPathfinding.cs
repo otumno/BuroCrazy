@@ -90,6 +90,9 @@ public class ClientPathfinding : MonoBehaviour
 
     public bool isLeavingSuccessfully = false;
     public LeaveReason reasonForLeaving = LeaveReason.Normal;
+    
+    [Header("Service Data")]
+    public bool isQueueJumper = false; // Флаг наглеца
 
     [Header("Grumbling - Промежуточное недовольство")]
     public bool canGrumble = true;
@@ -274,9 +277,9 @@ public class ClientPathfinding : MonoBehaviour
 		
 		patienceStartTime = Time.time;
 
-        if (spawnSound != null) AudioSource.PlayClipAtPoint(spawnSound, transform.position);
-		
-		var overlay = GetComponentInChildren<ClientStatusOverlay>(); 
+        // Звук спавна перенесен в ClientStateMachine.OnEnteredBuilding()
+  
+  var overlay = GetComponentInChildren<ClientStatusOverlay>();
     
  		if (overlay != null)
  		{
@@ -290,8 +293,7 @@ public class ClientPathfinding : MonoBehaviour
         // Инициализируем систему приветствий
         InitializeGreetingSystem();
 
-        // Показываем мысль при появлении (не сразу, а через небольшую паузу)
-        StartCoroutine(ShowSpawnThoughtDelayed());
+        // Показ мысли при появлении перенесен в ClientStateMachine.OnEnteredBuilding()
      }
 
     private IEnumerator ShowSpawnThoughtDelayed()

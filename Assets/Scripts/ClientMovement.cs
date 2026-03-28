@@ -56,9 +56,18 @@ public class ClientMovement : MonoBehaviour
         while(true)
         {
             yield return new WaitForSeconds(0.5f);
+
+            // FIXED: Do not accumulate stuck time if the agent is knocked down or intentionally yielding
+            if (agentMover != null && agentMover.IsSlipping)
+            {
+                timeStuck = 0f;
+                lastPosition = transform.position;
+                continue;
+            }
+
             float distanceMoved = Vector2.Distance(transform.position, lastPosition);
             
-            if (distanceMoved < 0.1f) 
+            if (distanceMoved < 0.1f)
             {
                 timeStuck += 0.5f;
             }

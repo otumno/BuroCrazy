@@ -51,6 +51,7 @@ public class GameBalanceControlPanel : EditorWindow
     private TutorialScreenConfig tutorialConfig;
     private MusicPlayer musicPlayer;
     private NotificationStyleManager notificationStyleManager;
+    private DirectorManager directorManager; // FIXED: Reference for reputation system
     
     // AI Balance
     private AIBalanceConfig aiConfig;
@@ -347,6 +348,20 @@ public class GameBalanceControlPanel : EditorWindow
             });
         }
 
+        DrawSmartManagerSettings(ref directorManager, "Репутация и Ошибки (DirectorManager)", "DirectorManager", (so) => {
+            DrawProperty(so, "baseMaxReputation", "Базовое HP", "Стартовое здоровье Бюро без учета захваченных районов.");
+            DrawProperty(so, "reputationPerRegion", "HP за район", "Бонусное максимальное HP за каждый захваченный район.");
+            DrawProperty(so, "successesNeededForOneHP", "Успехов для 1 HP", "Количество клиентов, обслуженных без ошибок, для восстановления 1 HP.");
+            DrawProperty(so, "archivistHealAmount", "Лечение от Архивариуса", "HP, восстанавливаемое Архивариусом при поиске или исправлении документов.");
+            DrawProperty(so, "endOfDayHealPercentage", "Хил в конце дня (%)", "Процент от максимального HP, который восстанавливается при успешном завершении смены (0.2 = 20%).");
+            DrawProperty(so, "damageIntern", "Урон: Стажер", "Урон репутации за ошибку стажера.");
+            DrawProperty(so, "damageRegistrar", "Урон: Регистратор", "Урон репутации за неверное направление клиента.");
+            DrawProperty(so, "damageClerk", "Урон: Клерк", "Урон репутации за выдачу документа по неверному бланку.");
+            DrawProperty(so, "damageCashier", "Урон: Кассир/Бухгалтер", "Урон репутации за махинации в кассе.");
+            DrawProperty(so, "damageDirector", "Урон: Директор", "Урон за подписание бракованного приказа.");
+            DrawProperty(so, "corruptionDamageMultiplier", "Урон от коррупции", "Урон за каждый $1 теневого дохода (0.1 = 1 HP за $10).");
+        });
+
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Аудио", EditorStyles.boldLabel);
         
@@ -581,21 +596,48 @@ public class GameBalanceControlPanel : EditorWindow
         DrawSerializedObject(aiConfig, "Настройки Utility AI", (so) => {
             // Метаболизм
             EditorGUILayout.LabelField("=== МЕТАБОЛИЗМ (Дельты в секунду) ===", EditorStyles.boldLabel);
-            DrawProperty(so, "baseEnergyLoss");
-            DrawProperty(so, "baseBladderGain");
-            DrawProperty(so, "baseMoraleLoss");
-            DrawProperty(so, "baseStressGain");
+            DrawProperty(so, "baseEnergyLoss", "Потеря энергии", "Скорость снижения энергии в секунду (положительное = тратится).");
+            DrawProperty(so, "baseBladderGain", "Наполнение мочевого пузыря", "Скорость роста потребности в туалете в секунду.");
+            DrawProperty(so, "baseMoraleLoss", "Потеря морали", "Скорость снижения морали в секунду от работы.");
+            DrawProperty(so, "baseStressGain", "Рост стресса", "Базовая скорость роста стресса в секунду.");
             
             EditorGUILayout.Space();
             
             // Веса Utility AI
             EditorGUILayout.LabelField("=== ВЕСА UTILITY AI ===", EditorStyles.boldLabel);
-            DrawProperty(so, "pedantrySortBonus");
-            DrawProperty(so, "masteryWorkMultiplier");
-            DrawProperty(so, "softSkillsHelpBonus");
-            DrawProperty(so, "corruptionCashierBonus");
-            DrawProperty(so, "stressHomeWeight");
-            DrawProperty(so, "messStressMultiplier");
+            DrawProperty(so, "pedantrySortBonus", "Бонус педантичности", "Дополнительный вес к педантичности при сортировке документов.");
+            DrawProperty(so, "masteryWorkMultiplier", "Мультипликатор мастерства", "Влияние уровня мастерства на выбор работы (выше = приоритетнее сложные задачи).");
+            DrawProperty(so, "softSkillsHelpBonus", "Бонус мягких навыков", "Влияние мягких навыков на помощь другим сотрудникам.");
+            DrawProperty(so, "corruptionCashierBonus", "Бонус коррупции (Кассир)", "Вес коррупции при выборе кассиром теневых операций.");
+            DrawProperty(so, "stressHomeWeight", "Вес стресса дома", "Насколько стресс сотрудника влияет на его поведение вне работы.");
+            DrawProperty(so, "messStressMultiplier", "Мультипликатор стресса от мусора", "Как беспорядок на рабочем месте умножает стресс.");
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("=== БЮРОКРАТИЯ ===", EditorStyles.boldLabel);
+            DrawProperty(so, "archiveWaitTimeout", "Таймаут ожидания в архиве", "Время (секунды), которое сотрудник будет ждать документ в архиве, прежде чем уйти.");
+
+            EditorGUILayout.Space();
+
+            EditorGUILayout.LabelField("=== ПРОЛАЗЫ (Я ТОЛЬКО СПРОСИТЬ!) ===", EditorStyles.boldLabel);
+            DrawProperty(so, "queueJumperChance", "Шанс Наглеца", "Вероятность (0-1), что клиент проигнорирует терминал и пойдет без очереди.");
+            DrawProperty(so, "jumperStressMultiplier", "Стресс наглеца (множитель)", "Насколько быстрее пролаза приходит в ярость.");
+
+            EditorGUILayout.Space();
+
+            // Трейты
+            EditorGUILayout.LabelField("=== ТРЕЙТЫ (ОСОБЕННОСТИ) ===", EditorStyles.boldLabel);
+            DrawProperty(so, "traitCheckInterval", "Интервал проверки трейтов", "Как часто проверяется наличие активных трейтов у NPC (секунды).");
+            DrawProperty(so, "allergyChance", "Шанс аллергии", "Вероятность срабатывания аллергии у сотрудника.");
+            DrawProperty(so, "allergyPushForce", "Сила толчка при аллергии", "Сила, с которой сотрудник отталкивает документы/предметы при аллергической реакции.");
+            DrawProperty(so, "allergyRadius", "Радиус аллергии", "Радиус распространения эффекта аллергии (в юнитах).");
+            DrawProperty(so, "loudmouthChance", "Шанс болтливости", "Вероятность того, что сотрудник начнет разговор с окружающими.");
+            DrawProperty(so, "sloppyDistance", "Дистанция неаккуратности", "Радиус, в котором сотрудник может разбрасывать мусор.");
+            DrawProperty(so, "sloppyChance", "Шанс неаккуратности", "Вероятность создания беспорядка при выполнении действий.");
+            DrawProperty(so, "clumsyDistance", "Дистанция неуклюжести", "Радиус, в котором сотрудник может случайно задевать объекты.");
+            DrawProperty(so, "clumsyChance", "Шанс неуклюжести", "Вероятность случайно уронить или сломать что-то.");
+            DrawProperty(so, "sprinterDistance", "Дистанция спринтера", "Расстояние, на котором сотрудник переходит на бег.");
+            DrawProperty(so, "gossipCooldown", "Перезарядка сплетен", "Минимальное время между сплетнями (секунды).");
         });
 
         if (GUI.changed)
@@ -613,8 +655,14 @@ public class GameBalanceControlPanel : EditorWindow
         return asset;
     }
 
-    private void DrawProperty(SerializedObject so, string propertyName)
+    private void DrawProperty(SerializedObject so, string propertyName, string customLabel = null, string tooltip = null)
     {
-        EditorGUILayout.PropertyField(so.FindProperty(propertyName));
+        var prop = so.FindProperty(propertyName);
+        if (prop != null)
+        {
+            string finalLabel = customLabel ?? prop.displayName;
+            string finalTooltip = tooltip ?? prop.tooltip;
+            EditorGUILayout.PropertyField(prop, new GUIContent(finalLabel, finalTooltip), true);
+        }
     }
 }

@@ -113,6 +113,13 @@ public class ClientStateMachine : MonoBehaviour
                     break;
             }
 
+            // 1.5 Наглецы закипают быстрее!
+            if (parent.isQueueJumper)
+            {
+                float jumperMult = Gameplay.AIBalanceConfig.Instance != null ? Gameplay.AIBalanceConfig.Instance.jumperStressMultiplier : 2.5f;
+                currentMultiplier *= jumperMult;
+            }
+
             // 2. Проверка окружения (Мусор) - только если стоит и ждет
             if (currentState == ClientState.AtWaitingArea || currentState == ClientState.SittingInWaitingArea)
             {
@@ -155,20 +162,28 @@ public class ClientStateMachine : MonoBehaviour
     }
 	
 	private void HandlePatienceExhausted()
-    {
-        StopAllActionCoroutines(); 
+	   {
+	       // ЗАПРЕТ УХОДА ВО ВРЕМЯ ОБСЛУЖИВАНИЯ
+	       if (IsInsideZoneState(currentState))
+	       {
+	           // Клиент в процессе обслуживания — показываем гнев, но не меняем состояние
+	           Debug.Log($"[ClientStateMachine] {parent.name}: Терпение на исходе, но в процессе обслуживания!");
+	           return;
+	       }
+	       
+	       StopAllActionCoroutines();
 
-        if (Random.value < 0.4f) // 40% шанс скандала
-        {
-            SetState(ClientState.Enraged);
-        }
-        else
-        {
-            parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-            SetGoal(ClientSpawner.Instance.exitWaypoint);
-            SetState(ClientState.LeavingUpset);
-        }
-    }
+	       if (Random.value < 0.4f) // 40% шанс скандала
+	       {
+	           SetState(ClientState.Enraged);
+	       }
+	       else
+	       {
+	           parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+	           SetGoal(ClientSpawner.Instance.exitWaypoint);
+	           SetState(ClientState.LeavingUpset);
+	       }
+	   }
 	
 
     public IEnumerator MainLogicLoop()
@@ -268,6 +283,15 @@ public class ClientStateMachine : MonoBehaviour
         {
             case ClientState.Spawning:
                 DecideInitialGoal();
+                break;
+
+            // Аппарат талонов
+            case ClientState.MovingToTerminal:
+                yield return StartCoroutine(actionExecutor.MoveToGoalRoutine(currentGoal));
+                SetState(ClientState.GettingTicket);
+                break;
+            case ClientState.GettingTicket:
+                yield return StartCoroutine(GetTicketRoutine());
                 break;
 
             // Группа состояний "Движение"
@@ -400,35 +424,83 @@ public class ClientStateMachine : MonoBehaviour
     private void DecideInitialGoal()
     {
         targetZone = null;
-        if (Random.value < parent.prolazaFactor)
+        
+        // 1. Проверка на Наглеца (Пролазу)
+        float jumperChance = Gameplay.AIBalanceConfig.Instance != null ? Gameplay.AIBalanceConfig.Instance.queueJumperChance : 0.1f;
+        if (Random.value < jumperChance)
         {
-            if (parent.impoliteSound != null) feedbackController.PlaySound(parent.impoliteSound);
-            Waypoint impoliteGoal = null;
+            parent.isQueueJumper = true;
+            // Звук убран отсюда, он проиграется при пересечении EntranceTrigger
+            
+            LimitedCapacityZone impoliteZone = null;
             switch (parent.mainGoal)
             {
-                case ClientGoal.GetCertificate1: impoliteGoal = ClientSpawner.GetDesk1Zone().waitingWaypoint; break;
-                case ClientGoal.GetCertificate2: impoliteGoal = ClientSpawner.GetDesk2Zone().waitingWaypoint; break;
-                case ClientGoal.PayTax: impoliteGoal = ClientSpawner.GetCashierZone().waitingWaypoint; break;
-                case ClientGoal.AskAndLeave: impoliteGoal = ClientSpawner.GetRegistrationZone().insideWaypoints[0]; break;
-                case ClientGoal.VisitToilet: impoliteGoal = ClientSpawner.GetToiletZone().waitingWaypoint; break;
+                case ClientGoal.GetCertificate1: impoliteZone = ClientSpawner.GetDesk1Zone(); break;
+                case ClientGoal.GetCertificate2: impoliteZone = ClientSpawner.GetDesk2Zone(); break;
+                case ClientGoal.PayTax: impoliteZone = ClientSpawner.GetCashierZone(); break;
+                case ClientGoal.AskAndLeave: impoliteZone = ClientSpawner.GetRegistrationZone(); break;
+                case ClientGoal.VisitToilet: impoliteZone = ClientSpawner.GetToiletZone(); break;
             }
 
-            if (impoliteGoal != null)
+            if (impoliteZone != null && impoliteZone.waitingWaypoint != null)
             {
-                SetGoal(impoliteGoal);
-                SetState(ClientState.MovingToRegistrarImpolite);
+                // Наглец встает в систему (получит скрытый номер 10000+) и ВЛЕЗАЕТ БЕЗ ОЧЕРЕДИ
+                ClientQueueManager.Instance.JoinQueue(parent);
+                impoliteZone.JumpQueue(parent.gameObject);
+                
+                SetGoal(impoliteZone.waitingWaypoint);
+                SetState(ClientState.MovingToGoal); // Идет стоять над душой у клерка
                 return;
             }
         }
 
-        Waypoint initialGoal = (parent.mainGoal == ClientGoal.VisitToilet) 
-            ? ClientSpawner.GetToiletZone().waitingWaypoint 
-            : ClientQueueManager.Instance.ChooseNewGoal(parent);
-
-        if (initialGoal != null)
+        // 2. Честный клиент идет к терминалу
+        if (Objects.TicketTerminal.Instance != null && Objects.TicketTerminal.Instance.GetStandWaypoint() != null)
         {
-            SetGoal(initialGoal);
-            SetState(ClientState.MovingToGoal);
+            SetGoal(Objects.TicketTerminal.Instance.GetStandWaypoint());
+            SetState(ClientState.MovingToTerminal);
+        }
+        else
+        {
+            // Фоллбэк, если терминала нет на сцене
+            Waypoint initialGoal = (parent.mainGoal == ClientGoal.VisitToilet)
+                ? ClientSpawner.GetToiletZone().waitingWaypoint
+                : ClientQueueManager.Instance.ChooseNewGoal(parent);
+
+            if (initialGoal != null)
+            {
+                SetGoal(initialGoal);
+                SetState(ClientState.MovingToGoal);
+            }
+            else SetState(ClientState.Confused);
+        }
+    }
+
+    private IEnumerator GetTicketRoutine()
+    {
+        // Клиент тупит у аппарата
+        if (Objects.TicketTerminal.Instance != null)
+        {
+            yield return new WaitForSeconds(Objects.TicketTerminal.Instance.interactionTime);
+            if (Objects.TicketTerminal.Instance.printSound != null)
+                feedbackController.PlaySound(Objects.TicketTerminal.Instance.printSound);
+        }
+        else yield return new WaitForSeconds(1f);
+
+        // Получаем талон
+        ClientQueueManager.Instance.JoinQueue(parent);
+
+        // Выбираем место для ожидания
+        Waypoint nextGoal = (parent.mainGoal == ClientGoal.VisitToilet)
+            ? ClientSpawner.GetToiletZone().waitingWaypoint
+            : ClientQueueManager.Instance.ChooseNewGoal(parent);
+            
+        if (nextGoal != null)
+        {
+            SetGoal(nextGoal);
+            Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
+            if (seat != null) GoToSeat(seat);
+            else SetState(ClientState.MovingToGoal);
         }
         else
         {
@@ -477,6 +549,13 @@ public class ClientStateMachine : MonoBehaviour
             }
         }
 
+        // FIXED: Recognize if the client arrived at an inside spot of a queue zone
+        if (targetZone != null && targetZone.insideWaypoints.Contains(dest))
+        {
+            SetState(ClientState.InsideLimitedZone);
+            return;
+        }
+
         var newTargetZone = FindObjectsByType<LimitedCapacityZone>(FindObjectsSortMode.None)
             .FirstOrDefault(z => z.waitingWaypoint == dest);
         bool zoneEntered = false;
@@ -493,15 +572,15 @@ public class ClientStateMachine : MonoBehaviour
         {
             ClientQueueManager.Instance.JoinQueue(parent);
             Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
-            if (seat != null) 
+            if (seat != null)
             {
                 GoToSeat(seat);
             }
-            else 
+            else
             {
                 SetState(ClientState.AtWaitingArea);
             }
-            if (zoneEntered) return;
+            return; // FIXED: Always return here so valid waiting clients don't fall through to Confused state.
         }
 
         if (ClientSpawner.Instance.formTable != null && dest == ClientSpawner.Instance.formTable.tableWaypoint)
@@ -868,6 +947,37 @@ public class ClientStateMachine : MonoBehaviour
         return state == ClientState.Leaving || state == ClientState.LeavingUpset ||
                state == ClientState.Confused || state == ClientState.Enraged ||
                state == ClientState.Grumbling;
+    }
+
+    private bool hasEnteredBuilding = false;
+
+    public void OnEnteredBuilding()
+    {
+        if (hasEnteredBuilding) return;
+        hasEnteredBuilding = true;
+
+        // 1. БАЗОВЫЙ ЗВУК ПОЯВЛЕНИЯ (Для всех клиентов)
+        if (parent != null && parent.spawnSound != null && feedbackController != null)
+        {
+            feedbackController.PlaySound(parent.spawnSound);
+        }
+
+        if (parent.isQueueJumper)
+        {
+            // 2. ДОП. ЗВУК НАГЛЕЦА И БАБЛ
+            if (parent != null && parent.impoliteSound != null && feedbackController != null)
+            {
+                feedbackController.PlaySound(parent.impoliteSound);
+            }
+            
+            var thoughtController = GetComponent<ThoughtBubbleController>();
+            if (thoughtController != null) thoughtController.ShowPriorityMessage("Я только спросить!", 3.5f, Color.red);
+        }
+        else
+        {
+            // 3. ПРИВЕТСТВИЕ НОРМАЛЬНОГО КЛИЕНТА
+            if (parent != null) parent.ShowSpawnThought();
+        }
     }
 
     public string GetStatusInfo()

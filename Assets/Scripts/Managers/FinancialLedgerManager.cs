@@ -50,6 +50,9 @@ namespace Managers
             {
                 globalCorruptionScore += Mathf.Abs(amount);
                 Debug.Log($"<color=purple>СЧЕТЧИК КОРРУПЦИИ:</color> Увеличен на {Mathf.Abs(amount)}. Текущее значение: {globalCorruptionScore}");
+                
+                // Наносим урон репутации за коррупцию
+                DirectorManager.Instance?.RegisterCorruption(Mathf.Abs(amount));
             }
         }
 

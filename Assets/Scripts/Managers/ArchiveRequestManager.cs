@@ -15,6 +15,8 @@ namespace Managers
         public ClientPathfinding WaitingClient; // Клиент, ожидающий документ
         public bool IsFulfilled = false; // Отметка о выполнении запроса архивариусом
         public bool IsTaken = false; // Отметка о том, что архивариус взял запрос в работу (чтобы другой не взял)
+        public bool IsDelegated = false; // Флаг: задача передана курьеру
+        public bool IsTakenByCourier = false; // Флаг: курьер уже принял задачу и идет за ней
     }
 
     public class ArchiveRequestManager : MonoBehaviour
@@ -45,34 +47,31 @@ namespace Managers
         /// <summary>
         /// Создает новый запрос в архив и добавляет его в список ожидания.
         /// </summary>
-        /// <param name="registrar">Регистратор, создающий запрос.</param>
-        /// <param name="client">Клиент, для которого нужен документ.</param>
-        public void CreateRequest(ClerkController registrar, ClientPathfinding client)
+        public void CreateRequest(ClerkController registrar, ClientPathfinding client, bool isDelegated = false)
         {
-            // Проверки входных данных
             if (registrar == null || client == null)
             {
                 Debug.LogError("[ArchiveRequestManager] Попытка создать запрос с null регистратором или клиентом!");
                 return;
             }
 
-            // Проверяем, нет ли уже активного запроса для этого клиента
             if (pendingRequestsList.Any(req => req.WaitingClient == client && !req.IsFulfilled))
             {
                 Debug.LogWarning($"[ArchiveRequestManager] Для клиента {client.name} уже существует активный запрос.");
-                return; // Не создаем дублирующий запрос
+                return;
             }
-
 
             var newRequest = new ArchiveRequest
             {
                 RequestingRegistrar = registrar,
                 WaitingClient = client,
                 IsFulfilled = false,
-                IsTaken = false // Изначально запрос не взят
+                IsTaken = false,
+                IsDelegated = isDelegated,
+                IsTakenByCourier = false
             };
 
-            pendingRequestsList.Add(newRequest); // Добавляем в конец списка
+            pendingRequestsList.Add(newRequest);
             Debug.Log($"[ArchiveRequestManager] Регистратор {registrar.name} создал запрос для клиента {client.name}. В очереди: {pendingRequestsList.Count}");
         }
 
@@ -121,6 +120,18 @@ namespace Managers
         {
             // Проверяем, есть ли хотя бы один запрос, который не выполнен И не взят
             return pendingRequestsList.Any(req => !req.IsFulfilled && !req.IsTaken);
+        }
+
+        public ArchiveRequest GetNextDelegatedRequest()
+        {
+            ArchiveRequest request = pendingRequestsList.FirstOrDefault(req => req.IsDelegated && !req.IsTakenByCourier && !req.IsFulfilled);
+            if (request != null) request.IsTakenByCourier = true; // Сразу бронируем задачу за курьером
+            return request;
+        }
+
+        public bool HasPendingDelegatedRequests()
+        {
+            return pendingRequestsList.Any(req => req.IsDelegated && !req.IsTakenByCourier && !req.IsFulfilled);
         }
 
         /// <summary>

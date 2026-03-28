@@ -26,7 +26,7 @@ namespace Scriptables.Audio
         Footstep_Tile,
         Client_Angry,
         Client_Happy,
-		Voice_Secretary,
+  Voice_Secretary,
     
         // Special
         Time_Period_Change,
@@ -42,6 +42,9 @@ namespace Scriptables.Audio
         BootFade,
         Panel_Open,
         Panel_Close,
-		RedLight
+		RedLight,
+		Sneeze,
+		Success,
+		Fail
     }
 }

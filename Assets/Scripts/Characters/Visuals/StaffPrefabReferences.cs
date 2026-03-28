@@ -20,4 +20,19 @@ public class StaffPrefabReferences : MonoBehaviour
 	public AudioClip levelUpSound;
 	
 	public GameObject processingIconPrefab;
-}
+
+	   [Header("Несгораемые префабы (для StaffController)")]
+	   public GameObject successEffectPrefab;
+	   public GameObject failureEffectPrefab;
+	   public GameObject puddlePrefab;
+	   public GameObject trashPrefab;
+	   public GameObject mudPrefab;
+	  
+	   [Header("Точки вылета иконок (в руках)")]
+	   public Transform successSpawnPoint;
+	   public Transform failureSpawnPoint;
+
+	   [Header("Звуковые ID (из SoundID)")]
+	   public Scriptables.Audio.SoundID successSoundID = Scriptables.Audio.SoundID.None;
+	   public Scriptables.Audio.SoundID failureSoundID = Scriptables.Audio.SoundID.None;
+	  }

@@ -462,14 +462,19 @@ namespace Managers
             {
                 case ProjectDocumentType.RegionUnlock:
                     FinalizeRegionUnlock(doc.targetRegion);
+                    if (DocumentManager.Instance != null) DocumentManager.Instance.UnregisterActiveProjectDoc(doc.targetRegion.regionID);
                     break;
                 case ProjectDocumentType.JobPromotion:
                     FinalizeJobPromotion(doc.targetJob);
+                    if (DocumentManager.Instance != null) DocumentManager.Instance.UnregisterActiveProjectDoc(doc.targetJob.jobID);
                     break;
                 case ProjectDocumentType.FacilityUpgrade:
-                    // --- ИЗМЕНЕНИЕ: Теперь метод существует ---
                     UpgradeManager.Instance.ActivateUpgradeByID(doc.targetUpgradeID);
-                    // ------------------------------------------
+                    if (DocumentManager.Instance != null) DocumentManager.Instance.UnregisterActiveProjectDoc(doc.targetUpgradeID);
+                    break;
+                case ProjectDocumentType.Policy:
+                    if (PolicyManager.Instance != null) PolicyManager.Instance.ActivatePolicy(doc.targetUpgradeID);
+                    if (DocumentManager.Instance != null) DocumentManager.Instance.UnregisterActiveProjectDoc(doc.targetUpgradeID);
                     break;
             }
         }
@@ -484,12 +489,7 @@ namespace Managers
             unlockedJobIDs.Clear();
             regionRuntimeStates.Clear();
 
-            // Автоматически открываем стартовый регион и должность, если они есть
-            if (allRegionsDatabase.Count > 0)
-            {
-                // Для теста открываем первый регион (обычно Трущобы)
-                unlockedRegionIDs.Add(allRegionsDatabase[0].regionID);
-            }
+            // Автоматически открываем стартовую должность, если она есть
             if (allJobsDatabase.Count > 0)
             {
                 // Открываем стартовую должность (Директор)

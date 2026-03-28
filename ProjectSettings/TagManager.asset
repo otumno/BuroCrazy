@@ -57,8 +57,11 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
-  - name: Pesonas
+  - name: Personas
     uniqueID: 1494906833
+    locked: 0
+  - name: UI
+    uniqueID: 1576684033
     locked: 0
   m_RenderingLayers:
   - Default

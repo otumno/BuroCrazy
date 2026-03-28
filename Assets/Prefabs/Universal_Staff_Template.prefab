@@ -133,6 +133,8 @@ Transform:
   - {fileID: 4552738779295589025}
   - {fileID: 1351213455531782926}
   - {fileID: 2845233907620649575}
+  - {fileID: 8840063139053076188}
+  - {fileID: 6852644643202970584}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &2741279865766227009
@@ -391,9 +393,6 @@ MonoBehaviour:
   roleData: {fileID: 0}
   gender: 0
   permanentTrait: 0
-  puddlePrefab: {fileID: 696781811648093872, guid: 36a573cee6808634fa3faf4e68dc903d, type: 3}
-  trashPrefab: {fileID: 3120465193860854178, guid: 08f147e64528d6d408eb1d7804a57525, type: 3}
-  mudPrefab: {fileID: 3725752530133082592, guid: 9022dbe0a41b7f648a8e56fcd3194a35, type: 3}
   currentRankData: {fileID: 0}
   salaryPerPeriod: 15
   unpaidPeriods: 0
@@ -470,6 +469,15 @@ MonoBehaviour:
   handAttachPoint: {fileID: 6279665039555831547}
   levelUpSound: {fileID: 8300000, guid: 8c28600a3205ba242917538dcb24c0ce, type: 3}
   processingIconPrefab: {fileID: 8302179308828539902, guid: 2082aa1967a44324cb451698f5122270, type: 3}
+  successEffectPrefab: {fileID: 2260185322131451865, guid: cc1df9b64b57eb64a8ae0983e30de9e4, type: 3}
+  failureEffectPrefab: {fileID: 4230281294203849939, guid: e11faec919e1cf048984ce39fa013961, type: 3}
+  puddlePrefab: {fileID: 696781811648093872, guid: 36a573cee6808634fa3faf4e68dc903d, type: 3}
+  trashPrefab: {fileID: 3120465193860854178, guid: 08f147e64528d6d408eb1d7804a57525, type: 3}
+  mudPrefab: {fileID: 3725752530133082592, guid: 9022dbe0a41b7f648a8e56fcd3194a35, type: 3}
+  successSpawnPoint: {fileID: 8840063139053076188}
+  failureSpawnPoint: {fileID: 6852644643202970584}
+  successSoundID: 29
+  failureSoundID: 30
 --- !u!114 &2692440484751530476
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -629,6 +637,37 @@ Transform:
   - {fileID: 6605297264608849027}
   - {fileID: 1861909396080614888}
   m_Father: {fileID: 3416182549313532167}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1441399603538622469
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6852644643202970584}
+  m_Layer: 6
+  m_Name: FailureSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6852644643202970584
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1441399603538622469}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.197, y: -0.233, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6522581963784924959}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2020952804384732130
 GameObject:
@@ -1276,6 +1315,37 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!1 &4151171796955382699
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8840063139053076188}
+  m_Layer: 6
+  m_Name: SuccessSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8840063139053076188
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4151171796955382699}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.195, y: -0.278, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6522581963784924959}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5612387860424236372
 GameObject:
   m_ObjectHideFlags: 0

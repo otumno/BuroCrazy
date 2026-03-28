@@ -97,13 +97,7 @@ public class StaffController : MonoBehaviour
     [Header("Особенности")]
     public TraitType permanentTrait = TraitType.None;
 
-    [Header("Префабы для трейтов (Лужи/Мусор)")]
-    [Tooltip("Префаб лужи (для трейтов Sloppy, Clumsy)")]
-    public GameObject puddlePrefab;
-    [Tooltip("Префаб мусора (для трейтов Sloppy)")]
-    public GameObject trashPrefab;
-    [Tooltip("Префаб грязи (для трейтов)")]
-    public GameObject mudPrefab;
+    // Префабы перенесены в StaffPrefabReferences для защиты от удаления при смене роли
 
     [Header("Карьера")]
     public RankData currentRankData; 
@@ -891,6 +885,55 @@ public class StaffController : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Показывает визуальный эффект успеха/неудачи над головой персонажа.
+    /// Директор переопределит этот метод как пустой.
+    /// </summary>
+    public virtual void ShowActionEffect(bool success)
+    {
+        var refs = GetComponent<StaffPrefabReferences>();
+        if (refs == null) return;
+
+        GameObject prefab = success ? refs.successEffectPrefab : refs.failureEffectPrefab;
+        Transform fixedSpawnPoint = success ? refs.successSpawnPoint : refs.failureSpawnPoint;
+        
+        // Берем точку из сейфа. Если забыли назначить - фоллбэк над головой
+        Vector3 finalSpawnPos = fixedSpawnPoint != null ? fixedSpawnPoint.position : (transform.position + Vector3.up * 1.0f);
+
+        // FIXED: Force spawn slightly in front of the worker on Z axis to guarantee visibility even without correct Sorting Layer order
+        finalSpawnPos.z -= 0.1f;
+
+        if (prefab != null)
+        {
+            // 1. ПЛЕЙ ЗВУК
+            Scriptables.Audio.SoundID soundIDToPlay = success ? refs.successSoundID : refs.failureSoundID;
+            if (soundIDToPlay != Scriptables.Audio.SoundID.None && Managers.AudioManager.Instance != null)
+            {
+                // Используем 3D звук в позиции работника
+                Managers.AudioManager.Instance.PlaySound(soundIDToPlay, transform.position);
+            }
+
+            // 2. Спавним в мировых координатах в фиксированной точке (со сдвигом по Z)
+            GameObject effect = Instantiate(prefab, finalSpawnPos, Quaternion.identity);
+            effect.transform.SetParent(null); // Отвязываем, чтобы клерк мог уйти
+
+            // Принудительно выводим поверх всех слоев
+            SpriteRenderer[] renderers = effect.GetComponentsInChildren<SpriteRenderer>();
+            foreach (var sr in renderers)
+            {
+                sr.sortingLayerName = "UI";
+                sr.sortingOrder = 32000;
+            }
+
+            // 3. Устанавливаем жесткое направление полета (плюс вверх, минус вниз)
+            ActionFeedbackIcon iconScript = effect.GetComponent<ActionFeedbackIcon>();
+            if (iconScript != null)
+            {
+                iconScript.SetFixedDirection(success ? Vector3.up : Vector3.down);
+            }
+        }
+    }
+    
     private IEnumerator ExitRoutine(Vector3 target)
     {
         if (agentMover != null)
@@ -1062,20 +1105,25 @@ public class StaffController : MonoBehaviour
         
         _traitTimer += Time.deltaTime;
         
+        var aiConfig = AIBalanceConfig.Instance;
+        
         // === ОБРАБОТКА ПО ТАЙМЕРУ (для персонажей за столами - Allergy, Loudmouth) ===
         // Эти трейты должны работать ВСЕГДА, не только при движении
-        if (_traitTimer >= 10f) // Каждые 10 секунд
+        float checkInterval = aiConfig != null ? aiConfig.traitCheckInterval : 250f;
+        if (_traitTimer >= checkInterval)
         {
             _traitTimer = 0f;
             
-            // Аллергик - каждые 10 сек проверяем
-            if (permanentTrait == TraitType.Allergy && Random.value < 0.4f)
+            // Аллергик - чихает редко
+            float allergyChance = aiConfig != null ? aiConfig.allergyChance : 0.3f;
+            if (permanentTrait == TraitType.Allergy && Random.value < allergyChance)
             {
                 ProcessAllergyTrait();
                 return;
             }
-            // Несдержанный - каждые 10 сек проверяем
-            else if (permanentTrait == TraitType.Loudmouth && Random.value < 0.3f)
+            // Несдержанный - каждые traitCheckInterval проверяем
+            float loudmouthChance = aiConfig != null ? aiConfig.loudmouthChance : 0.3f;
+            if (permanentTrait == TraitType.Loudmouth && Random.value < loudmouthChance)
             {
                 ProcessLoudmouthTrait();
                 return;
@@ -1129,8 +1177,11 @@ public class StaffController : MonoBehaviour
     
     private void ProcessGossipTrait()
     {
-        // Каждые 20 секунд при встрече с другим сотрудником - болтовня
-        if (_traitTimer >= 20f)
+        var aiConfig = AIBalanceConfig.Instance;
+        float gossipCooldown = aiConfig != null ? aiConfig.gossipCooldown : 20f;
+        
+        // Каждые gossipCooldown секунд при встрече с другим сотрудником - болтовня
+        if (_traitTimer >= gossipCooldown)
         {
             _traitTimer = 0f;
             
@@ -1169,13 +1220,17 @@ public class StaffController : MonoBehaviour
     
     private void ProcessSloppyTrait()
     {
-        // Срабатывание каждые 0.5f единиц дистанции (пол-метра!)
-        if (_distanceAccumulated >= 0.5f)
+        var aiConfig = AIBalanceConfig.Instance;
+        float sloppyDistance = aiConfig != null ? aiConfig.sloppyDistance : 0.5f;
+        float sloppyChance = aiConfig != null ? aiConfig.sloppyChance : 0.2f;
+        
+        // Срабатывание каждые sloppyDistance единиц дистанции
+        if (_distanceAccumulated >= sloppyDistance)
         {
             _distanceAccumulated = 0f; // Сброс после срабатывания
             
-            // 20% шанс создать лужу
-            if (Random.value < 0.2f)
+            // sloppyChance шанс создать лужу
+            if (Random.value < sloppyChance)
             {
                 if (thoughtBubble != null)
                 {
@@ -1195,12 +1250,13 @@ public class StaffController : MonoBehaviour
                     GameObject prefabToSpawn = null;
                     string messType = "";
                     
-                    // Сначала пробуем использовать назначенные поля prefab
+                    // Берем префабы напрямую из сейфа (StaffPrefabReferences)
+                    var refs = GetComponent<StaffPrefabReferences>();
                     if (createPuddle) {
-                        prefabToSpawn = puddlePrefab;
+                        prefabToSpawn = refs != null ? refs.puddlePrefab : null;
                         messType = "лужу";
                     } else {
-                        prefabToSpawn = trashPrefab;
+                        prefabToSpawn = refs != null ? refs.trashPrefab : null;
                         messType = "мусор";
                     }
                     
@@ -1228,13 +1284,17 @@ public class StaffController : MonoBehaviour
     
     private void ProcessClumsyTrait()
     {
-        // Срабатывание каждые 3.0f метра
-        if (_distanceAccumulated >= 3.0f)
+        var aiConfig = AIBalanceConfig.Instance;
+        float clumsyDistance = aiConfig != null ? aiConfig.clumsyDistance : 3.0f;
+        float clumsyChance = aiConfig != null ? aiConfig.clumsyChance : 0.2f;
+        
+        // Срабатывание каждые clumsyDistance метра
+        if (_distanceAccumulated >= clumsyDistance)
         {
             _distanceAccumulated = 0f; // Сброс после срабатывания
             
-            // 20% шанс поскользнуться
-            if (Random.value < 0.2f && agentMover != null && agentMover.IsMoving())
+            // clumsyChance шанс поскользнуться
+            if (Random.value < clumsyChance && agentMover != null && agentMover.IsMoving())
             {
                 if (thoughtBubble != null)
                 {
@@ -1251,8 +1311,11 @@ public class StaffController : MonoBehaviour
     
     private void ProcessSprinterTrait()
     {
-        // Срабатывание каждые 8.0 - 10.0 единиц дистанции
-        if (_distanceAccumulated >= 8f + Random.Range(0f, 2f))
+        var aiConfig = AIBalanceConfig.Instance;
+        float sprinterDistance = aiConfig != null ? aiConfig.sprinterDistance : 8.0f;
+        
+        // Срабатывание каждые sprinterDistance единиц дистанции
+        if (_distanceAccumulated >= sprinterDistance + Random.Range(0f, 2f))
         {
             _distanceAccumulated = 0f;
             
@@ -1284,17 +1347,21 @@ public class StaffController : MonoBehaviour
     
     private void ProcessAllergyTrait()
     {
-        // Показываем бабл "А-аааПЧХИИИ!"
+        var aiConfig = AIBalanceConfig.Instance;
+        float allergyRadius = aiConfig != null ? aiConfig.allergyRadius : 2.5f;
+        float allergyPushForce = aiConfig != null ? aiConfig.allergyPushForce : 200f;
+        
+        // Показываем бабл "А-аааПЧХИИИ!" на короткое время
         if (thoughtBubble != null)
         {
-            thoughtBubble.ShowPriorityMessage("А-аааПЧХИИИ!", 1.5f, Color.white);
+            thoughtBubble.ShowPriorityMessage("А-аааПЧХИИИ!", 0.8f, Color.white);
         }
         
         // Звук чихания
-        AudioManager.Instance?.PlaySound(Scriptables.Audio.SoundID.Voice_Secretary, transform.position);
+        AudioManager.Instance?.PlaySound(Scriptables.Audio.SoundID.Sneeze, transform.position);
         
-        // Отталкиваем всех вокруг (радиус 2.5f, сила 200f)
-        var colliders = Physics2D.OverlapCircleAll(transform.position, 2.5f);
+        // Отталкиваем всех вокруг (радиус allergyRadius, сила allergyPushForce)
+        var colliders = Physics2D.OverlapCircleAll(transform.position, allergyRadius);
         foreach (var col in colliders)
         {
             if (col.gameObject == gameObject) continue;
@@ -1303,11 +1370,27 @@ public class StaffController : MonoBehaviour
             if (rb != null)
             {
                 Vector2 pushDirection = (col.transform.position - transform.position).normalized;
-                rb.AddForce(pushDirection * 200f, ForceMode2D.Impulse);
+                Vector2 originalPos = col.transform.position;
+                
+                // Фаза 1: отталкиваем
+                rb.AddForce(pushDirection * 5f, ForceMode2D.Impulse); // было 20f, уменьшили в 4 раза
+                
+                // Фаза 2: на резинке возвращаем обратно через 0.4 сек
+                StartCoroutine(ElasticReturnRoutine(rb, originalPos, pushDirection));
             }
         }
         
         Debug.Log($"[Trait] {characterName} чихнул и оттолкнул окружающих!");
+    }
+    
+    private IEnumerator ElasticReturnRoutine(Rigidbody2D rb, Vector2 originalPos, Vector2 pushDir)
+    {
+        yield return new WaitForSeconds(0.4f);
+        if (rb == null) yield break;
+        
+        // Резинка: возвращаем с силой 30% от начального отталкивания, направление противоположное
+        Vector2 pullDirection = -pushDir;
+        rb.AddForce(pullDirection * 6f, ForceMode2D.Impulse);
     }
     
     private void ProcessForgetfulTrait()

@@ -268,6 +268,27 @@ namespace UI.Map
             var docData = new ProjectDocumentDefinition(selectedRegion);
             directorInboxStack.AddProjectDocument(docData, regionDocPrefab);
 
+            // --- ФИКС ДУБЛИКАТОВ: Регистрируем документ как активный ---
+            if (Managers.DocumentManager.Instance != null)
+            {
+                Managers.DocumentManager.Instance.RegisterActiveProjectDoc(selectedRegion.regionID);
+            }
+
+            // --- TUTORIAL HOOK ---
+            // Убрана проверка на день, так как она давала сбой. Оставили только проверку на 0 районов.
+            if (Managers.ProgressionManager.Instance != null && Managers.ProgressionManager.Instance.GetCapturedRegionsCount() == 0)
+            {
+                if (Managers.TutorialBureaucracyQuest.Instance != null)
+                {
+                    Managers.TutorialBureaucracyQuest.Instance.StartQuest(docData);
+                }
+                else
+                {
+                    Debug.LogError("Скрипт TutorialBureaucracyQuest не найден на сцене!");
+                }
+            }
+            // ---------------------
+
             ClosePanel();
             Debug.Log($"Документ на захват '{selectedRegion.displayName}' отправлен директору.");
         }

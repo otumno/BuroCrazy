@@ -11,7 +11,8 @@ namespace Utilities
             CollectDocuments,
             WorkAtRegistration,
             WorkAtOfficeDesk,
-            WorkAtCashier
+            WorkAtCashier,
+            TutorialTakeDoc
         }
 
         [Tooltip("Тип взаимодействия, который предоставляет эта точка")]

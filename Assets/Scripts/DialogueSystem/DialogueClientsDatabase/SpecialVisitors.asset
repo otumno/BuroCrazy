@@ -27,7 +27,7 @@ MonoBehaviour:
     arrivalSound: {fileID: 0}
   - name: "\u0421\u0435\u043A\u0440\u0435\u0442\u0430\u0440\u044C"
     dayToSpawn: 0
-    dialogue: {fileID: 11400000, guid: 93d578a4f649b0744a715727f01a3f12, type: 2}
+    dialogue: {fileID: 11400000, guid: 2ba5843bd9c7a2f41b535bb8277a10f9, type: 2}
     spawnChance: 1
     requiredFlagKey: 
     requiredFlagValue: 1

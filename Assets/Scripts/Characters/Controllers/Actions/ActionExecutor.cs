@@ -24,14 +24,45 @@ public abstract class ActionExecutor : MonoBehaviour
 
         if (staff != null)
         {
+            // FIXED: Игнорируем базовые нужды
+            bool isBasicNeed = actionData != null && (
+                actionData.actionType == ActionType.GoHome ||
+                actionData.actionType == ActionType.GoToToilet ||
+                actionData.actionType == ActionType.GoToBreak ||
+                actionData.actionType == ActionType.GoToCooler ||
+                actionData.actionType == ActionType.Eat ||
+                actionData.actionType == ActionType.Drink
+            );
+
+            if (!isBasicNeed)
+            {
+                staff.ShowActionEffect(success);
+
+                // --- РЕГИСТРАЦИЯ РЕПУТАЦИИ (HP) ---
+                if (Managers.DirectorManager.Instance != null)
+                {
+                    if (success) Managers.DirectorManager.Instance.RegisterSuccess(staff.currentRole);
+                    else Managers.DirectorManager.Instance.RegisterFailure(staff.currentRole);
+                }
+            }
+
             staff.OnActionFinished();
         }
         Destroy(this);
     }
 
-    // ----- НОВЫЙ ВИРТУАЛЬНЫЙ МЕТОД ДЛЯ ОБРАТНОЙ СВЯЗИ -----
     protected virtual void OnActionCompleted(bool success)
     {
+        bool isBasicNeed = actionData != null && (
+            actionData.actionType == ActionType.GoHome ||
+            actionData.actionType == ActionType.GoToToilet ||
+            actionData.actionType == ActionType.GoToBreak ||
+            actionData.actionType == ActionType.GoToCooler ||
+            actionData.actionType == ActionType.Eat ||
+            actionData.actionType == ActionType.Drink
+        );
+        if (isBasicNeed) return; // Не спамим "Готово!" для туалета
+
         // Базовая реализация: просто показывает мысль об успехе/провале
         if (success)
         {

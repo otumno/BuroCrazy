@@ -144,7 +144,23 @@ public class ClientQueueManager : MonoBehaviour
             
             if (client != null)
             {
-                // === НОВОЕ: Очищаем стойку, если клиент отвалился по таймауту ===
+                // --- НОВАЯ БЛОКИРОВКА ТАЙМАУТА ---
+                var cs = client.stateMachine?.GetCurrentState();
+                bool isBeingServed = cs == ClientState.AtRegistration ||
+                                     cs == ClientState.AtDesk1 ||
+                                     cs == ClientState.AtDesk2 ||
+                                     cs == ClientState.AtCashier ||
+                                     cs == ClientState.InsideLimitedZone;
+                
+                if (isBeingServed)
+                {
+                    // Если клиент уже у стойки, просто удаляем его из списка ожидания ответа, не трогая его ИИ
+                    clientsAwaitingResponse.Remove(ticketNumber);
+                    continue;
+                }
+                // ---------------------------------
+                
+                // === Очищаем стойку, если клиент отвалился по таймауту ===
                 if (client.stateMachine != null && client.stateMachine.MyServiceProvider != null)
                 {
                     var sp = client.stateMachine.MyServiceProvider.GetWorkstation();
@@ -192,13 +208,19 @@ public class ClientQueueManager : MonoBehaviour
         StartCoroutine(PatienceCheck(client));
     }
     
-    private IEnumerator PatienceCheck(ClientPathfinding client) 
-    { 
+    private IEnumerator PatienceCheck(ClientPathfinding client)
+    {
         float minWait = patienceMinTime * (1f + client.babushkaFactor) * (1f - client.suetunFactor * 0.5f);
         float maxWait = patienceMaxTime * (1f + client.babushkaFactor) * (1f - client.suetunFactor * 0.5f);
         yield return new WaitForSeconds(Random.Range(minWait, maxWait));
         
-        if (client == null || (client.stateMachine.GetCurrentState() != ClientState.AtWaitingArea && client.stateMachine.GetCurrentState() != ClientState.SittingInWaitingArea) || (queue.ContainsKey(client) && currentlyCalledNumbers.Contains(queue[client]))) 
+        // Ранняя проверка: клиент вызван к столу — не проверяем терпение
+        if (client == null) yield break;
+        if (queue.ContainsKey(client) && currentlyCalledNumbers.Contains(queue[client])) yield break;
+        
+        // Проверка состояния очереди
+        if (client.stateMachine.GetCurrentState() != ClientState.AtWaitingArea &&
+            client.stateMachine.GetCurrentState() != ClientState.SittingInWaitingArea)
             yield break;
         
         float confusedChance = 0.65f;
@@ -240,7 +262,24 @@ public class ClientQueueManager : MonoBehaviour
     public void ClientArrivedAtDesk(int number) { if (clientsAwaitingResponse.ContainsKey(number)) { clientsAwaitingResponse.Remove(number); } }
     public void ServiceFinishedForNumber(int number) { if (currentlyCalledNumbers.Contains(number)) { currentlyCalledNumbers.Remove(number); } if (clientsAwaitingResponse.ContainsKey(number)) { clientsAwaitingResponse.Remove(number); } }
     public void ResetQueueNumber() { nextQueueNumber = 1; currentlyCalledNumbers.Clear(); clientsAwaitingResponse.Clear(); }
-    public void JoinQueue(ClientPathfinding c) { if (!queue.ContainsKey(c)) { queue.Add(c, nextQueueNumber++); if (c.notification != null) c.notification.SetQueueNumber(queue[c]); StartPatienceTimer(c); } }
+    public void JoinQueue(ClientPathfinding c)
+    {
+        if (!queue.ContainsKey(c))
+        {
+            // Если это наглец (QueueJumper) - даем скрытый номер >= 10000
+            if (c.isQueueJumper)
+            {
+                queue.Add(c, 10000 + nextQueueNumber++);
+                if (c.notification != null) c.notification.SetQueueNumber(-1); // Скрытый номер не показываем
+            }
+            else
+            {
+                queue.Add(c, nextQueueNumber++);
+                if (c.notification != null) c.notification.SetQueueNumber(queue[c]);
+            }
+            StartPatienceTimer(c);
+        }
+    }
     public void RemoveClientFromQueue(ClientPathfinding c) { if (c != null && queue.ContainsKey(c)) { ServiceFinishedForNumber(queue[c]); if (c.notification != null) c.notification.SetQueueNumber(-1); OnClientLeavesWaitingZone(c); queue.Remove(c); } }
     public Transform FindSeatForClient(ClientPathfinding client) { if (mainWaitingZone == null || mainWaitingZone.seatPoints.Count == 0) return null; Transform freeSeat = mainWaitingZone.seatPoints.FirstOrDefault(s => s != null && !occupiedSeats.ContainsKey(s)); if (freeSeat != null) { occupiedSeats[freeSeat] = client; if(standingClients.Contains(client)) standingClients.Remove(client); return freeSeat; } else { if (!standingClients.Contains(client)) standingClients.Add(client); return null; } }
     public void OnClientLeavesWaitingZone(ClientPathfinding client) { if (standingClients.Contains(client)) standingClients.Remove(client); if (occupiedSeats.ContainsValue(client)) { Transform seatToFree = occupiedSeats.FirstOrDefault(kvp => kvp.Value == client).Key; if (seatToFree != null) { occupiedSeats.Remove(seatToFree); FindAndAssignNearestStandingClient(seatToFree); } } }
@@ -279,7 +318,8 @@ public class ClientQueueManager : MonoBehaviour
 	           if (workerMono != null)
 	           {
 	               var bubble = workerMono.GetComponent<ThoughtBubbleController>();
-	               if (bubble != null) bubble.ShowPriorityMessage($"Вне очереди, №{calledNumber}!", 3f, new Color(1f, 0.5f, 0f));
+	               string message = calledNumber > 10000 ? "Следующий!" : $"Вне очереди, №{calledNumber}!";
+	               if (bubble != null) bubble.ShowPriorityMessage(message, 3f, new Color(1f, 0.5f, 0f));
 	           }
 	           // ----------------------------------
 
@@ -294,4 +334,40 @@ public class ClientQueueManager : MonoBehaviour
 	       return false;
 	   }
 	
+	/// <summary>
+	/// VIP-вызов конкретного клиента (например, когда принесли его документ из архива)
+	/// </summary>
+	public bool CallSpecificClient(ClientPathfinding targetClient, IServiceProvider provider)
+	{
+	    if (provider == null || targetClient == null) return false;
+
+	    // Проверяем, есть ли он в очереди
+	    if (queue.ContainsKey(targetClient))
+	    {
+	        int calledNumber = queue[targetClient];
+	        
+	        if (!currentlyCalledNumbers.Contains(calledNumber))
+	        {
+	            currentlyCalledNumbers.Add(calledNumber);
+	            clientsAwaitingResponse.Add(calledNumber, Time.time);
+	        }
+
+	        lastCallTime = Time.time;
+	        if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, ((MonoBehaviour)provider).transform.position);
+
+	        var workerMono = provider as MonoBehaviour;
+	        if (workerMono != null)
+	        {
+	            var bubble = workerMono.GetComponent<ThoughtBubbleController>();
+	            string message = calledNumber > 10000 ? "Следующий!" : $"Талон №{calledNumber}, документ готов!";
+	            if (bubble != null) bubble.ShowPriorityMessage(message, 3f, new Color(0f, 1f, 0f));
+	        }
+
+	        Debug.Log($"<color=cyan>ОЧЕРЕДЬ (VIP):</color> Работник {workerMono?.name} вызывает клиента #{calledNumber} ({targetClient.name}) вне очереди");
+
+	        targetClient.stateMachine.GetCalledToSpecificDesk(provider.GetClientStandPoint().GetComponent<Waypoint>(), calledNumber, provider);
+	        return true;
+	    }
+	    return false;
+	}
 }

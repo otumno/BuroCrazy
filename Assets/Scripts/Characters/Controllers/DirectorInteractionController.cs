@@ -34,6 +34,22 @@ public class DirectorInteractionController : MonoBehaviour
         if (other.GetComponent<InteractionPoint>() is InteractionPoint point)
         {
             currentInteractionPoint = point;
+
+            // --- АВТОЗАПУСК ТУТОРИАЛА ---
+            if (point.type == InteractionPoint.InteractionType.TutorialTakeDoc)
+            {
+                // Скрываем кнопку контекстного действия, чтобы она не мелькала
+                if (contextButton != null) contextButton.gameObject.SetActive(false);
+                
+                // Сразу запускаем катсцену
+                if (directorAvatar != null && Managers.TutorialBureaucracyQuest.Instance != null)
+                {
+                    directorAvatar.StartCoroutine(directorAvatar.TutorialAutoTourRoutine(Managers.TutorialBureaucracyQuest.Instance));
+                }
+                return; // Прерываем метод, чтобы кнопка не обновилась
+            }
+            // ----------------------------
+
             UpdateContextButton();
         }
     }
@@ -80,6 +96,10 @@ public class DirectorInteractionController : MonoBehaviour
             case InteractionPoint.InteractionType.WorkAtCashier:
                 buttonText = isWorkingHere ? "Закончить работу" : "Работать в кассе";
                 break;
+            case InteractionPoint.InteractionType.TutorialTakeDoc:
+                buttonText = "Взять приказ и оформить";
+                shouldBeActive = true;
+                break;
             default:
                 shouldBeActive = false;
                 break;
@@ -123,6 +143,9 @@ public class DirectorInteractionController : MonoBehaviour
                 {
                     directorAvatar.StartWorkingAt(workstation);
                 }
+                break;
+            case InteractionPoint.InteractionType.TutorialTakeDoc:
+                directorAvatar.StartCoroutine(directorAvatar.TutorialAutoTourRoutine(Managers.TutorialBureaucracyQuest.Instance));
                 break;
         }
         

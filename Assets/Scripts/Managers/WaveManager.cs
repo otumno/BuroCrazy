@@ -87,6 +87,8 @@ namespace Managers
         private Coroutine spawnCoroutine;
         private Coroutine queueCheckerCoroutine;
 
+        private int lastCheckedMorningDay = -1;
+
         private void Awake()
         {
             if (Instance == null) Instance = this;
@@ -201,7 +203,7 @@ namespace Managers
         /// <summary>
         /// Запускает спавн для текущего периода на основе дневного плана
         /// </summary>
-        private void StartSpawningForCurrentPeriod()
+        public void StartSpawningForCurrentPeriod()
         {
             if (TimeManager.Instance == null) return;
 
@@ -247,15 +249,10 @@ namespace Managers
             	int day = TimeManager.Instance.GetCurrentDay();
             	CheckMorningEvents(day);
 
-            	// === ТЕСТОВЫЙ РЕЖИМ: Отключаем авто-спавн ===
-            	if (enableAutoSpawn)
-            	{
-                	int clientsCount = Mathf.RoundToInt(currentSettings.clientCount.Evaluate(day));
-                	if (clientsCount > 0 && spawnCoroutine == null)
-                	{
-                    	spawnCoroutine = StartCoroutine(SpawnRoutine(currentSettings, clientsCount));
-                	}
-            	}
+            	   if (enableAutoSpawn)
+            	   {
+            	       StartSpawningForCurrentPeriod();
+            	   }
             	else
             	{
                 	Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
@@ -376,6 +373,9 @@ namespace Managers
 
         private void CheckMorningEvents(int day)
         {
+            if (lastCheckedMorningDay == day) return;
+            lastCheckedMorningDay = day;
+
             if (specialVisitorsDB == null)
             {
                 Debug.LogError("[WaveManager] ОШИБКА: Не назначена база данных SpecialVisitorsDB!");

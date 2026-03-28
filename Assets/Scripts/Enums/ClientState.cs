@@ -1,7 +1,7 @@
 // Файл: ClientState.cs
 public enum ClientState
 {
-    Spawning, MovingToGoal, MovingToSeat, MovingToRegistrarImpolite,
+    Spawning, MovingToTerminal, GettingTicket, InterruptingDesk, MovingToGoal, MovingToSeat, MovingToRegistrarImpolite,
     AtRegistration, AtWaitingArea, SittingInWaitingArea,
     AtToilet, Leaving, Confused,
     PassedRegistration,

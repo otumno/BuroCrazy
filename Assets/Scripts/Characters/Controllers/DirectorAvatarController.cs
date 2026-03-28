@@ -90,6 +90,14 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         Debug.Log($"[MicroManagement] Директор приказал {target.characterName} выполнить: {action.displayName}");
     }
 
+    /// <summary>
+    /// Директор не показывает визуальный фидбек (+/-) над собой.
+    /// </summary>
+    public override void ShowActionEffect(bool success)
+    {
+        // Пустой метод: Директор — игрок, не показываем +/- над ним
+    }
+
     void Start()
     {
         // Инициализация навыков по умолчанию, если они не назначены
@@ -710,6 +718,123 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             .Where(wp => wp != null)
             .OrderBy(wp => Vector2.Distance(position, wp.transform.position))
             .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Автоматическая катсцена туториала - директор самостоятельно оформляет приказ.
+    /// </summary>
+    public IEnumerator TutorialAutoTourRoutine(Managers.TutorialBureaucracyQuest quest)
+    {
+        if (quest == null) yield break;
+        
+        SetUninterruptible(true);
+
+        SetState(DirectorState.AtDesk);
+        thoughtBubble?.ShowPriorityMessage("Так, вот этот приказ...", 2f, Color.white);
+        yield return new WaitForSeconds(1.5f);
+        
+        // --- ОЧИЩАЕМ СТОЛ И СПАВНИМ ДОКУМЕНТ В РУКЕ ---
+        if (quest.directorInboxStack != null) quest.directorInboxStack.TakeEntireStack();
+
+        Gameplay.Documents.ProjectDocumentObject physicalDoc = null;
+        if (quest.innerDocPrefab != null)
+        {
+            // Надежный способ: берем трансформ от спрайта StackInHands, он точно двигается с телом
+            Transform hand = (stackHolder != null && stackHolder.stackSpriteRenderer != null)
+                ? stackHolder.stackSpriteRenderer.transform
+                : transform;
+            
+            GameObject docGO = Instantiate(quest.innerDocPrefab, hand);
+            
+            // Жестко выставляем координаты относительно руки (сдвигаем по Z к камере, чтобы не прятался за спрайт)
+            docGO.transform.localPosition = new Vector3(0, 0f, -0.1f);
+            docGO.transform.localRotation = Quaternion.identity;
+            docGO.transform.localScale = Vector3.one;
+            
+            // Обновляем слои, чтобы папка рисовалась поверх Директора
+            SpriteRenderer[] renderers = docGO.GetComponentsInChildren<SpriteRenderer>();
+            foreach (var sr in renderers)
+            {
+                sr.sortingOrder = 30000;
+            }
+            
+            physicalDoc = docGO.GetComponent<Gameplay.Documents.ProjectDocumentObject>();
+            if (physicalDoc != null && quest.tutorialDoc != null)
+            {
+                quest.tutorialDoc.signedByDirector = true;
+                physicalDoc.Initialize(quest.tutorialDoc);
+            }
+            
+            // Гасим дефолтную белую заглушку, чтобы она не торчала из-под префаба
+            if (stackHolder != null && stackHolder.stackSpriteRenderer != null)
+            {
+                stackHolder.stackSpriteRenderer.enabled = false;
+            }
+        }
+        else
+        {
+            stackHolder?.ShowSingleDocumentSprite();
+        }
+        // --------------------------------
+
+        SetState(DirectorState.CarryingDocuments);
+
+        // 2. Идем в Регистратуру
+        SetState(DirectorState.MovingToPoint);
+        yield return StartCoroutine(MoveToTargetRoutine(quest.registrarStandPoint.position));
+        SetState(DirectorState.WorkingAtStation);
+        thoughtBubble?.ShowPriorityMessage("Никого нет в регистратуре...\nЗарегистрирую сам.", 3f, Color.yellow);
+        yield return new WaitForSeconds(3f);
+
+        // Ставим печать регистрации
+        if (quest.tutorialDoc != null) quest.tutorialDoc.processedByRegistrar = true;
+        if (physicalDoc != null) physicalDoc.UpdateVisuals();
+        if (Managers.AudioManager.Instance != null) Managers.AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Stamp_Approve, transform.position);
+
+        // 3. Идем в Офис
+        SetState(DirectorState.MovingToPoint);
+        yield return StartCoroutine(MoveToTargetRoutine(quest.officeStandPoint.position));
+        SetState(DirectorState.WorkingAtStation);
+        thoughtBubble?.ShowPriorityMessage("Ставлю печать клерка.", 2f, Color.gray);
+        yield return new WaitForSeconds(2f);
+        if (Managers.AudioManager.Instance != null) Managers.AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Stamp_Approve, transform.position);
+
+        // 4. Идем в Кассу
+        SetState(DirectorState.MovingToPoint);
+        yield return StartCoroutine(MoveToTargetRoutine(quest.cashierStandPoint.position));
+        SetState(DirectorState.WorkingAtStation);
+        thoughtBubble?.ShowPriorityMessage("Сам себе плачу пошлину...", 3f, Color.yellow);
+        
+        if (Managers.PlayerWallet.Instance != null)
+        {
+            Managers.PlayerWallet.Instance.AddMoney(-5, "Пошлина (Оформление)");
+            if (Managers.AudioManager.Instance != null) Managers.AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Money_Income, transform.position);
+        }
+        yield return new WaitForSeconds(2f);
+
+        // Ставим печать кассы
+        if (quest.tutorialDoc != null) quest.tutorialDoc.paidAtCashier = true;
+        if (physicalDoc != null) physicalDoc.UpdateVisuals();
+
+        // 5. Идем в Архив
+        SetState(DirectorState.MovingToPoint);
+        yield return StartCoroutine(MoveToTargetRoutine(quest.archiveStandPoint.position));
+        SetState(DirectorState.WorkingAtStation);
+        thoughtBubble?.ShowPriorityMessage("И наконец, в архив!", 2f, Color.green);
+        
+        // Убираем документ
+        if (physicalDoc != null) Destroy(physicalDoc.gameObject);
+        else stackHolder?.HideStack();
+
+        yield return new WaitForSeconds(2f);
+
+        thoughtBubble?.ShowPriorityMessage("Готово!", 1.5f, Color.green);
+        yield return new WaitForSeconds(1.5f);
+
+        SetState(DirectorState.Idle);
+        SetUninterruptible(false);
+        
+        quest.CompleteQuest();
     }
     #endregion
 

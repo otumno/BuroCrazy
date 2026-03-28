@@ -551,7 +551,8 @@ public class AgentMover : MonoBehaviour
     /// <returns>True if moving, false otherwise.</returns>
     public bool IsMoving()
     {
-        if (isSlipping) return false;
+        // FIXED: Slipping is a state of transit, coroutines must wait for recovery
+        if (isSlipping) return true;
 
         if (isDirectChasing)
         {
@@ -693,8 +694,9 @@ public class AgentMover : MonoBehaviour
         wasUninterruptible = director.IsInUninterruptibleAction;
         director.SetUninterruptible(true); 
     }
-    Vector2 lastVelocity = rb.linearVelocity; 
-    Stop(); 
+    Vector2 lastVelocity = rb.linearVelocity;
+    // Stop(); // FIXED: Do not clear the path queue so the agent resumes movement after recovering.
+    rb.linearVelocity = Vector2.zero; // Manually halt physics instead of calling Stop()
 
     // --- Play Sound ---
     if (fallSound != null && footstepAudioSource != null)

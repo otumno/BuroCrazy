@@ -209,10 +209,9 @@ MonoBehaviour:
     paidAtCashier: 0
     archived: 0
   documentTitleText: {fileID: 5639910555753128996}
-  signatureSeal: {fileID: 7434728297085217496}
-  registrarStamp: {fileID: 7434728297085217496}
-  cashierStamp: {fileID: 7832713282488365398}
-  archivedStamp: {fileID: 8941245385788886566}
+  stampDirector: {fileID: 8941245385788886566}
+  stampRegistrar: {fileID: 7832713282488365398}
+  stampPaid: {fileID: 372233337320028339}
 --- !u!1 &4832811633657579370
 GameObject:
   m_ObjectHideFlags: 0

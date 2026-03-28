@@ -203,6 +203,10 @@ public class ClerkController : StaffController, IServiceProvider
         client.billToPay = 0;
         client.isLeavingSuccessfully = true;
         client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+        
+        // --- ВИЗУАЛЬНЫЙ ФИДБЕК УСПЕХА ---
+        ShowActionEffect(true);
+        
         client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
         client.stateMachine?.SetState(ClientState.Leaving);
         ServiceComplete();

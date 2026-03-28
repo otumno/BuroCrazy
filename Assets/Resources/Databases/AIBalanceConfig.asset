@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72bb05d8515f5a9408ff66c1b63753b2, type: 3}
+  m_Name: AIBalanceConfig
+  m_EditorClassIdentifier: Assembly-CSharp::Gameplay.AIBalanceConfig
+  baseEnergyLoss: 0.3
+  baseBladderGain: 0.8
+  baseMoraleLoss: 0.5
+  baseStressGain: 0.2
+  pedantrySortBonus: 15
+  masteryWorkMultiplier: 1.5
+  softSkillsHelpBonus: 25
+  corruptionCashierBonus: 20
+  stressHomeWeight: 30
+  messStressMultiplier: 2
+  archiveWaitTimeout: 20
+  queueJumperChance: 0.5
+  jumperStressMultiplier: 2.5
+  traitCheckInterval: 10
+  allergyChance: 0.4
+  allergyPushForce: 200
+  allergyRadius: 2.5
+  loudmouthChance: 0.3
+  sloppyDistance: 0.5
+  sloppyChance: 0.2
+  clumsyDistance: 3
+  clumsyChance: 0.2
+  sprinterDistance: 8
+  gossipCooldown: 20
+  enableDebugLogs: 0
