@@ -91,6 +91,7 @@ namespace Audio
             _audioSource.clip = clip;
             _audioSource.outputAudioMixerGroup = mixerGroup;
             _audioSource.spatialBlend = 0f;
+            _audioSource.Play();
         }
 
         public void PlayVoiceClip(AudioClip clip,

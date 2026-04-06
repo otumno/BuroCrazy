@@ -15,6 +15,7 @@ using Enums;
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]
 [RequireComponent(typeof(ThoughtBubbleController))]
+[RequireComponent(typeof(ActionDiary))]
 public class StaffController : MonoBehaviour
 {
     // === TRAITS SYSTEM ===
@@ -1074,6 +1075,10 @@ public class StaffController : MonoBehaviour
     public void ExecuteAction(StaffAction action)
     {
         if (action == null) return;
+        
+        // --- Логирование начала задачи в ActionDiary ---
+        GetComponent<ActionDiary>()?.LogEvent($"Начал задачу: {action.displayName}");
+        
         var executorType = action.GetExecutorType();
         if (executorType != null)
         {
@@ -1305,6 +1310,9 @@ public class StaffController : MonoBehaviour
                 agentMover.SlipAndRecover();
                 
                 Debug.Log($"[Trait] {characterName} (Неуклюжий) поскользнулся!");
+                
+                // --- Логирование в ActionDiary ---
+                GetComponent<ActionDiary>()?.LogEvent("Сработал трейт: Неуклюжий (упал)");
             }
         }
     }
@@ -1331,6 +1339,9 @@ public class StaffController : MonoBehaviour
             StartCoroutine(ResetSprinterSpeed());
             
             Debug.Log($"[Trait] {characterName} (Спринтер) остановился передохнуть");
+            
+            // --- Логирование в ActionDiary ---
+            GetComponent<ActionDiary>()?.LogEvent("Сработал трейт: Спринтер (передохнул)");
         }
     }
     

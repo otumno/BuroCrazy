@@ -435,6 +435,8 @@ public class InternController : StaffController, IServiceProvider
             case ClientGoal.PayTax: return ClientSpawner.GetCashierZone()?.waitingWaypoint;
             case ClientGoal.GetCertificate1: return ClientSpawner.GetDesk1Zone()?.waitingWaypoint;
             case ClientGoal.GetCertificate2: return ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
+            case ClientGoal.DirectorApproval:
+            case ClientGoal.DirectorAudience: return ClientSpawner.Instance?.directorReceptionZone?.waitingWaypoint;
             case ClientGoal.VisitToilet: return ClientSpawner.GetToiletZone()?.waitingWaypoint;
             default: return ClientQueueManager.Instance.ChooseNewGoal(client);
         }

@@ -10,16 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 69d7b69215196e649b88ab36a45f154c, type: 3}
-  m_Name: SpecialVisitors
+  m_Name: SpecialVisitorDatabase
   m_EditorClassIdentifier: Assembly-CSharp::SpecialVisitorDatabase
   visitors:
-  - name: "\u0418\u0432\u0430\u043D\u043E\u0432\u043D\u0430"
+  - name: "\u0411\u0435\u043B\u0435\u0433\u043E\u0440\u0441\u043A\u0430\u044F-\u0422\u0443\u0440\u0448\u0438\u043D\u0430
+      \u0415\u0432\u043F\u0430\u0442\u0438\u044F \u0418\u0432\u0430\u043D\u043E\u0432\u043D\u0430"
     dayToSpawn: 0
     dialogue: {fileID: 11400000, guid: e7ab42c42841b4c45b74d60753aa748b, type: 2}
     spawnChance: 1
     requiredFlagKey: 
     requiredFlagValue: 1
-    forcedGoal: 5
+    forcedGoal: 6
+    forcedArchetype: {fileID: 11400000, guid: 5e4d2c66610890e43ae0667f84fcd2f5, type: 2}
     spawnAtStartOfDay: 0
     isRemoteInteraction: 0
     deskIconOverride: {fileID: 0}
@@ -32,6 +34,7 @@ MonoBehaviour:
     requiredFlagKey: 
     requiredFlagValue: 1
     forcedGoal: 5
+    forcedArchetype: {fileID: 0}
     spawnAtStartOfDay: 1
     isRemoteInteraction: 1
     deskIconOverride: {fileID: 2280500997398541189, guid: 4f8bb12e2ea854449bebaad00c5f7705, type: 3}

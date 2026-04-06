@@ -185,15 +185,36 @@ namespace DialogueSystem.Editor
                 
                 nodeView.capabilities &= ~Capabilities.Deletable;
             }
-            else if (nodeData is EndNode end)
+            else if (nodeData is EndNode endNode)
             {
                 nodeView.title = "КОНЕЦ";
                 nodeView.mainContainer.style.backgroundColor = new Color(0.1f, 0.1f, 0.1f, 0.8f);
-				var soundContainer = new IMGUIContainer(() => {
+    var soundContainer = new IMGUIContainer(() => {
                     GUILayout.Space(5);
-                    end.endSound = (AudioClip)EditorGUILayout.ObjectField("Звук конца:", end.endSound, typeof(AudioClip), false);
+                    endNode.endSound = (AudioClip)EditorGUILayout.ObjectField("Звук конца:", endNode.endSound, typeof(AudioClip), false);
                 });
                 nodeView.extensionContainer.Add(soundContainer);
+
+                // Поле исхода
+                var outcomeContainer = new IMGUIContainer(() => {
+                    GUILayout.Space(5);
+                    endNode.outcome = (EndNode.DialogueOutcome)EditorGUILayout.EnumPopup("Исход:", endNode.outcome);
+                });
+                nodeView.extensionContainer.Add(outcomeContainer);
+
+                // Поле эмоции
+                var emotionContainer = new IMGUIContainer(() => {
+                    GUILayout.Space(5);
+                    endNode.outputEmotion = (Emotion)EditorGUILayout.EnumPopup("Эмоция:", endNode.outputEmotion);
+                });
+                nodeView.extensionContainer.Add(emotionContainer);
+
+                // Поле стресса
+                var stressContainer = new IMGUIContainer(() => {
+                    GUILayout.Space(5);
+                    endNode.stressModifier = EditorGUILayout.FloatField("Изменение стресса:", endNode.stressModifier);
+                });
+                nodeView.extensionContainer.Add(stressContainer);
             }
             else if (nodeData is PhraseNode phrase)
             {

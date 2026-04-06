@@ -45,6 +45,12 @@ public abstract class ActionExecutor : MonoBehaviour
                     else Managers.DirectorManager.Instance.RegisterFailure(staff.currentRole);
                 }
             }
+            
+            // --- Логирование завершения задачи в ActionDiary ---
+            if (actionData != null)
+            {
+                staff.GetComponent<ActionDiary>()?.LogEvent($"Завершил задачу: {actionData.displayName} (Успех: {success})");
+            }
 
             staff.OnActionFinished();
         }

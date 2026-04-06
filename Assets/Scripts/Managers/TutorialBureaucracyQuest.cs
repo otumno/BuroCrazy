@@ -26,14 +26,22 @@ namespace Managers
 
         public Data.Documents.ProjectDocumentDefinition tutorialDoc { get; private set; }
 
-        private void Awake() { if (Instance == null) Instance = this; else Destroy(gameObject); }
+        private void Awake()
+        {
+            if (Instance == null) Instance = this; else Destroy(gameObject);
+            if (directorDeskPoint != null) directorDeskPoint.gameObject.SetActive(false);
+        }
 
         public void StartQuest(Data.Documents.ProjectDocumentDefinition doc)
         {
             tutorialDoc = doc;
             TeletypeManager.Instance?.LogImportant("ТУТОРИАЛ: Возьмите приказ со стола и оформите его.");
             if (pathToDesk) pathToDesk.SetActive(true);
-            if (directorDeskPoint) directorDeskPoint.type = InteractionPoint.InteractionType.TutorialTakeDoc;
+            if (directorDeskPoint)
+            {
+                directorDeskPoint.gameObject.SetActive(true);
+                directorDeskPoint.type = InteractionPoint.InteractionType.TutorialTakeDoc;
+            }
         }
 
         public void CompleteQuest()

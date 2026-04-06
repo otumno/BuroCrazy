@@ -2,14 +2,14 @@ trackSelection = true
 refreshSearchWindowsInPlayMode = false
 pickerAdvancedUI = false
 fetchPreview = true
-defaultFlags = 0
+defaultFlags = 264
 keepOpen = true
 queryFolder = "Assets"
 onBoardingDoNotAskAgain = true
 showPackageIndexes = false
 showStatusBar = false
 scopes = {
-	"last_search.66F56946" = "layers"
+	"last_search.66F56946" = "t:ClientDebugMenu"
 	"OpenInspectorPreview.66F56946" = "0"
 	"currentGroup.66F56946" = "all"
 }
@@ -78,6 +78,20 @@ providers = {
 objectSelectors = {
 }
 recentSearches = [
+	"t: KeyCode.F1"
+	""
+	"h: KeyCode.F1"
+	"p: ClientDebugMenu>"
+	"p: AddComponent<ClientDebugMenu>"
+	"p:"
+	"h:AddComponent<ClientDebugMenu>"
+	"h:"
+	"h: AddComponent<ClientDebugMenu>"
+	"t:ClientDebugMenu"
+	"t:ClientDebugMenu ClientDebugMenu"
+	"ClientDebugMenu"
+	"h: t:ClientDebugMenu"
+	"h: t:ClientDebugMenu clientd"
 	"lauers"
 	"дфгукы"
 ]
@@ -90,7 +104,7 @@ expandedQueries = [
 ]
 queryBuilder = true
 ignoredProperties = "id;name;classname;imagecontentshash"
-helperWidgetCurrentArea = "all"
+helperWidgetCurrentArea = "p:"
 disabledIndexers = ""
 minIndexVariations = 2
 findProviderIndexHelper = true

@@ -12,6 +12,10 @@ public class DirectorDeskButton : MonoBehaviour
     public GameObject documentIconPrefab;
     public Transform iconContainer;
     
+    [Header("Client Icons")]
+    [SerializeField] private Sprite audienceSprite;  // силуэт для DirectorAudience
+    [SerializeField] private Sprite documentSprite;  // иконка документа (существующее поведение)
+    
     [Header("Настройки стопки")]
     public int maxVisibleIcons = 10;
     public float yOffsetPerIcon = 5f;
@@ -55,7 +59,10 @@ public class DirectorDeskButton : MonoBehaviour
             {
                 uiAudioSource.PlayOneShot(newDocumentSound);
             }
-            countText.text = $"На рассмотрении: {count}";
+            if (countText != null)
+            {
+                countText.text = $"Ожидают: {count}";
+            }
         }
 
         foreach (GameObject icon in activeIcons)
@@ -64,15 +71,43 @@ public class DirectorDeskButton : MonoBehaviour
         }
         activeIcons.Clear();
 
+        // Получаем список клиентов в приемной, чтобы знать, кто ждет
+        var waitingClients = ClientSpawner.Instance?.directorReceptionZone?.GetOccupyingClients() ?? new List<ClientPathfinding>();
+
         int iconsToCreate = Mathf.Min(count, maxVisibleIcons);
         for (int i = 0; i < iconsToCreate; i++)
         {
             GameObject newIcon = Instantiate(documentIconPrefab, iconContainer);
+            
+            // Находим Image у клонированной иконки
+            Image iconImage = newIcon.GetComponent<Image>();
+            if (iconImage == null) iconImage = newIcon.GetComponentInChildren<Image>();
+
+            if (iconImage != null)
+            {
+                // Проверяем цель клиента по его индексу в очереди
+                bool isAudience = false;
+                if (i < waitingClients.Count && waitingClients[i] != null && waitingClients[i].mainGoal == ClientGoal.DirectorAudience)
+                {
+                    isAudience = true;
+                }
+
+                // Назначаем нужный спрайт прямо на созданный элемент стопки
+                if (isAudience && audienceSprite != null)
+                {
+                    iconImage.sprite = audienceSprite;
+                }
+                else if (documentSprite != null)
+                {
+                    iconImage.sprite = documentSprite;
+                }
+            }
+
             RectTransform rt = newIcon.GetComponent<RectTransform>();
             if (rt != null)
             {
                 rt.anchoredPosition = new Vector2(
-                    Random.Range(-maxRandomXOffset, maxRandomXOffset), 
+                    Random.Range(-maxRandomXOffset, maxRandomXOffset),
                     i * yOffsetPerIcon
                 );
                 rt.localRotation = Quaternion.Euler(0, 0, Random.Range(-maxRandomRotation, maxRandomRotation));

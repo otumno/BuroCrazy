@@ -1,6 +1,7 @@
 // Файл: ClientMovement.cs
 using UnityEngine;
 using System.Collections;
+using Managers;
 
 public class ClientMovement : MonoBehaviour
 {
@@ -79,6 +80,20 @@ public class ClientMovement : MonoBehaviour
 
             if (timeStuck >= stuckTimeThreshold)
             {
+                var currentState = parent.stateMachine.GetCurrentState();
+                var currentGoal = parent.stateMachine.GetCurrentGoal();
+                
+                // Если клиент уже уходит К ВЫХОДУ, просто игнорируем застревание - пусть толкается в двери
+                bool isHeadingToExit = currentGoal != null &&
+                    ClientSpawner.Instance != null &&
+                    currentGoal == ClientSpawner.Instance.exitWaypoint;
+                
+                if (isHeadingToExit && (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset || currentState == ClientState.Enraged))
+                {
+                    timeStuck = 0f;
+                    continue;
+                }
+
                 Debug.LogWarning($"Клиент {gameObject.name} застрял! Принудительно перевожу в состояние Confused.");
                 parent.stateMachine.SetState(ClientState.Confused);
                 yield break;

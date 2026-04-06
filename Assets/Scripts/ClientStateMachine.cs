@@ -8,11 +8,13 @@ using Characters;
 [RequireComponent(typeof(ClientMessGenerator))]
 [RequireComponent(typeof(ClientActionExecutor))]
 [RequireComponent(typeof(ClientFeedbackController))]
+[RequireComponent(typeof(ActionDiary))]
 public class ClientStateMachine : MonoBehaviour
 {
     // --- Components ---
     private ClientPathfinding parent;
     private CharacterStateLogger logger;
+    private ActionDiary actionDiary;
     
     // --- Modules ---
     private ClientMessGenerator messGenerator;
@@ -53,6 +55,7 @@ public class ClientStateMachine : MonoBehaviour
     {
         parent = p;
         logger = GetComponent<CharacterStateLogger>();
+        actionDiary = GetComponent<ActionDiary>();
 
         // Init Modules
         messGenerator = GetComponent<ClientMessGenerator>();
@@ -403,7 +406,7 @@ public class ClientStateMachine : MonoBehaviour
         CleanupOldState(currentState, newState);
         
         // --- ИСПРАВЛЕНИЕ: Используем централизованный метод остановки ---
-        StopAllActionCoroutines(); 
+        StopAllActionCoroutines();
         
         if (newState == ClientState.Confused)
         {
@@ -413,8 +416,85 @@ public class ClientStateMachine : MonoBehaviour
 
         currentState = newState;
         
+        // --- Логирование в ActionDiary (только важные состояния) ---
+        LogImportantStateChange(newState);
+        
         logger?.LogState(GetStatusInfo());
         feedbackController.UpdateStateVisuals(newState, parent.reasonForLeaving);
+    }
+
+    /// <summary>
+    /// Логирует важные изменения состояния клиента в ActionDiary
+    /// </summary>
+    private void LogImportantStateChange(ClientState newState)
+    {
+        // Используем безопасный вызов через ?. чтобы избежать NullReference
+        switch (newState)
+        {
+            case ClientState.Spawning:
+                actionDiary?.LogEvent("Заспавнен");
+                break;
+            case ClientState.MovingToTerminal:
+                actionDiary?.LogEvent("Идёт к терминалу");
+                break;
+            case ClientState.GettingTicket:
+                actionDiary?.LogEvent("Получает талон");
+                break;
+            case ClientState.MovingToRegistrarImpolite:
+                actionDiary?.LogEvent("Направляется к регистратуре (без очереди)");
+                break;
+            case ClientState.MovingToGoal:
+                actionDiary?.LogEvent("Движется к цели");
+                break;
+            case ClientState.AtRegistration:
+                actionDiary?.LogEvent("Начал обслуживание у регистратора");
+                break;
+            case ClientState.PassedRegistration:
+                actionDiary?.LogEvent("Прошёл регистратуру, получил направление");
+                break;
+            case ClientState.AtWaitingArea:
+                actionDiary?.LogEvent("Вошёл в зону ожидания");
+                break;
+            case ClientState.SittingInWaitingArea:
+                actionDiary?.LogEvent("Сел в зоне ожидания");
+                break;
+            case ClientState.AtDesk1:
+            case ClientState.AtDesk2:
+                actionDiary?.LogEvent("Обслуживается у клерка");
+                break;
+            case ClientState.GoingToCashier:
+                actionDiary?.LogEvent("Идёт к кассе");
+                break;
+            case ClientState.AtCashier:
+                actionDiary?.LogEvent("У кассы");
+                break;
+            case ClientState.AtToilet:
+                actionDiary?.LogEvent("В туалете");
+                break;
+            case ClientState.Confused:
+                actionDiary?.LogEvent("СБИЛСЯ С ПУТИ!");
+                break;
+            case ClientState.Grumbling:
+                actionDiary?.LogEvent("Начал ворчать от нетерпения");
+                break;
+            case ClientState.Enraged:
+                actionDiary?.LogEvent("ВЗБЕШЁН!");
+                break;
+            case ClientState.Leaving:
+                // Безопасный доступ к parent.reasonForLeaving (LeaveReason enum)
+                string reason = parent != null ? parent.reasonForLeaving.ToString() : "неизвестно";
+                actionDiary?.LogEvent($"Покидает офис (причина: {reason})");
+                break;
+            case ClientState.LeavingUpset:
+                actionDiary?.LogEvent("Уходит расстроенный");
+                break;
+            case ClientState.ReturningToWait:
+                actionDiary.LogEvent("Возвращается в зону ожидания");
+                break;
+            case ClientState.WaitingForDocument:
+                actionDiary.LogEvent("Ждёт документ");
+                break;
+        }
     }
 
     public void SetGoal(Waypoint g) => currentGoal = g;
@@ -430,6 +510,7 @@ public class ClientStateMachine : MonoBehaviour
         if (Random.value < jumperChance)
         {
             parent.isQueueJumper = true;
+            parent.GetVisuals()?.SetEmotion(Emotion.Sly);
             // Звук убран отсюда, он проиграется при пересечении EntranceTrigger
             
             LimitedCapacityZone impoliteZone = null;
@@ -446,11 +527,35 @@ public class ClientStateMachine : MonoBehaviour
             {
                 // Наглец встает в систему (получит скрытый номер 10000+) и ВЛЕЗАЕТ БЕЗ ОЧЕРЕДИ
                 ClientQueueManager.Instance.JoinQueue(parent);
+                
+                // Устанавливаем локальный номер очереди для наглеца
+                if (ClientQueueManager.Instance.queue.TryGetValue(parent, out int queueNum))
+                {
+                    myQueueNumber = queueNum;
+                }
+                
                 impoliteZone.JumpQueue(parent.gameObject);
                 
                 SetGoal(impoliteZone.waitingWaypoint);
                 SetState(ClientState.MovingToGoal); // Идет стоять над душой у клерка
+                
+                // Показываем наглое сообщение в бабле
+                string[] rudeMessages = {
+                    "Мне только спросить!",
+                    "Я требую немедленно!",
+                    "У меня нет времени ждать!",
+                    "Я тут главный!",
+                    "Это займёт секунду!"
+                };
+                string rudeMsg = rudeMessages[Random.Range(0, rudeMessages.Length)];
+                parent.ShowThoughtBubble(rudeMsg, 3f);
+                
                 return;
+            }
+            else
+            {
+                // Защита: если зоны нет, он становится обычным клиентом и идет за талоном
+                parent.isQueueJumper = false;
             }
         }
 
@@ -478,6 +583,15 @@ public class ClientStateMachine : MonoBehaviour
 
     private IEnumerator GetTicketRoutine()
     {
+        // Защита от повторного запуска
+        if (myQueueNumber != -1)
+        {
+            Debug.Log($"[GetTicketRoutine] {parent.name}: Уже имеет талон #{myQueueNumber}, выход.");
+            yield break;
+        }
+        
+        Debug.Log($"[GetTicketRoutine] {parent.name}: Начинаю получать талон...");
+        
         // Клиент тупит у аппарата
         if (Objects.TicketTerminal.Instance != null)
         {
@@ -488,29 +602,46 @@ public class ClientStateMachine : MonoBehaviour
         else yield return new WaitForSeconds(1f);
 
         // Получаем талон
+        Debug.Log($"[GetTicketRoutine] {parent.name}: JoinQueue...");
         ClientQueueManager.Instance.JoinQueue(parent);
+        
+        // Устанавливаем локальный номер очереди (同步 с ClientQueueManager)
+        if (ClientQueueManager.Instance.queue.TryGetValue(parent, out int queueNum))
+        {
+            myQueueNumber = queueNum;
+        }
+        
+        Debug.Log($"[GetTicketRoutine] {parent.name}: JoinQueue завершён, queueNumber={myQueueNumber}");
 
         // Выбираем место для ожидания
         Waypoint nextGoal = (parent.mainGoal == ClientGoal.VisitToilet)
             ? ClientSpawner.GetToiletZone().waitingWaypoint
             : ClientQueueManager.Instance.ChooseNewGoal(parent);
             
+        Debug.Log($"[GetTicketRoutine] {parent.name}: nextGoal={nextGoal?.name ?? "NULL"}, mainGoal={parent.mainGoal}");
+        
         if (nextGoal != null)
         {
             SetGoal(nextGoal);
             Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
+            Debug.Log($"[GetTicketRoutine] {parent.name}: seat={seat?.name ?? "NULL"}, standingClients={ClientQueueManager.Instance.standingClients.Count}");
             if (seat != null) GoToSeat(seat);
             else SetState(ClientState.MovingToGoal);
         }
         else
         {
+            Debug.LogWarning($"[GetTicketRoutine] {parent.name}: nextGoal == NULL! Переход в Confused!");
             SetState(ClientState.Confused);
         }
     }
 
     private void HandleMovementArrival()
     {
-        if (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset)
+        Debug.Log($"[HandleMovementArrival] {parent.name}: currentState={currentState}, currentGoal={currentGoal?.name ?? "NULL"}");
+        
+        // Бронебойная проверка: если статус ухода ИЛИ цель - это выход из здания
+        if (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset ||
+            (currentGoal != null && Managers.ClientSpawner.Instance != null && currentGoal == Managers.ClientSpawner.Instance.exitWaypoint))
         {
             parent.OnClientExit();
             return;
@@ -525,52 +656,84 @@ public class ClientStateMachine : MonoBehaviour
             SetState(ClientState.AtRegistration);
             return;
         }
-
-        Waypoint dest = GetCurrentGoal();
-        if (dest == null) { SetState(ClientState.Confused); return; }
+        // Проверка: если клиент уже получил талон (myQueueNumber != -1), не запускать GetTicketRoutine повторно
+        if (currentState == ClientState.MovingToTerminal || (currentGoal != null && currentGoal.name == "TicketStandPoint"))
+        {
+            if (myQueueNumber == -1) // Ещё не в очереди - идём за талоном
+            {
+                Debug.Log($"[HandleMovementArrival] {parent.name}: Прибыл к терминалу. Меняю состояние на GettingTicket.");
+                SetState(ClientState.GettingTicket);
+            }
+            else
+            {
+                Debug.Log($"[HandleMovementArrival] {parent.name}: Уже имеет талон #{myQueueNumber}, пропускаю GetTicketRoutine.");
+            }
+            return;
+        }
+        Debug.Log($"[HandleMovementArrival] {parent.name}: currentGoal={currentGoal?.name ?? "NULL"}");
+        if (currentGoal == null) {
+            Debug.LogWarning($"[HandleMovementArrival] {parent.name}: currentGoal == NULL! Переход в Confused!");
+            SetState(ClientState.Confused);
+            return;
+        }
 
         // БРОНЕБОЙНЫЙ ПОИСК: Ищем ServicePoint по ссылке, даже если забыли галочку isServicePoint
-        var servicePoint = dest.GetComponentInParent<ServicePoint>() ??
-                           FindObjectsByType<ServicePoint>(FindObjectsSortMode.None).FirstOrDefault(s => s.clientStandPoint == dest);
+        var servicePoint = currentGoal.GetComponentInParent<ServicePoint>() ??
+                           FindObjectsByType<ServicePoint>(FindObjectsSortMode.None).FirstOrDefault(s => s.clientStandPoint == currentGoal);
 
         // Если это точка обслуживания - жестко чекинимся
-        if (servicePoint != null || dest.isServicePoint)
+        if (servicePoint != null || currentGoal.isServicePoint)
         {
-            var owningZone = dest.GetComponentInParent<LimitedCapacityZone>() ?? servicePoint?.GetComponentInParent<LimitedCapacityZone>();
+            var owningZone = currentGoal.GetComponentInParent<LimitedCapacityZone>() ?? servicePoint?.GetComponentInParent<LimitedCapacityZone>();
             if (owningZone != null)
             {
-                owningZone.ManuallyOccupyWaypoint(dest, parent.gameObject);
+                owningZone.ManuallyOccupyWaypoint(currentGoal, parent.gameObject);
                 targetZone = owningZone;
-                occupiedWaypoint = dest;
+                occupiedWaypoint = currentGoal;
                 SetState(ClientState.InsideLimitedZone);
 
-                TryGreetWorkerAtServicePoint(dest);
+                TryGreetWorkerAtServicePoint(currentGoal);
                 return;
             }
         }
 
         // FIXED: Recognize if the client arrived at an inside spot of a queue zone
-        if (targetZone != null && targetZone.insideWaypoints.Contains(dest))
+        if (targetZone != null && targetZone.insideWaypoints.Contains(currentGoal))
         {
             SetState(ClientState.InsideLimitedZone);
             return;
         }
 
+        // Проверка: это точка входа в LimitedCapacityZone (waitingWaypoint)?
         var newTargetZone = FindObjectsByType<LimitedCapacityZone>(FindObjectsSortMode.None)
-            .FirstOrDefault(z => z.waitingWaypoint == dest);
-        bool zoneEntered = false;
+            .FirstOrDefault(z => z.waitingWaypoint == currentGoal);
         
         if (newTargetZone != null)
         {
             targetZone = newTargetZone;
             SetState(ClientState.AtLimitedZoneEntrance);
-            zoneEntered = true;
+            return; // Немедленно прерываем - они уже перешли в состояние входа в зону!
         }
 
-        // Клиент добавляется в очередь независимо от того, вошел ли он в зону
-        if (ClientQueueManager.Instance.IsWaypointInWaitingZone(dest) || zoneEntered)
+        // Проверка: это точка ожидания в зоне очереди?
+        if (ClientQueueManager.Instance.IsWaypointInWaitingZone(currentGoal))
         {
-            ClientQueueManager.Instance.JoinQueue(parent);
+            if (parent.isQueueJumper)
+            {
+                // Наглецы не сидят с обычными людьми! Возвращаем их упрямо стоять у стойки.
+                if (targetZone != null && targetZone.waitingWaypoint != null)
+                {
+                    SetGoal(targetZone.waitingWaypoint);
+                    SetState(ClientState.MovingToGoal);
+                }
+                else
+                {
+                    SetState(ClientState.Confused);
+                }
+                return;
+            }
+
+            // Для обычных клиентов:
             Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
             if (seat != null)
             {
@@ -580,10 +743,11 @@ public class ClientStateMachine : MonoBehaviour
             {
                 SetState(ClientState.AtWaitingArea);
             }
-            return; // FIXED: Always return here so valid waiting clients don't fall through to Confused state.
+            return;
         }
 
-        if (ClientSpawner.Instance.formTable != null && dest == ClientSpawner.Instance.formTable.tableWaypoint)
+        // Проверка: это стол с формой?
+        if (ClientSpawner.Instance.formTable != null && currentGoal == ClientSpawner.Instance.formTable.tableWaypoint)
         {
             StartCoroutine(GetFormFromTableRoutine());
             return;
@@ -633,18 +797,56 @@ public class ClientStateMachine : MonoBehaviour
 
     private IEnumerator ConfusedRoutine()
     {
+        Debug.Log($"[ConfusedRoutine] {parent.name}: Вошёл в Confused! previousGoal={previousGoal?.name ?? "NULL"}");
+        
         actionExecutor.StopMoving();
+
+        // 1. Показываем мысли потеряшки
+        string[] confusedThoughts = {
+            "Так куда это мне надо было?",
+            "Где я?",
+            "Ой, а я за кем занимал?",
+            "Что-то я запамятовал...",
+            "Голова кругом от этих кабинетов...",
+            "Кажется, я заблудился..."
+        };
+        parent.ShowThoughtBubble(confusedThoughts[Random.Range(0, confusedThoughts.Length)], 3f);
+
+        // Ждем 3 секунды, давая стажеру шанс перехватить клиента
         yield return new WaitForSeconds(3f);
-        float recoveryChance = 0.3f * (1f - parent.babushkaFactor);
-        if (Random.value < recoveryChance)
+
+        // 2. Кидаем кубик на память (бабушки забывают чаще)
+        float recoveryChance = 0.5f - (parent.babushkaFactor * 0.3f);
+        Debug.Log($"[ConfusedRoutine] {parent.name}: Шанс вспомнить = {recoveryChance:P0}");
+        
+        Waypoint newGoal = null;
+
+        if (Random.value < recoveryChance && previousGoal != null)
         {
-            SetGoal(previousGoal ?? ClientQueueManager.Instance.ChooseNewGoal(parent));
+            // Вспомнил!
+            parent.ShowThoughtBubble("А, точно, вспомнил!", 2f);
+            newGoal = previousGoal;
+        }
+        else
+        {
+            // Не вспомнил! Идет обратно в зал ожидания
+            parent.ShowThoughtBubble("Придется всё начинать сначала...", 2.5f);
+            newGoal = ClientQueueManager.Instance.ChooseNewGoal(parent);
+        }
+        
+        yield return new WaitForSeconds(1.5f);
+
+        if (newGoal != null)
+        {
+            SetGoal(newGoal);
             SetState(ClientState.MovingToGoal);
         }
         else
         {
-            SetGoal(ClientQueueManager.Instance.ChooseNewGoal(parent));
-            SetState(ClientState.MovingToGoal);
+            // Если даже в зал вернуться не смог - обижается и уходит
+            parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+            SetGoal(ClientSpawner.Instance.exitWaypoint);
+            SetState(ClientState.LeavingUpset);
         }
     }
 
@@ -689,21 +891,37 @@ public class ClientStateMachine : MonoBehaviour
 
     private IEnumerator EnragedRoutine()
     {
-        GuardManager.Instance.ReportViolator(parent.gameObject);
-        ClientQueueManager.Instance.AddAngryClient(parent);
+        GuardManager.Instance?.ReportViolator(parent.gameObject);
+        ClientQueueManager.Instance?.AddAngryClient(parent);
         
-        for(int i=0; i<5; i++) messGenerator.TrySpawnPuddle();
+        // МУСОРИМ БУМАГАМИ ПРИ СРЫВЕ
+        for(int i = 0; i < 5; i++)
+        {
+            if (parent.trashPrefabs != null && parent.trashPrefabs.Count > 0)
+            {
+                GameObject trash = parent.trashPrefabs[Random.Range(0, parent.trashPrefabs.Count)];
+                Vector3 spawnPos = transform.position + (Vector3)Random.insideUnitCircle * 1.5f;
+                Instantiate(trash, spawnPos, Quaternion.identity);
+            }
+        }
 
         var thoughtController = GetComponent<ThoughtBubbleController>();
-        if (thoughtController != null)
-        {
-            thoughtController.StopThinking();
-            thoughtController.TriggerCriticalThought($"Client_{ClientState.Enraged}");
-        }
+        if (thoughtController != null) thoughtController.StopThinking();
 
         float rageTimer = Time.time + rageDuration;
         while (Time.time < rageTimer)
         {
+            if (Random.value < 0.05f && thoughtController != null)
+            {
+                string[] rageShouts = { "БЕЗОБРАЗИЕ!", "Я БУДУ ЖАЛОВАТЬСЯ!", "ВЫ ВСЕ УВОЛЕНЫ!", "РРРАААА!" };
+                thoughtController.ShowPriorityMessage(rageShouts[Random.Range(0, rageShouts.Length)], 2f, Color.red);
+            }
+
+            if (Random.value < 0.02f && parent.trashPrefabs != null && parent.trashPrefabs.Count > 0)
+            {
+                Instantiate(parent.trashPrefabs[Random.Range(0, parent.trashPrefabs.Count)], transform.position, Quaternion.identity);
+            }
+
             Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
             if (allWaypoints.Length > 0)
             {
@@ -842,11 +1060,15 @@ public class ClientStateMachine : MonoBehaviour
     public void GetCalledToSpecificDesk(Waypoint destination, int queueNumber, IServiceProvider provider)
     {
         // --- ИСПРАВЛЕНИЕ: Используем централизованный метод остановки ---
-        StopAllActionCoroutines(); 
+        StopAllActionCoroutines();
         
         ClientQueueManager.Instance.OnClientLeavesWaitingZone(parent);
         myQueueNumber = queueNumber;
         myServiceProvider = provider;
+        
+        // --- Логирование вызова клиента к стойке ---
+        actionDiary?.LogEvent($"Вызван к окну №{queueNumber}");
+        
         SetGoal(destination);
         SetState(ClientState.MovingToGoal);
     }
@@ -944,9 +1166,7 @@ public class ClientStateMachine : MonoBehaviour
     
     private bool IsLeavingState(ClientState state)
     {
-        return state == ClientState.Leaving || state == ClientState.LeavingUpset ||
-               state == ClientState.Confused || state == ClientState.Enraged ||
-               state == ClientState.Grumbling;
+        return state == ClientState.Leaving || state == ClientState.LeavingUpset;
     }
 
     private bool hasEnteredBuilding = false;

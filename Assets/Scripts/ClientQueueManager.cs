@@ -17,12 +17,12 @@ public class ClientQueueManager : MonoBehaviour
     public float patienceMaxTime = 15f;
     
     private Dictionary<Transform, ClientPathfinding> occupiedSeats = new Dictionary<Transform, ClientPathfinding>();
-    private List<ClientPathfinding> standingClients = new List<ClientPathfinding>();
+    public List<ClientPathfinding> standingClients = new List<ClientPathfinding>();
     public Dictionary<ClientPathfinding, int> queue = new Dictionary<ClientPathfinding, int>();
     private int nextQueueNumber = 1;
     private float lastCallTime = -100f;
 
-    private Dictionary<int, float> clientsAwaitingResponse = new Dictionary<int, float>();
+    public Dictionary<int, float> clientsAwaitingResponse = new Dictionary<int, float>();
     /// <summary>Публичное свойство для доступа к clientsAwaitingResponse (только чтение)</summary>
     public int ClientsAwaitingResponseCount => clientsAwaitingResponse.Count;
     public List<int> currentlyCalledNumbers = new List<int>();
@@ -110,11 +110,14 @@ public class ClientQueueManager : MonoBehaviour
             if (destination == null) return;
 
             lastCallTime = Time.time;
-            if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, ((MonoBehaviour)availableWorker).transform.position);
+            if (nextClientSound != null) Managers.AudioManager.Instance?.PlayAudioClip2D(nextClientSound);
 
             int calledNumber = nextInQueue.Value;
             currentlyCalledNumbers.Add(calledNumber);
             clientsAwaitingResponse.Add(calledNumber, Time.time);
+            
+            // --- Логирование вызова клиента в его ActionDiary ---
+            nextClient?.GetComponent<ActionDiary>()?.LogEvent($"Вызван к окну №{calledNumber}");
 
             // --- ОЗВУЧКА ВЫЗОВА ТАЛОНА ---
             var workerMono = availableWorker as MonoBehaviour;
@@ -229,11 +232,10 @@ public class ClientQueueManager : MonoBehaviour
         { 
             client.stateMachine.DecideToVisitToilet();
         } 
-        else if (choice < confusedChance) 
-        { 
-            RemoveClientFromQueue(client);
-            client.stateMachine.SetState(ClientState.Confused); 
-        } 
+        else if (choice < confusedChance)
+        {
+            client.stateMachine.SetState(ClientState.Confused);
+        }
         else 
         { 
             StartPatienceTimer(client);
@@ -269,7 +271,7 @@ public class ClientQueueManager : MonoBehaviour
             // Если это наглец (QueueJumper) - даем скрытый номер >= 10000
             if (c.isQueueJumper)
             {
-                queue.Add(c, 10000 + nextQueueNumber++);
+                queue.Add(c, 10000 + Random.Range(1, 1000));
                 if (c.notification != null) c.notification.SetQueueNumber(-1); // Скрытый номер не показываем
             }
             else
@@ -284,7 +286,12 @@ public class ClientQueueManager : MonoBehaviour
     public Transform FindSeatForClient(ClientPathfinding client) { if (mainWaitingZone == null || mainWaitingZone.seatPoints.Count == 0) return null; Transform freeSeat = mainWaitingZone.seatPoints.FirstOrDefault(s => s != null && !occupiedSeats.ContainsKey(s)); if (freeSeat != null) { occupiedSeats[freeSeat] = client; if(standingClients.Contains(client)) standingClients.Remove(client); return freeSeat; } else { if (!standingClients.Contains(client)) standingClients.Add(client); return null; } }
     public void OnClientLeavesWaitingZone(ClientPathfinding client) { if (standingClients.Contains(client)) standingClients.Remove(client); if (occupiedSeats.ContainsValue(client)) { Transform seatToFree = occupiedSeats.FirstOrDefault(kvp => kvp.Value == client).Key; if (seatToFree != null) { occupiedSeats.Remove(seatToFree); FindAndAssignNearestStandingClient(seatToFree); } } }
     private void FindAndAssignNearestStandingClient(Transform freeSeat) { if (occupiedSeats.ContainsKey(freeSeat) || standingClients.Count == 0) return; ClientPathfinding closestClient = standingClients.OrderBy(c => Vector2.Distance(c.transform.position, freeSeat.position)).FirstOrDefault(); if (closestClient != null) { standingClients.Remove(closestClient); occupiedSeats[freeSeat] = closestClient; closestClient.stateMachine.GoToSeat(freeSeat); } }
-    public Waypoint ChooseNewGoal(ClientPathfinding client) { return mainWaitingZone.GetRandomStandingPoint().GetComponent<Waypoint>(); }
+    public Waypoint ChooseNewGoal(ClientPathfinding client) {
+        Debug.Log($"[ChooseNewGoal] client={client?.name}, mainWaitingZone={(mainWaitingZone != null ? mainWaitingZone.name : "NULL")}");
+        var result = mainWaitingZone?.GetRandomStandingPoint()?.GetComponent<Waypoint>();
+        Debug.Log($"[ChooseNewGoal] result={result?.name ?? "NULL"}");
+        return result;
+    }
     public void AddAngryClient(ClientPathfinding client) { if (!dissatisfiedClients.Contains(client)) { dissatisfiedClients.Add(client); } }
 	
 	/// <summary>
@@ -307,7 +314,7 @@ public class ClientQueueManager : MonoBehaviour
 	       if (targetClient != null)
 	       {
 	           lastCallTime = Time.time;
-	           if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, (provider as MonoBehaviour).transform.position);
+	           if (nextClientSound != null) Managers.AudioManager.Instance?.PlayAudioClip2D(nextClientSound);
 
 	           int calledNumber = nextInQueue.Value;
 	           currentlyCalledNumbers.Add(calledNumber);
@@ -353,7 +360,7 @@ public class ClientQueueManager : MonoBehaviour
 	        }
 
 	        lastCallTime = Time.time;
-	        if (nextClientSound != null) AudioSource.PlayClipAtPoint(nextClientSound, ((MonoBehaviour)provider).transform.position);
+	        if (nextClientSound != null) Managers.AudioManager.Instance?.PlayAudioClip2D(nextClientSound);
 
 	        var workerMono = provider as MonoBehaviour;
 	        if (workerMono != null)

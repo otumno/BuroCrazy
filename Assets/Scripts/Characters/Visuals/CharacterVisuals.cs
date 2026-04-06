@@ -25,6 +25,8 @@ namespace Characters
     private Coroutine levelUpCoroutine;
 
     private Sprite assignedPortrait;
+    
+    public Sprite UniquePortrait => assignedPortrait;
 
     // Archetype tracking for Behavior Tree
     public Characters.ClientArchetype currentArchetype { get; private set; }

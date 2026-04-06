@@ -150,7 +150,22 @@ public class ClientPathfinding : MonoBehaviour
     }
 
     [Header("Касса")]
-    public int billToPay = 0;
+    [SerializeField] private int _billToPay = 0;
+    public int billToPay
+    {
+        get => _billToPay;
+        set
+        {
+            int oldBill = _billToPay;
+            _billToPay = value;
+            
+            // Если счет вырос (нам выставили счет), принимаем решение об оплате
+            if (_billToPay > oldBill && _billToPay > 0 && stateMachine != null && stateMachine.GetCurrentState() != ClientState.Leaving)
+            {
+                TrySteal();
+            }
+        }
+    }
     public GameObject moneyPrefab;
     
     [Header("Создание беспорядка")]
@@ -264,13 +279,13 @@ public class ClientPathfinding : MonoBehaviour
 
         stateMachine.Initialize(this);
         
-        // --- ПРИНУДИТЕЛЬНАЯ РЕГИСТРАЦИЯ В ОЧЕРЕДИ ---
-        // Обеспечиваем получение тикета при появлении клиента
-        if (ClientQueueManager.Instance != null && !ClientQueueManager.Instance.queue.ContainsKey(this))
-        {
-            ClientQueueManager.Instance.JoinQueue(this);
-            Debug.Log($"[ClientPathfinding] {gameObject.name}: зарегистрирован в очереди с номером {ClientQueueManager.Instance.queue[this]}");
-        }
+        // --- ПРИНУДИТЕЛЬНАЯ РЕГИСТРАЦИЯ В ОЧЕРЕДИ УБРАНА ---
+        // Клиенты теперь получают номерок только в TicketTerminal, не при спавне
+        // if (ClientQueueManager.Instance != null && !ClientQueueManager.Instance.queue.ContainsKey(this))
+        // {
+        //     ClientQueueManager.Instance.JoinQueue(this);
+        //     Debug.Log($"[ClientPathfinding] {gameObject.name}: зарегистрирован в очереди с номером {ClientQueueManager.Instance.queue[this]}");
+        // }
         movement.Initialize(this);
         float basePatience = Random.Range(minPatienceTime, maxPatienceTime);
         totalPatienceTime = basePatience * (1 + babushkaFactor);
@@ -463,12 +478,29 @@ public class ClientPathfinding : MonoBehaviour
     }
 	
 	public void RelieveStress(float percent)
-    {
-        _currentStressValue -= _maxPatienceValue * percent;
-        if (_currentStressValue < 0) _currentStressValue = 0;
-    }
-	
-	public void InitializeRemote(Sprite icon)
+	   {
+	       _currentStressValue -= _maxPatienceValue * percent;
+	       if (_currentStressValue < 0) _currentStressValue = 0;
+	   }
+
+	   /// <summary>
+	   /// Уменьшает терпение клиента на указанное количество секунд.
+	   /// </summary>
+	   /// <param name="seconds">Количество секунд для уменьшения терпения</param>
+	   public void DecreasePatience(float seconds)
+	   {
+	       if (isLeavingSuccessfully) return;
+	       if (seconds <= 0) return;
+	       
+	       float currentPatience = CurrentPatience;
+	       if (currentPatience <= 0) return;
+	       
+	       float newRemainingTime = Mathf.Max(0, currentPatience - seconds);
+	       float timePassed = totalPatienceTime - newRemainingTime;
+	       patienceStartTime = Time.time - timePassed;
+	   }
+
+	   public void InitializeRemote(Sprite icon)
     {
         IsRemote = true;
         iconOverride = icon;
@@ -832,6 +864,51 @@ public class ClientPathfinding : MonoBehaviour
         {
             string thought = archetype.GetRandomThought();
             ShowThoughtBubble(thought, 4f);
+        }
+    }
+
+    /// <summary>
+    /// Попытка украсть и сбежать вместо оплаты
+    /// </summary>
+    public void TrySteal()
+    {
+        // Бабушки никогда не воруют
+        if (babushkaFactor > 0.5f) return;
+        
+        // Шанс кражи зависит от фактора "пролазы" (например, максимум 30% шанс)
+        float theftChance = prolazaFactor * 0.3f;
+        
+        if (Random.value < theftChance)
+        {
+            Debug.Log($"[Theft] Клиент {name} решил не платить и сбежать!");
+            
+            // Сбрасываем очередь и текущие действия
+            isQueueJumper = false;
+            stateMachine.StopAllActionCoroutines();
+            
+            // Эмоция и звук
+            visuals?.SetEmotion(Emotion.Sly);
+            if (theftAttemptSound != null && Managers.AudioManager.Instance != null)
+            {
+                Managers.AudioManager.Instance.PlayAudioClip2D(theftAttemptSound);
+            }
+            
+            ShowThoughtBubble("Платить? Щас!", 3f);
+            
+            // Регистрируем вора для охраны
+            if (Managers.GuardManager.Instance != null)
+            {
+                Managers.GuardManager.Instance.currentThief = this.gameObject;
+            }
+            
+            // Замедляем скорость при побеге
+            var mover = GetComponent<AgentMover>();
+            if (mover != null) mover.ApplySpeedMultiplier(0.8f);
+            
+            // Убегаем
+            reasonForLeaving = LeaveReason.Theft;
+            stateMachine.SetGoal(Managers.ClientSpawner.Instance.exitWaypoint);
+            stateMachine.SetState(ClientState.Leaving);
         }
     }
 }

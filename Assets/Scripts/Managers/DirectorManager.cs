@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using System.Linq;
+using Data;
+using Gameplay;
 
 namespace Managers
 {
@@ -73,6 +75,23 @@ namespace Managers
         {
             float damage = shadowMoneyAmount * corruptionDamageMultiplier;
             TakeDamage(damage, "Теневые доходы (Коррупция)");
+        }
+
+        public void ApplyClinchEffect(bool success, bool isTimeout = false)
+        {
+            Debug.Log($"[DirectorManager] Попытка доступа к AIBalanceConfig.Instance. Текущий namespace AIBalanceConfig: Gameplay, using Data: присутствует. Код компилируется?");
+            var config = AIBalanceConfig.Instance;
+            Debug.Log($"[DirectorManager] AIBalanceConfig.Instance = {(config != null ? config.name : "NULL")}");
+            if (success)
+            {
+                HealReputation(config.clinchRewardHP);
+                Debug.Log($"<color=green>[Клинч]</color> Успех! Восстановлено HP: {config.clinchRewardHP}");
+            }
+            else
+            {
+                TakeDamage(config.clinchPenaltyHP, "Провал клинча");
+                Debug.Log($"<color=red>[Клинч]</color> Провал! Урон HP: {config.clinchPenaltyHP}");
+            }
         }
 
         private void HealReputation(float amount)

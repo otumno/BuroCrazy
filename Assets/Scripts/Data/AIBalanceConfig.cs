@@ -109,6 +109,33 @@ namespace Gameplay
         public float gossipCooldown = 20f;
         #endregion
 
+        #region Clinch System
+        [Header("🤼 Clinch System (Прорыв)")]
+        [Tooltip("Базовый шанс инициировать клинч (прорыв)")]
+        [Range(0f, 1f)]
+        public float clinchBaseChance = 0.3f;
+
+        [Tooltip("Время в секундах на принятие решения в клинче")]
+        [Range(1f, 20f)]
+        public float clinchTimeoutDuration = 10f;
+
+        [Tooltip("Штраф HP директора при провале клинча")]
+        [Range(0f, 50f)]
+        public float clinchPenaltyHP = 10f;
+
+        [Tooltip("Награда HP директора при успешном клинче")]
+        [Range(0f, 50f)]
+        public float clinchRewardHP = 5f;
+
+        [Tooltip("Штраф к стрессу персонажа при провале клинча")]
+        [Range(0f, 100f)]
+        public float clinchPenaltyStress = 20f;
+
+        [Tooltip("Облегчение стресса персонажа при успешном клинче")]
+        [Range(0f, 100f)]
+        public float clinchRewardStress = 10f;
+        #endregion
+
         #region Debug
         [Header("🔧 Debug")]
         [Tooltip("Включить подробные логи")]

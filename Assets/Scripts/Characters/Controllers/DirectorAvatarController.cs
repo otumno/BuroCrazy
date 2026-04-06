@@ -510,29 +510,211 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
             // -----------------------------------------------------
 
-            var zone = ClientSpawner.GetZoneByDeskId(workstation.deskId);
-            var clientToServe = zone?.GetOccupyingClients().FirstOrDefault();
-
-            if (clientToServe != null && clientBeingServed == null)
+            // --- ЛОГИКА АРХИВАРИУСА (deskId 3) ---
+            if (workstation.deskId == 3)
             {
-                  if (clientToServe.stateMachine != null && clientToServe.stateMachine.GetTargetZone() == zone) {
+                if (ArchiveRequestManager.Instance != null && ArchiveRequestManager.Instance.HasPendingRequests())
+                {
+                    yield return StartCoroutine(DirectorArchiveRetrieveRoutine());
+                    continue;
+                }
+                else if (ArchiveManager.Instance != null && !ArchiveManager.Instance.mainDocumentStack.IsEmpty)
+                {
+                    // Архивируем документы со стола
+                    yield return StartCoroutine(DirectorArchiveStoreRoutine());
+                    continue;
+                }
+            }
+            // -----------------------------------------------------
 
-                      // Сбрасываем клиента перед обслуживанием для безопасности
-                      clientBeingServed = null;
+            // --- PULL-МОДЕЛЬ ДЛЯ РЕГИСТРАТУРЫ (deskId == 0) ---
+            if (workstation.deskId == 0)
+            {
+                if (ClientQueueManager.Instance != null && clientBeingServed == null)
+                {
+                    var nextInQueue = ClientQueueManager.Instance.queue
+                        .Where(kvp => kvp.Key != null && !ClientQueueManager.Instance.currentlyCalledNumbers.Contains(kvp.Value))
+                        .OrderBy(kvp => kvp.Value)
+                        .FirstOrDefault();
 
-                      // Запускаем обслуживание
-                      yield return StartCoroutine(DirectorServiceRoutine(clientToServe));
+                    var client = nextInQueue.Key;
+                    if (client != null)
+                    {
+                        int ticketNum = nextInQueue.Value;
+                        ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
+                        ClientQueueManager.Instance.clientsAwaitingResponse.Add(ticketNum, Time.time);
 
-                      // Явно сбрасываем после обслуживания
-                      clientBeingServed = null;
+                        Waypoint wp = workstation.clientStandPoint != null ? workstation.clientStandPoint : workstation.GetComponentInChildren<Waypoint>();
+                        client.stateMachine.GetCalledToSpecificDesk(wp, ticketNum, this);
 
-                      // --- ИЗНОС: Наносим урон ПОСЛЕ обслуживания ---
-                      // Урон зависит от эффективности (чем хуже стол, тем больше усилий и урона)
-                      if (durability != null) durability.Degrade(Random.Range(2f, 4f));
+                        // Ждём прибытия клиента (с таймаутом 15f)
+                        float waitTimer = 0f;
+                        yield return new WaitUntil(() =>
+                        {
+                            waitTimer += Time.deltaTime;
+                            if (waitTimer >= 15f) return true;
+                            var z = ClientSpawner.GetZoneByDeskId(workstation.deskId);
+                            return z?.GetOccupyingClients().Contains(client) ?? false;
+                        });
 
-                      // Дополнительная задержка из-за плохой эффективности
-                      if (efficiency < 1.0f) yield return new WaitForSeconds(1.0f);
-                   }
+                        if (waitTimer >= 15f)
+                        {
+                            // Клиент не пришёл за 15ф — убираем из вызванных
+                            ClientQueueManager.Instance.currentlyCalledNumbers.Remove(ticketNum);
+                            ClientQueueManager.Instance.clientsAwaitingResponse.Remove(ticketNum);
+                            yield return new WaitForSeconds(0.5f);
+                            continue;
+                        }
+
+                        // Обслуживаем клиента
+                        clientBeingServed = client;
+                        yield return StartCoroutine(DirectorServiceRoutine(client));
+                        clientBeingServed = null;
+
+                        // --- ИЗНОС: Наносим урон ПОСЛЕ обслуживания ---
+                        if (durability != null) durability.Degrade(Random.Range(2f, 4f));
+                        if (efficiency < 1.0f) yield return new WaitForSeconds(1.0f);
+                    }
+                }
+            }
+            // --- ЛОГИКА КЛЕРКОВ И РЕГИСТРАТОРА ---
+            else
+            {
+                ClientPathfinding clientToServe = workstation.CurrentClient;
+
+                // 1. ЧИСТАЯ PULL-МОДЕЛЬ ДЛЯ РЕГИСТРАТУРЫ (Берем из очереди)
+                if (clientToServe == null && workstation.deskId == 0 && ClientQueueManager.Instance != null && ClientQueueManager.Instance.queue.Count > 0)
+                {
+                    var nextInQueue = ClientQueueManager.Instance.queue
+                        .Where(c => c.Key != null && !ClientQueueManager.Instance.currentlyCalledNumbers.Contains(c.Value))
+                        .OrderBy(kvp => kvp.Value)
+                        .FirstOrDefault();
+
+                    if (nextInQueue.Key != null)
+                    {
+                        clientToServe = nextInQueue.Key;
+                        int ticketNum = nextInQueue.Value;
+                        
+                        ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
+                        ClientQueueManager.Instance.clientsAwaitingResponse.Add(ticketNum, Time.time);
+                        
+                        workstation.AssignClient(clientToServe);
+
+                        string callMsg = ticketNum > 10000 ? "Следующий!" : $"Талон №{ticketNum}, подойдите!";
+                        thoughtBubble?.ShowPriorityMessage(callMsg, 3f, Color.green);
+                        if (ClientQueueManager.Instance.nextClientSound != null)
+                            Managers.AudioManager.Instance?.PlayAudioClip2D(ClientQueueManager.Instance.nextClientSound);
+
+                        Waypoint wp = workstation.clientStandPoint != null ? workstation.clientStandPoint : workstation.GetComponentInChildren<Waypoint>();
+                        clientToServe.stateMachine.GetCalledToSpecificDesk(wp, ticketNum, this);
+                    }
+                }
+
+                // 2. БРОНЕБОЙНАЯ ТЯГА (Ищем неприкаянных клиентов в зоне стола)
+                if (clientToServe == null)
+                {
+                    var zone = ClientSpawner.GetZoneByDeskId(workstation.deskId);
+                    if (zone != null)
+                    {
+                        clientToServe = zone.GetOccupyingClients().FirstOrDefault(c =>
+                            c.stateMachine.GetCurrentState() != ClientState.Leaving &&
+                            c.stateMachine.GetCurrentState() != ClientState.LeavingUpset &&
+                            c.stateMachine.MyServiceProvider == null);
+                            
+                        if (clientToServe != null)
+                        {
+                            workstation.AssignClient(clientToServe);
+                            thoughtBubble?.ShowPriorityMessage("Эй, вы, подходите!", 2f, Color.green);
+                            Waypoint wp = workstation.clientStandPoint != null ? workstation.clientStandPoint : workstation.GetComponentInChildren<Waypoint>();
+                            clientToServe.stateMachine.GetCalledToSpecificDesk(wp, clientToServe.stateMachine.MyQueueNumber, this);
+                        }
+                    }
+                }
+
+                // 3. ЛОГИКА НАГЛЕЦОВ (QUEUE JUMPERS)
+                if (clientToServe != null && clientToServe.isQueueJumper)
+                {
+                    float currentSoftSkills = (skills != null) ? skills.softSkills : 0.5f;
+                    float currentCorruption = (skills != null) ? skills.corruption : 0.0f;
+                    
+                    if (Random.value < currentSoftSkills)
+                    {
+                        thoughtBubble?.ShowPriorityMessage("В общую очередь, пожалуйста!", 3f, Color.red);
+                        clientToServe.ShowThoughtBubble("Извините, шеф...", 2f);
+                        clientToServe.isQueueJumper = false;
+                        
+                        if (Objects.TicketTerminal.Instance != null && Objects.TicketTerminal.Instance.GetStandWaypoint() != null)
+                        {
+                            clientToServe.stateMachine.SetGoal(Objects.TicketTerminal.Instance.GetStandWaypoint());
+                            clientToServe.stateMachine.SetState(ClientState.MovingToTerminal);
+                        }
+                        else clientToServe.stateMachine.SetState(ClientState.Confused);
+                        
+                        workstation.ClearClient();
+                        yield return new WaitForSeconds(2f);
+                        continue; // Ждем следующего
+                    }
+                    else
+                    {
+                        if (Random.value < currentCorruption)
+                        {
+                            thoughtBubble?.ShowPriorityMessage("Ладно, давайте сюда...", 2f, Color.green);
+                            if (PlayerWallet.Instance != null) PlayerWallet.Instance.AddMoney(150, "Взятка Директору", IncomeType.Shadow);
+                            if (AudioManager.Instance != null) AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Money_Income, transform.position);
+                        }
+                        else
+                        {
+                            thoughtBubble?.ShowPriorityMessage("Так уж и быть, давайте...", 2f, Color.gray);
+                        }
+                        clientToServe.isQueueJumper = false; // Снимаем флаг наглеца
+                    }
+                }
+
+                // 4. ЖДЕМ КЛИЕНТА (С ТАЙМАУТОМ)
+                if (clientToServe != null && clientBeingServed == null)
+                {
+                    float waitTimer = 0f;
+                    bool clientArrived = false;
+                    Vector2 wpPos = workstation.clientStandPoint != null ? (Vector2)workstation.clientStandPoint.transform.position : (Vector2)workstation.transform.position;
+
+                    while (waitTimer < 15f && isManuallyWorking)
+                    {
+                        if (clientToServe == null || clientToServe.stateMachine == null || workstation.CurrentClient != clientToServe) break;
+
+                        if (workstation.IsClientPhysicallyReady || Vector2.Distance(clientToServe.transform.position, wpPos) < 1.5f)
+                        {
+                            clientArrived = true;
+                            break;
+                        }
+
+                        var state = clientToServe.stateMachine.GetCurrentState();
+                        if (state == ClientState.Leaving || state == ClientState.LeavingUpset || state == ClientState.Confused || state == ClientState.Enraged)
+                            break;
+
+                        waitTimer += 0.5f;
+                        yield return new WaitForSeconds(0.5f);
+                    }
+
+                    if (!clientArrived)
+                    {
+                        thoughtBubble?.ShowPriorityMessage("Следующий!", 2f, Color.red);
+                        workstation.ClearClient();
+                        if (clientToServe != null && ClientQueueManager.Instance != null)
+                        {
+                            ClientQueueManager.Instance.RemoveClientFromQueue(clientToServe);
+                            clientToServe.stateMachine?.SetState(ClientState.Confused);
+                        }
+                    }
+                    else
+                    {
+                        clientBeingServed = clientToServe;
+                        yield return StartCoroutine(DirectorServiceRoutine(clientToServe));
+                        clientBeingServed = null;
+                        workstation.ClearClient();
+
+                        if (durability != null) durability.Degrade(Random.Range(1f, 2f));
+                    }
+                }
             }
 
             yield return new WaitForSeconds(0.5f);
@@ -540,10 +722,99 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
          Debug.Log($"[DirectorController] {characterName} закончил ручную работу на {workstation?.name}.");
     }
 
+    // --- НОВАЯ СИСТЕМА АРХИВА ДЛЯ ДИРЕКТОРА ---
+    private IEnumerator DirectorArchiveRetrieveRoutine()
+    {
+        var request = ArchiveRequestManager.Instance.GetNextRequest();
+        if (request == null) yield break;
+
+        // 1. Идем к случайному шкафу
+        var cabinet = ArchiveManager.Instance.GetRandomCabinet();
+        if (cabinet != null)
+        {
+            SetState(DirectorState.MovingToPoint);
+            yield return StartCoroutine(MoveToTargetRoutine(cabinet.transform.position));
+        }
+
+        SetState(DirectorState.WorkingAtStation);
+        thoughtBubble?.ShowPriorityMessage("Ищу выписку (Архив)...", 2f, Color.yellow);
+        
+        // Директор ищет быстро (1-2 шага поиска вместо 2-4 как у обычного клерка)
+        int searchSteps = Random.Range(1, 3);
+        string[] searchThoughts = { "Где же она...", "Так, так, так...", "Пыли-то сколько..." };
+        for(int i = 0; i < searchSteps; i++)
+        {
+            thoughtBubble?.ShowPriorityMessage(searchThoughts[Random.Range(0, searchThoughts.Length)], 1.5f, Color.gray);
+            yield return new WaitForSeconds(1.5f);
+        }
+
+        thoughtBubble?.ShowPriorityMessage("Нашел!", 1.5f, Color.green);
+        stackHolder?.ShowSingleDocumentSprite();
+        
+        var registrar = request.RequestingRegistrar;
+        if (registrar != null)
+        {
+            // Несем документ регистратору
+            SetState(DirectorState.MovingToPoint);
+            yield return StartCoroutine(MoveToTargetRoutine(registrar.transform.position));
+            
+            stackHolder?.HideStack();
+            request.IsFulfilled = true;
+            
+            thoughtBubble?.ShowPriorityMessage("Вот ваша выписка.", 2f, Color.white);
+            yield return new WaitForSeconds(1f);
+            
+            // Возвращаемся за свой стол в архиве
+            SetState(DirectorState.MovingToPoint);
+            yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
+            SetState(DirectorState.WorkingAtStation);
+        }
+        else
+        {
+            stackHolder?.HideStack();
+            request.IsFulfilled = true;
+            // Если регистратор пропал, просто возвращаемся за свой стол
+            SetState(DirectorState.MovingToPoint);
+            yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
+            SetState(DirectorState.WorkingAtStation);
+        }
+    }
+
+    private IEnumerator DirectorArchiveStoreRoutine()
+    {
+        // Берем один документ из главной кучи
+        if (ArchiveManager.Instance.mainDocumentStack.TakeOneDocument())
+        {
+            // 1. Идем к случайному шкафу
+            var cabinet = ArchiveManager.Instance.GetRandomCabinet();
+            if (cabinet != null)
+            {
+                SetState(DirectorState.MovingToPoint);
+                yield return StartCoroutine(MoveToTargetRoutine(cabinet.transform.position));
+            }
+
+            SetState(DirectorState.WorkingAtStation);
+            thoughtBubble?.ShowPriorityMessage("Архивирую...", 1.0f, Color.gray);
+            
+            // Директор кладет бумаги в шкаф
+            stackHolder?.ShowSingleDocumentSprite();
+            yield return new WaitForSeconds(1.0f);
+            stackHolder?.HideStack();
+
+            // 2. Возвращаемся за свой стол в архиве за следующей партией
+            if (currentWorkstation != null && currentWorkstation.clerkStandPoint != null)
+            {
+                SetState(DirectorState.MovingToPoint);
+                yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
+                SetState(DirectorState.WorkingAtStation);
+            }
+        }
+    }
+
     /// <summary>
     /// Корутина для перемещения Директора к цели с использованием PathfindingUtility.
     /// </summary>
-    // <<< ИЗМЕНЕНИЕ: Убран stateAfterArrival >>>
+    // <<< ИЗМЕНЕНИЕ: Убран stateAfterArrellation >>>
     private IEnumerator MoveToTargetRoutine(Vector2 targetPosition)
     {
         SetState(DirectorState.MovingToPoint); // Устанавливаем состояние "Движется к точке"
@@ -1022,11 +1293,41 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                             destination = ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
                             break;
                         case ClientGoal.GetArchiveRecord:
-                            thoughtBubble?.ShowPriorityMessage("Архив недоступен.\nИзвините.", 3f, Color.red);
+                            // Директор сам бежит в архив к шкафу!
+                            thoughtBubble?.ShowPriorityMessage("Минутку, я мигом в архив!", 2f, Color.cyan);
                             yield return new WaitForSeconds(1.5f);
-                            destination = ClientSpawner.Instance?.exitWaypoint;
-                            client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                            leavingUpset = true;
+                            
+                            var targetCabinet = ArchiveManager.Instance?.GetRandomCabinet();
+                            if (targetCabinet != null)
+                            {
+                                // Бежим к шкафу
+                                SetState(DirectorState.MovingToPoint);
+                                yield return StartCoroutine(MoveToTargetRoutine(targetCabinet.transform.position));
+                                
+                                SetState(DirectorState.WorkingAtStation);
+                                thoughtBubble?.ShowPriorityMessage("Где же это дело...", 1.5f, Color.gray);
+                                yield return new WaitForSeconds(1.5f);
+                                
+                                thoughtBubble?.ShowPriorityMessage("Нашел!", 1.0f, Color.green);
+                                stackHolder?.ShowSingleDocumentSprite();
+                                yield return new WaitForSeconds(1.0f);
+                                
+                                // Возвращаемся к клиенту за свою стойку регистратуры
+                                SetState(DirectorState.MovingToPoint);
+                                yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
+                                SetState(DirectorState.ServingClient);
+                                
+                                stackHolder?.HideStack();
+                                client.billToPay += 150;
+                                destination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+                                leavingUpset = false;
+                            }
+                            else
+                            {
+                                 thoughtBubble?.ShowPriorityMessage("А где архив?!", 2f, Color.red);
+                                 destination = ClientSpawner.Instance?.exitWaypoint;
+                                 leavingUpset = true;
+                            }
                             break;
                         default:
                             client.isLeavingSuccessfully = true;
@@ -1135,6 +1436,92 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         clientBeingServed = null;
         SetState(DirectorState.WorkingAtStation);
         Debug.Log($"[DirectorController] {characterName} завершил обслуживание {client?.name}.");
+    }
+
+    /// <summary>
+    /// Отправляет Директора к указанной мишени клинча и открывает UI мини-игры.
+    /// </summary>
+    /// <param name="target">Мишень клинча для разрешения</param>
+    public void GoAndResolveClinch(Clinch.ClinchTarget target)
+    {
+        if (target == null) return;
+        if (IsInUninterruptibleAction)
+        {
+            Debug.LogWarning("[DirectorAvatarController] GoAndResolveClinch: Директор занят!");
+            return;
+        }
+        StartCoroutine(GoAndResolveClinchRoutine(target));
+    }
+
+    private IEnumerator GoAndResolveClinchRoutine(Clinch.ClinchTarget target)
+    {
+        if (target == null) yield break;
+
+        SetUninterruptible(true);
+        SetState(DirectorState.MovingToPoint);
+
+        // 1. УМНЫЙ ПОИСК ЦЕЛИ (Чтобы не обегать столы)
+        Vector3 destination = target.transform.position;
+        
+        var client = target.GetComponent<ClientPathfinding>();
+        var staff = target.GetComponent<StaffController>();
+
+        ServicePoint relatedDesk = null;
+
+        if (client != null && client.stateMachine != null && client.stateMachine.MyServiceProvider != null)
+        {
+            relatedDesk = client.stateMachine.MyServiceProvider.GetWorkstation();
+        }
+        else if (staff != null)
+        {
+            relatedDesk = staff.assignedWorkstation;
+        }
+
+        // Если клинч происходит за рабочим столом, бежим к точке персонала
+        if (relatedDesk != null && relatedDesk.clerkStandPoint != null)
+        {
+            destination = relatedDesk.clerkStandPoint.position;
+        }
+        else
+        {
+            // Иначе ищем ближайший вейпоинт к самому персонажу (например, в коридоре)
+            var wp = FindNearestWaypointTo(target.transform.position);
+            if (wp != null) destination = wp.transform.position;
+        }
+
+        // 2. ДВИЖЕНИЕ И ПРЕРЫВАНИЕ ПО ДИСТАНЦИИ
+        if (agentMover != null)
+        {
+            var path = Utilities.PathfindingUtility.BuildPathTo(transform.position, destination, gameObject);
+            agentMover.SetPath(path);
+        }
+
+        float interactRange = 1.5f;
+
+        // Ждем, пока двигаемся, но бьем по тормозам, если подошли достаточно близко
+        while (target != null && target.IsActive && agentMover != null && agentMover.IsMoving())
+        {
+            if (Vector2.Distance(transform.position, target.transform.position) <= interactRange)
+            {
+                agentMover.Stop();
+                break;
+            }
+            yield return null;
+        }
+
+        SetState(DirectorState.Idle);
+        SetUninterruptible(false);
+
+        // 3. ПРОВЕРКА И ОТКРЫТИЕ UI
+        // Даем небольшой запас (+0.5f), чтобы не промахнуться из-за погрешностей остановки физики
+        if (target != null && target.IsActive && Vector2.Distance(transform.position, target.transform.position) <= interactRange + 0.5f)
+        {
+            target.OpenUI();
+        }
+        else if (target != null && !target.IsActive)
+        {
+            thoughtBubble?.ShowPriorityMessage("Не успел...", 2f, Color.gray);
+        }
     }
     #endregion
 } // Конец класса DirectorAvatarController

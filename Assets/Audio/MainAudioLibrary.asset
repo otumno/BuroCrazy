@@ -292,3 +292,21 @@ MonoBehaviour:
     FadeOutDuration: 0
     FadeOutEase: 1
     mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
+  - id: 31
+    clips:
+    - {fileID: 8300000, guid: 8e67f6aeb3ff9964f98a04aa5e233a64, type: 3}
+    volume: 0.6
+    pitch: 1
+    pitchDelta: 0.2
+    Priority: 128
+    Loop: 0
+    SpatialBlend: 0
+    Rolloff: 1
+    DopplerLevel: 1
+    DistanceMin: 0
+    DistanceMax: 50
+    FadeInDuration: 0
+    FadeInEase: 1
+    FadeOutDuration: 0
+    FadeOutEase: 1
+    mixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}

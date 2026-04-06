@@ -250,6 +250,38 @@ namespace BuroDebug
 
             yPos -= 25;
 
+            // Кнопка "Спавн пожилого (К Директору)"
+            var spawnElderlyDirBtnGO = new GameObject("Btn_Elderly_Director");
+            spawnElderlyDirBtnGO.transform.SetParent(panel.transform, false);
+            var spawnElderlyDirBtnRect = spawnElderlyDirBtnGO.AddComponent<RectTransform>();
+            spawnElderlyDirBtnRect.anchorMin = new Vector2(0, 1);
+            spawnElderlyDirBtnRect.anchorMax = new Vector2(1, 1);
+            spawnElderlyDirBtnRect.pivot = new Vector2(0.5f, 1);
+            spawnElderlyDirBtnRect.anchoredPosition = new Vector2(0, yPos);
+            spawnElderlyDirBtnRect.sizeDelta = new Vector2(-20, 22);
+
+            var spawnElderlyDirBtnImage = spawnElderlyDirBtnGO.AddComponent<Image>();
+            spawnElderlyDirBtnImage.color = new Color(0.6f, 0.2f, 0.2f, 1f);
+
+            var spawnElderlyDirBtn = spawnElderlyDirBtnGO.AddComponent<Button>();
+            spawnElderlyDirBtn.onClick.AddListener(() => debugMenu.SpawnElderlyForDirector());
+
+            var spawnElderlyDirTextGO = new GameObject("Text");
+            spawnElderlyDirTextGO.transform.SetParent(spawnElderlyDirBtnGO.transform, false);
+            var spawnElderlyDirTextRect = spawnElderlyDirTextGO.AddComponent<RectTransform>();
+            spawnElderlyDirTextRect.anchorMin = Vector2.zero;
+            spawnElderlyDirTextRect.anchorMax = Vector2.one;
+            spawnElderlyDirTextRect.sizeDelta = Vector2.zero;
+
+            var spawnElderlyDirText = spawnElderlyDirTextGO.AddComponent<Text>();
+            spawnElderlyDirText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            spawnElderlyDirText.fontSize = 12;
+            spawnElderlyDirText.color = Color.white;
+            spawnElderlyDirText.alignment = TextAnchor.MiddleCenter;
+            spawnElderlyDirText.text = "Бабушка (К Директору)";
+
+            yPos -= 25;
+
             // Кнопка "Показать клиентов"
             var showBtnGO = new GameObject("Btn_ShowClients");
             showBtnGO.transform.SetParent(panel.transform, false);
@@ -279,6 +311,38 @@ namespace BuroDebug
             showText.color = Color.white;
             showText.alignment = TextAnchor.MiddleCenter;
             showText.text = "Показать клиентов";
+
+            yPos -= 25;
+
+            // Кнопка "Сюжетный гость №1"
+            var specialVisitorBtnGO = new GameObject("Btn_SpecialVisitor");
+            specialVisitorBtnGO.transform.SetParent(panel.transform, false);
+            var specialVisitorBtnRect = specialVisitorBtnGO.AddComponent<RectTransform>();
+            specialVisitorBtnRect.anchorMin = new Vector2(0, 1);
+            specialVisitorBtnRect.anchorMax = new Vector2(1, 1);
+            specialVisitorBtnRect.pivot = new Vector2(0.5f, 1);
+            specialVisitorBtnRect.anchoredPosition = new Vector2(0, yPos);
+            specialVisitorBtnRect.sizeDelta = new Vector2(-20, 22);
+
+            var specialVisitorBtnImage = specialVisitorBtnGO.AddComponent<Image>();
+            specialVisitorBtnImage.color = new Color(0.8f, 0.4f, 0.2f, 1f);
+
+            var specialVisitorBtn = specialVisitorBtnGO.AddComponent<Button>();
+            specialVisitorBtn.onClick.AddListener(() => debugMenu.SpawnFirstSpecialVisitor());
+
+            var specialVisitorTextGO = new GameObject("Text");
+            specialVisitorTextGO.transform.SetParent(specialVisitorBtnGO.transform, false);
+            var specialVisitorTextRect = specialVisitorTextGO.AddComponent<RectTransform>();
+            specialVisitorTextRect.anchorMin = Vector2.zero;
+            specialVisitorTextRect.anchorMax = Vector2.one;
+            specialVisitorTextRect.sizeDelta = Vector2.zero;
+
+            var specialVisitorText = specialVisitorTextGO.AddComponent<Text>();
+            specialVisitorText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            specialVisitorText.fontSize = 12;
+            specialVisitorText.color = Color.white;
+            specialVisitorText.alignment = TextAnchor.MiddleCenter;
+            specialVisitorText.text = "Сюжетный гость №1";
         }
     }
 }

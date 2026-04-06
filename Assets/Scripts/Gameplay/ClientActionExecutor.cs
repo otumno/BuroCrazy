@@ -130,7 +130,7 @@ public class ClientActionExecutor : MonoBehaviour
         _client.stateMachine.OnZoneEntryApproved(freeSpot, targetZone);
         
         // Спец. логика директора
-        if (_client.mainGoal == ClientGoal.DirectorApproval && targetZone == ClientSpawner.Instance?.directorReceptionZone)
+        if ((_client.mainGoal == ClientGoal.DirectorApproval || _client.mainGoal == ClientGoal.DirectorAudience) && targetZone == ClientSpawner.Instance?.directorReceptionZone)
         {
             StartOfDayPanel.Instance?.RegisterDirectorDocument(_client);
         }

@@ -4,6 +4,9 @@ using System.Collections;
 using System.Linq;
 using Managers;
 using Gameplay; // Подключаем пространство имен с OfficeObjectDurability
+using Gameplay;
+using Clinch;
+using Enums;
 
 public class ServiceAtCashierExecutor : ActionExecutor
 {
@@ -12,11 +15,54 @@ public class ServiceAtCashierExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var cashier = staff as ClerkController;
-        if (cashier == null || cashier.assignedWorkstation == null) 
+        if (cashier == null || cashier.assignedWorkstation == null)
         {
-            FinishAction(false); 
+            FinishAction(false);
             yield break;
         }
+
+        var zone = ClientSpawner.GetZoneByDeskId(cashier.assignedWorkstation.deskId);
+        var client = zone?.GetOccupyingClients().FirstOrDefault(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
+
+        if (client == null)
+        {
+            FinishAction(false);
+            yield break;
+        }
+
+        // --- КЛИНЧ-ПРОВЕРКА ---
+        var clinchConfig = Gameplay.AIBalanceConfig.Instance;
+        if (clinchConfig != null && clinchConfig.clinchBaseChance > 0f && Random.value < clinchConfig.clinchBaseChance)
+        {
+            Clinch.ClinchTarget clinch = null;
+            
+            if (client != null)
+            {
+                clinch = client.GetComponent<Clinch.ClinchTarget>();
+                if (clinch == null) clinch = client.gameObject.AddComponent<Clinch.ClinchTarget>();
+            }
+            else if (staff != null)
+            {
+                clinch = staff.GetComponent<Clinch.ClinchTarget>();
+                if (clinch == null) clinch = staff.gameObject.AddComponent<Clinch.ClinchTarget>();
+            }
+
+            if (clinch != null && !clinch.IsActive)
+            {
+                clinch.TriggerClinch();
+                staff.thoughtBubble?.ShowPriorityMessage("Эмм... Директор!", 2f, Color.yellow);
+                yield return new WaitWhile(() => clinch.IsActive);
+            }
+        }
+        // После WaitWhile ОБЯЗАТЕЛЬНАЯ ПРОВЕРКА для всех экзекуторов:
+        if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.LeavingUpset)
+        {
+            // Клиент обиделся и ушел по таймауту клинча
+            if (staff is ClerkController c) c.SetState(ClerkController.ClerkState.Working);
+            FinishAction(false);
+            yield break;
+        }
+        // --- КЛИНЧ-ПРОВЕРКА (КОНЕЦ) ---
 
         // --- ИНТЕГРАЦИЯ ИЗНОСА (НАЧАЛО) ---
         var durability = cashier.assignedWorkstation.GetComponent<OfficeObjectDurability>();
@@ -24,21 +70,12 @@ public class ServiceAtCashierExecutor : ActionExecutor
         {
             cashier.thoughtBubble?.ShowPriorityMessage("Касса сломана!", 3f, Color.red);
             // Не забываем сбрасывать состояние, если оно было изменено
-            cashier.SetState(ClerkController.ClerkState.Working); 
+            cashier.SetState(ClerkController.ClerkState.Working);
             FinishAction(false);
             yield break;
         }
         float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
         // --- ИНТЕГРАЦИЯ ИЗНОСА (КОНЕЦ) ---
-
-        var zone = ClientSpawner.GetZoneByDeskId(cashier.assignedWorkstation.deskId);
-        var client = zone?.GetOccupyingClients().FirstOrDefault(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
-
-        if (client == null) 
-        {
-            FinishAction(false);
-            yield break;
-        }
 
         cashier.SetState(ClerkController.ClerkState.Working);
         

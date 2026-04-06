@@ -2,6 +2,7 @@
 using UnityEngine;
 using TMPro;
 using System.Linq; // Добавлено для работы со списками
+using Managers;
 
 public class UIManager : MonoBehaviour 
 { 
@@ -30,20 +31,27 @@ public class UIManager : MonoBehaviour
         if(clientsExitedProcessedText != null) clientsExitedProcessedText.text = $"Обслужено: {ClientPathfinding.clientsExitedProcessed}";
         
         // --- ИЗМЕНЕНИЕ: Новая логика отображения списка номеров ---
-        if(nowServingText != null && ClientQueueManager.Instance != null) 
-        { 
-            var numbers = ClientQueueManager.Instance.currentlyCalledNumbers;
-            if (numbers.Count > 0)
+        if(nowServingText != null && ClientQueueManager.Instance != null)
+        {
+            var registrarWorker = ClientSpawner.GetServiceProviderAtDesk(0);
+            if (registrarWorker == null)
             {
-                // Сортируем номера для красивого отображения
-                numbers.Sort(); 
-                // Объединяем все номера в одну строку через запятую
-                nowServingText.text = $"Вызываются: {string.Join(", ", numbers)}";
+                nowServingText.text = "Регистратура закрыта";
             }
             else
             {
-                nowServingText.text = "Регистратура свободна";
+                // Берем только нормальные номера (меньше 10000)
+                var numbers = ClientQueueManager.Instance.currentlyCalledNumbers.Where(n => n < 10000).ToList();
+                if (numbers.Count > 0)
+                {
+                    numbers.Sort();
+                    nowServingText.text = $"Вызываются: {string.Join(", ", numbers)}";
+                }
+                else
+                {
+                    nowServingText.text = "Регистратура свободна";
+                }
             }
-        } 
+        }
     }
 }

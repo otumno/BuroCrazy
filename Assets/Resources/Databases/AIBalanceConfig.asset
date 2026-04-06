@@ -36,4 +36,10 @@ MonoBehaviour:
   clumsyChance: 0.2
   sprinterDistance: 8
   gossipCooldown: 20
+  clinchBaseChance: 1
+  clinchTimeoutDuration: 10
+  clinchPenaltyHP: 10
+  clinchRewardHP: 5
+  clinchPenaltyStress: 20
+  clinchRewardStress: 10
   enableDebugLogs: 0

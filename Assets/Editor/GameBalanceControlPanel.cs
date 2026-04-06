@@ -638,6 +638,17 @@ public class GameBalanceControlPanel : EditorWindow
             DrawProperty(so, "clumsyChance", "Шанс неуклюжести", "Вероятность случайно уронить или сломать что-то.");
             DrawProperty(so, "sprinterDistance", "Дистанция спринтера", "Расстояние, на котором сотрудник переходит на бег.");
             DrawProperty(so, "gossipCooldown", "Перезарядка сплетен", "Минимальное время между сплетнями (секунды).");
+
+            EditorGUILayout.Space();
+
+            // Clinch System
+            EditorGUILayout.LabelField("=== CLINCH SYSTEM (ПРОРЫВ) ===", EditorStyles.boldLabel);
+            DrawProperty(so, "clinchBaseChance", "Базовый шанс клинча", "Вероятность (0-1) инициировать прорыв через клинч.");
+            DrawProperty(so, "clinchTimeoutDuration", "Таймаут клинча", "Время (секунды) на принятие решения в режиме клинча.");
+            DrawProperty(so, "clinchPenaltyHP", "Штраф HP (провал)", "Урон HP директора при неудачном клинче.");
+            DrawProperty(so, "clinchRewardHP", "Награда HP (успех)", "Восстановление HP директора при успешном клинче.");
+            DrawProperty(so, "clinchPenaltyStress", "Штраф стресса (провал)", "Количество стресса, добавляемое персонажу при провале клинча.");
+            DrawProperty(so, "clinchRewardStress", "Облегчение стресса (успех)", "Количество стресса, снимаемое с персонажа при успешном клинче.");
         });
 
         if (GUI.changed)

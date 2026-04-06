@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections;
 using Managers;
 using UI;
+using Clinch;
 
 public class PlayerInputController : MonoBehaviour
 {
@@ -26,6 +27,9 @@ public class PlayerInputController : MonoBehaviour
     [Header("Ссылки для взаимодействия")]
     [Tooltip("Перетащите сюда объект ActionConfigPopup из UI")]
     public ActionConfigPopupUI actionConfigPopup;
+    
+    // Hover для клинчей
+    private Clinch.ClinchTarget _currentHoveredClinch;
     // --- КОНЕЦ ИЗМЕНЕНИЙ ---
 
     void Awake()
@@ -111,13 +115,53 @@ public class PlayerInputController : MonoBehaviour
         // ----------------------------------------------
 #endif
 
-  // --- ЛЕВЫЙ КЛИК (передвижение) ---
+        // --- HOVER ДЛЯ КЛИНЧЕЙ ---
+        if (!EventSystem.current.IsPointerOverGameObject())
+        {
+            Vector2 mousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            Collider2D[] hoverHits = Physics2D.OverlapCircleAll(mousePos, 0.8f);
+            Clinch.ClinchTarget foundClinch = null;
+
+            foreach (var hit in hoverHits)
+            {
+                if (hit.isTrigger) continue;
+                Clinch.ClinchTarget c = hit.GetComponentInParent<Clinch.ClinchTarget>();
+                if (c != null && c.IsActive)
+                {
+                    foundClinch = c;
+                    break;
+                }
+            }
+
+            if (foundClinch != _currentHoveredClinch)
+            {
+                if (_currentHoveredClinch != null) _currentHoveredClinch.SetHover(false);
+                _currentHoveredClinch = foundClinch;
+                if (_currentHoveredClinch != null) _currentHoveredClinch.SetHover(true);
+            }
+        }
+        else if (_currentHoveredClinch != null)
+        {
+            _currentHoveredClinch.SetHover(false);
+            _currentHoveredClinch = null;
+        }
+        // ----------------------------------------------
+
+  // --- ЛЕВЫЙ КЛИК (взаимодействие с клинчем или передвижение) ---
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;
             if(DirectorAvatarController.Instance != null && DirectorAvatarController.Instance.IsInUninterruptibleAction) return;
 
             Vector2 clickWorldPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+
+            // Сначала проверяем клик по активному клинчу
+            if (TryHandleClinchClick(clickWorldPosition))
+            {
+                return; // Клинч обработан, не двигаемся
+            }
+
+            // Если не кликнули по клинчу - обрабатываем движение
             Collider2D groundHit = Physics2D.OverlapPoint(clickWorldPosition, movementLayerMask);
             if (groundHit != null)
             {
@@ -178,6 +222,29 @@ public class PlayerInputController : MonoBehaviour
         // 3. Ставим игру на паузу и открываем UI
         MainUIManager.Instance.PushPause();
         actionConfigPopup.OpenForStaff(targetStaff);
+    }
+
+    /// <summary>
+    /// Пытается обработать клик по активному клинчу.
+    /// </summary>
+    /// <param name="clickWorldPosition">Мировые координаты клика</param>
+    /// <returns>true если клик был обработан как клинч, иначе false</returns>
+    private bool TryHandleClinchClick(Vector2 clickWorldPosition)
+    {
+        // Радиус 0.8f создает большое "пятно" клика вокруг курсора
+        Collider2D[] hits = Physics2D.OverlapCircleAll(clickWorldPosition, 0.8f);
+        foreach (Collider2D hit in hits)
+        {
+            if (hit.isTrigger) continue;
+            Clinch.ClinchTarget clinchTarget = hit.GetComponentInParent<Clinch.ClinchTarget>();
+            if (clinchTarget != null && clinchTarget.IsActive)
+            {
+                if (Managers.AudioManager.Instance != null) Managers.AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Click_Default, clinchTarget.transform.position);
+                DirectorAvatarController.Instance?.GoAndResolveClinch(clinchTarget);
+                return true;
+            }
+        }
+        return false;
     }
 
     private Waypoint FindNearestWaypointTo(Vector2 position)

@@ -12,6 +12,9 @@ public class ClientFeedbackController : MonoBehaviour
     private const float EMOTION_COOLDOWN = 0.2f;
     private Emotion _lastEmotion;
 
+    private float _lastStateSoundTime = -1f;
+    private const float STATE_SOUND_COOLDOWN = 1f;
+
     public void Initialize(ClientPathfinding client)
     {
         _client = client;
@@ -22,7 +25,14 @@ public class ClientFeedbackController : MonoBehaviour
     {
         if (clip != null)
         {
-            AudioSource.PlayClipAtPoint(clip, transform.position);
+            if (Managers.AudioManager.Instance != null)
+            {
+                Managers.AudioManager.Instance.PlayAudioClip2D(clip);
+            }
+            else
+            {
+                AudioSource.PlayClipAtPoint(clip, transform.position); // Фолбэк
+            }
         }
     }
 
@@ -68,6 +78,12 @@ public class ClientFeedbackController : MonoBehaviour
             }
         }
 
+        // Queue jumper (Наглец) should show Sly emotion while moving or waiting
+        if (_client.isQueueJumper && (state == ClientState.MovingToGoal || state == ClientState.AtWaitingArea || state == ClientState.SittingInWaitingArea))
+        {
+            return Emotion.Sly;
+        }
+
         switch (state)
         {
             case ClientState.Confused: return Emotion.Confused;
@@ -87,6 +103,11 @@ public class ClientFeedbackController : MonoBehaviour
 
     public void PlayStateSound(ClientState state)
     {
+        if (Time.time - _lastStateSoundTime < STATE_SOUND_COOLDOWN)
+            return;
+
+        _lastStateSoundTime = Time.time;
+
         if (state == ClientState.Confused && _client.confusedSound != null)
             PlaySound(_client.confusedSound);
     }

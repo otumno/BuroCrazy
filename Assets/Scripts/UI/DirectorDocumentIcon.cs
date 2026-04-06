@@ -8,7 +8,18 @@ public class DirectorDocumentIcon : MonoBehaviour
     [Header("UI")]
     public Image iconImage;
     [Header("Спрайты")]
-    public Sprite defaultVisitorSprite; 
+    public Sprite defaultVisitorSprite;
+    
+    [Header("Слои портрета (Для личного приема)")]
+    public GameObject photoContainer; // Контейнер для рамки и маски
+    public Image portraitBody;
+    public Image portraitOutfit;
+    public Image portraitHair;
+    public Image portraitFace;
+    public Image uniquePortraitDisplay; // Новый объект для цельного фото
+    public Material grayscaleMaterial;
+    public TMPro.TextMeshProUGUI visitorNameText; // Текст для имени на фото/папке
+    public TMPro.TextMeshProUGUI statusText; // Текст "На рассмотрении" / "Ожидает приема"
 
     private ClientPathfinding ownerClient;
     private DirectorDocumentReviewPanel reviewPanel;
@@ -32,20 +43,98 @@ public class DirectorDocumentIcon : MonoBehaviour
     {
         if (ownerClient == null) return;
 
-        // 1. ЗВОНОК (Удаленный клиент)
+        if (statusText != null)
+        {
+            if (ownerClient.mainGoal == ClientGoal.DirectorAudience)
+                statusText.text = "Ожидает приема";
+            else
+                statusText.text = "На рассмотрении";
+        }
+
+        // Сброс состояния: папка видна, фото и имя скрыты
+        if (photoContainer != null) photoContainer.SetActive(false);
+        if (visitorNameText != null) visitorNameText.gameObject.SetActive(false);
+        iconImage.enabled = true;
+
         if (ownerClient.IsRemote)
         {
-            if (ownerClient.iconOverride != null) 
-                iconImage.sprite = ownerClient.iconOverride;
+            if (ownerClient.iconOverride != null) iconImage.sprite = ownerClient.iconOverride;
         }
-        // 2. ПОСЕТИТЕЛЬ (Прием)
         else if (ownerClient.mainGoal == ClientGoal.DirectorAudience)
         {
             var visuals = ownerClient.GetVisuals();
-            Sprite portrait = visuals != null ? visuals.GetPortraitSprite() : null;
-            iconImage.sprite = portrait != null ? portrait : defaultVisitorSprite;
+            if (visuals != null)
+            {
+                iconImage.enabled = false;
+                if (photoContainer != null) photoContainer.SetActive(true);
+                
+                // Форматирование имени: "Посетитель №..." или уникальное имя
+                if (visitorNameText != null)
+                {
+                    visitorNameText.gameObject.SetActive(true);
+                    string rawName = ownerClient.gameObject.name.Replace("(Clone)", "").Trim();
+                    if (rawName.Contains("#"))
+                    {
+                        string[] parts = rawName.Split('#');
+                        string number = parts.Length > 1 ? parts[1].Trim() : "";
+                        visitorNameText.text = $"Посетитель №{number}";
+                    }
+                    else
+                    {
+                        visitorNameText.text = rawName;
+                    }
+                }
+
+                Sprite uniqueSpr = visuals.UniquePortrait;
+                if (uniqueSpr != null)
+                {
+                    if (uniquePortraitDisplay != null)
+                    {
+                        uniquePortraitDisplay.gameObject.SetActive(true);
+                        uniquePortraitDisplay.sprite = uniqueSpr;
+                        if (grayscaleMaterial != null) uniquePortraitDisplay.material = grayscaleMaterial;
+                    }
+                    if (portraitBody != null) portraitBody.gameObject.SetActive(false);
+                    if (portraitOutfit != null) portraitOutfit.gameObject.SetActive(false);
+                    if (portraitHair != null) portraitHair.gameObject.SetActive(false);
+                    if (portraitFace != null) portraitFace.gameObject.SetActive(false);
+                }
+                else
+                {
+                    if (uniquePortraitDisplay != null) uniquePortraitDisplay.gameObject.SetActive(false);
+                    if (portraitBody != null) {
+                        portraitBody.gameObject.SetActive(true);
+                        SetPortraitLayer(portraitBody, visuals.GetBodyRenderer());
+                    }
+                    if (portraitOutfit != null) {
+                        portraitOutfit.gameObject.SetActive(true);
+                        SetPortraitLayer(portraitOutfit, visuals.GetOutfitRenderer());
+                    }
+                    if (portraitHair != null) {
+                        portraitHair.gameObject.SetActive(true);
+                        SetPortraitLayer(portraitHair, visuals.GetHairRenderer());
+                    }
+                    if (portraitFace != null && visuals.currentSpriteCollection != null) {
+                        portraitFace.gameObject.SetActive(true);
+                        portraitFace.sprite = visuals.currentSpriteCollection.GetFaceSprite(Emotion.Neutral, ownerClient.gender);
+                        if (grayscaleMaterial != null) portraitFace.material = grayscaleMaterial;
+                    }
+                }
+            }
         }
-        // 3. ДОКУМЕНТ (Обычный) - оставляем спрайт префаба
+    }
+
+    private void SetPortraitLayer(Image uiImage, SpriteRenderer sourceRenderer)
+    {
+        if (uiImage == null) return;
+        if (sourceRenderer != null && sourceRenderer.sprite != null) {
+            uiImage.sprite = sourceRenderer.sprite;
+            uiImage.color = sourceRenderer.color;
+            uiImage.enabled = true;
+            if (grayscaleMaterial != null) uiImage.material = grayscaleMaterial;
+        } else {
+            uiImage.enabled = false;
+        }
     }
 
     private void OnIconClicked()
@@ -90,34 +179,19 @@ public class DirectorDocumentIcon : MonoBehaviour
             var dialogueRef = ownerClient.specificDialogue; // <--- ВОТ ЭТА СТРОКА ДОЛЖНА БЫТЬ ЗДЕСЬ
             
             // 2. ЗАПУСКАЕМ ДИАЛОГ
-            DialogueUIManager.Instance.StartDialogue(ownerClient.specificDialogue, ownerClient, () => 
+            DialogueUIManager.Instance.StartDialogue(ownerClient.specificDialogue, ownerClient, () =>
             {
-                // 3. ЭТОТ КОД ВЫПОЛНИТСЯ ПОСЛЕ ДИАЛОГА
-                Debug.Log($"[Icon] Диалог завершен. Удаляю {clientRef?.name}");
-
-                // Теперь dialogueRef доступен, так как мы объявили его выше
-                if (dialogueRef != null && PhoneManager.Instance != null)
-                {
+                Debug.Log($"[Icon] Диалог завершен. Обрабатываем {clientRef?.name}");
+                if (dialogueRef != null && PhoneManager.Instance != null) {
                     PhoneManager.Instance.RemoveCall(dialogueRef);
                 }
-                
-                if (StartOfDayPanel.Instance != null)
+                if (StartOfDayPanel.Instance != null) {
                     StartOfDayPanel.Instance.RemoveDocumentIcon(clientRef);
-
-                if (clientRef != null)
-                {
-                    clientRef.isLeavingSuccessfully = true;
-                    clientRef.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-
-                    if (destroyObject)
-                    {
-                        Destroy(clientRef.gameObject);
-                    }
-                    else
-                    {
-                        clientRef.ForceLeave(ClientPathfinding.LeaveReason.Processed);
-                    }
                 }
+                if (clientRef != null && destroyObject) {
+                    Destroy(clientRef.gameObject);
+                }
+                // Мы больше не заставляем клиента уходить довольным здесь. Это решает DialogueUIManager.
             });
         }
     }

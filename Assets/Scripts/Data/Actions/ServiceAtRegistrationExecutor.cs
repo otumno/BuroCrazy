@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Managers;
 using Gameplay;
+using Clinch;
+using Enums;
 
 public class ServiceAtRegistrationExecutor : ActionExecutor
 {
@@ -50,11 +52,12 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 {
                     int ticketNum = nextInQueue.Value;
                     ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
+                    ClientQueueManager.Instance.clientsAwaitingResponse.Add(ticketNum, Time.time);
                     desk.AssignClient(client);
 
                     registrar.thoughtBubble?.ShowPriorityMessage($"Талон №{ticketNum}, подойдите!", 3f, Color.green);
                     if (ClientQueueManager.Instance.nextClientSound != null)
-                        AudioSource.PlayClipAtPoint(ClientQueueManager.Instance.nextClientSound, transform.position);
+                        Managers.AudioManager.Instance?.PlayAudioClip2D(ClientQueueManager.Instance.nextClientSound);
 
                     client.stateMachine.GetCalledToSpecificDesk(desk.clientStandPoint, ticketNum, registrar);
                 }
@@ -213,6 +216,52 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
             // 5. КЛИЕНТ ПОДОШЕЛ - НАЧИНАЕМ ОБСЛУЖИВАНИЕ
             staff.CurrentSubStatus = $"[Обслуживание] {client.name}";
+            
+            // --- ЖЕЛЕЗОБЕТОННЫЙ КЛИНЧ ---
+            var clinchConfig = Gameplay.AIBalanceConfig.Instance;
+            if (clinchConfig != null && clinchConfig.clinchBaseChance > 0f)
+            {
+                float roll = Random.value;
+                Debug.Log($"<color=orange>[Клинч-Тест]</color> Регистратура. Шанс: {clinchConfig.clinchBaseChance}, Бросок: {roll}");
+                
+                if (roll <= clinchConfig.clinchBaseChance)
+                {
+                    Debug.Log($"<color=orange>[Клинч-Тест]</color> Клинч сработал для {client?.name}!");
+                    Clinch.ClinchTarget clinch = client?.GetComponent<Clinch.ClinchTarget>();
+                    
+                    if (clinch == null)
+                    {
+                        Debug.LogError($"<color=red>[Клинч-Ошибка]</color> На префабе клиента {client?.name} НЕТ скрипта ClinchTarget! Клинч пропущен.");
+                    }
+                    else
+                    {
+                        if (!clinch.IsActive)
+                        {
+                            Debug.Log($"<color=orange>[Клинч-Тест]</color> Запускаем TriggerClinch(). Ставим обслуживание на паузу.");
+                            clinch.TriggerClinch();
+                            registrar.thoughtBubble?.ShowPriorityMessage("Эмм... Директор!", 3f, Color.yellow);
+                            
+                            // ЖДЕМ РАЗРЕШЕНИЯ КЛИНЧА
+                            yield return new WaitWhile(() => clinch.IsActive);
+                            
+                            Debug.Log($"<color=orange>[Клинч-Тест]</color> Клинч завершен. Проверяем статус клиента.");
+                            
+                            // ПРОВЕРКА: Если клиент расстроился и ушел (провал клинча)
+                            if (client?.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.LeavingUpset)
+                            {
+                                Debug.Log($"<color=orange>[Клинч-Тест]</color> Клиент ушел злым. Прерываем обслуживание.");
+                                _lastServiceSuccess = false;
+                                desk.ClearClient();
+                                yield return new WaitForSeconds(1f);
+                                continue; // Переходим к следующему клиенту в очереди
+                            }
+                        }
+                    }
+                }
+            }
+            // --- КОНЕЦ КЛИНЧА ---
+            
+            if (client == null || client.stateMachine == null) continue;
             
             if (client.mainGoal == ClientGoal.GetArchiveRecord)
                 yield return staff.StartCoroutine(HandleArchiveRequest(registrar, client));
@@ -455,7 +504,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
     private Waypoint DetermineCorrectGoalForClient(ClientPathfinding client)
     {
-        if (client == null || ClientSpawner.Instance == null) return ClientSpawner.Instance?.exitWaypoint; 
+        if (client == null || ClientSpawner.Instance == null) return ClientSpawner.Instance?.exitWaypoint;
         if (client.billToPay > 0) return ClientSpawner.GetCashierZone()?.waitingWaypoint ?? ClientSpawner.Instance?.exitWaypoint;
 
         switch (client.mainGoal)
@@ -463,6 +512,8 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             case ClientGoal.PayTax: return ClientSpawner.GetCashierZone()?.waitingWaypoint;
             case ClientGoal.GetCertificate1: return ClientSpawner.GetDesk1Zone()?.waitingWaypoint;
             case ClientGoal.GetCertificate2: return ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
+            case ClientGoal.DirectorApproval:
+            case ClientGoal.DirectorAudience: return ClientSpawner.Instance?.directorReceptionZone?.waitingWaypoint;
             default: return ClientSpawner.Instance?.exitWaypoint;
         }
     }
@@ -476,8 +527,10 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             case ClientGoal.PayTax: return "Я налоги заплатить.";
             case ClientGoal.GetArchiveRecord: return "Мне в архив нужно.";
             case ClientGoal.VisitToilet: return "Где тут туалет?";
-            case ClientGoal.DirectorApproval: return "Мне к директору!";
-            default: return "Я просто спросить.";
+            case ClientGoal.DirectorApproval: return "Мне к директору на подпись!";
+            case ClientGoal.DirectorAudience: return "У меня личный прием у директора!";
+            case ClientGoal.AskAndLeave: return "Мне бы справочку получить...";
+            default: return "Мне бы справочку получить...";
         }
     }
 }

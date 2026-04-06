@@ -149,7 +149,7 @@ namespace Managers
             }
             else
             {
-                EndDialogue();
+                EndDialogue(null);
             }
         }
 
@@ -226,21 +226,21 @@ namespace Managers
             UpdateNodeImage(node);
 			
 			if (node is EndNode endNode)
-            {
-                if (endNode.endSound != null)
-                {
-                    PlaySystemSound(endNode.endSound);
-                }
-                EndDialogue();
-                return;
-            }
+			         {
+			             if (endNode.endSound != null)
+			             {
+			                 PlaySystemSound(endNode.endSound);
+			             }
+			             EndDialogue(endNode);
+			             return;
+			         }
 			
 			
-            if (node == null || node is EndNode)
-            {
-                EndDialogue();
-                return;
-            }
+			         if (node == null || node is EndNode)
+			         {
+			             EndDialogue(null);
+			             return;
+			         }
 
             switch (node)
             {
@@ -256,7 +256,7 @@ namespace Managers
             if (node.outcomes == null || node.outcomes.Count == 0)
             {
                 Debug.LogWarning("RandomNode не имеет исходов!");
-                EndDialogue();
+                EndDialogue(null);
                 return;
             }
 
@@ -516,7 +516,7 @@ namespace Managers
             }
                 
             // 3. Страйки (НЕ требуют StoryStateManager)
-            else if (evt.eventType == EventNode.EventType.AddStrike) 
+            else if (evt.eventType == EventNode.EventType.AddStrike)
             {
                 DirectorManager.Instance?.AddStrike();
             }
@@ -538,7 +538,7 @@ namespace Managers
             }
             else
             {
-                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue();
+                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue(null);
                 else ProcessNode(evt.nextNode);
             }
         }
@@ -563,22 +563,82 @@ namespace Managers
             if (currentNode is PhraseNode phrase) ProcessNode(phrase.nextNode);
             else if (currentNode is EventNode evt)
             {
-                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue();
+                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue(null);
                 else ProcessNode(evt.nextNode);
             }
         }
 
-        private void EndDialogue()
+        private void EndDialogue(EndNode endNode)
         {
             if (nodeImageContainer != null) nodeImageContainer.SetActive(false);
 
             if (panelAnimCoroutine != null) StopCoroutine(panelAnimCoroutine);
             panelAnimCoroutine = StartCoroutine(AnimatePanel(false));
 
-            if (currentClientContext != null)
+            if (currentClientContext != null && currentNode is EndNode endNodeData)
             {
-                currentClientContext.stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
-                currentClientContext.stateMachine.SetState(ClientState.Leaving);
+                var visuals = currentClientContext.GetVisuals();
+                bool isRageOverride = false;
+
+                // 1. Проверяем стресс на переполнение
+                if (endNodeData.stressModifier != 0)
+                {
+                    currentClientContext.DecreasePatience(endNodeData.stressModifier);
+                    if (currentClientContext.CurrentPatience <= 0)
+                    {
+                        isRageOverride = true; // СТРЕСС ПРОБИЛ ПОТОЛОК
+                    }
+                }
+
+                // 2. ВЫСШИЙ ПРИОРИТЕТ: ЯРОСТЬ
+                if (isRageOverride)
+                {
+                    visuals?.SetEmotion(Emotion.Enraged);
+                    currentClientContext.isLeavingSuccessfully = false;
+                    currentClientContext.reasonForLeaving = ClientPathfinding.LeaveReason.Angry;
+                    currentClientContext.stateMachine?.SetState(ClientState.Enraged); // Уйдет в EnragedRoutine
+                    StartOfDayPanel.Instance?.RemoveDocumentIcon(currentClientContext);
+                    return; // Блокируем стандартный уход
+                }
+
+                // 3. ЕСЛИ НЕ ЯРОСТЬ - применяем выбор игрока из EndNode (Happy, Neutral, Sad, Angry)
+                visuals?.SetEmotion(endNodeData.outputEmotion);
+                currentClientContext.iconOverride = null;
+
+                switch (endNodeData.outcome)
+                {
+                    case EndNode.DialogueOutcome.LeaveHappy:
+                        currentClientContext.isLeavingSuccessfully = true;
+                        currentClientContext.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+                        currentClientContext.stateMachine?.SetGoal(Managers.ClientSpawner.Instance.exitWaypoint);
+                        currentClientContext.stateMachine?.SetState(ClientState.Leaving);
+                        break;
+                        
+                    case EndNode.DialogueOutcome.LeaveAngry:
+                        currentClientContext.isLeavingSuccessfully = false;
+                        currentClientContext.reasonForLeaving = ClientPathfinding.LeaveReason.Angry;
+                        currentClientContext.stateMachine?.SetGoal(Managers.ClientSpawner.Instance.exitWaypoint);
+                        currentClientContext.stateMachine?.SetState(ClientState.LeavingUpset);
+                        break;
+                        
+                    case EndNode.DialogueOutcome.LeaveUpset:
+                        currentClientContext.isLeavingSuccessfully = false;
+                        currentClientContext.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+                        currentClientContext.stateMachine?.SetGoal(Managers.ClientSpawner.Instance.exitWaypoint);
+                        currentClientContext.stateMachine?.SetState(ClientState.LeavingUpset);
+                        break;
+
+                    case EndNode.DialogueOutcome.GoToCashier:
+                        currentClientContext.billToPay += 100;
+                        currentClientContext.stateMachine?.SetGoal(Managers.ClientSpawner.GetCashierZone()?.waitingWaypoint);
+                        currentClientContext.stateMachine?.SetState(ClientState.MovingToGoal);
+                        break;
+
+                    case EndNode.DialogueOutcome.BecomeConfused:
+                        currentClientContext.stateMachine?.SetState(ClientState.Confused);
+                        break;
+                }
+
                 StartOfDayPanel.Instance?.RemoveDocumentIcon(currentClientContext);
             }
 

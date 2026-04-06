@@ -94,6 +94,7 @@ public class HandleSituationExecutor : ActionExecutor
         if (clientToHelp.billToPay > 0 || clientToHelp.mainGoal == ClientGoal.PayTax) destinationName = "Кассу";
         else if (clientToHelp.mainGoal == ClientGoal.GetCertificate1) destinationName = "Окно №1";
         else if (clientToHelp.mainGoal == ClientGoal.GetCertificate2) destinationName = "Окно №2";
+        else if (clientToHelp.mainGoal == ClientGoal.DirectorApproval || clientToHelp.mainGoal == ClientGoal.DirectorAudience) destinationName = "Приемную Директора";
         else if (clientToHelp.mainGoal == ClientGoal.VisitToilet) destinationName = "Туалет";
 
         staff.thoughtBubble?.ShowPriorityMessage($"Вам в {destinationName}!", 2.5f, Color.green);
@@ -116,6 +117,8 @@ public class HandleSituationExecutor : ActionExecutor
             case ClientGoal.PayTax: return ClientSpawner.GetCashierZone()?.waitingWaypoint;
             case ClientGoal.GetCertificate1: return ClientSpawner.GetDesk1Zone()?.waitingWaypoint;
             case ClientGoal.GetCertificate2: return ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
+            case ClientGoal.DirectorApproval:
+            case ClientGoal.DirectorAudience: return ClientSpawner.Instance?.directorReceptionZone?.waitingWaypoint;
             case ClientGoal.VisitToilet: return ClientSpawner.GetToiletZone()?.waitingWaypoint;
             default: return ClientQueueManager.Instance.ChooseNewGoal(client);
         }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Characters;
 using Data;
 using Data.Calendar;
+using DialogueSystem.Data;
 using Managers;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,6 +22,7 @@ namespace BuroDebug
         public Text infoText;
 
         private ArchetypeDatabase archetypeDB;
+        public SpecialVisitorDatabase specialVisitorsDB;
         private string currentSelectedGroup;
 
         private void Start()
@@ -262,6 +264,39 @@ namespace BuroDebug
         }
 
         /// <summary>
+        /// Спавн клиента группы "Elderly" (пожилые) для Директора
+        /// </summary>
+        public void SpawnElderlyForDirector()
+        {
+            if (waveManager.IsNightTime()) return;
+
+            if (archetypeDB == null) return;
+
+            ClientArchetype archetype = archetypeDB.GetRandomByGroup("Elderly");
+            if (archetype != null)
+            {
+                Debug.Log($"[ClientDebugMenu] Spawning Elderly for Director: {archetype.displayName}");
+                
+                Vector3 spawnPos = waveManager.spawnPoint != null ? waveManager.spawnPoint.position : Vector3.zero;
+                GameObject clientObj = Instantiate(waveManager.clientPrefab, spawnPos, Quaternion.identity);
+                ClientPathfinding client = clientObj.GetComponent<ClientPathfinding>();
+
+                if (client != null)
+                {
+                    client.mainGoal = ClientGoal.DirectorApproval; // ЖЕСТКО ЗАДАЕМ ЦЕЛЬ ДО ИНИЦИАЛИЗАЦИИ
+                    
+                    client.SetupFromArchetype(archetype);
+                    client.SetupGrumblingFromArchetype(archetype);
+                    var visuals = client.GetComponent<CharacterVisuals>();
+                    if (visuals != null) visuals.SetupVisualDiversity(archetype);
+
+                    client.Initialize(waveManager.waitingZoneObject, waveManager.exitWaypoint);
+                    RefreshInfo();
+                }
+            }
+        }
+
+        /// <summary>
         /// Спавн нескольких клиентов текущей выбранной группы
         /// </summary>
         public void SpawnMultiple(int count)
@@ -305,6 +340,51 @@ namespace BuroDebug
         }
 
         /// <summary>
+        /// Спавн первого сюжетного гостя из базы SpecialVisitorDatabase
+        /// </summary>
+        public void SpawnFirstSpecialVisitor()
+        {
+            // Пытаемся загрузить базу автоматически, если она не назначена
+            if (specialVisitorsDB == null)
+            {
+                specialVisitorsDB = Resources.Load<SpecialVisitorDatabase>("DialogueClientsDatabase/SpecialVisitorDatabase");
+            }
+
+            if (specialVisitorsDB == null || specialVisitorsDB.visitors.Count == 0)
+            {
+                Debug.LogWarning("[ClientDebugMenu] База SpecialVisitors пуста или не найдена в Resources!");
+                return;
+            }
+
+            var visitorData = specialVisitorsDB.visitors[0];
+            Debug.Log($"[ClientDebugMenu] Спавн сюжетного гостя: {visitorData.name}");
+
+            ClientArchetype archetype = visitorData.forcedArchetype != null ? visitorData.forcedArchetype : (archetypeDB != null ? archetypeDB.GetRandomArchetype() : null);
+            Vector3 spawnPos = waveManager.spawnPoint != null ? waveManager.spawnPoint.position : Vector3.zero;
+
+            GameObject clientObj = Instantiate(waveManager.clientPrefab, spawnPos, Quaternion.identity);
+            ClientPathfinding client = clientObj.GetComponent<ClientPathfinding>();
+
+            if (client != null)
+            {
+                client.gameObject.name = visitorData.name;
+                client.mainGoal = visitorData.forcedGoal;
+                client.specificDialogue = visitorData.dialogue;
+
+                if (archetype != null)
+                {
+                    client.SetupFromArchetype(archetype);
+                    client.SetupGrumblingFromArchetype(archetype);
+                    var visuals = client.GetComponent<CharacterVisuals>();
+                    if (visuals != null) visuals.SetupVisualDiversity(archetype);
+                }
+
+                client.Initialize(waveManager.waitingZoneObject, waveManager.exitWaypoint);
+                RefreshInfo();
+            }
+        }
+
+        /// <summary>
         /// Показать всех активных клиентов
         /// </summary>
         public void ShowActiveClients()
@@ -328,6 +408,24 @@ namespace BuroDebug
             }
 
             Debug.Log(info);
+        }
+
+        /// <summary>
+        /// Спавн посетителя для личного приема у директора
+        /// </summary>
+        public void SpawnVisitorForAudience()
+        {
+            if (waveManager.IsNightTime() || archetypeDB == null) return;
+            
+            ClientArchetype archetype = archetypeDB.GetRandomArchetype();
+            GameObject clientObj = Instantiate(waveManager.clientPrefab, waveManager.spawnPoint.position, Quaternion.identity);
+            ClientPathfinding client = clientObj.GetComponent<ClientPathfinding>();
+            if (client != null) {
+                client.mainGoal = ClientGoal.DirectorAudience;
+                client.specificDialogue = Resources.Load<DialogueSystem.Data.DialogueGraph>("DialoguesBase/Test_Client_Dialogue");
+                client.SetupFromArchetype(archetype);
+                client.Initialize(waveManager.waitingZoneObject, waveManager.exitWaypoint);
+            }
         }
     }
 }

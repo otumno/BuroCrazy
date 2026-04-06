@@ -4,6 +4,7 @@ using UnityEditor;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using Characters;
 
 public class UtilityAIDebugWindow : EditorWindow
@@ -67,6 +68,42 @@ public class UtilityAIDebugWindow : EditorWindow
         
         GUI.backgroundColor = new Color(1f, 0.6f, 0.6f);
         if (GUILayout.Button("📋 ДАМП ОФИСА (ВСЁ)", GUILayout.Height(30))) CopyFullStateToClipboard();
+        
+        GUI.backgroundColor = Color.white;
+        EditorGUILayout.EndHorizontal();
+        EditorGUILayout.EndVertical();
+        EditorGUILayout.Space();
+        
+        // --- ПАНЕЛЬ ЭКСПОРТА ACTION DIARY ---
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("📓 ЭКСПОРТ ДНЕВНИКА ДЕЙСТВИЙ", EditorStyles.boldLabel);
+        EditorGUILayout.BeginHorizontal();
+        
+        GUI.backgroundColor = new Color(0.4f, 0.9f, 0.4f);
+        if (GUILayout.Button("💾 Сохранить лог выбранного работника", GUILayout.Height(25)))
+        {
+            if (selectedStaff != null)
+            {
+                var diary = selectedStaff.GetComponent<ActionDiary>();
+                if (diary != null) SaveSingleStaffDiary(selectedStaff, diary);
+            }
+        }
+        
+        GUI.backgroundColor = new Color(0.9f, 0.9f, 0.4f);
+        if (GUILayout.Button("💾 Сохранить лог выбранного клиента", GUILayout.Height(25)))
+        {
+            if (selectedClient != null)
+            {
+                var diary = selectedClient.GetComponent<ActionDiary>();
+                if (diary != null) SaveSingleClientDiary(selectedClient, diary);
+            }
+        }
+        
+        GUI.backgroundColor = new Color(0.5f, 0.7f, 1f);
+        if (GUILayout.Button("💾 Сохранить логи ВСЕХ работников", GUILayout.Height(25))) SaveAllStaffDiaries();
+        
+        GUI.backgroundColor = new Color(1f, 0.7f, 0.5f);
+        if (GUILayout.Button("💾 Сохранить логи ВСЕХ клиентов", GUILayout.Height(25))) SaveAllClientDiaries();
         
         GUI.backgroundColor = Color.white;
         EditorGUILayout.EndHorizontal();
@@ -280,6 +317,11 @@ public class UtilityAIDebugWindow : EditorWindow
 
         EditorGUILayout.EndVertical();
 
+        EditorGUILayout.Space();
+        
+        // --- ДНЕВНИК ДЕЙСТВИЙ КЛИЕНТА ---
+        DrawClientDiary();
+
         EditorGUILayout.EndScrollView();
     }
 
@@ -418,24 +460,292 @@ public class UtilityAIDebugWindow : EditorWindow
     private void DrawDiary()
     {
         EditorGUILayout.BeginVertical("box");
-        GUILayout.Label("📓 ДНЕВНИК ЗАДАЧ", EditorStyles.boldLabel);
+        GUILayout.Label("📓 ДНЕВНИК ДЕЙСТВИЙ", EditorStyles.boldLabel);
         
-        // Здесь можно добавить логику отображения дневника задач, если она есть
-        // Пока просто показываем текущее действие
+        // Получаем компонент ActionDiary
+        var diary = selectedStaff.GetComponent<ActionDiary>();
         
-        if (selectedStaff.currentAction != null)
+        if (diary == null || diary.EntryCount == 0)
         {
-            EditorGUILayout.LabelField("Выполняется:", selectedStaff.currentAction.displayName);
+            EditorGUILayout.HelpBox("Нет записей в дневнике.", MessageType.Info);
+            EditorGUILayout.EndVertical();
+            return;
+        }
+        
+        // Кнопка очистки
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("🗑️ Очистить", EditorStyles.miniButton, GUILayout.Width(80)))
+        {
+            diary.ClearHistory();
+        }
+        if (GUILayout.Button("💾 Сохранить лог", EditorStyles.miniButton, GUILayout.Width(100)))
+        {
+            SaveSingleStaffDiary(selectedStaff, diary);
+        }
+        EditorGUILayout.EndHorizontal();
+        
+        EditorGUILayout.Space(5);
+        
+        // Отображаем записи через скролл
+        diaryScrollPos = EditorGUILayout.BeginScrollView(diaryScrollPos, GUILayout.Height(300));
+        
+        var entries = diary.GetAllEntries();
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var entry = entries[i];
+            string displayText = entry.ToDisplayString();
             
-            if (selectedStaff.currentExecutor != null)
+            // Выделяем цветом разные типы событий
+            Color textColor = Color.white;
+            if (entry.message.Contains("Начал задачу"))
+                textColor = new Color(0.4f, 1f, 0.4f); // зелёный для начала
+            else if (entry.message.Contains("Завершил задачу"))
+                textColor = new Color(0.6f, 0.6f, 1f); // синий для завершения
+            else if (entry.message.Contains("Сработал трейт"))
+                textColor = new Color(1f, 0.6f, 1f); // розовый для трейтов
+            else if (entry.message.Contains("СБИЛСЯ") || entry.message.Contains("ВЗБЕШЁН"))
+                textColor = new Color(1f, 0.4f, 0.4f); // красный для проблем
+            else if (entry.message.Contains("Вызван"))
+                textColor = new Color(1f, 0.9f, 0.4f); // жёлтый для вызова
+            
+            GUI.contentColor = textColor;
+            
+            // Форматируем: тайминг серым, сообщение обычным
+            string[] parts = displayText.Split(new string[] {" -> "}, 2, System.StringSplitOptions.None);
+            if (parts.Length == 2)
             {
-                var executor = selectedStaff.currentExecutor;
-                var actionType = executor.GetType().Name;
-                EditorGUILayout.LabelField("Executor:", actionType);
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label(parts[0], EditorStyles.miniLabel, GUILayout.Width(180)); // Время и дельта
+                GUI.contentColor = textColor;
+                GUILayout.Label("-> " + parts[1], EditorStyles.miniLabel); // Сообщение
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.LabelField(displayText, EditorStyles.miniLabel);
             }
         }
         
+        GUI.contentColor = Color.white;
+        EditorGUILayout.EndScrollView();
         EditorGUILayout.EndVertical();
+    }
+    
+    /// <summary>
+    /// Отрисовка дневника для выбранного клиента
+    /// </summary>
+    private void DrawClientDiary()
+    {
+        EditorGUILayout.BeginVertical("box");
+        GUILayout.Label("📓 ДНЕВНИК ДЕЙСТВИЙ", EditorStyles.boldLabel);
+        
+        if (selectedClient == null)
+        {
+            EditorGUILayout.HelpBox("Клиент не выбран.", MessageType.Info);
+            EditorGUILayout.EndVertical();
+            return;
+        }
+        
+        var diary = selectedClient.GetComponent<ActionDiary>();
+        
+        if (diary == null || diary.EntryCount == 0)
+        {
+            EditorGUILayout.HelpBox("Нет записей в дневнике.", MessageType.Info);
+            EditorGUILayout.EndVertical();
+            return;
+        }
+        
+        // Кнопка очистки и сохранения
+        EditorGUILayout.BeginHorizontal();
+        if (GUILayout.Button("🗑️ Очистить", EditorStyles.miniButton, GUILayout.Width(80)))
+        {
+            diary.ClearHistory();
+        }
+        if (GUILayout.Button("💾 Сохранить лог", EditorStyles.miniButton, GUILayout.Width(100)))
+        {
+            SaveSingleClientDiary(selectedClient, diary);
+        }
+        EditorGUILayout.EndHorizontal();
+        
+        EditorGUILayout.Space(5);
+        
+        // Отображаем записи через скролл
+        diaryScrollPos = EditorGUILayout.BeginScrollView(diaryScrollPos, GUILayout.Height(300));
+        
+        var entries = diary.GetAllEntries();
+        for (int i = 0; i < entries.Count; i++)
+        {
+            var entry = entries[i];
+            string displayText = entry.ToDisplayString();
+            
+            Color textColor = Color.white;
+            if (entry.message.Contains("Вошёл") || entry.message.Contains("Сел"))
+                textColor = new Color(0.4f, 1f, 0.4f);
+            else if (entry.message.Contains("Обслужи"))
+                textColor = new Color(0.6f, 0.6f, 1f);
+            else if (entry.message.Contains("СБИЛСЯ") || entry.message.Contains("ВЗБЕШЁН") || entry.message.Contains("упал"))
+                textColor = new Color(1f, 0.4f, 0.4f);
+            else if (entry.message.Contains("Вызван"))
+                textColor = new Color(1f, 0.9f, 0.4f);
+            else if (entry.message.Contains("Успешно") || entry.message.Contains("Прошёл"))
+                textColor = new Color(0.4f, 1f, 0.4f);
+            
+            GUI.contentColor = textColor;
+            
+            string[] parts = displayText.Split(new string[] {" -> "}, 2, System.StringSplitOptions.None);
+            if (parts.Length == 2)
+            {
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label(parts[0], EditorStyles.miniLabel, GUILayout.Width(180));
+                GUI.contentColor = textColor;
+                GUILayout.Label("-> " + parts[1], EditorStyles.miniLabel);
+                EditorGUILayout.EndHorizontal();
+            }
+            else
+            {
+                EditorGUILayout.LabelField(displayText, EditorStyles.miniLabel);
+            }
+        }
+        
+        GUI.contentColor = Color.white;
+        EditorGUILayout.EndScrollView();
+        EditorGUILayout.EndVertical();
+    }
+    
+    // ============================================================================
+    // МЕТОДЫ ЭКСПОРТА ЛОГОВ
+    // ============================================================================
+    
+    private void SaveSingleStaffDiary(StaffController staff, ActionDiary diary)
+    {
+        if (staff == null || diary == null) return;
+        
+        string logsDir = GetLogsDirectory();
+        string safeName = staff.characterName.Replace(" ", "_").Replace(".", "").Replace(",", "");
+        string fileName = $"Staff_{safeName}_{System.DateTime.Now:yyyyMMdd_HHmmss}.txt";
+        string fullPath = Path.Combine(logsDir, fileName);
+        
+        try
+        {
+            string content = diary.GetExportString(staff.characterName, staff.currentRole.ToString());
+            File.WriteAllText(fullPath, content);
+            UnityEditor.EditorUtility.RevealInFinder(fullPath);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[ActionDiary] Ошибка сохранения: {e.Message}");
+        }
+    }
+    
+    private void SaveSingleClientDiary(ClientPathfinding client, ActionDiary diary)
+    {
+        if (client == null || diary == null) return;
+        
+        string logsDir = GetLogsDirectory();
+        // Убираем (Clone) из имени и получаем информацию о талоне
+        string clientName = client.name.Replace("(Clone)", "").Trim();
+        string queueNum = client.stateMachine != null ? client.stateMachine.MyQueueNumber.ToString() : "Нет талона";
+        string safeName = clientName.Replace(" ", "_").Replace("#", "").Replace(".", "").Replace(",", "");
+        string fileName = $"Client_{safeName}_Ticket{queueNum}_{System.DateTime.Now:yyyyMMdd_HHmmss}.txt";
+        string fullPath = Path.Combine(logsDir, fileName);
+        
+        try
+        {
+            string content = diary.GetExportString(clientName, $"Талон: {queueNum}");
+            File.WriteAllText(fullPath, content);
+            UnityEditor.EditorUtility.RevealInFinder(fullPath);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[ActionDiary] Ошибка сохранения: {e.Message}");
+        }
+    }
+    
+    private void SaveAllStaffDiaries()
+    {
+        string logsDir = GetLogsDirectory();
+        string fileName = $"AllStaff_Diary_{System.DateTime.Now:yyyyMMdd_HHmmss}.txt";
+        string fullPath = Path.Combine(logsDir, fileName);
+        
+        var allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None).ToList();
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("================================================================================");
+        sb.AppendLine($"ЛОГ ДЕЙСТВИЙ ВСЕХ СОТРУДНИКОВ - {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Всего сотрудников: {allStaff.Count}");
+        sb.AppendLine("================================================================================");
+        
+        foreach (var staff in allStaff)
+        {
+            var diary = staff.GetComponent<ActionDiary>();
+            if (diary != null && diary.EntryCount > 0)
+            {
+                sb.AppendLine();
+                string staffName = staff.characterName ?? "Неизвестный";
+                string roleInfo = staff.currentRole.ToString();
+                sb.Append(diary.GetExportString(staffName, roleInfo));
+                sb.AppendLine();
+                sb.AppendLine("--------------------------------------------------------------------------------");
+            }
+        }
+        
+        try
+        {
+            File.WriteAllText(fullPath, sb.ToString());
+            UnityEditor.EditorUtility.RevealInFinder(fullPath);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[ActionDiary] Ошибка сохранения: {e.Message}");
+        }
+    }
+    
+    private void SaveAllClientDiaries()
+    {
+        string logsDir = GetLogsDirectory();
+        string fileName = $"AllClients_Diary_{System.DateTime.Now:yyyyMMdd_HHmmss}.txt";
+        string fullPath = Path.Combine(logsDir, fileName);
+        
+        var allClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).ToList();
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("================================================================================");
+        sb.AppendLine($"ЛОГ ДЕЙСТВИЙ ВСЕХ КЛИЕНТОВ - {System.DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Всего клиентов: {allClients.Count}");
+        sb.AppendLine("================================================================================");
+        
+        foreach (var client in allClients)
+        {
+            var diary = client.GetComponent<ActionDiary>();
+            if (diary != null && diary.EntryCount > 0)
+            {
+                sb.AppendLine();
+                // Убираем (Clone) из имени и получаем информацию о талоне
+                string clientName = client.name.Replace("(Clone)", "").Trim();
+                string queueNum = client.stateMachine != null ? client.stateMachine.MyQueueNumber.ToString() : "Нет талона";
+                sb.Append(diary.GetExportString(clientName, $"Талон: {queueNum}"));
+                sb.AppendLine();
+                sb.AppendLine("--------------------------------------------------------------------------------");
+            }
+        }
+        
+        try
+        {
+            File.WriteAllText(fullPath, sb.ToString());
+            UnityEditor.EditorUtility.RevealInFinder(fullPath);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[ActionDiary] Ошибка сохранения: {e.Message}");
+        }
+    }
+    
+    private string GetLogsDirectory()
+    {
+        string logsDir = Path.Combine(Application.dataPath, "Logs");
+        if (!Directory.Exists(logsDir))
+        {
+            Directory.CreateDirectory(logsDir);
+        }
+        return logsDir;
     }
 
     // ============================================================================

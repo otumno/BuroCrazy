@@ -13,6 +13,8 @@ GameObject:
   - component: {fileID: 474132197750029827}
   - component: {fileID: 1477754312843515185}
   - component: {fileID: 7624300496234838057}
+  - component: {fileID: 2775651523645997888}
+  - component: {fileID: 8889722137769621669}
   m_Layer: 0
   m_Name: ResumePin_Prefab
   m_TagString: Untagged
@@ -141,6 +143,37 @@ MonoBehaviour:
   backgroundImage: {fileID: 474132197750029827}
   uniqueSkillIcon: {fileID: 1564193258566076973}
   viewButton: {fileID: 1477754312843515185}
+--- !u!114 &2775651523645997888
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245826071138034414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c04cb32984742ae0224e27189a91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Effects.UIButtonJuice
+  hoverScale: 1.05
+  pressScale: 0.95
+  animationSpeed: 15
+--- !u!114 &8889722137769621669
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1245826071138034414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e160eed3bfacb0d448daf97219619bd7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.Utils.PlaySoundOnPointerEvent
+  hoverSound: 2
+  clickSound: 1
+  enableHover: 1
+  enableClick: 1
 --- !u!1 &1564193258566076973
 GameObject:
   m_ObjectHideFlags: 0

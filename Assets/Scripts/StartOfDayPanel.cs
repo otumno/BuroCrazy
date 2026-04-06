@@ -167,9 +167,22 @@ public class StartOfDayPanel : MonoBehaviour
         GameObject iconGO = Instantiate(documentIconPrefab, documentIconsContainer);
         DirectorDocumentIcon icon = iconGO.GetComponent<DirectorDocumentIcon>();
         
-        if (icon != null) { 
-            icon.Setup(client, reviewPanel); 
-            waitingDocumentIcons.Add(client, icon); 
+        if (icon != null) {
+            // Добавляем разброс
+            RectTransform rt = iconGO.GetComponent<RectTransform>();
+            RectTransform containerRT = documentIconsContainer as RectTransform;
+            if (rt != null)
+            {
+                // Берем размеры контейнера, оставляем отступы по краям (padding 30f)
+                float widthX = containerRT != null ? (containerRT.rect.width / 2f) - 30f : 100f;
+                float heightY = containerRT != null ? (containerRT.rect.height / 2f) - 30f : 50f;
+                
+                rt.anchoredPosition = new Vector2(Random.Range(-widthX, widthX), Random.Range(-heightY, heightY));
+                rt.localRotation = Quaternion.Euler(0, 0, Random.Range(-15f, 15f));
+            }
+
+            icon.Setup(client, reviewPanel);
+            waitingDocumentIcons.Add(client, icon);
 
             if(directorDeskButton != null)
             {
@@ -184,42 +197,43 @@ public class StartOfDayPanel : MonoBehaviour
     }
 	
 	public void RegisterProjectDocument(Data.Documents.ProjectDocumentDefinition docData, System.Action onSignedWorldCallback)
-    {
-        if (docData == null || activeProjectIcons.ContainsKey(docData)) return;
+	   {
+	       if (docData == null || activeProjectIcons.ContainsKey(docData)) return;
+	       if (documentIconsContainer == null) return;
 
-        // Создаем иконку в DocumentContainer (туда же, где клиентские документы)
-        // documentIconsContainer - это существующее поле в вашем скрипте (надеюсь, оно public или SerializeField)
-        if (documentIconsContainer == null) return;
+	       GameObject iconGO = Instantiate(projectDocIconPrefab, documentIconsContainer);
+	       
+	       // Добавляем разброс
+	       RectTransform rt = iconGO.GetComponent<RectTransform>();
+	       RectTransform containerRT = documentIconsContainer as RectTransform;
+	       if (rt != null)
+	       {
+	           // Берем размеры контейнера, оставляем отступы по краям (padding 30f)
+	           float widthX = containerRT != null ? (containerRT.rect.width / 2f) - 30f : 100f;
+	           float heightY = containerRT != null ? (containerRT.rect.height / 2f) - 30f : 50f;
+	           
+	           rt.anchoredPosition = new Vector2(Random.Range(-widthX, widthX), Random.Range(-heightY, heightY));
+	           rt.localRotation = Quaternion.Euler(0, 0, Random.Range(-15f, 15f));
+	       }
 
-        GameObject iconGO = Instantiate(projectDocIconPrefab, documentIconsContainer);
-        var iconUI = iconGO.GetComponent<UI.ProjectDocumentIconUI>();
-        
-        if (iconUI != null)
-        {
-            iconUI.Setup(docData, (doc) => 
-            {
-                // При клике на иконку открываем панель просмотра
-                projectReviewPanel.Show(doc, () => 
-                {
-                    // Когда подписали в панели:
-                    
-                    // 1. Убираем иконку из UI
-                    RemoveProjectDocumentIcon(doc);
-                    
-                    // 2. Сообщаем физическому миру (Callback в ProjectDocumentObject)
-                    onSignedWorldCallback?.Invoke();
-                    
-                    // 3. Обновляем счетчик на кнопке стола
-                    if(directorDeskButton != null) directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
-                });
-            });
-        }
+	       var iconUI = iconGO.GetComponent<UI.ProjectDocumentIconUI>();
+	       
+	       if (iconUI != null)
+	       {
+	           iconUI.Setup(docData, (doc) =>
+	           {
+	               projectReviewPanel.Show(doc, () =>
+	               {
+	                   RemoveProjectDocumentIcon(doc);
+	                   onSignedWorldCallback?.Invoke();
+	                   if(directorDeskButton != null) directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+	               });
+	           });
+	       }
 
-        activeProjectIcons.Add(docData, iconGO);
-        
-        // Обновляем кнопку стола (красный кружочек с цифрой)
-        if(directorDeskButton != null) directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
-    }
+	       activeProjectIcons.Add(docData, iconGO);
+	       if(directorDeskButton != null) directorDeskButton.UpdateAppearance(GetWaitingDocumentCount());
+	   }
 
     public void RemoveDocumentIcon(ClientPathfinding client)
     {

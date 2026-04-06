@@ -140,27 +140,49 @@ public class WorkstationUI : MonoBehaviour
             {
                 activeStaffCount++;
                 string staffName = (provider as MonoBehaviour)?.name ?? "Неизвестно";
-                string status = "Работает";
+                string status = "Свободна";
                 Color statusColor = Color.green;
 
-                // Определяем статус в зависимости от типа сотрудника
-                if (provider is ClerkController clerk)
+                // Если это клерк и он на перерыве
+                if (provider is ClerkController clerk && clerk.IsOnBreak())
                 {
-                    if (clerk.IsOnBreak())
+                    status = "Перерыв";
+                    statusColor = Color.yellow;
+                }
+                // Если к столу привязан клиент
+                else if (point.CurrentClient != null)
+                {
+                    int qNum = point.CurrentClient.stateMachine.MyQueueNumber;
+                    // Отсекаем наглецов (номера 10000+)
+                    string numStr = (qNum >= 10000 || qNum == -1) ? "Вне очереди" : $"№{qNum}";
+        
+                    // Проверяем, подошел ли клиент физически к столу
+                    var cState = point.CurrentClient.stateMachine.GetCurrentState();
+                    bool isAtDesk = cState == ClientState.AtRegistration || cState == ClientState.AtDesk1 ||
+                                    cState == ClientState.AtDesk2 || cState == ClientState.AtCashier ||
+                                    cState == ClientState.InsideLimitedZone;
+                        
+                    if (isAtDesk)
                     {
-                        status = "Перерыв";
-                        statusColor = Color.yellow;
+                        status = $"Обслуживает {numStr}";
+                        statusColor = Color.cyan;
                     }
-                } 
+                    else
+                    {
+                        status = $"Вызывает {numStr}";
+                        statusColor = new Color(1f, 0.6f, 0f); // Оранжевый
+                    }
+                }
+                // Директор
                 else if (provider is DirectorAvatarController director)
                 {
                     if (director.GetCurrentState() == DirectorAvatarController.DirectorState.ServingClient)
                     {
-                        status = "Обслуживает";
+                        status = "Занят";
                         statusColor = Color.cyan;
                     }
                 }
-                
+    
                 sb.AppendLine($"{staffName}: <color=#{ColorUtility.ToHtmlStringRGB(statusColor)}>{status}</color>");
             }
         }

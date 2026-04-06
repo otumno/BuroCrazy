@@ -26,6 +26,8 @@ public class SpecialVisitorDatabase : ScriptableObject
         [Header("Цель Визита")]
         [Tooltip("Какую цель насильно поставить этому клиенту?")]
         public ClientGoal forcedGoal = ClientGoal.DirectorApproval;
+        [Tooltip("Если указано, клиент заспавнится с этим архетипом (игнорируя рандом)")]
+        public Characters.ClientArchetype forcedArchetype;
 
         [Header("Настройки Времени")]
         [Tooltip("Если True, появится МГНОВЕННО при загрузке дня (до нажатия 'Начать').")]

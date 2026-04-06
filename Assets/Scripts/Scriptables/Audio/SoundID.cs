@@ -45,6 +45,7 @@ namespace Scriptables.Audio
 		RedLight,
 		Sneeze,
 		Success,
-		Fail
+		Fail,
+		ClinchAlarm
     }
 }
