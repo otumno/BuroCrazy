@@ -1,4 +1,3 @@
-// Файл: Assets/Scripts/PlayerInputController.cs
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Linq;
@@ -11,7 +10,7 @@ public class PlayerInputController : MonoBehaviour
 {
     // --- ДЕБАГ ФЛАГИ ---
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-    public static bool DebugForceBookkeeping = false; // Чит для открытия бухгалтерии
+    public static bool DebugForceBookkeeping = false;
 #endif
     // --------------------
     
@@ -20,21 +19,23 @@ public class PlayerInputController : MonoBehaviour
     public LayerMask movementLayerMask;
     public GameObject clickMarkerPrefab;
 	
-	[Tooltip("Слой(и), на котором находятся коллайдеры персонала для взаимодействия (правый клик)")]
+    [Tooltip("Слой(и), на котором находятся коллайдеры персонала для взаимодействия (правый клик)")]
     public LayerMask staffInteractionLayerMask;
 
-    // --- НАЧАЛО ИЗМЕНЕНИЙ ---
     [Header("Ссылки для взаимодействия")]
     [Tooltip("Перетащите сюда объект ActionConfigPopup из UI")]
     public ActionConfigPopupUI actionConfigPopup;
     
     // Hover для клинчей
     private Clinch.ClinchTarget _currentHoveredClinch;
-    // --- КОНЕЦ ИЗМЕНЕНИЙ ---
+
+    // --- DIABLO MOVEMENT ---
+    private bool _isHoldingMouse = false;
+    private Waypoint _lastTargetWaypoint;
+    // -----------------------
 
     void Awake()
     {
-        // На случай, если забыли назначить в инспекторе
         if (actionConfigPopup == null)
         {
             actionConfigPopup = FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include);
@@ -75,13 +76,14 @@ public class PlayerInputController : MonoBehaviour
         }
 
         DirectorAvatarController director = DirectorAvatarController.Instance;
-    AgentMover directorMover = director?.GetComponent<AgentMover>(); // Безопасно получаем AgentMover
+        AgentMover directorMover = director?.GetComponent<AgentMover>();
 
-    // Если директор существует, у него есть AgentMover и он сейчас скользит/лежит - игнорируем ввод
-    if (directorMover != null && directorMover.IsSlipping)
-    {
-        return; // Выходим из Update, не обрабатывая клики
-    }
+        // Если директор существует, у него есть AgentMover и он сейчас скользит/лежит - игнорируем ввод
+        if (directorMover != null && directorMover.IsSlipping)
+        {
+            _isHoldingMouse = false; // Сбрасываем удержание при падении
+            return; 
+        }
 
         // --- ЧИТ НА ДЕНЬГИ (КЛАВИША M) ---
         if (Input.GetKeyDown(KeyCode.M))
@@ -92,7 +94,6 @@ public class PlayerInputController : MonoBehaviour
                 Debug.Log("<color=green>[ЧИТ]</color> Добавлено $10,000!");
             }
         }
-        // ---------------------------------
         
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
         // --- ДЕБАГ: ОТКРЫТЬ БУХГАЛТЕРИЮ (КЛАВИША B) ---
@@ -101,18 +102,15 @@ public class PlayerInputController : MonoBehaviour
             DebugForceBookkeeping = !DebugForceBookkeeping;
             Debug.Log($"<color=green>[ЧИТ]</color> Бухгалтерия принудительно {(DebugForceBookkeeping ? "ОТКРЫТА" : "ЗАКРЫТА")}!");
 
-            // 1. Принудительно пинаем калькулятор на столе, чтобы он перепроверил статус
             var calc = FindFirstObjectByType<DeskCalculator>(FindObjectsInactive.Include);
             if (calc != null) calc.CheckAvailability();
 
-            // 2. Принудительно ВКЛЮЧАЕМ кнопку UI, чтобы её Update() снова начал работать
             var bookBtn = FindFirstObjectByType<BookkeepingButtonController>(FindObjectsInactive.Include);
             if (bookBtn != null)
             {
                 bookBtn.gameObject.SetActive(true);
             }
         }
-        // ----------------------------------------------
 #endif
 
         // --- HOVER ДЛЯ КЛИНЧЕЙ ---
@@ -145,40 +143,71 @@ public class PlayerInputController : MonoBehaviour
             _currentHoveredClinch.SetHover(false);
             _currentHoveredClinch = null;
         }
-        // ----------------------------------------------
 
-  // --- ЛЕВЫЙ КЛИК (взаимодействие с клинчем или передвижение) ---
+
+        // ========================================================
+        // --- ЛЕВЫЙ КЛИК (DIABLO-STYLE ДВИЖЕНИЕ ИЛИ КЛИНЧ) ---
+        // ========================================================
+        
+        // 1. Первый клик (нажали кнопку)
         if (Input.GetMouseButtonDown(0))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;
-            if(DirectorAvatarController.Instance != null && DirectorAvatarController.Instance.IsInUninterruptibleAction) return;
+            if (DirectorAvatarController.Instance != null && DirectorAvatarController.Instance.IsInUninterruptibleAction) return;
 
             Vector2 clickWorldPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
 
             // Сначала проверяем клик по активному клинчу
             if (TryHandleClinchClick(clickWorldPosition))
             {
-                return; // Клинч обработан, не двигаемся
+                _isHoldingMouse = false; // Клинч обработан, не переходим в режим бега
+                return; 
             }
 
-            // Если не кликнули по клинчу - обрабатываем движение
+            // Если не кликнули по клинчу - активируем режим удержания
+            _isHoldingMouse = true;
+
+            // Спавним маркер клика (только один раз при нажатии)
             Collider2D groundHit = Physics2D.OverlapPoint(clickWorldPosition, movementLayerMask);
-            if (groundHit != null)
+            if (groundHit != null && clickMarkerPrefab != null)
             {
-                if (clickMarkerPrefab != null)
-                {
-                    Instantiate(clickMarkerPrefab, clickWorldPosition, Quaternion.identity);
-                }
-                
-                Waypoint nearestWaypoint = FindNearestWaypointTo(clickWorldPosition);
-                if (nearestWaypoint != null)
-                {
-                    DirectorAvatarController.Instance?.MoveToWaypoint(nearestWaypoint);
-                }
+                Instantiate(clickMarkerPrefab, clickWorldPosition, Quaternion.identity);
             }
         }
 
-        // --- ПРАВЫЙ КЛИК (взаимодействие) ---
+        // 2. Отпустили кнопку
+        if (Input.GetMouseButtonUp(0))
+        {
+            _isHoldingMouse = false;
+            _lastTargetWaypoint = null; // Сбрасываем цель, чтобы следующий клик туда же сработал
+        }
+
+        // 3. Удержание кнопки (Diablo-style)
+        if (_isHoldingMouse && Input.GetMouseButton(0))
+        {
+            // Перестаем бежать за мышью, если навели на UI
+            if (EventSystem.current.IsPointerOverGameObject()) return; 
+
+            if (DirectorAvatarController.Instance != null && DirectorAvatarController.Instance.IsInUninterruptibleAction)
+            {
+                _isHoldingMouse = false;
+                return;
+            }
+
+            Vector2 currentMousePos = mainCamera.ScreenToWorldPoint(Input.mousePosition);
+            Waypoint nearestWaypoint = FindNearestWaypointTo(currentMousePos);
+
+            // Даем команду идти ТОЛЬКО если ближайший вейпоинт сменился. 
+            // Это спасет от перестроения пути каждый кадр и диких дерганий!
+            if (nearestWaypoint != null && nearestWaypoint != _lastTargetWaypoint)
+            {
+                _lastTargetWaypoint = nearestWaypoint;
+                DirectorAvatarController.Instance?.MoveToWaypoint(nearestWaypoint);
+            }
+        }
+
+
+        // --- ПРАВЫЙ КЛИК (взаимодействие с персоналом) ---
         if (Input.GetMouseButtonDown(1))
         {
             if (EventSystem.current.IsPointerOverGameObject()) return;
@@ -187,51 +216,40 @@ public class PlayerInputController : MonoBehaviour
             RaycastHit2D hit = Physics2D.Raycast(
                 mainCamera.ScreenToWorldPoint(Input.mousePosition),
                 Vector2.zero,
-                Mathf.Infinity, // Длина луча (не важна для Raycast с Vector2.zero)
-                staffInteractionLayerMask // <<<< ИСПОЛЬЗУЕМ МАСКУ
+                Mathf.Infinity, 
+                staffInteractionLayerMask 
             );
+            
             if (hit.collider != null)
             {
                 StaffController clickedStaff = hit.collider.GetComponentInParent<StaffController>();
                 if (clickedStaff != null && !(clickedStaff is DirectorAvatarController))
                 {
-                    // Мы кликнули на сотрудника!
                     StartCoroutine(DirectorInteractRoutine(clickedStaff));
                 }
             }
         }
     }
 
-    // --- НОВАЯ КОРУТИНА ---
     private IEnumerator DirectorInteractRoutine(StaffController targetStaff)
     {
         DirectorAvatarController director = DirectorAvatarController.Instance;
         if (director == null || actionConfigPopup == null) yield break;
 
-        // 1. Отправляем Директора к сотруднику
-        // Находим ближайшую к сотруднику точку, чтобы встать рядом, а не в нем самом
         Waypoint targetWaypoint = FindNearestWaypointTo(targetStaff.transform.position); 
         if(targetWaypoint != null)
         {
             director.MoveToWaypoint(targetWaypoint);
         }
 
-        // 2. Ждем, пока Директор дойдет
         yield return new WaitUntil(() => !director.AgentMover.IsMoving());
 
-        // 3. Ставим игру на паузу и открываем UI
         MainUIManager.Instance.PushPause();
         actionConfigPopup.OpenForStaff(targetStaff);
     }
 
-    /// <summary>
-    /// Пытается обработать клик по активному клинчу.
-    /// </summary>
-    /// <param name="clickWorldPosition">Мировые координаты клика</param>
-    /// <returns>true если клик был обработан как клинч, иначе false</returns>
     private bool TryHandleClinchClick(Vector2 clickWorldPosition)
     {
-        // Радиус 0.8f создает большое "пятно" клика вокруг курсора
         Collider2D[] hits = Physics2D.OverlapCircleAll(clickWorldPosition, 0.8f);
         foreach (Collider2D hit in hits)
         {
