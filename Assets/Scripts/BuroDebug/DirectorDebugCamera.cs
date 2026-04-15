@@ -23,13 +23,26 @@ namespace BuroDebug
         [Tooltip("Максимально допустимое смещение камеры от центра (в юнитах)")]
         public float maxMouseOffset = 2.0f;
 
+        [Header("Ограничения карты (Границы)")]
+        public bool useBounds = true;
+        [Tooltip("Левый нижний угол карты (X, Y)")]
+        public Vector2 mapMinBounds = new Vector2(-15f, -10f);
+        [Tooltip("Правый верхний угол карты (X, Y)")]
+        public Vector2 mapMaxBounds = new Vector2(15f, 10f);
+
+        [Header("Динамический зум")]
+        [Tooltip("Насколько отдалять камеру при движении директора")]
+        public float movementZoomOffset = 1.0f;
+        [Tooltip("Время сглаживания для зума (резиночка)")]
+        public float zoomSmoothTime = 0.3f;
+
         private Camera _camera;
         private CameraToggle _cameraToggle;
         private bool _isFollowing = false;
 
-        // Точка, за которой реально следит камера (с учетом мертвой зоны)
-        private Vector2 _focusPoint; 
+        private Vector2 _focusPoint;
         private Vector3 _velocity = Vector3.zero;
+        private float _zoomVelocity = 0f;
 
         private void Awake()
         {
@@ -50,7 +63,6 @@ namespace BuroDebug
 
                 if (_isFollowing && DirectorAvatarController.Instance != null)
                 {
-                    // При включении мгновенно переносим фокус на директора, чтобы камера не летела через всю карту
                     _focusPoint = DirectorAvatarController.Instance.transform.position;
                 }
 
@@ -66,8 +78,13 @@ namespace BuroDebug
             {
                 if (DirectorAvatarController.Instance == null) return;
 
-                // 1. Плавный Зум
-                _camera.orthographicSize = Mathf.Lerp(_camera.orthographicSize, zoomedSize, Time.unscaledDeltaTime * zoomSpeed);
+                // 1. Определяем целевой зум в зависимости от движения директора
+                bool isMoving = DirectorAvatarController.Instance.AgentMover != null
+                    && DirectorAvatarController.Instance.AgentMover.IsMoving();
+                float targetZoom = isMoving ? zoomedSize + movementZoomOffset : zoomedSize;
+                
+                // 2. Плавное изменение зума через SmoothDamp
+                _camera.orthographicSize = Mathf.SmoothDamp(_camera.orthographicSize, targetZoom, ref _zoomVelocity, zoomSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
 
                 // 2. Логика Мертвой зоны (Deadzone)
                 Vector2 directorPos = DirectorAvatarController.Instance.transform.position;
@@ -75,25 +92,38 @@ namespace BuroDebug
                 
                 if (distanceToDirector > deadzoneRadius)
                 {
-                    // Директор "толкает" границу мертвой зоны, смещая точку фокуса
                     Vector2 direction = (directorPos - _focusPoint).normalized;
                     _focusPoint = directorPos - direction * deadzoneRadius;
                 }
 
                 // 3. Смещение к курсору мыши
                 Vector3 mouseScreenPos = Input.mousePosition;
-                mouseScreenPos.z = Mathf.Abs(_camera.transform.position.z); // Глубина для перевода в мировые координаты
+                mouseScreenPos.z = Mathf.Abs(_camera.transform.position.z);
                 Vector2 mouseWorldPos = _camera.ScreenToWorldPoint(mouseScreenPos);
                 
-                // Вектор от фокуса до мыши
                 Vector2 mouseOffset = (mouseWorldPos - _focusPoint) * mouseOffsetMultiplier;
-                // Ограничиваем максимальное смещение
                 mouseOffset = Vector2.ClampMagnitude(mouseOffset, maxMouseOffset);
 
-                // 4. Финальная цель и Резиночка (SmoothDamp)
+                // 4. Предварительная цель
                 Vector3 targetPos = _focusPoint + mouseOffset;
-                targetPos.z = _camera.transform.position.z; // Жестко фиксируем плоскость Z камеры
 
+                // 5. Ограничение камеры рамками карты (Clamping)
+                if (useBounds)
+                {
+                    // Динамически высчитываем размеры половины экрана
+                    float camHalfHeight = _camera.orthographicSize;
+                    float camHalfWidth = camHalfHeight * _camera.aspect;
+
+                    // Ограничиваем так, чтобы край экрана не вылезал за границы mapMinBounds и mapMaxBounds
+                    float clampedX = Mathf.Clamp(targetPos.x, mapMinBounds.x + camHalfWidth, mapMaxBounds.x - camHalfWidth);
+                    float clampedY = Mathf.Clamp(targetPos.y, mapMinBounds.y + camHalfHeight, mapMaxBounds.y - camHalfHeight);
+                    
+                    targetPos = new Vector3(clampedX, clampedY, targetPos.z);
+                }
+
+                targetPos.z = _camera.transform.position.z; // Фиксируем Z
+
+                // 6. Финальная резиночка (SmoothDamp)
                 _camera.transform.position = Vector3.SmoothDamp(
                     _camera.transform.position, 
                     targetPos, 
@@ -105,8 +135,7 @@ namespace BuroDebug
             }
             else
             {
-                // Возвращаем зум в норму, когда выключаем слежение
-                _camera.orthographicSize = Mathf.Lerp(_camera.orthographicSize, defaultSize, Time.unscaledDeltaTime * zoomSpeed);
+                _camera.orthographicSize = Mathf.SmoothDamp(_camera.orthographicSize, defaultSize, ref _zoomVelocity, zoomSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
             }
         }
     }

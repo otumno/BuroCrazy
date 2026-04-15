@@ -182,6 +182,11 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 if (desk.IsClientPhysicallyReady || Vector2.Distance(client.transform.position, wpPos) < 1.5f)
                 {
                     clientArrived = true;
+                    // --- ИСПРАВЛЕНИЕ: Принудительно останавливаем клиента у стола ---
+                    client.stateMachine.StopAllActionCoroutines();
+                    client.GetComponent<AgentMover>()?.Stop();
+                    client.stateMachine.SetState(ClientState.AtRegistration);
+                    // ---------------------------------------------------------------
                     break;
                 }
 
@@ -217,45 +222,55 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             // 5. КЛИЕНТ ПОДОШЕЛ - НАЧИНАЕМ ОБСЛУЖИВАНИЕ
             staff.CurrentSubStatus = $"[Обслуживание] {client.name}";
             
-            // --- ЖЕЛЕЗОБЕТОННЫЙ КЛИНЧ ---
+            // --- ЖЕЛЕЗОБЕТОННЫЙ КЛИНЧ (НЕЗАВИСИМЫЕ КУБИКИ) ---
             var clinchConfig = Gameplay.AIBalanceConfig.Instance;
-            if (clinchConfig != null && clinchConfig.clinchBaseChance > 0f)
+            Clinch.ClinchTarget clinchToTrigger = null;
+            
+            if (clinchConfig != null)
             {
-                float roll = Random.value;
-                Debug.Log($"<color=orange>[Клинч-Тест]</color> Регистратура. Шанс: {clinchConfig.clinchBaseChance}, Бросок: {roll}");
+                // Бросок для клиента
+                bool rollClient = Random.value < (clinchConfig.clientClinchBaseChance * (1f + client.suetunFactor));
+                // Бросок для персонала
+                bool rollStaff = Random.value < (clinchConfig.staffClinchBaseChance * (1f - staff.skills.sedentaryResilience));
                 
-                if (roll <= clinchConfig.clinchBaseChance)
+                Clinch.ClinchTarget clinch = null;
+                
+                if (rollClient)
                 {
-                    Debug.Log($"<color=orange>[Клинч-Тест]</color> Клинч сработал для {client?.name}!");
-                    Clinch.ClinchTarget clinch = client?.GetComponent<Clinch.ClinchTarget>();
+                    clinch = client?.GetComponent<Clinch.ClinchTarget>();
+                    if (clinch == null) clinch = client?.gameObject.AddComponent<Clinch.ClinchTarget>();
+                }
+                else if (rollStaff)
+                {
+                    clinch = staff.GetComponent<Clinch.ClinchTarget>();
+                    if (clinch == null) clinch = staff.gameObject.AddComponent<Clinch.ClinchTarget>();
+                }
+
+                if (clinch != null && !clinch.IsActive)
+                {
+                    clinchToTrigger = clinch;
+                }
+                
+                if (clinchToTrigger != null)
+                {
+                    Debug.Log($"<color=orange>[Клинч-Тест]</color> Запускаем TriggerClinch(). Ставим обслуживание на паузу.");
+                    clinchToTrigger.TriggerClinch();
+                    registrar.thoughtBubble?.ShowPriorityMessage("Эмм... Директор!", 3f, Color.yellow);
                     
-                    if (clinch == null)
+                    // ЖДЕМ РАЗРЕШЕНИЯ КЛИНЧА
+                    yield return new WaitWhile(() => clinchToTrigger.IsActive);
+                    yield return new WaitForSeconds(2.5f); // Даём реакции проявиться
+                    
+                    Debug.Log($"<color=orange>[Клинч-Тест]</color> Клинч завершен. Проверяем статус клиента.");
+                    
+                    // ПРОВЕРКА: Если клиент расстроился и ушел (провал клинча)
+                    if (client?.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.LeavingUpset)
                     {
-                        Debug.LogError($"<color=red>[Клинч-Ошибка]</color> На префабе клиента {client?.name} НЕТ скрипта ClinchTarget! Клинч пропущен.");
-                    }
-                    else
-                    {
-                        if (!clinch.IsActive)
-                        {
-                            Debug.Log($"<color=orange>[Клинч-Тест]</color> Запускаем TriggerClinch(). Ставим обслуживание на паузу.");
-                            clinch.TriggerClinch();
-                            registrar.thoughtBubble?.ShowPriorityMessage("Эмм... Директор!", 3f, Color.yellow);
-                            
-                            // ЖДЕМ РАЗРЕШЕНИЯ КЛИНЧА
-                            yield return new WaitWhile(() => clinch.IsActive);
-                            
-                            Debug.Log($"<color=orange>[Клинч-Тест]</color> Клинч завершен. Проверяем статус клиента.");
-                            
-                            // ПРОВЕРКА: Если клиент расстроился и ушел (провал клинча)
-                            if (client?.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.LeavingUpset)
-                            {
-                                Debug.Log($"<color=orange>[Клинч-Тест]</color> Клиент ушел злым. Прерываем обслуживание.");
-                                _lastServiceSuccess = false;
-                                desk.ClearClient();
-                                yield return new WaitForSeconds(1f);
-                                continue; // Переходим к следующему клиенту в очереди
-                            }
-                        }
+                        Debug.Log($"<color=orange>[Клинч-Тест]</color> Клиент ушел злым. Прерываем обслуживание.");
+                        _lastServiceSuccess = false;
+                        desk.ClearClient();
+                        yield return new WaitForSeconds(1f);
+                        continue; // Переходим к следующему клиенту в очереди
                     }
                 }
             }

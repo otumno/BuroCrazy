@@ -684,6 +684,11 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                         if (workstation.IsClientPhysicallyReady || Vector2.Distance(clientToServe.transform.position, wpPos) < 1.5f)
                         {
                             clientArrived = true;
+                            // --- ИСПРАВЛЕНИЕ: Принудительно останавливаем клиента у стола ---
+                            clientToServe.stateMachine.StopAllActionCoroutines();
+                            clientToServe.GetComponent<AgentMover>()?.Stop();
+                            clientToServe.stateMachine.SetState(ClientState.InsideLimitedZone);
+                            // ---------------------------------------------------------------
                             break;
                         }
 
@@ -1392,7 +1397,8 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                     {
                         GameObject moneyEffect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
                         MoneyMover mover = moneyEffect.GetComponent<MoneyMover>();
-                        if (mover != null) mover.StartMove(this.transform);
+                        Transform moneyTarget = currentWorkstation?.moneyTrayPoint ?? currentWorkstation?.transform ?? this.transform;
+                        if (mover != null) mover.StartMove(moneyTarget);
                         else Destroy(moneyEffect);
                     }
 

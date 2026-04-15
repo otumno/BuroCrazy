@@ -14,6 +14,9 @@ public class ServicePoint : MonoBehaviour
     public Waypoint clientStandPoint;
     [Tooltip("Точка на столе, куда кладется документ")]
     public Transform documentPointOnDesk;
+    
+    [Tooltip("Лоток для денег на кассе")]
+    public Transform moneyTrayPoint;
     [Tooltip("Ссылка на стопку документов, связанную с этим местом")]
     public DocumentStack documentStack;
     

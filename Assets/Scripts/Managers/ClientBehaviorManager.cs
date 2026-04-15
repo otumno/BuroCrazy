@@ -54,6 +54,10 @@ namespace Managers
 
         private void Awake()
         {
+            // ПРИНУДИТЕЛЬНО ОТКЛЮЧАЕМ BT ДЛЯ ПРЕДОТВРАЩЕНИЯ КОНФЛИКТОВ
+            useBehaviorTree = false;
+            behaviorMode = ClientBehaviorMode.StateMachineOnly;
+
             clientPathfinding = GetComponent<ClientPathfinding>();
             stateMachine = GetComponent<ClientStateMachine>();
 

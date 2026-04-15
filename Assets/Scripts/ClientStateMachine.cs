@@ -165,28 +165,84 @@ public class ClientStateMachine : MonoBehaviour
     }
 	
 	private void HandlePatienceExhausted()
-	   {
-	       // ЗАПРЕТ УХОДА ВО ВРЕМЯ ОБСЛУЖИВАНИЯ
-	       if (IsInsideZoneState(currentState))
-	       {
-	           // Клиент в процессе обслуживания — показываем гнев, но не меняем состояние
-	           Debug.Log($"[ClientStateMachine] {parent.name}: Терпение на исходе, но в процессе обслуживания!");
-	           return;
-	       }
-	       
-	       StopAllActionCoroutines();
+	{
+	    // ЗАПРЕТ УХОДА ВО ВРЕМЯ ОБСЛУЖИВАНИЯ (только если работник ФИЗИЧЕСКИ взял в работу)
+	    if (IsInsideZoneState(currentState) && MyServiceProvider != null)
+	    {
+	        Debug.Log($"[ClientStateMachine] {parent.name}: Терпение на исходе, но уже в процессе обслуживания!");
+	        return;
+	    }
+	    
+	    // --- ЗЛАЯ ОПЛАТА ---
+	    // Если клиент у кассира и должен оплатить - бросаем деньги и уходим злым
+	    if (parent.billToPay > 0 &&
+	        (currentState == ClientState.AtCashier || currentState == ClientState.GoingToCashier))
+	    {
+	        float angerModifier = Random.Range(-0.20f, 0.05f);
+	        int finalBill = Mathf.Max(1, Mathf.RoundToInt(parent.billToPay * (1f + angerModifier)));
+	        
+	        Debug.Log($"[ClientStateMachine] {parent.name}: ЗЛАЯ ОПЛАТА! Штраф {angerModifier:P0}, сумма {finalBill}");
+	        
+	        // Спавн денег - летят на ближайший ServicePoint кассы (deskId == -1)
+	        var allServicePoints = Object.FindObjectsByType<ServicePoint>(FindObjectsSortMode.None);
+	        ServicePoint cashierPoint = null;
+	        float minDist = float.MaxValue;
+	        foreach (var sp in allServicePoints)
+	        {
+	            if (sp.deskId == -1) // Касса
+	            {
+	                float d = Vector2.Distance(parent.transform.position, sp.transform.position);
+	                if (d < minDist)
+	                {
+	                    minDist = d;
+	                    cashierPoint = sp;
+	                }
+	            }
+	        }
+	        
+	        if (parent.moneyPrefab != null && cashierPoint != null)
+	        {
+	            GameObject money = Object.Instantiate(parent.moneyPrefab, parent.transform.position, Quaternion.identity);
+	            // Анимация полёта к moneyTrayPoint кассира (или documentPointOnDesk как fallback)
+	            Transform targetPoint = cashierPoint.moneyTrayPoint ?? cashierPoint.documentPointOnDesk;
+	            if (targetPoint != null)
+	            {
+	                money.transform.position = targetPoint.position;
+	            }
+	        }
+	        
+	        // Добавляем деньги в кошелёк
+	        if (Managers.PlayerWallet.Instance != null)
+	        {
+	            Managers.PlayerWallet.Instance.AddMoney(finalBill, "Оплата со злостью", Managers.IncomeType.Official);
+	        }
+	        
+	        // Показываем бабл и сбрасываем
+	        parent.ShowThoughtBubble("Подавитесь своими деньгами!", 3f);
+	        parent.billToPay = 0;
+	        
+	        // Уходим злым (без мусора/луж)
+	        StopAllActionCoroutines();
+	        parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+	        SetGoal(ClientSpawner.Instance.exitWaypoint);
+	        SetState(ClientState.LeavingUpset);
+	        return;
+	    }
+	    // --- КОНЕЦ ЗЛОЙ ОПЛАТЫ ---
+	    
+	    StopAllActionCoroutines();
 
-	       if (Random.value < 0.4f) // 40% шанс скандала
-	       {
-	           SetState(ClientState.Enraged);
-	       }
-	       else
-	       {
-	           parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-	           SetGoal(ClientSpawner.Instance.exitWaypoint);
-	           SetState(ClientState.LeavingUpset);
-	       }
-	   }
+	    if (Random.value < 0.4f) // 40% шанс скандала
+	    {
+	        SetState(ClientState.Enraged);
+	    }
+	    else
+	    {
+	        parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
+	        SetGoal(ClientSpawner.Instance.exitWaypoint);
+	        SetState(ClientState.LeavingUpset);
+	    }
+	}
 	
 
     public IEnumerator MainLogicLoop()
@@ -666,7 +722,14 @@ public class ClientStateMachine : MonoBehaviour
             }
             else
             {
-                Debug.Log($"[HandleMovementArrival] {parent.name}: Уже имеет талон #{myQueueNumber}, пропускаю GetTicketRoutine.");
+                // Устранение бага: если талон уже есть, принудительно даем новую цель, чтобы не застрять в цикле
+                Waypoint nextGoal = ClientQueueManager.Instance.ChooseNewGoal(parent);
+                if (nextGoal != null) {
+                    SetGoal(nextGoal);
+                    SetState(ClientState.MovingToGoal);
+                } else {
+                    SetState(ClientState.Confused);
+                }
             }
             return;
         }

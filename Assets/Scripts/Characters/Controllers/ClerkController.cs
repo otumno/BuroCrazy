@@ -180,8 +180,8 @@ public class ClerkController : StaffController, IServiceProvider
             GameObject moneyEffect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
             MoneyMover mover = moneyEffect.GetComponent<MoneyMover>();
 
-            // Используем позицию кассира как цель
-            Transform moneyTarget = this.transform;
+            // Летим в moneyTrayPoint если есть, иначе в transform стола
+            Transform moneyTarget = assignedWorkstation?.moneyTrayPoint ?? assignedWorkstation?.transform ?? this.transform;
             if (mover != null) mover.StartMove(moneyTarget);
             else Destroy(moneyEffect);
         }

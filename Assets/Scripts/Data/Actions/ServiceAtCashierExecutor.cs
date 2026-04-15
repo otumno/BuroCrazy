@@ -22,7 +22,15 @@ public class ServiceAtCashierExecutor : ActionExecutor
         }
 
         var zone = ClientSpawner.GetZoneByDeskId(cashier.assignedWorkstation.deskId);
-        var client = zone?.GetOccupyingClients().FirstOrDefault(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
+        var client = zone?.GetOccupyingClients().FirstOrDefault(c => c != null && !c.isLeavingSuccessfully && (c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax));
+        
+        // Бронебойный поиск физически ближайшего клиента у кассы
+        if (client == null && cashier.assignedWorkstation != null)
+        {
+            client = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
+                .FirstOrDefault(c => c != null && !c.isLeavingSuccessfully && (c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax) &&
+                Vector2.Distance(c.transform.position, cashier.assignedWorkstation.clientStandPoint.transform.position) < 1.5f);
+        }
 
         if (client == null)
         {
@@ -30,18 +38,25 @@ public class ServiceAtCashierExecutor : ActionExecutor
             yield break;
         }
 
-        // --- КЛИНЧ-ПРОВЕРКА ---
+        // --- КЛИНЧ-ПРОВЕРКА (НЕЗАВИСИМЫЕ КУБИКИ) ---
         var clinchConfig = Gameplay.AIBalanceConfig.Instance;
-        if (clinchConfig != null && clinchConfig.clinchBaseChance > 0f && Random.value < clinchConfig.clinchBaseChance)
+        Clinch.ClinchTarget clinchToTrigger = null;
+        
+        if (clinchConfig != null)
         {
+            // Бросок для клиента
+            bool rollClient = Random.value < (clinchConfig.clientClinchBaseChance * (1f + client.suetunFactor));
+            // Бросок для персонала
+            bool rollStaff = Random.value < (clinchConfig.staffClinchBaseChance * (1f - staff.skills.sedentaryResilience));
+            
             Clinch.ClinchTarget clinch = null;
             
-            if (client != null)
+            if (rollClient)
             {
                 clinch = client.GetComponent<Clinch.ClinchTarget>();
                 if (clinch == null) clinch = client.gameObject.AddComponent<Clinch.ClinchTarget>();
             }
-            else if (staff != null)
+            else if (rollStaff)
             {
                 clinch = staff.GetComponent<Clinch.ClinchTarget>();
                 if (clinch == null) clinch = staff.gameObject.AddComponent<Clinch.ClinchTarget>();
@@ -49,9 +64,15 @@ public class ServiceAtCashierExecutor : ActionExecutor
 
             if (clinch != null && !clinch.IsActive)
             {
-                clinch.TriggerClinch();
+                clinchToTrigger = clinch;
+            }
+            
+            if (clinchToTrigger != null)
+            {
+                clinchToTrigger.TriggerClinch();
                 staff.thoughtBubble?.ShowPriorityMessage("Эмм... Директор!", 2f, Color.yellow);
-                yield return new WaitWhile(() => clinch.IsActive);
+                yield return new WaitWhile(() => clinchToTrigger.IsActive);
+                yield return new WaitForSeconds(2.5f); // Даём реакции проявиться
             }
         }
         // После WaitWhile ОБЯЗАТЕЛЬНАЯ ПРОВЕРКА для всех экзекуторов:

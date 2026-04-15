@@ -111,9 +111,13 @@ namespace Gameplay
 
         #region Clinch System
         [Header("🤼 Clinch System (Прорыв)")]
-        [Tooltip("Базовый шанс инициировать клинч (прорыв)")]
+        [Tooltip("Базовый шанс клиента инициировать клинч (прорыв)")]
         [Range(0f, 1f)]
-        public float clinchBaseChance = 0.3f;
+        public float clientClinchBaseChance = 0.1f;
+        
+        [Tooltip("Базовый шанс персонала инициировать клинч (прорыв)")]
+        [Range(0f, 1f)]
+        public float staffClinchBaseChance = 0.1f;
 
         [Tooltip("Время в секундах на принятие решения в клинче")]
         [Range(1f, 20f)]

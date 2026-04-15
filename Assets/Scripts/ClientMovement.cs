@@ -65,6 +65,14 @@ public class ClientMovement : MonoBehaviour
                 lastPosition = transform.position;
                 continue;
             }
+            
+            // ИСПРАВЛЕНИЕ: Не сводим с ума клиентов, если они просто толкаются в очереди за талоном
+            var goalAtTicket = parent.stateMachine.GetCurrentGoal();
+            if (goalAtTicket != null && goalAtTicket.name == "TicketStandPoint")
+            {
+                timeStuck = 0f;
+                continue;
+            }
 
             float distanceMoved = Vector2.Distance(transform.position, lastPosition);
             
@@ -93,6 +101,16 @@ public class ClientMovement : MonoBehaviour
                     timeStuck = 0f;
                     continue;
                 }
+                
+                // --- ИСПРАВЛЕНИЕ: Если застрял по пути в зону ожидания - просто жди на месте! ---
+                if (ClientQueueManager.Instance != null && ClientQueueManager.Instance.IsWaypointInWaitingZone(currentGoal))
+                {
+                    parent.stateMachine.StopAllActionCoroutines();
+                    if (agentMover != null) agentMover.Stop();
+                    parent.stateMachine.SetState(ClientState.AtWaitingArea);
+                    yield break;
+                }
+                // ---------------------------------------------------------------------------------
 
                 Debug.LogWarning($"Клиент {gameObject.name} застрял! Принудительно перевожу в состояние Confused.");
                 parent.stateMachine.SetState(ClientState.Confused);
