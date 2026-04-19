@@ -2,11 +2,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
-using System.Collections;
 using System.Collections.Generic;
 using Data.Calendar;
 using DG.Tweening;
 using Managers;
+using Random = UnityEngine.Random;
 
 public class StartOfDayPanel : MonoBehaviour
 {
@@ -55,6 +55,8 @@ public class StartOfDayPanel : MonoBehaviour
     [Header("Animation Settings")]
     [SerializeField] private float _fadeDuration;
     private Sequence _sequence;
+
+    private bool _isFirstShow = true;
     
     private void Awake()
     {
@@ -67,6 +69,7 @@ public class StartOfDayPanel : MonoBehaviour
         Debug.Log($"<color=orange>[StartOfDayPanel] OnEnable called. _pauseCount before: {MainUIManager.Instance?.pauseCount ?? -1}</color>");
         UpdatePanelInfo();
         UpdateBackground(); // Обновляем фон при открытии
+        TimeManager.Instance.OnDayChanged += SwitchFirstShow;
     }
     
     // --- МЕТОД ОБНОВЛЕНИЯ ФОНА ---
@@ -138,18 +141,12 @@ public class StartOfDayPanel : MonoBehaviour
         {
             startDayButton.interactable = true;
             var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
-
-            var currentPeriodPlan = TimeManager.Instance.GetCurrentPeriodSettings();
-            
-            // Здесь была ошибка с лишними символами, исправлено:
-            var isMidDayPause = Time.timeScale == 0f &&
-                                currentPeriodPlan != null &&
-                                !currentPeriodPlan.PeriodType.IsNight(); 
-
-            buttonText.text = isMidDayPause ? "Продолжить день" : "Начать день";
+            buttonText.text = _isFirstShow ? "Начать день" : "Продолжить день";
 
             startDayButton.onClick.RemoveAllListeners();
-            startDayButton.onClick.AddListener(() => {
+            startDayButton.onClick.AddListener(() =>
+            {
+                _isFirstShow = false;
                 MainUIManager.Instance.StartOrResumeGameplay();
             });
         }
@@ -260,4 +257,12 @@ public class StartOfDayPanel : MonoBehaviour
     }
 
     public int GetWaitingDocumentCount() { return waitingDocumentIcons.Count + activeProjectIcons.Count; }
+
+    private void SwitchFirstShow(int _) => _isFirstShow = true;
+
+    private void OnDestroy()
+    {
+        if (TimeManager.Instance)
+            TimeManager.Instance.OnDayChanged -= SwitchFirstShow;
+    }
 }

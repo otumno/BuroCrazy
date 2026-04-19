@@ -62,12 +62,6 @@ MonoBehaviour:
   listContainer: {fileID: 6872305093914776269}
   policyItemPrefab: {fileID: 4326181012391038503, guid: 93f68544a753c274c9845e70da95446a, type: 3}
   closeButton: {fileID: 8063647990964475707}
-  policiesTabButton: {fileID: 0}
-  instructionsTabButton: {fileID: 0}
-  policiesPanel: {fileID: 4702596532719920888}
-  instructionsPanel: {fileID: 0}
-  instructionsContainer: {fileID: 0}
-  instructionItemPrefab: {fileID: 4798425935918223822, guid: ec920274f2f167c45af8aaf6188914c8, type: 3}
   detailsPanel: {fileID: 3514363913301758383}
   titleText: {fileID: 2686177951839598089}
   descText: {fileID: 2195855120956233697}
@@ -514,7 +508,7 @@ MonoBehaviour:
   m_fontSize: 14
   m_fontSizeBase: 14
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -833,7 +827,7 @@ MonoBehaviour:
   m_fontSize: 22
   m_fontSizeBase: 22
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
@@ -1199,7 +1193,7 @@ MonoBehaviour:
   m_fontSize: 16
   m_fontSizeBase: 16
   m_fontWeight: 400
-  m_enableAutoSizing: 0
+  m_enableAutoSizing: 1
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0

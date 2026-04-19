@@ -385,32 +385,32 @@ namespace Managers
             Debug.Log($"[WaveManager] --- НАЧАЛО ПРОВЕРКИ УТРЕННИХ СОБЫТИЙ (День {day}) ---");
             Debug.Log($"[WaveManager] Всего записей в базе: {specialVisitorsDB.visitors.Count}");
 
-            foreach (var v in specialVisitorsDB.visitors)
+            foreach (var specialVisitor in specialVisitorsDB.visitors)
             {
-                string prefix = $"[WaveManager] Гость '{v.name}': ";
+                string prefix = $"[WaveManager] Гость '{specialVisitor.name}': ";
 
-                if (v.dayToSpawn != day)
+                if (specialVisitor.dayToSpawn != day)
                 {
-                    Debug.Log(prefix + $"ПРОПУСК. День {v.dayToSpawn} != {day}");
+                    Debug.Log(prefix + $"ПРОПУСК. День {specialVisitor.dayToSpawn} != {day}");
                     continue;
                 }
 
-                if (!v.spawnAtStartOfDay)
+                if (!specialVisitor.spawnAtStartOfDay)
                 {
                     Debug.Log(prefix + $"ПРОПУСК. Галочка 'Spawn At Start Of Day' выключена.");
                     continue;
                 }
 
-                if (!AreSpawnConditionsMet(v))
+                if (!AreSpawnConditionsMet(specialVisitor))
                 {
-                    string reqFlag = string.IsNullOrEmpty(v.requiredFlagKey) ? "Нет" : $"{v.requiredFlagKey} == {v.requiredFlagValue}";
+                    string reqFlag = string.IsNullOrEmpty(specialVisitor.requiredFlagKey) ? "Нет" : $"{specialVisitor.requiredFlagKey} == {specialVisitor.requiredFlagValue}";
                     Debug.Log(prefix + $"ПРОПУСК. Условия флага не выполнены. Требуется: {reqFlag}");
                     continue;
                 }
 
                 // Если дошли сюда — успех
                 Debug.Log(prefix + "<color=green>УСПЕХ! Начинаю спавн.</color>");
-                SpawnSpecialClient(v);
+                SpawnSpecialClient(specialVisitor);
             }
             Debug.Log($"[WaveManager] --- КОНЕЦ ПРОВЕРКИ ---");
         }

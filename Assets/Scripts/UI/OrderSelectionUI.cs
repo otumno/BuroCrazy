@@ -23,7 +23,7 @@ public class OrderSelectionUI : MonoBehaviour
         {
             if (i < availableOrders.Count)
             {
-                orderCards[i].Setup(availableOrders[i], this);
+                orderCards[i].Setup(availableOrders[i], OnOrderSelected);
                 orderCards[i].gameObject.SetActive(true);
             }
             else
@@ -33,7 +33,7 @@ public class OrderSelectionUI : MonoBehaviour
         }
     }
 
-    public void OnOrderSelected(DirectorOrder selectedOrder)
+    private void OnOrderSelected(DirectorOrder selectedOrder)
     {
         // ИСПРАВЛЕНИЕ: Используем OrderManager
         if (OrderManager.Instance != null)

@@ -125,9 +125,10 @@ namespace Managers
 
         public void StartDialogue(DialogueGraph graph, ClientPathfinding client, System.Action onComplete = null)
         {
-            if (!isUIReady || graph == null) return;
+            if (!isUIReady || graph == null)
+                return;
 
-            this.onDialogueComplete = onComplete;
+            onDialogueComplete = onComplete;
             currentClientContext = client;
             currentGraph = graph;
             
@@ -149,7 +150,7 @@ namespace Managers
             }
             else
             {
-                EndDialogue(null);
+                EndDialogue();
             }
         }
 
@@ -224,23 +225,23 @@ namespace Managers
             if (choiceContainer != null) foreach (Transform child in choiceContainer) Destroy(child.gameObject);
 
             UpdateNodeImage(node);
-			
-			if (node is EndNode endNode)
-			         {
-			             if (endNode.endSound != null)
-			             {
-			                 PlaySystemSound(endNode.endSound);
-			             }
-			             EndDialogue(endNode);
-			             return;
-			         }
-			
-			
-			         if (node == null || node is EndNode)
-			         {
-			             EndDialogue(null);
-			             return;
-			         }
+
+            if (node is EndNode endNode)
+            {
+                if (endNode.endSound != null)
+                {
+                    PlaySystemSound(endNode.endSound);
+                }
+
+                EndDialogue();
+                return;
+            }
+
+            if (node == null)
+            {
+                EndDialogue();
+                return;
+            }
 
             switch (node)
             {
@@ -256,7 +257,7 @@ namespace Managers
             if (node.outcomes == null || node.outcomes.Count == 0)
             {
                 Debug.LogWarning("RandomNode не имеет исходов!");
-                EndDialogue(null);
+                EndDialogue();
                 return;
             }
 
@@ -538,7 +539,7 @@ namespace Managers
             }
             else
             {
-                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue(null);
+                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue();
                 else ProcessNode(evt.nextNode);
             }
         }
@@ -563,12 +564,12 @@ namespace Managers
             if (currentNode is PhraseNode phrase) ProcessNode(phrase.nextNode);
             else if (currentNode is EventNode evt)
             {
-                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue(null);
+                if (evt.eventType == EventNode.EventType.EndDialogue) EndDialogue();
                 else ProcessNode(evt.nextNode);
             }
         }
 
-        private void EndDialogue(EndNode endNode)
+        private void EndDialogue()
         {
             if (nodeImageContainer != null) nodeImageContainer.SetActive(false);
 

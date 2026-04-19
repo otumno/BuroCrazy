@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -11,13 +12,13 @@ public class OrderCardUI : MonoBehaviour
     [SerializeField] private Image iconImage; // Необязательно, если нет иконок
 
     private DirectorOrder currentOrder;
-    private OrderSelectionUI selectionManager;
+    private Action<DirectorOrder> _onClick;
 
     // Метод для настройки карточки данными из приказа
-    public void Setup(DirectorOrder order, OrderSelectionUI manager)
+    public void Setup(DirectorOrder order, Action<DirectorOrder> onClick)
     {
         currentOrder = order;
-        selectionManager = manager;
+        _onClick = onClick;
 
         titleText.text = order.orderName;
         descriptionText.text = order.description;
@@ -42,6 +43,11 @@ public class OrderCardUI : MonoBehaviour
     {
         // Карточка сообщает главному менеджеру, что ее выбрали
         Debug.Log($"Выбран приказ: {currentOrder.orderName}");
-        selectionManager.OnOrderSelected(currentOrder);
+        _onClick?.Invoke(currentOrder);
+    }
+
+    private void OnDestroy()
+    {
+        _onClick = null;
     }
 }
