@@ -1,5 +1,8 @@
-using Steamworks;
 using UnityEngine;
+
+#if !DISABLESTEAMWORKS
+using Steamworks;
+#endif
 
 namespace Managers
 {
@@ -8,13 +11,15 @@ namespace Managers
         [SerializeField]
         private SteamManager _steamManager;
 
+#if !DISABLESTEAMWORKS
         private void Start()
         {
             if (!SteamManager.Initialized)
                 return;
 
-            var steamName = SteamFriends.GetPersonaName();
+            var steamName = SteamManager.GetPersonaName();
             Debug.Log($"Your Steam Name: {steamName}");
         }
+#endif
     }
 }

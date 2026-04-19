@@ -1379,7 +1379,7 @@ GameObject:
   - component: {fileID: 6966393238698906762}
   - component: {fileID: 923265784420433401}
   m_Layer: 0
-  m_Name: SetamManager
+  m_Name: StaamManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2080,6 +2080,8 @@ MonoBehaviour:
   globalStartScale: 0.95
   globalShowEase: 27
   globalHideEase: 8
+  defaultOpenSound: 3
+  defaultCloseSound: 1
 --- !u!1 &7778612619835768913
 GameObject:
   m_ObjectHideFlags: 0

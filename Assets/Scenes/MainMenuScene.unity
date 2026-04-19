@@ -14230,6 +14230,14 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5157418603204356944, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_Name
+      value: SteamManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 5157418603204356944, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5956366104858927862, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: defaultOpenSound
       value: 25
