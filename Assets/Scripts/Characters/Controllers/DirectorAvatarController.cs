@@ -829,9 +829,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             if (agentMover != null)
             {
                 agentMover.SetPath(path);
-                Debug.Log($"[MoveToTargetRoutine] Движение начато к {targetPosition}. Ожидание завершения..."); // <<< ДОБАВЛЕН ЛОГ
                 yield return new WaitUntil(() => agentMover == null || !agentMover.IsMoving());
-                Debug.Log($"[MoveToTargetRoutine] Движение к {targetPosition} завершено."); // <<< ДОБАВЛЕН ЛОГ
             } else {
                  Debug.LogError($"AgentMover не найден на {gameObject.name}! Невозможно двигаться.");
             }
@@ -847,7 +845,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     public void SetState(DirectorState newState)
     {
         if (currentState == newState) return; // Не меняем, если состояние то же самое
-         Debug.Log($"[DirectorController] {characterName} State Change: {currentState} -> {newState}");
+         // Debug.Log($"[DirectorController] {characterName} State Change: {currentState} -> {newState}");
         currentState = newState;
         // Обновляем эмоцию через CharacterVisuals, если он есть
         visuals?.SetEmotionForState(newState);

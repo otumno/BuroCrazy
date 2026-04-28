@@ -102,7 +102,7 @@ namespace Data
             }
 
             var selected = groupArchetypes[Random.Range(0, groupArchetypes.Count)];
-            Debug.Log($"[ArchetypeDatabase] GetRandomByGroup('{groupID}'): Selected '{selected.name}' (groupID: {selected.groupID})");
+            // GetRandomByGroup лог убран
             return selected;
         }
 
@@ -116,14 +116,14 @@ namespace Data
                 return result;
             }
 
-            Debug.Log($"[ArchetypeDatabase] GetByGroup('{groupID}'): Searching through {allArchetypes.Count} archetypes...");
+            // GetByGroup Searching лог убран
 
             foreach (var archetype in allArchetypes)
             {
                 if (archetype != null)
                 {
                     bool matches = archetype.groupID == groupID;
-                    Debug.Log($"[ArchetypeDatabase]   Archetype '{archetype.name}' has groupID '{archetype.groupID}' - Match: {matches}");
+                    // Archetype match лог убран
                     if (matches)
                     {
                         result.Add(archetype);
@@ -131,7 +131,7 @@ namespace Data
                 }
             }
 
-            Debug.Log($"[ArchetypeDatabase] GetByGroup('{groupID}'): Found {result.Count} archetypes");
+            // GetByGroup Found лог убран
             return result;
         }
     }

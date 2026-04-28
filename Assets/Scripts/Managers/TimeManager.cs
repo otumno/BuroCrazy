@@ -24,6 +24,10 @@ namespace Managers
         [SerializeField] private float periodTimer = 0f;
         [SerializeField] private CalendarDayPeriodType currentPeriodType;
 
+        // Поля для отслеживания времени суток
+        [SerializeField] private float dayStartTime = 0f;
+        [SerializeField] private float totalSecondsInDay = 0f;
+
         // События
         public event Action<PeriodSettings> OnPeriodChanged;
         public event Action<int> OnDayChanged;
@@ -78,7 +82,8 @@ namespace Managers
             currentPeriodIndex = startPeriodIndex;
             currentPeriodSettings = mainCalendarDay.periodSettings[currentPeriodIndex];
             currentPeriodType = currentPeriodSettings.PeriodType;
-            
+            dayStartTime = Time.time;
+
             // Ставим таймер так, чтобы до конца периода оставалось 10 секунд
             periodTimer = Mathf.Max(0, currentPeriodSettings.durationInSeconds - 10f);
 
@@ -98,9 +103,11 @@ namespace Managers
             currentPeriodType = currentPeriodSettings.PeriodType;
 
             // Если вернулись к началу списка — новый день
-            if (currentPeriodIndex == 0)
+            bool isNewDay = (currentPeriodIndex == 0);
+            if (isNewDay)
             {
                 dayCounter++;
+                dayStartTime = Time.time;
                 OnDayChanged?.Invoke(dayCounter);
             }
 
@@ -114,6 +121,29 @@ namespace Managers
         public PeriodSettings GetCurrentPeriodSettings() => currentPeriodSettings;
         public float GetPeriodTimer() => periodTimer;
         public bool IsNight() => currentPeriodType.IsNight();
+
+        /// <summary>
+        /// Возвращает абсолютное время (Time.time) начала текущего дня
+        /// </summary>
+        public float GetCurrentDayStartTime() => dayStartTime;
+
+        /// <summary>
+        /// Возвращает количество секунд, прошедших с начала текущего дня
+        /// </summary>
+        public float GetCurrentTimeSinceDayStart() => Time.time - dayStartTime;
+
+        /// <summary>
+        /// Возвращает общую длительность дня в секундах
+        /// </summary>
+        public float GetTotalSecondsInDay()
+        {
+            if (mainCalendarDay == null || mainCalendarDay.periodSettings == null)
+                return 0f;
+            float total = 0f;
+            foreach (var ps in mainCalendarDay.periodSettings)
+                total += ps.durationInSeconds;
+            return total;
+        }
 
         private string GetPeriodDisplayName(CalendarDayPeriodType periodType)
         {

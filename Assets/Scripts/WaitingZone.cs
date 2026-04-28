@@ -13,7 +13,7 @@ public class WaitingZone : MonoBehaviour
     // Метод для получения случайной точки для стояния
     public Transform GetRandomStandingPoint()
     {
-        Debug.Log($"[WaitingZone.GetRandomStandingPoint] zone={name}, standingPoints={(standingPoints == null ? "NULL" : standingPoints.Count.ToString())}");
+        // Debug.Log($"[WaitingZone.GetRandomStandingPoint] zone={name}, standingPoints=...");
         if (standingPoints == null || standingPoints.Count == 0) {
             Debug.LogWarning($"[WaitingZone.GetRandomStandingPoint] zone={name}: standingPoints пустой! Возвращаю transform (это может быть ошибкой!)");
             return transform;

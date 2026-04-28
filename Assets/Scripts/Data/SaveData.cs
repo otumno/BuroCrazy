@@ -30,7 +30,10 @@ public class SaveData
     public List<DocumentStackSaveData> allDocumentStackData;
     
     // [НОВОЕ] Данные о прочности мебели
-    public List<DurabilitySaveData> allDurabilityData; 
+    public List<DurabilitySaveData> allDurabilityData;
+
+    // --- Контакты телефона ---
+    public List<string> unlockedContactIDs;
 
     public HashSet<string> watchedDialogues;
 }

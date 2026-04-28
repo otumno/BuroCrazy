@@ -108,10 +108,16 @@ namespace Managers
                 data.allDurabilityData.Add(dData);
             }
 
+            // 7. Контакты телефона
+            if (PhoneManager.Instance != null)
+            {
+                data.unlockedContactIDs = PhoneManager.Instance.GetUnlockedContactIDs();
+            }
+
             // Запись на диск
             WriteSaveDataToFile(slotIndex, data);
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
-            Debug.Log($"Игра сохранена в слот {slotIndex}");
+            // Debug.Log($"Игра сохранена в слот {slotIndex}");
         }
 
         public void SaveNewGame(int slotIndex, SaveData initialData)
@@ -126,7 +132,7 @@ namespace Managers
             }
             
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
-            Debug.Log($"Новая игра создана и сохранена в слот {slotIndex}");
+            // Debug.Log($"Новая игра создана и сохранена в слот {slotIndex}");
         }
     
         private void WriteSaveDataToFile(int slotIndex, SaveData data)
@@ -139,7 +145,7 @@ namespace Managers
         public void SetCurrentSlot(int slotIndex)
         {
             currentSlotIndex = slotIndex;
-            Debug.Log($"[SaveLoadManager] Текущий слот изменен на {slotIndex}");
+            // Debug.Log($"[SaveLoadManager] Текущий слот изменен на {slotIndex}");
         }
     
         public int GetCurrentSlot()
@@ -259,6 +265,12 @@ namespace Managers
                     }
                 }
 
+                // 6. Восстановление контактов телефона
+                if (PhoneManager.Instance != null && data.unlockedContactIDs != null)
+                {
+                    PhoneManager.Instance.LoadUnlockedContacts(data.unlockedContactIDs);
+                }
+
                 PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
                 Debug.Log($"Игра загружена из слота {slotIndex}");
                 return true;
@@ -286,7 +298,7 @@ namespace Managers
             if (File.Exists(path))
             {
                 File.Delete(path);
-                Debug.Log($"Сохранение в слоте {slotIndex} удалено.");
+                // Debug.Log($"Сохранение в слоте {slotIndex} удалено.");
             }
         }
 

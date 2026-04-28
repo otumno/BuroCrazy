@@ -199,6 +199,16 @@ namespace Managers
             unlockedRegionIDs.Add(region.regionID);
             Debug.Log($"<color=green>[Progression] РЕГИОН ЗАХВАЧЕН: {region.displayName}</color>");
 
+            // Разблокируем телефонные контакты, если привязаны
+            if (region.unlocksContactIDs != null)
+            {
+                foreach (string contactID in region.unlocksContactIDs)
+                {
+                    if (!string.IsNullOrEmpty(contactID))
+                        PhoneManager.Instance?.UnlockContact(contactID);
+                }
+            }
+
             // Создаём runtime state для региона
             CreateRegionRuntimeState(region);
 

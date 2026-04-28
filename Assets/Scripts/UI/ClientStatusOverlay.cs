@@ -61,7 +61,6 @@ public class ClientStatusOverlay : MonoBehaviour
         if (overlayRoot.activeSelf != shouldBeVisible)
         {
             overlayRoot.SetActive(shouldBeVisible);
-            Debug.Log($"[Overlay] {name}: Переключение видимости на {shouldBeVisible}. (Pause={isPaused}, Force={debugForceVisible})");
         }
 
         // 3. Обновляем данные, если видно

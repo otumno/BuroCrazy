@@ -188,7 +188,7 @@ public class DocumentStack : MonoBehaviour
         {
             if (sr != null) sr.sortingOrder = 50 + visualStack.Count;
         }
-        Debug.Log($"[DocumentStack] Бумага добавлена на {gameObject.name}. Всего: {visualStack.Count}");
+        // Debug.Log($"[DocumentStack] Бумага добавлена на {gameObject.name}. Всего: {visualStack.Count}");
 
         visualStack.Add(newDoc);
         return newDoc;

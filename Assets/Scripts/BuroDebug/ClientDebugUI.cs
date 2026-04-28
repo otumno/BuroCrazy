@@ -343,6 +343,70 @@ namespace BuroDebug
             specialVisitorText.color = Color.white;
             specialVisitorText.alignment = TextAnchor.MiddleCenter;
             specialVisitorText.text = "Сюжетный гость №1";
+
+            yPos -= 25;
+
+            // Кнопка "Тест: Клоун"
+            var testClownBtnGO = new GameObject("Btn_TestClown");
+            testClownBtnGO.transform.SetParent(panel.transform, false);
+            var testClownBtnRect = testClownBtnGO.AddComponent<RectTransform>();
+            testClownBtnRect.anchorMin = new Vector2(0, 1);
+            testClownBtnRect.anchorMax = new Vector2(1, 1);
+            testClownBtnRect.pivot = new Vector2(0.5f, 1);
+            testClownBtnRect.anchoredPosition = new Vector2(0, yPos);
+            testClownBtnRect.sizeDelta = new Vector2(-20, 22);
+
+            var testClownBtnImage = testClownBtnGO.AddComponent<Image>();
+            testClownBtnImage.color = new Color(0.8f, 0.4f, 0.8f, 1f); // фиолетовый
+
+            var testClownBtn = testClownBtnGO.AddComponent<Button>();
+            testClownBtn.onClick.AddListener(() => debugMenu.SpawnTestClown());
+
+            var testClownTextGO = new GameObject("Text");
+            testClownTextGO.transform.SetParent(testClownBtnGO.transform, false);
+            var testClownTextRect = testClownTextGO.AddComponent<RectTransform>();
+            testClownTextRect.anchorMin = Vector2.zero;
+            testClownTextRect.anchorMax = Vector2.one;
+            testClownTextRect.sizeDelta = Vector2.zero;
+
+            var testClownText = testClownTextGO.AddComponent<Text>();
+            testClownText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            testClownText.fontSize = 12;
+            testClownText.color = Color.white;
+            testClownText.alignment = TextAnchor.MiddleCenter;
+            testClownText.text = "Тест: Клоун";
+
+            yPos -= 25;
+
+            // Кнопка "Тест: Уборщики"
+            var testCleanersBtnGO = new GameObject("Btn_TestCleaners");
+            testCleanersBtnGO.transform.SetParent(panel.transform, false);
+            var testCleanersBtnRect = testCleanersBtnGO.AddComponent<RectTransform>();
+            testCleanersBtnRect.anchorMin = new Vector2(0, 1);
+            testCleanersBtnRect.anchorMax = new Vector2(1, 1);
+            testCleanersBtnRect.pivot = new Vector2(0.5f, 1);
+            testCleanersBtnRect.anchoredPosition = new Vector2(0, yPos);
+            testCleanersBtnRect.sizeDelta = new Vector2(-20, 22);
+
+            var testCleanersBtnImage = testCleanersBtnGO.AddComponent<Image>();
+            testCleanersBtnImage.color = new Color(0.4f, 0.8f, 0.8f, 1f); // бирюзовый
+
+            var testCleanersBtn = testCleanersBtnGO.AddComponent<Button>();
+            testCleanersBtn.onClick.AddListener(() => debugMenu.SpawnTestCleaners());
+
+            var testCleanersTextGO = new GameObject("Text");
+            testCleanersTextGO.transform.SetParent(testCleanersBtnGO.transform, false);
+            var testCleanersTextRect = testCleanersTextGO.AddComponent<RectTransform>();
+            testCleanersTextRect.anchorMin = Vector2.zero;
+            testCleanersTextRect.anchorMax = Vector2.one;
+            testCleanersTextRect.sizeDelta = Vector2.zero;
+
+            var testCleanersText = testCleanersTextGO.AddComponent<Text>();
+            testCleanersText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            testCleanersText.fontSize = 12;
+            testCleanersText.color = Color.white;
+            testCleanersText.alignment = TextAnchor.MiddleCenter;
+            testCleanersText.text = "Тест: Уборщики";
         }
     }
 }

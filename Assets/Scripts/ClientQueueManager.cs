@@ -193,7 +193,7 @@ public class ClientQueueManager : MonoBehaviour
                 }
                 
                 client.stateMachine?.SetState(ClientState.Confused);
-                Debug.Log($"Клиент {client.name} (#{ticketNumber}) полностью удален из очереди и переведен в состояние Confused.");
+                // Клиент удален из очереди - лог убран
             }
             else
             {
@@ -287,9 +287,8 @@ public class ClientQueueManager : MonoBehaviour
     public void OnClientLeavesWaitingZone(ClientPathfinding client) { if (standingClients.Contains(client)) standingClients.Remove(client); if (occupiedSeats.ContainsValue(client)) { Transform seatToFree = occupiedSeats.FirstOrDefault(kvp => kvp.Value == client).Key; if (seatToFree != null) { occupiedSeats.Remove(seatToFree); FindAndAssignNearestStandingClient(seatToFree); } } }
     private void FindAndAssignNearestStandingClient(Transform freeSeat) { if (occupiedSeats.ContainsKey(freeSeat) || standingClients.Count == 0) return; ClientPathfinding closestClient = standingClients.OrderBy(c => Vector2.Distance(c.transform.position, freeSeat.position)).FirstOrDefault(); if (closestClient != null) { standingClients.Remove(closestClient); occupiedSeats[freeSeat] = closestClient; closestClient.stateMachine.GoToSeat(freeSeat); } }
     public Waypoint ChooseNewGoal(ClientPathfinding client) {
-        Debug.Log($"[ChooseNewGoal] client={client?.name}, mainWaitingZone={(mainWaitingZone != null ? mainWaitingZone.name : "NULL")}");
+        // ChooseNewGoal логи убраны
         var result = mainWaitingZone?.GetRandomStandingPoint()?.GetComponent<Waypoint>();
-        Debug.Log($"[ChooseNewGoal] result={result?.name ?? "NULL"}");
         return result;
     }
     public void AddAngryClient(ClientPathfinding client) { if (!dissatisfiedClients.Contains(client)) { dissatisfiedClients.Add(client); } }

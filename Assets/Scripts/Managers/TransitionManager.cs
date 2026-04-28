@@ -105,13 +105,13 @@ namespace Managers
             SpawnLeaves();
 
             // 2. Fade screen to black
-            Debug.Log($"[TransitionManager] Начало затемнения (FadeToBlack) к сцене {sceneName}...");
+            // Debug.Log($"[TransitionManager] Начало затемнения (FadeToBlack) к сцене {sceneName}...");
             yield return StartCoroutine(Fade(1f, 0f, fadeToBlackDuration)); // Fade GlobalFadeValue from 1 (visible) to 0 (black)
-            Debug.Log("[TransitionManager] Затемнение завершено.");
+            // Debug.Log("[TransitionManager] Затемнение завершено.");
 
 
             // 3. Start loading the new scene asynchronously
-            Debug.Log($"[TransitionManager] Загрузка сцены {sceneName}...");
+            // Debug.Log($"[TransitionManager] Загрузка сцены {sceneName}...");
             AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneName);
             asyncLoad.allowSceneActivation = true; // Allow immediate activation once loaded
 
@@ -122,20 +122,20 @@ namespace Managers
                 yield return _waitForSeconds;
             }
             
-            Debug.Log($"[TransitionManager] Сцена {sceneName} загружена.");
+            // Debug.Log($"[TransitionManager] Сцена {sceneName} загружена.");
 
             // 4. Hold the black screen for a moment
             yield return new WaitForSecondsRealtime(blackScreenHoldDuration); // Use Realtime to ignore Time.timeScale
 
             // 5. Fade screen back to visible
-            Debug.Log("[TransitionManager] Начало проявления (FadeToVisible)...");
+            // Debug.Log("[TransitionManager] Начало проявления (FadeToVisible)...");
             yield return StartCoroutine(Fade(0f, 1f, fadeToVisibleDuration)); // Fade GlobalFadeValue from 0 (black) to 1 (visible)
-            Debug.Log("[TransitionManager] Проявление завершено.");
+            // Debug.Log("[TransitionManager] Проявление завершено.");
             
             // 6. Trigger leaves to fly off screen
             yield return TriggerLeavesExit();
 
-            Debug.Log($"[TransitionManager] Переход к сцене {sceneName} завершен.");
+            // Debug.Log($"[TransitionManager] Переход к сцене {sceneName} завершен.");
 
             // выключаем рейкаст, чтобы можно было кликать через экран загрузки
             loadScreenRaycaster.enabled = false;
@@ -315,7 +315,7 @@ namespace Managers
                 }
             }
             activeLeaves.Clear(); // Clear the list
-            if (clearCount > 0) Debug.Log($"[TransitionManager] Очищено {clearCount} старых листьев.");
+            // if (clearCount > 0) Debug.Log($"[TransitionManager] Очищено {clearCount} старых листьев.");
         }
 
     }

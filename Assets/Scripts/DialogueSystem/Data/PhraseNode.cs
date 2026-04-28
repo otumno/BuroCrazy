@@ -1,4 +1,5 @@
 // Assets/Scripts/DialogueSystem/Data/PhraseNode.cs
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DialogueSystem.Data
@@ -10,7 +11,10 @@ namespace DialogueSystem.Data
         public string speakerID;
         [TextArea(3, 5)] public string text;
         public Sprite speakerPortrait;
-        public AudioClip voiceClip; 
+        public AudioClip voiceClip;
+
+        // НОВОЕ ПОЛЕ - вариативные тексты
+        public List<string> variantTexts = new List<string>();
 
         // НОВОЕ ПОЛЕ
         public AudioClip appearSound; // Звук при появлении фразы (например "Вжик" или "Тук")

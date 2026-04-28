@@ -60,7 +60,7 @@ namespace Managers
             {
                 // Убираем null элементы из базы на всякий случай
                 allUpgradesDatabase.RemoveAll(item => item == null);
-                Debug.Log($"[UpgradeManager] Инициализирован. Загружено {allUpgradesDatabase.Count} апгрейдов из базы.");
+                // Debug.Log($"[UpgradeManager] Инициализирован. Загружено {allUpgradesDatabase.Count} апгрейдов из базы.");
             }
         }
 

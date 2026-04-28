@@ -85,7 +85,7 @@ namespace Utilities
                 Instance = this;
                 SceneManager.sceneLoaded += OnSceneLoadedStarter;
                 isFirstEverAppearance = PlayerPrefs.GetInt("Mascot_FirstEverAppearance", 0) == 0;
-                Debug.Log($"[TutorialMascot] Awake: isFirstEverAppearance = {isFirstEverAppearance}");
+                // Debug.Log($"[TutorialMascot] Awake: isFirstEverAppearance = {isFirstEverAppearance}");
             }
             else if (Instance != this)
             {
@@ -125,7 +125,7 @@ namespace Utilities
             if (sceneLoadCoroutine == null && tutorialCoroutine == null)
             {
                 // Запускаем логику загрузки для текущей сцены
-                Debug.Log("[TutorialMascot] OnEnable: Объект включен, запускаем логику сцены.");
+                // Debug.Log("[TutorialMascot] OnEnable: Объект включен, запускаем логику сцены.");
                 sceneLoadCoroutine = StartCoroutine(DelayedSceneLoadLogic(SceneManager.GetActiveScene()));
             }
         }
@@ -137,7 +137,7 @@ namespace Utilities
             // Когда объект включат обратно, сработает OnEnable выше.
             if (!this.gameObject.activeInHierarchy) 
             {
-                Debug.Log("[TutorialMascot] OnSceneLoadedStarter: Объект выключен, пропускаем запуск корутины (ждет OnEnable).");
+                // Debug.Log("[TutorialMascot] OnSceneLoadedStarter: Объект выключен, пропускаем запуск корутины (ждет OnEnable).");
                 return;
             }
 
@@ -159,7 +159,7 @@ namespace Utilities
             sheetAnimationCoroutine = null;
         
             currentConfig = FindFirstObjectByType<TutorialScreenConfig>();
-            Debug.Log($"[TutorialMascot] currentConfig = {(currentConfig != null ? "НАЙДЕН" : "NULL")}");
+            // Debug.Log($"[TutorialMascot] currentConfig = {(currentConfig != null ? "НАЙДЕН" : "NULL")}");
             if (currentConfig != null)
             {
                 currentScreenID = currentConfig.screenID;
@@ -172,19 +172,19 @@ namespace Utilities
                 {
                     currentSceneLoadDelay = currentConfig.firstEverAppearanceDelay;
                     useCeremonialDelay = true;
-                    Debug.Log($"[TutorialMascot] Первый запуск игры, задержка: {currentSceneLoadDelay}с");
+                    // Debug.Log($"[TutorialMascot] Первый запуск игры, задержка: {currentSceneLoadDelay}с");
                 }
                 else if (isFirstAppearanceThisSession)
                 {
                     currentSceneLoadDelay = currentConfig.firstEverAppearanceDelay;
                     useCeremonialDelay = true;
-                    Debug.Log($"[TutorialMascot] Первый запуск в сессии, задержка: {currentSceneLoadDelay}с");
+                    // Debug.Log($"[TutorialMascot] Первый запуск в сессии, задержка: {currentSceneLoadDelay}с");
                 }
                 else
                 {
                     currentSceneLoadDelay = currentConfig.sceneLoadDelay;
                     useCeremonialDelay = false;
-                    Debug.Log($"[TutorialMascot] Обычный запуск, задержка: {currentSceneLoadDelay}с");
+                    // Debug.Log($"[TutorialMascot] Обычный запуск, задержка: {currentSceneLoadDelay}с");
                 }
             
                 if (!visitedSpotIDs.ContainsKey(currentScreenID))
@@ -211,9 +211,9 @@ namespace Utilities
 
                 isInitializing = false;
 
-                Debug.Log($"[TutorialMascot] Ожидание задержки: {currentSceneLoadDelay}с.");
+                // Debug.Log($"[TutorialMascot] Ожидание задержки: {currentSceneLoadDelay}с.");
                 yield return new WaitForSecondsRealtime(currentSceneLoadDelay);
-                Debug.Log("[TutorialMascot] Задержка прошла, показываем маскота");
+                // Debug.Log("[TutorialMascot] Задержка прошла, показываем маскота");
             
                 if (currentConfig.contextGroups != null)
                 {
@@ -336,15 +336,15 @@ namespace Utilities
 
             if (sceneLoadCoroutine != null) StopCoroutine(sceneLoadCoroutine);
 
-            Debug.Log("[TutorialMascot] ForceStartSequence: Принудительный запуск логики с задержкой.");
+            // Debug.Log("[TutorialMascot] ForceStartSequence: Принудительный запуск логики с задержкой.");
             sceneLoadCoroutine = StartCoroutine(DelayedForceStart());
         }
 
         private IEnumerator DelayedForceStart()
         {
-            Debug.Log("[TutorialMascot] DelayedForceStart: ждём 5 секунд...");
+            // Debug.Log("[TutorialMascot] DelayedForceStart: ждём 5 секунд...");
             yield return new WaitForSecondsRealtime(5f);
-            Debug.Log("[TutorialMascot] DelayedForceStart: время вышло, запускаем логику");
+            // Debug.Log("[TutorialMascot] DelayedForceStart: время вышло, запускаем логику");
             sceneLoadCoroutine = StartCoroutine(DelayedSceneLoadLogic(SceneManager.GetActiveScene()));
         }
 		

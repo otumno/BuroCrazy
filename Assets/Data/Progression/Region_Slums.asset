@@ -26,9 +26,8 @@ MonoBehaviour:
   spawnBonuses: []
   archetypeGroups:
   - Elderly
-  groupWeights:
-  - groupID: Elderly
-    weight: 1
+  groupWeights: []
   maxDailyFlow: 26
   flowVariance: 0.1
   rampUpDays: 4
+  unlocksContactIDs: []

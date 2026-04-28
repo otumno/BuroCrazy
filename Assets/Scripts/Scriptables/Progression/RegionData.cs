@@ -44,6 +44,10 @@ namespace Scriptables.Progression
         [Tooltip("Задержка выхода на полный поток (дней). 1й день = 25%, 2й = 50%, 3й = 75%, 4й = 100%")]
         [Range(1, 10)]
         public int rampUpDays = 4;
+
+        [Header("Телефонные контакты")]
+        [Tooltip("Список ID контактов PhoneContact, которые разблокируются при захвате этого региона")]
+        public List<string> unlocksContactIDs = new List<string>();
     }
 
     [System.Serializable]

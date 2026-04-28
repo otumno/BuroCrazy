@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AI;
 using Characters;
 using Data;
 using Data.Calendar;
@@ -426,6 +427,28 @@ namespace BuroDebug
                 client.SetupFromArchetype(archetype);
                 client.Initialize(waveManager.waitingZoneObject, waveManager.exitWaypoint);
             }
+        }
+
+        public void SpawnTestClown()
+        {
+            if (TemporaryEffectManager.Instance == null)
+            {
+                Debug.LogError("[Debug] TemporaryEffectManager не найден!");
+                return;
+            }
+            TemporaryEffectManager.Instance.SpawnClown(TemporaryClownAI.ClownMode.Clients);
+            Debug.Log("[Debug] Клоун заспавнен вручную");
+        }
+
+        public void SpawnTestCleaners()
+        {
+            if (TemporaryEffectManager.Instance == null)
+            {
+                Debug.LogError("[Debug] TemporaryEffectManager не найден!");
+                return;
+            }
+            TemporaryEffectManager.Instance.SpawnCleaningCrew();
+            Debug.Log("[Debug] Бригада уборщиков заспавнена вручную");
         }
     }
 }

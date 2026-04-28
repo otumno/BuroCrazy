@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19f1dfdac9672344793f5ed36676d980, type: 3}
+  m_Name: ClownDataFemale
+  m_EditorClassIdentifier: Assembly-CSharp::Data.TemporaryNPCData
+  gender: 1
+  spriteCollection: {fileID: 11400000, guid: daefc32bc174ff94f978f2bd574a3584, type: 2}
+  stateEmotionMap: {fileID: 11400000, guid: db98f0986a2f75f4eb6cf346c31aef95, type: 2}
+  animationSpeed: 0.3
+  accessoryPrefab: {fileID: 0}
+  voiceProfile: {fileID: 11400000, guid: a39dd52f6c2ca784ebc791214f4569de, type: 2}

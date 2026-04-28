@@ -68,7 +68,7 @@ namespace Characters
             Debug.LogError("Face not found in VisualsContainer!", gameObject);
         }
 
-        Debug.Log($"[CharacterVisuals] BodyRenderer: {(bodyRenderer != null ? bodyRenderer.gameObject.name : "NULL")}, FaceRenderer: {(faceRenderer != null ? faceRenderer.gameObject.name : "NULL")}");
+        // BodyRenderer/FaceRenderer лог убран
 
         // Для остальных компонентов используем StaffPrefabReferences (Hand, HeadAttachPoint, etc)
         StaffPrefabReferences references = GetComponent<StaffPrefabReferences>();
@@ -193,11 +193,11 @@ namespace Characters
             {
                 // Only set body sprite if not already set by archetype
                 bodyRenderer.sprite = bodySet.idleBody;
-                Debug.Log($"[{gameObject.name}] Setup: Using random body from collection: {bodySet.idleBody.name}");
+                // Using random body лог убран
             }
             else
             {
-                Debug.Log($"[{gameObject.name}] Setup: Body sprite already set by archetype, keeping: {existingSprite?.name ?? "NULL"}");
+                // Body sprite already set лог убран
             }
 
             // Provide all animation sprites to the AgentMover (use existing sprite if set, otherwise from bodySet)
@@ -333,7 +333,7 @@ namespace Characters
         //     accessoryRenderer.sortingLayerID = bodyRenderer.sortingLayerID;
         //     accessoryRenderer.sortingOrder = bodyRenderer.sortingOrder + 1; // Example: draw over body
         // }
-         Debug.Log($"Аксессуар {newAccessoryPrefab.name} прикреплен к {targetAttachPoint.name} у {gameObject.name}.");
+         // Аксессуар прикреплен лог убран
         // --- End Instantiate ---
     }
 
@@ -465,14 +465,49 @@ namespace Characters
         if (bodyRenderer != null && archetype.bodySprite != null)
         {
             bodyRenderer.sprite = archetype.bodySprite;
-            Debug.Log($"[CharacterVisuals] SetupFromArchetype: body sprite set to {archetype.bodySprite.name}");
+            // body sprite set лог убран
         }
         else if (bodyRenderer != null)
         {
             Debug.LogWarning($"[CharacterVisuals] SetupFromArchetype: archetype.bodySprite is null!");
         }
 
-        Debug.Log($"[CharacterVisuals] SetupFromArchetype: {archetype.displayName}, spriteCollection={(currentSpriteCollection != null ? currentSpriteCollection.name : "NULL")}");
+        // SetupFromArchetype лог убран
+    }
+
+    /// <summary>
+    /// Настраивает визуальную часть персонажа из TemporaryNPCData.
+    /// Используется для временных NPC (клоун, уборщик и т.д.).
+    /// </summary>
+    public void SetupFromTemporaryData(Data.TemporaryNPCData data)
+    {
+        if (data == null) return;
+
+        this.characterGender = data.gender;
+        this.currentSpriteCollection = data.spriteCollection;
+        this.currentStateEmotionMap = data.stateEmotionMap;
+
+        // Настройка тела и анимации (как в Setup)
+        if (currentSpriteCollection != null && bodyRenderer != null)
+        {
+            var bodySet = currentSpriteCollection.GetRandomBodySet(data.gender);
+            if (bodySet != null && bodySet.idleBody != null && bodySet.walkBody1 != null && bodySet.walkBody2 != null)
+            {
+                bodyRenderer.sprite = bodySet.idleBody;
+                AgentMover agentMover = GetComponent<AgentMover>();
+                if (agentMover != null)
+                {
+                    agentMover.SetAnimationSprites(bodySet.idleBody, bodySet.walkBody1, bodySet.walkBody2);
+                    agentMover.animationSpeed = data.animationSpeed;
+                }
+            }
+        }
+
+        // Эмоция по умолчанию
+        SetEmotion(Emotion.Neutral);
+
+        // Экипировка аксессуара
+        EquipAccessory(data.accessoryPrefab);
     }
 
     /// <summary>

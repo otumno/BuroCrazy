@@ -92,13 +92,13 @@ namespace Managers
         public void ValidateAllPoints()
         {
             Debug.Log("=== ScenePointsRegistry Validation ===");
-            Debug.Log($"kitchenPoints: {CountValid(kitchenPoints)}/{kitchenPoints?.Count ?? 0}");
-            Debug.Log($"toiletPoints: {CountValid(toiletPoints)}/{toiletPoints?.Count ?? 0}");
-            Debug.Log($"internPatrolPoints: {CountValid(internPatrolPoints)}/{internPatrolPoints?.Count ?? 0}");
-            Debug.Log($"guardPatrolPoints: {CountValid(guardPatrolPoints)}/{guardPatrolPoints?.Count ?? 0}");
-            Debug.Log($"janitorPatrolPoints: {CountValid(janitorPatrolPoints)}/{janitorPatrolPoints?.Count ?? 0}");
-            Debug.Log($"allServicePoints: {CountValidServicePoints(allServicePoints)}/{allServicePoints?.Count ?? 0}");
-            Debug.Log("======================================");
+            // Debug.Log($"kitchenPoints: {CountValid(kitchenPoints)}/{kitchenPoints?.Count ?? 0}");
+            // Debug.Log($"toiletPoints: {CountValid(toiletPoints)}/{toiletPoints?.Count ?? 0}");
+            // Debug.Log($"internPatrolPoints: {CountValid(internPatrolPoints)}/{internPatrolPoints?.Count ?? 0}");
+            // Debug.Log($"guardPatrolPoints: {CountValid(guardPatrolPoints)}/{guardPatrolPoints?.Count ?? 0}");
+            // Debug.Log($"janitorPatrolPoints: {CountValid(janitorPatrolPoints)}/{janitorPatrolPoints?.Count ?? 0}");
+            // Debug.Log($"allServicePoints: {CountValidServicePoints(allServicePoints)}/{allServicePoints?.Count ?? 0}");
+            // Debug.Log("======================================");
         }
 
         private int CountValid(List<Waypoint> list)

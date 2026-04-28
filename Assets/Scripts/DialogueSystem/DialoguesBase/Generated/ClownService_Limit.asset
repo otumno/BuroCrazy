@@ -1,0 +1,102 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-609900981915278248
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: p_p1
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.PhraseNode
+  id: 041cec33-ec7e-442f-9966-2399df59efee
+  graphPosition:
+    serializedVersion: 2
+    x: 600
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Operator
+  text: 
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts:
+  - "\u041A \u0441\u043E\u0436\u0430\u043B\u0435\u043D\u0438\u044E, \u043D\u0430\u0448
+    \u0435\u0434\u0438\u043D\u0441\u0442\u0432\u0435\u043D\u043D\u044B\u0439 \u043A\u043B\u043E\u0443\u043D
+    \u0443\u0436\u0435 \u0432\u044B\u0441\u0442\u0443\u043F\u0430\u0435\u0442. \u041F\u043E\u0437\u0432\u043E\u043D\u0438\u0442\u0435
+    \u0437\u0430\u0432\u0442\u0440\u0430."
+  - "\u0421\u0435\u0433\u043E\u0434\u043D\u044F \u0432\u0441\u0435 \u0431\u0438\u043B\u0435\u0442\u044B
+    \u043F\u0440\u043E\u0434\u0430\u043D\u044B, \u043C\u0435\u0441\u0442 \u043D\u0430
+    \u0441\u043C\u0435\u0445 \u043D\u0435 \u043E\u0441\u0442\u0430\u043B\u043E\u0441\u044C."
+  - "\u041B\u0438\u043C\u0438\u0442 \u0440\u0430\u0434\u043E\u0441\u0442\u0438 \u0438\u0441\u0447\u0435\u0440\u043F\u0430\u043D.
+    \u0416\u0434\u0435\u043C \u0432\u0430\u0441 \u0432 \u0441\u043B\u0435\u0434\u0443\u044E\u0449\u0438\u0439
+    \u0440\u0430\u0437."
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 8336845537496431166}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7e28d74defd1d54d8957d654b304587, type: 3}
+  m_Name: ClownService_Limit
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.DialogueGraph
+  startNode: {fileID: 7282376694711720910}
+  allNodes:
+  - {fileID: 7282376694711720910}
+  - {fileID: -609900981915278248}
+  - {fileID: 8336845537496431166}
+--- !u!114 &7282376694711720910
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec49ac1309bd0c94dbba53650b3bee98, type: 3}
+  m_Name: start_start1
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.StartNode
+  id: 111c2dc7-3564-4637-a1d1-f5628be38000
+  graphPosition:
+    serializedVersion: 2
+    x: 300
+    y: 0
+    width: 0
+    height: 0
+  startSoundOverride: {fileID: 0}
+  dialogueType: 1
+  defaultBackground: {fileID: 0}
+  nextNode: {fileID: -609900981915278248}
+--- !u!114 &8336845537496431166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1af36ba5234e6439af301385bd3bde, type: 3}
+  m_Name: end_end1
+  m_EditorClassIdentifier: Assembly-CSharp::DialogueSystem.Data.EndNode
+  id: 1713f2a8-0df5-48de-beb3-f9120b7c4cce
+  graphPosition:
+    serializedVersion: 2
+    x: 900
+    y: 0
+    width: 0
+    height: 0
+  endSound: {fileID: 0}
+  outcome: 0
+  outputEmotion: 0
+  stressModifier: 0

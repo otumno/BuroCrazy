@@ -149,7 +149,7 @@ public class ClientStateMachine : MonoBehaviour
             if (currentState != ClientState.Grumbling && parent.canGrumble &&
                 parent.PatienceHeat >= parent.GetEffectiveGrumblingThreshold() && parent.PatienceHeat < 1.0f)
             {
-                Debug.Log($"<color=yellow>[ClientStateMachine]</color> {parent.name}: Начинает ворчать ({parent.PatienceHeat:P0})!");
+                // Начинает ворчать - лог убран
                 SetState(ClientState.Grumbling);
                 yield break;
             }
@@ -157,7 +157,7 @@ public class ClientStateMachine : MonoBehaviour
             // 5. Проверка срыва (100%)
             if (parent.PatienceHeat >= 1.0f)
             {
-                Debug.Log($"<color=red>[ClientStateMachine]</color> {parent.name}: Терпение лопнуло (100%)!");
+                // Терпение лопнуло - лог убран
                 HandlePatienceExhausted();
                 yield break;
             }
@@ -169,7 +169,7 @@ public class ClientStateMachine : MonoBehaviour
 	    // ЗАПРЕТ УХОДА ВО ВРЕМЯ ОБСЛУЖИВАНИЯ (только если работник ФИЗИЧЕСКИ взял в работу)
 	    if (IsInsideZoneState(currentState) && MyServiceProvider != null)
 	    {
-	        Debug.Log($"[ClientStateMachine] {parent.name}: Терпение на исходе, но уже в процессе обслуживания!");
+	        // Терпение на исходе, но уже в процессе - лог убран
 	        return;
 	    }
 	    
@@ -181,7 +181,7 @@ public class ClientStateMachine : MonoBehaviour
 	        float angerModifier = Random.Range(-0.20f, 0.05f);
 	        int finalBill = Mathf.Max(1, Mathf.RoundToInt(parent.billToPay * (1f + angerModifier)));
 	        
-	        Debug.Log($"[ClientStateMachine] {parent.name}: ЗЛАЯ ОПЛАТА! Штраф {angerModifier:P0}, сумма {finalBill}");
+	        // ЗЛАЯ ОПЛАТА - лог убран
 	        
 	        // Спавн денег - летят на ближайший ServicePoint кассы (deskId == -1)
 	        var allServicePoints = Object.FindObjectsByType<ServicePoint>(FindObjectsSortMode.None);
@@ -459,6 +459,8 @@ public class ClientStateMachine : MonoBehaviour
     {
         if (newState == currentState) return;
 
+        bool wasGrumbling = (currentState == ClientState.Grumbling);
+
         CleanupOldState(currentState, newState);
         
         // --- ИСПРАВЛЕНИЕ: Используем централизованный метод остановки ---
@@ -471,6 +473,13 @@ public class ClientStateMachine : MonoBehaviour
         }
 
         currentState = newState;
+        
+        // --- Перезапуск монитора стресса при выходе из Grumbling ---
+        if (wasGrumbling && newState != ClientState.Grumbling)
+        {
+            StopCoroutine(GlobalPatienceMonitor());
+            StartCoroutine(GlobalPatienceMonitor());
+        }
         
         // --- Логирование в ActionDiary (только важные состояния) ---
         LogImportantStateChange(newState);
@@ -642,11 +651,11 @@ public class ClientStateMachine : MonoBehaviour
         // Защита от повторного запуска
         if (myQueueNumber != -1)
         {
-            Debug.Log($"[GetTicketRoutine] {parent.name}: Уже имеет талон #{myQueueNumber}, выход.");
+            // Уже имеет талон - лог убран
             yield break;
         }
-        
-        Debug.Log($"[GetTicketRoutine] {parent.name}: Начинаю получать талон...");
+
+        // Начинаю получать талон - лог убран
         
         // Клиент тупит у аппарата
         if (Objects.TicketTerminal.Instance != null)
@@ -658,7 +667,7 @@ public class ClientStateMachine : MonoBehaviour
         else yield return new WaitForSeconds(1f);
 
         // Получаем талон
-        Debug.Log($"[GetTicketRoutine] {parent.name}: JoinQueue...");
+        // JoinQueue лог убран
         ClientQueueManager.Instance.JoinQueue(parent);
         
         // Устанавливаем локальный номер очереди (同步 с ClientQueueManager)
@@ -667,20 +676,20 @@ public class ClientStateMachine : MonoBehaviour
             myQueueNumber = queueNum;
         }
         
-        Debug.Log($"[GetTicketRoutine] {parent.name}: JoinQueue завершён, queueNumber={myQueueNumber}");
+        // JoinQueue завершён - лог убран
 
         // Выбираем место для ожидания
         Waypoint nextGoal = (parent.mainGoal == ClientGoal.VisitToilet)
             ? ClientSpawner.GetToiletZone().waitingWaypoint
             : ClientQueueManager.Instance.ChooseNewGoal(parent);
             
-        Debug.Log($"[GetTicketRoutine] {parent.name}: nextGoal={nextGoal?.name ?? "NULL"}, mainGoal={parent.mainGoal}");
+        // nextGoal лог убран
         
         if (nextGoal != null)
         {
             SetGoal(nextGoal);
             Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
-            Debug.Log($"[GetTicketRoutine] {parent.name}: seat={seat?.name ?? "NULL"}, standingClients={ClientQueueManager.Instance.standingClients.Count}");
+            // seat лог убран
             if (seat != null) GoToSeat(seat);
             else SetState(ClientState.MovingToGoal);
         }
@@ -693,7 +702,7 @@ public class ClientStateMachine : MonoBehaviour
 
     private void HandleMovementArrival()
     {
-        Debug.Log($"[HandleMovementArrival] {parent.name}: currentState={currentState}, currentGoal={currentGoal?.name ?? "NULL"}");
+        // HandleMovementArrival лог убран
         
         // Бронебойная проверка: если статус ухода ИЛИ цель - это выход из здания
         if (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset ||
@@ -717,7 +726,7 @@ public class ClientStateMachine : MonoBehaviour
         {
             if (myQueueNumber == -1) // Ещё не в очереди - идём за талоном
             {
-                Debug.Log($"[HandleMovementArrival] {parent.name}: Прибыл к терминалу. Меняю состояние на GettingTicket.");
+                // Прибыл к терминалу - лог убран
                 SetState(ClientState.GettingTicket);
             }
             else
@@ -733,9 +742,9 @@ public class ClientStateMachine : MonoBehaviour
             }
             return;
         }
-        Debug.Log($"[HandleMovementArrival] {parent.name}: currentGoal={currentGoal?.name ?? "NULL"}");
+        // currentGoal лог убран
         if (currentGoal == null) {
-            Debug.LogWarning($"[HandleMovementArrival] {parent.name}: currentGoal == NULL! Переход в Confused!");
+            // currentGoal == NULL - лог убран
             SetState(ClientState.Confused);
             return;
         }
@@ -860,7 +869,7 @@ public class ClientStateMachine : MonoBehaviour
 
     private IEnumerator ConfusedRoutine()
     {
-        Debug.Log($"[ConfusedRoutine] {parent.name}: Вошёл в Confused! previousGoal={previousGoal?.name ?? "NULL"}");
+        // ConfusedRoutine вошёл - лог убран
         
         actionExecutor.StopMoving();
 
@@ -880,7 +889,7 @@ public class ClientStateMachine : MonoBehaviour
 
         // 2. Кидаем кубик на память (бабушки забывают чаще)
         float recoveryChance = 0.5f - (parent.babushkaFactor * 0.3f);
-        Debug.Log($"[ConfusedRoutine] {parent.name}: Шанс вспомнить = {recoveryChance:P0}");
+        // Шанс вспомнить - лог убран
         
         Waypoint newGoal = null;
 

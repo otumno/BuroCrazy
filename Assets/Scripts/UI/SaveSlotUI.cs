@@ -24,10 +24,10 @@ public class SaveSlotUI : MonoBehaviour
         }
 
         _mainMenuActions = FindFirstObjectByType<MainMenuActions>();
-        Debug.Log($"[SaveSlotUI #{slotIndex}] MainMenuActions найден: {_mainMenuActions != null}");
+        // Debug.Log($"[SaveSlotUI #{slotIndex}] MainMenuActions найден: {_mainMenuActions != null}");
 
         bool slotInUse = SaveLoadManager.Instance.DoesSaveExist(slotIndex);
-        Debug.Log($"[SaveSlotUI #{slotIndex}] Слот используется: {slotInUse}");
+        // Debug.Log($"[SaveSlotUI #{slotIndex}] Слот используется: {slotInUse}");
 
         SetupButtonListeners();
 
@@ -39,7 +39,7 @@ public class SaveSlotUI : MonoBehaviour
             deleteButton.gameObject.SetActive(true);
             
             infoText.text = (data != null) ? $"День: {data.day}\nДеньги: ${data.money}" : "Ошибка чтения данных";
-            Debug.Log($"[SaveSlotUI #{slotIndex}] Слот занят - показываем Continue");
+            // Debug.Log($"[SaveSlotUI #{slotIndex}] Слот занят - показываем Continue");
         }
         else
         {
@@ -47,7 +47,7 @@ public class SaveSlotUI : MonoBehaviour
             newGameButton.gameObject.SetActive(true);
             deleteButton.gameObject.SetActive(false);
             infoText.text = "Пустой слот";
-            Debug.Log($"[SaveSlotUI #{slotIndex}] Слот пустой - показываем NewGame");
+            // Debug.Log($"[SaveSlotUI #{slotIndex}] Слот пустой - показываем NewGame");
         }
     }
 
@@ -58,16 +58,16 @@ public class SaveSlotUI : MonoBehaviour
         deleteButton.onClick.RemoveAllListeners();
 
         continueButton.onClick.AddListener(() => {
-            Debug.Log($"[SaveSlotUI #{slotIndex}] НАЖАТА КНОПКА CONTINUE!");
+            // Debug.Log($"[SaveSlotUI #{slotIndex}] НАЖАТА КНОПКА CONTINUE!");
             MainUIManager.Instance.OnSaveSlotClicked(slotIndex);
         });
         
         newGameButton.onClick.AddListener(() => {
-            Debug.Log($"[SaveSlotUI #{slotIndex}] ====> НАЖАТА КНОПКА NEW GAME! slotIndex={slotIndex}");
+            // Debug.Log($"[SaveSlotUI #{slotIndex}] ====> НАЖАТА КНОПКА NEW GAME! slotIndex={slotIndex}");
             
             if (_mainMenuActions != null)
             {
-                Debug.Log($"[SaveSlotUI #{slotIndex}] Вызываем Action_StartNewGameWithDirectorCreation...");
+                // Debug.Log($"[SaveSlotUI #{slotIndex}] Вызываем Action_StartNewGameWithDirectorCreation...");
                 _mainMenuActions.Action_StartNewGameWithDirectorCreation(slotIndex);
             }
             else

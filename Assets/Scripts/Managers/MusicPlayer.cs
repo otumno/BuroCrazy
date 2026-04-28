@@ -58,6 +58,16 @@ namespace Managers
         private int _lastArchiveTrackIndex = -1;
         private bool _shouldRefreshMenuTrack = false;
 
+        [Header("Клоун")]
+        public AudioClip clownMusicTrack;
+        private bool isClownMusicForced = false;
+
+        [Header("Музыка диалогов")]
+        public AudioClip[] phoneDialogTracks;
+        public AudioClip[] worldDialogTracks;
+        private AudioClip _previousTrack;
+        private float _previousTrackTime;
+
         void Awake()
         {
             if (Instance == null) Instance = this;
@@ -79,6 +89,34 @@ namespace Managers
         {
              SceneManager.sceneLoaded -= OnSceneLoaded;
              if (TimeManager.Instance != null) TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
+        }
+
+        public void SwitchToDialogueMusic(DialogueSystem.Data.DialogueType type)
+        {
+            var tracks = type == DialogueSystem.Data.DialogueType.Phone ? phoneDialogTracks : worldDialogTracks;
+            if (tracks == null || tracks.Length == 0) return;
+            
+            if (AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
+            {
+                _previousTrack = AudioManager.Instance.musicSource.clip;
+                _previousTrackTime = AudioManager.Instance.musicSource.time;
+            }
+            
+            var clip = tracks[Random.Range(0, tracks.Length)];
+            PlayTrack(clip);
+        }
+
+        public void RestorePreviousMusic()
+        {
+            if (_previousTrack != null)
+            {
+                if (AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
+                {
+                    AudioManager.Instance.musicSource.time = _previousTrackTime;
+                }
+                PlayTrack(_previousTrack);
+                _previousTrack = null;
+            }
         }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -137,6 +175,9 @@ namespace Managers
 
         private void Update()
         {
+            // Если принудительно играет музыка клоуна - не трогаем
+            if (isClownMusicForced) return;
+
             // Проверка каждую секунду (примерно 60 кадров)
             if (Time.frameCount % 60 == 0 && AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
             {
@@ -509,6 +550,30 @@ namespace Managers
         {
             isMuffled = muffled;
             // TODO: Связать с параметром LowPass в микшере
+        }
+
+        public void PlayClownMusic()
+        {
+            if (clownMusicTrack == null) return;
+            isClownMusicForced = true;
+            PlayTrack(clownMusicTrack);
+        }
+
+        public void StopClownMusic()
+        {
+            isClownMusicForced = false;
+            // Возвращаемся к обычной музыке
+            if (isGameplayMusicActive)
+            {
+                if (TimeManager.Instance != null && TimeManager.Instance.IsNight())
+                    PlayTrack(nightTrack);
+                else
+                    PlayRandomDayTrack();
+            }
+            else
+            {
+                PlayDirectorsOfficeTheme();
+            }
         }
         
         private static bool IsNightTime() => TimeManager.Instance != null &&

@@ -24,3 +24,9 @@ MonoBehaviour:
   unlockCostInfluence: 1000
   unlockCostMoney: 2000
   spawnBonuses: []
+  archetypeGroups: []
+  groupWeights: []
+  maxDailyFlow: 26
+  flowVariance: 0.1
+  rampUpDays: 4
+  unlocksContactIDs: []

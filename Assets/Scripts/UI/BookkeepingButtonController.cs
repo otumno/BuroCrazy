@@ -79,7 +79,7 @@ public class BookkeepingButtonController : MonoBehaviour
         if (withLog)
         {
             logBuilder.AppendLine($"<b>ИТОГ: Кнопка должна быть активна: <color={(isUnlocked ? "green" : "red")}>{isUnlocked}</color></b>");
-            Debug.Log(logBuilder.ToString());
+            // Debug.Log(logBuilder.ToString());
         }
 
         if (gameObject.activeSelf != isUnlocked)

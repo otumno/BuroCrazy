@@ -17,7 +17,7 @@ namespace Managers
             if (!SteamManager.Initialized)
                 return;
 
-            var steamName = SteamManager.GetPersonaName();
+            var steamName = SteamFriends.GetPersonaName();
             Debug.Log($"Your Steam Name: {steamName}");
         }
 #endif

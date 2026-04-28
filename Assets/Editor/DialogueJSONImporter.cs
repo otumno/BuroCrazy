@@ -64,16 +64,20 @@ public class DialogueJSONImporter : EditorWindow
             {
                 case "start": // START node (обрабатываем start явно)
                     var s = graph.CreateNode<StartNode>();
+                    if (!string.IsNullOrEmpty(n.dt) && System.Enum.TryParse(n.dt, out DialogueSystem.Data.DialogueType parsedDt))
+                        s.dialogueType = parsedDt;
                     links.Add(new LinkReq { src = s, nextId = n.x });
-                    node = s; 
+                    node = s;
                     break;
 
                 case "p": // Phrase
                     var p = graph.CreateNode<PhraseNode>();
-                    p.text = n.m; 
+                    p.text = n.m;
                     p.speakerID = n.s;
+                    if (n.vt != null && n.vt.Length > 0)
+                        p.variantTexts = new System.Collections.Generic.List<string>(n.vt);
                     links.Add(new LinkReq { src = p, nextId = n.x });
-                    node = p; 
+                    node = p;
                     break;
                 
                 case "c": // Choice
@@ -176,7 +180,7 @@ public class DialogueJSONImporter : EditorWindow
 
     // JSON DTO Classes
     [System.Serializable] class GraphData { public string name; public string root; public List<N> n; }
-    [System.Serializable] class N { 
+    [System.Serializable] class N {
         public string i; // id
         public string t; // type
         public string m; // message
@@ -189,6 +193,8 @@ public class DialogueJSONImporter : EditorWindow
         public string trueX; // true next
         public string falseX; // false next
         public List<O> o; // options
+        public string dt; // dialogueType: "World" или "Phone"
+        public string[] vt; // variantTexts для PhraseNode
     }
     [System.Serializable] class O { public string m; public string x; public string key; public string op; public int v; }
     class LinkReq { public DialogueNode src; public string nextId; public int optIndex; public bool isTrueBranch; }

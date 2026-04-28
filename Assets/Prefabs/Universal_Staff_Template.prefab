@@ -185,6 +185,7 @@ GameObject:
   - component: {fileID: 1045731644747949900}
   - component: {fileID: 8298028932864607223}
   - component: {fileID: 7575490970654379408}
+  - component: {fileID: 6046683309611709665}
   m_Layer: 6
   m_Name: Universal_Staff_Template
   m_TagString: Clerk
@@ -758,6 +759,18 @@ CapsuleCollider2D:
   m_Offset: {x: 0.0037209392, y: -0.007441908}
   m_Size: {x: 0.5492159, y: 0.8888199}
   m_Direction: 0
+--- !u!114 &6046683309611709665
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300310410156682885}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca14520e3d7ad29499c603e38b197773, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ActionDiary
 --- !u!1 &1381716582639190742
 GameObject:
   m_ObjectHideFlags: 0

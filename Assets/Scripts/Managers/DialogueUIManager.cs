@@ -146,6 +146,8 @@ namespace Managers
                 defaultBackground = startNode.defaultBackground;
                 AudioClip clip = startNode.startSoundOverride != null ? startNode.startSoundOverride : defaultStartSound;
                 PlaySystemSound(clip);
+                if (MusicPlayer.Instance != null)
+                    MusicPlayer.Instance.SwitchToDialogueMusic(startNode.dialogueType);
                 if (startNode.nextNode != null) ProcessNode(startNode.nextNode);
             }
             else
@@ -347,7 +349,10 @@ namespace Managers
             UpdateFocusAnimation(isDirector);
 
             if (typingCoroutine != null) StopCoroutine(typingCoroutine);
-            typingCoroutine = StartCoroutine(TypewriterRoutine(phrase.text, voice));
+            string finalText = phrase.variantTexts.Count > 0
+                ? phrase.variantTexts[Random.Range(0, phrase.variantTexts.Count)]
+                : phrase.text;
+            typingCoroutine = StartCoroutine(TypewriterRoutine(finalText, voice));
         }
 
         private void UpdateFocusAnimation(bool? isDirectorActive)
@@ -648,6 +653,7 @@ namespace Managers
             currentGraph = null;
             defaultBackground = null;
 
+            MusicPlayer.Instance?.RestorePreviousMusic();
             onDialogueComplete?.Invoke();
             onDialogueComplete = null;
         }

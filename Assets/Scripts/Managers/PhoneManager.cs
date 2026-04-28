@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using DialogueSystem.Data;
 using System.Linq;
+using Managers.Teletype;
 
 namespace Managers
 {
@@ -14,16 +15,14 @@ namespace Managers
         public AudioClip ringSound;
         
         [Header("UI Ссылки")]
-        [Tooltip("Иконка в HUD, которая мигает/появляется при звонке")]
         public GameObject hudNotificationIcon; 
-        [Tooltip("Сама панель телефона с кнопками")]
         public PhonePanelUI phonePanelUI;
 
-        [Header("Исходящие контакты (Настройка в инспекторе)")]
+        [Header("Исходящие контакты")]
         public List<PhoneContact> outgoingContacts = new List<PhoneContact>();
 
-        // Список активных входящих звонков (диалоги)
         private List<DialogueGraph> incomingCalls = new List<DialogueGraph>();
+        private bool _isInitialized = false;
 
         public bool HasActiveCalls => incomingCalls.Count > 0;
 
@@ -31,24 +30,56 @@ namespace Managers
         {
             if (Instance == null) Instance = this;
             else Destroy(gameObject);
-
             if (hudNotificationIcon != null) hudNotificationIcon.SetActive(false);
         }
 
-        // --- ВХОДЯЩИЕ ---
+        private void Start()
+        {
+            Initialize();
+        }
 
+        private void Initialize()
+        {
+            if (_isInitialized) return;
+            _isInitialized = true;
+
+            if (TimeManager.Instance != null)
+            {
+                TimeManager.Instance.OnDayChanged += OnDayChanged;
+                // Сбрасываем лимиты при старте игры (на случай, если день не менялся)
+                ResetDailyLimits();
+            }
+            else
+            {
+                Debug.LogWarning("[PhoneManager] TimeManager.Instance не найден! Лимиты звонков не будут сбрасываться.");
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (TimeManager.Instance != null)
+                TimeManager.Instance.OnDayChanged -= OnDayChanged;
+        }
+
+        private void OnDayChanged(int newDay)
+        {
+            ResetDailyLimits();
+        }
+
+        public void ResetDailyLimits()
+        {
+            foreach (var c in outgoingContacts)
+                c.remainingUsesToday = c.maxDailyUses;
+            Debug.Log("[PhoneManager] Лимиты звонков сброшены на новый день.");
+        }
+
+        // --- ВХОДЯЩИЕ (без изменений) ---
         public void RegisterIncomingCall(DialogueGraph dialogue)
         {
             incomingCalls.Add(dialogue);
-            Debug.Log($"[PhoneManager] Входящий вызов! Всего на линии: {incomingCalls.Count}");
-
-            Managers.Teletype.TeletypeManager.Instance?.LogImportant("Входящий звонок на линии!");
-
-            // Визуальные/Аудио эффекты
+            TeletypeManager.Instance?.LogImportant("Входящий звонок на линии!");
             if (phoneAudioSource != null && ringSound != null)
-            {
                 phoneAudioSource.PlayOneShot(ringSound);
-            }
             UpdateNotificationState();
         }
 
@@ -58,17 +89,21 @@ namespace Managers
             {
                 incomingCalls.Remove(dialogue);
                 UpdateNotificationState();
-
-                // Запуск диалога
                 DialogueUIManager.Instance.StartDialogue(dialogue, null, null);
-                
-                // Закрываем панель телефона после ответа
                 phonePanelUI.Hide();
             }
         }
 
-        // --- ИСХОДЯЩИЕ ---
+        public void RemoveCall(DialogueGraph dialogue)
+        {
+            if (incomingCalls.Contains(dialogue))
+            {
+                incomingCalls.Remove(dialogue);
+                UpdateNotificationState();
+            }
+        }
 
+        // --- ИСХОДЯЩИЕ ---
         public void UnlockContact(string contactID)
         {
             var contact = outgoingContacts.FirstOrDefault(c => c.id == contactID);
@@ -78,58 +113,76 @@ namespace Managers
                 Debug.Log($"[PhoneManager] Контакт {contact.displayName} разблокирован.");
             }
         }
-		
-		public void RemoveCall(DialogueGraph dialogue)
-        {
-            if (incomingCalls.Contains(dialogue))
-            {
-                incomingCalls.Remove(dialogue);
-                UpdateNotificationState();
-            }
-        }
 
         public void CallContact(PhoneContact contact)
         {
-            // Логика вызова службы
-            Debug.Log($"[PhoneManager] Звонок исходящему: {contact.displayName}");
-            
-            // Пример логики вызова (можно расширить)
-            var staff = HiringManager.Instance.AllStaff.FirstOrDefault(s => s.currentRole == contact.associatedRole && s.IsOnDuty());
-            if (staff != null)
+            if (contact == null) return;
+
+            // Проверка лимитов
+            if (!contact.CanCallToday() && contact.limitDialogue != null)
             {
-                DirectorAvatarController.Instance.thoughtBubble.ShowPriorityMessage($"Вызываю {staff.characterName}...", 2f, Color.white);
+                DialogueUIManager.Instance.StartDialogue(contact.limitDialogue, null);
+                phonePanelUI.Hide();
+                return;
             }
-            else
+
+            // Для новых типов сервисов
+            if (contact.serviceType != ServiceType.CallStaff)
             {
-                DirectorAvatarController.Instance.thoughtBubble.ShowPriorityMessage("Абонент недоступен...", 2f, Color.red);
+                if (contact.mainDialogue != null)
+                {
+                    DialogueUIManager.Instance.StartDialogue(contact.mainDialogue, null, () =>
+                    {
+                        // После завершения диалога (если услуга оказана) уменьшаем лимит
+                        contact.remainingUsesToday--;
+                        if (phonePanelUI.gameObject.activeInHierarchy)
+                            phonePanelUI.Refresh();
+                    });
+                }
+                else
+                {
+                    Debug.LogWarning($"[PhoneManager] У контакта {contact.id} нет основного диалога!");
+                }
+            }
+            else // Старый тип – вызов сотрудника
+            {
+                var staff = HiringManager.Instance.AllStaff.FirstOrDefault(s => s.currentRole == contact.associatedRole && s.IsOnDuty());
+                if (staff != null)
+                    DirectorAvatarController.Instance.thoughtBubble.ShowPriorityMessage($"Вызываю {staff.characterName}...", 2f, Color.white);
+                else
+                    DirectorAvatarController.Instance.thoughtBubble.ShowPriorityMessage("Абонент недоступен...", 2f, Color.red);
             }
             
             phonePanelUI.Hide();
         }
-
-        // --- ОБЩЕЕ ---
 
         public List<DialogueGraph> GetActiveCalls() => incomingCalls;
 
         private void UpdateNotificationState()
         {
             if (hudNotificationIcon != null)
-            {
                 hudNotificationIcon.SetActive(HasActiveCalls);
-            }
-            
-            // Если панель открыта, обновляем её содержимое в реальном времени
             if (phonePanelUI.gameObject.activeInHierarchy)
-            {
                 phonePanelUI.Refresh();
-            }
         }
-        
-        // Метод для очистки звонков (например, ночью)
+
         public void ClearAllCalls()
         {
             incomingCalls.Clear();
             UpdateNotificationState();
+        }
+
+        // --- СОХРАНЕНИЕ ---
+        public List<string> GetUnlockedContactIDs()
+        {
+            return outgoingContacts.Where(c => c.isUnlocked).Select(c => c.id).ToList();
+        }
+
+        public void LoadUnlockedContacts(List<string> ids)
+        {
+            if (ids == null) return;
+            foreach (var id in ids)
+                UnlockContact(id);
         }
     }
 }

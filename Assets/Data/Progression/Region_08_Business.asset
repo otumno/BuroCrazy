@@ -32,3 +32,4 @@ MonoBehaviour:
   maxDailyFlow: 35
   flowVariance: 0.1
   rampUpDays: 4
+  unlocksContactIDs: []

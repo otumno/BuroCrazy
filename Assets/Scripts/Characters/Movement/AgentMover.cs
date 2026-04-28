@@ -680,7 +680,7 @@ public class AgentMover : MonoBehaviour
     private IEnumerator SlipAndRecoverRoutine()
 {
     isSlipping = true;
-    Debug.Log($"!!! {gameObject.name} НАЧАЛ СКОЛЬЗИТЬ !!!");
+    // Debug.Log($"!!! {gameObject.name} НАЧАЛ СКОЛЬЗИТЬ !!!");
 
     // --- Toggle Shadow Visibility (hide when slipping) ---
     Transform shadow = transform.Find("VisualsContainer/Shadow");
@@ -790,7 +790,7 @@ public class AgentMover : MonoBehaviour
     {
         director.SetUninterruptible(false);
     }
-      Debug.Log($"{gameObject.name} поднялся после падения.");
+      // Debug.Log($"{gameObject.name} поднялся после падения.");
     // --- End Recovery ---
 }
 

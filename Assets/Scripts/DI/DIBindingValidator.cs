@@ -77,7 +77,7 @@ namespace DI
                 typeof(ClientSpawner),
             };
 
-            Debug.Log($"<color=yellow>[DIBindingValidator] Начинаю проверку {typesToCheck.Length} биндингов...</color>");
+            // Debug.Log($"<color=yellow>[DIBindingValidator] Начинаю проверку {typesToCheck.Length} биндингов...</color>");
 
             foreach (var type in typesToCheck)
             {
@@ -87,40 +87,36 @@ namespace DI
                 if (hasBinding && instanceExists)
                 {
                     successCount++;
-                    if (logAllBindings)
-                        Debug.Log($"<color=green>[OK]</color> {type.Name}");
+                    // if (logAllBindings) Debug.Log($"<color=green>[OK]</color> {type.Name}");
                 }
                 else if (!hasBinding && !instanceExists)
                 {
                     failCount++;
                     if (highlightMissing)
                         Debug.LogError($"<color=red>[MISSING]</color> {type.Name} - нет биндинга и нет Instance");
-                    else
-                        Debug.Log($"<color=red>[MISSING]</color> {type.Name}");
+                    // else Debug.Log($"<color=red>[MISSING]</color> {type.Name}");
                 }
                 else if (hasBinding && !instanceExists)
                 {
                     failCount++;
                     if (highlightMissing)
                         Debug.LogError($"<color=red>[BROKEN]</color> {type.Name} - есть биндинг, но Instance == null!");
-                    else
-                        Debug.Log($"<color=red>[BROKEN]</color> {type.Name}");
+                    // else Debug.Log($"<color=red>[BROKEN]</color> {type.Name}");
                 }
                 else // !hasBinding && instanceExists
                 {
                     // Instance есть, но биндинга нет - это нормально для обратной совместимости
-                    if (logAllBindings)
-                        Debug.Log($"<color=cyan>[NO BINDING but Instance exists]</color> {type.Name}");
+                    // if (logAllBindings) Debug.Log($"<color=cyan>[NO BINDING but Instance exists]</color> {type.Name}");
                 }
             }
 
             if (failCount == 0)
             {
-                Debug.Log($"<color=green>[DIBindingValidator] Проверка завершена: {successCount} OK, {failCount} ошибок. Все критичные биндинги активны.</color>");
+                // Debug.Log($"<color=green>[DIBindingValidator] Проверка завершена: {successCount} OK, {failCount} ошибок. Все критичные биндинги активны.</color>");
             }
             else
             {
-                Debug.LogError($"<color=red>[DIBindingValidator] Проверка завершена: {successCount} OK, {failCount} ошибок!</color>");
+                // Debug.LogError($"<color=red>[DIBindingValidator] Проверка завершена: {successCount} OK, {failCount} ошибок!</color>");
             }
         }
 

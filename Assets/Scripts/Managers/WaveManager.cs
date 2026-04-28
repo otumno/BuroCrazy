@@ -84,6 +84,11 @@ namespace Managers
         [Tooltip("Общее количество клиентов на сегодня")]
         public int todayTotalClients = 0;
 
+        /// <summary>
+        /// Событие обновления плана спавна (для подписки TimelineController и других систем)
+        /// </summary>
+        public System.Action OnSpawnPlanUpdated;
+
         private Coroutine spawnCoroutine;
         private Coroutine queueCheckerCoroutine;
 
@@ -97,7 +102,7 @@ namespace Managers
 
         private void Start()
         {
-            Debug.Log("[WaveManager] === ТЕСТОВЫЙ РЕЖИМ: Авто-спавн " + (enableAutoSpawn ? "ВКЛЮЧЕН" : "ВЫКЛЮЧЕН") + " ===");
+            // Debug.Log("[WaveManager] === ТЕСТОВЫЙ РЕЖИМ: Авто-спавн " + (enableAutoSpawn ? "ВКЛЮЧЕН" : "ВЫКЛЮЧЕН") + " ===");
 
             // Загружаем базу архетипов, если не назначена
             if (archetypeDatabase == null)
@@ -113,7 +118,7 @@ namespace Managers
             if (ProgressionManager.Instance != null)
             {
                 ProgressionManager.Instance.OnDailyFlowUpdated += OnDailyFlowUpdated;
-                Debug.Log("[WaveManager] Подписан на ProgressionManager.OnDailyFlowUpdated");
+                // Debug.Log("[WaveManager] Подписан на ProgressionManager.OnDailyFlowUpdated");
 
                 // Сразу строим дневной план
                 RebuildDailySpawnPlan();
@@ -131,7 +136,7 @@ namespace Managers
                 var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
                 if (currentSettings != null && !currentSettings.PeriodType.IsNight())
                 {
-                    Debug.Log("[WaveManager] Старт сцены: Обнаружено утро, запускаем проверку событий вручную.");
+                    // Debug.Log("[WaveManager] Старт сцены: Обнаружено утро, запускаем проверку событий вручную.");
                     int day = TimeManager.Instance.GetCurrentDay();
                     CheckMorningEvents(day);
 
@@ -148,7 +153,7 @@ namespace Managers
         /// </summary>
         private void OnDailyFlowUpdated()
         {
-            Debug.Log("[WaveManager] OnDailyFlowUpdated: Перестраиваем дневной план...");
+            // Debug.Log("[WaveManager] OnDailyFlowUpdated: Перестраиваем дневной план...");
             RebuildDailySpawnPlan();
         }
 
@@ -172,13 +177,13 @@ namespace Managers
 
             if (activeRegions.Count == 0)
             {
-                Debug.Log("[WaveManager] Нет активных регионов. Дневной план пуст.");
+                // Debug.Log("[WaveManager] Нет активных регионов. Дневной план пуст.");
                 return;
             }
 
             if (totalFlow <= 0)
             {
-                Debug.Log("[WaveManager] Общий поток равен 0. Дневной план пуст.");
+                // Debug.Log("[WaveManager] Общий поток равен 0. Дневной план пуст.");
                 return;
             }
 
@@ -197,7 +202,10 @@ namespace Managers
             var periods = TimeDistributionCalculator.GetActivePeriods();
             dailySpawnPlan = TimeDistributionCalculator.CalculateDistribution(totalFlow, availableArchetypes, periods);
 
-            Debug.Log($"[WaveManager] Дневной план перестроен: {todayTotalClients} клиентов, {activeRegions.Count} регионов");
+            // Оповещаем подписчиков (TimelineController и др.)
+            OnSpawnPlanUpdated?.Invoke();
+
+            // Debug.Log($"[WaveManager] Дневной план перестроен: {todayTotalClients} клиентов, {activeRegions.Count} регионов");
         }
 
         /// <summary>
@@ -210,7 +218,7 @@ namespace Managers
             var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
             if (currentPeriod.IsNight())
             {
-                Debug.Log("[WaveManager] Ночь - спавн не запускается");
+                // Debug.Log("[WaveManager] Ночь - спавн не запускается");
                 return;
             }
 
@@ -225,11 +233,11 @@ namespace Managers
 
             if (clientsForPeriod <= 0)
             {
-                Debug.Log($"[WaveManager] Нет клиентов для периода {currentPeriod}");
+                // Debug.Log($"[WaveManager] Нет клиентов для периода {currentPeriod}");
                 return;
             }
 
-            Debug.Log($"[WaveManager] Запускаем спавн для {currentPeriod}: {clientsForPeriod} клиентов");
+            // Debug.Log($"[WaveManager] Запускаем спавн для {currentPeriod}: {clientsForPeriod} клиентов");
 
             var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
             if (currentSettings != null)
@@ -245,7 +253,7 @@ namespace Managers
         	var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
         	if (currentSettings != null && !currentSettings.PeriodType.IsNight())
         	{
-            	Debug.Log("[WaveManager] ForceCheckMorningEvents: Принудительная проверка утренних событий.");
+            	// Debug.Log("[WaveManager] ForceCheckMorningEvents: Принудительная проверка утренних событий.");
             	int day = TimeManager.Instance.GetCurrentDay();
             	CheckMorningEvents(day);
 
@@ -255,7 +263,7 @@ namespace Managers
             	   }
             	else
             	{
-                	Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
+                	// Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
             	}
         	}
     	}
@@ -266,7 +274,7 @@ namespace Managers
 
             if (settings.PeriodType.IsNight())
             {
-                Debug.Log("[WaveManager] Ночь - спавн не запускается");
+                // Debug.Log("[WaveManager] Ночь - спавн не запускается");
                 return;
             }
 
@@ -282,7 +290,7 @@ namespace Managers
             }
             else
             {
-                Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
+                // Debug.Log("[WaveManager] Авто-спавн отключен. Используйте F1 меню для ручного спавна.");
             }
         }
 
@@ -350,7 +358,7 @@ namespace Managers
                 yield return new WaitForSeconds(interval);
             }
 
-            Debug.Log($"[WaveManager] SpawnRoutineFromPlan завершён для {period}: {totalClients} клиентов");
+            // Debug.Log($"[WaveManager] SpawnRoutineFromPlan завершён для {period}: {totalClients} клиентов");
         }
 
         // --- ПРОВЕРКА УСЛОВИЙ (СЮЖЕТНЫЕ ФЛАГИ) ---
@@ -382,8 +390,8 @@ namespace Managers
                 return;
             }
 
-            Debug.Log($"[WaveManager] --- НАЧАЛО ПРОВЕРКИ УТРЕННИХ СОБЫТИЙ (День {day}) ---");
-            Debug.Log($"[WaveManager] Всего записей в базе: {specialVisitorsDB.visitors.Count}");
+            // Debug.Log($"[WaveManager] --- НАЧАЛО ПРОВЕРКИ УТРЕННИХ СОБЫТИЙ (День {day}) ---");
+            // Debug.Log($"[WaveManager] Всего записей в базе: {specialVisitorsDB.visitors.Count}");
 
             foreach (var specialVisitor in specialVisitorsDB.visitors)
             {
@@ -391,28 +399,28 @@ namespace Managers
 
                 if (specialVisitor.dayToSpawn != day)
                 {
-                    Debug.Log(prefix + $"ПРОПУСК. День {specialVisitor.dayToSpawn} != {day}");
+                    // Debug.Log(prefix + $"ПРОПУСК. День {specialVisitor.dayToSpawn} != {day}");
                     continue;
                 }
 
                 if (!specialVisitor.spawnAtStartOfDay)
                 {
-                    Debug.Log(prefix + $"ПРОПУСК. Галочка 'Spawn At Start Of Day' выключена.");
+                    // Debug.Log(prefix + $"ПРОПУСК. Галочка 'Spawn At Start Of Day' выключена.");
                     continue;
                 }
 
                 if (!AreSpawnConditionsMet(specialVisitor))
                 {
                     string reqFlag = string.IsNullOrEmpty(specialVisitor.requiredFlagKey) ? "Нет" : $"{specialVisitor.requiredFlagKey} == {specialVisitor.requiredFlagValue}";
-                    Debug.Log(prefix + $"ПРОПУСК. Условия флага не выполнены. Требуется: {reqFlag}");
+                    // Debug.Log(prefix + $"ПРОПУСК. Условия флага не выполнены. Требуется: {reqFlag}");
                     continue;
                 }
 
                 // Если дошли сюда — успех
-                Debug.Log(prefix + "<color=green>УСПЕХ! Начинаю спавн.</color>");
+                // Debug.Log(prefix + "<color=green>УСПЕХ! Начинаю спавн.</color>");
                 SpawnSpecialClient(specialVisitor);
             }
-            Debug.Log($"[WaveManager] --- КОНЕЦ ПРОВЕРКИ ---");
+            // Debug.Log($"[WaveManager] --- КОНЕЦ ПРОВЕРКИ ---");
         }
 
         private IEnumerator SpawnRoutine(PeriodSettings settings, int totalClients)
@@ -520,7 +528,7 @@ namespace Managers
                 // Пытаемся добавить в очередь ожидания
                 if (TryAddToQueue(archetype, requestedBy, priority))
                 {
-                    Debug.Log($"[WaveManager] OFFICE FULL! Client {archetype.displayName} added to waiting queue. Queue: {pendingSpawnQueue.Count}/{maxQueueSize}");
+                    // Debug.Log($"[WaveManager] OFFICE FULL! Client {archetype.displayName} added to waiting queue. Queue: {pendingSpawnQueue.Count}/{maxQueueSize}");
                 }
                 else
                 {
@@ -573,7 +581,7 @@ namespace Managers
                 if (IsNightTime())
                 {
                     // Ночью очищаем очередь (все уходят)
-                    Debug.Log($"[WaveManager] НОЧЬ! Очистка очереди ожидания: {pendingSpawnQueue.Count} клиентов удалено.");
+                    // Debug.Log($"[WaveManager] НОЧЬ! Очистка очереди ожидания: {pendingSpawnQueue.Count} клиентов удалено.");
                     overflowClientsCount += pendingSpawnQueue.Count;
                     pendingSpawnQueue.Clear();
                     break;
@@ -599,7 +607,7 @@ namespace Managers
                     foreach (var client in expiredClients)
                     {
                         pendingSpawnQueue.Remove(client);
-                        Debug.Log($"[WaveManager] Клиент {client.archetype.displayName} не дождался и ушёл. WaitTime: {Time.time - client.enqueueTime:F1}s");
+                        // Debug.Log($"[WaveManager] Клиент {client.archetype.displayName} не дождался и ушёл. WaitTime: {Time.time - client.enqueueTime:F1}s");
                     }
                     continue;
                 }
@@ -608,7 +616,7 @@ namespace Managers
                 var nextClient = pendingSpawnQueue.OrderByDescending(x => x.priority).First();
                 pendingSpawnQueue.Remove(nextClient);
 
-                Debug.Log($"[WaveManager] Queue processed: spawning {nextClient.archetype.displayName} (queue: {pendingSpawnQueue.Count})");
+                // Debug.Log($"[WaveManager] Queue processed: spawning {nextClient.archetype.displayName} (queue: {pendingSpawnQueue.Count})");
                 SpawnClientInternal(nextClient.archetype, $"Queue_{nextClient.requestedBy}");
 
                 yield return new WaitForSeconds(0.5f); // Небольшая пауза между спавнами из очереди
@@ -623,7 +631,7 @@ namespace Managers
         private void SpawnClientInternal(ClientArchetype archetype, string requestedBy)
         {
             Vector3 spawnPos = spawnPoint.position;
-            Debug.Log($"[WaveManager] SpawnClientInternal: {archetype.displayName} (groupID: {archetype.groupID}) from {requestedBy}");
+            // Debug.Log($"[WaveManager] SpawnClientInternal: {archetype.displayName} (groupID: {archetype.groupID}) from {requestedBy}");
 
             GameObject go = Instantiate(clientPrefab, spawnPos, Quaternion.identity);
             ClientPathfinding client = go.GetComponent<ClientPathfinding>();
@@ -646,10 +654,10 @@ namespace Managers
 
                 if (visuals != null)
                 {
-                    Debug.Log($"[WaveManager] Client configured: {archetype.displayName} | group: {archetype.groupID} | body: {(archetype.bodySprite != null ? archetype.bodySprite.name : "NULL")} | hair: {(archetype.hairSprites?.Count ?? 0)} options | outfit: {(archetype.outfitSprites?.Count ?? 0)} options");
+                    // Debug.Log($"[WaveManager] Client configured: {archetype.displayName} | group: {archetype.groupID} | body: {(archetype.bodySprite != null ? archetype.bodySprite.name : "NULL")} | hair: {(archetype.hairSprites?.Count ?? 0)} options | outfit: {(archetype.outfitSprites?.Count ?? 0)} options");
                 }
 
-                Debug.Log($"[WaveManager] Client spawned successfully: {client.name} = {archetype.displayName} ({archetype.groupID})");
+                // Debug.Log($"[WaveManager] Client spawned successfully: {client.name} = {archetype.displayName} ({archetype.groupID})");
             }
             else
             {
@@ -663,7 +671,7 @@ namespace Managers
             // 1. ОБРАБОТКА ЗВОНКА (БЕЗ СПАВНА КЛИЕНТА)
             if (visitorData.isRemoteInteraction)
             {
-                Debug.Log($"[WaveManager] Входящий звонок: {visitorData.name}");
+                // Debug.Log($"[WaveManager] Входящий звонок: {visitorData.name}");
 
                 if (visitorData.arrivalSound != null && AudioManager.Instance != null)
                 {
@@ -697,7 +705,7 @@ namespace Managers
                 // Примечание: настройка специального клиента происходит в SpawnClientInternal
                 // но нам нужно добавить specificDialogue и цель
                 // Это можно сделать через событие или отдельный метод
-                Debug.Log($"[WaveManager] Special visitor queued/spawned: {visitorData.name}");
+                // Debug.Log($"[WaveManager] Special visitor queued/spawned: {visitorData.name}");
             }
         }
 

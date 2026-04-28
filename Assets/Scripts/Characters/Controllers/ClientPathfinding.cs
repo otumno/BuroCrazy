@@ -20,14 +20,14 @@ public class ClientPathfinding : MonoBehaviour
     public DocumentHolder docHolder;
 	
 	[Header("Настройки Стресса (Баланс)")]
-    [Tooltip("Множитель скорости стресса, когда клиент стоит в очереди (База = 1.0)")]
-    public float stressMod_Standing = 1.0f;
-    [Tooltip("Множитель скорости, когда клиент сидит (комфорт)")]
-    public float stressMod_Sitting = 0.5f;
-    [Tooltip("Множитель скорости, когда клиент занят делом (идет, в туалете) или обслуживается")]
-    public float stressMod_BusyOrServed = 0.1f;
-    [Tooltip("Сколько стресса добавляет каждая куча мусора/лужа рядом (в секунду)")]
-    public float stressAdd_NearbyMess = 0.2f;
+	   [Tooltip("Множитель скорости стресса, когда клиент стоит в очереди (База = 1.0)")]
+	   public float stressMod_Standing = 2.5f;
+	   [Tooltip("Множитель скорости, когда клиент сидит (комфорт)")]
+	   public float stressMod_Sitting = 1.5f;
+	   [Tooltip("Множитель скорости, когда клиент занят делом (идет, в туалете) или обслуживается")]
+	   public float stressMod_BusyOrServed = 0.1f;
+	   [Tooltip("Сколько стресса добавляет каждая куча мусора/лужа рядом (в секунду)")]
+	   public float stressAdd_NearbyMess = 0.5f;
     [Tooltip("Мгновенный стресс при отказе/ошибке (в % от максимума, 0.15 = 15%)")]
     public float stressJump_Refusal = 0.15f;
 	
@@ -235,8 +235,7 @@ public class ClientPathfinding : MonoBehaviour
             if (bodyRenderer != null && agent != null)
             {
                 // AgentMover получит спрайты из CharacterVisuals.SetupVisualDiversity
-            }
-            Debug.Log($"[{gameObject.name}] Initialize: visuals already configured by archetype, skipping Setup()");
+                }
         }
     
     babushkaFactor = Mathf.RoundToInt(Random.Range(0, 5)) * 0.25f;
@@ -284,13 +283,14 @@ public class ClientPathfinding : MonoBehaviour
         // if (ClientQueueManager.Instance != null && !ClientQueueManager.Instance.queue.ContainsKey(this))
         // {
         //     ClientQueueManager.Instance.JoinQueue(this);
-        //     Debug.Log($"[ClientPathfinding] {gameObject.name}: зарегистрирован в очереди с номером {ClientQueueManager.Instance.queue[this]}");
+        //     // Debug.Log($"[ClientPathfinding] {gameObject.name}: зарегистрирован в очереди с номером {ClientQueueManager.Instance.queue[this]}");
         // }
         movement.Initialize(this);
         float basePatience = Random.Range(minPatienceTime, maxPatienceTime);
         totalPatienceTime = basePatience * (1 + babushkaFactor);
-		
-		patienceStartTime = Time.time;
+  
+  patienceStartTime = Time.time;
+        _maxPatienceValue = totalPatienceTime;
 
         // Звук спавна перенесен в ClientStateMachine.OnEnteredBuilding()
   
@@ -375,7 +375,7 @@ public class ClientPathfinding : MonoBehaviour
         
         if (_remoteLifetimePeriods <= 0)
         {
-            Debug.Log($"[ClientPathfinding] Время ожидания звонка от {name} истекло. Удаляем.");
+            // Debug.Log($"[ClientPathfinding] Время ожидания звонка от {name} истекло. Удаляем.");
             
             // Если игрок не ответил, считаем это как Upset (расстроен)
             reasonForLeaving = LeaveReason.Upset;
@@ -555,6 +555,7 @@ public class ClientPathfinding : MonoBehaviour
 
         // Терпение
         totalPatienceTime = archetype.patience;
+        _maxPatienceValue = totalPatienceTime;
 
         // Скорость
         var mover = GetComponent<AgentMover>();
@@ -662,7 +663,7 @@ public class ClientPathfinding : MonoBehaviour
         var archetype = GetVisuals()?.currentArchetype;
         if (archetype != null)
         {
-            Debug.Log($"[{gameObject.name}] Приветствует {staff.role}: {greeting}");
+            // Debug.Log($"[{gameObject.name}] Приветствует {staff.role}: {greeting}");
         }
     }
 
@@ -750,7 +751,7 @@ public class ClientPathfinding : MonoBehaviour
             var archetype = GetVisuals()?.currentArchetype;
             if (archetype != null)
             {
-                Debug.Log($"[{gameObject.name}] Small talk с {client.name}: {message}");
+                // Small talk лог убран
             }
             break;
         }
@@ -814,7 +815,7 @@ public class ClientPathfinding : MonoBehaviour
 
         if (archetype != null)
         {
-            Debug.Log($"[{gameObject.name}] Прощание ({reasonForLeaving}): {farewell}");
+            // Debug.Log($"[{gameObject.name}] Прощание ({reasonForLeaving}): {farewell}");
         }
     }
 
@@ -880,7 +881,7 @@ public class ClientPathfinding : MonoBehaviour
         
         if (Random.value < theftChance)
         {
-            Debug.Log($"[Theft] Клиент {name} решил не платить и сбежать!");
+            // Debug.Log($"[Theft] Клиент {name} решил не платить и сбежать!");
             
             // Сбрасываем очередь и текущие действия
             isQueueJumper = false;

@@ -183,6 +183,12 @@ namespace DialogueSystem.Editor
                 });
                 nodeView.extensionContainer.Add(bgContainer);
                 
+                var dtContainer = new IMGUIContainer(() => {
+                    GUILayout.Space(5);
+                    start.dialogueType = (global::DialogueSystem.Data.DialogueType)EditorGUILayout.EnumPopup("Dialogue Type:", start.dialogueType);
+                });
+                nodeView.extensionContainer.Add(dtContainer);
+                
                 nodeView.capabilities &= ~Capabilities.Deletable;
             }
             else if (nodeData is EndNode endNode)
@@ -223,6 +229,41 @@ namespace DialogueSystem.Editor
 
                 AddTextField(nodeView, "Кто говорит (ID):", phrase.speakerID, v => phrase.speakerID = v, phrase);
                 AddTextField(nodeView, "Текст:", phrase.text, v => phrase.text = v, phrase, true);
+
+                var variantsLabel = new Label("Варианты фраз:") { style = { unityFontStyleAndWeight = FontStyle.Bold, marginTop = 5 } };
+                nodeView.extensionContainer.Add(variantsLabel);
+
+                var addVariantBtn = new Button(() => {
+                    phrase.variantTexts.Add("");
+                    EditorUtility.SetDirty(phrase);
+                    PopulateView(_graph);
+                }) { text = "+ Добавить вариант" };
+                nodeView.extensionContainer.Add(addVariantBtn);
+
+                if (phrase.variantTexts != null && phrase.variantTexts.Count > 0)
+                {
+                    for (int i = 0; i < phrase.variantTexts.Count; i++)
+                    {
+                        int idx = i;
+                        var row = new VisualElement() { style = { flexDirection = FlexDirection.Row, alignItems = Align.Center } };
+                        var txtField = new TextField() { value = phrase.variantTexts[i], multiline = true, style = { flexGrow = 1 } };
+                        txtField.RegisterValueChangedCallback(e => {
+                            phrase.variantTexts[idx] = e.newValue;
+                            EditorUtility.SetDirty(phrase);
+                        });
+                        row.Add(txtField);
+
+                        var delBtn = new Button(() => {
+                            phrase.variantTexts.RemoveAt(idx);
+                            EditorUtility.SetDirty(phrase);
+                            PopulateView(_graph);
+                        }) { text = "X" };
+                        delBtn.style.backgroundColor = new Color(0.6f, 0.2f, 0.2f);
+                        row.Add(delBtn);
+
+                        nodeView.extensionContainer.Add(row);
+                    }
+                }
 
                 var outPort = GeneratePort(nodeView, Direction.Output, Port.Capacity.Single);
                 outPort.portName = "Далее";

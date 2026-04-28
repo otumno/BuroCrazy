@@ -16,14 +16,14 @@ public class Puddle : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
 {
-    Debug.Log($"[Puddle Trigger] Вошел: {other.name}, Тег: {other.tag}, Слой: {LayerMask.LayerToName(other.gameObject.layer)}");
+    // Debug.Log($"[Puddle Trigger] Вошел: {other.name}, Тег: {other.tag}, Слой: {LayerMask.LayerToName(other.gameObject.layer)}");
     AgentMover mover = other.GetComponent<AgentMover>();
     if (mover != null)
     {
-        Debug.Log($"Найден AgentMover на {other.name}. Шанс поскользнуться: {slipChance}"); // <<<< Добавь эту строку
+        // Debug.Log($"Найден AgentMover на {other.name}. Шанс поскользнуться: {slipChance}");
         if (Random.value < slipChance)
         {
-            Debug.Log($"ПОСКОЛЬЗНУЛСЯ! Вызов SlipAndRecover для {other.name}"); // <<<< Добавь эту строку
+            // Debug.Log($"ПОСКОЛЬЗНУЛСЯ! Вызов SlipAndRecover для {other.name}");
             mover.SlipAndRecover();
         }
     }
