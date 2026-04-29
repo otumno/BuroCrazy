@@ -6,6 +6,8 @@ using Managers;
 
 public class TimelineController : MonoBehaviour
 {
+    public static TimelineController Instance { get; private set; }
+
     [Header("UI Components")]
     public RectTransform currentTimeMarker;
     public RectTransform periodBgPrefab;
@@ -27,7 +29,16 @@ public class TimelineController : MonoBehaviour
     private PeriodInfo[] periods;
     private float[] spawnTimes;
     private float containerWidth;
-    private bool isInitialized = false;
+
+    public void Show()
+    {
+        gameObject.SetActive(true);
+        if (periods == null || periods.Length == 0)
+        {
+            RebuildTimeline();
+        }
+    }
+    public void Hide() => gameObject.SetActive(false);
 
     [System.Serializable]
     public class PeriodInfo
@@ -39,6 +50,8 @@ public class TimelineController : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
+
         if (TimeManager.Instance != null)
             TimeManager.Instance.OnDayChanged += OnDayChanged;
         else
@@ -59,32 +72,16 @@ public class TimelineController : MonoBehaviour
 
     private void OnDayChanged(int newDay)
     {
-        // Игнорируем, если ещё не инициализированы (первый вызов должен быть от DelayedInit)
-        if (!isInitialized)
-        {
-            Debug.Log("[Timeline] OnDayChanged проигнорирован до первой инициализации");
-            return;
-        }
-        RebuildTimeline();
-    }
-
-    private void Start()
-    {
-        StartCoroutine(DelayedInit());
-    }
-
-    private IEnumerator DelayedInit()
-    {
-        yield return new WaitForSeconds(0.5f);
         RebuildTimeline();
     }
 
     [ContextMenu("Force Rebuild")]
     public void ForceRebuild()
     {
-        isInitialized = false; // принудительно разрешаем перестройку
         RebuildTimeline();
     }
+
+    // Инициализация происходит при первом Show(), если периоды ещё не заданы
 
     private void ClearTimeline()
     {
@@ -173,15 +170,11 @@ public class TimelineController : MonoBehaviour
             spawnTimesArray = fallbackTimes.ToArray();
         }
 
-        // Очищаем старые данные если уже инициализированы
-        if (isInitialized)
-        {
-            ClearTimeline();
-        }
+        // Всегда очищаем перед перестройкой
+        ClearTimeline();
 
         Debug.Log($"[Timeline] Инициализация: {periods.Length} периодов, {spawnTimesArray.Length} иконок клиентов");
         Initialize(periods, spawnTimesArray);
-        isInitialized = true;
     }
 
     public void Initialize(PeriodInfo[] periodsArray, float[] spawnTimesArray)

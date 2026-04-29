@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using UI;
 using Utilities;
 using Managers.Teletype;
 
@@ -65,6 +66,11 @@ namespace Managers
         private IEnumerator WaitForDialogueEnd()
         {
             yield return new WaitUntil(() => !PhoneManager.Instance.HasActiveCalls);
+
+            // Показать Timeline после окончания диалога секретаря
+            var timeline = Object.FindObjectOfType<TimelineController>();
+            if (timeline != null) timeline.Show();
+
             WaveManager.Instance.enableAutoSpawn = true;
             WaveManager.Instance.ForceCheckMorningEvents();
             TeletypeManager.Instance?.LogImportant("Бюро официально открыто! Ожидайте клиентов.");
