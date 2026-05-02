@@ -85,6 +85,11 @@ namespace Managers
         public int todayTotalClients = 0;
 
         /// <summary>
+        /// Точное расписание спавна (время каждого клиента от начала дня)
+        /// </summary>
+        public List<float> SpawnSchedule { get; private set; } = new List<float>();
+
+        /// <summary>
         /// Событие обновления плана спавна (для подписки TimelineController и других систем)
         /// </summary>
         public System.Action OnSpawnPlanUpdated;
@@ -155,6 +160,16 @@ namespace Managers
         {
             // Debug.Log("[WaveManager] OnDailyFlowUpdated: Перестраиваем дневной план...");
             RebuildDailySpawnPlan();
+
+            if (enableAutoSpawn && TimeManager.Instance != null)
+            {
+                var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
+                if (!currentPeriod.IsNight() && dailySpawnPlan != null && dailySpawnPlan.ContainsKey(currentPeriod) && dailySpawnPlan[currentPeriod].clientCount > 0)
+                {
+                    Debug.Log($"[WaveManager] OnDailyFlowUpdated: принудительный запуск спавна для {currentPeriod}");
+                    StartSpawningForCurrentPeriod();
+                }
+            }
         }
 
         /// <summary>
@@ -202,10 +217,65 @@ namespace Managers
             var periods = TimeDistributionCalculator.GetActivePeriods();
             dailySpawnPlan = TimeDistributionCalculator.CalculateDistribution(totalFlow, availableArchetypes, periods);
 
+            // Строим точное расписание спавна
+            BuildSpawnSchedule();
+
             // Оповещаем подписчиков (TimelineController и др.)
             OnSpawnPlanUpdated?.Invoke();
 
             // Debug.Log($"[WaveManager] Дневной план перестроен: {todayTotalClients} клиентов, {activeRegions.Count} регионов");
+        }
+
+        /// <summary>
+        /// Строит точное расписание спавна (время для каждого клиента от начала дня)
+        /// </summary>
+        private void BuildSpawnSchedule()
+        {
+            SpawnSchedule.Clear();
+
+            if (TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
+                return;
+
+            var day = TimeManager.Instance.mainCalendarDay;
+            float currentTime = 0f;
+
+            foreach (var ps in day.periodSettings)
+            {
+                if (ps.PeriodType.IsNight()) // ночные периоды пропускаем
+                {
+                    currentTime += ps.durationInSeconds;
+                    continue;
+                }
+
+                if (!dailySpawnPlan.ContainsKey(ps.PeriodType))
+                {
+                    currentTime += ps.durationInSeconds;
+                    continue;
+                }
+
+                int totalClients = dailySpawnPlan[ps.PeriodType].clientCount;
+                float periodDuration = ps.durationInSeconds;
+
+                // Генерируем времена спавна внутри периода
+                for (int i = 0; i < totalClients; i++)
+                {
+                    float t = currentTime + (periodDuration * (i + 1) / (totalClients + 1));
+                    // Небольшой рандомный сдвиг в пределах ±15% от интервала
+                    float jitter = Random.Range(
+                        -periodDuration / (totalClients + 1) * 0.15f,
+                        periodDuration / (totalClients + 1) * 0.15f);
+                    t += jitter;
+                    t = Mathf.Clamp(t, currentTime + 1f, currentTime + periodDuration - 1f);
+                    SpawnSchedule.Add(t);
+                    Debug.Log($"[WaveManager]   + событие: {t:F1} сек");
+                }
+
+                currentTime += periodDuration;
+            }
+
+            // Сортируем времена
+            SpawnSchedule.Sort();
+            Debug.Log($"[WaveManager] Построен точный план спавна: {SpawnSchedule.Count} событий");
         }
 
         /// <summary>
@@ -233,11 +303,11 @@ namespace Managers
 
             if (clientsForPeriod <= 0)
             {
-                // Debug.Log($"[WaveManager] Нет клиентов для периода {currentPeriod}");
+                Debug.Log($"[WaveManager] Нет клиентов для периода {currentPeriod}");
                 return;
             }
 
-            // Debug.Log($"[WaveManager] Запускаем спавн для {currentPeriod}: {clientsForPeriod} клиентов");
+            Debug.Log($"[WaveManager] StartSpawning для {currentPeriod}: {clientsForPeriod} клиентов");
 
             var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
             if (currentSettings != null)
@@ -295,7 +365,7 @@ namespace Managers
         }
 
         /// <summary>
-        /// Новая корутина спавна на основе дневного плана
+        /// Новая корутина спавна на основе дневного плана и SpawnSchedule
         /// </summary>
         private IEnumerator SpawnRoutineFromPlan(CalendarDayPeriodType period, PeriodSettings settings, int totalClients)
         {
@@ -322,21 +392,43 @@ namespace Managers
 
             yield return new WaitForSeconds(initialSpawnDelay);
 
-            float duration = settings.durationInSeconds - initialSpawnDelay;
-            if (duration <= 0) duration = 1f;
+            // Вычисляем границы периода (секунды от начала дня)
+            float periodStart = 0f;
+            var day = TimeManager.Instance.mainCalendarDay;
+            for (int i = 0; i < day.periodSettings.Count; i++)
+            {
+                if (day.periodSettings[i].PeriodType == period) break;
+                periodStart += day.periodSettings[i].durationInSeconds;
+            }
+            float periodEnd = periodStart + settings.durationInSeconds;
 
-            float interval = duration / totalClients;
+            // Получаем отфильтрованный список времён из SpawnSchedule
+            var timesForPeriod = SpawnSchedule.Where(t => t >= periodStart && t < periodEnd).ToList();
+
+            Debug.Log($"[WaveManager] Запущен точный спавн для периода {period}, событий: {timesForPeriod.Count}");
+
+            if (timesForPeriod.Count == 0)
+            {
+                Debug.Log($"[WaveManager] Нет событий спавна для периода {period}");
+                yield break;
+            }
+
             bool guestSpawned = false;
             int archetypeIndex = 0;
+            float currentTime = TimeManager.Instance.GetCurrentTimeSinceDayStart();
 
-            for (int i = 0; i < totalClients; i++)
+            foreach (float t in timesForPeriod)
             {
+                // Вычисляем задержку от текущего времени
+                float delay = t - currentTime;
+                if (delay > 0) yield return new WaitForSeconds(delay);
+                currentTime = t; // обновляем текущее время после ожидания
+
                 // Внедряем дневного гостя в середину волны
-                if (!guestSpawned && dayGuest != null && i >= totalClients / 2)
+                if (!guestSpawned && dayGuest != null && archetypeIndex >= timesForPeriod.Count / 2)
                 {
                     SpawnSpecialClient(dayGuest);
                     guestSpawned = true;
-                    yield return new WaitForSeconds(interval);
                 }
 
                 // Проверяем capacity перед спавном
@@ -352,13 +444,11 @@ namespace Managers
                     // Спавним запланированного клиента
                     var archetype = archetypesToSpawn[archetypeIndex % archetypesToSpawn.Count];
                     SpawnClientInternal(archetype, $"Plan_{period}");
-                    archetypeIndex++;
                 }
-
-                yield return new WaitForSeconds(interval);
+                archetypeIndex++;
             }
 
-            // Debug.Log($"[WaveManager] SpawnRoutineFromPlan завершён для {period}: {totalClients} клиентов");
+            // Debug.Log($"[WaveManager] SpawnRoutineFromPlan завершён для {period}: {timesForPeriod.Count} клиентов");
         }
 
         // --- ПРОВЕРКА УСЛОВИЙ (СЮЖЕТНЫЕ ФЛАГИ) ---

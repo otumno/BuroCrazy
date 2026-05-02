@@ -27,7 +27,13 @@ MonoBehaviour:
   unlockCostMoney: 800
   spawnBonuses: []
   archetypeGroups: []
-  groupWeights: []
+  groupWeights:
+  - groupID: Worker
+    weight: 70
+  - groupID: Foreman
+    weight: 25
+  - groupID: Shady
+    weight: 10
   maxDailyFlow: 30
   flowVariance: 0.1
   rampUpDays: 4

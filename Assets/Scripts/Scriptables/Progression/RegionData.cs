@@ -66,7 +66,7 @@ namespace Scriptables.Progression
         public string groupID;
 
         [Tooltip("Вес этой группы при выборе (чем выше, тем чаще появляется)")]
-        [Range(0f, 1f)]
+        [Range(0f, 100f)]
         public float weight = 0.25f;
     }
 }

@@ -27,7 +27,19 @@ MonoBehaviour:
   unlockCostMoney: 7500
   spawnBonuses: []
   archetypeGroups: []
-  groupWeights: []
+  groupWeights:
+  - groupID: Businessman
+    weight: 30
+  - groupID: Official
+    weight: 60
+  - groupID: Professional
+    weight: 20
+  - groupID: Tourist
+    weight: 10
+  - groupID: VIP
+    weight: 10
+  - groupID: Aristocrat
+    weight: 5
   maxDailyFlow: 60
   flowVariance: 0.1
   rampUpDays: 4

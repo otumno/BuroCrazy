@@ -27,8 +27,17 @@ MonoBehaviour:
   unlockCostMoney: 3500
   spawnBonuses: []
   archetypeGroups: []
-  groupWeights: []
+  groupWeights:
+  - groupID: Tourist
+    weight: 80
+  - groupID: Businessman
+    weight: 10
+  - groupID: Bohemian
+    weight: 10
+  - groupID: Marginal
+    weight: 5
   maxDailyFlow: 50
   flowVariance: 0.1
   rampUpDays: 4
-  unlocksContactIDs: []
+  unlocksContactIDs:
+  - ClownService

@@ -27,8 +27,17 @@ MonoBehaviour:
   unlockCostMoney: 1500
   spawnBonuses: []
   archetypeGroups: []
-  groupWeights: []
+  groupWeights:
+  - groupID: Businessman
+    weight: 15
+  - groupID: Entrepreneur
+    weight: 40
+  - groupID: Shopkeeper
+    weight: 50
+  - groupID: Student
+    weight: 5
   maxDailyFlow: 45
   flowVariance: 0.1
   rampUpDays: 4
-  unlocksContactIDs: []
+  unlocksContactIDs:
+  - CleaningService

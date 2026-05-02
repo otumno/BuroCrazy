@@ -28,7 +28,15 @@ MonoBehaviour:
   unlockCostMoney: 5000
   spawnBonuses: []
   archetypeGroups: []
-  groupWeights: []
+  groupWeights:
+  - groupID: Businessman
+    weight: 60
+  - groupID: Entrepreneur
+    weight: 30
+  - groupID: Professional
+    weight: 10
+  - groupID: Official
+    weight: 10
   maxDailyFlow: 35
   flowVariance: 0.1
   rampUpDays: 4

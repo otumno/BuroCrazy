@@ -56,6 +56,20 @@ namespace Managers
                 ProgressionManager.Instance.ProcessCompletedDocument(tutorialDoc);
             }
 
+            // Включаем автоспавн сразу
+            if (WaveManager.Instance != null)
+            {
+                WaveManager.Instance.enableAutoSpawn = true;
+                WaveManager.Instance.ForceCheckMorningEvents();
+                Debug.Log("[Tutorial] Автоспавн включен после завершения туториала.");
+            }
+
+            // Показываем таймлайн
+            if (TimelineController.Instance != null)
+            {
+                TimelineController.Instance.Show();
+            }
+
             if (secretarySuccessCall != null && PhoneManager.Instance != null)
             {
                 PhoneManager.Instance.RegisterIncomingCall(secretarySuccessCall);
@@ -71,8 +85,6 @@ namespace Managers
             var timeline = Object.FindObjectOfType<TimelineController>();
             if (timeline != null) timeline.Show();
 
-            WaveManager.Instance.enableAutoSpawn = true;
-            WaveManager.Instance.ForceCheckMorningEvents();
             TeletypeManager.Instance?.LogImportant("Бюро официально открыто! Ожидайте клиентов.");
         }
     }

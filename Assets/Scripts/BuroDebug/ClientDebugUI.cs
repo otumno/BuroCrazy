@@ -407,6 +407,36 @@ namespace BuroDebug
             testCleanersText.color = Color.white;
             testCleanersText.alignment = TextAnchor.MiddleCenter;
             testCleanersText.text = "Тест: Уборщики";
+
+            // Кнопка "Анлок всех регионов"
+            var unlockAllBtnGO = new GameObject("Btn_UnlockAllRegions");
+            unlockAllBtnGO.transform.SetParent(panel.transform, false);
+            var unlockAllBtnRect = unlockAllBtnGO.AddComponent<RectTransform>();
+            unlockAllBtnRect.anchorMin = new Vector2(0, 1);
+            unlockAllBtnRect.anchorMax = new Vector2(1, 1);
+            unlockAllBtnRect.pivot = new Vector2(0.5f, 1);
+            unlockAllBtnRect.anchoredPosition = new Vector2(0, yPos);
+            unlockAllBtnRect.sizeDelta = new Vector2(-20, 22);
+
+            var unlockAllBtnImage = unlockAllBtnGO.AddComponent<Image>();
+            unlockAllBtnImage.color = new Color(0.2f, 0.8f, 0.2f, 1f); // зелёный
+
+            var unlockAllBtn = unlockAllBtnGO.AddComponent<Button>();
+            unlockAllBtn.onClick.AddListener(() => debugMenu.UnlockAllRegions());
+
+            var unlockAllTextGO = new GameObject("Text");
+            unlockAllTextGO.transform.SetParent(unlockAllBtnGO.transform, false);
+            var unlockAllTextRect = unlockAllTextGO.AddComponent<RectTransform>();
+            unlockAllTextRect.anchorMin = Vector2.zero;
+            unlockAllTextRect.anchorMax = Vector2.one;
+            unlockAllTextRect.sizeDelta = Vector2.zero;
+
+            var unlockAllText = unlockAllTextGO.AddComponent<Text>();
+            unlockAllText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            unlockAllText.fontSize = 12;
+            unlockAllText.color = Color.white;
+            unlockAllText.alignment = TextAnchor.MiddleCenter;
+            unlockAllText.text = "Анлок всех регионов";
         }
     }
 }

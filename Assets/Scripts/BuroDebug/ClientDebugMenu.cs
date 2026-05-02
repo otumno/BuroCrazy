@@ -450,5 +450,33 @@ namespace BuroDebug
             TemporaryEffectManager.Instance.SpawnCleaningCrew();
             Debug.Log("[Debug] Бригада уборщиков заспавнена вручную");
         }
+
+        public void UnlockAllRegions()
+        {
+            if (ProgressionManager.Instance == null)
+            {
+                Debug.LogError("[Debug] ProgressionManager не найден!");
+                return;
+            }
+
+            var regions = ProgressionManager.Instance.allRegionsDatabase;
+            if (regions == null || regions.Count == 0)
+            {
+                Debug.LogError("[Debug] Список регионов пуст!");
+                return;
+            }
+
+            int count = 0;
+            foreach (var region in regions)
+            {
+                if (!ProgressionManager.Instance.IsRegionUnlocked(region.regionID))
+                {
+                    ProgressionManager.Instance.FinalizeRegionUnlock(region);
+                    count++;
+                }
+            }
+
+            Debug.Log($"<color=green>[Debug] Открыто регионов: {count}</color>");
+        }
     }
 }

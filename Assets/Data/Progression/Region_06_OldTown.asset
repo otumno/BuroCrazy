@@ -28,7 +28,19 @@ MonoBehaviour:
   unlockCostMoney: 2500
   spawnBonuses: []
   archetypeGroups: []
-  groupWeights: []
+  groupWeights:
+  - groupID: Elderly
+    weight: 20
+  - groupID: Professional
+    weight: 50
+  - groupID: Bohemian
+    weight: 30
+  - groupID: Aristocrat
+    weight: 10
+  - groupID: Veteran
+    weight: 20
+  - groupID: Student
+    weight: 5
   maxDailyFlow: 15
   flowVariance: 0.1
   rampUpDays: 4

@@ -26,7 +26,15 @@ MonoBehaviour:
   unlockCostMoney: 2000
   spawnBonuses: []
   archetypeGroups: []
-  groupWeights: []
+  groupWeights:
+  - groupID: Shady
+    weight: 70
+  - groupID: Bohemian
+    weight: 20
+  - groupID: Entrepreneur
+    weight: 10
+  - groupID: Marginal
+    weight: 20
   maxDailyFlow: 20
   flowVariance: 0.1
   rampUpDays: 4

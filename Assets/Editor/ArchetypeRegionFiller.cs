@@ -128,8 +128,8 @@ public class ArchetypeRegionFiller : EditorWindow
             // Установка unlocksContactIDs
             Dictionary<string, string[]> unlocksMap = new Dictionary<string, string[]>()
             {
-                {"Commercial", new string[]{"CleaningService"}},
-                {"Park", new string[]{"ClownService"}}
+                {"REG_COMMERCIAL", new string[]{"CleaningService"}},
+                {"REG_PARK", new string[]{"ClownService"}}
             };
 
             if (unlocksMap.TryGetValue(region.regionID, out var contactIDs))
@@ -187,16 +187,16 @@ public static class ArchetypeData
     // Веса по регионам (привязываем к groupID, пол не важен)
     public static Dictionary<string, Dictionary<string, float>> RegionWeights = new Dictionary<string, Dictionary<string, float>>()
     {
-        {"Slums", new Dictionary<string, float> { {"Worker",60}, {"Foreman",5}, {"Elderly",10}, {"Student",10}, {"Shady",30}, {"Marginal",40} }},
-        {"Factory", new Dictionary<string, float> { {"Worker",70}, {"Foreman",25}, {"Shady",10} }},
-        {"Residential", new Dictionary<string, float> { {"Elderly",60}, {"Student",30}, {"Worker",10}, {"Veteran",10}, {"Bohemian",5} }},
-        {"OldTown", new Dictionary<string, float> { {"Elderly",20}, {"Professional",50}, {"Bohemian",30}, {"Aristocrat",10}, {"Veteran",20}, {"Student",5} }},
-        {"Business", new Dictionary<string, float> { {"Businessman",60}, {"Entrepreneur",30}, {"Professional",10}, {"Official",10} }},
-        {"Center", new Dictionary<string, float> { {"Businessman",30}, {"Official",60}, {"Professional",20}, {"Tourist",10}, {"VIP",10}, {"Aristocrat",5} }},
-        {"Commercial", new Dictionary<string, float> { {"Businessman",15}, {"Entrepreneur",40}, {"Shopkeeper",50}, {"Student",5} }},
-        {"Redlight", new Dictionary<string, float> { {"Shady",70}, {"Bohemian",20}, {"Entrepreneur",10}, {"Marginal",20} }},
-        {"Park", new Dictionary<string, float> { {"Tourist",80}, {"Businessman",10}, {"Bohemian",10}, {"Marginal",5} }},
-        {"Elite", new Dictionary<string, float> { {"VIP",70}, {"Aristocrat",30}, {"Official",20} }}
+        {"REG_SLUMS", new Dictionary<string, float> { {"Worker",60}, {"Foreman",5}, {"Elderly",10}, {"Student",10}, {"Shady",30}, {"Marginal",40} }},
+        {"REG_FACTORY", new Dictionary<string, float> { {"Worker",70}, {"Foreman",25}, {"Shady",10} }},
+        {"REG_RESIDENTIAL", new Dictionary<string, float> { {"Elderly",60}, {"Student",30}, {"Worker",10}, {"Veteran",10}, {"Bohemian",5} }},
+        {"REG_OLDTOWN", new Dictionary<string, float> { {"Elderly",20}, {"Professional",50}, {"Bohemian",30}, {"Aristocrat",10}, {"Veteran",20}, {"Student",5} }},
+        {"REG_BUSINESS", new Dictionary<string, float> { {"Businessman",60}, {"Entrepreneur",30}, {"Professional",10}, {"Official",10} }},
+        {"REG_CENTER", new Dictionary<string, float> { {"Businessman",30}, {"Official",60}, {"Professional",20}, {"Tourist",10}, {"VIP",10}, {"Aristocrat",5} }},
+        {"REG_COMMERCIAL", new Dictionary<string, float> { {"Businessman",15}, {"Entrepreneur",40}, {"Shopkeeper",50}, {"Student",5} }},
+        {"REG_REDLIGHT", new Dictionary<string, float> { {"Shady",70}, {"Bohemian",20}, {"Entrepreneur",10}, {"Marginal",20} }},
+        {"REG_PARK", new Dictionary<string, float> { {"Tourist",80}, {"Businessman",10}, {"Bohemian",10}, {"Marginal",5} }},
+        {"REG_ELITE", new Dictionary<string, float> { {"VIP",70}, {"Aristocrat",30}, {"Official",20} }}
     };
 
     // ==================== АРХЕТИПЫ ====================

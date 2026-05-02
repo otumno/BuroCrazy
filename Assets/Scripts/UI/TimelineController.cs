@@ -33,10 +33,8 @@ public class TimelineController : MonoBehaviour
     public void Show()
     {
         gameObject.SetActive(true);
-        if (periods == null || periods.Length == 0)
-        {
-            RebuildTimeline();
-        }
+        // Гарантированное перестроение при каждом показе
+        RebuildTimeline();
     }
     public void Hide() => gameObject.SetActive(false);
 
@@ -59,6 +57,11 @@ public class TimelineController : MonoBehaviour
 
         if (WaveManager.Instance != null)
             WaveManager.Instance.OnSpawnPlanUpdated += RebuildTimeline;
+    }
+
+    private void Start()
+    {
+        Hide();
     }
 
     private void OnDestroy()
@@ -120,9 +123,15 @@ public class TimelineController : MonoBehaviour
             };
         }
 
+        // Используем готовое расписание из WaveManager
         float[] spawnTimesArray = new float[0];
-        if (WaveManager.Instance?.dailySpawnPlan != null && WaveManager.Instance.dailySpawnPlan.Count > 0)
+        if (WaveManager.Instance?.SpawnSchedule != null && WaveManager.Instance.SpawnSchedule.Count > 0)
         {
+            spawnTimesArray = WaveManager.Instance.SpawnSchedule.ToArray();
+        }
+        else if (WaveManager.Instance?.dailySpawnPlan != null && WaveManager.Instance.dailySpawnPlan.Count > 0)
+        {
+            // Fallback - вычисляем вручную если SpawnSchedule не доступен
             var plan = WaveManager.Instance.dailySpawnPlan;
             List<float> times = new List<float>();
             foreach (var kvp in plan)
@@ -153,27 +162,19 @@ public class TimelineController : MonoBehaviour
             spawnTimesArray = times.ToArray();
         }
 
-        if (spawnTimesArray == null || spawnTimesArray.Length == 0)
-        {
-            List<float> fallbackTimes = new List<float>();
-            for (int i = 0; i < periodCount; i++)
-            {
-                float start = periods[i].startTime;
-                float end = start + periods[i].duration;
-                int fallbackCount = 3;
-                for (int j = 0; j < fallbackCount; j++)
-                {
-                    float t = start + (end - start) * j / fallbackCount;
-                    fallbackTimes.Add(t);
-                }
-            }
-            spawnTimesArray = fallbackTimes.ToArray();
-        }
-
         // Всегда очищаем перед перестройкой
         ClearTimeline();
 
-        Debug.Log($"[Timeline] Инициализация: {periods.Length} периодов, {spawnTimesArray.Length} иконок клиентов");
+        // Логируем информацию о запланированных клиентах
+        int totalClientsInPlan = 0;
+        if (WaveManager.Instance?.dailySpawnPlan != null)
+        {
+            foreach (var kvp in WaveManager.Instance.dailySpawnPlan)
+            {
+                totalClientsInPlan += kvp.Value.clientCount;
+            }
+        }
+        Debug.Log($"[Timeline] Инициализация: {periods.Length} периодов, {spawnTimesArray.Length} иконок (всего клиентов в плане: {totalClientsInPlan})");
         Initialize(periods, spawnTimesArray);
     }
 
