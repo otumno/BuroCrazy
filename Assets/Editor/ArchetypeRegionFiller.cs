@@ -14,10 +14,11 @@ public class ArchetypeRegionFiller : EditorWindow
     {
         FillArchetypes();
         FillRegions();
+        PopulateArchetypeDatabase();
 
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("<color=green>[ArchetypeRegionFiller] Парные архетипы и регионы успешно обновлены!</color>");
+        Debug.Log("<color=green>[ArchetypeRegionFiller] Парные архетипы, регионы и база данных архетипов успешно обновлены!</color>");
     }
 
     private static void FillArchetypes()
@@ -55,7 +56,7 @@ public class ArchetypeRegionFiller : EditorWindow
         // --- Общие параметры ---
         archetype.groupID = entry.groupID;
         archetype.archetypeID = $"{entry.archetypeID}_{genderSuffix.ToLower()}";
-        archetype.displayName = $"{entry.displayName} ({genderSuffix})";
+        archetype.displayName = entry.displayName;
         archetype.gender = (gender == Gender.Female) ? 0 : 1;
 
         archetype.patience = entry.patience;
@@ -143,6 +144,40 @@ public class ArchetypeRegionFiller : EditorWindow
 
             EditorUtility.SetDirty(region);
         }
+    }
+
+    /// <summary>
+    /// Загружает существующую базу данных архетипов и добавляет все найденные ClientArchetype ассеты.
+    /// </summary>
+    public static void PopulateArchetypeDatabase()
+    {
+        ArchetypeDatabase db = Resources.Load<ArchetypeDatabase>("Databases/ArchetypeDatabase");
+        if (db == null)
+        {
+            Debug.LogError("[ArchetypeRegionFiller] ArchetypeDatabase не найден в Resources/Databases/!");
+            return;
+        }
+
+        db.allArchetypes.Clear();
+        db.spawnWeights.Clear();
+
+        string[] guids = AssetDatabase.FindAssets("t:ClientArchetype", new[] { "Assets/Data/Archetypes" });
+        int count = 0;
+
+        foreach (string guid in guids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            ClientArchetype archetype = AssetDatabase.LoadAssetAtPath<ClientArchetype>(path);
+            if (archetype != null)
+            {
+                db.allArchetypes.Add(archetype);
+                db.spawnWeights.Add(new ArchetypeDatabase.ArchetypeWeight { archetype = archetype, weight = 10f });
+                count++;
+            }
+        }
+
+        EditorUtility.SetDirty(db);
+        Debug.Log($"<color=cyan>[ArchetypeRegionFiller] Добавлено архетипов в базу: {count}</color>");
     }
 }
 

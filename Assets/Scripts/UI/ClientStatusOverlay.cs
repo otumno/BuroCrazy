@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using Managers;
 
 public class ClientStatusOverlay : MonoBehaviour
@@ -18,6 +19,9 @@ public class ClientStatusOverlay : MonoBehaviour
     [Header("Прогресс")]
     public Slider progressSlider;
     public GameObject moneyIcon;
+
+    [Header("Архетип")]
+    public TextMeshProUGUI archetypeText;
 
     private ClientPathfinding _client;
     private Canvas _canvas;
@@ -40,8 +44,18 @@ public class ClientStatusOverlay : MonoBehaviour
             // --- ВАЖНОЕ ИЗМЕНЕНИЕ: Просто ставим огромный Order на дефолтном слое ---
             // Это работает надежнее, если слоя "UI" не существует
             _canvas.overrideSorting = true;
-            _canvas.sortingOrder = 32000; 
+            _canvas.sortingOrder = 32000;
             // ------------------------------------------------------------------------
+        }
+
+        // Заполняем текст архетипа
+        if (archetypeText != null)
+        {
+            var visual = _client?.GetVisuals();
+            if (visual != null && visual.currentArchetype != null)
+                archetypeText.text = visual.currentArchetype.displayName;
+            else
+                archetypeText.text = "";
         }
 
         _isInitialized = true;

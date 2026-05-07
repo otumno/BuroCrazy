@@ -31,7 +31,7 @@ namespace BuroDebug
             canvasGO.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             canvasGO.AddComponent<GraphicRaycaster>();
 
-            // Панель меню
+            // Панель меню (основа для ScrollView и infoText)
             panel = new GameObject("DebugPanel");
             panel.transform.SetParent(canvasGO.transform, false);
 
@@ -45,7 +45,7 @@ namespace BuroDebug
             var panelImage = panel.AddComponent<Image>();
             panelImage.color = new Color(0, 0, 0, 0.8f);
 
-            // Info текст
+            // Info текст (ВНЕ ScrollView, всегда виден)
             var infoGO = new GameObject("InfoText");
             infoGO.transform.SetParent(panel.transform, false);
             var infoRect = infoGO.AddComponent<RectTransform>();
@@ -64,359 +64,77 @@ namespace BuroDebug
             debugMenu.menuPanel = panel;
             debugMenu.infoText = infoText;
 
-            // Кнопки для групп
-            CreateGroupButtons(canvasGO.transform);
+            // ScrollView -> Viewport -> Content
+            var scrollViewGO = new GameObject("ScrollView");
+            scrollViewGO.transform.SetParent(panel.transform, false);
+            var scrollViewRect = scrollViewGO.AddComponent<RectTransform>();
+            scrollViewRect.anchorMin = new Vector2(0, 0);
+            scrollViewRect.anchorMax = new Vector2(1, 1);
+            scrollViewRect.pivot = new Vector2(0.5f, 1);
+            scrollViewRect.anchoredPosition = new Vector2(0, -130);
+            scrollViewRect.sizeDelta = new Vector2(-10, -140);
+
+            var scrollRect = scrollViewGO.AddComponent<ScrollRect>();
+            scrollRect.horizontal = false;
+            scrollRect.vertical = true;
+
+            var viewportGO = new GameObject("Viewport");
+            viewportGO.transform.SetParent(scrollViewGO.transform, false);
+            var viewportRect = viewportGO.AddComponent<RectTransform>();
+            viewportRect.anchorMin = Vector2.zero;
+            viewportRect.anchorMax = Vector2.one;
+            viewportRect.pivot = Vector2.up;
+            viewportRect.sizeDelta = Vector2.zero;
+
+            var viewportMask = viewportGO.AddComponent<Mask>();
+            viewportMask.showMaskGraphic = false;
+
+            var viewportImage = viewportGO.AddComponent<Image>();
+            viewportImage.color = Color.white;
+
+            scrollRect.viewport = viewportRect;
+
+            var contentGO = new GameObject("Content");
+            contentGO.transform.SetParent(viewportGO.transform, false);
+            var contentRect = contentGO.AddComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0, 1);
+            contentRect.anchorMax = new Vector2(1, 1);
+            contentRect.pivot = new Vector2(0.5f, 1);
+            contentRect.sizeDelta = new Vector2(-10, 0);
+            contentRect.anchoredPosition = new Vector2(0, 0);
+
+            var verticalLayout = contentGO.AddComponent<VerticalLayoutGroup>();
+            verticalLayout.padding = new RectOffset(5, 5, 5, 5);
+            verticalLayout.spacing = 3;
+            verticalLayout.childAlignment = TextAnchor.UpperCenter;
+            verticalLayout.childControlWidth = true;
+            verticalLayout.childControlHeight = true;
+            verticalLayout.childForceExpandWidth = true;
+            verticalLayout.childForceExpandHeight = false;
+
+            var contentFitter = contentGO.AddComponent<ContentSizeFitter>();
+            contentFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scrollRect.content = contentRect;
+
+            // Кнопки для групп - теперь под Content
+            CreateGroupButtons(contentRect);
 
             panel.SetActive(false);
         }
 
         private void CreateGroupButtons(Transform parent)
         {
-            var db = Resources.Load<ArchetypeDatabase>("Databases/ArchetypeDatabase");
-            if (db == null || db.allArchetypes == null) return;
-
-            var groups = new HashSet<string>();
-            foreach (var a in db.allArchetypes)
-            {
-                if (a != null) groups.Add(a.groupID);
-            }
-
-            float yPos = -90;
-            int index = 0;
-
-            foreach (var group in groups)
-            {
-                var btnGO = new GameObject($"Btn_{group}");
-                btnGO.transform.SetParent(panel.transform, false);
-
-                var btnRect = btnGO.AddComponent<RectTransform>();
-                btnRect.anchorMin = new Vector2(0, 1);
-                btnRect.anchorMax = new Vector2(1, 1);
-                btnRect.pivot = new Vector2(0.5f, 1);
-                btnRect.anchoredPosition = new Vector2(0, yPos);
-                btnRect.sizeDelta = new Vector2(-20, 22);
-
-                var btnImage = btnGO.AddComponent<Image>();
-                btnImage.color = new Color(0.2f, 0.4f, 0.8f, 1f);
-
-                var btn = btnGO.AddComponent<Button>();
-                btn.onClick.AddListener(() => debugMenu.SpawnByGroup(group));
-
-                // Текст кнопки
-                var textGO = new GameObject("Text");
-                textGO.transform.SetParent(btnGO.transform, false);
-                var textRect = textGO.AddComponent<RectTransform>();
-                textRect.anchorMin = Vector2.zero;
-                textRect.anchorMax = Vector2.one;
-                textRect.sizeDelta = Vector2.zero;
-
-                var text = textGO.AddComponent<Text>();
-                text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-                text.fontSize = 12;
-                text.color = Color.white;
-                text.alignment = TextAnchor.MiddleCenter;
-                text.text = $"Spawn {group}";
-
-                yPos -= 25;
-                index++;
-            }
-
-            // Кнопка "+10" для быстрого спавна
-            var spawn10BtnGO = new GameObject("Btn_Spawn10");
-            spawn10BtnGO.transform.SetParent(panel.transform, false);
-            var spawn10BtnRect = spawn10BtnGO.AddComponent<RectTransform>();
-            spawn10BtnRect.anchorMin = new Vector2(0, 1);
-            spawn10BtnRect.anchorMax = new Vector2(1, 1);
-            spawn10BtnRect.pivot = new Vector2(0.5f, 1);
-            spawn10BtnRect.anchoredPosition = new Vector2(0, yPos);
-            spawn10BtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var spawn10BtnImage = spawn10BtnGO.AddComponent<Image>();
-            spawn10BtnImage.color = new Color(0.2f, 0.6f, 0.3f, 1f);
-
-            var spawn10Btn = spawn10BtnGO.AddComponent<Button>();
-            spawn10Btn.onClick.AddListener(() => debugMenu.SpawnMultiple(10));
-
-            var spawn10TextGO = new GameObject("Text");
-            spawn10TextGO.transform.SetParent(spawn10BtnGO.transform, false);
-            var spawn10TextRect = spawn10TextGO.AddComponent<RectTransform>();
-            spawn10TextRect.anchorMin = Vector2.zero;
-            spawn10TextRect.anchorMax = Vector2.one;
-            spawn10TextRect.sizeDelta = Vector2.zero;
-
-            var spawn10Text = spawn10TextGO.AddComponent<Text>();
-            spawn10Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            spawn10Text.fontSize = 12;
-            spawn10Text.color = Color.white;
-            spawn10Text.alignment = TextAnchor.MiddleCenter;
-            spawn10Text.text = "+10 клиентов";
-
-            yPos -= 25;
-
-            // === КНОПКИ ДЛЯ ПОЖИЛЫХ (ELDERLY) ===
-            // Кнопка "Спавн пожилого 1"
-            var spawnElderly1BtnGO = new GameObject("Btn_Elderly_1");
-            spawnElderly1BtnGO.transform.SetParent(panel.transform, false);
-            var spawnElderly1BtnRect = spawnElderly1BtnGO.AddComponent<RectTransform>();
-            spawnElderly1BtnRect.anchorMin = new Vector2(0, 1);
-            spawnElderly1BtnRect.anchorMax = new Vector2(1, 1);
-            spawnElderly1BtnRect.pivot = new Vector2(0.5f, 1);
-            spawnElderly1BtnRect.anchoredPosition = new Vector2(0, yPos);
-            spawnElderly1BtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var spawnElderly1BtnImage = spawnElderly1BtnGO.AddComponent<Image>();
-            spawnElderly1BtnImage.color = new Color(0.5f, 0.3f, 0.6f, 1f);
-
-            var spawnElderly1Btn = spawnElderly1BtnGO.AddComponent<Button>();
-            spawnElderly1Btn.onClick.AddListener(() => debugMenu.SpawnElderly());
-
-            var spawnElderly1TextGO = new GameObject("Text");
-            spawnElderly1TextGO.transform.SetParent(spawnElderly1BtnGO.transform, false);
-            var spawnElderly1TextRect = spawnElderly1TextGO.AddComponent<RectTransform>();
-            spawnElderly1TextRect.anchorMin = Vector2.zero;
-            spawnElderly1TextRect.anchorMax = Vector2.one;
-            spawnElderly1TextRect.sizeDelta = Vector2.zero;
-
-            var spawnElderly1Text = spawnElderly1TextGO.AddComponent<Text>();
-            spawnElderly1Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            spawnElderly1Text.fontSize = 12;
-            spawnElderly1Text.color = Color.white;
-            spawnElderly1Text.alignment = TextAnchor.MiddleCenter;
-            spawnElderly1Text.text = "Спавн пожилого 1";
-
-            yPos -= 25;
-
-            // Кнопка "Спавн пожилого 10"
-            var spawnElderly10BtnGO = new GameObject("Btn_Elderly_10");
-            spawnElderly10BtnGO.transform.SetParent(panel.transform, false);
-            var spawnElderly10BtnRect = spawnElderly10BtnGO.AddComponent<RectTransform>();
-            spawnElderly10BtnRect.anchorMin = new Vector2(0, 1);
-            spawnElderly10BtnRect.anchorMax = new Vector2(1, 1);
-            spawnElderly10BtnRect.pivot = new Vector2(0.5f, 1);
-            spawnElderly10BtnRect.anchoredPosition = new Vector2(0, yPos);
-            spawnElderly10BtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var spawnElderly10BtnImage = spawnElderly10BtnGO.AddComponent<Image>();
-            spawnElderly10BtnImage.color = new Color(0.4f, 0.25f, 0.5f, 1f);
-
-            var spawnElderly10Btn = spawnElderly10BtnGO.AddComponent<Button>();
-            spawnElderly10Btn.onClick.AddListener(() => debugMenu.SpawnElderlyMultiple(10));
-
-            var spawnElderly10TextGO = new GameObject("Text");
-            spawnElderly10TextGO.transform.SetParent(spawnElderly10BtnGO.transform, false);
-            var spawnElderly10TextRect = spawnElderly10TextGO.AddComponent<RectTransform>();
-            spawnElderly10TextRect.anchorMin = Vector2.zero;
-            spawnElderly10TextRect.anchorMax = Vector2.one;
-            spawnElderly10TextRect.sizeDelta = Vector2.zero;
-
-            var spawnElderly10Text = spawnElderly10TextGO.AddComponent<Text>();
-            spawnElderly10Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            spawnElderly10Text.fontSize = 12;
-            spawnElderly10Text.color = Color.white;
-            spawnElderly10Text.alignment = TextAnchor.MiddleCenter;
-            spawnElderly10Text.text = "Спавн пожилого 10";
-
-            yPos -= 25;
-
-            // Кнопка "Спавн пожилого 100"
-            var spawnElderly100BtnGO = new GameObject("Btn_Elderly_100");
-            spawnElderly100BtnGO.transform.SetParent(panel.transform, false);
-            var spawnElderly100BtnRect = spawnElderly100BtnGO.AddComponent<RectTransform>();
-            spawnElderly100BtnRect.anchorMin = new Vector2(0, 1);
-            spawnElderly100BtnRect.anchorMax = new Vector2(1, 1);
-            spawnElderly100BtnRect.pivot = new Vector2(0.5f, 1);
-            spawnElderly100BtnRect.anchoredPosition = new Vector2(0, yPos);
-            spawnElderly100BtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var spawnElderly100BtnImage = spawnElderly100BtnGO.AddComponent<Image>();
-            spawnElderly100BtnImage.color = new Color(0.3f, 0.2f, 0.4f, 1f);
-
-            var spawnElderly100Btn = spawnElderly100BtnGO.AddComponent<Button>();
-            spawnElderly100Btn.onClick.AddListener(() => debugMenu.SpawnElderlyMultiple(100));
-
-            var spawnElderly100TextGO = new GameObject("Text");
-            spawnElderly100TextGO.transform.SetParent(spawnElderly100BtnGO.transform, false);
-            var spawnElderly100TextRect = spawnElderly100TextGO.AddComponent<RectTransform>();
-            spawnElderly100TextRect.anchorMin = Vector2.zero;
-            spawnElderly100TextRect.anchorMax = Vector2.one;
-            spawnElderly100TextRect.sizeDelta = Vector2.zero;
-
-            var spawnElderly100Text = spawnElderly100TextGO.AddComponent<Text>();
-            spawnElderly100Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            spawnElderly100Text.fontSize = 12;
-            spawnElderly100Text.color = Color.white;
-            spawnElderly100Text.alignment = TextAnchor.MiddleCenter;
-            spawnElderly100Text.text = "Спавн пожилого 100";
-
-            yPos -= 25;
-
-            // Кнопка "Спавн пожилого (К Директору)"
-            var spawnElderlyDirBtnGO = new GameObject("Btn_Elderly_Director");
-            spawnElderlyDirBtnGO.transform.SetParent(panel.transform, false);
-            var spawnElderlyDirBtnRect = spawnElderlyDirBtnGO.AddComponent<RectTransform>();
-            spawnElderlyDirBtnRect.anchorMin = new Vector2(0, 1);
-            spawnElderlyDirBtnRect.anchorMax = new Vector2(1, 1);
-            spawnElderlyDirBtnRect.pivot = new Vector2(0.5f, 1);
-            spawnElderlyDirBtnRect.anchoredPosition = new Vector2(0, yPos);
-            spawnElderlyDirBtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var spawnElderlyDirBtnImage = spawnElderlyDirBtnGO.AddComponent<Image>();
-            spawnElderlyDirBtnImage.color = new Color(0.6f, 0.2f, 0.2f, 1f);
-
-            var spawnElderlyDirBtn = spawnElderlyDirBtnGO.AddComponent<Button>();
-            spawnElderlyDirBtn.onClick.AddListener(() => debugMenu.SpawnElderlyForDirector());
-
-            var spawnElderlyDirTextGO = new GameObject("Text");
-            spawnElderlyDirTextGO.transform.SetParent(spawnElderlyDirBtnGO.transform, false);
-            var spawnElderlyDirTextRect = spawnElderlyDirTextGO.AddComponent<RectTransform>();
-            spawnElderlyDirTextRect.anchorMin = Vector2.zero;
-            spawnElderlyDirTextRect.anchorMax = Vector2.one;
-            spawnElderlyDirTextRect.sizeDelta = Vector2.zero;
-
-            var spawnElderlyDirText = spawnElderlyDirTextGO.AddComponent<Text>();
-            spawnElderlyDirText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            spawnElderlyDirText.fontSize = 12;
-            spawnElderlyDirText.color = Color.white;
-            spawnElderlyDirText.alignment = TextAnchor.MiddleCenter;
-            spawnElderlyDirText.text = "Бабушка (К Директору)";
-
-            yPos -= 25;
-
-            // Кнопка "Показать клиентов"
-            var showBtnGO = new GameObject("Btn_ShowClients");
-            showBtnGO.transform.SetParent(panel.transform, false);
-            var showBtnRect = showBtnGO.AddComponent<RectTransform>();
-            showBtnRect.anchorMin = new Vector2(0, 1);
-            showBtnRect.anchorMax = new Vector2(1, 1);
-            showBtnRect.pivot = new Vector2(0.5f, 1);
-            showBtnRect.anchoredPosition = new Vector2(0, yPos);
-            showBtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var showBtnImage = showBtnGO.AddComponent<Image>();
-            showBtnImage.color = new Color(0.4f, 0.2f, 0.2f, 1f);
-
-            var showBtn = showBtnGO.AddComponent<Button>();
-            showBtn.onClick.AddListener(() => debugMenu.ShowActiveClients());
-
-            var showTextGO = new GameObject("Text");
-            showTextGO.transform.SetParent(showBtnGO.transform, false);
-            var showTextRect = showTextGO.AddComponent<RectTransform>();
-            showTextRect.anchorMin = Vector2.zero;
-            showTextRect.anchorMax = Vector2.one;
-            showTextRect.sizeDelta = Vector2.zero;
-
-            var showText = showTextGO.AddComponent<Text>();
-            showText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            showText.fontSize = 12;
-            showText.color = Color.white;
-            showText.alignment = TextAnchor.MiddleCenter;
-            showText.text = "Показать клиентов";
-
-            yPos -= 25;
-
-            // Кнопка "Сюжетный гость №1"
-            var specialVisitorBtnGO = new GameObject("Btn_SpecialVisitor");
-            specialVisitorBtnGO.transform.SetParent(panel.transform, false);
-            var specialVisitorBtnRect = specialVisitorBtnGO.AddComponent<RectTransform>();
-            specialVisitorBtnRect.anchorMin = new Vector2(0, 1);
-            specialVisitorBtnRect.anchorMax = new Vector2(1, 1);
-            specialVisitorBtnRect.pivot = new Vector2(0.5f, 1);
-            specialVisitorBtnRect.anchoredPosition = new Vector2(0, yPos);
-            specialVisitorBtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var specialVisitorBtnImage = specialVisitorBtnGO.AddComponent<Image>();
-            specialVisitorBtnImage.color = new Color(0.8f, 0.4f, 0.2f, 1f);
-
-            var specialVisitorBtn = specialVisitorBtnGO.AddComponent<Button>();
-            specialVisitorBtn.onClick.AddListener(() => debugMenu.SpawnFirstSpecialVisitor());
-
-            var specialVisitorTextGO = new GameObject("Text");
-            specialVisitorTextGO.transform.SetParent(specialVisitorBtnGO.transform, false);
-            var specialVisitorTextRect = specialVisitorTextGO.AddComponent<RectTransform>();
-            specialVisitorTextRect.anchorMin = Vector2.zero;
-            specialVisitorTextRect.anchorMax = Vector2.one;
-            specialVisitorTextRect.sizeDelta = Vector2.zero;
-
-            var specialVisitorText = specialVisitorTextGO.AddComponent<Text>();
-            specialVisitorText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            specialVisitorText.fontSize = 12;
-            specialVisitorText.color = Color.white;
-            specialVisitorText.alignment = TextAnchor.MiddleCenter;
-            specialVisitorText.text = "Сюжетный гость №1";
-
-            yPos -= 25;
-
-            // Кнопка "Тест: Клоун"
-            var testClownBtnGO = new GameObject("Btn_TestClown");
-            testClownBtnGO.transform.SetParent(panel.transform, false);
-            var testClownBtnRect = testClownBtnGO.AddComponent<RectTransform>();
-            testClownBtnRect.anchorMin = new Vector2(0, 1);
-            testClownBtnRect.anchorMax = new Vector2(1, 1);
-            testClownBtnRect.pivot = new Vector2(0.5f, 1);
-            testClownBtnRect.anchoredPosition = new Vector2(0, yPos);
-            testClownBtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var testClownBtnImage = testClownBtnGO.AddComponent<Image>();
-            testClownBtnImage.color = new Color(0.8f, 0.4f, 0.8f, 1f); // фиолетовый
-
-            var testClownBtn = testClownBtnGO.AddComponent<Button>();
-            testClownBtn.onClick.AddListener(() => debugMenu.SpawnTestClown());
-
-            var testClownTextGO = new GameObject("Text");
-            testClownTextGO.transform.SetParent(testClownBtnGO.transform, false);
-            var testClownTextRect = testClownTextGO.AddComponent<RectTransform>();
-            testClownTextRect.anchorMin = Vector2.zero;
-            testClownTextRect.anchorMax = Vector2.one;
-            testClownTextRect.sizeDelta = Vector2.zero;
-
-            var testClownText = testClownTextGO.AddComponent<Text>();
-            testClownText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            testClownText.fontSize = 12;
-            testClownText.color = Color.white;
-            testClownText.alignment = TextAnchor.MiddleCenter;
-            testClownText.text = "Тест: Клоун";
-
-            yPos -= 25;
-
-            // Кнопка "Тест: Уборщики"
-            var testCleanersBtnGO = new GameObject("Btn_TestCleaners");
-            testCleanersBtnGO.transform.SetParent(panel.transform, false);
-            var testCleanersBtnRect = testCleanersBtnGO.AddComponent<RectTransform>();
-            testCleanersBtnRect.anchorMin = new Vector2(0, 1);
-            testCleanersBtnRect.anchorMax = new Vector2(1, 1);
-            testCleanersBtnRect.pivot = new Vector2(0.5f, 1);
-            testCleanersBtnRect.anchoredPosition = new Vector2(0, yPos);
-            testCleanersBtnRect.sizeDelta = new Vector2(-20, 22);
-
-            var testCleanersBtnImage = testCleanersBtnGO.AddComponent<Image>();
-            testCleanersBtnImage.color = new Color(0.4f, 0.8f, 0.8f, 1f); // бирюзовый
-
-            var testCleanersBtn = testCleanersBtnGO.AddComponent<Button>();
-            testCleanersBtn.onClick.AddListener(() => debugMenu.SpawnTestCleaners());
-
-            var testCleanersTextGO = new GameObject("Text");
-            testCleanersTextGO.transform.SetParent(testCleanersBtnGO.transform, false);
-            var testCleanersTextRect = testCleanersTextGO.AddComponent<RectTransform>();
-            testCleanersTextRect.anchorMin = Vector2.zero;
-            testCleanersTextRect.anchorMax = Vector2.one;
-            testCleanersTextRect.sizeDelta = Vector2.zero;
-
-            var testCleanersText = testCleanersTextGO.AddComponent<Text>();
-            testCleanersText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            testCleanersText.fontSize = 12;
-            testCleanersText.color = Color.white;
-            testCleanersText.alignment = TextAnchor.MiddleCenter;
-            testCleanersText.text = "Тест: Уборщики";
-
-            // Кнопка "Анлок всех регионов"
+            // === КНОПКА "АНЛОК ВСЕХ РЕГИОНОВ" (в самом верху, повыше) ===
             var unlockAllBtnGO = new GameObject("Btn_UnlockAllRegions");
-            unlockAllBtnGO.transform.SetParent(panel.transform, false);
+            unlockAllBtnGO.transform.SetParent(parent, false);
             var unlockAllBtnRect = unlockAllBtnGO.AddComponent<RectTransform>();
             unlockAllBtnRect.anchorMin = new Vector2(0, 1);
             unlockAllBtnRect.anchorMax = new Vector2(1, 1);
             unlockAllBtnRect.pivot = new Vector2(0.5f, 1);
-            unlockAllBtnRect.anchoredPosition = new Vector2(0, yPos);
-            unlockAllBtnRect.sizeDelta = new Vector2(-20, 22);
+            unlockAllBtnRect.anchoredPosition = Vector2.zero;
+            unlockAllBtnRect.sizeDelta = new Vector2(-10, 26);
 
             var unlockAllBtnImage = unlockAllBtnGO.AddComponent<Image>();
             unlockAllBtnImage.color = new Color(0.2f, 0.8f, 0.2f, 1f); // зелёный
@@ -437,6 +155,230 @@ namespace BuroDebug
             unlockAllText.color = Color.white;
             unlockAllText.alignment = TextAnchor.MiddleCenter;
             unlockAllText.text = "Анлок всех регионов";
+
+            // === АВТО-КНОПКИ ДЛЯ ГРУПП ===
+            var db = Resources.Load<ArchetypeDatabase>("Databases/ArchetypeDatabase");
+            if (db != null && db.allArchetypes != null)
+            {
+                var groups = new HashSet<string>();
+                foreach (var a in db.allArchetypes)
+                {
+                    if (a != null) groups.Add(a.groupID);
+                }
+
+                foreach (var group in groups)
+                {
+                    var btnGO = new GameObject($"Btn_{group}");
+                    btnGO.transform.SetParent(parent, false);
+
+                    var btnRect = btnGO.AddComponent<RectTransform>();
+                    btnRect.anchorMin = new Vector2(0, 1);
+                    btnRect.anchorMax = new Vector2(1, 1);
+                    btnRect.pivot = new Vector2(0.5f, 1);
+                    btnRect.anchoredPosition = Vector2.zero;
+                    btnRect.sizeDelta = new Vector2(-10, 18);
+
+                    var btnImage = btnGO.AddComponent<Image>();
+                    btnImage.color = new Color(0.2f, 0.4f, 0.8f, 1f);
+
+                    var btn = btnGO.AddComponent<Button>();
+                    btn.onClick.AddListener(() => debugMenu.SpawnByGroup(group));
+
+                    var textGO = new GameObject("Text");
+                    textGO.transform.SetParent(btnGO.transform, false);
+                    var textRect = textGO.AddComponent<RectTransform>();
+                    textRect.anchorMin = Vector2.zero;
+                    textRect.anchorMax = Vector2.one;
+                    textRect.sizeDelta = Vector2.zero;
+
+                    var text = textGO.AddComponent<Text>();
+                    text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+                    text.fontSize = 11;
+                    text.color = Color.white;
+                    text.alignment = TextAnchor.MiddleCenter;
+                    text.text = $"Spawn {group}";
+                }
+            }
+
+            // === КНОПКА "SPAWN ELDERLY" (одна вместо нескольких) ===
+            var spawnElderlyBtnGO = new GameObject("Btn_Elderly");
+            spawnElderlyBtnGO.transform.SetParent(parent, false);
+            var spawnElderlyBtnRect = spawnElderlyBtnGO.AddComponent<RectTransform>();
+            spawnElderlyBtnRect.anchorMin = new Vector2(0, 1);
+            spawnElderlyBtnRect.anchorMax = new Vector2(1, 1);
+            spawnElderlyBtnRect.pivot = new Vector2(0.5f, 1);
+            spawnElderlyBtnRect.anchoredPosition = Vector2.zero;
+            spawnElderlyBtnRect.sizeDelta = new Vector2(-10, 20);
+
+            var spawnElderlyBtnImage = spawnElderlyBtnGO.AddComponent<Image>();
+            spawnElderlyBtnImage.color = new Color(0.5f, 0.3f, 0.6f, 1f);
+
+            var spawnElderlyBtn = spawnElderlyBtnGO.AddComponent<Button>();
+            spawnElderlyBtn.onClick.AddListener(() => debugMenu.SpawnElderly());
+
+            var spawnElderlyTextGO = new GameObject("Text");
+            spawnElderlyTextGO.transform.SetParent(spawnElderlyBtnGO.transform, false);
+            var spawnElderlyTextRect = spawnElderlyTextGO.AddComponent<RectTransform>();
+            spawnElderlyTextRect.anchorMin = Vector2.zero;
+            spawnElderlyTextRect.anchorMax = Vector2.one;
+            spawnElderlyTextRect.sizeDelta = Vector2.zero;
+
+            var spawnElderlyText = spawnElderlyTextGO.AddComponent<Text>();
+            spawnElderlyText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            spawnElderlyText.fontSize = 11;
+            spawnElderlyText.color = Color.white;
+            spawnElderlyText.alignment = TextAnchor.MiddleCenter;
+            spawnElderlyText.text = "Spawn Elderly";
+
+            // === КНОПКА "+10 КЛИЕНТОВ" ===
+            var spawn10BtnGO = new GameObject("Btn_Spawn10");
+            spawn10BtnGO.transform.SetParent(parent, false);
+            var spawn10BtnRect = spawn10BtnGO.AddComponent<RectTransform>();
+            spawn10BtnRect.anchorMin = new Vector2(0, 1);
+            spawn10BtnRect.anchorMax = new Vector2(1, 1);
+            spawn10BtnRect.pivot = new Vector2(0.5f, 1);
+            spawn10BtnRect.anchoredPosition = Vector2.zero;
+            spawn10BtnRect.sizeDelta = new Vector2(-10, 20);
+
+            var spawn10BtnImage = spawn10BtnGO.AddComponent<Image>();
+            spawn10BtnImage.color = new Color(0.2f, 0.6f, 0.3f, 1f);
+
+            var spawn10Btn = spawn10BtnGO.AddComponent<Button>();
+            spawn10Btn.onClick.AddListener(() => debugMenu.SpawnMultiple(10));
+
+            var spawn10TextGO = new GameObject("Text");
+            spawn10TextGO.transform.SetParent(spawn10BtnGO.transform, false);
+            var spawn10TextRect = spawn10TextGO.AddComponent<RectTransform>();
+            spawn10TextRect.anchorMin = Vector2.zero;
+            spawn10TextRect.anchorMax = Vector2.one;
+            spawn10TextRect.sizeDelta = Vector2.zero;
+
+            var spawn10Text = spawn10TextGO.AddComponent<Text>();
+            spawn10Text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            spawn10Text.fontSize = 11;
+            spawn10Text.color = Color.white;
+            spawn10Text.alignment = TextAnchor.MiddleCenter;
+            spawn10Text.text = "+10 клиентов";
+
+            // === КНОПКА "ПОКАЗАТЬ КЛИЕНТОВ" ===
+            var showBtnGO = new GameObject("Btn_ShowClients");
+            showBtnGO.transform.SetParent(parent, false);
+            var showBtnRect = showBtnGO.AddComponent<RectTransform>();
+            showBtnRect.anchorMin = new Vector2(0, 1);
+            showBtnRect.anchorMax = new Vector2(1, 1);
+            showBtnRect.pivot = new Vector2(0.5f, 1);
+            showBtnRect.anchoredPosition = Vector2.zero;
+            showBtnRect.sizeDelta = new Vector2(-10, 20);
+
+            var showBtnImage = showBtnGO.AddComponent<Image>();
+            showBtnImage.color = new Color(0.4f, 0.2f, 0.2f, 1f);
+
+            var showBtn = showBtnGO.AddComponent<Button>();
+            showBtn.onClick.AddListener(() => debugMenu.ShowActiveClients());
+
+            var showTextGO = new GameObject("Text");
+            showTextGO.transform.SetParent(showBtnGO.transform, false);
+            var showTextRect = showTextGO.AddComponent<RectTransform>();
+            showTextRect.anchorMin = Vector2.zero;
+            showTextRect.anchorMax = Vector2.one;
+            showTextRect.sizeDelta = Vector2.zero;
+
+            var showText = showTextGO.AddComponent<Text>();
+            showText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            showText.fontSize = 11;
+            showText.color = Color.white;
+            showText.alignment = TextAnchor.MiddleCenter;
+            showText.text = "Показать клиентов";
+
+            // === КНОПКА "СЮЖЕТНЫЙ ГОСТЬ №1" ===
+            var specialVisitorBtnGO = new GameObject("Btn_SpecialVisitor");
+            specialVisitorBtnGO.transform.SetParent(parent, false);
+            var specialVisitorBtnRect = specialVisitorBtnGO.AddComponent<RectTransform>();
+            specialVisitorBtnRect.anchorMin = new Vector2(0, 1);
+            specialVisitorBtnRect.anchorMax = new Vector2(1, 1);
+            specialVisitorBtnRect.pivot = new Vector2(0.5f, 1);
+            specialVisitorBtnRect.anchoredPosition = Vector2.zero;
+            specialVisitorBtnRect.sizeDelta = new Vector2(-10, 20);
+
+            var specialVisitorBtnImage = specialVisitorBtnGO.AddComponent<Image>();
+            specialVisitorBtnImage.color = new Color(0.8f, 0.4f, 0.2f, 1f);
+
+            var specialVisitorBtn = specialVisitorBtnGO.AddComponent<Button>();
+            specialVisitorBtn.onClick.AddListener(() => debugMenu.SpawnFirstSpecialVisitor());
+
+            var specialVisitorTextGO = new GameObject("Text");
+            specialVisitorTextGO.transform.SetParent(specialVisitorBtnGO.transform, false);
+            var specialVisitorTextRect = specialVisitorTextGO.AddComponent<RectTransform>();
+            specialVisitorTextRect.anchorMin = Vector2.zero;
+            specialVisitorTextRect.anchorMax = Vector2.one;
+            specialVisitorTextRect.sizeDelta = Vector2.zero;
+
+            var specialVisitorText = specialVisitorTextGO.AddComponent<Text>();
+            specialVisitorText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            specialVisitorText.fontSize = 11;
+            specialVisitorText.color = Color.white;
+            specialVisitorText.alignment = TextAnchor.MiddleCenter;
+            specialVisitorText.text = "Сюжетный гость №1";
+
+            // === КНОПКА "ТЕСТ: КЛОУН" ===
+            var testClownBtnGO = new GameObject("Btn_TestClown");
+            testClownBtnGO.transform.SetParent(parent, false);
+            var testClownBtnRect = testClownBtnGO.AddComponent<RectTransform>();
+            testClownBtnRect.anchorMin = new Vector2(0, 1);
+            testClownBtnRect.anchorMax = new Vector2(1, 1);
+            testClownBtnRect.pivot = new Vector2(0.5f, 1);
+            testClownBtnRect.anchoredPosition = Vector2.zero;
+            testClownBtnRect.sizeDelta = new Vector2(-10, 20);
+
+            var testClownBtnImage = testClownBtnGO.AddComponent<Image>();
+            testClownBtnImage.color = new Color(0.8f, 0.4f, 0.8f, 1f); // фиолетовый
+
+            var testClownBtn = testClownBtnGO.AddComponent<Button>();
+            testClownBtn.onClick.AddListener(() => debugMenu.SpawnTestClown());
+
+            var testClownTextGO = new GameObject("Text");
+            testClownTextGO.transform.SetParent(testClownBtnGO.transform, false);
+            var testClownTextRect = testClownTextGO.AddComponent<RectTransform>();
+            testClownTextRect.anchorMin = Vector2.zero;
+            testClownTextRect.anchorMax = Vector2.one;
+            testClownTextRect.sizeDelta = Vector2.zero;
+
+            var testClownText = testClownTextGO.AddComponent<Text>();
+            testClownText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            testClownText.fontSize = 11;
+            testClownText.color = Color.white;
+            testClownText.alignment = TextAnchor.MiddleCenter;
+            testClownText.text = "Тест: Клоун";
+
+            // === КНОПКА "ТЕСТ: УБОРЩИКИ" ===
+            var testCleanersBtnGO = new GameObject("Btn_TestCleaners");
+            testCleanersBtnGO.transform.SetParent(parent, false);
+            var testCleanersBtnRect = testCleanersBtnGO.AddComponent<RectTransform>();
+            testCleanersBtnRect.anchorMin = new Vector2(0, 1);
+            testCleanersBtnRect.anchorMax = new Vector2(1, 1);
+            testCleanersBtnRect.pivot = new Vector2(0.5f, 1);
+            testCleanersBtnRect.anchoredPosition = Vector2.zero;
+            testCleanersBtnRect.sizeDelta = new Vector2(-10, 20);
+
+            var testCleanersBtnImage = testCleanersBtnGO.AddComponent<Image>();
+            testCleanersBtnImage.color = new Color(0.4f, 0.8f, 0.8f, 1f); // бирюзовый
+
+            var testCleanersBtn = testCleanersBtnGO.AddComponent<Button>();
+            testCleanersBtn.onClick.AddListener(() => debugMenu.SpawnTestCleaners());
+
+            var testCleanersTextGO = new GameObject("Text");
+            testCleanersTextGO.transform.SetParent(testCleanersBtnGO.transform, false);
+            var testCleanersTextRect = testCleanersTextGO.AddComponent<RectTransform>();
+            testCleanersTextRect.anchorMin = Vector2.zero;
+            testCleanersTextRect.anchorMax = Vector2.one;
+            testCleanersTextRect.sizeDelta = Vector2.zero;
+
+            var testCleanersText = testCleanersTextGO.AddComponent<Text>();
+            testCleanersText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            testCleanersText.fontSize = 11;
+            testCleanersText.color = Color.white;
+            testCleanersText.alignment = TextAnchor.MiddleCenter;
+            testCleanersText.text = "Тест: Уборщики";
         }
     }
 }

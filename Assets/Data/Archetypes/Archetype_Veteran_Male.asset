@@ -17,12 +17,13 @@ MonoBehaviour:
   displayName: Veteran (Male)
   gender: 1
   useGenderSpecificLines: 0
-  bodySprite: {fileID: 0}
+  bodySprite: {fileID: -8050022268875839488, guid: 2247856a28d68304bac74681d8fb5502, type: 3}
   bodySpriteWalk1: {fileID: 0}
   bodySpriteWalk2: {fileID: 0}
   portraitSprite: {fileID: 0}
-  spriteCollection: {fileID: 0}
-  hairSprites: []
+  spriteCollection: {fileID: 11400000, guid: 353cecdf3dbe99647a3b64ac83940024, type: 2}
+  hairSprites:
+  - {fileID: 6705339496114913890, guid: 06cced24ff8b0504290f28324285397d, type: 3}
   hairColors:
   - {r: 0.2, g: 0.1, b: 0, a: 1}
   - {r: 0.4, g: 0.25, b: 0.1, a: 1}
@@ -30,7 +31,8 @@ MonoBehaviour:
   - {r: 0.8, g: 0.7, b: 0.5, a: 1}
   - {r: 0.9, g: 0.9, b: 0.85, a: 1}
   - {r: 0.5, g: 0.3, b: 0.2, a: 1}
-  outfitSprites: []
+  outfitSprites:
+  - {fileID: 2267550630922802779, guid: f6ab90ccdf2bde8469f3da0225a71156, type: 3}
   outfitColors:
   - {r: 0.3, g: 0.3, b: 0.4, a: 1}
   - {r: 0.5, g: 0.5, b: 0.5, a: 1}
@@ -42,6 +44,7 @@ MonoBehaviour:
   satisfactionChance: 0.8
   grumblingThreshold: 0.5
   grumblingFrequency: 0.5
+  voiceProfile: {fileID: 11400000, guid: 95d038aec7835eb4b97d58338eea8224, type: 2}
   allowedGoals: 09000000
   thoughtPool:
   - "\u0421\u043B\u0443\u0436\u0431\u0430 \u043D\u0435 \u0437\u0430\u0431\u044B\u0442\u0430."

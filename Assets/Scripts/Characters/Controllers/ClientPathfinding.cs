@@ -574,6 +574,12 @@ public class ClientPathfinding : MonoBehaviour
         {
             visuals.SetupFromArchetype(archetype);
         }
+
+        // Голосовой профиль
+        if (archetype.voiceProfile != null)
+        {
+            voiceProfile = archetype.voiceProfile;
+        }
     }
 
     // ============================================================================

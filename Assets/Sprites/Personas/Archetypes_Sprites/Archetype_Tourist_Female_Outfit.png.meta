@@ -1,0 +1,283 @@
+fileFormatVersion: 2
+guid: 7e80ea0f05fa22443896911cccb318ff
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -7697251004368297684
+    second: Archetype_Tourist_Female_Outfit_0
+  - first:
+      213: -5861382734562438931
+    second: Archetype_Tourist_Female_Outfit_1
+  - first:
+      213: -1296958916598931333
+    second: Archetype_Tourist_Female_Outfit_2
+  - first:
+      213: -710321135852773536
+    second: Archetype_Tourist_Female_Outfit_3
+  - first:
+      213: -7191845905737972876
+    second: Archetype_Tourist_Female_Outfit_4
+  - first:
+      213: -7805999506598039183
+    second: Archetype_Tourist_Female_Outfit_5
+  - first:
+      213: -6362421090056678470
+    second: Archetype_Tourist_Female_Outfit_6
+  - first:
+      213: 6160819936658043722
+    second: Archetype_Tourist_Female_Outfit_7
+  - first:
+      213: 7960113310611973711
+    second: Archetype_Tourist_Female_Outfit_8
+  - first:
+      213: -644932902298087781
+    second: Archetype_Tourist_Female_Outfit_9
+  - first:
+      213: -328479045637286749
+    second: Archetype_Tourist_Female_Outfit_10
+  - first:
+      213: 4436785826573771265
+    second: Archetype_Tourist_Female_Outfit_11
+  - first:
+      213: -184465527996781780
+    second: Archetype_Tourist_Female_Outfit_12
+  - first:
+      213: 5247528583655286121
+    second: Archetype_Tourist_Female_Outfit_13
+  - first:
+      213: -2719129549616015943
+    second: Archetype_Tourist_Female_Outfit_14
+  - first:
+      213: 3574300190009906938
+    second: Archetype_Tourist_Female_Outfit_15
+  - first:
+      213: 2330641431175852412
+    second: Archetype_Tourist_Female_Outfit_16
+  - first:
+      213: 2052377530600381946
+    second: Archetype_Tourist_Female_Outfit_17
+  - first:
+      213: -9031959792832118849
+    second: Archetype_Tourist_Female_Outfit_18
+  - first:
+      213: -8777187634118290311
+    second: Archetype_Tourist_Female_Outfit_19
+  - first:
+      213: -8231748027605534801
+    second: Archetype_Tourist_Female_Outfit_20
+  - first:
+      213: -2810744411947163735
+    second: Archetype_Tourist_Female_Outfit_21
+  - first:
+      213: -740435001927975548
+    second: Archetype_Tourist_Female_Outfit_22
+  - first:
+      213: 219111919564220800
+    second: Archetype_Tourist_Female_Outfit_23
+  - first:
+      213: 7030794406021496597
+    second: Archetype_Tourist_Female_Outfit_24
+  - first:
+      213: 9083820754034035816
+    second: Archetype_Tourist_Female_Outfit_25
+  - first:
+      213: 2366440730669102790
+    second: Archetype_Tourist_Female_Outfit_26
+  - first:
+      213: -8270064219353294208
+    second: Archetype_Tourist_Female_Outfit_27
+  - first:
+      213: -5897577819107191918
+    second: Archetype_Tourist_Female_Outfit_28
+  - first:
+      213: 965190416880742218
+    second: Archetype_Tourist_Female_Outfit_29
+  - first:
+      213: -1531977773633822560
+    second: Archetype_Tourist_Female_Outfit_30
+  - first:
+      213: 4440842721487878515
+    second: Archetype_Tourist_Female_Outfit_31
+  - first:
+      213: 8593501671793284787
+    second: Archetype_Tourist_Female_Outfit_32
+  - first:
+      213: 6774529908525470769
+    second: Archetype_Tourist_Female_Outfit_33
+  - first:
+      213: -1875249858178603827
+    second: Archetype_Tourist_Female_Outfit_34
+  - first:
+      213: 6547638480038543890
+    second: Archetype_Tourist_Female_Outfit_35
+  - first:
+      213: 7255199049509511514
+    second: Archetype_Tourist_Female_Outfit_36
+  - first:
+      213: -4305101840758661951
+    second: Archetype_Tourist_Female_Outfit_37
+  - first:
+      213: -2026934918095942581
+    second: Archetype_Tourist_Female_Outfit_38
+  - first:
+      213: 3637270602412266561
+    second: Archetype_Tourist_Female_Outfit_39
+  - first:
+      213: 1827696704024500473
+    second: Archetype_Tourist_Female_Outfit_40
+  - first:
+      213: 526148414603039914
+    second: Archetype_Tourist_Female_Outfit_41
+  - first:
+      213: 1642996186772523610
+    second: Archetype_Tourist_Female_Outfit_42
+  - first:
+      213: -7969773526772550088
+    second: Archetype_Tourist_Female_Outfit_43
+  - first:
+      213: -4085193789123257044
+    second: Archetype_Tourist_Female_Outfit_44
+  - first:
+      213: -2125120844063856360
+    second: Archetype_Tourist_Female_Outfit_45
+  - first:
+      213: 1084124801888597179
+    second: Archetype_Tourist_Female_Outfit_46
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 1350
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Archetype_Tourist_Female_Outfit_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 862
+        height: 1220
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c21eb994efedd2590800000000000000
+      internalID: -7697251004368297684
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: cd2972585c327684bad6b95d2b624db2
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":862.0,"y":1220.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      Archetype_Tourist_Female_Outfit_0: -7697251004368297684
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

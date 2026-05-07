@@ -419,7 +419,12 @@ public class AgentMover : MonoBehaviour
                 // --- НОВАЯ ЛОГИКА ПОВОРОТА ---
                 // Если первый кадр - поворачиваем в одну сторону, если второй - в другую
                 float targetAngle = isFirstWalkSprite ? walkWaddleAngle : -walkWaddleAngle;
-                characterSpriteRenderer.transform.localRotation = Quaternion.Euler(0, 0, targetAngle);
+                // Поворачиваем VisualsContainer, чтобы одежда и волосы поворачивались вместе с телом
+                Transform visualsContainer = transform.Find("VisualsContainer");
+                if (visualsContainer != null)
+                    visualsContainer.localRotation = Quaternion.Euler(0, 0, targetAngle);
+                else
+                    characterSpriteRenderer.transform.localRotation = Quaternion.Euler(0, 0, targetAngle);
                 // -----------------------------
             }
         }
@@ -428,12 +433,16 @@ public class AgentMover : MonoBehaviour
             // Сбрасываем спрайт и поворот, ТОЛЬКО если не упали (при падении там своя логика поворота)
             if (!isSlipping)
             {
-                 if (rb.linearVelocity.magnitude < 0.05f) 
+                 if (rb.linearVelocity.magnitude < 0.05f)
                  {
                      characterSpriteRenderer.sprite = idleSprite;
                      
                      // --- СБРОС ПОВОРОТА ---
-                     characterSpriteRenderer.transform.localRotation = Quaternion.identity;
+                     Transform visualsContainer = transform.Find("VisualsContainer");
+                     if (visualsContainer != null)
+                         visualsContainer.localRotation = Quaternion.identity;
+                     else
+                         characterSpriteRenderer.transform.localRotation = Quaternion.identity;
                      // ----------------------
                  }
             }

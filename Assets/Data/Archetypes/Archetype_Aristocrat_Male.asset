@@ -17,12 +17,13 @@ MonoBehaviour:
   displayName: Aristocrat (Male)
   gender: 1
   useGenderSpecificLines: 0
-  bodySprite: {fileID: 0}
+  bodySprite: {fileID: 8916483686229206390, guid: f859b8a2034cc9e4c8eeb007ccca60c0, type: 3}
   bodySpriteWalk1: {fileID: 0}
   bodySpriteWalk2: {fileID: 0}
   portraitSprite: {fileID: 0}
-  spriteCollection: {fileID: 0}
-  hairSprites: []
+  spriteCollection: {fileID: 11400000, guid: 353cecdf3dbe99647a3b64ac83940024, type: 2}
+  hairSprites:
+  - {fileID: -649902171696062616, guid: 54d8ff1c6e7cfb7419d4f4f18c250d18, type: 3}
   hairColors:
   - {r: 0.2, g: 0.1, b: 0, a: 1}
   - {r: 0.4, g: 0.25, b: 0.1, a: 1}
@@ -30,7 +31,8 @@ MonoBehaviour:
   - {r: 0.8, g: 0.7, b: 0.5, a: 1}
   - {r: 0.9, g: 0.9, b: 0.85, a: 1}
   - {r: 0.5, g: 0.3, b: 0.2, a: 1}
-  outfitSprites: []
+  outfitSprites:
+  - {fileID: 5733556557758026855, guid: 673e8a73ea906594dae4bf563e3da78d, type: 3}
   outfitColors:
   - {r: 0.3, g: 0.3, b: 0.4, a: 1}
   - {r: 0.5, g: 0.5, b: 0.5, a: 1}
@@ -42,6 +44,7 @@ MonoBehaviour:
   satisfactionChance: 0.8
   grumblingThreshold: 0.5
   grumblingFrequency: 0.5
+  voiceProfile: {fileID: 11400000, guid: 95d038aec7835eb4b97d58338eea8224, type: 2}
   allowedGoals: 050000000e000000
   thoughtPool:
   - "\u0422\u0440\u0430\u0434\u0438\u0446\u0438\u0438 \u0442\u0440\u0435\u0431\u0443\u044E\u0442."

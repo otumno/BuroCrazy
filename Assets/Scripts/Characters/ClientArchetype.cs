@@ -91,6 +91,9 @@ namespace Characters
         [Range(0f, 1f)]
         public float grumblingFrequency = 0.5f;
 
+        [Tooltip("Профиль голоса для озвучки клиента")]
+        public Scriptables.Audio.VoiceData voiceProfile;
+
         [Header("Цели")]
         [Tooltip("Какие цели может иметь этот архетип")]
         public List<ClientGoal> allowedGoals;
