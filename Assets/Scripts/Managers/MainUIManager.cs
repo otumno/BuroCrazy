@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Data.Creation;
 using Enums;
+using Gameplay;
 
 namespace Managers
 {
@@ -258,6 +259,7 @@ namespace Managers
 
         public void StartOrResumeGameplay()
         {
+            Debug.Log($"[StartOrResume] Вызван, timeScale = {Time.timeScale}, isTransitioning = {isTransitioning}");
             if (isTransitioning) return;
             
             if (Managers.Teletype.TeletypeManager.Instance != null)
@@ -345,6 +347,14 @@ namespace Managers
 
             // Загрузка данных
             bool loadSuccess = SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
+            
+            // Подготовка данных - проверяем туториал СРАЗУ
+            int currentSlot = SaveLoadManager.Instance.GetCurrentSlot();
+            var saveData = SaveLoadManager.Instance.GetDataForSlot(currentSlot);
+            bool isFirstDay = CalendarManager.Instance.CurrentDay == 1;
+            bool isTutorialNeeded = isFirstDay && !saveData.firstDayTutorialCompleted;
+            Debug.Log($"[Tutorial] day={CalendarManager.Instance.CurrentDay}, flag={saveData.firstDayTutorialCompleted}");
+            
             if (!loadSuccess && SaveLoadManager.Instance.isNewGame)
             {
                 PlayerWallet.Instance.ResetState();
@@ -354,51 +364,27 @@ namespace Managers
 
             if (SaveLoadManager.Instance.isNewGame)
             {
-                DirectorManager.Instance.ResetState(); 
+                DirectorManager.Instance.ResetState();
                 HiringManager.Instance.ResetState();
                 OrderManager.Instance.ResetState();
-                StoryStateManager.Instance?.ResetState(); 
+                StoryStateManager.Instance?.ResetState();
 
                 ApplyDirectorCreationSettings();
             }
 
             DirectorManager.Instance.PrepareDay();
 
-            // Телепортация директора
-            DirectorAvatarController directorController = FindFirstObjectByType<DirectorAvatarController>();
-            if (directorController != null && directorController.directorChairPoint != null)
-            {
-                directorController.TeleportTo(directorController.directorChairPoint.position);
-                directorController.ForceSetAtDeskState(true);
-            }
-
-            // 1. Мгновенно показываем стол (он будет лежать на дне)
+            // Подготавливаем ссылки на панели (для возможного использования)
             var desk = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
-            if (desk != null)
+
+            // 1. Показываем сплэш-скрин (он нужен ВСЕГДА, независимо от туториала)
+            if (daySplashScreenController != null)
             {
-                desk.gameObject.SetActive(true);
-                var anim = desk.GetComponent<UIWindowAnimator>();
-                if (anim != null) anim.ShowInstant();
-                else 
-                { 
-                    var cg = desk.GetComponent<CanvasGroup>(); 
-                    if (cg != null) { cg.alpha = 1f; cg.interactable = true; cg.blocksRaycasts = true; } 
-                }
+                daySplashScreenController.Setup(CalendarManager.Instance.CurrentDay);
+                daySplashScreenController.gameObject.SetActive(true);
             }
 
-
-            // 2. Мгновенно показываем Приказы и выносим их ПОВЕРХ стола
-            if (orderSelectionUI != null)
-            {
-                orderSelectionUI.gameObject.SetActive(true);
-                // orderSelectionUI.transform.SetAsLastSibling(); // УДАЛЕНО: UIWindowAnimator сам управляет порядком
-                orderSelectionUI.Setup();
-                var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
-                if(orderCG) { orderCG.alpha = 1f; orderCG.interactable = false; orderCG.blocksRaycasts = false; }
-            }
-
-
-            // 3. Ждем скипа заставки (сплэш-скрина)
+            // 2. Ждем скипа заставки (сплэш-скрина)
             float timer = 0f;
             while (timer < splashScreenDwellTime)
             {
@@ -407,19 +393,81 @@ namespace Managers
                 yield return null;
             }
 
-
-            // 4. Убираем сплэш
+            // 3. Убираем сплэш
             if (daySplashScreenController != null) yield return daySplashScreenController.Fade(false);
 
+            // 4. Снимаем паузу после сплеш-скрина
+            ResumeGame();
+            Debug.Log($"[Unveil] После сплеша, время = {Time.timeScale}");
 
-            // 5. Разрешаем кликать по приказам
-            if (orderSelectionUI != null) 
+            // 5. Проверяем туториал ПОСЛЕ скрытия сплэша
+            if (isTutorialNeeded)
             {
+                Debug.Log("[MainUIManager] Туториал активен, запускаем FirstDayTutorial");
+                
+                // НЕ создаем панели - туториал сам покажет свой UI
+                isTransitioning = false;
+                yield return StartCoroutine(StartTutorialRoutine());
+                yield break;
+            }
+
+            // 6. ОБЫЧНЫЙ СТАРТ - показываем стол и приказы
+            // Телепортируем директора к столу
+            DirectorAvatarController directorController = FindFirstObjectByType<DirectorAvatarController>();
+            if (directorController != null && directorController.directorChairPoint != null)
+            {
+                directorController.TeleportTo(directorController.directorChairPoint.position);
+                directorController.ForceSetAtDeskState(true);
+            }
+
+            // Показываем стол
+            if (desk != null)
+            {
+                desk.gameObject.SetActive(true);
+                var anim = desk.GetComponent<UIWindowAnimator>();
+                if (anim != null) anim.ShowInstant();
+                else
+                {
+                    var cg = desk.GetComponent<CanvasGroup>();
+                    if (cg != null) { cg.alpha = 1f; cg.interactable = true; cg.blocksRaycasts = true; }
+                }
+            }
+
+            // Показываем Приказы
+            if (orderSelectionUI != null)
+            {
+                orderSelectionUI.gameObject.SetActive(true);
+                orderSelectionUI.Setup();
                 var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
                 if(orderCG) { orderCG.interactable = true; orderCG.blocksRaycasts = true; }
             }
 
+            isTransitioning = false;
+        }
 
+        private IEnumerator StartTutorialRoutine()
+        {
+            Debug.Log("[MainUIManager] StartTutorialRoutine: Запуск туториала первого дня");
+            
+            // Находим компонент туториала (может быть неактивным)
+            var tutorial = FindFirstObjectByType<FirstDayTutorial>(FindObjectsInactive.Include);
+            if (tutorial == null)
+            {
+                Debug.LogError("[MainUIManager] FirstDayTutorial не найден на сцене!");
+                isTransitioning = false;
+                yield break;
+            }
+            
+            // Запускаем туториал (он сам заблокирует управление и покажет UI)
+            tutorial.StartTutorial();
+            
+            // Ждем завершения туториала
+            while (!tutorial.IsTutorialCompleted)
+            {
+                yield return null;
+            }
+            
+            Debug.Log("[MainUIManager] Туториал первого дня завершен");
             isTransitioning = false;
         }
 

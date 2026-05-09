@@ -36,6 +36,21 @@ namespace BuroDebug
         [Tooltip("Время сглаживания для зума (резиночка)")]
         public float zoomSmoothTime = 0.3f;
 
+        public void SetFollowMode(bool follow)
+        {
+            _isFollowing = follow;
+            if (_cameraToggle != null)
+            {
+                _cameraToggle.enabled = !_isFollowing;
+            }
+            if (_isFollowing && DirectorAvatarController.Instance != null)
+            {
+                _focusPoint = DirectorAvatarController.Instance.transform.position;
+                _currentZoomTarget = zoomedSize; // Инициализируем целевой зум при включении слежения
+            }
+            Debug.Log($"<color=yellow>[DirectorDebugCamera]</color> Режим слежения: {_isFollowing}");
+        }
+
         private Camera _camera;
         private CameraToggle _cameraToggle;
         private bool _isFollowing = false;
@@ -43,6 +58,7 @@ namespace BuroDebug
         private Vector2 _focusPoint;
         private Vector3 _velocity = Vector3.zero;
         private float _zoomVelocity = 0f;
+        private float _currentZoomTarget = 0f; // Текущий целевой зум для инерционного перехода
 
         private void Awake()
         {
@@ -81,12 +97,15 @@ namespace BuroDebug
                 // 1. Определяем целевой зум в зависимости от движения директора
                 bool isMoving = DirectorAvatarController.Instance.AgentMover != null
                     && DirectorAvatarController.Instance.AgentMover.IsMoving();
-                float targetZoom = isMoving ? zoomedSize + movementZoomOffset : zoomedSize;
+                float idealZoom = isMoving ? zoomedSize + movementZoomOffset : zoomedSize;
                 
-                // 2. Плавное изменение зума через SmoothDamp
-                _camera.orthographicSize = Mathf.SmoothDamp(_camera.orthographicSize, targetZoom, ref _zoomVelocity, zoomSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
+                // 2. Плавное изменение зума через SmoothDamp (теперь сам targetZoom меняется плавно)
+                // Используем промежуточную переменную _currentZoomTarget для инерционного перехода
+                float currentZoomTarget = Mathf.SmoothDamp(_currentZoomTarget, idealZoom, ref _zoomVelocity, zoomSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
+                _currentZoomTarget = currentZoomTarget;
+                _camera.orthographicSize = _currentZoomTarget;
 
-                // 2. Логика Мертвой зоны (Deadzone)
+                // 3. Логика Мертвой зоны (Deadzone)
                 Vector2 directorPos = DirectorAvatarController.Instance.transform.position;
                 float distanceToDirector = Vector2.Distance(_focusPoint, directorPos);
                 

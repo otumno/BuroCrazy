@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class CursorController : MonoBehaviour
 {
+    public static CursorController Instance { get; private set; }
+    
     [Tooltip("Текстура для кастомного курсора")]
     public Texture2D cursorTexture;
 
@@ -13,6 +15,44 @@ public class CursorController : MonoBehaviour
 
     [Tooltip("Режим курсора (Auto - система решает, Software - принудительно программный)")]
     public CursorMode cursorMode = CursorMode.Auto;
+    
+    [Tooltip("Текстура курсора во время катсцен/туториалов")]
+    public Texture2D cutsceneCursorTexture;
+    
+    private Texture2D _defaultCursorTexture;
+    private Vector2 _defaultHotspot;
+
+    private void Awake()
+    {
+        Instance = this;
+        _defaultCursorTexture = cursorTexture;
+        _defaultHotspot = hotspot;
+    }
+    
+    public void SetCutsceneCursor()
+    {
+        SetCutsceneCursor(true);
+    }
+
+    public void SetCutsceneCursor(bool active)
+    {
+        if (active)
+        {
+            if (cutsceneCursorTexture != null)
+            {
+                Cursor.SetCursor(cutsceneCursorTexture, hotspot, cursorMode);
+            }
+        }
+        else
+        {
+            SetDefaultCursor();
+        }
+    }
+
+    public void SetDefaultCursor()
+    {
+        Cursor.SetCursor(_defaultCursorTexture, hotspot, cursorMode);
+    }
 
     void Start()
     {

@@ -329,6 +329,7 @@ MonoBehaviour:
   cursorTextureClicked: {fileID: 2800000, guid: 07f80e52c0f1aff4dbd786ccae9009fb, type: 3}
   hotspot: {x: 0, y: 0}
   cursorMode: 0
+  cutsceneCursorTexture: {fileID: 2800000, guid: 5c259d8423c816f4292bf6522e41562d, type: 3}
 --- !u!114 &96204288
 MonoBehaviour:
   m_ObjectHideFlags: 0

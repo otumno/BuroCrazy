@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 7c04b0d4f46d5f646b01731d8efdabb5
+guid: ba05bc844f6dcb348bb36b5b8beba020
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -2177355002486848264
-    second: ClientFBase4Outfit1.png_0
-  - first:
-      213: 161796545561580192
-    second: ClientFBase4Outfit1.png_1
+      213: 6629561140761988301
+    second: Archetype_Elderly_Female_Hair_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -54,7 +51,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 1350
+  spritePixelsToUnits: 100
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -103,7 +100,7 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: ClientFBase4Outfit1.png_0
+      name: Archetype_Elderly_Female_Hair_0
       rect:
         serializedVersion: 2
         x: 0
@@ -118,8 +115,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 8f40ade492b78c1e0800000000000000
-      internalID: -2177355002486848264
+      spriteID: dcc0adb8bbee00c50800000000000000
+      internalID: 6629561140761988301
       vertices: []
       indices: 
       edges: []
@@ -128,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 0e4882568935cd843837d599fba3f5ca
+    spriteID: aec4965b31daa8c43bc178664b3c6fa4
     internalID: 0
     vertices: []
     indices: 
@@ -136,10 +133,11 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     spriteCustomMetadata:
-      entries: []
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":1.0,"y":1.0},"gridSpriteSize":{"x":862.0,"y":1220.0},"gridSpriteOffset":{"x":0.0,"y":0.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":1,"keepEmptyRects":false,"isAlternate":false}'
     nameFileIdTable:
-      ClientFBase4Outfit1.png_0: -2177355002486848264
-      ClientFBase4Outfit1.png_1: 161796545561580192
+      Archetype_Elderly_Female_Hair_0: 6629561140761988301
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

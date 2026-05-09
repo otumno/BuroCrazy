@@ -17,13 +17,13 @@ MonoBehaviour:
   displayName: Elderly (Male)
   gender: 1
   useGenderSpecificLines: 0
-  bodySprite: {fileID: 0}
+  bodySprite: {fileID: -2530838926302856509, guid: b2cf649a0f7d9194a8777c593c328a8e, type: 3}
   bodySpriteWalk1: {fileID: 0}
   bodySpriteWalk2: {fileID: 0}
   portraitSprite: {fileID: 0}
   spriteCollection: {fileID: 11400000, guid: 353cecdf3dbe99647a3b64ac83940024, type: 2}
   hairSprites:
-  - {fileID: 0}
+  - {fileID: -1993445770025269698, guid: b23426f26c26d554ba2df51d21470b0d, type: 3}
   hairColors:
   - {r: 0.2, g: 0.1, b: 0, a: 1}
   - {r: 0.4, g: 0.25, b: 0.1, a: 1}
@@ -32,7 +32,7 @@ MonoBehaviour:
   - {r: 0.9, g: 0.9, b: 0.85, a: 1}
   - {r: 0.5, g: 0.3, b: 0.2, a: 1}
   outfitSprites:
-  - {fileID: 0}
+  - {fileID: 4334358079121305684, guid: e1a90a1ae06689f4781e7dcd0776d9fd, type: 3}
   outfitColors:
   - {r: 0.3, g: 0.3, b: 0.4, a: 1}
   - {r: 0.5, g: 0.5, b: 0.5, a: 1}

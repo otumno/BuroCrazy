@@ -175,8 +175,53 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         StartCoroutine(MoveToTargetAndSetState(targetWaypoint.transform.position, DirectorState.Idle)); // Запускаем движение к новой цели
     }
 
+    /// <summary>
+    /// Централизованный механизм перемещения директора с блокировкой управления.
+    /// Используется туториалом для перемещений, которые блокируют игрока до прибытия.
+    /// </summary>
+    /// <param name="targetWaypoint">Целевая путевая точка</param>
+    /// <param name="stateAfterArrival">Состояние после прибытия (по умолчанию Idle)</param>
+    /// <returns>Coroutine</returns>
+    public IEnumerator MoveToAndLock(Waypoint targetWaypoint, DirectorState stateAfterArrival = DirectorState.Idle)
+    {
+        if (targetWaypoint == null)
+        {
+            Debug.LogError("[DirectorAvatarController] MoveToAndLock: targetWaypoint is null!");
+            yield break;
+        }
+        
+        Debug.Log($"[DirectorAvatarController] MoveToAndLock: Начало движения к {targetWaypoint.name}");
+        
+        // Блокируем управление
+        PlayerInputController inputController = FindFirstObjectByType<PlayerInputController>();
+        if (inputController != null)
+        {
+            inputController.IsCutscenePlaying = true;
+        }
+        
+        // Если директор работает на станции или обслуживает клиента, останавливаем
+        if (currentState == DirectorState.WorkingAtStation || currentState == DirectorState.ServingClient)
+        {
+            StopManualWork(false);
+        }
+        
+        // Останавливаем все текущие корутины движения
+        StopAllCoroutines();
+        
+        // Запускаем движение
+        yield return StartCoroutine(MoveToTargetAndSetState(targetWaypoint.transform.position, stateAfterArrival));
+        
+        // Разблокируем управление
+        if (inputController != null)
+        {
+            inputController.IsCutscenePlaying = false;
+        }
+        
+        Debug.Log($"[DirectorAvatarController] MoveToAndLock: Завершено, состояние={currentState}");
+    }
+
      /// <summary>
-    /// Новая корутина-обертка для установки состояния ПОСЛЕ движения.
+     /// Новая корутина-обертка для установки состояния ПОСЛЕ движения.
     /// </summary>
     private IEnumerator MoveToTargetAndSetState(Vector2 targetPosition, DirectorState stateAfterArrival)
     {

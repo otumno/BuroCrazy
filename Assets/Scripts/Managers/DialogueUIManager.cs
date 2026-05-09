@@ -146,7 +146,7 @@ namespace Managers
                 defaultBackground = startNode.defaultBackground;
                 AudioClip clip = startNode.startSoundOverride != null ? startNode.startSoundOverride : defaultStartSound;
                 PlaySystemSound(clip);
-                if (MusicPlayer.Instance != null)
+                if (MusicPlayer.Instance != null && startNode.dialogueType != DialogueType.None)
                     MusicPlayer.Instance.SwitchToDialogueMusic(startNode.dialogueType);
                 if (startNode.nextNode != null) ProcessNode(startNode.nextNode);
             }

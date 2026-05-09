@@ -535,6 +535,15 @@ public class AgentMover : MonoBehaviour
              return;
         }
 
+        // Оптимизация: удаляем первый waypoint, если он уже достаточно близко (предотвращает "дёрганье" назад)
+        if (newPath != null && newPath.Count > 0)
+        {
+            Waypoint first = newPath.Peek();
+            if (first != null && Vector2.Distance(transform.position, first.transform.position) < stoppingDistance)
+            {
+                newPath.Dequeue();
+            }
+        }
 
         StopDirectChase(); // Ensure direct chasing is off
         // Create a new Queue from the input or set to null if input is null

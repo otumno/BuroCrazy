@@ -124,6 +124,7 @@ namespace Managers
         {
             isNewGame = false;
             currentSlotIndex = slotIndex;
+            initialData.firstDayTutorialCompleted = false;
             WriteSaveDataToFile(slotIndex, initialData);
             
             if (StoryStateManager.Instance != null)

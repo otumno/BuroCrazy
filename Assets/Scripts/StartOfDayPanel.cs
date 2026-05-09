@@ -146,6 +146,7 @@ public class StartOfDayPanel : MonoBehaviour
             startDayButton.onClick.RemoveAllListeners();
             startDayButton.onClick.AddListener(() =>
             {
+                Debug.Log("[StartDayButton] Нажата");
                 _isFirstShow = false;
                 MainUIManager.Instance.StartOrResumeGameplay();
             });

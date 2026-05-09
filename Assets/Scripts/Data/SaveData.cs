@@ -12,6 +12,7 @@ public class SaveData
     public int day;
     public int money;
     public int archiveDocumentCount;
+    public bool firstDayTutorialCompleted = false;
     
     // --- Создание директора ---
     [Tooltip("Код создания директора (A1B2C1D3E3)")]

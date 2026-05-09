@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace DialogueSystem.Data
 {
-    public enum DialogueType { World, Phone }
+    public enum DialogueType { World, Phone, None }
     
     [CreateAssetMenu(menuName = "Bureau/Dialogue/Nodes/Start Node")]
     public class StartNode : DialogueNode

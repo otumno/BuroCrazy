@@ -26,8 +26,29 @@ public class PlayerInputController : MonoBehaviour
     [Tooltip("Перетащите сюда объект ActionConfigPopup из UI")]
     public ActionConfigPopupUI actionConfigPopup;
     
+    [Tooltip("Курсор-контроллер для смены курсора во время катсцен")]
+    public CursorController cursorController;
+    
     // Hover для клинчей
     private Clinch.ClinchTarget _currentHoveredClinch;
+    
+    // --- CUTSCENE BLOCKING ---
+    [Tooltip("Блокирует ввод во время катсцен/туториалов")]
+    private bool _isCutscenePlaying = false;
+    
+    public bool IsCutscenePlaying
+    {
+        get => _isCutscenePlaying;
+        set
+        {
+            _isCutscenePlaying = value;
+            // Используем статический Instance если cursorController не назначен
+            if (cursorController != null)
+                cursorController.SetCutsceneCursor(value);
+            else
+                CursorController.Instance?.SetCutsceneCursor(value);
+        }
+    }
 
     // --- DIABLO MOVEMENT ---
     private bool _isHoldingMouse = false;
@@ -40,10 +61,21 @@ public class PlayerInputController : MonoBehaviour
         {
             actionConfigPopup = FindFirstObjectByType<ActionConfigPopupUI>(FindObjectsInactive.Include);
         }
+        if (cursorController == null)
+        {
+            cursorController = FindFirstObjectByType<CursorController>();
+        }
     }
 
     void Update()
     {
+        // --- CUTSCENE BLOCKING ---
+        if (IsCutscenePlaying)
+        {
+            // Не обрабатываем ввод во время катсцен
+            return;
+        }
+        
         // --- ПРОБЕЛ (ПАУЗА) ---
         if (Input.GetKeyDown(KeyCode.Space))
         {

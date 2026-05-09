@@ -208,6 +208,10 @@ public class WorkstationClickTrigger : MonoBehaviour
     {
         if (DirectorAvatarController.Instance == null) return false;
         if (DirectorAvatarController.Instance.IsInUninterruptibleAction) return false;
+        
+        // Блокируем взаимодействие во время катсцен (включая туториал)
+        var inputController = DirectorAvatarController.Instance.GetComponent<PlayerInputController>();
+        if (inputController != null && inputController.IsCutscenePlaying) return false;
 
         // Проверка занятости стола только для Workstation
         if (type == TriggerType.Workstation && targetWorkstation != null)
