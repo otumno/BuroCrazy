@@ -5967,8 +5967,8 @@ GameObject:
   - component: {fileID: 6553212404176211079}
   - component: {fileID: 6557408319332965827}
   - component: {fileID: 7372913808653966642}
-  - component: {fileID: 8357529449158038840}
   - component: {fileID: 7532084200254737219}
+  - component: {fileID: 6333694187846661506}
   m_Layer: 5
   m_Name: SettingsPanel
   m_TagString: Untagged
@@ -6037,22 +6037,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8357529449158038840
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7540273231744642192}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e678af435e3008946b91ec9b585628cf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MainMenuDialogueTrigger
-  introDialogue: {fileID: 11400000, guid: ee44276f4a2bf664ba7be4ef888b5482, type: 2}
-  saveKey: HAS_SEEN_INTRO
-  alwaysShowIntro: 0
-  helpSystemObject: {fileID: 0}
 --- !u!225 &7532084200254737219
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -6065,6 +6049,18 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &6333694187846661506
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7540273231744642192}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7aa11aab8b17fbf46b04f59430468cf3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SetingsView
 --- !u!1 &7708665759677712033
 GameObject:
   m_ObjectHideFlags: 0
