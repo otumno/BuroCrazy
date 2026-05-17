@@ -1,3 +1,4 @@
+using Gameplay;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -12,12 +13,12 @@ public class DirectorInteractionController : MonoBehaviour
     private InteractionPoint currentInteractionPoint;
     private DirectorAvatarController directorAvatar;
 
-    void Awake()
+    private void Awake()
     {
         directorAvatar = GetComponent<DirectorAvatarController>();
     }
 
-    void Start()
+    private void Start()
     {
         if (contextButton != null)
         {
@@ -27,40 +28,49 @@ public class DirectorInteractionController : MonoBehaviour
     }
 
     // Убираем Update(), чтобы кнопка не моргала
-    // void Update() { ... }
+    // private void Update() { ... }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.GetComponent<InteractionPoint>() is InteractionPoint point)
+        if (other.GetComponent<InteractionPoint>() is not { } point)
+            return;
+
+        currentInteractionPoint = point;
+
+        // Во время туториала первого дня директора водит катсцену, поэтому контекстные действия надо игнорировать
+        if (FirstDayTutorial.IsActive)
         {
-            currentInteractionPoint = point;
-
-            // --- АВТОЗАПУСК ТУТОРИАЛА ---
-            if (point.type == InteractionPoint.InteractionType.TutorialTakeDoc)
-            {
-                // Скрываем кнопку контекстного действия, чтобы она не мелькала
-                if (contextButton != null) contextButton.gameObject.SetActive(false);
-                
-                // Сразу запускаем катсцену
-                if (directorAvatar != null && Managers.TutorialBureaucracyQuest.Instance != null)
-                {
-                    directorAvatar.StartCoroutine(directorAvatar.TutorialAutoTourRoutine(Managers.TutorialBureaucracyQuest.Instance));
-                }
-                return; // Прерываем метод, чтобы кнопка не обновилась
-            }
-            // ----------------------------
-
-            UpdateContextButton();
+            if (contextButton != null)
+                contextButton.gameObject.SetActive(false);
+            
+            return;
         }
+
+        // --- АВТОЗАПУСК ТУТОРИАЛА ---
+        if (point.type == InteractionPoint.InteractionType.TutorialTakeDoc)
+        {
+            // Скрываем кнопку контекстного действия, чтобы она не мелькала
+            if (contextButton != null) contextButton.gameObject.SetActive(false);
+                
+            // Сразу запускаем катсцену
+            if (directorAvatar != null && Managers.TutorialBureaucracyQuest.Instance != null)
+            {
+                directorAvatar.StartCoroutine(directorAvatar.TutorialAutoTourRoutine(Managers.TutorialBureaucracyQuest.Instance));
+            }
+            return; // Прерываем метод, чтобы кнопка не обновилась
+        }
+        // ----------------------------
+
+        UpdateContextButton();
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.GetComponent<InteractionPoint>() is InteractionPoint point && point == currentInteractionPoint)
-        {
-            currentInteractionPoint = null;
-            UpdateContextButton();
-        }
+        if (other.GetComponent<InteractionPoint>() is not { } point || point != currentInteractionPoint)
+            return;
+        
+        currentInteractionPoint = null;
+        UpdateContextButton();
     }
 
     private void UpdateContextButton()
@@ -68,6 +78,13 @@ public class DirectorInteractionController : MonoBehaviour
         if (contextButton == null || currentInteractionPoint == null || directorAvatar == null)
         {
             if (contextButton) contextButton.gameObject.SetActive(false);
+            return;
+        }
+
+        // Во время туториала первого дня контекстные действия запрещены.
+        if (FirstDayTutorial.IsActive)
+        {
+            contextButton.gameObject.SetActive(false);
             return;
         }
 
@@ -115,6 +132,7 @@ public class DirectorInteractionController : MonoBehaviour
     private void OnContextButtonClicked()
     {
         if (currentInteractionPoint == null || directorAvatar == null) return;
+        if (FirstDayTutorial.IsActive) return;
 
         ServicePoint workstation = currentInteractionPoint.GetComponentInParent<ServicePoint>();
         bool isWorkingHere = directorAvatar.GetCurrentState() == DirectorAvatarController.DirectorState.WorkingAtStation && directorAvatar.GetWorkstation() == workstation;

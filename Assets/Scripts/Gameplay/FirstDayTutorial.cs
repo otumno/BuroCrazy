@@ -10,6 +10,9 @@ namespace Gameplay
 {
     public class FirstDayTutorial : MonoBehaviour
     {
+        // Глобальный флаг для других систем (контекстные кнопки и т.п.), чтобы они отключали ввод во время туториала.
+        public static bool IsActive { get; private set; }
+
         [Header("Точки маршрута")]
         public Transform entryPoint;
         public Waypoint firstStopPoint;
@@ -62,6 +65,7 @@ namespace Gameplay
         public void StartTutorial()
         {
             Debug.Log("[FirstDayTutorial] StartTutorial: Начало туториала первого дня");
+            IsActive = true;
             
             // Гарантируем, что время идёт (на случай, если пауза осталась от сплеш-скрина)
             if (Time.timeScale == 0f) Time.timeScale = 1f;
@@ -349,8 +353,7 @@ namespace Gameplay
                 Debug.Log("[FirstDayTutorial] firstDayTutorialCompleted = true сохранено");
             }
             
-            // Уничтожаем компонент туториала
-            Destroy(gameObject);
+            IsActive = false;
         }
 
         private void CleanupTutorial()
