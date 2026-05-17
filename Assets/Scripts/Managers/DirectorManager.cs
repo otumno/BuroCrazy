@@ -94,14 +94,22 @@ namespace Managers
             }
         }
 
-        private void HealReputation(float amount)
+        /// <summary>
+        /// Восстановить репутацию (HP).
+        /// Публичный метод для вызова извне (например, из EventNode).
+        /// </summary>
+        public void HealReputation(float amount)
         {
             float max = GetMaxReputation();
             currentReputation = Mathf.Clamp(currentReputation + amount, 0f, max);
             Debug.Log($"<color=green>[Репутация]</color> Восстановлено {amount} HP. Текущее: {currentReputation}/{max}");
         }
 
-        private void TakeDamage(float amount, string reason)
+        /// <summary>
+        /// Нанести урон репутации.
+        /// Публичный метод для вызова извне (например, из EventNode).
+        /// </summary>
+        public void TakeDamage(float amount, string reason = "Внешнее событие")
         {
             float maxHP = GetMaxReputation();
             if (maxHP <= 0f) return; // FIXED: Защита от страйка, если районов нет и база 0 (Режим обучения)

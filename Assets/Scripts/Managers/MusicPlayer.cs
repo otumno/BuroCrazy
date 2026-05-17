@@ -118,6 +118,27 @@ namespace Managers
                 _previousTrack = null;
             }
         }
+        
+        // === Новые методы для Cinematic System ===
+        
+        /// <summary>
+        /// Проиграть трек один раз, сохранив текущий для последующего восстановления.
+        /// Используется в CinematicSystem для PlayMusic.
+        /// </summary>
+        public void PlayOneShotTrack(AudioClip clip)
+        {
+            if (clip == null) return;
+            
+            // Сохраняем текущий трек и время
+            if (AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
+            {
+                _previousTrack = AudioManager.Instance.musicSource.clip;
+                _previousTrackTime = AudioManager.Instance.musicSource.time;
+            }
+            
+            // Проигрываем новый трек
+            PlayTrack(clip);
+        }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {

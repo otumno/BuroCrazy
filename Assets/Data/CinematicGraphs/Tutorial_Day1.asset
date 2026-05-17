@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e6f799f0586ead4d880a3d621cb35fd, type: 3}
+  m_Name: Tutorial_Day1
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.CinematicGraph
+  graphID: d006b2ae517b952468cfd4edbbf02e56
+  graphName: Tutorial_Day1
+  allNodes:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 1852453160834128844}
+  startNode: {fileID: 0}
+  isBackground: 0
+--- !u!114 &1852453160834128844
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b89e23a75d8c06549b25077ddebefd3b, type: 3}
+  m_Name: RandomNode_16
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.RandomNode
+  id: 4cf1746f-3a57-4adb-a829-fc1361299dac
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 853
+    y: -358
+    width: 200
+    height: 150
+  outcomes:
+  - weight: 1
+    nextNode: {fileID: 0}
+  - weight: 1
+    nextNode: {fileID: 0}
+  - weight: 1
+    nextNode: {fileID: 0}
