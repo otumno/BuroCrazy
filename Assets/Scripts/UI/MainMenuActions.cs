@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UI.Creation;
-using UnityEngine.PlayerLoop;
 
 public class MainMenuActions : MonoBehaviour
 {
@@ -15,6 +14,7 @@ public class MainMenuActions : MonoBehaviour
     [SerializeField] private GameObject saveLoadPanel;
     [SerializeField] private GameObject achievementListPanel;
     [SerializeField] private GameObject directorCreationPanel;
+    [SerializeField] private GameObject settingsPanel;
 
     [Header("Boot Fade Effect")]
     [SerializeField] private BootFadeEffect bootFadeEffect;
@@ -30,6 +30,7 @@ public class MainMenuActions : MonoBehaviour
 
     private int selectedSlotIndex = -1;
     private bool isDirectorCreationActive = false;
+    private GameObject[] panels;
 
     private void Awake()
     {
@@ -53,6 +54,15 @@ public class MainMenuActions : MonoBehaviour
 
     // --- ПУБЛИЧНЫЕ МЕТОДЫ ДЛЯ КНОПОК ---
 
+    public void Action_LoadSave()
+    {
+        int latestSaveSlot = SaveLoadManager.Instance.GetLatestSaveSlotIndex();
+        if (latestSaveSlot != -1)
+        {
+            MainUIManager.Instance.OnSaveSlotClicked(latestSaveSlot);
+        }
+    }
+
     public void Action_OpenSaveLoadPanel()
     {
         Debug.Log("<b><color=cyan>[MainMenuActions] ==> Открываю панель выбора слотов...</color></b>");
@@ -65,13 +75,9 @@ public class MainMenuActions : MonoBehaviour
         ShowPanel(achievementListPanel);
     }
 
-    public void Action_Continue()
+    public void Action_OpenSettings()
     {
-        int latestSaveSlot = SaveLoadManager.Instance.GetLatestSaveSlotIndex();
-        if (latestSaveSlot != -1)
-        {
-            MainUIManager.Instance.OnSaveSlotClicked(latestSaveSlot);
-        }
+        ShowPanel(settingsPanel);
     }
 
     public void Action_BackToMainMenu()
@@ -168,7 +174,10 @@ public class MainMenuActions : MonoBehaviour
     
     private void ShowPanel(GameObject panelToShow)
     {
-        GameObject[] allPanels = new GameObject[] { mainMenuPanel, saveLoadPanel, achievementListPanel, directorCreationPanel };
+        panels ??= new[]
+        {
+            mainMenuPanel, saveLoadPanel, achievementListPanel, directorCreationPanel, settingsPanel
+        };
 
         // 1. ГАРАНТИРОВАННО Включаем целевую панель
         if (panelToShow != null)
@@ -187,9 +196,10 @@ public class MainMenuActions : MonoBehaviour
         }
 
         // 2. Красиво прячем все остальные
-        foreach (var panel in allPanels)
+        foreach (var panel in panels)
         {
-            if (panel == null || panel == panelToShow) continue;
+            if (panel == null || panel == panelToShow)
+                continue;
 
             var cg = panel.GetComponent<CanvasGroup>();
             // Считаем видимым, если есть альфа ИЛИ объект активен
