@@ -2,13 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using Data.Creation;
-using Characters;
-using Managers;
 using TMPro;
 using Enums;
-using UnityEngine.SceneManagement;
 
 namespace UI.Creation
 {
@@ -24,6 +20,7 @@ namespace UI.Creation
         public Button nextPageButton;
         public Button finishButton;
         public Button startGameButton;
+        public Button skipButton;
 
         [Header("Визуал")]
         public Image backgroundImage;
@@ -77,6 +74,15 @@ namespace UI.Creation
             if (startGameButton != null)
             {
                 startGameButton.onClick.AddListener(OnStartGameClicked);
+            }
+
+            if (skipButton != null)
+            {
+#if DEBUG_ENABLED
+                skipButton.onClick.AddListener(SkipToEnd);
+#else
+                skipButton.gameObject.SetActive(false);
+#endif       
             }
 
             if (transitionOverlay != null)
@@ -581,7 +587,58 @@ namespace UI.Creation
             OnBookFinished?.Invoke(initialState, creationCode);
         }
 
-        public void OnStartGameClicked()
+        private void SkipToEnd()
+        {
+            if (isTransitioning)
+                return;
+            
+            if (allPages == null || allPages.Count == 0 || currentPage == null)
+                return;
+
+            // Защита от зацикливания на испорченных данных, где nextPageID указывает на саму себя
+            int safetyLimit = allPages.Count * 2;
+            while (safetyLimit-- > 0)
+            {
+                if (currentPage.choices == null || currentPage.choices.Count == 0)
+                    break;
+
+                var firstChoice = currentPage.choices[0];
+                ApplyChoiceEffects(firstChoice.effects);
+                AppendToCode(firstChoice);
+
+                if (currentPage.isFinalPage)
+                    break;
+
+                string nextPageId = null;
+                var lastChoice = currentPage.choices[currentPage.choices.Count - 1];
+                if (!string.IsNullOrEmpty(lastChoice.nextPageID))
+                {
+                    nextPageId = lastChoice.nextPageID;
+                }
+                else
+                {
+                    int currentIndex = allPages.IndexOf(currentPage);
+                    if (currentIndex < allPages.Count - 1)
+                    {
+                        nextPageId = allPages[currentIndex + 1].pageID;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(nextPageId)) break;
+
+                var nextPage = allPages.Find(p => p.pageID == nextPageId);
+                if (nextPage == null || nextPage == currentPage) break;
+
+                pageHistory.Push(currentPage);
+                currentPage = nextPage;
+                currentPageLetter = GetPageLetter(allPages.IndexOf(nextPage));
+            }
+
+            StopMusic();
+            FinishBook();
+        }
+
+        private void OnStartGameClicked()
         {
             Debug.Log("[DirectorCreationBookUI] OnStartGameClicked вызван!");
             StopMusic();

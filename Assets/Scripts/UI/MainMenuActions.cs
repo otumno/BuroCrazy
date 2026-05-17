@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UI.Creation;
+using UnityEngine.PlayerLoop;
 
 public class MainMenuActions : MonoBehaviour
 {
@@ -30,7 +31,7 @@ public class MainMenuActions : MonoBehaviour
     private int selectedSlotIndex = -1;
     private bool isDirectorCreationActive = false;
 
-    void Awake()
+    private void Awake()
     {
         if (primaryActionButton != null)
         {
@@ -44,24 +45,9 @@ public class MainMenuActions : MonoBehaviour
         }
     }
     
-    void Start()
+    private void Start()
     {
-        bool hasSaves = SaveLoadManager.Instance != null && SaveLoadManager.Instance.DoesAnySaveExist();
-        if (primaryActionButtonText != null)
-        {
-            if (hasSaves)
-            {
-                primaryActionButtonText.text = "Загрузить игру";
-            }
-            else
-            {
-                primaryActionButtonText.text = "Новая игра";
-            }
-        }
-        if (continueButton != null)
-        {
-            continueButton.gameObject.SetActive(SaveLoadManager.Instance.DoesAnySaveExist());
-        }
+        UpdateHasSaves();
         ShowPanel(mainMenuPanel);
     }
 
@@ -91,6 +77,7 @@ public class MainMenuActions : MonoBehaviour
     public void Action_BackToMainMenu()
     {
         Debug.Log("<b><color=orange>[MainMenuActions] ==> Возвращаюсь в главное меню...</color></b>");
+        UpdateHasSaves();
         ShowPanel(mainMenuPanel);
     }
 
@@ -163,6 +150,19 @@ public class MainMenuActions : MonoBehaviour
         if (selectedSlotIndex >= 0)
         {
             MainUIManager.Instance.StartNewGameWithDirectorCreation(selectedSlotIndex, initialState, creationCode);
+        }
+    }
+
+    private void UpdateHasSaves()
+    {
+        var hasSaves = SaveLoadManager.Instance != null && SaveLoadManager.Instance.DoesAnySaveExist();
+        if (primaryActionButtonText != null)
+        {
+            primaryActionButtonText.text = hasSaves ? "Загрузить игру" : "Новая игра";
+        }
+        if (continueButton != null)
+        {
+            continueButton.gameObject.SetActive(SaveLoadManager.Instance.DoesAnySaveExist());
         }
     }
     
