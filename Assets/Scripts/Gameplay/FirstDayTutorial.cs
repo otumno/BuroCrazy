@@ -332,9 +332,15 @@ namespace Gameplay
             
             // Выключаем DirectorDebugCamera, включаем CameraToggle
             if (debugCamera != null)
+            {
+                debugCamera.DisableFollowing();
                 debugCamera.enabled = false;
+            }
             if (cameraToggle != null)
+            {
                 cameraToggle.enabled = true;
+                cameraToggle.ResetToDefault();
+            }
             
             // Открываем панель стола директора
             OpenDirectorDeskPanel();
@@ -360,11 +366,16 @@ namespace Gameplay
         {
             Debug.Log("[FirstDayTutorial] CleanupTutorial: Завершение туториала");
             
+            // Отключаем DirectorDebugCamera (критично — без этого оба компонента конфликтуют)
+            if (debugCamera != null)
+            {
+                debugCamera.DisableFollowing();
+                debugCamera.enabled = false;
+            }
+            
             // Возвращаем управление камерой
             if (cameraToggle != null)
                 cameraToggle.enabled = true;
-            
-            // НЕ отключаем DirectorDebugCamera - оставляем игроку управление камерой
             
             // Разблокируем игровой ввод (курсор восстановится автоматически через свойство)
             if (playerInput != null)

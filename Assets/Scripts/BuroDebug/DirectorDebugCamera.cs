@@ -51,6 +51,11 @@ namespace BuroDebug
             Debug.Log($"<color=yellow>[DirectorDebugCamera]</color> Режим слежения: {_isFollowing}");
         }
 
+        public void DisableFollowing()
+        {
+            SetFollowMode(false);
+        }
+
         private Camera _camera;
         private CameraToggle _cameraToggle;
         private bool _isFollowing = false;

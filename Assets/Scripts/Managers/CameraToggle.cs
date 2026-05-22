@@ -73,6 +73,16 @@ namespace Managers
             _shouldMuffle.Value = GetShouldMuffle();
         }
 
+        public void ResetToDefault()
+        {
+            if (_positions.Length > 0)
+            {
+                _targetIndex = 0;
+                _camera.transform.position = _positions[0].position;
+            }
+            Debug.Log("[CameraToggle] Reset to default position");
+        }
+
         private void ToggleToNext()
         {
             if (_positions.Length == 0) return;

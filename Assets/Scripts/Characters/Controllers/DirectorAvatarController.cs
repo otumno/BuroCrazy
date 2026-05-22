@@ -932,6 +932,12 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         }
 
         barrier.ToggleBarrier();
+        
+        // Разблокируем достижение "Первый раз открыл дверь"
+        if (AchievementManager.Instance != null)
+        {
+            AchievementManager.Instance.UnlockAchievement("OPEN_FIRST_DOOR");
+        }
 
         SetState(DirectorState.Idle);
         SetUninterruptible(false);

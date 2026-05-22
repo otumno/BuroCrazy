@@ -32,6 +32,10 @@ public class ClinchTarget : MonoBehaviour
     /// <summary>Корень индикатора (для скрытия при клике).</summary>
     public GameObject indicatorRoot;
 
+    [Header("Tooltip")]
+    public string tooltipText = "Разобраться с проблемой";
+    public float displayDelay = 0.5f;
+
     [Header("Звуки и Интеракция")]
     public Scriptables.Audio.SoundID hoverSound = Scriptables.Audio.SoundID.UI_Hover;
     public Scriptables.Audio.SoundID clickSound = Scriptables.Audio.SoundID.UI_Click_Default;

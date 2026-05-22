@@ -69,6 +69,7 @@ public class DoorController : MonoBehaviour
             {
                 spriteRenderer.sprite = openSprite;
                 PlayOpenSound();
+                // Достижение разблокируется только когда директор управляет barrier (см. DirectorAvatarController)
             }
         }
     }

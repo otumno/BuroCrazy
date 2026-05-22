@@ -1,11 +1,13 @@
 using System;
 using UnityEngine;
+using UI.Tooltips;
 using Zenject;
 using Managers;
 using Managers.Teletype;
 using Managers.Academy;
 using Managers.Bureaucracy;
 using UI.Notifications;
+using UI;
 
 namespace DI
 {
@@ -61,6 +63,9 @@ namespace DI
             BindSingleton<DocumentQualityManager>(() => DocumentQualityManager.Instance);
             BindSingleton<GameLifecycleManager>(() => GameLifecycleManager.Instance);
             BindSingleton<NotificationManager>(() => NotificationManager.Instance);
+
+            // Tooltip system
+            Container.Bind<TooltipManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
 
             Debug.Log("[ProjectContextInstallerAsset] Все синглтоны привязаны к DI-контейнеру.");
         }
