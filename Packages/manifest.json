@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.gladekit.mcp-bridge": "https://github.com/Glade-tool/glade-mcp-unity.git?path=/unity-bridge",
     "com.unity.ai.navigation": "2.0.9",
     "com.unity.collab-proxy": "2.10.0",
     "com.unity.feature.2d": "2.0.1",

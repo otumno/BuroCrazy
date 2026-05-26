@@ -1,5 +1,15 @@
 {
   "dependencies": {
+    "com.gladekit.mcp-bridge": {
+      "version": "https://github.com/Glade-tool/glade-mcp-unity.git?path=/unity-bridge",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.inputsystem": "1.0.0",
+        "com.unity.ai.navigation": "1.0.0"
+      },
+      "hash": "ff2312ed6563c0a294b3be09fac02e1b0c88cb8b"
+    },
     "com.unity.2d.animation": {
       "version": "12.0.2",
       "depth": 1,

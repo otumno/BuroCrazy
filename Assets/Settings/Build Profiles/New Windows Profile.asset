@@ -635,7 +635,7 @@ MonoBehaviour:
     - line: '|     PS5: DOTWEEN'
     - line: '|     QNX: DOTWEEN'
     - line: '|     ReservedCFE: DOTWEEN'
-    - line: '|     Standalone: DOTWEEN;STEAMWORKS_NET'
+    - line: '|     Standalone: DOTWEEN;GLADE_AI_NAVIGATION;GLADE_INPUT_SYSTEM;GLADE_UGUI;STEAMWORKS_NET'
     - line: '|     VisionOS: DOTWEEN'
     - line: '|     WebGL: DOTWEEN'
     - line: '|     Windows Store Apps: DOTWEEN'
