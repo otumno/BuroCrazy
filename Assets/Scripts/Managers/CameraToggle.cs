@@ -12,6 +12,10 @@ namespace Managers
         [Header("Камера и точки")]
         [SerializeField] private Camera _camera;
         [SerializeField] private Transform[] _positions;
+        
+        [Header("Настройки зума")]
+        [Tooltip("Размер orthographicSize для стандартной камеры")]
+        [SerializeField] private float _defaultOrthographicSize = 5.4f;
 
         [Header("Настройки перехода")]
         [SerializeField] private float _transitionSpeed = 5f;
@@ -36,14 +40,33 @@ namespace Managers
 
         private void Update()
         {
+            // Защита от null EventSystem
+            if (UnityEngine.EventSystems.EventSystem.current == null)
+            {
+                Debug.LogWarning("[CameraToggle] EventSystem не инициализирован, пропускаем проверку UI");
+                return;
+            }
+            
             var scrollInput = 0f;
             var hasTabInput = false;
             var deltaTime = Time.unscaledDeltaTime;
             
-            if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            // Защита: не блокируем ввод если уже на второй позиции (стандартный режим после туториала)
+            // Это позволяет переключать камеру даже когда курсор над UI (например в диалогах)
+            bool isPointerOverUI = UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
+            bool shouldAllowInput = !isPointerOverUI || _positions.Length == 0 ||
+                                   Vector3.SqrMagnitude(_camera.transform.position - _positions[0].position) > 0.1f;
+            
+            if (shouldAllowInput)
             {
                 scrollInput = Input.GetAxis(_scrollAxis);
                 hasTabInput = Input.GetKeyDown(_keyCode);
+            }
+            
+            // Отладка
+            if (scrollInput > 0.01f || scrollInput < -0.01f || hasTabInput)
+            {
+                Debug.Log($"[CameraToggle] Ввод: scroll={scrollInput:F3}, tab={hasTabInput}, isOverUI={isPointerOverUI}");
             }
 
             // Tab - переключение по кругу
@@ -80,7 +103,50 @@ namespace Managers
                 _targetIndex = 0;
                 _camera.transform.position = _positions[0].position;
             }
-            Debug.Log("[CameraToggle] Reset to default position");
+            // Сбрасываем orthographicSize на стандартное значение
+            if (_camera != null && _defaultOrthographicSize > 0)
+            {
+                _camera.orthographicSize = _defaultOrthographicSize;
+            }
+            Debug.Log($"[CameraToggle] Reset to default position, orthographicSize={_defaultOrthographicSize}");
+        }
+        
+        /// <summary>
+        /// Явно устанавливает первую позицию камеры (используется после завершения туториала
+        /// чтобы камера показывала на первую позицию, а не на последнюю)
+        /// </summary>
+        public void SetToFirstPosition()
+        {
+            if (_positions.Length > 0)
+            {
+                _targetIndex = 0;
+                _camera.transform.position = _positions[0].position;
+                _camera.orthographicSize = _defaultOrthographicSize > 0 ? _defaultOrthographicSize : _camera.orthographicSize;
+                Debug.Log($"[CameraToggle] SetToFirstPosition: позиция={_positions[0].position}, зум={_defaultOrthographicSize}");
+            }
+        }
+
+        /// <summary>
+        /// Явно устанавливает вторую позицию камеры (используется после клика на стол директора
+        /// чтобы камера показывала на вторую позицию, а не на первую)
+        /// </summary>
+        public void SetToSecondPosition()
+        {
+            if (_positions.Length > 1)
+            {
+                _targetIndex = 1;
+                _camera.transform.position = _positions[1].position;
+                _camera.orthographicSize = _defaultOrthographicSize > 0 ? _defaultOrthographicSize : _camera.orthographicSize;
+                Debug.Log($"[CameraToggle] SetToSecondPosition: позиция={_positions[1].position}, зум={_defaultOrthographicSize}");
+            }
+            else if (_positions.Length > 0)
+            {
+                // Если есть только одна позиция, используем её
+                _targetIndex = 0;
+                _camera.transform.position = _positions[0].position;
+                _camera.orthographicSize = _defaultOrthographicSize > 0 ? _defaultOrthographicSize : _camera.orthographicSize;
+                Debug.Log($"[CameraToggle] SetToSecondPosition: доступна только первая позиция={_positions[0].position}");
+            }
         }
 
         private void ToggleToNext()

@@ -38,10 +38,10 @@ MonoBehaviour:
   id: 794c8a84-5a08-47b9-ac52-17217e03579a
   graphPosition:
     serializedVersion: 2
-    x: 300
-    y: 0
-    width: 0
-    height: 0
+    x: 220
+    y: -2
+    width: 847
+    height: 357
   speakerID: Director
   text: "\u041D\u0443 \u0432\u043E\u0442 \u044F \u0438 \u043D\u0430 \u043C\u0435\u0441\u0442\u0435.
     \u0421\u043B\u0443\u0436\u0435\u0431\u043D\u044B\u0435 \u043F\u043E\u043C\u0435\u0449\u0435\u043D\u0438\u044F\u2026

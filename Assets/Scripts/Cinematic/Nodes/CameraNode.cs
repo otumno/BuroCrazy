@@ -54,7 +54,12 @@ namespace CinematicSystem.Nodes
             else if (!useDirectorCamera && cameraToggle != null)
             {
                 cameraToggle.enabled = true;
-                if (directorCam != null) directorCam.SetFollowMode(false);
+                // ТОЛЬКО сбрасываем follow mode, НЕ отключаем компонент DirectorDebugCamera
+                // чтобы клавиша C продолжала работать
+                if (directorCam != null)
+                {
+                    directorCam.SetFollowMode(false);
+                }
             }
 
             // Слежение за объектом и/или зум

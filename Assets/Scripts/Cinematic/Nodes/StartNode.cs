@@ -27,8 +27,15 @@ namespace CinematicSystem.Nodes
 
         public override IEnumerator Execute(CinematicPlayer player)
         {
+            Debug.Log($"[StartNode] Execute: this={this?.name ?? "null"}, characterID={characterID}");
+            Debug.Log($"[StartNode] Execute: nextNode is null? {nextNode == null}");
+            if (nextNode != null)
+            {
+                Debug.Log($"[StartNode] Execute: nextNode.name='{nextNode.name}', nextNode.nodeName='{nextNode.nodeName}', nextNode.id='{nextNode.id}'");
+            }
             // Устанавливаем DefaultActor для игрока из этого узла
             player.DefaultActor = characterID;
+            Debug.Log($"[StartNode] Вызываю GoToNextNode с nextNode");
             player.GoToNextNode(nextNode);
             yield break;
         }

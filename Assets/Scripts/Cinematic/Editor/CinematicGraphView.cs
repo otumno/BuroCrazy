@@ -190,6 +190,7 @@ namespace CinematicSystem.Editor
                 ("Call Dialogue", typeof(Nodes.CallDialogueNode)),
                 ("Call Cinematic Graph", typeof(Nodes.CallCinematicGraphNode)),
                 ("Camera", typeof(Nodes.CameraNode)),
+                ("Camera Move", typeof(Nodes.CameraMoveNode)),
                 ("Wait For Seconds", typeof(Nodes.WaitForSecondsNode)),
                 ("Wait For UI Click", typeof(Nodes.WaitForUIClickNode)),
                 ("Wait For Despawn", typeof(Nodes.WaitForCharacterDespawnNode)),

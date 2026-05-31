@@ -105,6 +105,7 @@ namespace CinematicSystem.Editor
                 case "call_dialogue": return "📞";
                 case "call_cinematic": return "🔗";
                 case "camera": return "🎥";
+                case "camera_move": return "📷";
                 case "wait": return "⏱";
                 case "wait_click": return "👆";
                 case "wait_despawn": return "💀";
@@ -133,6 +134,7 @@ namespace CinematicSystem.Editor
                 case "call_dialogue": return "Call Dialogue";
                 case "call_cinematic": return "Call Graph";
                 case "camera": return "Camera";
+                case "camera_move": return "Camera Move";
                 case "wait": return "Wait";
                 case "wait_click": return "Wait Click";
                 case "wait_despawn": return "Wait Despawn";
@@ -189,6 +191,7 @@ namespace CinematicSystem.Editor
                 case "call_dialogue": return CallDialogueNodeColor;
                 case "call_cinematic": return new Color(0.4f, 0.6f, 0.9f, 0.9f);
                 case "camera": return CameraNodeColor;
+                case "camera_move": return new Color(0.2f, 0.6f, 1f);
                 case "wait": return WaitNodeColor;
                 case "wait_click": return WaitClickNodeColor;
                 case "wait_despawn": return new Color(0.5f, 0.2f, 0.5f, 0.9f);
@@ -417,6 +420,42 @@ namespace CinematicSystem.Editor
                 cam.duration = EditorGUILayout.FloatField("Duration", cam.duration);
                 cam.useDirectorCamera = EditorGUILayout.Toggle("Director Cam", cam.useDirectorCamera);
                 cam.waitForCompletion = EditorGUILayout.Toggle("Wait", cam.waitForCompletion);
+                EditorGUILayout.EndVertical();
+                return;
+            }
+            
+            // Для CameraMoveNode
+            if (Node is Nodes.CameraMoveNode camMove)
+            {
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.LabelField("Camera Move", EditorStyles.boldLabel);
+                
+                EditorGUILayout.LabelField("Start Position", EditorStyles.boldLabel);
+                camMove.startPositionSource = (Nodes.CameraMoveNode.PositionSource)EditorGUILayout.EnumPopup("Source", camMove.startPositionSource);
+                if (camMove.startPositionSource == Nodes.CameraMoveNode.PositionSource.Transform)
+                    camMove.startTransform = (Transform)EditorGUILayout.ObjectField("Transform", camMove.startTransform, typeof(Transform), true);
+                if (camMove.startPositionSource == Nodes.CameraMoveNode.PositionSource.StandardCamera)
+                    camMove.standardCameraPositionIndex = EditorGUILayout.IntField("Camera Index", camMove.standardCameraPositionIndex);
+                
+                EditorGUILayout.Space(2);
+                EditorGUILayout.LabelField("End Position", EditorStyles.boldLabel);
+                camMove.endPositionSource = (Nodes.CameraMoveNode.PositionSource)EditorGUILayout.EnumPopup("Source", camMove.endPositionSource);
+                if (camMove.endPositionSource == Nodes.CameraMoveNode.PositionSource.Transform)
+                    camMove.endTransform = (Transform)EditorGUILayout.ObjectField("Transform", camMove.endTransform, typeof(Transform), true);
+                camMove.endOrthographicSize = EditorGUILayout.FloatField("End Ortho Size", camMove.endOrthographicSize);
+                
+                EditorGUILayout.Space(2);
+                EditorGUILayout.LabelField("Animation", EditorStyles.boldLabel);
+                camMove.duration = EditorGUILayout.FloatField("Duration", camMove.duration);
+                camMove.easeType = (Nodes.CameraMoveNode.EaseTypeEnum)EditorGUILayout.EnumPopup("Easing", camMove.easeType);
+                camMove.pauseAtEnd = EditorGUILayout.Toggle("Pause At End", camMove.pauseAtEnd);
+                if (camMove.pauseAtEnd)
+                    camMove.pauseDuration = EditorGUILayout.FloatField("Pause Duration", camMove.pauseDuration);
+                camMove.returnDuration = EditorGUILayout.FloatField("Return Duration", camMove.returnDuration);
+                
+                EditorGUILayout.Space(2);
+                EditorGUILayout.LabelField($"→ {camMove.nextNode?.nodeName ?? "null"}", EditorStyles.miniLabel);
+                
                 EditorGUILayout.EndVertical();
                 return;
             }

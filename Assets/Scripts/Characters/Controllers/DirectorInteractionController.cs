@@ -1,5 +1,6 @@
 using Gameplay;
 using UnityEngine;
+using CinematicSystem;
 using UnityEngine.UI;
 using TMPro;
 using Utilities;
@@ -37,8 +38,9 @@ public class DirectorInteractionController : MonoBehaviour
 
         currentInteractionPoint = point;
 
-        // Во время туториала первого дня директора водит катсцену, поэтому контекстные действия надо игнорировать
-        if (FirstDayTutorial.IsActive)
+        // Во время кинематик-графа (туториала) директора водит катсцену, поэтому контекстные действия надо игнорировать
+        var cinematicPlayer = FindObjectOfType<CinematicPlayer>();
+        if (cinematicPlayer != null && cinematicPlayer.IsPlaying)
         {
             if (contextButton != null)
                 contextButton.gameObject.SetActive(false);
@@ -81,8 +83,9 @@ public class DirectorInteractionController : MonoBehaviour
             return;
         }
 
-        // Во время туториала первого дня контекстные действия запрещены.
-        if (FirstDayTutorial.IsActive)
+        // Во время кинематик-графа (туториала) контекстные действия запрещены.
+        var cinematicPlayer2 = FindObjectOfType<CinematicPlayer>();
+        if (cinematicPlayer2 != null && cinematicPlayer2.IsPlaying)
         {
             contextButton.gameObject.SetActive(false);
             return;
@@ -132,7 +135,8 @@ public class DirectorInteractionController : MonoBehaviour
     private void OnContextButtonClicked()
     {
         if (currentInteractionPoint == null || directorAvatar == null) return;
-        if (FirstDayTutorial.IsActive) return;
+        var cinematicPlayer3 = FindObjectOfType<CinematicPlayer>();
+        if (cinematicPlayer3 != null && cinematicPlayer3.IsPlaying) return;
 
         ServicePoint workstation = currentInteractionPoint.GetComponentInParent<ServicePoint>();
         bool isWorkingHere = directorAvatar.GetCurrentState() == DirectorAvatarController.DirectorState.WorkingAtStation && directorAvatar.GetWorkstation() == workstation;

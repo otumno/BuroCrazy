@@ -81,6 +81,8 @@ namespace CinematicSystem
         /// <param name="executionMode">Режим выполнения</param>
         public void Play(CinematicGraph graph, ExecutionMode executionMode)
         {
+            Debug.Log($"[CinematicPlayer] Play() called. Graph={graph?.name ?? "NULL"}, allNodes.Count={graph?.allNodes?.Count ?? 0}, startNode={graph?.startNode?.nodeName ?? "NULL"}");
+            
             if (IsPlaying) Stop();
             
             CurrentGraph = graph;
@@ -174,6 +176,8 @@ namespace CinematicSystem
         /// </summary>
         private IEnumerator ExecuteGraph()
         {
+            Debug.Log($"[CinematicPlayer] ExecuteGraph START. Graph={(CurrentGraph != null ? CurrentGraph.name : "NULL")}, startNode={(CurrentGraph?.startNode != null ? CurrentGraph.startNode.nodeName : "NULL")}");
+            
             if (CurrentGraph == null || CurrentGraph.startNode == null)
             {
                 Debug.LogError("[CinematicPlayer] Не указан startNode в графе!");
@@ -182,9 +186,11 @@ namespace CinematicSystem
             }
 
             currentNode = CurrentGraph.startNode;
+            Debug.Log($"[CinematicPlayer] Начальный currentNode: {currentNode.nodeName} (id={currentNode.id})");
             
             while (currentNode != null)
             {
+                Debug.Log($"[CinematicPlayer] >>> Выполняю узел: {currentNode.nodeName} (type={currentNode.GetNodeType()})");
                 OnNodeStarted?.Invoke(currentNode);
                 skipRequested = false;
 
@@ -216,11 +222,13 @@ namespace CinematicSystem
                 }
 
                 OnNodeFinished?.Invoke(currentNode);
+                Debug.Log($"[CinematicPlayer] Узел завершён: {currentNode?.nodeName ?? "null"}, currentNode после = {currentNode?.nodeName ?? "null"}");
 
                 // Если currentNode стал null - завершаем
                 if (currentNode == null) break;
             }
 
+            Debug.Log("[CinematicPlayer] ExecuteGraph END - выход из while цикла");
             Finish();
         }
 
@@ -229,6 +237,7 @@ namespace CinematicSystem
         /// </summary>
         public void GoToNextNode(CinematicNode nextNode)
         {
+            Debug.Log($"[CinematicPlayer] GoToNextNode: {currentNode?.nodeName ?? "null"} -> {nextNode?.nodeName ?? "NULL (завершение графа)"}");
             currentNode = nextNode;
         }
         
@@ -265,7 +274,51 @@ namespace CinematicSystem
             var cursor = FindObjectOfType<CursorController>();
             if (cursor != null) cursor.SetCutsceneCursor(false);
             
+            // ВОССТАНАВЛИВАЕМ УПРАВЛЕНИЕ КАМЕРОЙ
+            RestoreCameraControl();
+            
             OnFinished?.Invoke();
+        }
+        
+        /// <summary>
+        /// Восстанавливает стандартное управление камерой после завершения cinematic.
+        /// Включает CameraToggle и отключает режим слежения в DirectorDebugCamera.
+        /// </summary>
+        private void RestoreCameraControl()
+        {
+            var mainCamera = Camera.main;
+            if (mainCamera == null)
+            {
+                Debug.LogWarning("[CinematicPlayer] Не найдена MainCamera для восстановления управления камерой");
+                return;
+            }
+            
+            // Получаем компоненты камеры
+            var cameraToggle = mainCamera.GetComponent<Managers.CameraToggle>();
+            var directorCam = mainCamera.GetComponent<BuroDebug.DirectorDebugCamera>();
+            
+            // Включаем CameraToggle (стандартное управление)
+            if (cameraToggle != null)
+            {
+                cameraToggle.enabled = true;
+                Debug.Log("[CinematicPlayer] CameraToggle.enabled = true (восстановлен стандартный режим камеры)");
+            }
+            
+            // Отключаем режим слежения DirectorDebugCamera
+            if (directorCam != null)
+            {
+                directorCam.SetFollowMode(false);
+                Debug.Log("[CinematicPlayer] DirectorDebugCamera.SetFollowMode(false) (режим слежения отключён)");
+            }
+            
+            // Дополнительная защита: только сбрасываем orthographicSize, НЕ отключаем DirectorDebugCamera.enabled
+            // Компонент должен оставаться enabled чтобы игрок мог нажать C и переключить режим
+            if (directorCam != null && mainCamera != null)
+            {
+                // Сбрасываем зум камеры на дефолтный (используем defaultSize из DirectorDebugCamera)
+                mainCamera.orthographicSize = directorCam.defaultSize;
+                Debug.Log($"[CinematicPlayer] DirectorDebugCamera orthographicSize сброшен на {directorCam.defaultSize}");
+            }
         }
     }
 }

@@ -1,5 +1,141 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8328433250445805116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a71103aa059d0ad48bb46416e9329e66, type: 3}
+  m_Name: EndNode_8
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.EndNode
+  id: end
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 3496
+    y: 28
+    width: 200
+    height: 150
+--- !u!114 &-6900271902605351478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02bb9589f5141a048bfbfe26823bd780, type: 3}
+  m_Name: ShowArrowNode_6
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.ShowArrowNode
+  id: arrow
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 2904
+    y: 28
+    width: 200
+    height: 150
+  nextNode: {fileID: 1398033852955810674}
+--- !u!114 &-4544197322302695862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a4e62972925e09499844b8b7188b381, type: 3}
+  m_Name: PlayDialogueNode_5
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.PlayDialogueNode
+  id: d2
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 2642
+    y: 28
+    width: 200
+    height: 150
+  nextNode: {fileID: -6900271902605351478}
+  dialogue: {fileID: 11400000, guid: ea32c37560809e742bf56f226fd85090, type: 2}
+--- !u!114 &-3126584006685475847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a55ab6f6eeec9534fac641aeea5371d8, type: 3}
+  m_Name: CameraNode_1
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.CameraNode
+  id: camera_debug
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 1363
+    y: 32
+    width: 200
+    height: 150
+  nextNode: {fileID: 6226537508312449887}
+  targetKey: 
+  orthographicSize: -1
+  duration: 0.5
+  ease: 7
+  useDirectorCamera: 1
+  waitForCompletion: 1
+--- !u!114 &-2798915106983065421
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a4e62972925e09499844b8b7188b381, type: 3}
+  m_Name: PlayDialogueNode_3
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.PlayDialogueNode
+  id: d1
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 2046
+    y: 28
+    width: 200
+    height: 150
+  nextNode: {fileID: 1134467663579302570}
+  dialogue: {fileID: 11400000, guid: 59fdf418fee01bf4a8dff034205bf338, type: 2}
+--- !u!114 &-36167067260136387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef6a16a25d5b27f4b92bd9b1572655e0, type: 3}
+  m_Name: TeleportNode_9
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.TeleportNode
+  id: 59d7ea72-923b-4208-8902-7920d314f47c
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 938
+    y: -173
+    width: 200
+    height: 150
+  nextNode: {fileID: -3126584006685475847}
+  characterID: Director
+  targetKey: EntryPoint
+  keepRotation: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12,29 +148,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e6f799f0586ead4d880a3d621cb35fd, type: 3}
   m_Name: Tutorial_Day1
   m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.CinematicGraph
-  graphID: d006b2ae517b952468cfd4edbbf02e56
+  graphID: bf8aa5ca83cc65f489c8489ef180e9d7
   graphName: Tutorial_Day1
   allNodes:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 1852453160834128844}
-  startNode: {fileID: 0}
+  - {fileID: 5977209104901432762}
+  - {fileID: -3126584006685475847}
+  - {fileID: 6226537508312449887}
+  - {fileID: -2798915106983065421}
+  - {fileID: 1134467663579302570}
+  - {fileID: -4544197322302695862}
+  - {fileID: -6900271902605351478}
+  - {fileID: 1398033852955810674}
+  - {fileID: -8328433250445805116}
+  - {fileID: -36167067260136387}
+  startNode: {fileID: 5977209104901432762}
   isBackground: 0
---- !u!114 &1852453160834128844
+--- !u!114 &1134467663579302570
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -43,21 +172,94 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b89e23a75d8c06549b25077ddebefd3b, type: 3}
-  m_Name: RandomNode_16
-  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.RandomNode
-  id: 4cf1746f-3a57-4adb-a829-fc1361299dac
+  m_Script: {fileID: 11500000, guid: 703dab99c1634ea4e9af95b065316969, type: 3}
+  m_Name: MoveToNode_4
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.MoveToNode
+  id: m2
   nodeName: 
   editorPosition:
     serializedVersion: 2
-    x: 853
-    y: -358
+    x: 2307
+    y: 28
     width: 200
     height: 150
-  outcomes:
-  - weight: 1
-    nextNode: {fileID: 0}
-  - weight: 1
-    nextNode: {fileID: 0}
-  - weight: 1
-    nextNode: {fileID: 0}
+  nextNode: {fileID: -4544197322302695862}
+  targetKey: SecondStopWaypont
+  speed: -1
+  waitForCompletion: 1
+  usePathfinding: 1
+  characterID: Director
+--- !u!114 &1398033852955810674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 703dab99c1634ea4e9af95b065316969, type: 3}
+  m_Name: MoveToNode_7
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.MoveToNode
+  id: m3
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 3164
+    y: 28
+    width: 200
+    height: 150
+  nextNode: {fileID: -8328433250445805116}
+  targetKey: DeskWaypoint
+  speed: -1
+  waitForCompletion: 1
+  usePathfinding: 1
+  characterID: Director
+--- !u!114 &5977209104901432762
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a82ee4a73e769749acc301af11c71f4, type: 3}
+  m_Name: StartNode_0
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.StartNode
+  id: start
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 661
+    y: 58
+    width: 200
+    height: 150
+  nextNode: {fileID: -3126584006685475847}
+  characterID: Director
+--- !u!114 &6226537508312449887
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 703dab99c1634ea4e9af95b065316969, type: 3}
+  m_Name: MoveToNode_2
+  m_EditorClassIdentifier: Assembly-CSharp::CinematicSystem.Nodes.MoveToNode
+  id: m1
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 1675
+    y: 28
+    width: 200
+    height: 150
+  nextNode: {fileID: -2798915106983065421}
+  targetKey: FirstStopWaypont
+  speed: -1
+  waitForCompletion: 1
+  usePathfinding: 1
+  characterID: Director

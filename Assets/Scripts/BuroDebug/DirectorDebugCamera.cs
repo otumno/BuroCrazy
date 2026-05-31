@@ -69,25 +69,60 @@ namespace BuroDebug
         {
             _camera = GetComponent<Camera>();
             _cameraToggle = GetComponent<CameraToggle>();
+            Debug.Log($"[DirectorDebugCamera] Awake: _camera={_camera != null}, _cameraToggle={_cameraToggle != null}");
         }
 
         private void Update()
         {
+            // Защита от null _cameraToggle (может быть null если Awake не вызывался после повторного Enable)
+            if (_cameraToggle == null)
+            {
+                _cameraToggle = GetComponent<CameraToggle>();
+            }
+            
             if (Input.GetKeyDown(toggleKey))
             {
-                _isFollowing = !_isFollowing;
-
-                if (_cameraToggle != null)
+                // Блокируем ВСЁ переключение камеры во время катсцены
+                var inputController = FindObjectOfType<PlayerInputController>();
+                bool isCutscenePlaying = inputController != null && inputController.IsCutscenePlaying;
+                
+                if (isCutscenePlaying)
                 {
-                    _cameraToggle.enabled = !_isFollowing;
+                    Debug.Log($"<color=yellow>[DirectorDebugCamera]</color> Клавиша C заблокирована - идёт катсцена");
+                    return;
                 }
-
-                if (_isFollowing && DirectorAvatarController.Instance != null)
+                
+                // Если НЕ в режиме слежения - проверяем, можно ли включить
+                if (!_isFollowing)
                 {
-                    _focusPoint = DirectorAvatarController.Instance.transform.position;
+                    // НЕ включаем слежение если CameraToggle активен (конфликт режимов)
+                    if (_cameraToggle != null && _cameraToggle.enabled)
+                    {
+                        Debug.Log($"<color=yellow>[DirectorDebugCamera]</color> Невозможно включить режим слежения - CameraToggle уже активен");
+                        return;
+                    }
+                    
+                    _isFollowing = true;
+                    if (_cameraToggle != null)
+                    {
+                        _cameraToggle.enabled = false;
+                    }
+                    if (DirectorAvatarController.Instance != null)
+                    {
+                        _focusPoint = DirectorAvatarController.Instance.transform.position;
+                    }
+                    Debug.Log($"<color=yellow>[DirectorDebugCamera]</color> Режим слежения ВКЛЮЧЕН");
                 }
-
-                Debug.Log($"<color=yellow>[DirectorDebugCamera]</color> Режим слежения: {_isFollowing}");
+                else
+                {
+                    // Выключаем режим слежения
+                    _isFollowing = false;
+                    if (_cameraToggle != null)
+                    {
+                        _cameraToggle.enabled = true;
+                    }
+                    Debug.Log($"<color=yellow>[DirectorDebugCamera]</color> Режим слежения ВЫКЛЮЧЕН, CameraToggle включен");
+                }
             }
         }
 
@@ -99,13 +134,38 @@ namespace BuroDebug
             {
                 if (DirectorAvatarController.Instance == null) return;
 
+                // ПРОВЕРКА: во время катсцены или диалогов отключаем смещение камеры за мышью
+                var inputController = FindObjectOfType<PlayerInputController>();
+                bool isBlocked = (inputController != null && inputController.IsCutscenePlaying);
+                
+                // Дополнительная проверка для диалогов: DialogueUIManager.ActivateDialogueUI() активирует дочерние панели
+                if (!isBlocked && DialogueUIManager.Instance != null)
+                {
+                    // Проверяем, активна ли панель диалога по тегам или по наличию.visibleChildren
+                    // Ищем любой активный дочерний объект с тегом "DialogueUI" или "DialoguePanel"
+                    foreach (Transform child in DialogueUIManager.Instance.transform)
+                    {
+                        if (child.gameObject.activeInHierarchy && child.gameObject.CompareTag("DialogueUI"))
+                        {
+                            isBlocked = true;
+                            break;
+                        }
+                    }
+                    // Альтернатива: если DialogueUIManager показывает диалог через Time.timeScale == 0 или другое состояние
+                    // Проверяем через MenuPanel или любой другой UI который может быть активен во время диалога
+                    var menuPanel = GameObject.FindGameObjectWithTag("MenuPanel");
+                    if (menuPanel != null && menuPanel.activeInHierarchy)
+                    {
+                        isBlocked = true;
+                    }
+                }
+                
                 // 1. Определяем целевой зум в зависимости от движения директора
                 bool isMoving = DirectorAvatarController.Instance.AgentMover != null
                     && DirectorAvatarController.Instance.AgentMover.IsMoving();
                 float idealZoom = isMoving ? zoomedSize + movementZoomOffset : zoomedSize;
                 
-                // 2. Плавное изменение зума через SmoothDamp (теперь сам targetZoom меняется плавно)
-                // Используем промежуточную переменную _currentZoomTarget для инерционного перехода
+                // 2. Плавное изменение зума через SmoothDamp
                 float currentZoomTarget = Mathf.SmoothDamp(_currentZoomTarget, idealZoom, ref _zoomVelocity, zoomSmoothTime, Mathf.Infinity, Time.unscaledDeltaTime);
                 _currentZoomTarget = currentZoomTarget;
                 _camera.orthographicSize = _currentZoomTarget;
@@ -120,25 +180,26 @@ namespace BuroDebug
                     _focusPoint = directorPos - direction * deadzoneRadius;
                 }
 
-                // 3. Смещение к курсору мыши
-                Vector3 mouseScreenPos = Input.mousePosition;
-                mouseScreenPos.z = Mathf.Abs(_camera.transform.position.z);
-                Vector2 mouseWorldPos = _camera.ScreenToWorldPoint(mouseScreenPos);
-                
-                Vector2 mouseOffset = (mouseWorldPos - _focusPoint) * mouseOffsetMultiplier;
-                mouseOffset = Vector2.ClampMagnitude(mouseOffset, maxMouseOffset);
+                // 4. Смещение к курсору мыши (ОТКЛЮЧАЕМ во время катсцен/диалогов!)
+                Vector3 targetPos = _focusPoint;
+                if (!isBlocked)
+                {
+                    Vector3 mouseScreenPos = Input.mousePosition;
+                    mouseScreenPos.z = Mathf.Abs(_camera.transform.position.z);
+                    Vector2 mouseWorldPos = _camera.ScreenToWorldPoint(mouseScreenPos);
+                    
+                    Vector2 mouseOffset = (mouseWorldPos - _focusPoint) * mouseOffsetMultiplier;
+                    mouseOffset = Vector2.ClampMagnitude(mouseOffset, maxMouseOffset);
 
-                // 4. Предварительная цель
-                Vector3 targetPos = _focusPoint + mouseOffset;
+                    targetPos = _focusPoint + mouseOffset;
+                }
 
                 // 5. Ограничение камеры рамками карты (Clamping)
                 if (useBounds)
                 {
-                    // Динамически высчитываем размеры половины экрана
                     float camHalfHeight = _camera.orthographicSize;
                     float camHalfWidth = camHalfHeight * _camera.aspect;
 
-                    // Ограничиваем так, чтобы край экрана не вылезал за границы mapMinBounds и mapMaxBounds
                     float clampedX = Mathf.Clamp(targetPos.x, mapMinBounds.x + camHalfWidth, mapMaxBounds.x - camHalfWidth);
                     float clampedY = Mathf.Clamp(targetPos.y, mapMinBounds.y + camHalfHeight, mapMaxBounds.y - camHalfHeight);
                     
@@ -149,11 +210,11 @@ namespace BuroDebug
 
                 // 6. Финальная резиночка (SmoothDamp)
                 _camera.transform.position = Vector3.SmoothDamp(
-                    _camera.transform.position, 
-                    targetPos, 
-                    ref _velocity, 
-                    smoothTime, 
-                    Mathf.Infinity, 
+                    _camera.transform.position,
+                    targetPos,
+                    ref _velocity,
+                    smoothTime,
+                    Mathf.Infinity,
                     Time.unscaledDeltaTime
                 );
             }

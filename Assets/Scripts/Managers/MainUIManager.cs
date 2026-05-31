@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using Data.Creation;
 using Enums;
 using Gameplay;
+using CinematicSystem;
 
 namespace Managers
 {
@@ -315,6 +316,18 @@ namespace Managers
             _isUserPaused = false; // Сбрасываем флаг ручной паузы
             Time.timeScale = 1f;
             Debug.Log("<color=green>[MainUIManager] Время запущено, _pauseCount сброшен на 0.</color>");
+            
+            // После закрытия панели стола директора устанавливаем камеру на ВТОРУЮ позицию
+            var mainCamera = Camera.main;
+            if (mainCamera != null)
+            {
+                var cameraToggle = mainCamera.GetComponent<Managers.CameraToggle>();
+                if (cameraToggle != null)
+                {
+                    cameraToggle.SetToSecondPosition();
+                    Debug.Log("[MainUIManager] Камера установлена на вторую позицию после закрытия панели");
+                }
+            }
         }
 
         private IEnumerator LoadSceneRoutine(string sceneName)
@@ -447,27 +460,56 @@ namespace Managers
 
         private IEnumerator StartTutorialRoutine()
         {
-            Debug.Log("[MainUIManager] StartTutorialRoutine: Запуск туториала первого дня");
+            Debug.Log("[MainUIManager] StartTutorialRoutine: Запуск туториала первого дня через CinematicGraph");
             
-            // Находим компонент туториала (может быть неактивным)
-            var tutorial = FindFirstObjectByType<FirstDayTutorial>(FindObjectsInactive.Include);
-            if (tutorial == null)
+            // Загружаем граф туториала
+            var tutorialGraph = CinematicGraphLibrary.LoadGraph("Tutorial_Day1");
+            if (tutorialGraph == null)
             {
-                Debug.LogError("[MainUIManager] FirstDayTutorial не найден на сцене!");
+                Debug.LogError("[MainUIManager] Tutorial_Day1.graph не найден!");
                 isTransitioning = false;
                 yield break;
             }
             
-            // Запускаем туториал (он сам заблокирует управление и покажет UI)
-            tutorial.StartTutorial();
+            // Находим или создаём CinematicPlayer
+            var cinematicPlayer = FindObjectOfType<CinematicPlayer>();
+            if (cinematicPlayer == null)
+            {
+                var playerObject = new GameObject("CinematicPlayer");
+                cinematicPlayer = playerObject.AddComponent<CinematicPlayer>();
+            }
             
-            // Ждем завершения туториала
-            while (!tutorial.IsTutorialCompleted)
+            // Подписываемся на завершение
+            bool graphFinished = false;
+            System.Action onFinishedHandler = null;
+            onFinishedHandler = () =>
+            {
+                graphFinished = true;
+                // Устанавливаем флаг завершения туториала
+                var slotIndex = SaveLoadManager.Instance?.GetCurrentSlot() ?? 0;
+                var saveData = SaveLoadManager.Instance?.GetDataForSlot(slotIndex);
+                if (saveData != null)
+                {
+                    saveData.firstDayTutorialCompleted = true;
+                    // Сохраняем обратно через WriteSaveDataToFile (нужно добавить публичный метод)
+                    // Временное решение: используем PlayerPrefs для флага
+                    PlayerPrefs.SetInt("FirstDayTutorialCompleted", 1);
+                    Debug.Log("[MainUIManager] firstDayTutorialCompleted = true сохранено");
+                }
+                cinematicPlayer.OnFinished -= onFinishedHandler;
+            };
+            cinematicPlayer.OnFinished += onFinishedHandler;
+            
+            // Запускаем граф (CinematicSystem.ExecutionMode.FullControl блокирует управление)
+            cinematicPlayer.Play(tutorialGraph, CinematicSystem.ExecutionMode.FullControl);
+            
+            // Ждем завершения графа
+            while (!graphFinished)
             {
                 yield return null;
             }
             
-            Debug.Log("[MainUIManager] Туториал первого дня завершен");
+            Debug.Log("[MainUIManager] Туториал первого дня завершен (через CinematicGraph)");
             isTransitioning = false;
         }
 

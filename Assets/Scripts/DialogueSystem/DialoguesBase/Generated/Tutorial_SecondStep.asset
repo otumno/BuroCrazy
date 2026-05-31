@@ -55,10 +55,10 @@ MonoBehaviour:
   id: 1b699d72-e8ec-4036-9c75-68becc25bace
   graphPosition:
     serializedVersion: 2
-    x: 600
+    x: 1213
     y: 0
-    width: 0
-    height: 0
+    width: 213
+    height: 176
   endSound: {fileID: 0}
   outcome: 0
   outputEmotion: 0

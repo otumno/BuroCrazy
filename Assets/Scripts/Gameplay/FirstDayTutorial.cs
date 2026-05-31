@@ -216,7 +216,21 @@ namespace Gameplay
             if (playerInput != null)
                 playerInput.IsCutscenePlaying = false;
 
-            // НЕ отключаем DirectorDebugCamera - оставляем активной для игрока
+            // ПЕРЕКЛЮЧАЕМ КАМЕРУ НА СТАНДАРТНЫЙ РЕЖИМ сразу после завершения диалогов
+            // Даём игроку управлять камерой стандартно, пока он решает что кликнуть
+            // Используем ResetToDefault() который устанавливает ПЕРВУЮ позицию (индекс 0)
+            if (cameraToggle != null)
+            {
+                Debug.Log("[FirstDayTutorial] EndCutsceneAndGiveControl: включаем стандартную камеру");
+                cameraToggle.enabled = true;
+                cameraToggle.ResetToDefault();
+            }
+            if (debugCamera != null)
+            {
+                Debug.Log("[FirstDayTutorial] EndCutsceneAndGiveControl: отключаем debug камеру");
+                debugCamera.DisableFollowing();
+                // НЕ отключаем debugCamera.enabled = false ! Нужно чтобы работала клавиша C
+            }
 
             // Воспроизводим звук звонка секретаря
             if (AudioManager.Instance != null)
@@ -249,11 +263,8 @@ namespace Gameplay
             
             IsWaitingForDeskClick = false;
             
-            // Скрываем стрелочку
-            if (hintArrow != null)
-            {
-                hintArrow.SetActive(false);
-            }
+            // Скрываем стрелочку - используем отдельный метод для надежности
+            HideHintArrow();
             
             // Блокируем управление
             if (playerInput != null)
@@ -268,6 +279,61 @@ namespace Gameplay
             {
                 CompleteTutorialDirectly();
             }
+        }
+        
+        /// <summary>
+        /// Скрывает стрелку подсказки. Вызывается при клике на кнопку стола директора.
+        /// </summary>
+        private void HideHintArrow()
+        {
+            // Способ 1: Прямая ссылка
+            if (hintArrow != null)
+            {
+                hintArrow.SetActive(false);
+                Debug.Log("[FirstDayTutorial] Стрелка скрыта (прямая ссылка)");
+                return;
+            }
+            
+            // Способ 2: Поиск по тегу HintArrow
+            var foundByTag = GameObject.FindGameObjectWithTag("HintArrow");
+            if (foundByTag != null)
+            {
+                foundByTag.SetActive(false);
+                Debug.Log("[FirstDayTutorial] Найдена стрелка по тегу HintArrow и скрыта");
+                return;
+            }
+            
+            // Способ 3: Поиск среди активных объектов с именем содержащим "HintArrow" или "UIGOArrow"
+            var allObjects = FindObjectsOfType<GameObject>();
+            foreach (var obj in allObjects)
+            {
+                if (obj == null) continue;
+                string nameLower = obj.name.ToLower();
+                if (nameLower.Contains("hintarrow") || nameLower.Contains("uigoarrow"))
+                {
+                    if (obj.activeInHierarchy)
+                    {
+                        obj.SetActive(false);
+                        Debug.Log($"[FirstDayTutorial] Найдена и скрыта стрелка по имени: {obj.name}");
+                        return;
+                    }
+                }
+            }
+            
+            // Способ 4: Поиск в иерархии StartOfDayPanel
+            var startOfDayPanel = FindObjectOfType<StartOfDayPanel>(true);
+            if (startOfDayPanel != null)
+            {
+                var arrowInPanel = startOfDayPanel.transform.Find("UIGOArrow (1)");
+                if (arrowInPanel != null)
+                {
+                    arrowInPanel.gameObject.SetActive(false);
+                    Debug.Log($"[FirstDayTutorial] Найдена стрелка в StartOfDayPanel: {arrowInPanel.name}");
+                    return;
+                }
+            }
+            
+            Debug.LogWarning("[FirstDayTutorial] Стрелка подсказки не найдена ни одним из способов");
         }
         
         private IEnumerator MoveDirectorToDeskAndCompleteTutorial()
@@ -330,16 +396,28 @@ namespace Gameplay
                 directorAvatar.ForceSetAtDeskState(true);
             }
             
-            // Выключаем DirectorDebugCamera, включаем CameraToggle
+            // Выключаем СЛЕЖЕНИЕ DirectorDebugCamera, НО оставляем компонентEnabled для обработки клавиши C
+            // enabled = false полностью отключает компонент и Update() не проверяет клавишу C
             if (debugCamera != null)
             {
+                Debug.Log($"[FirstDayTutorial] Отключаем слежение DirectorDebugCamera: enabled остается={debugCamera.enabled}");
                 debugCamera.DisableFollowing();
-                debugCamera.enabled = false;
+                // НЕ отключаем debugCamera.enabled = false ! Нужно чтобы работала клавиша C
             }
+            else
+            {
+                Debug.LogWarning("[FirstDayTutorial] debugCamera == null");
+            }
+            
             if (cameraToggle != null)
             {
+                Debug.Log($"[FirstDayTutorial] Включаем CameraToggle");
                 cameraToggle.enabled = true;
-                cameraToggle.ResetToDefault();
+                cameraToggle.SetToSecondPosition(); // ЯВНО устанавливаем ВТОРУЮ позицию после клика на стол директора
+            }
+            else
+            {
+                Debug.LogWarning("[FirstDayTutorial] cameraToggle == null");
             }
             
             // Открываем панель стола директора
@@ -366,11 +444,12 @@ namespace Gameplay
         {
             Debug.Log("[FirstDayTutorial] CleanupTutorial: Завершение туториала");
             
-            // Отключаем DirectorDebugCamera (критично — без этого оба компонента конфликтуют)
+            // Отключаем СЛЕЖЕНИЕ DirectorDebugCamera, НО оставляем компонент Enabled
+            //enabled = false полностью отключает компонент и Update() не проверяет клавишу C
             if (debugCamera != null)
             {
                 debugCamera.DisableFollowing();
-                debugCamera.enabled = false;
+                // НЕ отключаем debugCamera.enabled = false! Нужно чтобы работала клавиша C
             }
             
             // Возвращаем управление камерой
