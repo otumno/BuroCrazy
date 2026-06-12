@@ -20,6 +20,7 @@ TagManager:
   - Seat
   - Intern
   - Cashier
+  - HintArrow
   layers:
   - Default
   - TransparentFX
