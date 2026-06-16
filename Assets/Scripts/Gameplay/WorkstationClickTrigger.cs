@@ -113,7 +113,7 @@ public class WorkstationClickTrigger : MonoBehaviour
             AudioManager.Instance.PlaySound(soundIdOnHover, transform.position);
         }
 
-        if (_highlightRenderer != null) 
+        if (_highlightRenderer != null)
         {
             _highlightRenderer.enabled = true;
         }
@@ -121,7 +121,7 @@ public class WorkstationClickTrigger : MonoBehaviour
 
     private void OnMouseExit()
     {
-        if (_highlightRenderer != null) 
+        if (_highlightRenderer != null)
         {
             _highlightRenderer.enabled = false;
         }

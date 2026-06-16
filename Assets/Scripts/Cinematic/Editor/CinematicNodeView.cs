@@ -385,6 +385,8 @@ namespace CinematicSystem.Editor
             {
                 EditorGUILayout.BeginVertical("box");
                 EditorGUILayout.LabelField("Say Dialog", EditorStyles.boldLabel);
+                dialog.dialogueGraph = (DialogueSystem.Data.DialogueGraph)EditorGUILayout.ObjectField(
+                    "Dialogue Graph (опц.)", dialog.dialogueGraph, typeof(DialogueSystem.Data.DialogueGraph), false);
                 dialog.speakerName = EditorGUILayout.TextField("Speaker Name", dialog.speakerName);
                 dialog.portrait = (Sprite)EditorGUILayout.ObjectField("Portrait", dialog.portrait, typeof(Sprite), false);
                 
@@ -395,6 +397,12 @@ namespace CinematicSystem.Editor
                 
                 dialog.duration = EditorGUILayout.FloatField("Duration", dialog.duration);
                 dialog.voiceClip = (AudioClip)EditorGUILayout.ObjectField("Voice", dialog.voiceClip, typeof(AudioClip), false);
+                
+                EditorGUILayout.Space(2);
+                if (dialog.dialogueGraph != null)
+                    EditorGUILayout.LabelField("→ Будет использован DialogueUIManager", EditorStyles.miniLabel);
+                else
+                    EditorGUILayout.LabelField("→ Будет использован ThoughtBubble (фолбэк)", EditorStyles.miniLabel);
                 EditorGUILayout.EndVertical();
                 return;
             }
@@ -406,6 +414,23 @@ namespace CinematicSystem.Editor
                 EditorGUILayout.LabelField("Call Dialogue", EditorStyles.boldLabel);
                 call.dialogueGraph = (DialogueSystem.Data.DialogueGraph)EditorGUILayout.ObjectField("Dialogue Graph", call.dialogueGraph, typeof(DialogueSystem.Data.DialogueGraph), false);
                 call.targetClient = (ClientPathfinding)EditorGUILayout.ObjectField("Target Client", call.targetClient, typeof(ClientPathfinding), true);
+                EditorGUILayout.EndVertical();
+                return;
+            }
+
+            // Для PlayDialogueNode
+            if (Node is Nodes.PlayDialogueNode playDlg)
+            {
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.LabelField("Play Dialogue", EditorStyles.boldLabel);
+                playDlg.dialogue = (DialogueSystem.Data.DialogueGraph)EditorGUILayout.ObjectField(
+                    "Dialogue Graph", playDlg.dialogue, typeof(DialogueSystem.Data.DialogueGraph), false);
+                
+                EditorGUILayout.Space(2);
+                if (playDlg.dialogue != null)
+                    EditorGUILayout.LabelField($"→ {playDlg.dialogue.name}", EditorStyles.miniLabel);
+                else
+                    EditorGUILayout.LabelField("→ Не задан", EditorStyles.miniLabel);
                 EditorGUILayout.EndVertical();
                 return;
             }
@@ -678,6 +703,28 @@ namespace CinematicSystem.Editor
             {
                 EditorGUILayout.BeginVertical("box");
                 comment.comment = EditorGUILayout.TextArea(comment.comment, GUILayout.Height(60));
+                EditorGUILayout.EndVertical();
+                return;
+            }
+            
+            // Для ShowArrowNode
+            if (Node is Nodes.ShowArrowNode showArrow)
+            {
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.LabelField("Show Arrow", EditorStyles.boldLabel);
+                showArrow.arrowKey = EditorGUILayout.TextField(
+                    new GUIContent("Arrow Key", "Ключ объекта-стрелки в SceneObjectRegistry (например 'DirectorDeskHintArrow')"),
+                    showArrow.arrowKey);
+                showArrow.buttonKey = EditorGUILayout.TextField(
+                    new GUIContent("Button Key", "Ключ кнопки в SceneObjectRegistry (например 'DeskButton'). Если пусто — ожидается любой клик мыши."),
+                    showArrow.buttonKey);
+                showArrow.timeout = EditorGUILayout.FloatField("Timeout (0=inf)", showArrow.timeout);
+                
+                EditorGUILayout.Space(2);
+                if (!string.IsNullOrEmpty(showArrow.buttonKey))
+                    EditorGUILayout.LabelField($"→ Ожидание клика по '{showArrow.buttonKey}'", EditorStyles.miniLabel);
+                else
+                    EditorGUILayout.LabelField("→ Ожидание любого клика мыши", EditorStyles.miniLabel);
                 EditorGUILayout.EndVertical();
                 return;
             }

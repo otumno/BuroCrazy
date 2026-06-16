@@ -3,7 +3,7 @@ using UnityEngine;
 public class CursorController : MonoBehaviour
 {
     public static CursorController Instance { get; private set; }
-    
+
     [Tooltip("Текстура для кастомного курсора")]
     public Texture2D cursorTexture;
 
@@ -15,12 +15,13 @@ public class CursorController : MonoBehaviour
 
     [Tooltip("Режим курсора (Auto - система решает, Software - принудительно программный)")]
     public CursorMode cursorMode = CursorMode.Auto;
-    
+
     [Tooltip("Текстура курсора во время катсцен/туториалов")]
     public Texture2D cutsceneCursorTexture;
-    
+
     private Texture2D _defaultCursorTexture;
     private Vector2 _defaultHotspot;
+    private bool _isCutsceneCursorActive;
 
     private void Awake()
     {
@@ -28,7 +29,7 @@ public class CursorController : MonoBehaviour
         _defaultCursorTexture = cursorTexture;
         _defaultHotspot = hotspot;
     }
-    
+
     public void SetCutsceneCursor()
     {
         SetCutsceneCursor(true);
@@ -36,6 +37,7 @@ public class CursorController : MonoBehaviour
 
     public void SetCutsceneCursor(bool active)
     {
+        _isCutsceneCursorActive = active;
         if (active)
         {
             if (cutsceneCursorTexture != null)
@@ -61,6 +63,9 @@ public class CursorController : MonoBehaviour
 
     void Update()
     {
+        // Во время катсцены не трогаем курсор — иначе клик по диалогу переключит его на обычный.
+        if (_isCutsceneCursorActive) return;
+
         // При нажатии меняем текстуру на повернутую
         if (Input.GetMouseButtonDown(0))
         {

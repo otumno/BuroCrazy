@@ -22,15 +22,38 @@ namespace UI.Tooltips
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (!enabled || string.IsNullOrEmpty(tooltipText)) return;
-            isHovered = true;
-            TooltipManager.Instance?.RegisterHover(this);
+            SetHovered(true);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            isHovered = false;
-            TooltipManager.Instance?.UnregisterHover(this);
+            SetHovered(false);
+        }
+
+        // Резервный путь: работает и без EventSystem / Physics2DRaycaster —
+        // OnMouseEnter вызывается самим Unity по любому Collider2D на объекте.
+        private void OnMouseEnter()
+        {
+            SetHovered(true);
+        }
+
+        private void OnMouseExit()
+        {
+            SetHovered(false);
+        }
+
+        private void SetHovered(bool value)
+        {
+            if (value == isHovered) return;
+            isHovered = value;
+            if (value)
+            {
+                TooltipManager.Instance?.RegisterHover(this);
+            }
+            else
+            {
+                TooltipManager.Instance?.UnregisterHover(this);
+            }
         }
 
         public bool IsHovered() => isHovered;

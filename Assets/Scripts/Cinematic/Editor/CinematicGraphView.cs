@@ -51,6 +51,9 @@ namespace CinematicSystem.Editor
             
             if (graph == null) return;
             
+            // Восстанавливаем связи из сериализованного списка
+            graph.RestoreLinks();
+            
             // Визуальная индикация фонового графа
             if (graph.isBackground)
             {
@@ -276,10 +279,38 @@ namespace CinematicSystem.Editor
                         
                         if (fromView != null && toView != null)
                         {
-                            // Определяем какой порт
-                            if (fromView.Node is NextNode)
+                            // StartNode
+                            if (fromView.Node is Nodes.StartNode startNodeRm
+                                && startNodeRm.nextNode == toView.Node)
                             {
-                                (fromView.Node as NextNode).nextNode = null;
+                                startNodeRm.nextNode = null;
+                            }
+                            // NextNode и все наследники
+                            else if (fromView.Node is NextNode nextNodeRm
+                                     && nextNodeRm.nextNode == toView.Node)
+                            {
+                                nextNodeRm.nextNode = null;
+                            }
+                            // ConditionNode (порты T и F)
+                            else if (fromView.Node is Nodes.ConditionNode condNodeRm)
+                            {
+                                string portName = edge.output.portName;
+                                if (portName == "T" && condNodeRm.trueNode == toView.Node)
+                                    condNodeRm.trueNode = null;
+                                else if (portName == "F" && condNodeRm.falseNode == toView.Node)
+                                    condNodeRm.falseNode = null;
+                            }
+                            // RandomNode (порты 0, 1, 2, ...)
+                            else if (fromView.Node is Nodes.RandomNode randNodeRm
+                                     && randNodeRm.outcomes != null)
+                            {
+                                string portName = edge.output.portName;
+                                if (int.TryParse(portName, out int idx)
+                                    && idx < randNodeRm.outcomes.Count
+                                    && randNodeRm.outcomes[idx].nextNode == toView.Node)
+                                {
+                                    randNodeRm.outcomes[idx].nextNode = null;
+                                }
                             }
                         }
                     }
@@ -296,14 +327,25 @@ namespace CinematicSystem.Editor
                     
                     if (fromView != null && toView != null)
                     {
-                        // Определяем тип связи
-                        if (fromView.Node is NextNode nextNode)
+                        // Обработка связи для StartNode
+                        if (fromView.Node is Nodes.StartNode startNodeConn)
+                        {
+                            startNodeConn.nextNode = toView.Node;
+                        }
+                        // Обработка связи для NextNode (и всех его наследников: MoveTo, SayBubble, CameraMove и т.д.)
+                        else if (fromView.Node is NextNode nextNode)
                         {
                             nextNode.nextNode = toView.Node;
                         }
-                        
-                        // Обработка связи для RandomNode
-                        if (fromView.Node is Nodes.RandomNode randNode)
+                        // Обработка связи для ConditionNode (порты T и F)
+                        else if (fromView.Node is Nodes.ConditionNode condNode)
+                        {
+                            string portName = edge.output.portName;
+                            if (portName == "T") condNode.trueNode = toView.Node;
+                            else if (portName == "F") condNode.falseNode = toView.Node;
+                        }
+                        // Обработка связи для RandomNode (порты 0, 1, 2, ...)
+                        else if (fromView.Node is Nodes.RandomNode randNode)
                         {
                             string portName = edge.output.portName;
                             if (int.TryParse(portName, out int index) && randNode.outcomes != null)
@@ -333,6 +375,13 @@ namespace CinematicSystem.Editor
                         nodeView.Node.editorPosition = pos;
                     }
                 }
+            }
+            
+            // После обработки изменений перестраиваем список связей
+            if (graph != null)
+            {
+                graph.RebuildLinksFromNodes();
+                EditorUtility.SetDirty(graph);
             }
             
             return change;

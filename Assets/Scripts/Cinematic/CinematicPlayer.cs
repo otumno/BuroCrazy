@@ -91,6 +91,12 @@ namespace CinematicSystem
             IsPaused = false;
             skipRequested = false;
             
+            // Восстанавливаем связи из сериализованного списка (гарантия целостности)
+            if (graph != null)
+            {
+                graph.RestoreLinks();
+            }
+            
             // Блокируем управление только в режиме FullControl
             if (executionMode == ExecutionMode.FullControl)
             {

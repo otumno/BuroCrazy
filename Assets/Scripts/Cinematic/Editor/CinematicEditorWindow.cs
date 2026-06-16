@@ -64,12 +64,22 @@ namespace CinematicSystem.Editor
             var pasteJsonButton = new ToolbarButton(() => ImportFromClipboard()) { text = "Paste JSON" };
             var exportJsonButton = new ToolbarButton(() => ExportJSON()) { text = "Export JSON" };
             var autoLayoutButton = new ToolbarButton(() => AutoLayout()) { text = "Auto Layout" };
+            var repairButton = new ToolbarButton(() => 
+            {
+                if (currentGraph != null)
+                {
+                    currentGraph.ApplyLinks();
+                    graphView.PopulateView(currentGraph);
+                    Debug.Log("Links repaired");
+                }
+            }) { text = "Repair Links" };
             
             toolbar.Add(saveButton);
             toolbar.Add(loadJsonButton);
             toolbar.Add(pasteJsonButton);
             toolbar.Add(exportJsonButton);
             toolbar.Add(autoLayoutButton);
+            toolbar.Add(repairButton);
             
             root.Add(toolbar);
             
@@ -103,6 +113,7 @@ namespace CinematicSystem.Editor
         {
             if (currentGraph == null) return;
             
+            currentGraph.RebuildLinksFromNodes();
             EditorUtility.SetDirty(currentGraph);
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();

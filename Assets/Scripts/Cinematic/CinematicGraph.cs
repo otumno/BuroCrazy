@@ -9,7 +9,7 @@ namespace CinematicSystem
     /// ScriptableObject, представляющий кинематический граф - последовательность узлов для постановочных сцен.
     /// </summary>
     [CreateAssetMenu(fileName = "NewCinematicGraph", menuName = "Bureau/Cinematic/Cinematic Graph")]
-    public class CinematicGraph : ScriptableObject
+    public class CinematicGraph : ScriptableObject, ISerializationCallbackReceiver
     {
         [Tooltip("Уникальный ID графа")]
         public string graphID;
@@ -25,6 +25,19 @@ namespace CinematicSystem
         
         [Tooltip("Является ли этот граф фоновым (выполняется без блокировки управления)")]
         public bool isBackground = false;
+        
+        /// <summary>
+        /// Сериализованная связь между узлами.
+        /// </summary>
+        [System.Serializable]
+        public class NodeLink
+        {
+            public string fromNodeId;
+            public string toNodeId;
+            public string linkType;
+        }
+        
+        [SerializeField] private List<NodeLink> links = new List<NodeLink>();
         
         /// <summary>
         /// Параметры времени выполнения, передаваемые в граф при запуске.
@@ -131,6 +144,91 @@ namespace CinematicSystem
             
             errorMessage = null;
             return true;
+        }
+
+        /// <summary>
+        /// Перестраивает список связей (links) из текущих ссылок в узлах.
+        /// Вызывается автоматически перед сериализацией.
+        /// </summary>
+        public void RebuildLinksFromNodes()
+        {
+            links.Clear();
+            foreach (var node in allNodes)
+            {
+                if (node == null) continue;
+                string fromId = node.id;
+                
+                if (node is Nodes.StartNode start && start.nextNode != null)
+                    links.Add(new NodeLink { fromNodeId = fromId, toNodeId = start.nextNode.id, linkType = "next" });
+                else if (node is NextNode next && next.nextNode != null)
+                    links.Add(new NodeLink { fromNodeId = fromId, toNodeId = next.nextNode.id, linkType = "next" });
+                else if (node is Nodes.ConditionNode cond)
+                {
+                    if (cond.trueNode != null) links.Add(new NodeLink { fromNodeId = fromId, toNodeId = cond.trueNode.id, linkType = "true" });
+                    if (cond.falseNode != null) links.Add(new NodeLink { fromNodeId = fromId, toNodeId = cond.falseNode.id, linkType = "false" });
+                }
+                else if (node is Nodes.RandomNode rand && rand.outcomes != null)
+                {
+                    for (int i = 0; i < rand.outcomes.Count; i++)
+                        if (rand.outcomes[i].nextNode != null)
+                            links.Add(new NodeLink { fromNodeId = fromId, toNodeId = rand.outcomes[i].nextNode.id, linkType = i.ToString() });
+                }
+            }
+        }
+
+        /// <summary>
+        /// Восстанавливает ссылки в узлах из списка связей (links).
+        /// Вызывать после загрузки графа.
+        /// </summary>
+        public void ApplyLinks()
+        {
+            var nodeDict = new Dictionary<string, CinematicNode>();
+            foreach (var n in allNodes) if (n != null) nodeDict[n.id] = n;
+            
+            foreach (var link in links)
+            {
+                if (!nodeDict.TryGetValue(link.fromNodeId, out var from)) continue;
+                if (!nodeDict.TryGetValue(link.toNodeId, out var to)) continue;
+                
+                if (from is Nodes.StartNode start && link.linkType == "next") start.nextNode = to;
+                else if (from is NextNode next && link.linkType == "next") next.nextNode = to;
+                else if (from is Nodes.ConditionNode cond)
+                {
+                    if (link.linkType == "true") cond.trueNode = to;
+                    else if (link.linkType == "false") cond.falseNode = to;
+                }
+                else if (from is Nodes.RandomNode rand && int.TryParse(link.linkType, out int idx))
+                {
+                    if (idx < rand.outcomes.Count) rand.outcomes[idx].nextNode = to;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Публичный метод для ручного восстановления ссылок (вызывать после загрузки графа).
+        /// </summary>
+        public void RestoreLinks()
+        {
+            ApplyLinks();
+        }
+
+        /// <summary>
+        /// Вызывается Unity перед сериализацией объекта.
+        /// Перестраиваем список связей из текущих ссылок в узлах.
+        /// </summary>
+        public void OnBeforeSerialize()
+        {
+            RebuildLinksFromNodes();
+        }
+
+        /// <summary>
+        /// Вызывается Unity после десериализации объекта.
+        /// Не вызываем ApplyLinks здесь, так как allNodes ещё не загружены.
+        /// Вместо этого вызываем RestoreLinks() в PopulateView/Play.
+        /// </summary>
+        public void OnAfterDeserialize()
+        {
+            // Не восстанавливаем здесь - allNodes ещё не готовы
         }
     }
 }

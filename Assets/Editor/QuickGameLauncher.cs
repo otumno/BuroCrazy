@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using System.Reflection;
 
 [InitializeOnLoad]
 public class QuickGameLauncher
@@ -21,8 +22,8 @@ public class QuickGameLauncher
         string startScenePath = EditorPrefs.GetString(PREF_START_SCENE);
         if (string.IsNullOrEmpty(startScenePath))
         {
-            if (EditorUtility.DisplayDialog("Quick Launcher", 
-                "Стартовая сцена не выбрана!\nTools > Quick Launcher > Set Current Scene as Start", 
+            if (EditorUtility.DisplayDialog("Quick Launcher",
+                "Стартовая сцена не выбрана!\nTools > Quick Launcher > Set Current Scene as Start",
                 "Понял")) { }
             return;
         }
@@ -37,17 +38,23 @@ public class QuickGameLauncher
             return;
 
         // ЗАЩИТА: Гарантируем, что редактор не стоит на паузе перед запуском
-        EditorApplication.isPaused = false; 
+        EditorApplication.isPaused = false;
 
         string currentScene = EditorSceneManager.GetActiveScene().path;
         EditorPrefs.SetString(PREF_PREVIOUS_SCENE, currentScene);
 
-        if (EditorPrefs.GetBool(PREF_MAXIMIZE, false))
+        // По умолчанию maximize включён, если флаг не задан
+        if (!EditorPrefs.HasKey(PREF_MAXIMIZE))
+        {
+            EditorPrefs.SetBool(PREF_MAXIMIZE, true);
+        }
+
+        if (EditorPrefs.GetBool(PREF_MAXIMIZE, true))
         {
             SetGameViewMaximized(true);
         }
 
-        try 
+        try
         {
             EditorSceneManager.OpenScene(startScenePath);
             EditorApplication.isPlaying = true;
@@ -62,7 +69,7 @@ public class QuickGameLauncher
     {
         if (state == PlayModeStateChange.EnteredEditMode)
         {
-            if (EditorPrefs.GetBool(PREF_MAXIMIZE, false))
+            if (EditorPrefs.GetBool(PREF_MAXIMIZE, true))
             {
                 SetGameViewMaximized(false);
             }
@@ -77,7 +84,7 @@ public class QuickGameLauncher
                 EditorPrefs.DeleteKey(PREF_PREVIOUS_SCENE);
             }
         }
-        
+
         // ЗАЩИТА: Если при входе в Play Mode редактор сам нажал паузу — отжимаем её
         if (state == PlayModeStateChange.EnteredPlayMode)
         {
@@ -85,11 +92,48 @@ public class QuickGameLauncher
         }
     }
 
+    /// <summary>
+    /// Maximize GameView через reflection. Универсально работает в Unity 2021+.
+    /// </summary>
     private static void SetGameViewMaximized(bool maximized)
     {
-        var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView");
-        var gameView = EditorWindow.GetWindow(gameViewType);
-        if (gameView != null) gameView.maximized = maximized;
+        try
+        {
+            var gameViewType = typeof(EditorWindow).Assembly.GetType("UnityEditor.GameView");
+            if (gameViewType == null) return;
+
+            var gameView = EditorWindow.GetWindow(gameViewType);
+            if (gameView == null) return;
+
+            // Способ 1: свойство maximized (Unity 2019.3+)
+            var maxProp = gameViewType.GetProperty("maximized",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            if (maxProp != null && maxProp.CanWrite)
+            {
+                maxProp.SetValue(gameView, maximized);
+                gameView.Repaint();
+                return;
+            }
+
+            // Способ 2: статический метод SetMainGameViewSize (fallback)
+            var setSizeMethod = gameViewType.GetMethod("SetMainGameViewSize",
+                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (setSizeMethod != null)
+            {
+                // Получаем текущее разрешение
+                var sizeProp = gameViewType.GetProperty("currentGameViewSize",
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (sizeProp != null)
+                {
+                    var size = sizeProp.GetValue(gameView);
+                    setSizeMethod.Invoke(null, new object[] { size, false, maximized });
+                }
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[QuickGameLauncher] Failed to set maximized={maximized}: {e.Message}");
+        }
     }
 
     [MenuItem("Tools/Quick Launcher/Set Current Scene as Start")]
@@ -99,5 +143,21 @@ public class QuickGameLauncher
         if (string.IsNullOrEmpty(currentPath)) return;
         EditorPrefs.SetString(PREF_START_SCENE, currentPath);
         Debug.Log($"QuickLauncher: Start Scene -> {currentPath}");
+    }
+
+    [MenuItem("Tools/Quick Launcher/Toggle Maximize on Play")]
+    public static void ToggleMaximizeOnPlay()
+    {
+        bool current = EditorPrefs.GetBool(PREF_MAXIMIZE, true);
+        EditorPrefs.SetBool(PREF_MAXIMIZE, !current);
+        Debug.Log($"QuickLauncher: Maximize on Play = {!current}");
+    }
+
+    [MenuItem("Tools/Quick Launcher/Toggle Maximize on Play", validate = true)]
+    private static bool ToggleMaximizeOnPlayValidate()
+    {
+        bool current = EditorPrefs.GetBool(PREF_MAXIMIZE, true);
+        Menu.SetChecked("Tools/Quick Launcher/Toggle Maximize on Play", current);
+        return true;
     }
 }

@@ -15,7 +15,7 @@ namespace BuroDebug
 
         [Header("Настройки для теста")]
         public Sprite testHairSprite;
-        public Color testHairColor = Color.brown;
+        public Color testHairColor = new Color(0.65f, 0.4f, 0.2f);
         public Sprite testOutfitSprite;
         public Color testOutfitColor = Color.gray;
 

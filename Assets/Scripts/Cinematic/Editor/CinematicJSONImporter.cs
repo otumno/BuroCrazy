@@ -65,6 +65,8 @@ namespace CinematicSystem.Editor
             public string cmt;
             // Поля для teleport
             public string tkey_tp;
+            // Поля для show_arrow
+            public string arrow;
         }
 
         [Serializable]
@@ -210,6 +212,9 @@ namespace CinematicSystem.Editor
                 case "comment":
                     nodeType = typeof(CommentNode);
                     break;
+                case "show_arrow":
+                    nodeType = typeof(ShowArrowNode);
+                    break;
                 default:
                     Debug.LogWarning($"[CinematicJSONImporter] Неизвестный тип узла: {jsonNode.t}");
                     return null;
@@ -354,6 +359,15 @@ namespace CinematicSystem.Editor
                     if (commentNode != null)
                     {
                         commentNode.comment = jsonNode.cmt ?? "";
+                    }
+                    break;
+
+                case "show_arrow":
+                    var arrowNode = node as ShowArrowNode;
+                    if (arrowNode != null)
+                    {
+                        if (!string.IsNullOrEmpty(jsonNode.arrow))
+                            arrowNode.arrowKey = jsonNode.arrow;
                     }
                     break;
             }

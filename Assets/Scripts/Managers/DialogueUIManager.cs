@@ -131,8 +131,11 @@ namespace Managers
             onDialogueComplete = onComplete;
             currentClientContext = client;
             currentGraph = graph;
-            
+
             MainUIManager.Instance?.PauseGame(false);
+
+            // Переключаем курсор на обычный, чтобы игрок мог кликать по диалогу.
+            CursorController.Instance?.SetCutsceneCursor(false);
             
             dialoguePanel.SetActive(true);
             if (panelAnimCoroutine != null) StopCoroutine(panelAnimCoroutine);
@@ -580,6 +583,13 @@ namespace Managers
 
             if (panelAnimCoroutine != null) StopCoroutine(panelAnimCoroutine);
             panelAnimCoroutine = StartCoroutine(AnimatePanel(false));
+
+            // Возвращаем катсценный курсор, если катсцена ещё играется.
+            var inputController = FindFirstObjectByType<PlayerInputController>();
+            if (inputController != null && inputController.IsCutscenePlaying)
+            {
+                CursorController.Instance?.SetCutsceneCursor(true);
+            }
 
             if (currentClientContext != null && currentNode is EndNode endNodeData)
             {

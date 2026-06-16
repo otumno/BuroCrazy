@@ -64,8 +64,10 @@ namespace DI
             BindSingleton<GameLifecycleManager>(() => GameLifecycleManager.Instance);
             BindSingleton<NotificationManager>(() => NotificationManager.Instance);
 
-            // Tooltip system
-            Container.Bind<TooltipManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
+            // Tooltip system — используется сценический экземпляр TooltipManager (TooltipTarget берёт его через TooltipManager.Instance).
+            // Раньше здесь было FromNewComponentOnNewGameObject(), но это создавало клон с дефолтными настройками,
+            // перекрывая сценическую конфигурацию. BindSingleton оставлен для совместимости с DI-инжекциями (если такие появятся).
+            BindSingleton<TooltipManager>(() => TooltipManager.Instance);
 
             Debug.Log("[ProjectContextInstallerAsset] Все синглтоны привязаны к DI-контейнеру.");
         }
