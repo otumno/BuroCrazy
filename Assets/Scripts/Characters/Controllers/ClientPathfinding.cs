@@ -187,6 +187,11 @@ public class ClientPathfinding : MonoBehaviour
 
     [Header("Документы")]
     [Range(0f, 1f)] public float documentQuality;
+
+    [Tooltip("Влияние babushkaFactor на шанс отсутствия документа (0 = всегда есть, 1 = 30% пусто)")]
+    [SerializeField, Range(0f, 1f)] private float forgetfulnessFactor = 0.3f;
+    [Tooltip("Влияние suetunFactor на шанс неправильного бланка (0 = всегда правильный, 1 = 40% неправильный)")]
+    [SerializeField, Range(0f, 1f)] private float confusionFactor = 0.4f;
     
     [Header("Данные документа Директора")]
     public int directorDocumentFee;
@@ -248,23 +253,60 @@ public class ClientPathfinding : MonoBehaviour
         
         if (mainGoal == default(ClientGoal))
         {
-            var goals = System.Enum.GetValues(typeof(ClientGoal));
-            if (goals.Length > 0)
+            // Пытаемся взять цель из текущего архетипа клиента
+            var visualsComp = GetComponent<CharacterVisuals>();
+            var currentArchetype = visualsComp != null ? visualsComp.currentArchetype : null;
+
+            if (currentArchetype != null && currentArchetype.allowedGoals != null && currentArchetype.allowedGoals.Count > 0)
             {
-                mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
+                mainGoal = currentArchetype.allowedGoals[Random.Range(0, currentArchetype.allowedGoals.Count)];
             }
             else
             {
-                mainGoal = ClientGoal.AskAndLeave;
+                var goals = System.Enum.GetValues(typeof(ClientGoal));
+                if (goals.Length > 0)
+                {
+                    mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
+                }
+                else
+                {
+                    mainGoal = ClientGoal.AskAndLeave;
+                }
             }
         }
 
         DocumentType startingDoc = DocumentType.None;
-        if (Random.value < 0.2f)
+
+        // Документ на подпись директору: всегда в руках, ошибки живут в directorDocumentLayout (мини-игра)
+        if (mainGoal == ClientGoal.DirectorApproval)
         {
-            if (mainGoal == ClientGoal.GetCertificate1) { startingDoc = DocumentType.Form2; }
-            else if (mainGoal == ClientGoal.GetCertificate2) { startingDoc = DocumentType.Form1; }
+            startingDoc = DocumentType.Form1;
         }
+        else
+        {
+            DocumentType requiredDoc = DocumentType.None;
+            if (mainGoal == ClientGoal.GetCertificate1) requiredDoc = DocumentType.Form1;
+            else if (mainGoal == ClientGoal.GetCertificate2) requiredDoc = DocumentType.Form2;
+
+            if (requiredDoc != DocumentType.None)
+            {
+                float hasDocumentChance = 1f - babushkaFactor * forgetfulnessFactor;
+                if (Random.value < hasDocumentChance)
+                {
+                    float correctChance = 1f - suetunFactor * confusionFactor;
+                    if (Random.value < correctChance)
+                    {
+                        startingDoc = requiredDoc;
+                    }
+                    else
+                    {
+                        if (requiredDoc == DocumentType.Form1) startingDoc = DocumentType.Form2;
+                        else if (requiredDoc == DocumentType.Form2) startingDoc = DocumentType.Form1;
+                    }
+                }
+            }
+        }
+
         docHolder.SetDocument(startingDoc);
         
         if (mainGoal == ClientGoal.DirectorApproval)
@@ -287,7 +329,10 @@ public class ClientPathfinding : MonoBehaviour
         // }
         movement.Initialize(this);
         float basePatience = Random.Range(minPatienceTime, maxPatienceTime);
-        totalPatienceTime = basePatience * (1 + babushkaFactor);
+        // Бабушка терпит в 2 раза дольше при факторе 1, суетун ждёт вдвое меньше при факторе 1
+        float babushkaMultiplier = 1f + babushkaFactor * 1.5f;
+        float suetunMultiplier = 1f - suetunFactor * 0.5f;
+        totalPatienceTime = basePatience * babushkaMultiplier * suetunMultiplier;
   
   patienceStartTime = Time.time;
         _maxPatienceValue = totalPatienceTime;
@@ -347,11 +392,57 @@ public class ClientPathfinding : MonoBehaviour
         }
         
         // Очистка из всех зон через FindObjectsOfType если нужно
-        var allZones = FindObjectsOfType<LimitedCapacityZone>();
+        var allZones = FindObjectsByType<LimitedCapacityZone>(FindObjectsSortMode.None);
         foreach (var z in allZones)
         {
             z.LeaveQueue(gameObject);
         }
+    }
+
+    private Coroutine _directorWaitCoroutine;
+
+    /// <summary>
+    /// Запустить таймер ожидания директора/приёма. По истечении клиент уходит со штрафом.
+    /// </summary>
+    public void StartDirectorWaitTimer()
+    {
+        if (_directorWaitCoroutine != null) StopCoroutine(_directorWaitCoroutine);
+        if (mainGoal != ClientGoal.DirectorApproval && mainGoal != ClientGoal.DirectorAudience) return;
+        _directorWaitCoroutine = StartCoroutine(DirectorWaitTimerRoutine());
+    }
+
+    public void StopDirectorWaitTimer()
+    {
+        if (_directorWaitCoroutine != null)
+        {
+            StopCoroutine(_directorWaitCoroutine);
+            _directorWaitCoroutine = null;
+        }
+    }
+
+    private IEnumerator DirectorWaitTimerRoutine()
+    {
+        float timeout = 60f;
+        if (Managers.WaveManager.Instance != null) timeout = Managers.WaveManager.Instance.directorWaitTimeout;
+
+        yield return new WaitForSeconds(timeout);
+
+        if (this == null || isLeavingSuccessfully) yield break;
+        if (mainGoal != ClientGoal.DirectorApproval && mainGoal != ClientGoal.DirectorAudience) yield break;
+        if (stateMachine == null) yield break;
+
+        // Клиент устал ждать директора
+        Debug.Log($"[DirectorWait] {name} устал ждать директора и уходит");
+
+        Managers.DirectorManager.Instance?.OnDirectorVisitorLeft();
+
+        if (visuals != null) visuals.SetEmotion(Emotion.Angry);
+        ShowThoughtBubble("Долго же вас приходится ждать...", 3f);
+
+        // Удаляем иконку со стола директора
+        StartOfDayPanel.Instance?.RemoveDocumentIcon(this);
+
+        ForceLeave(LeaveReason.Normal);
     }
 
 	public void InitializeRemoteLifetime(int periods)
@@ -398,6 +489,12 @@ public class ClientPathfinding : MonoBehaviour
         else if(isLeavingSuccessfully)
         {
             clientsExitedProcessed++;
+
+            // Ачивки за характер клиента (только при успешном обслуживании)
+            if (babushkaFactor > 0.5f)
+                Managers.AchievementManager.Instance?.UnlockAchievement("Achv_GrandmaClientStory");
+            if (isQueueJumper)
+                Managers.AchievementManager.Instance?.UnlockAchievement("Achv_TheFixerStory");
         }
         clientsExited++;
         totalClients--;

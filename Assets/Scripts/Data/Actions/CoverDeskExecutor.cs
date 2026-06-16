@@ -38,10 +38,11 @@ public class CoverDeskExecutor : ActionExecutor
         ClientSpawner.AssignServiceProviderToDesk(intern, targetPoint.deskId);
         
         yield return new WaitUntil(() => clerkOnBreak == null || !clerkOnBreak.IsOnBreak());
-        
+
         ClientSpawner.UnassignServiceProviderFromDesk(targetPoint.deskId);
         intern.AssignCoveredWorkstation(null);
         intern.SetState(InternController.InternState.Patrolling);
+        Managers.AchievementManager.Instance?.UnlockAchievement("Achv_InternStory");
         FinishAction(true);
     }
 }

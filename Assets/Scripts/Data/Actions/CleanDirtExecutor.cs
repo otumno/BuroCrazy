@@ -59,9 +59,10 @@ public class CleanDirtExecutor : ActionExecutor
         yield return new WaitForSeconds(cleaningTime);
 
         if (messPoint != null) Destroy(messPoint.gameObject);
-        
+
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         worker.SetState(ServiceWorkerController.WorkerState.Idle);
+        Managers.AchievementManager.Instance?.UnlockAchievement("Achv_CleanerStory");
         FinishAction(true);
     }
 }

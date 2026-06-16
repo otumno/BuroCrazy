@@ -34,15 +34,68 @@ namespace Managers
                 Instance = this;
                 // Мы НЕ вызываем DontDestroyOnLoad.
                 // Мы полагаемся, что HiringManager сделает нашего родителя [SYSTEMS] бессмертным.
-            
+
                 saveFilePath = Path.Combine(Application.persistentDataPath, "achievements.dat");
+
+                // Запоминаем, был ли уже файл сохранения — это нужно, чтобы применить
+                // дефолт-разблокировки (isUnlockedByDefault) ТОЛЬКО при первом запуске.
+                bool saveFileExisted = File.Exists(saveFilePath);
+
                 LoadAchievements();
+
+                // Авто-подгрузка ассетов AchievementData из проекта, если в инспекторе
+                // ничего не назначено. В редакторе ищем в Assets/Thoughts/Achivments,
+                // в билде — в Resources/Thoughts/Achivments.
+                EnsureDatabasePopulated();
+
+                // Применяем дефолт-разблокировки только при самом первом запуске
+                // (когда файла сохранения ещё не было). Это позволяет дизайнеру
+                // пометить ачивки (например, «Мануал» или «Титры») как
+                // изначально доступные в архиве.
+                if (!saveFileExisted)
+                {
+                    ApplyDefaultUnlocks();
+                    SaveAchievements();
+                }
             }
             else if (Instance != this)
             {
                 // Мы - дубликат из новой сцены, самоуничтожаемся.
                 Destroy(gameObject);
             }
+        }
+
+        private void EnsureDatabasePopulated()
+        {
+            if (allAchievementsDatabase == null) allAchievementsDatabase = new List<AchievementData>();
+
+            // Удаляем null-элементы, если какие-то ссылки потерялись
+            for (int i = allAchievementsDatabase.Count - 1; i >= 0; i--)
+            {
+                if (allAchievementsDatabase[i] == null) allAchievementsDatabase.RemoveAt(i);
+            }
+
+            if (allAchievementsDatabase.Count > 0) return; // Уже наполнено вручную — не трогаем
+
+#if UNITY_EDITOR
+            // В редакторе можно дотянуться до AssetDatabase
+            var guids = UnityEditor.AssetDatabase.FindAssets("t:AchievementData");
+            foreach (var guid in guids)
+            {
+                var path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<AchievementData>(path);
+                if (asset != null && !allAchievementsDatabase.Contains(asset))
+                    allAchievementsDatabase.Add(asset);
+            }
+#else
+            // В билде подтягиваем из Resources
+            var resAssets = Resources.LoadAll<AchievementData>("Thoughts/Achivments");
+            foreach (var asset in resAssets)
+            {
+                if (asset != null && !allAchievementsDatabase.Contains(asset))
+                    allAchievementsDatabase.Add(asset);
+            }
+#endif
         }
 
         /// <summary>
@@ -96,13 +149,52 @@ namespace Managers
             {
                 File.Delete(saveFilePath);
             }
-        
+
             Debug.LogWarning("[AchievementManager] ВСЕ АЧИВКИ СБРОШЕНЫ!");
-        
+
             // Оповещаем UI, чтобы он обновился
             OnAchievementsReset?.Invoke();
         }
         // --- <<< КОНЕЦ НОВОГО МЕТОДА >>> ---
+
+        /// <summary>
+        /// Применяет isUnlockedByDefault ко всем ассетам, у которых он выставлен.
+        /// Вызывается однократно при первом запуске (когда файла сохранения ещё не было).
+        /// </summary>
+        private void ApplyDefaultUnlocks()
+        {
+            if (allAchievementsDatabase == null) return;
+
+            int applied = 0;
+            foreach (var data in allAchievementsDatabase)
+            {
+                if (data == null) continue;
+                if (!data.isUnlockedByDefault) continue;
+                if (string.IsNullOrEmpty(data.achievementID)) continue;
+                if (unlockedAchievementIDs.Contains(data.achievementID)) continue;
+
+                unlockedAchievementIDs.Add(data.achievementID);
+                Debug.Log($"[AchievementManager] Дефолт-разблокировка: {data.displayName} ({data.achievementID})");
+                applied++;
+            }
+
+            if (applied > 0)
+            {
+                Debug.Log($"[AchievementManager] Применено {applied} дефолт-разблокировок.");
+            }
+        }
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Тест: поднять тост разблокировки без изменения HashSet и без сохранения на диск.
+        /// Только для Editor (используется F12-тумблером в AchievementListUI).
+        /// </summary>
+        public void DebugRaiseUnlockToast(AchievementData data)
+        {
+            if (data == null) return;
+            OnAchievementUnlocked?.Invoke(data);
+        }
+#endif
 
 
         // --- СИСТЕМА СОХРАНЕНИЯ/ЗАГРУЗКИ (Глобальная) ---

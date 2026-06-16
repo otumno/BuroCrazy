@@ -30,6 +30,18 @@ namespace Managers
         }
     }
 
+    /// <summary>
+    /// Запланированный посетитель к директору (гарантированный поток)
+    /// </summary>
+    [System.Serializable]
+    public class DirectorVisitorPlan
+    {
+        public ClientArchetype archetype;
+        public ClientGoal forcedGoal;
+        public float spawnTime; // Секунд от начала дня
+        public int day;
+    }
+
     // Файл: Assets/Scripts/Managers/WaveManager.cs
     public class WaveManager : MonoBehaviour
     {
@@ -89,6 +101,25 @@ namespace Managers
         /// </summary>
         public List<float> SpawnSchedule { get; private set; } = new List<float>();
 
+        [Header("=== ГАРАНТИРОВАННЫЙ ДИРЕКТОРСКИЙ ПОТОК ===")]
+        [Tooltip("Базовое количество посетителей к директору в день (1-й день после анлока первого региона)")]
+        public int baseDirectorVisitorsPerDay = 1;
+        [Tooltip("Дополнительные посетители за каждый регион сверх первого")]
+        public int extraDirectorVisitorsPerRegion = 1;
+        [Tooltip("Кап посетителей от разогрева (1->2->3, далее 3)")]
+        public int directorVisitorsCap = 3;
+        [Tooltip("Длительность разогрева (дней) до капа")]
+        public int directorRampUpDays = 3;
+        [Tooltip("Таймаут ожидания директора/приёма (секунды). По истечении клиент уходит")]
+        public float directorWaitTimeout = 60f;
+        [Tooltip("Штраф репутации (HP) за уход клиента из приёмной по таймауту")]
+        public float directorRejectionReputationPenalty = 5f;
+        [Tooltip("Штраф Влияния за уход клиента из приёмной по таймауту")]
+        public int directorRejectionInfluencePenalty = 1;
+
+        [Tooltip("Запланированные директорские посетители на сегодня")]
+        public List<DirectorVisitorPlan> directorVisitorsToday = new List<DirectorVisitorPlan>();
+
         /// <summary>
         /// Событие обновления плана спавна (для подписки TimelineController и других систем)
         /// </summary>
@@ -96,6 +127,7 @@ namespace Managers
 
         private Coroutine spawnCoroutine;
         private Coroutine queueCheckerCoroutine;
+        private Coroutine directorSpawnCoroutine;
 
         private int lastCheckedMorningDay = -1;
 
@@ -220,6 +252,10 @@ namespace Managers
             // Строим точное расписание спавна
             BuildSpawnSchedule();
 
+            // Планируем директорских посетителей (добавляет в SpawnSchedule)
+            int currentDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 1;
+            ScheduleDirectorVisitors(currentDay);
+
             // Оповещаем подписчиков (TimelineController и др.)
             OnSpawnPlanUpdated?.Invoke();
 
@@ -279,6 +315,130 @@ namespace Managers
         }
 
         /// <summary>
+        /// Рассчитывает количество директорских посетителей на сегодня.
+        /// 1-й регион: разогрев 1->2->3 за directorRampUpDays дней.
+        /// Каждый следующий регион: +extraDirectorVisitorsPerRegion.
+        /// </summary>
+        public int CalculateDirectorVisitorCount()
+        {
+            if (ProgressionManager.Instance == null) return baseDirectorVisitorsPerDay;
+
+            var activeRegions = ProgressionManager.Instance.GetActiveRegions();
+            int totalRegions = activeRegions.Count;
+
+            if (totalRegions == 0) return 0;
+
+            // Находим регион с наименьшим daysOwned (это первый открытый, он и разогревается)
+            var firstRegion = activeRegions.OrderBy(r => r.unlockDay).FirstOrDefault();
+            int dayInFirstRegion = firstRegion != null ? Mathf.Max(1, firstRegion.daysOwned) : 1;
+
+            int fromRampUp = Mathf.Min(directorVisitorsCap, baseDirectorVisitorsPerDay + (dayInFirstRegion - 1) / Mathf.Max(1, directorRampUpDays / (directorVisitorsCap - baseDirectorVisitorsPerDay + 1)));
+            int fromRegions = Mathf.Max(0, totalRegions - 1) * extraDirectorVisitorsPerRegion;
+
+            int total = fromRampUp + fromRegions;
+            Debug.Log($"[WaveManager] Директорских посетителей на сегодня: {total} (регионов={totalRegions}, день_в_первом={dayInFirstRegion}, от_разогрева={fromRampUp}, от_регионов={fromRegions})");
+            return total;
+        }
+
+        /// <summary>
+        /// Планирует директорских посетителей на сегодня, равномерно распределяя по дневным периодам.
+        /// </summary>
+        public void ScheduleDirectorVisitors(int day)
+        {
+            directorVisitorsToday.Clear();
+
+            if (archetypeDatabase == null || TimeManager.Instance == null || TimeManager.Instance.mainCalendarDay == null)
+                return;
+
+            int count = CalculateDirectorVisitorCount();
+            if (count <= 0) return;
+
+            // Собираем дневные периоды с их границами
+            var dayConfig = TimeManager.Instance.mainCalendarDay;
+            var dayPeriods = new List<(float start, float end)>();
+            float currentTime = 0f;
+            foreach (var ps in dayConfig.periodSettings)
+            {
+                if (ps.PeriodType.IsNight())
+                {
+                    currentTime += ps.durationInSeconds;
+                    continue;
+                }
+                dayPeriods.Add((currentTime, currentTime + ps.durationInSeconds));
+                currentTime += ps.durationInSeconds;
+            }
+
+            if (dayPeriods.Count == 0) return;
+
+            // Равномерно распределяем count клиентов по периодам
+            for (int i = 0; i < count; i++)
+            {
+                // Берём i-й период (с обтеканием, если клиентов больше чем периодов)
+                var period = dayPeriods[i % dayPeriods.Count];
+                float t = Mathf.Lerp(period.start + 2f, period.end - 2f, (i % 2 == 0) ? 0.3f : 0.7f);
+
+                // Рандомный архетип из базы
+                var archetype = archetypeDatabase.GetRandomArchetype();
+                if (archetype == null) continue;
+
+                // 50/50 DirectorApproval / DirectorAudience
+                var goal = (Random.value < 0.5f) ? ClientGoal.DirectorApproval : ClientGoal.DirectorAudience;
+
+                directorVisitorsToday.Add(new DirectorVisitorPlan
+                {
+                    archetype = archetype,
+                    forcedGoal = goal,
+                    spawnTime = t,
+                    day = day
+                });
+
+                // Добавляем в общий SpawnSchedule для отображения на таймлайне
+                SpawnSchedule.Add(t);
+            }
+
+            SpawnSchedule.Sort();
+            Debug.Log($"[WaveManager] Запланировано {directorVisitorsToday.Count} директорских посетителей на день {day}");
+        }
+
+        /// <summary>
+        /// Запускает корутину спавна запланированных директорских посетителей
+        /// </summary>
+        public void StartSpawningDirectorVisitors()
+        {
+            if (directorSpawnCoroutine != null) StopCoroutine(directorSpawnCoroutine);
+            if (directorVisitorsToday.Count == 0) return;
+            directorSpawnCoroutine = StartCoroutine(SpawnDirectorVisitorsRoutine());
+        }
+
+        private IEnumerator SpawnDirectorVisitorsRoutine()
+        {
+            float currentTime = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentTimeSinceDayStart() : 0f;
+
+            foreach (var plan in directorVisitorsToday)
+            {
+                if (plan == null || plan.archetype == null) continue;
+
+                float delay = plan.spawnTime - currentTime;
+                if (delay > 0) yield return new WaitForSeconds(delay);
+                currentTime = plan.spawnTime;
+
+                if (IsNightTime()) continue;
+
+                UpdateClientsCount();
+                if (currentClientsInOffice >= officeCapacity)
+                {
+                    TryAddToQueue(plan.archetype, $"Director_{plan.forcedGoal}", 5);
+                }
+                else
+                {
+                    var client = SpawnClientInternalWithGoal(plan.archetype, plan.forcedGoal, $"Director_{plan.forcedGoal}");
+                }
+            }
+
+            directorSpawnCoroutine = null;
+        }
+
+        /// <summary>
         /// Запускает спавн для текущего периода на основе дневного плана
         /// </summary>
         public void StartSpawningForCurrentPeriod()
@@ -330,6 +490,7 @@ namespace Managers
             	   if (enableAutoSpawn)
             	   {
             	       StartSpawningForCurrentPeriod();
+            	       StartSpawningDirectorVisitors();
             	   }
             	else
             	{
@@ -357,6 +518,7 @@ namespace Managers
             if (enableAutoSpawn)
             {
                 StartSpawningForCurrentPeriod();
+                StartSpawningDirectorVisitors();
             }
             else
             {
@@ -754,6 +916,46 @@ namespace Managers
                 Debug.LogError("[WaveManager] ClientPathfinding component not found!");
                 Destroy(go);
             }
+        }
+
+        /// <summary>
+        /// Спавн клиента с принудительной целью (для директорского потока).
+        /// </summary>
+        private ClientPathfinding SpawnClientInternalWithGoal(ClientArchetype archetype, ClientGoal goal, string requestedBy)
+        {
+            if (clientPrefab == null || spawnPoint == null || archetype == null) return null;
+
+            if (IsNightTime()) return null;
+
+            UpdateClientsCount();
+            if (currentClientsInOffice >= officeCapacity) return null;
+
+            Vector3 spawnPos = spawnPoint.position;
+            GameObject go = Instantiate(clientPrefab, spawnPos, Quaternion.identity);
+            ClientPathfinding client = go.GetComponent<ClientPathfinding>();
+
+            if (client == null)
+            {
+                Debug.LogError("[WaveManager] ClientPathfinding component not found!");
+                Destroy(go);
+                return null;
+            }
+
+            // Устанавливаем принудительную цель ДО инициализации
+            client.mainGoal = goal;
+
+            client.SetupFromArchetype(archetype);
+            client.SetupGrumblingFromArchetype(archetype);
+
+            var visuals = client.GetComponent<CharacterVisuals>();
+            if (visuals != null)
+            {
+                visuals.SetupVisualDiversity(archetype);
+            }
+
+            client.Initialize(waitingZoneObject, exitWaypoint);
+            Debug.Log($"[WaveManager] Директорский посетитель заспавнен: {client.name} ({goal})");
+            return client;
         }
 
         private void SpawnSpecialClient(SpecialVisitorDatabase.ScheduledVisitor visitorData)

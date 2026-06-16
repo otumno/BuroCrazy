@@ -46,6 +46,16 @@ public class AchievementToastUI : MonoBehaviour
         }
     }
 
+    void Start()
+    {
+        // Повторная попытка подписки, если на момент OnEnable менеджер еще не существовал
+        if (AchievementManager.Instance != null)
+        {
+            AchievementManager.Instance.OnAchievementUnlocked -= OnUnlockReceived; // защита от двойной подписки
+            AchievementManager.Instance.OnAchievementUnlocked += OnUnlockReceived;
+        }
+    }
+
     void OnDisable()
     {
         // Отписываемся

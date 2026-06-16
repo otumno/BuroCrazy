@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fcf2fcf68142a94f93cc7f2d591b07f, type: 3}
+  m_Name: Achv_LostClientStory
+  m_EditorClassIdentifier: 
+  achievementID: Achv_LostClientStory
+  displayName: "\u0417\u0430\u0431\u043B\u0443\u0434\u0438\u0432\u0448\u0438\u0439\u0441\u044F
+    \u043A\u043B\u0438\u0435\u043D\u0442"
+  description: "\u0421\u0442\u0430\u0436\u0451\u0440 \u0432\u043F\u0435\u0440\u0432\u044B\u0435
+    \u043F\u043E\u043C\u043E\u0433 \u0440\u0430\u0441\u0442\u0435\u0440\u044F\u043D\u043D\u043E\u043C\u0443
+    \u043F\u043E\u0441\u0435\u0442\u0438\u0442\u0435\u043B\u044E \u043D\u0430\u0439\u0442\u0438
+    \u0434\u043E\u0440\u043E\u0433\u0443."
+  bookType: 0
+  iconLocked: {fileID: -5355063000224973080, guid: 120ec3224208c44499e7b1496152fd55, type: 3}
+  iconUnlocked: {fileID: 1331796021520532709, guid: 150c141f7afbfc8439367f4369ccf4f7, type: 3}
+  isSecret: 0
+  alwaysAvailable: 0
+  comicPages:
+  - {fileID: 3214067539243507576, guid: 3691579774e969d4ea2ca67ae5e48654, type: 3}
+  - {fileID: -2771233166060693113, guid: a022f4eec4137754eb30b126d5667b7f, type: 3}
+  - {fileID: -1524150547421254175, guid: 00e6e1807195ce94ea32dfd3f4a85d9d, type: 3}
+  - {fileID: -7911527130828227337, guid: e6d463eebf74b784ba8a0ccd4aba7f18, type: 3}
+  - {fileID: -6840624132288899840, guid: eb4408cbccf97b4468177cd02dc294e8, type: 3}
+  - {fileID: -153118711292424706, guid: 9f4253e5780b6654bad9ac0b275fda5b, type: 3}
+  - {fileID: -3606374662710740626, guid: 7690cb6b43f5b1b49b58857e5c8f693d, type: 3}
+  - {fileID: 1623832658445761936, guid: fe2c334a33972504393269ae22f12006, type: 3}
+  - {fileID: 2265158441531251501, guid: 040814a2e05cf824f9a725c38f367134, type: 3}
+  - {fileID: -7828820322091442796, guid: 06e63dbf93186c84fbfe44da39b8d26d, type: 3}
+  - {fileID: -5639751721759200804, guid: 78fa122165822094db0a2cecc0a292ba, type: 3}
+  - {fileID: 28374161365091856, guid: 56b051c5a37c2ed498f5dbad22b1ea4d, type: 3}
+  - {fileID: 9197967493281700186, guid: 188b244fa5bb29d4e94a8667e2b4b497, type: 3}
+  directorBookPages: []
+  directorBookCode: 

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fcf2fcf68142a94f93cc7f2d591b07f, type: 3}
+  m_Name: Achv_DirectorStory
+  m_EditorClassIdentifier: 
+  achievementID: Achv_DirectorStory
+  displayName: "\u0414\u0438\u0440\u0435\u043A\u0442\u043E\u0440"
+  description: "\u0414\u0438\u0440\u0435\u043A\u0442\u043E\u0440 \u0432\u043F\u0435\u0440\u0432\u044B\u0435
+    \u0437\u0430\u043D\u044F\u043B \u0441\u0432\u043E\u0451 \u0437\u0430\u043A\u043E\u043D\u043D\u043E\u0435
+    \u043C\u0435\u0441\u0442\u043E \u0437\u0430 \u0440\u0430\u0431\u043E\u0447\u0438\u043C
+    \u0441\u0442\u043E\u043B\u043E\u043C."
+  bookType: 0
+  iconLocked: {fileID: 8126714549114811382, guid: c35143f605955854ba0f3fdfeb17c57a, type: 3}
+  iconUnlocked: {fileID: 6739686731750041381, guid: 9c5f283bdb3c5ff4cbd0cfb0575fb2e0, type: 3}
+  isSecret: 0
+  alwaysAvailable: 0
+  comicPages:
+  - {fileID: -1649018855314606664, guid: fb5cb6cf58ae30b46987b37c625335c4, type: 3}
+  - {fileID: 4103966236793010700, guid: 9a1f0107ed81cb84daa9932d9717135b, type: 3}
+  - {fileID: -7134944367816006766, guid: 18565f15154397940953f05be1c7be5a, type: 3}
+  - {fileID: 4027818196483039329, guid: 6a89340a289d2df45a5ab0a234b8fd9c, type: 3}
+  - {fileID: -5837104446322328769, guid: c079e439bb4bcac498fba13189c83627, type: 3}
+  - {fileID: 1121176127433786413, guid: ebae3df46bb87d743ae03b5eecf5de62, type: 3}
+  - {fileID: 6064508967255863762, guid: 86fd9b8bc2805d7408cd3918a712d182, type: 3}
+  - {fileID: -3376313571387291082, guid: b3db6fe92dee50e40aead16f70a79821, type: 3}
+  - {fileID: -2118909269774693460, guid: 0d2fc1f1a8cdb3f4fa7a0e1cedad6e47, type: 3}
+  - {fileID: 8547756426871403607, guid: 9f67569eb344eb048a4fce1ba6a9915c, type: 3}
+  - {fileID: 6872899961316187367, guid: a6f6a6c3fc97f174a9c23db2b1d2499f, type: 3}
+  directorBookPages: []
+  directorBookCode: 

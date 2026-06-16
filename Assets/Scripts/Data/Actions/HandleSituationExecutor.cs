@@ -27,8 +27,9 @@ public class HandleSituationExecutor : ActionExecutor
 
                         Waypoint correctGoal = DetermineCorrectGoalForClient(confusedClient);
                         confusedClient.stateMachine.GetHelpFromIntern(correctGoal);
-                        
+
                         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
+                        if (staff is InternController) Managers.AchievementManager.Instance?.UnlockAchievement("Achv_LostClientStory");
                         FinishAction(true);
                         yield break;
                     }
@@ -103,9 +104,10 @@ public class HandleSituationExecutor : ActionExecutor
 
         clientToHelp.stateMachine.GetHelpFromIntern(goal);
         Managers.ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        
+
         if (staff is InternController i) i.SetState(InternController.InternState.Patrolling);
-        
+        if (staff is InternController) Managers.AchievementManager.Instance?.UnlockAchievement("Achv_LostClientStory");
+
         FinishAction(true); // Успешно закончили!
     }
 

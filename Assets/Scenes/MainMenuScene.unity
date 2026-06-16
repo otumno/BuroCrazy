@@ -344,6 +344,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   allAchievementsDatabase:
   - {fileID: 11400000, guid: aa5cba6092009b840a1feef2edfc6bca, type: 2}
+  - {fileID: 11400000, guid: 3d247239810f64c4ab0366ce83dd85c2, type: 2}
+  - {fileID: 11400000, guid: ec72b0e54d6c2c148bde75871682130a, type: 2}
+  - {fileID: 11400000, guid: f2189c379a20f3e4bb0de982d80af68b, type: 2}
+  - {fileID: 11400000, guid: ba3c438600b5913498b1cbe2fee5e93f, type: 2}
+  - {fileID: 11400000, guid: e06ada2141eb2434c8c0d36ee79ccb9f, type: 2}
+  - {fileID: 11400000, guid: 4be9af3b51903954cb0b04620958fbb1, type: 2}
+  - {fileID: 11400000, guid: 6ce2e6878682b3c428bddab47262bc9b, type: 2}
+  - {fileID: 11400000, guid: 854f63e418076934982179fed5236bbe, type: 2}
+  - {fileID: 11400000, guid: c666f510d19a5514bad0079476b834a4, type: 2}
+  - {fileID: 11400000, guid: d4b976effe44af04aa3a8bf250a453c0, type: 2}
 --- !u!114 &96204289
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5402,6 +5412,7 @@ MonoBehaviour:
   m_ScreenCoordScaleBias: {x: 0, y: 0, z: 0, w: 0}
   m_RequiresDepthTexture: 0
   m_RequiresColorTexture: 0
+  m_Version: 2
   m_TaaSettings:
     m_Quality: 3
     m_FrameInfluence: 0.1
@@ -5409,7 +5420,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
-  m_Version: 2
 --- !u!114 &1389421145
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5697,8 +5707,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1572519597}
-  - component: {fileID: 1572519599}
-  - component: {fileID: 1572519598}
   m_Layer: 5
   m_Name: Content
   m_TagString: Untagged
@@ -5725,46 +5733,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 1}
---- !u!114 &1572519598
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1572519596}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_HorizontalFit: 0
-  m_VerticalFit: 2
---- !u!114 &1572519599
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1572519596}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 20
-    m_Right: 20
-    m_Top: 20
-    m_Bottom: 20
-  m_ChildAlignment: 0
-  m_Spacing: 0
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
 --- !u!1 &1581954206
 GameObject:
   m_ObjectHideFlags: 0
@@ -6247,6 +6215,17 @@ MonoBehaviour:
   achievementItemPrefab: {fileID: 9058546671245510119, guid: 3d760d8f0f05fe643954bde7df0477d7, type: 3}
   resetButton: {fileID: 1766545917}
   comicViewer: {fileID: 1351160082}
+  defaultCellWidth: 500
+  minCellWidth: 500
+  maxCellWidth: 500
+  cellHeight: 700
+  gridPadding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  cellSpacing: {x: 30, y: 30}
+  autoFitGrid: 0
   audioSource: {fileID: 1708293355}
   achievementClickSound: {fileID: 8300000, guid: 4e1dd562c7e6a3d419b5d4d703cd8d7d, type: 3}
 --- !u!82 &1708293355

@@ -213,8 +213,8 @@ public class ClientQueueManager : MonoBehaviour
     
     private IEnumerator PatienceCheck(ClientPathfinding client)
     {
-        float minWait = patienceMinTime * (1f + client.babushkaFactor) * (1f - client.suetunFactor * 0.5f);
-        float maxWait = patienceMaxTime * (1f + client.babushkaFactor) * (1f - client.suetunFactor * 0.5f);
+        float minWait = patienceMinTime * (1f + client.babushkaFactor * 1.5f) * (1f - client.suetunFactor * 0.7f);
+        float maxWait = patienceMaxTime * (1f + client.babushkaFactor * 1.5f) * (1f - client.suetunFactor * 0.7f);
         yield return new WaitForSeconds(Random.Range(minWait, maxWait));
         
         // Ранняя проверка: клиент вызван к столу — не проверяем терпение

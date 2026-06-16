@@ -138,6 +138,8 @@ public class DirectorAvatarController : StaffController, IServiceProvider
                      SetState(DirectorState.AtDesk);
                 }
 
+                // Ачивка: впервые сел за директорский стол
+                Managers.AchievementManager.Instance?.UnlockAchievement("Achv_DirectorStory");
             }
             else if (!currentlyAtDesk && IsAtDesk) // Если отошли от стола
             {
@@ -1035,14 +1037,36 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     {
          Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
          if (allWaypoints == null || allWaypoints.Length == 0) {
-              Debug.LogError("На сцене нет Waypoint'ов!");
-              return null;
+               Debug.LogError("На сцене нет Waypoint'ов!");
+               return null;
          }
-         // Используем Linq для поиска ближайшей точки, исключая null
+          // Используем Linq для поиска ближайшей точки, исключая null
         return allWaypoints
             .Where(wp => wp != null)
             .OrderBy(wp => Vector2.Distance(position, wp.transform.position))
             .FirstOrDefault();
+    }
+
+    /// <summary>
+    /// Оценивает суммарную длину маршрута по вейпоинтам от startPos до waypointPos.
+    /// Используется для сравнения стоимости двух альтернативных подходов в клинче.
+    /// </summary>
+    private float EstimatePathLength(Vector2 startPos, Vector2 waypointPos)
+    {
+        var path = Utilities.PathfindingUtility.BuildPathTo(startPos, waypointPos, gameObject);
+        if (path == null || path.Count == 0) return float.PositiveInfinity;
+
+        float total = 0f;
+        Vector2 prev = startPos;
+        foreach (var wp in path)
+        {
+            if (wp == null) continue;
+            total += Vector2.Distance(prev, wp.transform.position);
+            prev = wp.transform.position;
+        }
+        // Дотягивание от последнего вейпоинта до целевой точки (если она не совпадает с вейпоинтом)
+        total += Vector2.Distance(prev, waypointPos);
+        return total;
     }
 
     /// <summary>
@@ -1516,8 +1540,11 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         SetState(DirectorState.MovingToPoint);
 
         // 1. УМНЫЙ ПОИСК ЦЕЛИ (Чтобы не обегать столы)
+        // Сравниваем длину маршрута до clerkStandPoint (рабочее место) и до ближайшего
+        // вейпоинта рядом с самим клиентом — идём туда, куда быстрее.
         Vector3 destination = target.transform.position;
-        
+        Vector3 pathfindingTarget = target.transform.position;
+
         var client = target.GetComponent<ClientPathfinding>();
         var staff = target.GetComponent<StaffController>();
 
@@ -1532,22 +1559,48 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             relatedDesk = staff.assignedWorkstation;
         }
 
-        // Если клинч происходит за рабочим столом, бежим к точке персонала
+        // Считаем «стоимость» двух вариантов подхода: до рабочего места и до ближайшей точки у клиента.
+        // Учитываем и длину пути по вейпоинтам, и финальную «честную» дистанцию от конечного узла до цели.
+        float deskCost = float.PositiveInfinity;
+        float clientCost = float.PositiveInfinity;
+
         if (relatedDesk != null && relatedDesk.clerkStandPoint != null)
         {
-            destination = relatedDesk.clerkStandPoint.position;
+            deskCost = EstimatePathLength(transform.position, relatedDesk.clerkStandPoint.position)
+                       + Vector2.Distance(relatedDesk.clerkStandPoint.position, target.transform.position);
+        }
+
+        var nearestToClient = FindNearestWaypointTo(target.transform.position);
+        if (nearestToClient != null)
+        {
+            clientCost = EstimatePathLength(transform.position, nearestToClient.transform.position)
+                         + Vector2.Distance(nearestToClient.transform.position, target.transform.position);
+        }
+
+        if (deskCost < clientCost)
+        {
+            // Быстрее добраться до рабочего места — идём через clerkStandPoint
+            destination = relatedDesk != null && relatedDesk.clerkStandPoint != null
+                ? relatedDesk.clerkStandPoint.position
+                : target.transform.position;
+            pathfindingTarget = destination;
+        }
+        else if (nearestToClient != null)
+        {
+            // Быстрее подойти почти к самому клиенту — идём к ближайшему вейпоинту рядом с ним
+            destination = nearestToClient.transform.position;
+            pathfindingTarget = target.transform.position;
         }
         else
         {
-            // Иначе ищем ближайший вейпоинт к самому персонажу (например, в коридоре)
-            var wp = FindNearestWaypointTo(target.transform.position);
-            if (wp != null) destination = wp.transform.position;
+            // Фоллбэк: ни маршрут до стола, ни маршрут к клиенту не доступны
+            pathfindingTarget = destination;
         }
 
         // 2. ДВИЖЕНИЕ И ПРЕРЫВАНИЕ ПО ДИСТАНЦИИ
         if (agentMover != null)
         {
-            var path = Utilities.PathfindingUtility.BuildPathTo(transform.position, destination, gameObject);
+            var path = Utilities.PathfindingUtility.BuildPathTo(transform.position, pathfindingTarget, gameObject);
             agentMover.SetPath(path);
         }
 

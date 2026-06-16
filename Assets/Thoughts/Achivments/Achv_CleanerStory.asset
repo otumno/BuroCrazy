@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fcf2fcf68142a94f93cc7f2d591b07f, type: 3}
+  m_Name: Achv_CleanerStory
+  m_EditorClassIdentifier: 
+  achievementID: Achv_CleanerStory
+  displayName: "\u0423\u0431\u043E\u0440\u0449\u0438\u0446\u0430"
+  description: "\u0423\u0431\u043E\u0440\u0449\u0438\u043A \u0432\u043F\u0435\u0440\u0432\u044B\u0435
+    \u043D\u0430\u0432\u0451\u043B \u043F\u043E\u0440\u044F\u0434\u043E\u043A \u0432
+    \u043A\u0430\u0431\u0438\u043D\u0435\u0442\u0435, \u0443\u0431\u0440\u0430\u0432
+    \u043C\u0443\u0441\u043E\u0440."
+  bookType: 0
+  iconLocked: {fileID: 2464730445671044920, guid: 6b8d39ffec6879c4880f482e43573daa, type: 3}
+  iconUnlocked: {fileID: 5455385252279970831, guid: 7a41bd47a9faa234383056630550bbb9, type: 3}
+  isSecret: 0
+  alwaysAvailable: 0
+  comicPages:
+  - {fileID: 3749366938098206945, guid: 05e32306d0addac46a7d116d37e764c0, type: 3}
+  - {fileID: -2440933098888119584, guid: 305927d763eac86489c5f8ca67275696, type: 3}
+  - {fileID: -1547728042916557577, guid: 68be8bd98c38061419b1e997157ca97d, type: 3}
+  - {fileID: 1061702683902341086, guid: 238f331e61707d541a267f3030aaf102, type: 3}
+  - {fileID: -4075360884686335898, guid: 4cf637769b68f0c4695dc2b21a605571, type: 3}
+  - {fileID: -5957793849354578972, guid: f94d4e26c5d45e146be1f526ac958ed9, type: 3}
+  - {fileID: -3423790864551222862, guid: d059741e4491ee34b98d1ebd16aa6ca6, type: 3}
+  - {fileID: -4329656737410694252, guid: 4b79510c4eb1bf64fb6528f3fd1d7015, type: 3}
+  - {fileID: 8803317545267984759, guid: 3989706f39df19b4a944dd64ea303479, type: 3}
+  - {fileID: 6305310107320928801, guid: fe8fb1f018bd787449e9f98db8bd1d57, type: 3}
+  - {fileID: 9179532245095458792, guid: f639fd14da7fec048966f3b7c54e3768, type: 3}
+  directorBookPages: []
+  directorBookCode: 

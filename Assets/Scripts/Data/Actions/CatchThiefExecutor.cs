@@ -49,9 +49,12 @@ public class CatchThiefExecutor : ActionExecutor
             // Логика поимки (например, удаление вора или вывод из здания)
             // GuardManager.Instance.ArrestThief(thief); // Если есть такой метод
             staff.thoughtBubble?.ShowPriorityMessage("Попался!", 2f, Color.green);
-            
+
             // Очки за отчет
             guard.unwrittenReportPoints++;
+
+            // Ачивка: охранник впервые поймал вора
+            Managers.AchievementManager.Instance?.UnlockAchievement("Achv_GuardStory");
         }
 
         guard.SetState(GuardMovement.GuardState.Idle);

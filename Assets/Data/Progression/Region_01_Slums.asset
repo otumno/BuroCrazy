@@ -38,7 +38,7 @@ MonoBehaviour:
     weight: 30
   - groupID: Marginal
     weight: 40
-  maxDailyFlow: 10
+  maxDailyFlow: 20
   flowVariance: 0.1
   rampUpDays: 4
   unlocksContactIDs: []

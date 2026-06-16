@@ -197,6 +197,7 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
         currentClient.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
         currentClient.stateMachine.SetState(ClientState.MovingToGoal);
         StartOfDayPanel.Instance.RemoveDocumentIcon(currentClient);
+        Managers.AchievementManager.Instance?.UnlockAchievement("Achv_DocumentStory");
         ClosePanel();
         currentClient = null;
     }

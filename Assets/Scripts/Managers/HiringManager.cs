@@ -340,6 +340,12 @@ namespace Managers
                     schedulePanel.RefreshTable();
                 }
 
+                // Ачивка: найм клерка
+                if (candidate.Role == StaffController.Role.Clerk)
+                {
+                    AchievementManager.Instance?.UnlockAchievement("Achv_ExperiencedClerkStory");
+                }
+
                 return true;
             }
             
@@ -573,11 +579,17 @@ namespace Managers
 
             if (staff.currentRole != newRankData.associatedRole)
             {
-                // Тут мы используем корутину, но она не определена в этом сокращенном варианте кода. 
+                // Тут мы используем корутину, но она не определена в этом сокращенном варианте кода.
                 // Предполагаем, что она есть в полной версии HiringManager.cs
                  StartCoroutine(RebuildControllerComponent(staff, newRankData.associatedRole, staff.activeActions));
+
+                // Ачивка: повышение стажёра до клерка
+                if (newRankData.associatedRole == StaffController.Role.Clerk)
+                {
+                    AchievementManager.Instance?.UnlockAchievement("Achv_ExperiencedClerkStory");
+                }
             }
-            
+
             FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
         }
         

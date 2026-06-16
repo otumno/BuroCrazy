@@ -37,6 +37,7 @@ public class RetrieveDocumentExecutor : ActionExecutor
         archivist.GetComponent<StackHolder>().HideStack();
         request.IsFulfilled = true;
 
+        Managers.AchievementManager.Instance?.UnlockAchievement("Achv_ArchivistStory");
         FinishAction(true);
     }
 }

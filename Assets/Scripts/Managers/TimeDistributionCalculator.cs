@@ -43,9 +43,10 @@ namespace Managers
                 return result;
             }
 
-            // 1. Суммируем score предпочтений для каждого периода
+            // 1. Равномерное распределение по дневным периодам (временно отключаем учёт timeOfDayPreference)
             var periodScores = new Dictionary<CalendarDayPeriodType, float>();
             float totalScore = 0f;
+            int activePeriodsCount = 0;
 
             foreach (var period in periods)
             {
@@ -55,29 +56,9 @@ namespace Managers
                     continue;
                 }
 
-                float score = 0f;
-                int count = 0;
-
-                if (availableArchetypes != null)
-                {
-                    foreach (var archetype in availableArchetypes)
-                    {
-                        if (archetype != null)
-                        {
-                            score += archetype.GetTimePreferenceScore(period);
-                            count++;
-                        }
-                    }
-                }
-
-                // Если архетипы не заданы, используем дефолтные предпочтения
-                if (count == 0)
-                {
-                    score = GetDefaultPreferenceScore(period);
-                }
-
-                periodScores[period] = score;
-                totalScore += score;
+                periodScores[period] = 1f;
+                totalScore += 1f;
+                activePeriodsCount++;
             }
 
             // 2. Распределяем клиентов пропорционально score
@@ -132,33 +113,15 @@ namespace Managers
                 if (dist.clientCount <= 0 || period.IsNight())
                     continue;
 
-                // Выбираем клиентов с учётом их предпочтений к этому периоду
-                var weightedArchetypes = new List<WeightedArchetype>();
-
-                foreach (var archetype in availableArchetypes)
-                {
-                    if (archetype == null) continue;
-
-                    float preference = archetype.GetTimePreferenceScore(period);
-                    // Чем выше предпочтение, тем выше вес
-                    float weight = preference > 0.01f ? preference : 0.01f;
-
-                    weightedArchetypes.Add(new WeightedArchetype
-                    {
-                        archetype = archetype,
-                        weight = weight
-                    });
-                }
-
-                // Выбираем клиентов
+                // Равномерный выбор архетипа (без учёта timeOfDayPreference — он временно отключён)
                 for (int i = 0; i < dist.clientCount; i++)
                 {
-                    if (weightedArchetypes.Count == 0) break;
+                    if (availableArchetypes == null || availableArchetypes.Count == 0) break;
 
-                    var selected = SelectWeighted(weightedArchetypes);
-                    if (selected.archetype != null)
+                    var archetype = availableArchetypes[Random.Range(0, availableArchetypes.Count)];
+                    if (archetype != null)
                     {
-                        distribution[period].archetypes.Add(selected.archetype);
+                        distribution[period].archetypes.Add(archetype);
                         assigned++;
                     }
                 }

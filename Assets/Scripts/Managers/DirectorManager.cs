@@ -165,6 +165,30 @@ namespace Managers
             currentReputation = GetMaxReputation();
             currentSuccessStreak = 0;
         }
+
+        /// <summary>
+        /// Обработка ухода клиента из приёмной директора (по таймауту или иной причине).
+        /// Применяет штраф репутации и Влияния.
+        /// </summary>
+        public void OnDirectorVisitorLeft()
+        {
+            float reputationPenalty = 5f;
+            int influencePenalty = 1;
+
+            if (WaveManager.Instance != null)
+            {
+                reputationPenalty = WaveManager.Instance.directorRejectionReputationPenalty;
+                influencePenalty = WaveManager.Instance.directorRejectionInfluencePenalty;
+            }
+
+            TakeDamage(reputationPenalty, "Клиент ушёл из приёмной директора");
+
+            if (ProgressionManager.Instance != null && influencePenalty > 0)
+            {
+                ProgressionManager.Instance.AddInfluence(-influencePenalty);
+                Debug.Log($"<color=red>[Директор]</color> Штраф Влияния: -{influencePenalty}");
+            }
+        }
         
         public void EvaluateEndOfDayStrikes(int dayIndex)
         {

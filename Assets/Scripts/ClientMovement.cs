@@ -127,8 +127,11 @@ public class ClientMovement : MonoBehaviour
         var _collider2D = GetComponent<CircleCollider2D>();
 
         // Скорость зависит от фактора "Суетуна" (быстрее) и "Бабушки" (медленнее)
-        float baseSpeed = Mathf.Lerp(minMoveSpeed, maxMoveSpeed, parent.suetunFactor);
-        float finalSpeed = baseSpeed * (1f - parent.babushkaFactor * 0.4f); // Бабушка на 40% медленнее при факторе 1.0
+        // Усиленный эффект: бабушка -50% при факторе 1, суетун добавляет +0.3 к Lerp-фактору
+        float suetunBoost = parent.suetunFactor * 0.3f;
+        float lerpFactor = Mathf.Clamp01(parent.suetunFactor + suetunBoost);
+        float baseSpeed = Mathf.Lerp(minMoveSpeed, maxMoveSpeed, lerpFactor);
+        float finalSpeed = baseSpeed * (1f - parent.babushkaFactor * 0.5f); // Бабушка на 50% медленнее при факторе 1.0
 
         // Масса и размер зависят от "Суетуна" (более легкие и мелкие)
         float finalMass = Mathf.Lerp(maxMass, minMass, parent.suetunFactor);

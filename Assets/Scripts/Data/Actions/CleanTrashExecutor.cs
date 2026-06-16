@@ -85,9 +85,10 @@ public class CleanTrashExecutor : ActionExecutor
         }
 
         if (messPoint != null) Destroy(messPoint.gameObject);
-        
+
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         worker.SetState(ServiceWorkerController.WorkerState.Idle);
+        Managers.AchievementManager.Instance?.UnlockAchievement("Achv_CleanerStory");
         FinishAction(true);
     }
 }

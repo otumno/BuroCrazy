@@ -133,6 +133,7 @@ public class ClientActionExecutor : MonoBehaviour
         if ((_client.mainGoal == ClientGoal.DirectorApproval || _client.mainGoal == ClientGoal.DirectorAudience) && targetZone == ClientSpawner.Instance?.directorReceptionZone)
         {
             StartOfDayPanel.Instance?.RegisterDirectorDocument(_client);
+            _client.StartDirectorWaitTimer();
         }
     }
 

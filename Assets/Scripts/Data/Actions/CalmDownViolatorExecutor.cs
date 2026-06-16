@@ -30,14 +30,17 @@ public class CalmDownViolatorExecutor : ActionExecutor
             // Разговор
             guard.SetState(GuardMovement.GuardState.Talking);
             staff.agentMover.Stop();
-            
+
             yield return new WaitForSeconds(guard.talkTime);
 
             // Результат
             // GuardManager.Instance.PacifyViolator(violator);
             staff.thoughtBubble?.ShowPriorityMessage("Конфликт исчерпан.", 2f, Color.green);
-            
+
             guard.unwrittenReportPoints++;
+
+            // Ачивка: охранник впервые утихомирил нарушителя
+            Managers.AchievementManager.Instance?.UnlockAchievement("Achv_GuardStory");
         }
 
         guard.SetState(GuardMovement.GuardState.Idle);
