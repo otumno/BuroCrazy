@@ -30,6 +30,6 @@ MonoBehaviour:
   - role: 8
     color: {r: 0.9245283, g: 0.6933962, b: 0.6933962, a: 1}
   - role: 9
-    color: {r: 0.2, g: 0.8, b: 0.3, a: 1}
+    color: {r: 0.78, g: 0.72, b: 0.25, a: 1}
   - role: 10
     color: {r: 0.8, g: 0.5, b: 0.3, a: 1}

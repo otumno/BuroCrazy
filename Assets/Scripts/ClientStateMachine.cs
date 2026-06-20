@@ -178,11 +178,9 @@ public class ClientStateMachine : MonoBehaviour
 	    if (parent.billToPay > 0 &&
 	        (currentState == ClientState.AtCashier || currentState == ClientState.GoingToCashier))
 	    {
-	        float angerModifier = Random.Range(-0.20f, 0.05f);
-	        int finalBill = Mathf.Max(1, Mathf.RoundToInt(parent.billToPay * (1f + angerModifier)));
-	        
-	        // ЗЛАЯ ОПЛАТА - лог убран
-	        
+	        // Точная сумма (после рефакторинга: Кассир принимает ровно billToPay)
+	        int finalBill = Mathf.Max(1, parent.billToPay);
+
 	        // Спавн денег - летят на ближайший ServicePoint кассы (deskId == -1)
 	        var allServicePoints = Object.FindObjectsByType<ServicePoint>(FindObjectsSortMode.None);
 	        ServicePoint cashierPoint = null;
@@ -199,7 +197,7 @@ public class ClientStateMachine : MonoBehaviour
 	                }
 	            }
 	        }
-	        
+
 	        if (parent.moneyPrefab != null && cashierPoint != null)
 	        {
 	            GameObject money = Object.Instantiate(parent.moneyPrefab, parent.transform.position, Quaternion.identity);
@@ -207,20 +205,22 @@ public class ClientStateMachine : MonoBehaviour
 	            Transform targetPoint = cashierPoint.moneyTrayPoint ?? cashierPoint.documentPointOnDesk;
 	            if (targetPoint != null)
 	            {
-	                money.transform.position = targetPoint.position;
+	                MoneyMover mover = money.GetComponent<MoneyMover>();
+	                if (mover != null) mover.StartMove(targetPoint);
+	                else money.transform.position = targetPoint.position;
 	            }
 	        }
-	        
-	        // Добавляем деньги в кошелёк
+
+	        // Добавляем деньги в кошелёк (точная сумма)
 	        if (Managers.PlayerWallet.Instance != null)
 	        {
-	            Managers.PlayerWallet.Instance.AddMoney(finalBill, "Оплата со злостью", Managers.IncomeType.Official);
+	            Managers.PlayerWallet.Instance.AddMoney(finalBill, $"Оплата услуги (клиент ушёл)", Managers.IncomeType.Official);
 	        }
-	        
+
 	        // Показываем бабл и сбрасываем
 	        parent.ShowThoughtBubble("Подавитесь своими деньгами!", 3f);
 	        parent.billToPay = 0;
-	        
+
 	        // Уходим злым (без мусора/луж)
 	        StopAllActionCoroutines();
 	        parent.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;

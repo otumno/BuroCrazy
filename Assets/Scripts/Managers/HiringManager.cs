@@ -601,9 +601,53 @@ namespace Managers
         
         public IEnumerator RebuildControllerComponent(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
         {
-            // (Полный код Rebuild был в предыдущих сообщениях, он большой, но важный для смены класса)
-            // Просто убедитесь, что он у вас есть.
-            yield return null; 
+            if (staff == null) yield break;
+
+            System.Type targetType = GetControllerTypeForRole(newRole);
+            if (targetType == null) { yield break; }
+
+            // Если уже нужный тип — просто обновим действия
+            var existing = staff.GetComponent(targetType);
+            if (existing != null)
+            {
+                if (newActions != null) staff.activeActions = new List<StaffAction>(newActions);
+                staff.currentRole = newRole;
+                yield break;
+            }
+
+            // Старый контроллер — снимаем, если он InternController
+            var oldIntern = staff.GetComponent<InternController>();
+            if (oldIntern != null) Destroy(oldIntern);
+
+            var oldNotification = staff.GetComponent<InternNotification>();
+            if (oldNotification != null) Destroy(oldNotification);
+
+            // Удаляем прочие специализированные контроллеры ClerkController и т.п., чтобы не было конфликтов
+            foreach (var c in staff.GetComponents<ClerkController>())
+            {
+                if (c.GetType() != targetType) Destroy(c);
+            }
+
+            // Добавляем новый контроллер
+            staff.gameObject.AddComponent(targetType);
+
+            // Применяем данные от роли
+            var roleData = allRoleData?.FirstOrDefault(d => d != null && d.roleType == newRole);
+            if (roleData != null)
+            {
+                staff.InitializeFromData(roleData);
+            }
+
+            staff.currentRole = newRole;
+            if (newActions != null) staff.activeActions = new List<StaffAction>(newActions);
+
+            // Инициализируем dirtyHands для Accountant
+            if (newRole == StaffController.Role.Accountant && roleData != null && staff.skills != null)
+            {
+                staff.skills.dirtyHands = roleData.accountant_dirtyHandsBase;
+            }
+
+            yield return null;
         }
 
         public void ResetState()

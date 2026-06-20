@@ -11,7 +11,8 @@ namespace Utilities
         SedentaryResilience,
         Pedantry,
         SoftSkills,
-        Corruption
+        Corruption,
+        DirtyHands
     }
 
     public static class SkillDescriptor
@@ -31,6 +32,8 @@ namespace Utilities
                     return GetSoftSkillsDescription(value);
                 case SkillType.Corruption:
                     return GetCorruptionDescription(value);
+                case SkillType.DirtyHands:
+                    return GetDirtyHandsDescription(value);
                 default:
                     return "Неизвестный навык";
             }
@@ -80,6 +83,15 @@ namespace Utilities
             if (value >= 0.5f) return "Жизнь такова...";
             if (value >= 0.25f) return "Не без греха";
             return "Чистый лист";
+        }
+
+        private static string GetDirtyHandsDescription(float value)
+        {
+            if (value >= 1.0f) return "Всё пропустит через себя";
+            if (value >= 0.75f) return "Знает все ходы";
+            if (value >= 0.5f) return "Не первый день в этой кухне";
+            if (value >= 0.25f) return "Кое-что понимает";
+            return "Белый и пушистый";
         }
     }
 }

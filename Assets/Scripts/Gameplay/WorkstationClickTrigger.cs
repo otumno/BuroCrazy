@@ -52,6 +52,11 @@ public class WorkstationClickTrigger : MonoBehaviour
         "Звон монет успокаивает нервы.",
         "Касса свободна, подходите!"
     };
+    private static readonly string[] accountantMoveReplics = {
+        "Пора проверить цифры.",
+        "Документы сами себя не посчитают.",
+        "Иду к своему столу."
+    };
 
     // === РЕПЛИКИ НА РАБОЧЕМ МЕСТЕ ===
     private static readonly string[] registrarArrivedReplics = {
@@ -78,6 +83,11 @@ public class WorkstationClickTrigger : MonoBehaviour
         "Касса открыта.",
         "Готовьте ваши денежки.",
         "Приступил к финансовым операциям."
+    };
+    private static readonly string[] accountantArrivedReplics = {
+        "Начинаю оптимизацию.",
+        "Конверты ждут.",
+        "Приступил к бухгалтерии."
     };
 
     private void Awake()
@@ -249,7 +259,7 @@ public class WorkstationClickTrigger : MonoBehaviour
                 2 => office2MoveReplics,
                 3 => archiveMoveReplics,
                 -1 => cashierMoveReplics,
-                4 => cashierMoveReplics,
+                4 => accountantMoveReplics,
                 _ => new string[] { "Иду работать!" }
             };
         }
@@ -261,7 +271,7 @@ public class WorkstationClickTrigger : MonoBehaviour
                 2 => office2ArrivedReplics,
                 3 => archiveArrivedReplics,
                 -1 => cashierArrivedReplics,
-                4 => cashierArrivedReplics,
+                4 => accountantArrivedReplics,
                 _ => new string[] { "Приступил к работе!" }
             };
         }

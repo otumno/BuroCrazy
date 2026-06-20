@@ -163,7 +163,7 @@ public class TeamMemberCardUI : MonoBehaviour
             case StaffController.Role.Guard: return new Color(0.3f, 0.3f, 0.5f, 1f);
             case StaffController.Role.Janitor: return new Color(0.5f, 0.5f, 0.5f, 1f);
             case StaffController.Role.OfficeManager: return new Color(0.9f, 0.4f, 0.4f, 1f);
-            case StaffController.Role.Accountant: return new Color(0.2f, 0.6f, 0.3f, 1f);
+            case StaffController.Role.Accountant: return new Color(0.78f, 0.72f, 0.25f, 1f);
             case StaffController.Role.ServiceWorker: return new Color(0.8f, 0.5f, 0.3f, 1f);
             default: return Color.white;
         }

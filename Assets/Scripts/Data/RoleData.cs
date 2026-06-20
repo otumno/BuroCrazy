@@ -64,11 +64,30 @@ public class RoleData : ScriptableObject
 	[Tooltip("Максимальный процент от суммы, который кассир может украсть за раз (0.0 до 1.0).")]
 	[Range(0f, 1f)]
 	public float cashier_maxSkimAmount = 0.3f; // 30% по умолчанию
-	
+
+	[Header("Специфика Бухгалтера (Accountant)")]
+	[Tooltip("Базовое значение 'грязных рук' при найме (0..1). Чем больше — тем чаще находит деньги И покрывает схемы.")]
+	[Range(0f, 1f)]
+	public float accountant_dirtyHandsBase = 0.2f;
+
+	[Tooltip("Override интервала AccountantMoneyGen (сек). Если <= 0 — берётся из AIBalanceConfig.")]
+	public float accountant_moneyGenIntervalOverride = -1f;
+
+	[Tooltip("Override интервала AccountantCoverSchemes (сек). Если <= 0 — берётся из AIBalanceConfig.")]
+	public float accountant_coverSchemesIntervalOverride = -1f;
+
+	[Tooltip("Override базового шанса находки денег (0..1). Если < 0 — из AIBalanceConfig.")]
+	[Range(-1f, 1f)]
+	public float accountant_moneyGenChanceOverride = -1f;
+
+	[Tooltip("Override базового шанса покрытия схем (0..1). Если < 0 — из AIBalanceConfig.")]
+	[Range(-1f, 1f)]
+	public float accountant_coverChanceOverride = -1f;
+
 	[Header("Параметры бездействия (Idle)")]
     public float minIdleWait = 5f;
     public float maxIdleWait = 10f;
-	
+
 	[Tooltip("Базовая стоимость найма для этой роли (без учета навыков и ранга)")]
 	public int baseHiringCost = 100;
 }

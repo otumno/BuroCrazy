@@ -136,79 +136,9 @@ public class ClerkController : StaffController, IServiceProvider
 
     public void AssignClient(ClientPathfinding client)
     {
-        if (this.clerkRole == ClerkRole.Cashier)
-        {
-            StartCoroutine(CashierServiceRoutine(client));
-        }
+        // Логика обслуживания клиентов перенесена в новые action-executor'ы
+        // (ServiceAtCashierExecutor, ServiceAtRegistrationExecutor, DoBookkeepingExecutor).
+        // AssignClient оставлен как no-op для совместимости с IServiceProvider.
     }
     #endregion
-
-    private IEnumerator CashierServiceRoutine(ClientPathfinding client)
-    {
-        if (client == null)
-        {
-            Debug.LogWarning("[ClerkController] CashierServiceRoutine вызван с null клиентом");
-            yield break;
-        }
-
-        SetState(ClerkState.Working);
-        thoughtBubble?.ShowPriorityMessage($"К оплате: ${client.billToPay}", 3f, Color.white);
-        yield return new WaitForSeconds(Random.Range(2f, 4f));
-
-        int bill = client.billToPay;
-        int totalSkimAmount = 0;
-        RoleData roleData = allRoleData?.FirstOrDefault(d => d.roleType == currentRole);
-        float corruptionChanceMult = 1.0f;
-        float maxSkimAmount = 0.3f;
-        if (roleData != null)
-        {
-            corruptionChanceMult = roleData.cashier_corruptionChanceMultiplier;
-            maxSkimAmount = roleData.cashier_maxSkimAmount;
-        }
-
-        float corruptionChance = (skills.corruption * 0.5f) * corruptionChanceMult;
-        if (Random.value < corruptionChance && bill > 0)
-        {
-            totalSkimAmount = (int)(bill * Random.Range(0.1f, maxSkimAmount));
-            thoughtBubble?.ShowPriorityMessage("Никто и не заметит...", 2f, new Color(0.8f, 0, 0.8f));
-            yield return new WaitForSeconds(2f);
-        }
-
-        // --- Анимация денег ---
-        if (client.moneyPrefab != null && bill > 0)
-        {
-            GameObject moneyEffect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
-            MoneyMover mover = moneyEffect.GetComponent<MoneyMover>();
-
-            // Летим в moneyTrayPoint если есть, иначе в transform стола
-            Transform moneyTarget = assignedWorkstation?.moneyTrayPoint ?? assignedWorkstation?.transform ?? this.transform;
-            if (mover != null) mover.StartMove(moneyTarget);
-            else Destroy(moneyEffect);
-        }
-        // ---
-
-        int officialAmount = bill - totalSkimAmount;
-        if (officialAmount > 0)
-        {
-            PlayerWallet.Instance?.AddMoney(officialAmount, $"Оплата услуги (Клиент: {client.name})", IncomeType.Official);
-        }
-
-        int playerSkimCut = totalSkimAmount / 2;
-        if (playerSkimCut > 0)
-        {
-            PlayerWallet.Instance?.AddMoney(playerSkimCut, $"Доля от махинации ({name})", IncomeType.Shadow);
-        }
-
-        if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
-        client.billToPay = 0;
-        client.isLeavingSuccessfully = true;
-        client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-        
-        // --- ВИЗУАЛЬНЫЙ ФИДБЕК УСПЕХА ---
-        ShowActionEffect(true);
-        
-        client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-        client.stateMachine?.SetState(ClientState.Leaving);
-        ServiceComplete();
-    }
 }

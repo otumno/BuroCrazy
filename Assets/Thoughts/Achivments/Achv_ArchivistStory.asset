@@ -23,6 +23,7 @@ MonoBehaviour:
   iconUnlocked: {fileID: -8733133810003931847, guid: 87b38e903d178e74aa0b7e8dbab053f9, type: 3}
   isSecret: 0
   alwaysAvailable: 0
+  isUnlockedByDefault: 0
   comicPages:
   - {fileID: -4483054239753016745, guid: 29be3491c5471f14fb915cc7236c1cdc, type: 3}
   - {fileID: 7165112464728007453, guid: fded17e2855023741b0d527f2dbcc871, type: 3}

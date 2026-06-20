@@ -140,6 +140,39 @@ namespace Gameplay
         public float clinchRewardStress = 10f;
         #endregion
 
+        #region Бухгалтер (Accountant)
+        [Header("💼 Бухгалтер")]
+        [Tooltip("Период между попытками найти деньги (сек)")]
+        public float accountantMoneyGenInterval = 60f;
+
+        [Tooltip("Базовый шанс найти деньги за один тик (0..1)")]
+        [Range(0f, 1f)]
+        public float accountantMoneyGenBaseChance = 0.4f;
+
+        [Tooltip("Минимальная сумма находки (официально теневой)")]
+        public int accountantMoneyGenMin = 10;
+
+        [Tooltip("Максимальная сумма находки (официально теневой)")]
+        public int accountantMoneyGenMax = 50;
+
+        [Tooltip("Период между попытками покрыть схемы (сек)")]
+        public float accountantCoverSchemesInterval = 120f;
+
+        [Tooltip("Базовый шанс покрыть схемы (до модификации dirtyHands)")]
+        [Range(0f, 1f)]
+        public float accountantCoverSchemesBaseChance = 0.1f;
+
+        [Tooltip("Множитель шанса покрытия от dirtyHands (0..1)")]
+        [Range(0f, 1f)]
+        public float accountantCoverSchemesDirtyHandsBonus = 0.8f;
+
+        [Tooltip("Минимальное снижение globalCorruptionScore за успех")]
+        public int accountantCoverSchemesReduceMin = 50;
+
+        [Tooltip("Максимальное снижение globalCorruptionScore за успех")]
+        public int accountantCoverSchemesReduceMax = 150;
+        #endregion
+
         #region Debug
         [Header("🔧 Debug")]
         [Tooltip("Включить подробные логи")]

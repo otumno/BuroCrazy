@@ -36,6 +36,8 @@ public enum ActionType
 	DoBookkeeping,
 	PrepareSalaries,
 	DirectorPrepareSalaries,
+	AccountantMoneyGen,        // Пассивная генерация денег (теневые находки)
+	AccountantCoverSchemes,    // Пассивное снижение коррупции (покрытие схем)
 
     // Действия Уборщика
     CleanTrash,

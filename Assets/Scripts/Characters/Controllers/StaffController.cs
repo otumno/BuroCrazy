@@ -121,31 +121,33 @@ public class StaffController : MonoBehaviour
 
     // Обертка для скиллов (совместимость)
     [System.Serializable]
-    public class CharacterSkillsWrapper 
+    public class CharacterSkillsWrapper
     {
         public float speed = 1f;
         public float efficiency = 1f;
         public float paperworkMastery = 0f;
-        public float sedentaryResilience = 0f; 
-        public float pedantry = 0f;            
-        public float softSkills = 0f;          
-        public float corruption = 0f;          
-        
-        public string GetSkillShortText(SkillType type) => $"{type}: 100%"; 
+        public float sedentaryResilience = 0f;
+        public float pedantry = 0f;
+        public float softSkills = 0f;
+        public float corruption = 0f;
+        public float dirtyHands = 0f;
+
+        public string GetSkillShortText(SkillType type) => $"{type}: 100%";
 
         public static implicit operator CharacterSkillsWrapper(CharacterSkills s)
         {
             if (s == null) return new CharacterSkillsWrapper();
-            return new CharacterSkillsWrapper 
+            return new CharacterSkillsWrapper
             {
                 paperworkMastery = s.paperworkMastery,
                 sedentaryResilience = s.sedentaryResilience,
                 pedantry = s.pedantry,
                 softSkills = s.softSkills,
-                corruption = s.corruption
+                corruption = s.corruption,
+                dirtyHands = s.dirtyHands
             };
         }
-        
+
         public static implicit operator CharacterSkills(CharacterSkillsWrapper w)
         {
             var s = ScriptableObject.CreateInstance<CharacterSkills>();
@@ -154,6 +156,7 @@ public class StaffController : MonoBehaviour
             s.pedantry = w.pedantry;
             s.softSkills = w.softSkills;
             s.corruption = w.corruption;
+            s.dirtyHands = w.dirtyHands;
             return s;
         }
     }
@@ -1041,6 +1044,10 @@ public class StaffController : MonoBehaviour
         this.roleData = data;
         if (data != null && agentMover != null) { agentMover.moveSpeed = data.moveSpeed; agentMover.priority = data.priority; }
         if (data != null && visuals != null) visuals.SetupFromRoleData(data, gender);
+        if (data != null && skills != null && data.roleType == Role.Accountant)
+        {
+            skills.dirtyHands = data.accountant_dirtyHandsBase;
+        }
     }
     
     public void ForceInitializeBaseComponents(AgentMover mover, CharacterVisuals vis, CharacterStateLogger log) 

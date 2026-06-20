@@ -1446,7 +1446,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             }
         }
         // --- Логика для Кассы (ID -1 или 4) ---
-        else if (deskId == -1 || deskId == 4)
+        else if (deskId == -1)
         {
             thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
             yield return new WaitForSeconds(Random.Range(2.0f, 3.5f));

@@ -17,6 +17,9 @@ public class CharacterSkills : ScriptableObject
     [Tooltip("Скрытый параметр, влияет на коррупцию")]
     [Range(0.0f, 1.0f)]
     public float corruption;
+    [Tooltip("Грязные руки — параметр бухгалтера. Больше = чаще находит деньги и эффективнее покрывает схемы.")]
+    [Range(0.0f, 1.0f)]
+    public float dirtyHands;
 
     public float GetSkillValue(SkillType type)
     {
@@ -27,6 +30,7 @@ public class CharacterSkills : ScriptableObject
             case SkillType.Pedantry: return pedantry;
             case SkillType.SoftSkills: return softSkills;
             case SkillType.Corruption: return corruption;
+            case SkillType.DirtyHands: return dirtyHands;
             default: return 0f;
         }
     }
@@ -46,6 +50,7 @@ public class CharacterSkills : ScriptableObject
             SkillType.Pedantry => "Педантичность",
             SkillType.SoftSkills => "Умение общаться",
             SkillType.Corruption => "Коррумпированность",
+            SkillType.DirtyHands => "Грязные руки",
             _ => ""
         };
 }

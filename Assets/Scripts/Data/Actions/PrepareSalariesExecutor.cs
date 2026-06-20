@@ -18,10 +18,14 @@ public class PrepareSalariesExecutor : ActionExecutor
             yield break;
         }
 
-        var clerk = staff as ClerkController;
-        if(clerk != null && clerk.assignedWorkstation != null)
+        // Динамическая ёмкость: сотрудники + 1 (по ТЗ).
+        // Сначала зафиксируем начальное количество сотрудников, чтобы не зациклиться при найме во время работы.
+        int targetCapacity = Mathf.Max(1, HiringManager.Instance.AllStaff.Count + 1);
+
+        var accountant = staff as ClerkController;
+        if (accountant != null && accountant.assignedWorkstation != null)
         {
-            yield return staff.StartCoroutine(clerk.MoveToTarget(clerk.assignedWorkstation.clerkStandPoint.position, "Working"));
+            yield return staff.StartCoroutine(accountant.MoveToTarget(accountant.assignedWorkstation.clerkStandPoint.position, "Working"));
         }
         else
         {
@@ -30,8 +34,8 @@ public class PrepareSalariesExecutor : ActionExecutor
 
         while (true)
         {
-            // Проверка переполнения
-            if (envelopeStack.CurrentEnvelopeCount >= envelopeStack.maxCapacity)
+            // Проверка переполнения (динамический лимит)
+            if (envelopeStack.CurrentEnvelopeCount >= targetCapacity)
             {
                 staff.thoughtBubble?.ShowPriorityMessage("Достаточно конвертов", 3f, Color.yellow);
                 break;
@@ -44,7 +48,7 @@ public class PrepareSalariesExecutor : ActionExecutor
             if (PlayerWallet.Instance.GetCurrentMoney() >= cost)
             {
                 PlayerWallet.Instance.AddMoney(-cost, "Зарплатный фонд");
-                envelopeStack.AddEnvelope(); // Исправлено
+                envelopeStack.AddEnvelope();
                 staff.thoughtBubble?.ShowPriorityMessage("Готов конверт", 1f, Color.green);
             }
             else

@@ -128,7 +128,7 @@ public class ResumePin : MonoBehaviour
             case StaffController.Role.Guard: return new Color(0.3f, 0.3f, 0.5f); // Тёмно-синий
             case StaffController.Role.Janitor: return new Color(0.5f, 0.5f, 0.5f); // Серый
             case StaffController.Role.OfficeManager: return new Color(0.9f, 0.4f, 0.4f); // Красный
-            case StaffController.Role.Accountant: return new Color(0.2f, 0.6f, 0.3f); // Зелёный
+            case StaffController.Role.Accountant: return new Color(0.78f, 0.72f, 0.25f); // Оливковый (как у Кассира, чуть зеленее)
             case StaffController.Role.ServiceWorker: return new Color(0.8f, 0.5f, 0.3f); // Оранжевый
             default: return Color.white;
         }

@@ -11,6 +11,7 @@ public class DirectorControlPanelUI : MonoBehaviour
     [SerializeField] private Button office1Button;
     [SerializeField] private Button office2Button;
     [SerializeField] private Button cashierButton;
+    [SerializeField] private Button accountantButton;
     [SerializeField] private Button doorButton;
 
     [Header("Кнопки документов")]
@@ -25,6 +26,7 @@ public class DirectorControlPanelUI : MonoBehaviour
     [SerializeField] private List<ServicePoint> office1Points;
     [SerializeField] private List<ServicePoint> office2Points;
     [SerializeField] private List<ServicePoint> cashierPoints;
+    [SerializeField] private List<ServicePoint> accountantPoints;
     [SerializeField] private ServicePoint guardReportDesk;
 
     void Start()
@@ -34,6 +36,7 @@ public class DirectorControlPanelUI : MonoBehaviour
         office1Button?.onClick.AddListener(() => SendDirectorToWork(office1Points));
         office2Button?.onClick.AddListener(() => SendDirectorToWork(office2Points));
         cashierButton?.onClick.AddListener(() => SendDirectorToWork(cashierPoints));
+        accountantButton?.onClick.AddListener(() => SendDirectorToWork(accountantPoints));
         doorButton?.onClick.AddListener(GoAndToggleBarrier);
 
         // Назначаем обработчики кнопок "собрать документы"
@@ -53,6 +56,7 @@ public class DirectorControlPanelUI : MonoBehaviour
         UpdateWorkButton(office1Button, office1Points, directorIsBusy);
         UpdateWorkButton(office2Button, office2Points, directorIsBusy);
         UpdateWorkButton(cashierButton, cashierPoints, directorIsBusy);
+        UpdateWorkButton(accountantButton, accountantPoints, directorIsBusy);
         doorButton.interactable = !directorIsBusy;
 
         // Обновляем кнопки "собрать документы"

@@ -334,7 +334,7 @@ public class HiringSystemUI : MonoBehaviour
         }
     }
 
-    string GetRoleNameInRussian(StaffController.Role role) 
+    string GetRoleNameInRussian(StaffController.Role role)
     {
         switch (role)
         {
@@ -343,10 +343,13 @@ public class HiringSystemUI : MonoBehaviour
             case StaffController.Role.Registrar: return "Регистратор";
             case StaffController.Role.Cashier: return "Кассир";
             case StaffController.Role.Archivist: return "Архивариус";
+            case StaffController.Role.Accountant: return "Бухгалтер";
             case StaffController.Role.Guard: return "Охранник";
             case StaffController.Role.Janitor: return "Уборщик";
+            case StaffController.Role.OfficeManager: return "Офис-менеджер";
+            case StaffController.Role.ServiceWorker: return "Разнорабочий";
             case StaffController.Role.Unassigned: return "Без роли";
-            default: return role.ToString(); 
+            default: return role.ToString();
         }
     }
 

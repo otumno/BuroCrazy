@@ -61,5 +61,21 @@ namespace Managers
             dailyLog.Clear();
             // Глобальный счетчик коррупции НЕ сбрасываем каждый день! Он накапливается.
         }
+
+        /// <summary>
+        /// Снижает globalCorruptionScore на указанную величину (не ниже 0).
+        /// Используется AccountantCoverSchemesExecutor.
+        /// </summary>
+        public void ReduceCorruption(int amount)
+        {
+            if (amount <= 0) return;
+            int old = globalCorruptionScore;
+            globalCorruptionScore = Mathf.Max(0, globalCorruptionScore - amount);
+            int actual = old - globalCorruptionScore;
+            if (actual > 0)
+            {
+                Debug.Log($"<color=purple>СЧЕТЧИК КОРРУПЦИИ:</color> Снижен на {actual}. Текущее значение: {globalCorruptionScore}");
+            }
+        }
     }
 }

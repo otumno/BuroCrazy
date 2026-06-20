@@ -27,9 +27,9 @@ public class DeskCalculator : DeskInteractiveItem
             return;
         }
 
-        // Проверяем, есть ли у нас хоть один Кассир (Бухгалтер)
-        // Логика взята из твоего BookkeepingButtonController
-        bool hasBookkeeper = HiringManager.Instance.AllStaff.Any(s => 
+        // Проверяем, есть ли у нас хоть один Бухгалтер
+        // Логика взята из BookkeepingButtonController
+        bool hasBookkeeper = HiringManager.Instance.AllStaff.Any(s =>
             s.activeActions.Any(a => a.actionType == ActionType.DoBookkeeping)
         );
 

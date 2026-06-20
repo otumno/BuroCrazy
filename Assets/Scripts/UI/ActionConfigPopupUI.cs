@@ -243,9 +243,10 @@ public class ActionConfigPopupUI : MonoBehaviour
     private StaffController.Role GetRoleForDeskId(int id)
     {
         if (id == 0) return StaffController.Role.Registrar;
-        if (id == -1 || id == 4) return StaffController.Role.Cashier;
+        if (id == -1) return StaffController.Role.Cashier;
         if (id == 1 || id == 2) return StaffController.Role.Clerk;
         if (id == 3) return StaffController.Role.Archivist;
+        if (id == 4) return StaffController.Role.Accountant;
         return StaffController.Role.Unassigned;
     }
 	
