@@ -4,6 +4,7 @@ using UnityEngine;
 using Managers;
 using Enums;
 using Characters;
+using StorySystem;
 
 [System.Serializable]
 public class SaveData
@@ -37,6 +38,9 @@ public class SaveData
     public List<string> unlockedContactIDs;
 
     public HashSet<string> watchedDialogues;
+
+    // [НОВОЕ] Прогресс сюжетных арок (текущее прохождение)
+    public List<ArcSaveData> arcProgress;
 }
 
 [System.Serializable]

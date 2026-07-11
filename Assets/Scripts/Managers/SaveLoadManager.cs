@@ -114,6 +114,12 @@ namespace Managers
                 data.unlockedContactIDs = PhoneManager.Instance.GetUnlockedContactIDs();
             }
 
+            // 8. [НОВОЕ] Прогресс сюжетных арок
+            if (StorySystem.ArcManager.Instance != null)
+            {
+                data.arcProgress = StorySystem.ArcManager.Instance.GetArcProgress();
+            }
+
             // Запись на диск
             WriteSaveDataToFile(slotIndex, data);
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
@@ -270,6 +276,12 @@ namespace Managers
                 if (PhoneManager.Instance != null && data.unlockedContactIDs != null)
                 {
                     PhoneManager.Instance.LoadUnlockedContacts(data.unlockedContactIDs);
+                }
+
+                // 7. [НОВОЕ] Восстановление прогресса сюжетных арок
+                if (StorySystem.ArcManager.Instance != null)
+                {
+                    StorySystem.ArcManager.Instance.LoadArcProgress(data.arcProgress);
                 }
 
                 PlayerPrefs.SetInt("LastUsedSlot", slotIndex);

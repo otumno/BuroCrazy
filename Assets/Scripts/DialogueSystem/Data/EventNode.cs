@@ -6,8 +6,16 @@ namespace DialogueSystem.Data
     [CreateAssetMenu(menuName = "Bureau/Dialogue/Nodes/Event Node")]
     public class EventNode : DialogueNode
     {
-        public enum EventType { SetFlag, AddMoney, AddStrike, EndDialogue }
-        
+        public enum EventType
+        {
+            SetFlag,
+            AddMoney,
+            AddStrike,
+            AddReputation, // [НОВОЕ] добавить/снять HP репутации (intValue может быть отрицательным).
+            AddInfluence,  // [НОВОЕ] добавить очки влияния (intValue может быть отрицательным).
+            EndDialogue
+        }
+
         public EventType eventType;
         
         [Header("Логика")]

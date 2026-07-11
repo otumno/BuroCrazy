@@ -61,10 +61,53 @@ public static class CreateAccountantAssets
         // Шаг 5: обновить Rank_1_Cashier_*.asset — удалить PrepareSalaries из unlockedActions
         UpdateCashierRanks(prepareSalaries);
 
+        // Шаг 6: обновить RankDatabase.asset — добавить Accountant ранги (если их там нет)
+        UpdateRankDatabase(new[] { rank1, rank2, rank3 });
+
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
         Debug.Log("[CreateAccountantAssets] Готово. Проверьте RankDatabase.asset — обновите ссылки на новые Rank_1_Accountant_1/2/3.asset.");
+    }
+
+    private static void UpdateRankDatabase(RankData[] newAccountantRanks)
+    {
+        string dbPath = $"{RanksFolder}/RankDatabase.asset";
+        var db = AssetDatabase.LoadAssetAtPath<RankDatabase>(dbPath);
+        if (db == null)
+        {
+            Debug.LogWarning($"[CreateAccountantAssets] RankDatabase не найден: {dbPath}");
+            return;
+        }
+        if (db.ranks == null) db.ranks = new List<RankData>();
+
+        bool changed = false;
+        foreach (var rank in newAccountantRanks)
+        {
+            if (rank == null) continue;
+            if (db.ranks.Contains(rank)) continue;
+
+            // Удаляем старый Accountant ранк (rankLevel 0), если он есть, чтобы избежать дублей
+            for (int i = db.ranks.Count - 1; i >= 0; i--)
+            {
+                var r = db.ranks[i];
+                if (r != null && r.associatedRole == StaffController.Role.Accountant && r.rankLevel == 0 && r != rank)
+                {
+                    db.ranks.RemoveAt(i);
+                    changed = true;
+                    Debug.Log($"[CreateAccountantAssets] Удалён устаревший ранг Accountant: {r.name}");
+                }
+            }
+
+            db.ranks.Add(rank);
+            changed = true;
+            Debug.Log($"[CreateAccountantAssets] Добавлен ранг в RankDatabase: {rank.name}");
+        }
+
+        if (changed)
+        {
+            EditorUtility.SetDirty(db);
+        }
     }
 
     private static T CreateOrLoad<T>(string path) where T : ScriptableObject

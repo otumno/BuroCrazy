@@ -127,10 +127,12 @@ public class DialogueJSONImporter : EditorWindow
             if (node != null) {
                 node.name = $"{n.t}_{n.i}"; // Даем ноде имя для удобства в инспекторе
                 node.graphPosition = new Rect(pos, Vector2.zero);
+                // [НОВОЕ] Сохраняем человеко-читаемый стабильный ID для обратной ссылки при экспорте.
+                node.nodeID = n.i;
                 idMap[n.i] = node;
-                
+
                 // !!! ВАЖНОЕ ИСПРАВЛЕНИЕ: Помечаем ноду как измененную !!!
-                EditorUtility.SetDirty(node); 
+                EditorUtility.SetDirty(node);
             }
         }
 

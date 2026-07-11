@@ -32,7 +32,8 @@ namespace Managers
 
         [Header("Настройки генерации кандидатов")]
         public AnimationCurve internCountOverTime = new AnimationCurve(new Keyframe(1, 4), new Keyframe(30, 1));
-        public AnimationCurve specialistCountOverTime = new AnimationCurve(new Keyframe(1, 0), new Keyframe(10, 1), new Keyframe(30, 3));
+        // Дебаг: на любой день минимум 1 специалист (по одной вакансии каждой роли).
+        public AnimationCurve specialistCountOverTime = new AnimationCurve(new Keyframe(1, 1), new Keyframe(10, 2), new Keyframe(30, 3));
         public AnimationCurve experiencedInternChance = new AnimationCurve(new Keyframe(1, 0), new Keyframe(5, 0.1f), new Keyframe(30, 0.5f));
 
         [Header("Стоимость найма")]
@@ -40,34 +41,11 @@ namespace Managers
         public int costPerSkillPoint = 150;
 
         // --- Списки Имен ---
-        [System.Serializable]
+        // Все списки имён, фамилий и патронимов перенесены в Utilities.NameGenerator
+        // (статические массивы на 40+ записей в стиле «отражений»).
+        // EN-локализация в NameGenerator закомментирована и готова к включению.
+        [System.Obsolete("Используйте Utilities.NameGenerator для генерации имён.")]
         private struct NameSet { public string full; public string shortName; public string diminutive; }
-
-        private List<NameSet> maleNames = new List<NameSet> { 
-            new NameSet { full = "Иван", shortName = "Ваня", diminutive = "Ванечка" },
-            new NameSet { full = "Аркадий", shortName = "Аркаша", diminutive = "Аркашенька" },
-            new NameSet { full = "Иннокентий", shortName = "Кеша", diminutive = "Кешенька" },
-            new NameSet { full = "Пантелеймон", shortName = "Пантя", diminutive = "Пантеюшка" },
-            new NameSet { full = "Акакий", shortName = "Акаша", diminutive = "Акакинька" },
-            new NameSet { full = "Евгений", shortName = "Женя", diminutive = "Женечка" },
-            new NameSet { full = "Анатолий", shortName = "Толя", diminutive = "Толечка" },
-            new NameSet { full = "Вениамин", shortName = "Веня", diminutive = "Венечка" },
-            new NameSet { full = "Борис", shortName = "Боря", diminutive = "Боренька" }
-        };
-        private List<NameSet> femaleNames = new List<NameSet> { 
-            new NameSet { full = "Аглая", shortName = "Глаша", diminutive = "Глашенька" },
-            new NameSet { full = "Евпраксия", shortName = "Прасковья", diminutive = "Прасенька" },
-            new NameSet { full = "Пелагея", shortName = "Поля", diminutive = "Поленька" },
-            new NameSet { full = "Серафима", shortName = "Сима", diminutive = "Симочка" },
-            new NameSet { full = "Зинаида", shortName = "Зина", diminutive = "Зиночка" },
-            new NameSet { full = "Клавдия", shortName = "Клава", diminutive = "Клавочка" },
-            new NameSet { full = "Тамара", shortName = "Тома", diminutive = "Томочка" },
-            new NameSet { full = "Антонина", shortName = "Тоня", diminutive = "Тонечка" },
-            new NameSet { full = "Людмила", shortName = "Люда", diminutive = "Людочка" }
-        };
-        private List<string> lastNames = new List<string> { "Перепискин", "Протоколов", "Архивариусов", "Гербовый", "Скрепочкин", "Бланков", "Штампов", "Сургучев", "Бумагин", "Папкин", "Канцелярский", "Законов" };
-        private List<string> patronymicsMale = new List<string> { "Аркадьевич", "Иннокентьевич", "Варфоломеевич", "Акакиевич", "Поликарпович", "Дормидонтович", "Евгеньевич", "Анатольевич" };
-        private List<string> patronymicsFemale = new List<string> { "Аркадьевна", "Иннокентьевна", "Варфоломеевна", "Акакиевна", "Поликарповна", "Дормидонтовна", "Евгеньевна", "Анатольевна" };
 
         public List<Candidate> AvailableCandidates { get; private set; } = new List<Candidate>();
         private List<StaffController> staffBeingModified = new List<StaffController>();
@@ -487,24 +465,11 @@ namespace Managers
             candidate.Role = role;
             candidate.Gender = (Random.value > 0.5f) ? Gender.Male : Gender.Female;
 
-            var firstNames = candidate.Gender == Gender.Male ? maleNames : femaleNames;
-            var patronymics = candidate.Gender == Gender.Male ? patronymicsMale : patronymicsFemale;
-            
-            // Создаем StaffNameData
-            candidate.NameData = new StaffController.StaffNameData();
-            
-            if (firstNames.Count > 0 && lastNames.Count > 0 && patronymics.Count > 0)
+            // Создаем StaffNameData через новый генератор вымышленных имён
+            candidate.NameData = NameGenerator.BuildStaffName(candidate.Gender);
+
+            if (!string.IsNullOrEmpty(candidate.NameData.firstName))
             {
-                NameSet firstNameData = firstNames[Random.Range(0, firstNames.Count)];
-                candidate.NameData.firstName = firstNameData.full;
-                candidate.NameData.shortName = firstNameData.shortName;
-                candidate.NameData.diminutiveName = firstNameData.diminutive;
-                
-                string lname = lastNames[Random.Range(0, lastNames.Count)];
-                if (candidate.Gender == Gender.Female && !lname.EndsWith("а")) lname += "а";
-                candidate.NameData.lastName = lname;
-                candidate.NameData.patronymic = patronymics[Random.Range(0, patronymics.Count)];
-                
                 // UI fallback - полное ФИО
                 candidate.Name = $"{candidate.NameData.lastName} {candidate.NameData.firstName} {candidate.NameData.patronymic}";
             }

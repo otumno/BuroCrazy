@@ -35,8 +35,14 @@ namespace Managers
         
         private Sprite defaultBackground;
         private DialogueGraph currentGraph;
-        
+
         private System.Action onDialogueComplete;
+
+        /// <summary>
+        /// Вызывается при завершении любого диалога (в EndDialogue). Аргумент — завершённый DialogueGraph.
+        /// Используется внешними системами (например, ArcManager) для отслеживания сюжетных диалогов.
+        /// </summary>
+        public event System.Action<DialogueGraph> OnDialogueFinished;
 
         // --- НАСТРОЙКИ ---
         [Header("Assets")]
@@ -529,7 +535,36 @@ namespace Managers
             {
                 DirectorManager.Instance?.AddStrike();
             }
-            
+
+            // 4. [НОВОЕ] Репутация (DirectorManager.HealReputation / TakeDamage)
+            else if (evt.eventType == EventNode.EventType.AddReputation)
+            {
+                if (DirectorManager.Instance != null)
+                {
+                    if (evt.intValue >= 0)
+                        DirectorManager.Instance.HealReputation(evt.intValue);
+                    else
+                        DirectorManager.Instance.TakeDamage(-evt.intValue, "Сюжет (Диалог)");
+                }
+                else
+                {
+                    Debug.LogWarning("Попытка изменить репутацию, но DirectorManager не найден!");
+                }
+            }
+
+            // 5. [НОВОЕ] Влияние (ProgressionManager.AddInfluence)
+            else if (evt.eventType == EventNode.EventType.AddInfluence)
+            {
+                if (ProgressionManager.Instance != null)
+                {
+                    ProgressionManager.Instance.AddInfluence(evt.intValue);
+                }
+                else
+                {
+                    Debug.LogWarning("Попытка изменить влияние, но ProgressionManager не найден!");
+                }
+            }
+
             AudioClip clip = evt.soundEffect != null ? evt.soundEffect : defaultEventSound;
             PlaySystemSound(clip);
 
@@ -658,12 +693,22 @@ namespace Managers
                 StartOfDayPanel.Instance?.RemoveDocumentIcon(currentClientContext);
             }
 
+            // Захватываем ссылку на завершённый диалог ДО очистки, чтобы уведомить подписчиков
+            DialogueGraph finishedGraph = currentGraph;
+
             currentClientContext = null;
             currentNode = null;
             currentGraph = null;
             defaultBackground = null;
 
             MusicPlayer.Instance?.RestorePreviousMusic();
+
+            // [НОВОЕ] Уведомляем подписчиков о завершении диалога (ArcManager и др.)
+            if (finishedGraph != null)
+            {
+                OnDialogueFinished?.Invoke(finishedGraph);
+            }
+
             onDialogueComplete?.Invoke();
             onDialogueComplete = null;
         }

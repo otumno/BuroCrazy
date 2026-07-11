@@ -7,6 +7,9 @@ using DialogueSystem.Data;
 using Scriptables.Audio;
 using Characters;
 using Data;
+using StorySystem;
+using Utilities;
+using Enums;
 
 namespace Managers
 {
@@ -130,6 +133,40 @@ namespace Managers
         private Coroutine directorSpawnCoroutine;
 
         private int lastCheckedMorningDay = -1;
+
+        /// <summary>
+        /// Арковые посетители, запланированные через ArcManager. Обрабатываются в CheckMorningEvents.
+        /// </summary>
+        private List<SpecialVisitorDatabase.ScheduledVisitor> _arcVisitors = new List<SpecialVisitorDatabase.ScheduledVisitor>();
+
+        /// <summary>
+        /// Имя, которое нужно присвоить следующему заспавненному клиенту (через SpawnSpecialClient).
+        /// После применения сбрасывается. Используется для сюжетных посетителей с фиксированным именем.
+        /// </summary>
+        private string _pendingCharacterName;
+
+        /// <summary>
+        /// Диалог, который должен быть привязан к следующему заспавненному клиенту
+        /// (через <see cref="ClientPathfinding.specificDialogue"/>). Сбрасывается после применения.
+        /// Используется арковыми посетителями — на иконке на столе по этому диалогу запускается сюжет.
+        /// </summary>
+        private DialogueGraph _pendingSpecificDialogue;
+
+        /// <summary>
+        /// Цель клиента, которую нужно принудительно проставить следующему заспавненному клиенту
+        /// (через <see cref="ClientPathfinding.mainGoal"/>). Сбрасывается после применения.
+        /// Используется арковыми посетителями — гарантирует, что клиент пойдёт именно в приёмную директора.
+        /// </summary>
+        private ClientGoal _pendingForcedGoal = (ClientGoal)(-1);
+
+        /// <summary>
+        /// Пол клиента, который нужно принудительно проставить следующему заспавненному клиенту
+        /// (через <see cref="ClientPathfinding.gender"/>). null = оставить значение по умолчанию
+        /// (наследуется от архетипа). Используется арковыми посетителями: архетип «Professional_Female»
+        /// по умолчанию задаёт мужское тело через gender-фоллбэк — мы выставляем Gender явно,
+        /// чтобы клиент действительно был визуально женским.
+        /// </summary>
+        private Enums.Gender? _pendingGender;
 
         private void Awake()
         {
@@ -633,6 +670,9 @@ namespace Managers
 
         private void CheckMorningEvents(int day)
         {
+            // [НОВОЕ] Арковых посетителей обрабатываем каждый раз (т.к. они могут добавляться динамически)
+            ProcessArcVisitors(day);
+
             if (lastCheckedMorningDay == day) return;
             lastCheckedMorningDay = day;
 
@@ -672,7 +712,104 @@ namespace Managers
                 // Debug.Log(prefix + "<color=green>УСПЕХ! Начинаю спавн.</color>");
                 SpawnSpecialClient(specialVisitor);
             }
+
             // Debug.Log($"[WaveManager] --- КОНЕЦ ПРОВЕРКИ ---");
+        }
+
+        /// <summary>
+        /// Зарегистрировать аркового посетителя. Посетитель будет заспавнен в начале указанного дня
+        /// через стандартный механизм CheckMorningEvents.
+        /// </summary>
+        public void AddArcVisitor(DialogueGraph dialogue, ClientGoal goal, ClientArchetype archetype, int day, bool isRemote = false, string characterName = null)
+        {
+            if (dialogue == null)
+            {
+                Debug.LogWarning("[WaveManager] AddArcVisitor: dialogue is null — пропускаем.");
+                return;
+            }
+
+            var visitor = new SpecialVisitorDatabase.ScheduledVisitor
+            {
+                name = $"Arc_{dialogue.name}",
+                dayToSpawn = day,
+                dialogue = dialogue,
+                forcedGoal = goal,
+                forcedArchetype = archetype,
+                isRemoteInteraction = isRemote,
+                spawnAtStartOfDay = true,
+                spawnChance = 1f,
+                requiredFlagKey = null,
+                requiredFlagValue = 0,
+                characterName = characterName
+            };
+
+            _arcVisitors.Add(visitor);
+            Debug.Log($"[WaveManager] AddArcVisitor: '{dialogue.name}' запланирован на день {day} (remote={isRemote}, name='{characterName}')");
+        }
+
+        /// <summary>
+        /// Немедленный спавн аркового клиента: обходит дневной гейтинг
+        /// и сразу создаёт клиента через тот же путь, что и обычные арк-посетители.
+        /// Используется из ArcManager для отладки и для случаев «арка сейчас».
+        /// </summary>
+        /// <returns>Количество фактически созданных клиентов (0 или 1).</returns>
+        public int SpawnArcClientNow(DialogueGraph dialogue, ClientGoal goal, ClientArchetype archetype, string characterName = null, Enums.Gender? gender = null)
+        {
+            if (dialogue == null)
+            {
+                Debug.LogWarning("[WaveManager] SpawnArcClientNow: dialogue is null.");
+                return 0;
+            }
+
+            var visitor = new SpecialVisitorDatabase.ScheduledVisitor
+            {
+                name = $"Arc_{dialogue.name}",
+                dayToSpawn = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 1,
+                dialogue = dialogue,
+                forcedGoal = goal,
+                forcedArchetype = archetype,
+                isRemoteInteraction = false,
+                spawnAtStartOfDay = true,
+                spawnChance = 1f,
+                requiredFlagKey = null,
+                requiredFlagValue = 0,
+                characterName = characterName,
+                characterGender = gender
+            };
+
+            SpawnSpecialClient(visitor);
+            return 1;
+        }
+
+        /// <summary>
+        /// Обрабатывает арковых посетителей для указанного дня: спавнит подходящих и удаляет их из списка.
+        /// </summary>
+        private void ProcessArcVisitors(int day)
+        {
+            if (_arcVisitors.Count == 0) return;
+
+            for (int i = _arcVisitors.Count - 1; i >= 0; i--)
+            {
+                var visitor = _arcVisitors[i];
+                if (visitor == null)
+                {
+                    _arcVisitors.RemoveAt(i);
+                    continue;
+                }
+
+                if (visitor.dayToSpawn != day)
+                    continue;
+
+                // Проверяем ночь: если ночь, откладываем на следующий день
+                if (IsNightTime())
+                {
+                    visitor.dayToSpawn = day + 1;
+                    continue;
+                }
+
+                SpawnSpecialClient(visitor);
+                _arcVisitors.RemoveAt(i);
+            }
         }
 
         private IEnumerator SpawnRoutine(PeriodSettings settings, int totalClients)
@@ -894,6 +1031,21 @@ namespace Managers
                 client.SetupFromArchetype(archetype);
                 client.SetupGrumblingFromArchetype(archetype);
 
+                // [ИМЯ КЛИЕНТА] Если задан _pendingCharacterName (например, для сюжетного посетителя),
+                // используем его. Иначе генерируем случайное имя в стиле «отражений».
+                string clientFullName;
+                if (!string.IsNullOrEmpty(_pendingCharacterName))
+                {
+                    clientFullName = _pendingCharacterName;
+                }
+                else
+                {
+                    bool isMale = Random.value > 0.5f;
+                    Gender clientGender = isMale ? Gender.Male : Gender.Female;
+                    clientFullName = NameGenerator.BuildClientFullName(clientGender, out _, out _);
+                }
+                go.name = clientFullName;
+
                 // СНАЧАЛА настраиваем визуал - body sprite установится в archetype body sprite
                 var visuals = client.GetComponent<CharacterVisuals>();
                 if (visuals != null)
@@ -903,6 +1055,10 @@ namespace Managers
 
                 // ПОТОМ инициализируем - теперь bodySpriteAlreadySet = true и спрайт НЕ будет перезаписан
                 client.Initialize(waitingZoneObject, exitWaypoint);
+
+                // Применяем ожидающие goal/dialogue к свежезаспавненному клиенту.
+                // (Арковые посетители или специальные типы клиентов в дебаг-меню).
+                ApplyPendingClientOverrides(client);
 
                 if (visuals != null)
                 {
@@ -947,6 +1103,20 @@ namespace Managers
             client.SetupFromArchetype(archetype);
             client.SetupGrumblingFromArchetype(archetype);
 
+            // [ИМЯ КЛИЕНТА] Если задано pending имя — используем его, иначе генерируем случайное.
+            string clientFullName;
+            if (!string.IsNullOrEmpty(_pendingCharacterName))
+            {
+                clientFullName = _pendingCharacterName;
+            }
+            else
+            {
+                bool isMale = Random.value > 0.5f;
+                Gender clientGender = isMale ? Gender.Male : Gender.Female;
+                clientFullName = NameGenerator.BuildClientFullName(clientGender, out _, out _);
+            }
+            go.name = clientFullName;
+
             var visuals = client.GetComponent<CharacterVisuals>();
             if (visuals != null)
             {
@@ -981,22 +1151,42 @@ namespace Managers
             // 2. ОБЫЧНЫЙ СПАВН - используем очередь с высоким приоритетом
             if (clientPrefab == null) return;
 
-            // Специальные посетители получают случайный архетип
-            ClientArchetype archetype = null;
-            if (archetypeDatabase != null)
+            // Специальные посетители получают случайный архетип (если не задан в visitor)
+            ClientArchetype archetype = visitorData.forcedArchetype;
+            if (archetype == null && archetypeDatabase != null)
             {
                 archetype = archetypeDatabase.GetRandomArchetype();
             }
 
+            // Пробрасываем через _pending*-флаги то, что SpawnClientInternal подхватит.
+            _pendingCharacterName = !string.IsNullOrEmpty(visitorData.characterName)
+                ? visitorData.characterName
+                : null;
+
+            // [ИСПРАВЛЕНО] Теперь диалог и цель клиента задаются здесь:
+            _pendingSpecificDialogue = visitorData.dialogue;
+            // Если в visitorData.forcedGoal задан "Default" (0), берём goal из арки
+            // иначе — напрямую из visitorData.forcedGoal.
+            _pendingForcedGoal = visitorData.forcedGoal;
+
+            // [ИСПРАВЛЕНО] Пол клиента: если задан явно через visitor (например, из арки),
+            // используем его. Иначе — null = ApplyPendingClientOverrides пропустит установку gender.
+            _pendingGender = visitorData.characterGender;
+
             // Используем новый метод с приоритетом 10 для специальных посетителей
             SpawnClientWithArchetype(archetype, $"Special_{visitorData.name}", 10);
+
+            // Сбрасываем, чтобы не утекло в следующий спавн
+            _pendingCharacterName = null;
+            _pendingSpecificDialogue = null;
+            _pendingForcedGoal = (ClientGoal)(-1);
+            _pendingGender = null;
 
             // Если клиент был создан (не в очереди), настраиваем его
             if (archetype != null)
             {
-                // Примечание: настройка специального клиента происходит в SpawnClientInternal
-                // но нам нужно добавить specificDialogue и цель
-                // Это можно сделать через событие или отдельный метод
+                // Настройка клиента (specificDialogue/mainGoal) теперь происходит
+                // внутри SpawnClientInternal по флагам _pending*.
                 // Debug.Log($"[WaveManager] Special visitor queued/spawned: {visitorData.name}");
             }
         }
@@ -1014,6 +1204,37 @@ namespace Managers
 
             client.SetupFromArchetype(archetype);
             client.SetupGrumblingFromArchetype(archetype);
+        }
+
+        /// <summary>
+        /// Применяет ожидающие (_pending*) переопределения goal/dialogue/gender к свежему клиенту.
+        /// Вызывается из обоих спавн-методов (SpawnClientInternal и SpawnClientInternalWithGoal)
+        /// сразу после client.Initialize(...). Не перетирает уже выставленные поля, если
+        /// pending-флаги не заданы.
+        /// </summary>
+        private void ApplyPendingClientOverrides(ClientPathfinding client)
+        {
+            if (client == null) return;
+
+            // Goal: применяем только если pending задан явно. ClientGoal.none == 0,
+            // поэтому нулём не маркируем "не задано". Используем sentinel (-1).
+            if (_pendingForcedGoal != (ClientGoal)(-1))
+            {
+                client.mainGoal = _pendingForcedGoal;
+            }
+
+            // Dialogue: применяем всегда, если задан.
+            if (_pendingSpecificDialogue != null)
+            {
+                client.specificDialogue = _pendingSpecificDialogue;
+            }
+
+            // Gender: применяем только если pending задан явно. null = оставить как есть
+            // (наследуется от архетипа или дефолт Male).
+            if (_pendingGender.HasValue)
+            {
+                client.gender = _pendingGender.Value;
+            }
         }
 
         /// <summary>

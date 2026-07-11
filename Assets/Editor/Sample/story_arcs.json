@@ -1,0 +1,862 @@
+[
+  {
+    "arcID": "Orwell_1984_Incident",
+    "displayName": "Исправленный инцидент",
+    "description": "Функционер Винсан Шмидар требует заменить выданную ранее справку, утверждая, что прошлое было иным. В процесс вмешивается фигура из Архивной Чистоты.",
+    "durationDays": 3,
+    "priority": 4,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Orwell_Started",
+        "onCompleteFlag": "Arc_Orwell_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Official",
+        "isRemoteInteraction": false,
+        "characterName": "Винсан Шмидар",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_intro" },
+            { "nodeID": "phrase_intro", "type": "Phrase", "speakerID": "Client", "text": "Директор, мне нужно исправить справку. Номер 4881. В ней ошибка факта, и я требую внести правку.", "nextNodeID": "phrase_director_ask" },
+            { "nodeID": "phrase_director_ask", "type": "Phrase", "speakerID": "Director", "text": "Ошибка факта? Бюро заверяет только подлинные сведения. Уточните, что именно не так.", "nextNodeID": "phrase_client_explain" },
+            { "nodeID": "phrase_client_explain", "type": "Phrase", "speakerID": "Client", "text": "Здесь написано, что я присутствовал на Торжественном митинге дружбы. Но митинга не проводилось. Я сидел дома и чинил приёмник.", "nextNodeID": "choice_main" },
+            {
+              "nodeID": "choice_main",
+              "type": "Choice",
+              "queryText": "Как реагировать на просьбу о переписывании реальности?",
+              "options": [
+                { "text": "Действовать строго по регламенту. Потребовать официальные доказательства.", "nextNodeID": "event_protocol" },
+                { "text": "Вписать правду. Митинга не было — значит, не было.", "nextNodeID": "event_truth" },
+                { "text": "(Корыстно) Запросить неофициальную плату за исправление.", "nextNodeID": "event_bribe" },
+                { "text": "(Подробнее) Расскажите, что это был за митинг?", "nextNodeID": "phrase_mit_detail" },
+                { "text": "(Уточнить) Почему вы уверены, что его не проводили?", "nextNodeID": "phrase_confidence" }
+              ]
+            },
+            { "nodeID": "phrase_mit_detail", "type": "Phrase", "speakerID": "Client", "text": "Обычная пропагандистская акция. Марши, транспаранты, речь главы района. Всех госслужащих обязали явиться, но я лежал с мигренью. В новостях потом писали, что явка была стопроцентная. Но я-то знаю, что не ходил.", "nextNodeID": "phrase_director_back" },
+            { "nodeID": "phrase_confidence", "type": "Phrase", "speakerID": "Client", "text": "У меня сохранился корешок больничного за тот день. И соседка может подтвердить: она заходила за солью и видела меня в халате. Но больничный мне не зачли — сказали, справка о присутствии уже в деле.", "nextNodeID": "phrase_director_back" },
+            { "nodeID": "phrase_director_back", "type": "Phrase", "speakerID": "Director", "text": "Ясно. Итак, вернёмся к вашему запросу. Что будем делать со справкой?", "nextNodeID": "choice_main" },
+            { "nodeID": "event_protocol", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Orwell_Protocol", "intValue": 1, "notificationText": "Вы потребовали официальные доказательства. Клиент обеспокоен.", "nextNodeID": "end_upset" },
+            { "nodeID": "event_truth", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Orwell_Truth", "intValue": 1, "notificationText": "Вы согласились исправить справку. Но чернила в старых журналах отличаются по цвету.", "nextNodeID": "end_upset" },
+            { "nodeID": "event_bribe", "type": "Event", "eventType": "AddMoney", "intValue": 80, "notificationText": "Вы намекнули на вознаграждение. Шмидар неохотно платит. Репутация подмочена.", "nextNodeID": "event_bribe_reputation" },
+            { "nodeID": "event_bribe_reputation", "type": "Event", "eventType": "AddReputation", "intValue": -20, "notificationText": "Клиент уходит с отвращением.", "nextNodeID": "end_upset" },
+            { "nodeID": "end_upset", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Scared", "stressModifier": 10 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Orwell_Stage0_Completed",
+        "onStartFlag": "Arc_Orwell_Stage1_Started",
+        "onCompleteFlag": "Arc_Orwell_Stage1_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Shady",
+        "isRemoteInteraction": false,
+        "characterName": "Орвин Тарх",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_path" },
+            { "nodeID": "cond_path", "type": "Condition", "conditionKey": "Arc_Orwell_Protocol", "operation": "==", "value": 1, "trueNodeID": "phrase_protocol_path", "falseNodeID": "phrase_truth_path" },
+            { "nodeID": "phrase_protocol_path", "type": "Phrase", "speakerID": "Client", "text": "Я по поводу вчерашнего запроса Шмидара. Вы требовали доказательств. Вот повестка из Архивной Чистоты. Они подтверждают: митинга не было. Теперь вы обязаны исправить запись.", "nextNodeID": "phrase_director_check" },
+            { "nodeID": "phrase_truth_path", "type": "Phrase", "speakerID": "Client", "text": "Я насчёт справки №4881 для Шмидара, которую вы согласились исправить. Отдел Архивной Чистоты интересуется, почему задерживается коррекция. Вы ведь не хотите проблем?", "nextNodeID": "phrase_director_check" },
+            { "nodeID": "phrase_director_check", "type": "Phrase", "speakerID": "Director", "text": "Архивная Чистота? Это серьёзный отдел. Я должен проверить ваши полномочия.", "nextNodeID": "phrase_threat" },
+            { "nodeID": "phrase_threat", "type": "Phrase", "speakerID": "Client", "text": "Полномочия? Вот они. Мандат на коррекцию фактов, подписанный лично Главным Архивистом. Вы удовлетворены?", "speakerPortrait": "Shady_Enforcer", "nextNodeID": "choice_day2" },
+            {
+              "nodeID": "choice_day2",
+              "type": "Choice",
+              "queryText": "Перед вами представитель надзора. Как действовать?",
+              "options": [
+                { "text": "Подчиниться и выдать новую справку с пометкой «Прошлое уточнено».", "nextNodeID": "event_submit" },
+                { "text": "Отказать, сославшись на несоответствие чернил. Бюрократия священна.", "nextNodeID": "event_refuse" },
+                { "text": "(Сговор) Предложить Тарху взаимовыгодное сотрудничество: вы выдаёте справку, он помогает с повышением.", "nextNodeID": "event_conspiracy" },
+                { "text": "(Спросить) Что такое Архивная Чистота?", "nextNodeID": "phrase_archive_explain" },
+                { "text": "(Уточнить) Почему вы так настойчивы в этом деле?", "nextNodeID": "phrase_insist" }
+              ]
+            },
+            { "nodeID": "phrase_archive_explain", "type": "Phrase", "speakerID": "Client", "text": "Архивная Чистота следит, чтобы документальная реальность соответствовала государственной необходимости. Мы исправляем ошибки прошлого, которые мешают настоящему. Это высший уровень допуска.", "nextNodeID": "phrase_director_day2_back" },
+            { "nodeID": "phrase_insist", "type": "Phrase", "speakerID": "Client", "text": "Потому что мистер Шмидар — ценный кадр, и его биография должна быть безупречна. А ещё это приказ сверху. Вам лучше не вникать в детали.", "nextNodeID": "phrase_director_day2_back" },
+            { "nodeID": "phrase_director_day2_back", "type": "Phrase", "speakerID": "Director", "text": "Понятно. Вернёмся к решению.", "nextNodeID": "choice_day2" },
+            { "nodeID": "event_submit", "type": "Event", "eventType": "AddInfluence", "intValue": 8, "notificationText": "Вы сотрудничали с надзором. Влияние растёт.", "nextNodeID": "end_day2_happy" },
+            { "nodeID": "event_refuse", "type": "Event", "eventType": "AddStrike", "intValue": 1, "notificationText": "Вы отказали Архивной Чистоте. Это может стоить вам должности.", "nextNodeID": "end_day2_angry" },
+            { "nodeID": "event_conspiracy", "type": "Event", "eventType": "AddInfluence", "intValue": 12, "notificationText": "Тарх соглашается замолвить слово. Но теперь вы у него на крючке.", "nextNodeID": "event_conspiracy_strike" },
+            { "nodeID": "event_conspiracy_strike", "type": "Event", "eventType": "AddStrike", "intValue": 1, "notificationText": "Сговор опасен, но влияние резко возросло.", "nextNodeID": "end_day2_happy" },
+            { "nodeID": "end_day2_happy", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Sly", "stressModifier": -5 },
+            { "nodeID": "end_day2_angry", "type": "End", "outcome": "LeaveAngry", "outputEmotion": "Angry", "stressModifier": 10 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 2,
+        "requiredFlag": "Arc_Orwell_Stage1_Completed",
+        "onStartFlag": "Arc_Orwell_Stage2_Started",
+        "onCompleteFlag": "Arc_Orwell_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Official",
+        "isRemoteInteraction": false,
+        "characterName": "Винсан Шмидар",
+        "dialogueStructure": {
+          "startNodeID": "start_day3",
+          "nodes": [
+            { "nodeID": "start_day3", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_final_visit" },
+            { "nodeID": "phrase_final_visit", "type": "Phrase", "speakerID": "Client", "text": "Добрый день. Я снова по поводу справки 4881. Она уже готова?", "nextNodeID": "phrase_director_ready" },
+            { "nodeID": "phrase_director_ready", "type": "Phrase", "speakerID": "Director", "text": "Да, всё готово. Вот справка о неучастии в несостоявшемся митинге.", "nextNodeID": "choice_final" },
+            {
+              "nodeID": "choice_final",
+              "type": "Choice",
+              "queryText": "Финальный аккорд. Как завершить?",
+              "options": [
+                { "text": "Вручить справку. Дело закрыто.", "nextNodeID": "event_done" },
+                { "text": "(Корыстно) Перед выдачей предложить Шмидару купить «страховку от будущих исправлений».", "nextNodeID": "event_insurance" },
+                { "text": "(Спросить) Вы уверены, что это правильное решение?", "nextNodeID": "phrase_doubt" },
+                { "text": "(Поинтересоваться) Как вы себя чувствуете теперь?", "nextNodeID": "phrase_feeling" }
+              ]
+            },
+            { "nodeID": "phrase_doubt", "type": "Phrase", "speakerID": "Client", "text": "Оставить как было? Нет, что вы! Та справка была ложью. Я хочу, чтобы в документах всё было честно. Даже если честность — всего лишь новая версия правды.", "nextNodeID": "choice_final" },
+            { "nodeID": "phrase_feeling", "type": "Phrase", "speakerID": "Client", "text": "Чувствую облегчение. Словно камень с души упал. Хотя теперь я не уверен, что вообще существовал тот день. Но в бумагах всё правильно, а это главное.", "nextNodeID": "choice_final" },
+            { "nodeID": "event_done", "type": "Event", "eventType": "AddReputation", "intValue": -10, "notificationText": "Вы поставили печать поверх старой даты. Архив переписан. Чувствуете горечь.", "nextNodeID": "end_final" },
+            { "nodeID": "event_insurance", "type": "Event", "eventType": "AddMoney", "intValue": 100, "notificationText": "Вы продали фиктивную страховку. Деньги есть, но репутация рушится.", "nextNodeID": "event_insurance_rep" },
+            { "nodeID": "event_insurance_rep", "type": "Event", "eventType": "AddReputation", "intValue": -25, "notificationText": "Шмидар понимает, что его обманули, но справка дороже.", "nextNodeID": "end_final" },
+            { "nodeID": "end_final", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Relaxed", "stressModifier": -10 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Camus_Grief_Coefficient",
+    "displayName": "Коэффициент скорби",
+    "description": "Альбан Марсан подаёт на пособие по утрате матери, но его равнодушие вызывает подозрения Социального Совета. Игрок должен оценить его эмоции.",
+    "durationDays": 2,
+    "priority": 3,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Camus_Started",
+        "onCompleteFlag": "Arc_Camus_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Elderly",
+        "isRemoteInteraction": false,
+        "characterName": "Альбан Марсан",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_intro" },
+            { "nodeID": "phrase_intro", "type": "Phrase", "speakerID": "Client", "text": "Здравствуйте. Мне нужна справка для пособия по утрате. Моя мать умерла.", "nextNodeID": "phrase_director_condol" },
+            { "nodeID": "phrase_director_condol", "type": "Phrase", "speakerID": "Director", "text": "Примите соболезнования. Заполните форму. Особое внимание графе «Внешние проявления скорби».", "nextNodeID": "phrase_client_indiff" },
+            { "nodeID": "phrase_client_indiff", "type": "Phrase", "speakerID": "Client", "text": "В кафе было душно. Я не плакал. Я устал.", "nextNodeID": "choice_grief" },
+            {
+              "nodeID": "choice_grief",
+              "type": "Choice",
+              "queryText": "Оцените проявления скорби по пятибалльной шкале.",
+              "options": [
+                { "text": "Поставить «0». Он абсолютно равнодушен.", "nextNodeID": "event_honest" },
+                { "text": "Приписать ему фальшивые слёзы. Пожалеть человека.", "nextNodeID": "event_fake" },
+                { "text": "(Корыстно) Завысить оценку и запросить благодарность с пособия.", "nextNodeID": "event_bribe" },
+                { "text": "(Уточнить) Как умерла ваша мать?", "nextNodeID": "phrase_death_circum" }
+              ]
+            },
+            { "nodeID": "phrase_death_circum", "type": "Phrase", "speakerID": "Client", "text": "В больнице. Сердце. Я был на работе.", "nextNodeID": "phrase_director_back" },
+            { "nodeID": "phrase_director_back", "type": "Phrase", "speakerID": "Director", "text": "Понимаю. Но вернёмся к форме.", "nextNodeID": "choice_grief" },
+            { "nodeID": "event_honest", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Camus_Honest", "intValue": 1, "notificationText": "Вы честно оценили состояние клиента. Соцсовет заинтересуется.", "nextNodeID": "end_first" },
+            { "nodeID": "event_fake", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Camus_Fake", "intValue": 1, "notificationText": "Вы завысили оценку из жалости. Это нарушение инструкции.", "nextNodeID": "end_first" },
+            { "nodeID": "event_bribe", "type": "Event", "eventType": "AddMoney", "intValue": 50, "notificationText": "Марсан согласился поделиться частью пособия. Выгодно, но грязно.", "nextNodeID": "event_bribe_rep" },
+            { "nodeID": "event_bribe_rep", "type": "Event", "eventType": "AddReputation", "intValue": -15, "notificationText": "Слухи пойдут.", "nextNodeID": "end_first" },
+            { "nodeID": "end_first", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Neutral", "stressModifier": 5 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Camus_Stage0_Completed",
+        "onStartFlag": "Arc_Camus_Stage1_Started",
+        "onCompleteFlag": "Arc_Camus_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Official",
+        "isRemoteInteraction": false,
+        "characterName": "Инспектор Ферран",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_inspect" },
+            { "nodeID": "cond_inspect", "type": "Condition", "conditionKey": "Arc_Camus_Honest", "operation": "==", "value": 1, "trueNodeID": "phrase_insp_honest", "falseNodeID": "phrase_insp_fake" },
+            { "nodeID": "phrase_insp_honest", "type": "Phrase", "speakerID": "Client", "text": "Инспектор Соцсовета. По вашему вчерашнему решению: почему у клиента Марсана ноль скорби? Это подозрительно.", "nextNodeID": "choice_verdict" },
+            { "nodeID": "phrase_insp_fake", "type": "Phrase", "speakerID": "Client", "text": "Инспектор Соцсовета. По вчерашнему делу Марсана: вы приписали скорбь. Объяснитесь.", "nextNodeID": "choice_verdict" },
+            {
+              "nodeID": "choice_verdict",
+              "type": "Choice",
+              "queryText": "Инспектор требует объяснений. Ваш вердикт?",
+              "options": [
+                { "text": "Скорбь глубока, но интровертна. Пособие полное.", "nextNodeID": "event_compassion" },
+                { "text": "Признать частичную недееспособность скорби. Урезать пособие на 70%.", "nextNodeID": "event_cut" },
+                { "text": "(Сговор) Предложить инспектору закрыть глаза за вознаграждение.", "nextNodeID": "event_bribe_inspector" }
+              ]
+            },
+            { "nodeID": "event_compassion", "type": "Event", "eventType": "AddReputation", "intValue": 15, "notificationText": "Вы защитили клиента. Репутация растёт, но бюджет трещит.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_cut", "type": "Event", "eventType": "AddMoney", "intValue": 100, "notificationText": "Вы сэкономили госсредства. Бюджет пополнен.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_bribe_inspector", "type": "Event", "eventType": "AddMoney", "intValue": -80, "notificationText": "Вы заплатили инспектору. Влияние падает.", "nextNodeID": "event_bribe_inspector_inf" },
+            { "nodeID": "event_bribe_inspector_inf", "type": "Event", "eventType": "AddInfluence", "intValue": -10, "notificationText": "Коррупция — рискованный путь.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveAngry", "outputEmotion": "Irritated", "stressModifier": 10 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Beckett_Waiting_Talon",
+    "displayName": "Талон Б-22",
+    "description": "Двое бродяг, Владис и Эстебан, приходят ежедневно за справкой от некоего Годо, которого не существует в системе.",
+    "durationDays": 2,
+    "priority": 2,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Beckett_Started",
+        "onCompleteFlag": "Arc_Beckett_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Владис и Эстебан",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_intro" },
+            { "nodeID": "phrase_intro", "type": "Phrase", "speakerID": "Client", "text": "Мы к директору. Нам нужна справка о подтверждении ожидания.", "nextNodeID": "phrase_director" },
+            { "nodeID": "phrase_director", "type": "Phrase", "speakerID": "Director", "text": "Годо? Такого в реестре нет. Номера заявления тоже нет. Что вам нужно на самом деле?", "nextNodeID": "phrase_clients" },
+            { "nodeID": "phrase_clients", "type": "Phrase", "speakerID": "Client", "text": "Он придёт завтра. Мы просто посидим. У вас есть бланк «Запроса на внесение в реестр ожидающих»?", "nextNodeID": "choice_day1" },
+            {
+              "nodeID": "choice_day1",
+              "type": "Choice",
+              "queryText": "Двое бродяг хотят бессмысленную бумагу. Что делать?",
+              "options": [
+                { "text": "Выдать форму «Запроса». Пусть играют в бюрократию.", "nextNodeID": "event_form" },
+                { "text": "Прогнать их. Бюро не место для философских перформансов.", "nextNodeID": "event_reject" },
+                { "text": "(Корыстно) Взять с них последние монеты за форму.", "nextNodeID": "event_money" },
+                { "text": "(Спросить) Кто такой Годо?", "nextNodeID": "phrase_godot" }
+              ]
+            },
+            { "nodeID": "phrase_godot", "type": "Phrase", "speakerID": "Client", "text": "Годо — наш наниматель. Он обещал работу. Мы должны дождаться его и принести справку.", "nextNodeID": "choice_day1" },
+            { "nodeID": "event_form", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Beckett_Form", "intValue": 1, "notificationText": "Вы выдали бесполезную форму. Бродяги сели на пол и заполняют её.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_reject", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Beckett_Reject", "intValue": 1, "notificationText": "Вы грубо выгнали посетителей. Они обещали вернуться.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_money", "type": "Event", "eventType": "AddMoney", "intValue": 30, "notificationText": "Вы стрясли с бродяг последние кроны. Стыдно.", "nextNodeID": "event_money_rep" },
+            { "nodeID": "event_money_rep", "type": "Event", "eventType": "AddReputation", "intValue": -10, "notificationText": "Они всё равно сели на пол.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "BecomeConfused", "outputEmotion": "Confused", "stressModifier": 5 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Beckett_Stage0_Completed",
+        "onStartFlag": "Arc_Beckett_Stage1_Started",
+        "onCompleteFlag": "Arc_Beckett_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Владис и Эстебан",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_day2" },
+            { "nodeID": "cond_day2", "type": "Condition", "conditionKey": "Arc_Beckett_Form", "operation": "==", "value": 1, "trueNodeID": "phrase_form", "falseNodeID": "phrase_reject" },
+            { "nodeID": "phrase_form", "type": "Phrase", "speakerID": "Client", "text": "Мы снова здесь. Вчера вы дали нам запрос. Но Годо не пришёл. Дайте справку, что мы ждали вчера.", "nextNodeID": "choice_day2" },
+            { "nodeID": "phrase_reject", "type": "Phrase", "speakerID": "Client", "text": "Вы выгнали нас вчера. Но мы всё равно ждали. Дайте справку, что мы ждали, чтобы мы ушли.", "nextNodeID": "choice_day2" },
+            {
+              "nodeID": "choice_day2",
+              "type": "Choice",
+              "queryText": "Выдать справку, которая аннулирует их цель?",
+              "options": [
+                { "text": "Выдать «Справку об окончании ожидания».", "nextNodeID": "event_end_waiting" },
+                { "text": "Предложить им работу курьерами.", "nextNodeID": "event_hire" },
+                { "text": "(Корыстно) Продать им «ускоренную справку» за плату.", "nextNodeID": "event_sell" }
+              ]
+            },
+            { "nodeID": "event_end_waiting", "type": "Event", "eventType": "AddReputation", "intValue": 5, "notificationText": "Бродяги ушли, сжимая справку. Они выглядят потерянными.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_hire", "type": "Event", "eventType": "AddInfluence", "intValue": 3, "notificationText": "Вы наняли двух философов. Теперь они разносят чай и рассуждают о тщете.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_sell", "type": "Event", "eventType": "AddMoney", "intValue": 20, "notificationText": "Вы продали им надежду. Маргиналы счастливы, но ваш карман тяжелеет.", "nextNodeID": "event_sell_rep" },
+            { "nodeID": "event_sell_rep", "type": "Event", "eventType": "AddReputation", "intValue": -5, "notificationText": "Они ушли, напевая.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Relaxed", "stressModifier": -5 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Heller_Catch_22_Omega",
+    "displayName": "Циркуляр 22-Омега",
+    "description": "Капитан Йоссан требует справку о негодности к полётам по психиатрии, но согласно циркуляру 22-Омега, его страх доказывает вменяемость.",
+    "durationDays": 2,
+    "priority": 4,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Heller_Started",
+        "onCompleteFlag": "Arc_Heller_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Veteran",
+        "isRemoteInteraction": false,
+        "characterName": "Капитан Йоссан",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_intro" },
+            { "nodeID": "phrase_intro", "type": "Phrase", "speakerID": "Client", "text": "Капитан Йоссан. Мне нужна справка формы «П-7» о психической негодности к полётам.", "nextNodeID": "phrase_director" },
+            { "nodeID": "phrase_director", "type": "Phrase", "speakerID": "Director", "text": "Согласно Циркуляру 22-Омега, беспокойство о безопасности в условиях опасности — признак здравого ума. Вы годны.", "nextNodeID": "phrase_client_paradox" },
+            { "nodeID": "phrase_client_paradox", "type": "Phrase", "speakerID": "Client", "text": "В том-то и уловка! Я сумасшедший, раз хочу летать, но сказать, что хочу летать, чтобы не лететь — значит быть нормальным!", "nextNodeID": "choice_paradox" },
+            {
+              "nodeID": "choice_paradox",
+              "type": "Choice",
+              "queryText": "Как разрешить парадокс?",
+              "options": [
+                { "text": "Зачитать циркуляр и отказать. Армии нужны пилоты.", "nextNodeID": "event_refuse" },
+                { "text": "Попытаться найти лазейку в формулировках.", "nextNodeID": "event_loophole" },
+                { "text": "(Корыстно) Предложить продать поддельную справку о негодности.", "nextNodeID": "event_sell" },
+                { "text": "(Уточнить) Почему вы боитесь летать?", "nextNodeID": "phrase_fear" }
+              ]
+            },
+            { "nodeID": "phrase_fear", "type": "Phrase", "speakerID": "Client", "text": "Меня уже сбивали трижды. Я видел, как горят мои товарищи. Но командование твердит: «Ты лучший пилот». Я больше не могу.", "nextNodeID": "choice_paradox" },
+            { "nodeID": "event_refuse", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Heller_Refuse", "intValue": 1, "notificationText": "Вы отказали капитану. Он выглядит опустошённым.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_loophole", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Heller_Loophole", "intValue": 1, "notificationText": "Вы начали искать лазейку. Это займёт время.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_sell", "type": "Event", "eventType": "AddMoney", "intValue": 150, "notificationText": "Вы продали фальшивку. Йоссан заплатил, но теперь вы соучастник.", "nextNodeID": "event_sell_strike" },
+            { "nodeID": "event_sell_strike", "type": "Event", "eventType": "AddStrike", "intValue": 1, "notificationText": "Велик риск разоблачения.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "LeaveAngry", "outputEmotion": "Angry", "stressModifier": 15 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Heller_Stage0_Completed",
+        "onStartFlag": "Arc_Heller_Stage1_Started",
+        "onCompleteFlag": "Arc_Heller_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Veteran",
+        "isRemoteInteraction": false,
+        "characterName": "Капитан Йоссан",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_loophole" },
+            { "nodeID": "cond_loophole", "type": "Condition", "conditionKey": "Arc_Heller_Loophole", "operation": "==", "value": 1, "trueNodeID": "phrase_loophole_found", "falseNodeID": "phrase_command_refuse" },
+            { "nodeID": "phrase_loophole_found", "type": "Phrase", "speakerID": "Client", "text": "Помните вчерашний разговор? Командование требует справку о годности Йоссана. Но брать «психов» в эскадрилью мы не можем.", "nextNodeID": "choice_solution" },
+            { "nodeID": "phrase_command_refuse", "type": "Phrase", "speakerID": "Client", "text": "После вчерашнего капитан Йоссан подал рапорт. Вы обязаны пересмотреть решение. Иначе трибунал.", "nextNodeID": "choice_solution" },
+            {
+              "nodeID": "choice_solution",
+              "type": "Choice",
+              "queryText": "Выдать спасительную справку?",
+              "options": [
+                { "text": "Выдать «Справку о временной непригодности к бюрократическим процедурам».", "nextNodeID": "event_save" },
+                { "text": "Отказать. Приказ есть приказ.", "nextNodeID": "event_sentence" },
+                { "text": "(Компромисс) Предложить перевести Йоссана в инструкторы без справки.", "nextNodeID": "event_compromise" }
+              ]
+            },
+            { "nodeID": "event_save", "type": "Event", "eventType": "AddInfluence", "intValue": 10, "notificationText": "Лазейка сработала. Военные ценят вашу изворотливость.", "nextNodeID": "end_day2_happy" },
+            { "nodeID": "event_sentence", "type": "Event", "eventType": "AddStrike", "intValue": 1, "notificationText": "Вы отправили пилота на верную смерть. Бюрократия беспощадна.", "nextNodeID": "end_day2_angry" },
+            { "nodeID": "event_compromise", "type": "Event", "eventType": "AddReputation", "intValue": 10, "notificationText": "Йоссан спасён, и вы не нарушили регламент. Все довольны.", "nextNodeID": "end_day2_happy" },
+            { "nodeID": "end_day2_happy", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Sly", "stressModifier": -10 },
+            { "nodeID": "end_day2_angry", "type": "End", "outcome": "LeaveAngry", "outputEmotion": "Angry", "stressModifier": 15 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Melville_Bartleby_Refusal",
+    "displayName": "Отказ от подписи",
+    "description": "Бартальби, бывший клерк, отказывается подписывать согласие на обработку данных, ставя под угрозу выдачу справки о несудимости.",
+    "durationDays": 2,
+    "priority": 3,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Melville_Started",
+        "onCompleteFlag": "Arc_Melville_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Бартальби",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_intro" },
+            { "nodeID": "phrase_intro", "type": "Phrase", "speakerID": "Client", "text": "Я принёс заявление. Всё заполнено. Мне нужна справка о несудимости.", "nextNodeID": "phrase_director" },
+            { "nodeID": "phrase_director", "type": "Phrase", "speakerID": "Director", "text": "Тут не хватает подписи в графе «Согласие на обработку». Распишитесь.", "nextNodeID": "phrase_refusal" },
+            { "nodeID": "phrase_refusal", "type": "Phrase", "speakerID": "Client", "text": "Я бы предпочёл этого не делать.", "nextNodeID": "choice_day1" },
+            {
+              "nodeID": "choice_day1",
+              "type": "Choice",
+              "queryText": "Посетитель вежливо отказывается подписывать. Действия?",
+              "options": [
+                { "text": "Пригрозить штрафом и аннулированием заявки.", "nextNodeID": "event_threat" },
+                { "text": "Спросить о причине. Возможно, это принцип.", "nextNodeID": "event_talk" },
+                { "text": "(Корыстно) Подделать подпись за него и потребовать плату.", "nextNodeID": "event_forge" }
+              ]
+            },
+            { "nodeID": "event_threat", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Melville_Threat", "intValue": 1, "notificationText": "Вы пригрозили клиенту. Он не шелохнулся.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_talk", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Melville_Talk", "intValue": 1, "notificationText": "Вы проявили эмпатию. Бартальби молча смотрит в стену.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_forge", "type": "Event", "eventType": "AddMoney", "intValue": 40, "notificationText": "Вы подделали подпись. Бартальби не заметил.", "nextNodeID": "event_forge_rep" },
+            { "nodeID": "event_forge_rep", "type": "Event", "eventType": "AddReputation", "intValue": -15, "notificationText": "Но репутация страдает.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "BecomeConfused", "outputEmotion": "Confused", "stressModifier": 5 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Melville_Stage0_Completed",
+        "onStartFlag": "Arc_Melville_Stage1_Started",
+        "onCompleteFlag": "Arc_Melville_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Бартальби",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_stubborn" },
+            { "nodeID": "phrase_stubborn", "type": "Phrase", "speakerID": "Client", "text": "Я всё ещё не подпишу. Но справка мне нужна. Это приемлемо? (как мы обсуждали вчера)", "nextNodeID": "choice_day2" },
+            {
+              "nodeID": "choice_day2",
+              "type": "Choice",
+              "queryText": "Нарушить регламент ради упрямого клиента?",
+              "options": [
+                { "text": "Выдать справку с пометкой «Подпись отсутствует по мировоззренческим причинам».", "nextNodeID": "event_exception" },
+                { "text": "Вызвать санитаров. Это ненормально.", "nextNodeID": "event_medics" },
+                { "text": "(Компромисс) Предложить оформить справку без подписи, но с тройным тарифом.", "nextNodeID": "event_tariff" }
+              ]
+            },
+            { "nodeID": "event_exception", "type": "Event", "eventType": "AddReputation", "intValue": 10, "notificationText": "Вы проявили креативность. Это оценили.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_medics", "type": "Event", "eventType": "AddReputation", "intValue": -5, "notificationText": "Охрана уводит тихого клерка.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_tariff", "type": "Event", "eventType": "AddMoney", "intValue": 60, "notificationText": "Бартальби заплатил без возражений. Странный человек.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Neutral", "stressModifier": -5 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Poe_Acoustic_Case",
+    "displayName": "Акустический казус",
+    "description": "Пан Эдгард требует справку о превышении шума от несуществующего насоса под паркетом. Его одержимость звуком нарастает.",
+    "durationDays": 2,
+    "priority": 3,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Poe_Started",
+        "onCompleteFlag": "Arc_Poe_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Эдгард",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_hears" },
+            { "nodeID": "phrase_hears", "type": "Phrase", "speakerID": "Client", "text": "Вы слышите? Этот гул! Он идёт из-под пола. Старый насос. Мне нужна справка для комиссии!", "nextNodeID": "phrase_director_nosound" },
+            { "nodeID": "phrase_director_nosound", "type": "Phrase", "speakerID": "Director", "text": "Проверил отчёт ЖЭКа. В вашем доме нет центрального отопления. Насоса нет. Вы здоровы?", "nextNodeID": "phrase_insists" },
+            { "nodeID": "phrase_insists", "type": "Phrase", "speakerID": "Client", "text": "Я слышу его сейчас! Тик-тик-тик. Он нарастает! Вы мне не верите?!", "nextNodeID": "choice_day1" },
+            {
+              "nodeID": "choice_day1",
+              "type": "Choice",
+              "queryText": "Пациент явно не в себе. Ваши действия?",
+              "options": [
+                { "text": "Дать ему форму для самостоятельной экспертизы.", "nextNodeID": "event_form" },
+                { "text": "Вызвать врача. Это случай для психиатра.", "nextNodeID": "event_doctor" },
+                { "text": "(Корыстно) Выдать липовую справку о шуме за щедрое вознаграждение.", "nextNodeID": "event_lipa" },
+                { "text": "(Уточнить) Когда начался шум?", "nextNodeID": "phrase_when" }
+              ]
+            },
+            { "nodeID": "phrase_when", "type": "Phrase", "speakerID": "Client", "text": "С тех пор, как умер сосед снизу. Он был часовщиком. Теперь его мастерская заколочена, но стук продолжается.", "nextNodeID": "choice_day1" },
+            { "nodeID": "event_form", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Poe_Form", "intValue": 1, "notificationText": "Вы дали форму. Эдгард ушёл, бормоча о частотах.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_doctor", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Poe_Doctor", "intValue": 1, "notificationText": "Вы вызвали санитаров. Эдгард кричит, что они заглушают шум.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_lipa", "type": "Event", "eventType": "AddMoney", "intValue": 70, "notificationText": "Вы взяли деньги за фиктивную справку.", "nextNodeID": "event_lipa_rep" },
+            { "nodeID": "event_lipa_rep", "type": "Event", "eventType": "AddReputation", "intValue": -10, "notificationText": "Эдгард счастлив, но ваша совесть нечиста.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Scared", "stressModifier": 15 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Poe_Stage0_Completed",
+        "onStartFlag": "Arc_Poe_Stage1_Started",
+        "onCompleteFlag": "Arc_Poe_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Эдгард",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_day2" },
+            { "nodeID": "cond_day2", "type": "Condition", "conditionKey": "Arc_Poe_Form", "operation": "==", "value": 1, "trueNodeID": "phrase_report", "falseNodeID": "phrase_clock" },
+            { "nodeID": "phrase_report", "type": "Phrase", "speakerID": "Client", "text": "После вчерашнего я принёс заключение частного эксперта! Вот справка. Шум есть! 60 герц!", "nextNodeID": "phrase_director_fake" },
+            { "nodeID": "phrase_clock", "type": "Phrase", "speakerID": "Client", "text": "Доктор вчера сказал, я здоров. Но шум остался. Я разобрал полы. Там были старые часы...", "nextNodeID": "choice_solution" },
+            { "nodeID": "phrase_director_fake", "type": "Phrase", "speakerID": "Director", "text": "Ваш эксперт лишён лицензии за шарлатанство. Но я вижу, вы страдаете. Давайте решать.", "nextNodeID": "choice_solution" },
+            {
+              "nodeID": "choice_solution",
+              "type": "Choice",
+              "queryText": "Как помочь человеку, одержимому несуществующим звуком?",
+              "options": [
+                { "text": "Выдать справку о «психосоматической аномалии» (компенсация).", "nextNodeID": "event_compensate" },
+                { "text": "Отказать. Фактов нет.", "nextNodeID": "event_refuse_final" },
+                { "text": "(Корыстно) Назначить платную экспертизу от бюро.", "nextNodeID": "event_paid_expert" }
+              ]
+            },
+            { "nodeID": "event_compensate", "type": "Event", "eventType": "AddMoney", "intValue": -50, "notificationText": "Компенсация выплачена из бюджета.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_refuse_final", "type": "Event", "eventType": "AddReputation", "intValue": -5, "notificationText": "Вы отказали. Эдгард вернётся завтра с новыми «доказательствами».", "nextNodeID": "end_day2" },
+            { "nodeID": "event_paid_expert", "type": "Event", "eventType": "AddMoney", "intValue": 40, "notificationText": "Эдгард заплатил за экспертизу. Вы ничего не нашли.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Happy", "stressModifier": -10 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Gogol_Nose_Cipher",
+    "displayName": "Персональный шифр",
+    "description": "Асессор Платан Ковальт потерял идентификационную карту, и кто-то активно ею пользуется. Самозванец оказывается его братом-близнецом.",
+    "durationDays": 2,
+    "priority": 4,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Gogol_Started",
+        "onCompleteFlag": "Arc_Gogol_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Official",
+        "isRemoteInteraction": false,
+        "characterName": "Платан Ковальт",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_panic" },
+            { "nodeID": "phrase_panic", "type": "Phrase", "speakerID": "Client", "text": "Катастрофа! Я, асессор Ковальт, потерял карточку в трамвае. Мне нужна справка о недействительности и новая карта!", "nextNodeID": "phrase_director_check" },
+            { "nodeID": "phrase_director_check", "type": "Phrase", "speakerID": "Director", "text": "Проверим базу... Странно. По вашей карте 20 минут назад оплачен обед в столовой Министерства.", "nextNodeID": "phrase_client_outrage" },
+            { "nodeID": "phrase_client_outrage", "type": "Phrase", "speakerID": "Client", "text": "Как?! Кто-то ест мой суп?! Это возмутительно!", "nextNodeID": "choice_day1" },
+            {
+              "nodeID": "choice_day1",
+              "type": "Choice",
+              "queryText": "Как поступить с двойником?",
+              "options": [
+                { "text": "Заблокировать карту немедленно.", "nextNodeID": "event_block" },
+                { "text": "Устроить засаду в столовой. Нужна помощь охраны.", "nextNodeID": "event_trap" },
+                { "text": "(Корыстно) Предложить Ковальту выкупить свою же карту у самозванца через вас.", "nextNodeID": "event_bribe" },
+                { "text": "(Спросить) Вы уверены, что это не вы обедали?", "nextNodeID": "phrase_doubt" }
+              ]
+            },
+            { "nodeID": "phrase_doubt", "type": "Phrase", "speakerID": "Client", "text": "Абсолютно! Я был на совещании с нотариусом. У меня свидетели.", "nextNodeID": "choice_day1" },
+            { "nodeID": "event_block", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Gogol_Block", "intValue": 1, "notificationText": "Карта заблокирована. Самозванец обнаружит это и скроется.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_trap", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Gogol_Trap", "intValue": 1, "notificationText": "Вы договорились с охраной. Завтра операция «Суп».", "nextNodeID": "end_day1" },
+            { "nodeID": "event_bribe", "type": "Event", "eventType": "AddMoney", "intValue": 100, "notificationText": "Вы взяли с Ковальта деньги за «посредничество».", "nextNodeID": "event_bribe_rep" },
+            { "nodeID": "event_bribe_rep", "type": "Event", "eventType": "AddReputation", "intValue": -10, "notificationText": "Он недоволен, но платит.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "BecomeConfused", "outputEmotion": "Thinking", "stressModifier": 5 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Gogol_Stage0_Completed",
+        "onStartFlag": "Arc_Gogol_Stage1_Started",
+        "onCompleteFlag": "Arc_Gogol_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Official",
+        "isRemoteInteraction": false,
+        "characterName": "Платан Ковальт (самозванец)",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_day2" },
+            { "nodeID": "cond_day2", "type": "Condition", "conditionKey": "Arc_Gogol_Trap", "operation": "==", "value": 1, "trueNodeID": "phrase_caught", "falseNodeID": "phrase_appeared" },
+            { "nodeID": "phrase_caught", "type": "Phrase", "speakerID": "Client", "text": "После вчерашней засады охрана привела самозванца. Он утверждает, что он и есть Ковальт.", "nextNodeID": "choice_identity" },
+            { "nodeID": "phrase_appeared", "type": "Phrase", "speakerID": "Client", "text": "По вашему вчерашнему решению: самозванец сам пришёл! Говорит, что он настоящий Ковальт.", "nextNodeID": "choice_identity" },
+            {
+              "nodeID": "choice_identity",
+              "type": "Choice",
+              "queryText": "Кому выдать справку о личности?",
+              "options": [
+                { "text": "Признать первого Ковальта настоящим. Усы решают.", "nextNodeID": "event_reunite" },
+                { "text": "Выдать справку о «двойной идентичности» обоим.", "nextNodeID": "event_double" },
+                { "text": "(Корыстно) Признать самозванца настоящим за долю в наследстве.", "nextNodeID": "event_inheritance" }
+              ]
+            },
+            { "nodeID": "event_reunite", "type": "Event", "eventType": "AddInfluence", "intValue": 5, "notificationText": "Брат-близнец раскрыт. Семья воссоединилась.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_double", "type": "Event", "eventType": "AddInfluence", "intValue": 10, "notificationText": "Вы создали прецедент. Два человека — одна личность.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_inheritance", "type": "Event", "eventType": "AddMoney", "intValue": 200, "notificationText": "Самозванец поделился наследством. Вы богаче, но справедливость нарушена.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Happy", "stressModifier": -10 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Shakespeare_Hamlet_Natural",
+    "displayName": "Свидетельство о естественности",
+    "description": "Наследник треста «Корона» Гамлат Ольденбарк и его дядя Клавдиан Ольденбарк спорят о причине смерти отца.",
+    "durationDays": 2,
+    "priority": 5,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Shakespeare_Started",
+        "onCompleteFlag": "Arc_Shakespeare_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Aristocrat",
+        "isRemoteInteraction": false,
+        "characterName": "Гамлат Ольденбарк и Клавдиан Ольденбарк",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_gamlat" },
+            { "nodeID": "phrase_gamlat", "type": "Phrase", "speakerID": "Client", "text": "Я Гамлат Ольденбарк. Мой отец, глава треста «Корона», умер при странных обстоятельствах. Мне нужна справка о насильственной смерти.", "nextNodeID": "phrase_clavdian" },
+            { "nodeID": "phrase_clavdian", "type": "Phrase", "speakerID": "Client", "text": "Я Клавдиан Ольденбарк. Мой брат умер естественно. Мне нужна справка о естественной смерти для акционеров.", "nextNodeID": "phrase_director" },
+            { "nodeID": "phrase_director", "type": "Phrase", "speakerID": "Director", "text": "У вас обоих заключения врачей. Вскрытия не было. Это подозрительно.", "nextNodeID": "choice_day1" },
+            {
+              "nodeID": "choice_day1",
+              "type": "Choice",
+              "queryText": "Кому верить?",
+              "options": [
+                { "text": "Затребовать эксгумацию. Истина дороже.", "nextNodeID": "event_exhume" },
+                { "text": "Признать документы Клавдиана приоритетными.", "nextNodeID": "event_money" },
+                { "text": "(Корыстно) Предложить Клавдиану уладить дело за щедрое пожертвование в фонд бюро.", "nextNodeID": "event_donate" },
+                { "text": "(Спросить) При каких обстоятельствах умер отец?", "nextNodeID": "phrase_details" }
+              ]
+            },
+            { "nodeID": "phrase_details", "type": "Phrase", "speakerID": "Client", "text": "Гамлат: «Он задыхался в сауне. Но я нашёл следы яда.» Клавдиан: «Экспертиза не подтвердила.»", "nextNodeID": "choice_day1" },
+            { "nodeID": "event_exhume", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Shakespeare_Exhum", "intValue": 1, "notificationText": "Гамлат ликует. Клавдиан в ярости. Эксгумация назначена.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_money", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Shakespeare_Money", "intValue": 1, "notificationText": "Вы приняли сторону Клавдиана. Гамлат угрожает судом.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_donate", "type": "Event", "eventType": "AddMoney", "intValue": 300, "notificationText": "Клавдиан заплатил. Бюджет пополнен, но справедливость продана.", "nextNodeID": "event_donate_rep" },
+            { "nodeID": "event_donate_rep", "type": "Event", "eventType": "AddReputation", "intValue": -15, "notificationText": "Гамлат в бешенстве.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "LeaveAngry", "outputEmotion": "Angry", "stressModifier": 15 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Shakespeare_Stage0_Completed",
+        "onStartFlag": "Arc_Shakespeare_Stage1_Started",
+        "onCompleteFlag": "Arc_Shakespeare_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Aristocrat",
+        "isRemoteInteraction": false,
+        "characterName": "Гамлат Ольденбарк",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_day2" },
+            { "nodeID": "cond_day2", "type": "Condition", "conditionKey": "Arc_Shakespeare_Exhum", "operation": "==", "value": 1, "trueNodeID": "phrase_gamlat_film", "falseNodeID": "phrase_clavdian_laugh" },
+            { "nodeID": "phrase_gamlat_film", "type": "Phrase", "speakerID": "Client", "text": "После вчерашнего решения: Гамлат принёс киноплёнку. Тень на стене показывает борьбу. Это доказательство!", "nextNodeID": "phrase_director_decision" },
+            { "nodeID": "phrase_clavdian_laugh", "type": "Phrase", "speakerID": "Client", "text": "В продолжение вчерашнего: Клавдиан смеётся. Он принёс заключение о «тяжёлом паре» в сауне.", "nextNodeID": "phrase_director_decision" },
+            { "nodeID": "phrase_director_decision", "type": "Phrase", "speakerID": "Director", "text": "Факты противоречивы. Я выдам «Справку о невозможности однозначного заключения». Счета заморозятся.", "nextNodeID": "choice_final" },
+            {
+              "nodeID": "choice_final",
+              "type": "Choice",
+              "queryText": "Это решение заморозит активы. Вы уверены?",
+              "options": [
+                { "text": "Да. Пусть грызутся дальше.", "nextNodeID": "event_freeze" },
+                { "text": "Нет. Отдать предпочтение Гамлату (риск).", "nextNodeID": "event_support_gamlat" },
+                { "text": "(Корыстно) Воспользоваться спором и купить акции треста по дешёвке.", "nextNodeID": "event_insider" }
+              ]
+            },
+            { "nodeID": "event_freeze", "type": "Event", "eventType": "AddMoney", "intValue": 200, "notificationText": "Гамлат благодарен и дарит вам акции.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_support_gamlat", "type": "Event", "eventType": "AddStrike", "intValue": 1, "notificationText": "Клавдиан использовал связи. У вас неприятности.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_insider", "type": "Event", "eventType": "AddMoney", "intValue": 500, "notificationText": "Вы заработали на инсайдерской сделке. Но репутация рухнула.", "nextNodeID": "event_insider_rep" },
+            { "nodeID": "event_insider_rep", "type": "Event", "eventType": "AddReputation", "intValue": -30, "notificationText": "Слухи о вашей беспринципности расходятся.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Sly", "stressModifier": -5 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Dante_Indulgence_3rd_Circle",
+    "displayName": "Индульгенция 3-го круга",
+    "description": "Поэт Дантеон застрял в транзитной зоне и требует справку о моральной чистоте для визы в Эмпиреи. Его поручитель Вергилиан предлагает пройти круги бюрократии.",
+    "durationDays": 2,
+    "priority": 3,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Dante_Started",
+        "onCompleteFlag": "Arc_Dante_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Bohemian",
+        "isRemoteInteraction": false,
+        "characterName": "Дантеон",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_intro" },
+            { "nodeID": "phrase_intro", "type": "Phrase", "speakerID": "Client", "text": "Я Дантеон, поэт. Мне нужна справка о степени моральной чистоплотности для выездной визы в Эмпиреи.", "nextNodeID": "phrase_director_form" },
+            { "nodeID": "phrase_director_form", "type": "Phrase", "speakerID": "Director", "text": "Заполните «Табель о рангах прегрешений». Опишите свои пороки честно.", "nextNodeID": "phrase_sins" },
+            { "nodeID": "phrase_sins", "type": "Phrase", "speakerID": "Client", "text": "Я ленив, гневлив и люблю женщину по имени Беатриче. Это грех?", "nextNodeID": "choice_pride" },
+            {
+              "nodeID": "choice_pride",
+              "type": "Choice",
+              "queryText": "Квалифицируйте гордыню поэта.",
+              "options": [
+                { "text": "Это гордыня. В визе отказать.", "nextNodeID": "event_reject" },
+                { "text": "Это мелочи. Назначить три дополнительных печати.", "nextNodeID": "event_stamps" },
+                { "text": "(Корыстно) Потребовать поэму в обмен на снисхождение.", "nextNodeID": "event_poem" },
+                { "text": "(Спросить) Кто такая Беатриче?", "nextNodeID": "phrase_beatrice" }
+              ]
+            },
+            { "nodeID": "phrase_beatrice", "type": "Phrase", "speakerID": "Client", "text": "Моя муза. Я встретил её в транзитном зале. Она уехала в Эмпиреи. Я должен следовать за ней.", "nextNodeID": "choice_pride" },
+            { "nodeID": "event_reject", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Dante_Reject", "intValue": 1, "notificationText": "Вы отказали поэту. Он опечален.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_stamps", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Dante_Stamps", "intValue": 1, "notificationText": "Поэт рад. Он готов пройти круги бюрократии.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_poem", "type": "Event", "eventType": "AddInfluence", "intValue": 5, "notificationText": "Дантеон написал оду в вашу честь. Репутация растёт.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Sad", "stressModifier": 10 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Dante_Stage0_Completed",
+        "onStartFlag": "Arc_Dante_Stage1_Started",
+        "onCompleteFlag": "Arc_Dante_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Bohemian",
+        "isRemoteInteraction": false,
+        "characterName": "Вергилиан",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_day2" },
+            { "nodeID": "cond_day2", "type": "Condition", "conditionKey": "Arc_Dante_Stamps", "operation": "==", "value": 1, "trueNodeID": "phrase_vergilian", "falseNodeID": "phrase_dante_stubborn" },
+            { "nodeID": "phrase_vergilian", "type": "Phrase", "speakerID": "Client", "text": "Продолжая вчерашнее: я Вергилиан, поручитель Дантеона. Я проведу его по инстанциям. Нужны печати из трёх бюро.", "nextNodeID": "choice_help" },
+            { "nodeID": "phrase_dante_stubborn", "type": "Phrase", "speakerID": "Client", "text": "После вчерашнего отказа: я не уйду без справки. Даже если это займёт вечность.", "nextNodeID": "choice_help" },
+            {
+              "nodeID": "choice_help",
+              "type": "Choice",
+              "queryText": "Сократить путь или заставить ждать?",
+              "options": [
+                { "text": "Выдать «Справку о грехах малой тяжести» (амнистия).", "nextNodeID": "event_amnisty" },
+                { "text": "Отправить за печатями. Бюрократия священна.", "nextNodeID": "event_bureaucracy" },
+                { "text": "(Корыстно) Предложить Вергилиану купить индульгенцию за пожертвование.", "nextNodeID": "event_sell_indulgence" }
+              ]
+            },
+            { "nodeID": "event_amnisty", "type": "Event", "eventType": "AddReputation", "intValue": 10, "notificationText": "Дантеон благословляет вас в стихах.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_bureaucracy", "type": "Event", "eventType": "AddInfluence", "intValue": 5, "notificationText": "Вы строги, но справедливы. Система работает.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_sell_indulgence", "type": "Event", "eventType": "AddMoney", "intValue": 100, "notificationText": "Вы продали индульгенцию. Поэт спасён, но бюро превращается в лавку.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Relaxed", "stressModifier": -10 }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "arcID": "Twain_Million_Pound_Asset",
+    "displayName": "Неподъёмный актив",
+    "description": "Оборванец Генрик Аткинс пытается оплатить справку о бедности купюрой в миллион крон. Сдачи в кассе нет, но купюра подлинная.",
+    "durationDays": 2,
+    "priority": 4,
+    "isOneTimeOnly": true,
+    "defaultGoal": "DirectorAudience",
+    "defaultArchetype": null,
+    "stages": [
+      {
+        "dayOffset": 0,
+        "requiredFlag": null,
+        "onStartFlag": "Arc_Twain_Started",
+        "onCompleteFlag": "Arc_Twain_Stage0_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Генрик Аткинс",
+        "dialogueStructure": {
+          "startNodeID": "start",
+          "nodes": [
+            { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_intro" },
+            { "nodeID": "phrase_intro", "type": "Phrase", "speakerID": "Client", "text": "Мне нужна справка о безработице. Я беден. Вот 10 крон.", "nextNodeID": "phrase_director_shock" },
+            { "nodeID": "phrase_director_shock", "type": "Phrase", "speakerID": "Director", "text": "Принимаю оплату. Это... что это? Купюра в миллион крон?", "nextNodeID": "phrase_client_calm" },
+            { "nodeID": "phrase_client_calm", "type": "Phrase", "speakerID": "Client", "text": "Да. Мне дали её в трамвае. Сдачи не надо. Просто справку.", "nextNodeID": "choice_million" },
+            {
+              "nodeID": "choice_million",
+              "type": "Choice",
+              "queryText": "Купюра подлинная. Как поступить?",
+              "options": [
+                { "text": "Послать запрос на размен в Госбанк (3 дня ожидания).", "nextNodeID": "event_exchange" },
+                { "text": "Признать его «лицом с особым кредитным доверием» и выдать справку бесплатно.", "nextNodeID": "event_trust" },
+                { "text": "(Корыстно) Обмануть, дав сдачу фальшивыми справками.", "nextNodeID": "event_cheat" },
+                { "text": "(Спросить) Кто вам дал такую купюру?", "nextNodeID": "phrase_who" }
+              ]
+            },
+            { "nodeID": "phrase_who", "type": "Phrase", "speakerID": "Client", "text": "Какой-то господин в цилиндре. Он сказал: «Твоя честность будет вознаграждена». Я не понял.", "nextNodeID": "choice_million" },
+            { "nodeID": "event_exchange", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Twain_Exchange", "intValue": 1, "notificationText": "Запрос отправлен. Аткинс остаётся без справки.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_trust", "type": "Event", "eventType": "SetFlag", "flagKey": "Arc_Twain_Trust", "intValue": 1, "notificationText": "Вы нарушили финансовый регламент, но выдали справку бесплатно.", "nextNodeID": "end_day1" },
+            { "nodeID": "event_cheat", "type": "Event", "eventType": "AddMoney", "intValue": 200, "notificationText": "Вы всучили Аткинсу фальшивые справки. Репутация страдает.", "nextNodeID": "event_cheat_rep" },
+            { "nodeID": "event_cheat_rep", "type": "Event", "eventType": "AddReputation", "intValue": -20, "notificationText": "Он ушёл, не заметив обмана.", "nextNodeID": "end_day1" },
+            { "nodeID": "end_day1", "type": "End", "outcome": "BecomeConfused", "outputEmotion": "Confused", "stressModifier": 5 }
+          ]
+        }
+      },
+      {
+        "dayOffset": 1,
+        "requiredFlag": "Arc_Twain_Stage0_Completed",
+        "onStartFlag": "Arc_Twain_Stage1_Started",
+        "onCompleteFlag": "Arc_Twain_Completed",
+        "forcedGoal": "DirectorAudience",
+        "forcedArchetype": "Marginal",
+        "isRemoteInteraction": false,
+        "characterName": "Генрик Аткинс",
+        "dialogueStructure": {
+          "startNodeID": "start_day2",
+          "nodes": [
+            { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "cond_day2" },
+            { "nodeID": "cond_day2", "type": "Condition", "conditionKey": "Arc_Twain_Trust", "operation": "==", "value": 1, "trueNodeID": "phrase_crowd", "falseNodeID": "phrase_frozen" },
+            { "nodeID": "phrase_crowd", "type": "Phrase", "speakerID": "Client", "text": "После вчерашнего: толпа репортёров и кредиторов! Все хотят вложить мои несуществующие деньги. Что мне делать?!", "nextNodeID": "choice_solution" },
+            { "nodeID": "phrase_frozen", "type": "Phrase", "speakerID": "Client", "text": "Мои деньги заморожены из-за вчерашнего запроса. Но я уже пообещал инвестиции в пекарню. Мне нужна ещё справка.", "nextNodeID": "choice_solution" },
+            {
+              "nodeID": "choice_solution",
+              "type": "Choice",
+              "queryText": "Предложить бартер или вызвать инкассацию?",
+              "options": [
+                { "text": "Обменять купюру на пачку мелких справок. Пусть торгует ими.", "nextNodeID": "event_barter" },
+                { "text": "Вызвать инкассацию. Заморозить всё на полгода.", "nextNodeID": "event_incasso" },
+                { "text": "(Корыстно) Инвестировать в его «миллион» и получить прибыль.", "nextNodeID": "event_invest" }
+              ]
+            },
+            { "nodeID": "event_barter", "type": "Event", "eventType": "AddInfluence", "intValue": 10, "notificationText": "Справки стали местной валютой.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_incasso", "type": "Event", "eventType": "AddMoney", "intValue": 150, "notificationText": "Комиссия за операции с крупным номиналом.", "nextNodeID": "end_day2" },
+            { "nodeID": "event_invest", "type": "Event", "eventType": "AddMoney", "intValue": 300, "notificationText": "Вы вложились в его фиктивный миллион и получили прибыль. Афера!", "nextNodeID": "event_invest_rep" },
+            { "nodeID": "event_invest_rep", "type": "Event", "eventType": "AddReputation", "intValue": -25, "notificationText": "Скандал неминуем.", "nextNodeID": "end_day2" },
+            { "nodeID": "end_day2", "type": "End", "outcome": "LeaveHappy", "outputEmotion": "Sly", "stressModifier": -10 }
+          ]
+        }
+      }
+    ]
+  }
+]

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using DialogueSystem.Data;
 
 // Файл: Assets/Scripts/DialogueSystem/DialogueClientsDatabase/SpecialVisitorDatabase.cs
+// Примечание: Gender определён в namespace Enums.
 [CreateAssetMenu(fileName = "SpecialVisitors", menuName = "Bureau/Special Visitor Database")]
 public class SpecialVisitorDatabase : ScriptableObject
 {
@@ -47,7 +48,14 @@ public class SpecialVisitorDatabase : ScriptableObject
         [Tooltip("Звук при появлении (например, звонок телефона).")]
         public AudioClip arrivalSound;
         // ------------------
-		
+
+        [Header("Отображение в диалоге")]
+        [Tooltip("Имя, отображаемое под портретом клиента в диалоге. Если пусто — используется GameObject.name клиента.")]
+        public string characterName;
+
+        [Tooltip("Пол клиента: null = Any (использовать дефолт архетипа), иначе — Male/Female.")]
+        public Enums.Gender? characterGender;
+
     }
 
     public List<ScheduledVisitor> visitors;

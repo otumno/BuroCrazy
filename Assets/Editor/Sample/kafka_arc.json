@@ -1,0 +1,215 @@
+{
+  "arcID": "Kafka_Trial_Omega",
+  "displayName": "Дело без номера",
+  "description": "Йонаш Крафт арестован, но не знает за что. Он требует справку о невиновности, но канцелярия отказывается выдавать документ без сформулированного обвинения.",
+  "durationDays": 4,
+  "priority": 5,
+  "isOneTimeOnly": true,
+  "defaultGoal": "DirectorAudience",
+  "defaultArchetype": null,
+  "stages": [
+    {
+      "dayOffset": 0,
+      "requiredFlag": null,
+      "onStartFlag": "Arc_Kafka_Started",
+      "onCompleteFlag": "Arc_Kafka_Stage0_Completed",
+      "forcedGoal": "DirectorAudience",
+      "forcedArchetype": "Professional",
+      "isRemoteInteraction": false,
+      "characterName": "Йонаш Крафт",
+      "dialogueStructure": {
+        "startNodeID": "start",
+        "nodes": [
+          { "nodeID": "start", "type": "Start", "dialogueType": "World", "nextNodeID": "thought_1" },
+          {
+            "nodeID": "thought_1",
+            "type": "Phrase",
+            "speakerID": "Director",
+            "text": "*Дверь открывается рывком.*",
+            "nextNodeID": "phrase_intro"
+          },
+          {
+            "nodeID": "phrase_intro",
+            "type": "Phrase",
+            "speakerID": "Client",
+            "text": "Меня арестовали без причины. Мне нужна справка.",
+            "nextNodeID": "choice_day1"
+          },
+          {
+            "nodeID": "choice_day1",
+            "type": "Choice",
+            "queryText": "Что делать?",
+            "options": [
+              { "text": "Выдать справку о невиновности", "nextNodeID": "event_clear" },
+              { "text": "Отказать", "nextNodeID": "event_refuse_d1" }
+            ]
+          },
+          {
+            "nodeID": "event_clear",
+            "type": "Event",
+            "eventType": "AddReputation",
+            "intValue": 5,
+            "notificationText": "Вы выдали справку о невиновности.",
+            "nextNodeID": "end_day1"
+          },
+          {
+            "nodeID": "event_refuse_d1",
+            "type": "Event",
+            "eventType": "AddReputation",
+            "intValue": -5,
+            "notificationText": "Вы отказали.",
+            "nextNodeID": "end_day1"
+          },
+          { "nodeID": "end_day1", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Scared", "stressModifier": 10 }
+        ]
+      }
+    },
+    {
+      "dayOffset": 1,
+      "requiredFlag": "Arc_Kafka_Stage0_Completed",
+      "onStartFlag": "Arc_Kafka_Stage1_Started",
+      "onCompleteFlag": "Arc_Kafka_Stage1_Completed",
+      "forcedGoal": "DirectorAudience",
+      "forcedArchetype": "Official",
+      "isRemoteInteraction": false,
+      "characterName": "Судебный Пристав Гультран",
+      "dialogueStructure": {
+        "startNodeID": "start_day2",
+        "nodes": [
+          { "nodeID": "start_day2", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_d2_1" },
+          {
+            "nodeID": "phrase_d2_1",
+            "type": "Phrase",
+            "speakerID": "Client",
+            "text": "По делу Крафта. Выдали справку. Это нежелательно.",
+            "nextNodeID": "choice_day2"
+          },
+          {
+            "nodeID": "choice_day2",
+            "type": "Choice",
+            "queryText": "Ваш вердикт?",
+            "options": [
+              { "text": "Отозвать справку", "nextNodeID": "event_compromise_d2" },
+              { "text": "Отказать", "nextNodeID": "event_refuse_d2" }
+            ]
+          },
+          {
+            "nodeID": "event_compromise_d2",
+            "type": "Event",
+            "eventType": "AddMoney",
+            "intValue": 100,
+            "notificationText": "Вы отозвали справку.",
+            "nextNodeID": "end_day2"
+          },
+          {
+            "nodeID": "event_refuse_d2",
+            "type": "Event",
+            "eventType": "AddReputation",
+            "intValue": -10,
+            "notificationText": "Вы отказали.",
+            "nextNodeID": "end_day2"
+          },
+          { "nodeID": "end_day2", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Neutral", "stressModifier": 15 }
+        ]
+      }
+    },
+    {
+      "dayOffset": 2,
+      "requiredFlag": "Arc_Kafka_Stage1_Completed",
+      "onStartFlag": "Arc_Kafka_Stage2_Started",
+      "onCompleteFlag": "Arc_Kafka_Stage2_Completed",
+      "forcedGoal": "DirectorAudience",
+      "forcedArchetype": "Bohemian",
+      "isRemoteInteraction": false,
+      "characterName": "Адвокат Гультран-младший",
+      "dialogueStructure": {
+        "startNodeID": "start_day3",
+        "nodes": [
+          { "nodeID": "start_day3", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_d3_1" },
+          {
+            "nodeID": "phrase_d3_1",
+            "type": "Phrase",
+            "speakerID": "Client",
+            "text": "Мой клиент в отчаянии. Напишите письмо в Вышестоящий Орган.",
+            "nextNodeID": "choice_day3"
+          },
+          {
+            "nodeID": "choice_day3",
+            "type": "Choice",
+            "queryText": "Писать письмо?",
+            "options": [
+              { "text": "Написать", "nextNodeID": "event_letter" },
+              { "text": "Отказать", "nextNodeID": "event_refuse_d3" }
+            ]
+          },
+          {
+            "nodeID": "event_letter",
+            "type": "Event",
+            "eventType": "AddInfluence",
+            "intValue": 10,
+            "notificationText": "Вы написали письмо.",
+            "nextNodeID": "end_day3"
+          },
+          {
+            "nodeID": "event_refuse_d3",
+            "type": "Event",
+            "eventType": "AddReputation",
+            "intValue": 5,
+            "notificationText": "Отказали.",
+            "nextNodeID": "end_day3"
+          },
+          { "nodeID": "end_day3", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Sad", "stressModifier": 15 }
+        ]
+      }
+    },
+    {
+      "dayOffset": 3,
+      "requiredFlag": "Arc_Kafka_Stage2_Completed",
+      "onStartFlag": "Arc_Kafka_Stage3_Started",
+      "onCompleteFlag": "Arc_Kafka_Completed",
+      "forcedGoal": "DirectorAudience",
+      "forcedArchetype": "Professional",
+      "isRemoteInteraction": false,
+      "characterName": "Йонаш Крафт",
+      "dialogueStructure": {
+        "startNodeID": "start_day4",
+        "nodes": [
+          { "nodeID": "start_day4", "type": "Start", "dialogueType": "World", "nextNodeID": "phrase_d4_1" },
+          {
+            "nodeID": "phrase_d4_1",
+            "type": "Phrase",
+            "speakerID": "Client",
+            "text": "Сегодня вечером за мной придут. Попрощаться.",
+            "nextNodeID": "choice_day4"
+          },
+          {
+            "nodeID": "choice_day4",
+            "type": "Choice",
+            "queryText": "Финальное решение",
+            "options": [
+              { "text": "Выдать справку о факте рождения", "nextNodeID": "event_humanity" },
+              { "text": "Отказать", "nextNodeID": "event_coward" }
+            ]
+          },
+          {
+            "nodeID": "event_humanity",
+            "type": "Event",
+            "eventType": "AddReputation",
+            "intValue": 15,
+            "notificationText": "Вы поступили по-человечески.",
+            "nextNodeID": "end_day4"
+          },
+          {
+            "nodeID": "event_coward",
+            "type": "Event",
+            "eventType": "AddReputation",
+            "intValue": -20,
+            "notificationText": "Вы отказали.",
+            "nextNodeID": "end_day4"
+          },
+          { "nodeID": "end_day4", "type": "End", "outcome": "LeaveUpset", "outputEmotion": "Sad", "stressModifier": 20 }
+        ]
+      }
+    }
+  ]
+}

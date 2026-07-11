@@ -382,6 +382,12 @@ namespace Managers
                 OrderManager.Instance.ResetState();
                 StoryStateManager.Instance?.ResetState();
 
+                // [НОВОЕ] Инициализировать ArcManager для новой игры (выбирает арки)
+                if (StorySystem.ArcManager.Instance != null)
+                {
+                    StorySystem.ArcManager.Instance.Initialize();
+                }
+
                 ApplyDirectorCreationSettings();
             }
 

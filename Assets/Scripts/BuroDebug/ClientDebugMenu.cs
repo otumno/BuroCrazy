@@ -5,6 +5,7 @@ using Data;
 using Data.Calendar;
 using DialogueSystem.Data;
 using Managers;
+using StorySystem;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -383,6 +384,61 @@ namespace BuroDebug
                 client.Initialize(waveManager.waitingZoneObject, waveManager.exitWaypoint);
                 RefreshInfo();
             }
+        }
+
+        /// <summary>
+        /// Спавн клиента текущего этапа любой активной арки прямо сейчас.
+        /// Используется ArcManager.SpawnActiveStageVisitorNow.
+        /// </summary>
+        public void SpawnArcStageVisitor()
+        {
+            if (ArcManager.Instance == null)
+            {
+                Debug.LogWarning("[ClientDebugMenu] ArcManager.Instance недоступен — нечего спавнить.");
+                return;
+            }
+
+            if (waveManager != null && waveManager.IsNightTime())
+            {
+                Debug.LogWarning("[ClientDebugMenu] Ночь — клиенты не спавнятся ночью.");
+                return;
+            }
+
+            bool ok = ArcManager.Instance.SpawnActiveStageVisitorNow();
+            if (ok)
+            {
+                Debug.Log("[ClientDebugMenu] Арковый клиент заспавнен немедленно.");
+            }
+            else
+            {
+                Debug.LogWarning("[ClientDebugMenu] Нет активной арки со свободным этапом. Проверьте ArcManager → 'Selected arcs' в инспекторе.");
+            }
+
+            RefreshInfo();
+        }
+
+        /// <summary>
+        /// Спавн клиента конкретной арки по её ID.
+        /// </summary>
+        public void SpawnArcStageVisitorByID(string arcID)
+        {
+            if (ArcManager.Instance == null)
+            {
+                Debug.LogWarning("[ClientDebugMenu] ArcManager.Instance недоступен.");
+                return;
+            }
+
+            if (waveManager != null && waveManager.IsNightTime())
+            {
+                Debug.LogWarning("[ClientDebugMenu] Ночь — клиенты не спавнятся ночью.");
+                return;
+            }
+
+            bool ok = ArcManager.Instance.SpawnActiveStageVisitorNow(arcID);
+            Debug.Log(ok
+                ? $"[ClientDebugMenu] Арковый клиент арки '{arcID}' заспавнен."
+                : $"[ClientDebugMenu] Арка '{arcID}' не найдена или завершена.");
+            RefreshInfo();
         }
 
         /// <summary>
