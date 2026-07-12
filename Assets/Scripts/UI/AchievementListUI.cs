@@ -1,12 +1,9 @@
 // Файл: Assets/Scripts/UI/AchievementListUI.cs
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using Managers;
-using Enums;
-using Data.Creation;
 using Scriptables.Audio;
 using UI.Effects;
 using UI.Utils;
@@ -32,7 +29,8 @@ public class AchievementListUI : MonoBehaviour
     [Tooltip("Высота ячейки (px).")]
     [SerializeField] private float cellHeight = 700f;
     [Tooltip("Отступы внутри сетки (left, right, top, bottom).")]
-    [SerializeField] private RectOffset gridPadding = new RectOffset(16, 16, 16, 16);
+    [SerializeField]
+    private RectOffset gridPadding;
     [Tooltip("Расстояние между ячейками по X и Y.")]
     [SerializeField] private Vector2 cellSpacing = new Vector2(30f, 30f);
     [Tooltip("Если true — ширина ячейки рассчитывается по ширине contentContainer.")]
@@ -51,48 +49,34 @@ public class AchievementListUI : MonoBehaviour
     private bool allUnlockedDebug = false;
 #endif
 
-    void Awake()
+    private void Awake()
     {
-        backButton.onClick.AddListener(HidePanel);
+        gridPadding ??= new RectOffset(16, 16, 16, 16);
         
-        if (resetButton != null)
-        {
-            resetButton.onClick.AddListener(OnResetClicked);
-        }
+        backButton.onClick.AddListener(HidePanel);        
+        resetButton.onClick.AddListener(OnResetClicked);
 
-        // --- НАЧАЛО ДОБАВЛЕНИЙ (ПОИСК AUDIOSOURCE) ---
-        if (audioSource == null)
-        {
-            audioSource = GetComponent<AudioSource>();
-        }
-        if (audioSource == null)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-            audioSource.playOnAwake = false;
-        }
-        // Устанавливаем, чтобы звук работал на паузе (Time.timeScale = 0)
+        audioSource.playOnAwake = false;
         audioSource.ignoreListenerPause = true; 
-        // --- КОНЕЦ ДОБАВЛЕНИЙ ---
     }
 
-    void Start()
+    private void Start()
     {
-        if (AchievementManager.Instance != null)
-        {
-            AchievementManager.Instance.OnAchievementsReset += RefreshData;
-            // Подпишемся на единичные ачивки, чтобы список обновлялся сам
-            AchievementManager.Instance.OnAchievementUnlocked += (data) => RefreshData();
-        }
+        if (AchievementManager.Instance == null)
+            return;
+        
+        AchievementManager.Instance.OnAchievementsReset += RefreshData;
+        AchievementManager.Instance.OnAchievementUnlocked += RefreshData;
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
         // При каждом показе панели — обновить список
         RefreshData();
     }
 
 #if UNITY_EDITOR
-    void Update()
+    private void Update()
     {
         // F12 — тестовый тумблер «всё разблокировано» (только PlayMode в Editor)
         if (!Input.GetKeyDown(KeyCode.F12)) return;
@@ -121,14 +105,16 @@ public class AchievementListUI : MonoBehaviour
     }
 #endif
 
-    void OnDestroy()
+    private void OnDestroy()
     {
-        if (AchievementManager.Instance != null)
-        {
-            AchievementManager.Instance.OnAchievementsReset -= RefreshData;
-            AchievementManager.Instance.OnAchievementUnlocked -= (data) => RefreshData();
-        }
+        if (AchievementManager.Instance == null)
+            return;
+        
+        AchievementManager.Instance.OnAchievementsReset -= RefreshData;
+        AchievementManager.Instance.OnAchievementUnlocked -= RefreshData;
     }
+
+    private void RefreshData(AchievementData achievementData) => RefreshData();
 
     public void RefreshData()
     {
