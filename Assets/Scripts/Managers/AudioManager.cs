@@ -71,7 +71,6 @@ namespace Managers
             if (_audioInstances.Count < maxPoolSize)
             {
                 var audioInstance = CreateAudioInstance();
-                _audioInstances.Add(audioInstance);
                 return audioInstance;
             }
 
@@ -183,6 +182,7 @@ namespace Managers
 
             var audioInstance = go.AddComponent<AudioInstance>();
             audioInstance.Init(audioSource);
+            _audioInstances.Add(audioInstance);
             return audioInstance;
         }
     }
