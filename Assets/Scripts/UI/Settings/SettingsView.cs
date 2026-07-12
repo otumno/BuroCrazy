@@ -17,22 +17,19 @@ namespace UI.Settings
         private const string PrefResolutionHz = DisplaySettingsBootstrap.PrefResolutionHz;
         private const string PrefScreenMode   = DisplaySettingsBootstrap.PrefScreenMode;
         private const string PrefVsync        = DisplaySettingsBootstrap.PrefVsync;
-        private const string PrefSoundVolume  = "settings.volume.sound";
-        private const string PrefMusicVolume  = "settings.volume.music";
+        // Ключи и имена параметров живут в AudioVolumeSettings — один источник правды с AudioManager.
+        private const string PrefUiVolume    = AudioVolumeSettings.PrefUiVolume;
+        private const string PrefSfxVolume   = AudioVolumeSettings.PrefSfxVolume;
+        private const string PrefMusicVolume = AudioVolumeSettings.PrefMusicVolume;
 
         [Header("UI ссылки")]
         [SerializeField] private TMP_Dropdown resolutionDropdown;
         [SerializeField] private TMP_Dropdown screenModeDropdown;
         [SerializeField] private Toggle vsyncToggle;
         [SerializeField] private TMP_Dropdown languageDropdown;
-        [SerializeField] private Slider soundVolumeSlider;
+        [SerializeField] private Slider uiVolumeSlider;
+        [SerializeField] private Slider sfxVolumeSlider;
         [SerializeField] private Slider musicVolumeSlider;
-
-        [Header("AudioMixer параметры")]
-        [Tooltip("Имя exposed параметра громкости SFX в AudioMixer.")]
-        [SerializeField] private string sfxMixerParameter = "SfxVolume";
-        [Tooltip("Имя exposed параметра громкости музыки в AudioMixer.")]
-        [SerializeField] private string musicMixerParameter = "MusicVolume";
 
         [Header("Поведение")]
         [Tooltip("Минимальная громкость на слайдере (нормализованная 0..1).")]
@@ -69,7 +66,9 @@ namespace UI.Settings
                 screenModeDropdown.onValueChanged.AddListener(OnScreenModeChanged);
                 vsyncToggle.onValueChanged.AddListener(OnVsyncChanged);
                 languageDropdown.onValueChanged.AddListener(OnLanguageDropdownChanged);
-                soundVolumeSlider.onValueChanged.AddListener(OnSoundVolumeChanged);
+                // Слайдеры громкости назначаются в сцене; страхуемся от null, чтобы не ронять всю панель настроек.
+                uiVolumeSlider.onValueChanged.AddListener(OnUiVolumeChanged);
+                sfxVolumeSlider.onValueChanged.AddListener(OnSfxVolumeChanged);
                 musicVolumeSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
             }
             else
@@ -78,7 +77,8 @@ namespace UI.Settings
                 screenModeDropdown.onValueChanged.RemoveListener(OnScreenModeChanged);
                 vsyncToggle.onValueChanged.RemoveListener(OnVsyncChanged);
                 languageDropdown.onValueChanged.RemoveListener(OnLanguageDropdownChanged);
-                soundVolumeSlider.onValueChanged.RemoveListener(OnSoundVolumeChanged);
+                uiVolumeSlider.onValueChanged.RemoveListener(OnUiVolumeChanged);
+                sfxVolumeSlider.onValueChanged.RemoveListener(OnSfxVolumeChanged);
                 musicVolumeSlider.onValueChanged.RemoveListener(OnMusicVolumeChanged);
             }
         }
@@ -175,19 +175,17 @@ namespace UI.Settings
                 languageDropdown.RefreshShownValue();
             }
 
-            if (soundVolumeSlider != null)
-            {
-                soundVolumeSlider.minValue = 0f;
-                soundVolumeSlider.maxValue = 1f;
-                soundVolumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(PrefSoundVolume, 1f));
-            }
+            uiVolumeSlider.minValue = 0f;
+            uiVolumeSlider.maxValue = 1f;
+            uiVolumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(PrefUiVolume, 1f));
 
-            if (musicVolumeSlider != null)
-            {
-                musicVolumeSlider.minValue = 0f;
-                musicVolumeSlider.maxValue = 1f;
-                musicVolumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(PrefMusicVolume, 1f));
-            }
+            sfxVolumeSlider.minValue = 0f;
+            sfxVolumeSlider.maxValue = 1f;
+            sfxVolumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(PrefSfxVolume, 1f));
+
+            musicVolumeSlider.minValue = 0f;
+            musicVolumeSlider.maxValue = 1f;
+            musicVolumeSlider.SetValueWithoutNotify(PlayerPrefs.GetFloat(PrefMusicVolume, 1f));
 
             isApplyingFromCode = false;
         }
@@ -235,12 +233,20 @@ namespace UI.Settings
             LocalizationSettings.SelectedLocale = availableLocales[index];
         }
 
-        private void OnSoundVolumeChanged(float value)
+        private void OnUiVolumeChanged(float value)
         {
             if (isApplyingFromCode) return;
-            PlayerPrefs.SetFloat(PrefSoundVolume, value);
+            PlayerPrefs.SetFloat(PrefUiVolume, value);
             PlayerPrefs.Save();
-            ApplySoundVolume(value);
+            ApplyUiVolume(value);
+        }
+
+        private void OnSfxVolumeChanged(float value)
+        {
+            if (isApplyingFromCode) return;
+            PlayerPrefs.SetFloat(PrefSfxVolume, value);
+            PlayerPrefs.Save();
+            ApplySfxVolume(value);
         }
 
         private void OnMusicVolumeChanged(float value)
@@ -255,25 +261,27 @@ namespace UI.Settings
 
         private void ApplyAudioFromCurrentValues()
         {
-            if (soundVolumeSlider != null) ApplySoundVolume(soundVolumeSlider.value);
-            if (musicVolumeSlider != null) ApplyMusicVolume(musicVolumeSlider.value);
+            ApplyUiVolume(uiVolumeSlider.value);
+            ApplySfxVolume(sfxVolumeSlider.value);
+            ApplyMusicVolume(musicVolumeSlider.value);
         }
 
-        private void ApplySoundVolume(float normalized)
+        private void ApplyUiVolume(float normalized)
         {
-            if (AudioManager.Instance != null && !string.IsNullOrEmpty(sfxMixerParameter))
-            {
-                AudioManager.Instance.SetVolume(sfxMixerParameter, Mathf.Max(minVolume, normalized));
-            }
+            AudioManager.Instance?.SetVolume(AudioVolumeSettings.ParamUi, NormalizeVolume(normalized));
+        }
+
+        private void ApplySfxVolume(float normalized)
+        {
+            AudioManager.Instance?.SetVolume(AudioVolumeSettings.ParamSfx, NormalizeVolume(normalized));
         }
 
         private void ApplyMusicVolume(float normalized)
         {
-            if (AudioManager.Instance != null && !string.IsNullOrEmpty(musicMixerParameter))
-            {
-                AudioManager.Instance.SetVolume(musicMixerParameter, Mathf.Max(minVolume, normalized));
-            }
+            AudioManager.Instance?.SetVolume(AudioVolumeSettings.ParamMusic, NormalizeVolume(normalized));
         }
+        
+        private float NormalizeVolume(float value) => Mathf.Max(minVolume, value);
 
         // --- MAPPING ---
 

@@ -44,6 +44,12 @@ namespace Managers
         /// </summary>
         public event System.Action<DialogueGraph> OnDialogueFinished;
 
+        /// <summary>
+        /// Идёт ли сейчас диалог. Внешние системы (например, камера директора) используют это,
+        /// чтобы блокировать своё поведение на время диалога вместо ненадёжной проверки по тегам.
+        /// </summary>
+        public bool IsDialogueActive => currentGraph != null;
+
         // --- НАСТРОЙКИ ---
         [Header("Assets")]
         [SerializeField] private GameObject choiceButtonPrefab;
@@ -712,7 +718,37 @@ namespace Managers
             onDialogueComplete?.Invoke();
             onDialogueComplete = null;
         }
-        
+
+        /// <summary>
+        /// Немедленно закрывает активный диалог без анимации: останавливает все корутины,
+        /// прячет панель и фоновое изображение, сбрасывает состояние.
+        /// Нужно при прерывании диалога (например, выход в главное меню посреди туториала):
+        /// панель диалога живёт на персистентном [SYSTEMS] (DontDestroyOnLoad) с Canvas
+        /// sortingOrder 2001, поэтому без явного скрытия она остаётся поверх новой сцены и
+        /// перекрывает её (чёрный экран).
+        /// Паузой (Time.timeScale) сознательно НЕ управляем — это делает вызывающая сторона
+        /// (MainUIManager при выходе в меню жёстко сбрасывает счётчик паузы), чтобы не
+        /// получить двойной ResumeGame.
+        /// </summary>
+        public void ForceCloseImmediate()
+        {
+            if (typingCoroutine != null) { StopCoroutine(typingCoroutine); typingCoroutine = null; }
+            if (panelAnimCoroutine != null) { StopCoroutine(panelAnimCoroutine); panelAnimCoroutine = null; }
+            if (directorAnimCoroutine != null) { StopCoroutine(directorAnimCoroutine); directorAnimCoroutine = null; }
+            if (clientAnimCoroutine != null) { StopCoroutine(clientAnimCoroutine); clientAnimCoroutine = null; }
+            isTyping = false;
+
+            if (nodeImageContainer != null) nodeImageContainer.SetActive(false);
+            if (panelCanvasGroup != null) panelCanvasGroup.alpha = 0f;
+            if (dialoguePanel != null) dialoguePanel.SetActive(false);
+
+            currentClientContext = null;
+            currentNode = null;
+            currentGraph = null;
+            defaultBackground = null;
+            onDialogueComplete = null;
+        }
+
         private IEnumerator AnimatePanel(bool show)
         {
             float timer = 0f;

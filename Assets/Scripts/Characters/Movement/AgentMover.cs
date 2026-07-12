@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic; // Required for List<>
 using System.Linq; // May be needed if more complex logic is added
 using Characters;
+using Managers;
 
 [RequireComponent(typeof(Rigidbody2D))] // Ensure Rigidbody2D is present
 public class AgentMover : MonoBehaviour
@@ -120,6 +121,13 @@ public class AgentMover : MonoBehaviour
                 // Configure other AudioSource settings (rolloff, doppler) if desired
                 Debug.LogWarning($"AudioSource для шагов добавлен автоматически к {gameObject.name}. Настройте его параметры (громкость, 3D Sound Settings) при необходимости.");
             }
+        }
+
+        // Направляем звук NPC в группу SFX (3D-звуки движущихся персонажей), иначе он пойдёт мимо микшера
+        // и не будет подчиняться слайдеру SFX. Делаем в коде, т.к. источник может быть добавлен в рантайме.
+        if (footstepAudioSource != null && AudioManager.Instance != null)
+        {
+            footstepAudioSource.outputAudioMixerGroup = AudioManager.Instance.sfxGroup;
         }
 
         // --- Инициализация коллайдера для системы "Втягивания живота" ---

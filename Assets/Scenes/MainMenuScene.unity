@@ -225,7 +225,7 @@ AudioSource:
   m_GameObject: {fileID: 96204279}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -4877,7 +4877,7 @@ AudioSource:
   m_GameObject: {fileID: 1351160080}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -6237,7 +6237,7 @@ AudioSource:
   m_GameObject: {fileID: 1708293350}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -8441,7 +8441,7 @@ AudioSource:
   m_GameObject: {fileID: 2085123106}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 6708789283850089148, guid: 52a3f71a9ef23844f9c332c4283a12ef, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 0
@@ -9313,77 +9313,8 @@ PrefabInstance:
     - {fileID: 6333694187846661506, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7540273231744642192, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 7310818898482178129}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
---- !u!114 &982077723409641704 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6557885189872249796, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
-  m_PrefabInstance: {fileID: 982077723409641703}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
---- !u!114 &982077723409641705 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5978025673962536300, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
-  m_PrefabInstance: {fileID: 982077723409641703}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67db9e8f0e2ae9c40bc1e2b64352a6b4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Slider
---- !u!114 &982077723409641706 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7076212447020857450, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
-  m_PrefabInstance: {fileID: 982077723409641703}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b743370ac3e4ec2a1668f5455a8ef8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_Dropdown
---- !u!114 &982077723409641707 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2546163661619828990, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
-  m_PrefabInstance: {fileID: 982077723409641703}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9085046f02f69544eb97fd06b6048fe2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Toggle
---- !u!114 &982077723409641708 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2036983213586717727, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
-  m_PrefabInstance: {fileID: 982077723409641703}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b743370ac3e4ec2a1668f5455a8ef8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_Dropdown
---- !u!114 &982077723409641709 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 5959506782339283414, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
-  m_PrefabInstance: {fileID: 982077723409641703}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7b743370ac3e4ec2a1668f5455a8ef8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TMP_Dropdown
 --- !u!1001 &1249719317901716781
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10097,27 +10028,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7540273231744642192, guid: f55e798b2bd98924da8b56fe70394c72, type: 3}
   m_PrefabInstance: {fileID: 982077723409641703}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &7310818898482178129
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7310818898482178128}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c4b63432bda195c429ebb22d7626725e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::UI.Settings.SettingsView
-  resolutionDropdown: {fileID: 982077723409641709}
-  screenModeDropdown: {fileID: 982077723409641708}
-  vsyncToggle: {fileID: 982077723409641707}
-  languageDropdown: {fileID: 982077723409641706}
-  soundVolumeSlider: {fileID: 982077723409641705}
-  musicVolumeSlider: {fileID: 982077723409641704}
-  sfxMixerParameter: SfxVolume
-  musicMixerParameter: MusicVolume
-  minVolume: 0.01
 --- !u!1001 &8306906582853188634
 PrefabInstance:
   m_ObjectHideFlags: 0

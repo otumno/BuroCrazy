@@ -250,12 +250,44 @@ namespace Managers
         public void GoToMainMenu()
         {
             if (isTransitioning) return;
-            ResumeGame();
+
+            // Сначала гасим всё, что могло остаться от прерванного геймплея (диалог/катсцена).
+            // Делаем это ДО загрузки сцены, пока мы ещё в GameScene и объекты живы.
+            CleanupInterruptedGameplay();
+
             if (SceneManager.GetActiveScene().name == gameSceneName && !SaveLoadManager.Instance.isNewGame)
             {
                 SaveLoadManager.Instance.SaveGame(SaveLoadManager.Instance.GetCurrentSlot());
             }
             StartCoroutine(LoadSceneRoutine(mainMenuSceneName));
+        }
+
+        /// <summary>
+        /// Сбрасывает состояние прерванного геймплея перед выходом в главное меню.
+        /// Если выйти в меню посреди туториала, диалог/катсцена не завершаются штатно, а их
+        /// UI живёт на персистентном [SYSTEMS] (DontDestroyOnLoad) — панель диалога с
+        /// sortingOrder 2001 остаётся поверх меню (чёрный экран), а корутины и блокировка
+        /// ввода/паузы утекают в следующую сессию.
+        /// </summary>
+        private void CleanupInterruptedGameplay()
+        {
+            // 1. Принудительно закрываем активный диалог (прячет персистентную панель и фон).
+            DialogueUIManager.Instance?.ForceCloseImmediate();
+
+            // 2. Останавливаем катсцену и снимаем блокировку ввода/катсценный курсор.
+            //    Stop() снимает блокировку сам, но дублируем на случай, если inputLocked уже сброшен.
+            var cinematic = FindFirstObjectByType<CinematicPlayer>();
+            if (cinematic != null) cinematic.Stop();
+
+            var input = FindFirstObjectByType<PlayerInputController>();
+            if (input != null) input.IsCutscenePlaying = false; // сеттер сам вернёт обычный курсор
+
+            // 3. Жёстко сбрасываем паузу: мы уходим в меню, начинаем с чистого состояния.
+            //    Не используем ResumeGame(), т.к. счётчик мог быть разбалансирован прерванным диалогом.
+            _pauseCount = 0;
+            _isUserPaused = false;
+            Time.timeScale = 1f;
+            if (pausePanel != null) pausePanel.SetActive(false);
         }
 
         public void StartOrResumeGameplay()
@@ -509,12 +541,21 @@ namespace Managers
             // Запускаем граф (CinematicSystem.ExecutionMode.FullControl блокирует управление)
             cinematicPlayer.Play(tutorialGraph, CinematicSystem.ExecutionMode.FullControl);
             
-            // Ждем завершения графа
+            // Ждём завершения графа. Дополнительно выходим, если плеер остановлен или уничтожен
+            // (например, игрок вышел в меню посреди туториала) — иначе корутина висела бы вечно
+            // на персистентном MainUIManager в ожидании graphFinished, который уже не придёт.
+            // На штатном завершении Finish() выставляет IsPlaying=false и graphFinished=true в
+            // одном кадре, поэтому проверка while(!graphFinished) отработает раньше этой ветки.
             while (!graphFinished)
             {
+                if (cinematicPlayer == null || !cinematicPlayer.IsPlaying)
+                {
+                    Debug.Log("[MainUIManager] Туториал прерван (катсцена остановлена) — выходим из ожидания");
+                    yield break; // управление сценой/паузой берёт на себя GoToMainMenu
+                }
                 yield return null;
             }
-            
+
             Debug.Log("[MainUIManager] Туториал первого дня завершен (через CinematicGraph)");
             isTransitioning = false;
         }

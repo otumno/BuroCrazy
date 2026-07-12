@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.Audio;
 using System.Collections.Generic;
 using Audio;
+using GameInitialization;
 using Scriptables.Audio;
 
 namespace Managers
@@ -43,6 +44,13 @@ namespace Managers
             }
 
             InitializePool();
+        }
+
+        private void Start()
+        {
+            // Применяем сохранённую громкость в Start, а не в Awake: SetFloat молча игнорируется,
+            // пока микшер ещё не полностью загружен на старте сцены.
+            AudioVolumeSettings.Apply(this);
         }
 
         private void InitializePool()
@@ -175,7 +183,6 @@ namespace Managers
 
             var audioInstance = go.AddComponent<AudioInstance>();
             audioInstance.Init(audioSource);
-            
             return audioInstance;
         }
     }

@@ -138,26 +138,14 @@ namespace BuroDebug
                 var inputController = FindObjectOfType<PlayerInputController>();
                 bool isBlocked = (inputController != null && inputController.IsCutscenePlaying);
                 
-                // Дополнительная проверка для диалогов: DialogueUIManager.ActivateDialogueUI() активирует дочерние панели
-                if (!isBlocked && DialogueUIManager.Instance != null)
+                // Дополнительная проверка для диалогов: во время диалога тоже блокируем смещение камеры за мышью.
+                // Раньше здесь была детекция по тегам (CompareTag("DialogueUI") + FindGameObjectWithTag("MenuPanel")),
+                // но тег "MenuPanel" в проекте не определён, из-за чего FindGameObjectWithTag бросал UnityException,
+                // а скан дочерних объектов менеджера ничего не находил (у объекта DialogueUIManager нет детей).
+                // Используем прямой запрос состояния диалога.
+                if (!isBlocked && DialogueUIManager.Instance != null && DialogueUIManager.Instance.IsDialogueActive)
                 {
-                    // Проверяем, активна ли панель диалога по тегам или по наличию.visibleChildren
-                    // Ищем любой активный дочерний объект с тегом "DialogueUI" или "DialoguePanel"
-                    foreach (Transform child in DialogueUIManager.Instance.transform)
-                    {
-                        if (child.gameObject.activeInHierarchy && child.gameObject.CompareTag("DialogueUI"))
-                        {
-                            isBlocked = true;
-                            break;
-                        }
-                    }
-                    // Альтернатива: если DialogueUIManager показывает диалог через Time.timeScale == 0 или другое состояние
-                    // Проверяем через MenuPanel или любой другой UI который может быть активен во время диалога
-                    var menuPanel = GameObject.FindGameObjectWithTag("MenuPanel");
-                    if (menuPanel != null && menuPanel.activeInHierarchy)
-                    {
-                        isBlocked = true;
-                    }
+                    isBlocked = true;
                 }
                 
                 // 1. Определяем целевой зум в зависимости от движения директора
