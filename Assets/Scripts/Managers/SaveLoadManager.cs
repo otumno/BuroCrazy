@@ -15,6 +15,10 @@ namespace Managers
         [Tooltip("Сколько слотов сохранения будет в игре")]
         public int numberOfSlots = 3;
         public bool isNewGame = true;
+        // Флаг «нужна инициализация новой игры». В отличие от isNewGame, НЕ сбрасывается в
+        // SaveNewGame/LoadGame — иначе к моменту проверки в MainUIManager.UnveilSequence он всегда
+        // false, и настройки новой игры (ресеты менеджеров, арки, создание директора) не применяются.
+        public bool pendingNewGameSetup = false;
         private int currentSlotIndex = 0;
 
         private void Awake()

@@ -747,5 +747,10 @@ namespace UI.Creation
         }
 
         public event System.Action<DirectorInitialState, string> OnBookFinished;
+
+        private void OnDestroy()
+        {
+            OnBookFinished = null;
+        }
     }
 }

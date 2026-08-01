@@ -122,6 +122,22 @@ public class DirectorAvatarController : StaffController, IServiceProvider
          }
     }
 
+    /// <summary>
+    /// Переназначает пол (и опционально коллекцию спрайтов) директора и перерисовывает внешний вид.
+    /// Вызывается при старте новой игры, чтобы применить выбор из книги создания директора.
+    /// Повторяет путь настройки из Start(), т.к. на момент вызова визуал уже отрисован полом по умолчанию.
+    /// </summary>
+    public void ApplyAppearance(Enums.Gender newGender, EmotionSpriteCollection newCollection = null)
+    {
+        gender = newGender;
+        if (newCollection != null) spriteCollection = newCollection;
+
+        if (visuals != null && spriteCollection != null && stateEmotionMap != null)
+        {
+            visuals.Setup(gender, spriteCollection, stateEmotionMap);
+        }
+    }
+
     void Update()
     {
         // Проверка нахождения у стола директора

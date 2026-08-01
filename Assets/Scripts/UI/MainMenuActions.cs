@@ -222,4 +222,10 @@ public class MainMenuActions : MonoBehaviour
             }
         }
     }
+
+    private void OnDestroy()
+    {
+        if (directorCreationBook != null)
+            directorCreationBook.OnBookFinished -= OnDirectorCreationFinished;
+    }
 }

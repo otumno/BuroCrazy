@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using Characters;
 using Enums;
 
 namespace Data.Creation

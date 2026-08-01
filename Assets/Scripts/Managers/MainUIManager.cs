@@ -206,6 +206,7 @@ namespace Managers
             if (isTransitioning) return;
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
             SaveLoadManager.Instance.isNewGame = true;
+            SaveLoadManager.Instance.pendingNewGameSetup = true;
             SaveData newGameData = new SaveData { day = 1, money = 1000 };
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
             StartCoroutine(LoadSceneRoutine(gameSceneName));
@@ -216,7 +217,8 @@ namespace Managers
             if (isTransitioning) return;
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
             SaveLoadManager.Instance.isNewGame = true;
-            
+            SaveLoadManager.Instance.pendingNewGameSetup = true;
+
             _pendingDirectorInitialState = initialState;
             _pendingDirectorCreationCode = creationCode;
             
@@ -407,7 +409,10 @@ namespace Managers
                 ArchiveManager.Instance.ResetState();
             }
 
-            if (SaveLoadManager.Instance.isNewGame)
+            // Проверяем pendingNewGameSetup, а не isNewGame: последний уже сброшен в false
+            // (SaveNewGame при старте новой игры и LoadGame выше), поэтому по isNewGame этот блок
+            // для новой игры не выполнялся бы никогда.
+            if (SaveLoadManager.Instance.pendingNewGameSetup)
             {
                 DirectorManager.Instance.ResetState();
                 HiringManager.Instance.ResetState();
@@ -421,6 +426,9 @@ namespace Managers
                 }
 
                 ApplyDirectorCreationSettings();
+
+                // Потребляем флаг: инициализация новой игры нужна один раз за загрузку GameScene.
+                SaveLoadManager.Instance.pendingNewGameSetup = false;
             }
 
             DirectorManager.Instance.PrepareDay();
@@ -599,17 +607,29 @@ namespace Managers
                 }
             }
 
-            if (DirectorAvatarController.Instance != null && !string.IsNullOrEmpty(initialState.spriteCollectionID))
-            {
-                ApplyDirectorAppearance(initialState.spriteCollectionID, initialState.startingGender);
-            }
+            // Применяем внешность всегда: пол задаётся книгой (SetGender), а spriteCollectionID
+            // ни один выбор пока не устанавливает — поэтому по нему гейтить вызов нельзя.
+            ApplyDirectorAppearance(initialState.spriteCollectionID, initialState.startingGender);
 
             ClearPendingDirectorData();
         }
 
         private void ApplyDirectorAppearance(string spriteCollectionID, Enums.Gender gender)
         {
-            Debug.Log($"[MainUIManager] Применяем внешний вид директора: {spriteCollectionID}, Gender: {gender}");
+            var director = DirectorAvatarController.Instance;
+            if (director == null) return;
+
+            EmotionSpriteCollection collection = null;
+            if (!string.IsNullOrEmpty(spriteCollectionID))
+            {
+                collection = Resources.Load<EmotionSpriteCollection>($"DirectorSprites/{spriteCollectionID}");
+                if (collection == null)
+                {
+                    Debug.LogWarning($"[MainUIManager] Коллекция спрайтов '{spriteCollectionID}' не найдена в Resources/DirectorSprites.");
+                }
+            }
+
+            director.ApplyAppearance(gender, collection);
         }
     }
 }

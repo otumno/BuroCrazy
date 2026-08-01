@@ -1984,7 +1984,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: b0626e0a4c41f644c9581bb154c2d363, type: 3}
   - {fileID: 8300000, guid: 04b30ae7975f5f641be87d47f36b5744, type: 3}
   - {fileID: 8300000, guid: d316491350bca5e459877b7a6d71dc71, type: 3}
-  initialState: {fileID: 0}
+  initialState: {fileID: 11400000, guid: ec96bd422206fe843be3feebcdbbef9f, type: 2}
   creationCode: 
   gameSceneName: GameScene
 --- !u!82 &6836607724535902018
