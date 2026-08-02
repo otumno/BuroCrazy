@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using DialogueSystem.Data;
 using Scriptables.Audio;
+using StorySystem;
 
 namespace Managers
 {
@@ -162,7 +163,10 @@ namespace Managers
                 AudioClip clip = startNode.startSoundOverride != null ? startNode.startSoundOverride : defaultStartSound;
                 PlaySystemSound(clip);
                 if (MusicPlayer.Instance != null && startNode.dialogueType != DialogueType.None)
-                    MusicPlayer.Instance.SwitchToDialogueMusic(startNode.dialogueType);
+                {
+                    ArcMusicType arcType = ArcManager.GetArcTypeForDialogue(graph);
+                    MusicPlayer.Instance.SwitchToDialogueMusic(startNode.dialogueType, arcType);
+                }
                 if (startNode.nextNode != null) ProcessNode(startNode.nextNode);
             }
             else

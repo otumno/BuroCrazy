@@ -1,0 +1,137 @@
+﻿=== RegionData assets ===
+Найдено: 13
+
+Region_01_Slums | id=REG_SLUMS | name=Трущобы
+  path: Assets/Data/Progression/Region_01_Slums.asset
+  description: Бедный, но густонаселенный район. Источник дешевой рабочей силы и постоянного потока жалоб.
+  unlock: influence=0, money=100
+  flow: max=20, variance=10%, ramp=4d
+  groupWeights:
+    - Worker: 60
+    - Foreman: 5
+    - Elderly: 10
+    - Student: 10
+    - Shady: 30
+    - Marginal: 40
+
+Region_02_Residential | id=REG_RESIDENTIAL | name=Спальный район
+  path: Assets/Data/Progression/Region_02_Residential.asset
+  description: Тихий жилой массив с типовой застройкой. Стабильный, умеренный поток посетителей с бесконечными рутинными справками.
+  unlock: influence=100, money=500
+  flow: max=25, variance=10%, ramp=4d
+  groupWeights:
+    - Elderly: 60
+    - Student: 30
+    - Worker: 10
+    - Veteran: 10
+    - Bohemian: 5
+
+Region_03_Factory | id=REG_FACTORY | name=Заводской район
+  path: Assets/Data/Progression/Region_03_Factory.asset
+  description: Промзона, окутанная смогом. Суровые рабочие приходят за выписками строго в часы пересменок. Не терпят бюрократической волокиты.
+  unlock: influence=100, money=800
+  flow: max=30, variance=10%, ramp=4d
+  groupWeights:
+    - Worker: 70
+    - Foreman: 25
+    - Shady: 10
+
+Region_04_Commercial | id=REG_COMMERCIAL | name=Торговый район
+  path: Assets/Data/Progression/Region_04_Commercial.asset
+  description: Шумные рынки и торговые площади. Огромное количество мелких предпринимателей, жаждущих оформить лицензии и готовых «договориться».
+  unlock: influence=100, money=1500
+  flow: max=45, variance=10%, ramp=4d
+  groupWeights:
+    - Businessman: 15
+    - Entrepreneur: 40
+    - Shopkeeper: 50
+    - Student: 5
+
+Region_05_Redlight | id=REG_REDLIGHT | name=Злачный район
+  path: Assets/Data/Progression/Region_05_Redlight.asset
+  description: Клубы, бары и сомнительные заведения. Посетители здесь нервные, часто предлагают взятки и приходят ближе к вечеру.
+  unlock: influence=100, money=2000
+  flow: max=20, variance=10%, ramp=4d
+  groupWeights:
+    - Shady: 70
+    - Bohemian: 20
+    - Entrepreneur: 10
+    - Marginal: 20
+
+Region_06_OldTown | id=REG_OLDTOWN | name=Старый город
+  path: Assets/Data/Progression/Region_06_OldTown.asset
+  description: Исторический центр. Туристы и владельцы антикварных лавок. Архивы здесь проверяют особенно тщательно, требует внимательного отношения к документам.
+  unlock: influence=100, money=2500
+  flow: max=15, variance=10%, ramp=4d
+  groupWeights:
+    - Elderly: 20
+    - Professional: 50
+    - Bohemian: 30
+    - Aristocrat: 10
+    - Veteran: 20
+    - Student: 5
+
+Region_07_Park | id=REG_PARK | name=Туристический парк
+  path: Assets/Data/Progression/Region_07_Park.asset
+  description: Развлекательный парк с цирком шапито. Ждите непредсказуемый поток экстравагантных клиентов с самыми абсурдными запросами.
+  unlock: influence=100, money=3500
+  flow: max=50, variance=10%, ramp=4d
+  groupWeights:
+    - Tourist: 80
+    - Businessman: 10
+    - Bohemian: 10
+    - Marginal: 5
+
+Region_08_Business | id=REG_BUSINESS | name=Деловой Сити
+  path: Assets/Data/Progression/Region_08_Business.asset
+  description: Небоскребы и стеклянные офисы. Местные «воротнички» всегда спешат. Каждая секунда простоя в очереди стоит им денег, а вам — репутации.
+  unlock: influence=100, money=5000
+  flow: max=35, variance=10%, ramp=4d
+  groupWeights:
+    - Businessman: 60
+    - Entrepreneur: 30
+    - Professional: 10
+    - Official: 10
+
+Region_09_Center | id=REG_CENTER | name=Центр города
+  path: Assets/Data/Progression/Region_09_Center.asset
+  description: Сердце мегаполиса. Здесь пересекаются все финансовые потоки. Открытие этого района принесет колоссальную нагрузку на все отделы бюро.
+  unlock: influence=100, money=7500
+  flow: max=60, variance=10%, ramp=4d
+  groupWeights:
+    - Businessman: 30
+    - Official: 60
+    - Professional: 20
+    - Tourist: 10
+    - VIP: 10
+    - Aristocrat: 5
+
+Region_10_Elite | id=REG_ELITE | name=Элитный район
+  path: Assets/Data/Progression/Region_10_Elite.asset
+  description: Элитный жилой комплекс за высоким забором. Клиенты здесь абсолютно не терпят очередей и хамства, но платят самые щедрые взятки.
+  unlock: influence=100, money=15000
+  flow: max=10, variance=10%, ramp=4d
+  groupWeights:
+    - VIP: 70
+    - Aristocrat: 30
+    - Official: 20
+
+Region_NoblePark | id=NOBLE_PARK | name=Дворянский Парк
+  path: Assets/Data/Progression/Region_NoblePark.asset
+  description: Элитный жилой комплекс. Клиенты здесь не терпят очередей, но платят щедрые взятки.
+  unlock: influence=1000, money=2000
+  flow: max=26, variance=10%, ramp=4d
+
+Region_OldCity | id=OLD_CITY | name=Старый Город
+  path: Assets/Data/Progression/Region_OldCity.asset
+  description: Исторический центр. Туристы и антикварные лавки. Требует внимательного отношения к документам.
+  unlock: influence=200, money=500
+  flow: max=26, variance=10%, ramp=4d
+
+Region_Slums | id=SLUMS | name=Трущобы
+  path: Assets/Data/Progression/Region_Slums.asset
+  description: Бедный, но густонаселенный район. Источник дешевой рабочей силы и постоянного потока жалоб.
+  unlock: influence=50, money=100
+  flow: max=26, variance=10%, ramp=4d
+  archetypeGroups: Elderly
+

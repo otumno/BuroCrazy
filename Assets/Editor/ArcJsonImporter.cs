@@ -63,6 +63,8 @@ namespace StorySystem.EditorTools
             public string characterGender;
             /// <summary>Путь к Sprite-фону для диалога. Если пусто — ставится DirectorOfficeBack.png.</summary>
             public string backgroundResource;
+            /// <summary>Опционально: помечает этап как эпилог. В текущей логике не используется.</summary>
+            public bool isEpilogue;
             public DialogueStructureDto dialogueStructure;
         }
 
@@ -125,6 +127,17 @@ namespace StorySystem.EditorTools
             public string defaultGoal;
             public string defaultArchetype;
             public List<StageDto> stages;
+
+            // [ИСПРАВЛЕНО] Опциональные мета-поля — для будущей системы ветвящихся арок.
+            // Сейчас читаются, но не используются в логике.
+            public string caseTitle;
+            public int maxDays;
+            public bool isBranchingLength;
+
+            // Тип арки, определяет BGM в диалогах арки: detective | tragedy | paradox | dystopia.
+            // Необязательное поле — если пусто/неизвестно, используется ArcMusicType.None
+            // и музыка диалога выбирается по стандартной логике Phone/World.
+            public string arcType;
         }
 
         public class ImportReport
@@ -410,6 +423,21 @@ namespace StorySystem.EditorTools
             arcAsset.priority = Mathf.Clamp(arcDto.priority, 1, 10);
             arcAsset.isOneTimeOnly = arcDto.isOneTimeOnly;
 
+            // arcType -> ArcMusicType. Не задано/нераспознано = None (старое поведение).
+            if (!string.IsNullOrEmpty(arcDto.arcType) &&
+                System.Enum.TryParse<ArcMusicType>(arcDto.arcType, true, out var parsedArcType))
+            {
+                arcAsset.arcType = parsedArcType;
+            }
+            else
+            {
+                arcAsset.arcType = ArcMusicType.None;
+                if (!string.IsNullOrEmpty(arcDto.arcType))
+                {
+                    report.warnings.Add($"[{arcDto.arcID}] arcType '{arcDto.arcType}' не распознан → используется None.");
+                }
+            }
+
             // Default goal
             if (Enum.TryParse<ClientGoal>(arcDto.defaultGoal, true, out var defGoal))
                 arcAsset.defaultGoal = defGoal;
@@ -447,6 +475,7 @@ namespace StorySystem.EditorTools
                         characterName = stageDto.characterName ?? "",
                         characterGender = string.IsNullOrEmpty(stageDto.characterGender) ? "Any" : stageDto.characterGender,
                         backgroundResource = stageDto.backgroundResource ?? "",
+                        isEpilogue = stageDto.isEpilogue,
                         useForcedGoal = !string.IsNullOrEmpty(stageDto.forcedGoal)
                     };
 

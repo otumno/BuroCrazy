@@ -5,6 +5,7 @@
   "durationDays": 4,
   "priority": 5,
   "isOneTimeOnly": true,
+  "arcType": "paradox",
   "defaultGoal": "DirectorAudience",
   "defaultArchetype": null,
   "stages": [

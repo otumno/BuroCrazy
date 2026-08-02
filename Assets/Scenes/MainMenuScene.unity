@@ -10445,6 +10445,14 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 8300000, guid: fab7732605bd0d94a9d81905ca8c42c4, type: 3}
     - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: paradoxArcTracks.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: tragedyArcTracks.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: 'archiveTracks.Array.data[10]'
       value: 
       objectReference: {fileID: 8300000, guid: 329bd551f0c2515419110579d2652582, type: 3}
@@ -10489,6 +10497,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 8300000, guid: 80d4fdfd3594ba043b84062b0a671456, type: 3}
     - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: dystopiaArcTracks.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: phoneDialogTracks.Array.size
       value: 1
       objectReference: {fileID: 0}
@@ -10497,6 +10509,22 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: detectiveArcTracks.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'paradoxArcTracks.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 4c60c45845084374e82177e74317a75d, type: 3}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'tragedyArcTracks.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 1f499ad5a0228f842b5ffe00140a5730, type: 3}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'dystopiaArcTracks.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: b7c0bca9557cfb841abfff7d672cac42, type: 3}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: 'phoneDialogTracks.Array.data[0]'
       value: 
       objectReference: {fileID: 8300000, guid: da82bd3e5c2e75b46858f59c1f3c8e36, type: 3}
@@ -10504,6 +10532,14 @@ PrefabInstance:
       propertyPath: 'worldDialogTracks.Array.data[0]'
       value: 
       objectReference: {fileID: 8300000, guid: 14bde853c14e5c74a9f98d51216b71e1, type: 3}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'detectiveArcTracks.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: a325dd4d92665c14ba0f88ae0d7d239f, type: 3}
+    - target: {fileID: 3472139131213046278, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
+      propertyPath: 'detectiveArcTracks.Array.data[1]'
+      value: 
+      objectReference: {fileID: 8300000, guid: a325dd4d92665c14ba0f88ae0d7d239f, type: 3}
     - target: {fileID: 4328939966884396420, guid: cb7e8e516c31549439207d8c76f84b1a, type: 3}
       propertyPath: m_Alpha
       value: 0

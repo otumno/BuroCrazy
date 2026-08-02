@@ -740,6 +740,55 @@ namespace StorySystem
         public List<ArcDefinition> GetAllArcDefinitions() => new List<ArcDefinition>(allArcDefinitions);
 
         /// <summary>
+        /// Находит ArcDefinition, которой принадлежит данный DialogueGraph.
+        /// Поиск среди активных арок; если не нашли — среди всех загруженных ArcDefinition.
+        /// Возвращает null, если ничего не найдено.
+        /// </summary>
+        public ArcDefinition FindArcDefinitionForDialogue(DialogueGraph dialogue)
+        {
+            if (dialogue == null) return null;
+
+            // 1. Сначала ищем среди активных арок
+            for (int a = 0; a < activeArcs.Count; a++)
+            {
+                var arc = activeArcs[a];
+                if (arc?.definition == null || arc.definition.stages == null) continue;
+                for (int s = 0; s < arc.definition.stages.Count; s++)
+                {
+                    if (arc.definition.stages[s] != null && arc.definition.stages[s].dialogue == dialogue)
+                        return arc.definition;
+                }
+            }
+
+            // 2. Фолбэк: ищем среди всех загруженных арок (для диалогов вне active arcs —
+            //    например, диалоги из PhoneManager/FirstDayTutorial, которые берутся напрямую).
+            for (int i = 0; i < allArcDefinitions.Count; i++)
+            {
+                var def = allArcDefinitions[i];
+                if (def == null || def.stages == null) continue;
+                for (int s = 0; s < def.stages.Count; s++)
+                {
+                    if (def.stages[s] != null && def.stages[s].dialogue == dialogue)
+                        return def;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Возвращает ArcMusicType для данного диалога, исходя из арки, которой он принадлежит.
+        /// Если арка не определена или не имеет arcType — возвращает ArcMusicType.None
+        /// (фолбэк на стандартные phone/world треки).
+        /// </summary>
+        public static ArcMusicType GetArcTypeForDialogue(DialogueGraph dialogue)
+        {
+            if (Instance == null) return ArcMusicType.None;
+            var def = Instance.FindArcDefinitionForDialogue(dialogue);
+            return def != null ? def.arcType : ArcMusicType.None;
+        }
+
+        /// <summary>
         /// Принудительно завершает арку (для отладки).
         /// </summary>
         public void DebugCompleteArc(ArcInstance arc)

@@ -50,6 +50,10 @@ namespace StorySystem
                  "стартового узла DialogueGraph). Пример: 'Assets/Sprites/Backs/DirectorOfficeBack.png'. " +
                  "Если пусто — будет использован дефолтный фон DirectorOfficeBack.")]
         public string backgroundResource = "";
+
+        [Tooltip("Помечает этап как эпилог. Поле опциональное — сейчас не влияет на логику ArcManager, " +
+                 "сохраняется для будущей системы эпилогов и аналитики.")]
+        public bool isEpilogue = false;
     }
 
     /// <summary>
@@ -78,6 +82,9 @@ namespace StorySystem
 
         [Tooltip("Если true, арка не может быть выбрана повторно после завершения.")]
         public bool isOneTimeOnly = true;
+
+        [Tooltip("Тип арки, определяющий BGM во всех её диалогах. None = fallback на phone/world треки.")]
+        public ArcMusicType arcType = ArcMusicType.None;
 
         [Header("Этапы арки (порядок важен)")]
         public List<StageDefinition> stages = new List<StageDefinition>();

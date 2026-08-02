@@ -62,7 +62,13 @@ namespace Managers
         public AudioClip clownMusicTrack;
         private bool isClownMusicForced = false;
 
-        [Header("Музыка диалогов")]
+        [Header("Музыка диалогов (по типу арки)")]
+        public AudioClip[] detectiveArcTracks;
+        public AudioClip[] tragedyArcTracks;
+        public AudioClip[] paradoxArcTracks;
+        public AudioClip[] dystopiaArcTracks;
+
+        [Header("Музыка диалогов (фолбэк по DialogueType)")]
         public AudioClip[] phoneDialogTracks;
         public AudioClip[] worldDialogTracks;
         private AudioClip _previousTrack;
@@ -91,19 +97,48 @@ namespace Managers
              if (TimeManager.Instance != null) TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
         }
 
-        public void SwitchToDialogueMusic(DialogueSystem.Data.DialogueType type)
+        public void SwitchToDialogueMusic(DialogueSystem.Data.DialogueType type, StorySystem.ArcMusicType arcType = StorySystem.ArcMusicType.None)
         {
-            var tracks = type == DialogueSystem.Data.DialogueType.Phone ? phoneDialogTracks : worldDialogTracks;
-            if (tracks == null || tracks.Length == 0) return;
-            
+            var clip = PickDialogueClip(type, arcType);
+            if (clip == null) return;
+
             if (AudioManager.Instance != null && AudioManager.Instance.musicSource != null)
             {
                 _previousTrack = AudioManager.Instance.musicSource.clip;
                 _previousTrackTime = AudioManager.Instance.musicSource.time;
             }
-            
-            var clip = tracks[Random.Range(0, tracks.Length)];
+
             PlayTrack(clip);
+        }
+
+        /// <summary>
+        /// Выбирает трек для диалога. Треки, привязанные к типу арки, имеют приоритет
+        /// над стандартными phone/world треками. Если для arcType ничего не задано —
+        /// используется фолбэк по DialogueType (Phone/World).
+        /// </summary>
+        private AudioClip PickDialogueClip(DialogueSystem.Data.DialogueType type, StorySystem.ArcMusicType arcType)
+        {
+            var arcTracks = GetArcTypeTracks(arcType);
+            if (arcTracks != null && arcTracks.Length > 0)
+                return arcTracks[Random.Range(0, arcTracks.Length)];
+
+            var fallback = type == DialogueSystem.Data.DialogueType.Phone ? phoneDialogTracks : worldDialogTracks;
+            if (fallback != null && fallback.Length > 0)
+                return fallback[Random.Range(0, fallback.Length)];
+
+            return null;
+        }
+
+        private AudioClip[] GetArcTypeTracks(StorySystem.ArcMusicType arcType)
+        {
+            switch (arcType)
+            {
+                case StorySystem.ArcMusicType.Detective: return detectiveArcTracks;
+                case StorySystem.ArcMusicType.Tragedy:   return tragedyArcTracks;
+                case StorySystem.ArcMusicType.Paradox:   return paradoxArcTracks;
+                case StorySystem.ArcMusicType.Dystopia:  return dystopiaArcTracks;
+                default: return null;
+            }
         }
 
         public void RestorePreviousMusic()
