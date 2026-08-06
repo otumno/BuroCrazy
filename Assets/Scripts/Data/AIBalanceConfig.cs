@@ -185,7 +185,7 @@ namespace Gameplay
                 Debug.Log($"[AIBalanceConfig] {message}");
             }
         }
-        
+
         /// <summary>
         /// Рассчитывает бонус коррупции для работы на кассе.
         /// </summary>
@@ -196,6 +196,46 @@ namespace Gameplay
             if (corruption <= 0f || corruptionCashierBonus <= 0f) return 0f;
             return corruption * corruptionCashierBonus;
         }
+        #endregion
+
+        #region Ending System (Система концовок)
+
+        [Header("🎬 Ending System")]
+        [Tooltip("День, на котором наступает финал игры (по умолчанию 30)")]
+        public int finalDay = 30;
+
+        [Tooltip("Лимит страйков, при превышении которого директор отстраняется (Dismissal)")]
+        public int dismissalStrikeLimit = 5;
+
+        [Tooltip("Максимально допустимое значение одной черты личности")]
+        public int maxTraitScore = 100;
+
+        [Tooltip("Минимальный шаг добавления очков черты за один выбор")]
+        public int traitMinStep = -1;
+
+        [Tooltip("Максимальный шаг добавления очков черты за один выбор")]
+        public int traitMaxStep = 2;
+
+        [Header("🎞️ Титры арок")]
+        [Tooltip("Длительность появления титра арки (сек)")]
+        public float arcTitleFadeIn = 1f;
+
+        [Tooltip("Длительность показа титра арки (сек)")]
+        public float arcTitleHold = 3f;
+
+        [Tooltip("Длительность исчезновения титра арки (сек)")]
+        public float arcTitleFadeOut = 2f;
+
+        [Tooltip("Звук, проигрываемый при появлении титра арки. Если null — берётся из SoundLibrary по SoundID.Arc_Title")]
+        public AudioClip arcTitleSoundClip;
+
+        [Tooltip("Музыка для экрана отстранения (если null — используется endingMusic из EndingEntry или nightTrack)")]
+        public AudioClip dismissalMusicOverride;
+
+        [Header("🛠️ Debug Ending")]
+        [Tooltip("Разрешить кнопку досрочного завершения карьеры в UI")]
+        public bool enableManualEndButton = false;
+
         #endregion
     }
 }

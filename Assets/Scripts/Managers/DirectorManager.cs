@@ -150,7 +150,10 @@ namespace Managers
 
         public void SetStrikes(int strikes)
         {
-            currentStrikes = Mathf.Clamp(strikes, 0, 3);
+            int limit = 3;
+            if (Gameplay.AIBalanceConfig.Instance != null)
+                limit = Gameplay.AIBalanceConfig.Instance.dismissalStrikeLimit;
+            currentStrikes = Mathf.Clamp(strikes, 0, limit);
             Debug.Log($"[DirectorManager] Установлено ошибок: {currentStrikes}");
         }
 

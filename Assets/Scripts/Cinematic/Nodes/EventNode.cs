@@ -35,7 +35,8 @@ namespace CinematicSystem.Nodes
         TriggerAllergy,
         AddReputation,
         SetReputation,
-        RemoveReputation
+        RemoveReputation,
+        AddTraitPoint
     }
 
     /// <summary>
@@ -222,6 +223,14 @@ namespace CinematicSystem.Nodes
                     
                 case EventType.RemoveReputation:
                     DirectorManager.Instance?.TakeDamage(intValue, "Событие кинематик");
+                    break;
+
+                case EventType.AddTraitPoint:
+                    if (TraitManager.Instance != null && !string.IsNullOrEmpty(stringValue))
+                    {
+                        int amount = intValue == 0 ? 1 : intValue;
+                        TraitManager.Instance.AddTraitPoints(stringValue, amount);
+                    }
                     break;
             }
             

@@ -149,11 +149,28 @@ namespace Managers
 
             // Переключаем курсор на обычный, чтобы игрок мог кликать по диалогу.
             CursorController.Instance?.SetCutsceneCursor(false);
-            
+
+            // [НОВОЕ] Титр арки (неблокирующий)
+            try
+            {
+                var arcDef = ArcManager.Instance != null ? ArcManager.Instance.FindArcDefinitionForDialogue(graph) : null;
+                if (arcDef != null && !string.IsNullOrEmpty(arcDef.displayName))
+                {
+                    AudioClip titleSound = Gameplay.AIBalanceConfig.Instance != null
+                        ? Gameplay.AIBalanceConfig.Instance.arcTitleSoundClip
+                        : null;
+                    UI.ArcTitleDisplay.Instance?.ShowArcTitle(arcDef.displayName, titleSound);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"[DialogueUIManager] ArcTitle show failed: {ex.Message}");
+            }
+
             dialoguePanel.SetActive(true);
             if (panelAnimCoroutine != null) StopCoroutine(panelAnimCoroutine);
             panelAnimCoroutine = StartCoroutine(AnimatePanel(true));
-            
+
             SetupPortraitsAndNames(client);
 
             var startNode = graph.allNodes.Find(n => n is StartNode) as StartNode;
@@ -575,6 +592,21 @@ namespace Managers
                 }
             }
 
+            // 6. [НОВОЕ] Черты личности Директора (TraitManager.AddTraitPoints)
+            else if (evt.eventType == EventNode.EventType.AddTraitPoint)
+            {
+                if (TraitManager.Instance != null && !string.IsNullOrEmpty(evt.flagKey))
+                {
+                    int amount = evt.intValue == 0 ? 1 : evt.intValue;
+                    TraitManager.Instance.AddTraitPoints(evt.flagKey, amount);
+                    Debug.Log($"[DialogueEvent] AddTraitPoint({evt.flagKey}, +{amount})");
+                }
+                else
+                {
+                    Debug.LogWarning($"[DialogueEvent] AddTraitPoint: TraitManager или traitKey не заданы.");
+                }
+            }
+
             AudioClip clip = evt.soundEffect != null ? evt.soundEffect : defaultEventSound;
             PlaySystemSound(clip);
 
@@ -717,6 +749,33 @@ namespace Managers
             if (finishedGraph != null)
             {
                 OnDialogueFinished?.Invoke(finishedGraph);
+
+                // [НОВОЕ] Если это диалог Инспектора и финал уже запускался — завершаем выбор
+                if (EndingManager.Instance != null
+                    && EndingManager.Instance.isEndingTriggered == false
+                    && EndingManager.Instance.GetDatabase() != null)
+                {
+                    bool belongsToInspectorEnding = false;
+
+                    // Если в этом диалоге был EventNode с AddTraitPoint на черту — относим его к финалу
+                    if (finishedGraph.allNodes != null)
+                    {
+                        foreach (var n in finishedGraph.allNodes)
+                        {
+                            if (n is DialogueSystem.Data.EventNode evt
+                                && evt.eventType == DialogueSystem.Data.EventNode.EventType.AddTraitPoint)
+                            {
+                                belongsToInspectorEnding = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (belongsToInspectorEnding)
+                    {
+                        EndingManager.Instance.OnInspectorQuestionAnswered();
+                    }
+                }
             }
 
             onDialogueComplete?.Invoke();

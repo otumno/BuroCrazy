@@ -101,8 +101,13 @@ public class StartOfDayPanel : MonoBehaviour
         if (moneyText != null && PlayerWallet.Instance != null) 
             moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
         
-        if (strikesText != null && DirectorManager.Instance != null) 
-            strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / 3";
+        if (strikesText != null && DirectorManager.Instance != null)
+        {
+            int limit = Gameplay.AIBalanceConfig.Instance != null
+                ? Gameplay.AIBalanceConfig.Instance.dismissalStrikeLimit
+                : 3;
+            strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / {limit}";
+        }
 
         // Обновление ошибок
         if (errorRateText != null && DocumentQualityManager.Instance != null && OrderManager.Instance != null)

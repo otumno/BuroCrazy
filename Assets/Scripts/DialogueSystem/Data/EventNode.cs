@@ -13,15 +13,16 @@ namespace DialogueSystem.Data
             AddStrike,
             AddReputation, // [НОВОЕ] добавить/снять HP репутации (intValue может быть отрицательным).
             AddInfluence,  // [НОВОЕ] добавить очки влияния (intValue может быть отрицательным).
+            AddTraitPoint, // [НОВОЕ] добавить очки черты личности (flagKey=traitKey, intValue=amount).
             EndDialogue
         }
 
         public EventType eventType;
-        
+
         [Header("Логика")]
-        [Tooltip("Имя флага для SetFlag")]
+        [Tooltip("Имя флага для SetFlag или ключ черты для AddTraitPoint")]
         public string flagKey;
-        [Tooltip("Значение для флага или сумма денег")]
+        [Tooltip("Значение для флага, сумма денег или количество очков черты")]
         public int intValue;
 
         [Header("Обратная связь (Визуал/Звук)")]

@@ -41,6 +41,35 @@ public class SaveData
 
     // [НОВОЕ] Прогресс сюжетных арок (текущее прохождение)
     public List<ArcSaveData> arcProgress;
+
+    // --- Система концовок ---
+    [Tooltip("Баллы черт личности Директора (Law/Empathy/Mask/Ambition) — сериализуется как параллельные списки (JsonUtility не поддерживает Dictionary).")]
+    public List<string> traitScoreKeys = new List<string>();
+    public List<int> traitScoreValues = new List<int>();
+
+    [Tooltip("true после успешного финала (книга учёта). При отстранении остаётся false.")]
+    public bool gameCompleted = false;
+
+    public Dictionary<string, int> GetTraitScoresDictionary()
+    {
+        var dict = new Dictionary<string, int>();
+        if (traitScoreKeys == null || traitScoreValues == null) return dict;
+        int count = Mathf.Min(traitScoreKeys.Count, traitScoreValues.Count);
+        for (int i = 0; i < count; i++) dict[traitScoreKeys[i]] = traitScoreValues[i];
+        return dict;
+    }
+
+    public void SetTraitScoresFromDictionary(Dictionary<string, int> dict)
+    {
+        traitScoreKeys = new List<string>();
+        traitScoreValues = new List<int>();
+        if (dict == null) return;
+        foreach (var kv in dict)
+        {
+            traitScoreKeys.Add(kv.Key);
+            traitScoreValues.Add(kv.Value);
+        }
+    }
 }
 
 [System.Serializable]

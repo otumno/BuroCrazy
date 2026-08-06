@@ -46,6 +46,11 @@ namespace Scriptables.Audio
 		Sneeze,
 		Success,
 		Fail,
-		ClinchAlarm
+		ClinchAlarm,
+
+        // Ending System (Система концовок)
+        Arc_Title,          // Звук появления титра арки
+        Ending_Music,       // Маркер финальной музыки концовки
+        Dismissal_Music     // Маркер тревожной музыки отстранения
     }
 }

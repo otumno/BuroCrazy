@@ -124,6 +124,12 @@ namespace Managers
                 data.arcProgress = StorySystem.ArcManager.Instance.GetArcProgress();
             }
 
+            // 9. [НОВОЕ] Черты личности Директора
+            if (TraitManager.Instance != null)
+            {
+                TraitManager.Instance.Save(ref data);
+            }
+
             // Запись на диск
             WriteSaveDataToFile(slotIndex, data);
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
@@ -286,6 +292,12 @@ namespace Managers
                 if (StorySystem.ArcManager.Instance != null)
                 {
                     StorySystem.ArcManager.Instance.LoadArcProgress(data.arcProgress);
+                }
+
+                // 8. [НОВОЕ] Восстановление черт личности Директора
+                if (TraitManager.Instance != null)
+                {
+                    TraitManager.Instance.Load(data);
                 }
 
                 PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
