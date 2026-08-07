@@ -81,12 +81,12 @@ namespace UI
             return instance.GetComponent<DismissalScreenUI>();
         }
 
-        public void ShowDismissal(Action onReloadCallback, Action onMenuCallback)
+        public void ShowDismissal(Action onReload, Action onMenu)
         {
             EnsureLoaded();
 
-            onReload = onReloadCallback;
-            onMenu = onMenuCallback;
+            this.onReload = onReload;
+            this.onMenu = onMenu;
 
             gameObject.SetActive(true);
             if (canvasGroup != null)

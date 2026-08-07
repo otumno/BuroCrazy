@@ -650,7 +650,7 @@ public static class EndingSystemBuilder
         AssetDatabase.CreateAsset(graph, PATH_INSPECTOR_CINEMATIC);
 
         // Узлы: Start → Move Director → Spawn Inspector → Move Inspector → Call Dialogue → End
-        var startNode = graph.CreateNode<StartNode>();
+        var startNode = graph.CreateNode<CinematicSystem.Nodes.StartNode>();
         startNode.characterID = "Director";
         startNode.nextNode = null; // заполним после создания Move
 
@@ -677,7 +677,7 @@ public static class EndingSystemBuilder
         var callDialogue = graph.CreateNode<CallDialogueNode>();
         callDialogue.dialogueGraph = inspectorDialogue;
 
-        var endNode = graph.CreateNode<EndNode>();
+        var endNode = graph.CreateNode<CinematicSystem.Nodes.EndNode>();
 
         // Связи
         startNode.nextNode = moveDirector;
@@ -746,7 +746,7 @@ public static class EndingSystemBuilder
         phraseConclusion.name = "Inspector_Conclusion";
         AddDialogueSubAsset(graph, phraseConclusion);
 
-        var end = ScriptableObject.CreateInstance<EndNode>();
+        var end = ScriptableObject.CreateInstance<DialogueSystem.Data.EndNode>();
         end.outcome = DialogueSystem.Data.EndNode.DialogueOutcome.LeaveUpset;
         end.stressModifier = 0f;
         end.name = "Inspector_End";
@@ -760,7 +760,7 @@ public static class EndingSystemBuilder
         for (int i = 0; i < tieQuestion.options.Count; i++)
         {
             var option = tieQuestion.options[i];
-            var eventNode = ScriptableObject.CreateInstance<EventNode>();
+            var eventNode = ScriptableObject.CreateInstance<DialogueSystem.Data.EventNode>();
             eventNode.eventType = DialogueSystem.Data.EventNode.EventType.AddTraitPoint;
             eventNode.flagKey = TraitKeysByName(option.text);
             eventNode.intValue = 1;

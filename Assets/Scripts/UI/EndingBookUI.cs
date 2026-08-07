@@ -90,7 +90,7 @@ namespace UI
             return instance.GetComponent<EndingBookUI>();
         }
 
-        public void ShowEnding(EndingEntry entry, Action onExitCallback)
+        public void ShowEnding(EndingEntry entry, Action onExit)
         {
             if (entry == null)
             {
@@ -101,7 +101,7 @@ namespace UI
             EnsureLoaded();
 
             currentEntry = entry;
-            onExit = onExitCallback;
+            this.onExit = onExit;
 
             gameObject.SetActive(true);
             if (canvasGroup != null) canvasGroup.alpha = 0f;
