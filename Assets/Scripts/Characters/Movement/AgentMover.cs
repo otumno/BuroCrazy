@@ -589,6 +589,7 @@ public class AgentMover : MonoBehaviour
         return path != null && path.Count > 0;
     }
 
+    public Waypoint DestinationWaypoint => path is {Count: > 0} ? path.Last() : null;
 
     /// <summary>
     /// Stops all agent movement (path following and direct chasing) and clears the path.
