@@ -54,9 +54,7 @@ namespace Managers
 
         public static IServiceProvider GetServiceProviderAtDesk(int deskId)
         {
-            if (serviceProviderAssignments.TryGetValue(deskId, out IServiceProvider provider))
-                return provider;
-            return null;
+            return serviceProviderAssignments.GetValueOrDefault(deskId);
         }
 
         public static void AssignServiceProviderToDesk(IServiceProvider provider, int deskId)
@@ -66,8 +64,7 @@ namespace Managers
 
         public static void UnassignServiceProviderFromDesk(int deskId)
         {
-            if (serviceProviderAssignments.ContainsKey(deskId))
-                serviceProviderAssignments.Remove(deskId);
+            serviceProviderAssignments.Remove(deskId);
         }
 
         public static LimitedCapacityZone GetRegistrationZone() => Instance?.registrationZone;

@@ -7,6 +7,8 @@ namespace Managers
 {
     public class ClientSpawnerWithArchetypes : MonoBehaviour
     {
+        public static ClientSpawnerWithArchetypes Instance { get; private set; }
+
         [Header("База данных архетипов")]
         public ArchetypeDatabase archetypeDatabase;
 
@@ -23,6 +25,26 @@ namespace Managers
         [Header("Управление очередью")]
         private List<ClientPathfinding> activeClients = new List<ClientPathfinding>();
         private float lastSpawnTime = 0f;
+
+        private void Awake()
+        {
+            // Синглтон: спавнер один на сцене, к нему обращается CrowdSoundManager за числом клиентов.
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
 
         private void Start()
         {
@@ -208,22 +230,20 @@ namespace Managers
             }
         }
 
-        public void RemoveClient(ClientPathfinding client)
-        {
-            if (activeClients.Contains(client))
-            {
-                activeClients.Remove(client);
-            }
-        }
+        public bool RemoveClient(ClientPathfinding client) => activeClients.Remove(client);
 
         public int GetActiveClientCount()
         {
+            RemoveDestroyedClients();
             return activeClients.Count;
         }
 
         public List<ClientPathfinding> GetActiveClients()
         {
+            RemoveDestroyedClients();
             return new List<ClientPathfinding>(activeClients);
         }
+
+        private void RemoveDestroyedClients() => activeClients.RemoveAll(client => client == null);
     }
 }

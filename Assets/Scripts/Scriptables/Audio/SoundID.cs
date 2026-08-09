@@ -51,6 +51,9 @@ namespace Scriptables.Audio
         // Ending System (Система концовок)
         Arc_Title,          // Звук появления титра арки
         Ending_Music,       // Маркер финальной музыки концовки
-        Dismissal_Music     // Маркер тревожной музыки отстранения
+        Dismissal_Music,    // Маркер тревожной музыки отстранения
+        
+        // звук толпы
+        Crowd,
     }
 }

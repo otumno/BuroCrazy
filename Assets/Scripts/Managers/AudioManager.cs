@@ -79,20 +79,21 @@ namespace Managers
         }
 
         // play 2D sound (2D sounds don't depend on position)
-        public void PlaySound(SoundID id) => PlayInternal(id, null, null);
+        public AudioInstance PlaySound(SoundID id) => PlayInternal(id, null, null);
         // play 3D sound at position
-        public void PlaySound(SoundID id, Vector3 position) => PlayInternal(id, null, position);
+        public AudioInstance PlaySound(SoundID id, Vector3 position) => PlayInternal(id, null, position);
         // play 3D sound at position and link audioSource to gameObject while clip is playing
-        public void PlaySound(SoundID id, Transform linkTransform) => PlayInternal(id, linkTransform, null);
+        public AudioInstance PlaySound(SoundID id, Transform linkTransform) => PlayInternal(id, linkTransform, null);
 
-        public void PlayAudioClip2D(AudioClip clip)
+        public AudioInstance PlayAudioClip2D(AudioClip clip)
         {
             var source = GetAvailableInstance();
             source.ResetSource();
             source.PlayAudioClip2D(clip, sfxGroup);
+            return source;
         }
         
-        public void PlayVoiceClip(AudioClip clip,
+        public AudioInstance PlayVoiceClip(AudioClip clip,
                                   Vector3 position,
                                   float basePitch,
                                   float pitchDelta,
@@ -101,12 +102,13 @@ namespace Managers
             var source = GetAvailableInstance();
             source.ResetSource();
             source.PlayVoiceClip(clip, position, basePitch, pitchDelta, volume, sfxGroup);
+            return source;
         }
 
-        private void PlayInternal(SoundID id, Transform linkTransform, Vector3? position)
+        private AudioInstance PlayInternal(SoundID id, Transform linkTransform, Vector3? position)
         {
             if (id == SoundID.None)
-                return;
+                return null;
 
             var soundData = soundLibrary.GetSound(id);
             if (soundData == null)
@@ -116,7 +118,7 @@ namespace Managers
                 
                 // чтобы не дублировать лог по многу раз
                 _missingSounds.Add(id);
-                return;
+                return null;
             }
 
             // Debug.Log($"[AudioManager] Playing: {id} | clips={soundData.clips?.Length} | volume={soundData.volume} | mixer={soundData.mixerGroup?.name}");
@@ -124,6 +126,7 @@ namespace Managers
             var audioInstance = GetAvailableInstance();
             audioInstance.ResetSource();
             audioInstance.Play(soundData, linkTransform, position);
+            return audioInstance;
         }
 
         public void PlayMusic(AudioClip clip)

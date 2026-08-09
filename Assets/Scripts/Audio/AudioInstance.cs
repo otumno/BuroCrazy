@@ -83,6 +83,17 @@ namespace Audio
             _audioSource.Play();
         }
 
+        /// <summary>
+        /// Задаёт громкость уже играющего источника — для рантайм-регулировки (напр. эмбиента толпы).
+        /// </summary>
+        public void SetVolume(float volume)
+        {
+            // Гасим активный fade-твин: ручная регулировка должна перекрывать DOTween,
+            // иначе анимация fade в следующем кадре перезапишет наше значение.
+            _volumeSequence.SafeKill();
+            _audioSource.volume = Mathf.Clamp01(volume);
+        }
+
         public void PlayAudioClip2D(AudioClip clip, AudioMixerGroup mixerGroup)
         {
             if (clip == null)
