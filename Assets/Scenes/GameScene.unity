@@ -38299,11 +38299,7 @@ MonoBehaviour:
     rid: 2870447904610320577
   m_ShadowCastingSource: 2
   m_ShadowMesh:
-<<<<<<< HEAD
     m_Mesh: {fileID: 1159105985}
-=======
-    m_Mesh: {fileID: 1389747717}
->>>>>>> 6d4b960378ad0140b41528bbf0b01d10096eafac
     m_LocalBounds:
       m_Center: {x: 18, y: 0, z: 0}
       m_Extent: {x: 8.576248, y: 5.919998, z: 0}
@@ -46537,11 +46533,7 @@ MonoBehaviour:
     rid: 2870447904610320576
   m_ShadowCastingSource: 2
   m_ShadowMesh:
-<<<<<<< HEAD
     m_Mesh: {fileID: 1270571071}
-=======
-    m_Mesh: {fileID: 669738104}
->>>>>>> 6d4b960378ad0140b41528bbf0b01d10096eafac
     m_LocalBounds:
       m_Center: {x: 9, y: 2, z: 0}
       m_Extent: {x: 18, y: 7, z: 0}
@@ -55602,11 +55594,7 @@ MonoBehaviour:
     rid: 2870447904610320577
   m_ShadowCastingSource: 2
   m_ShadowMesh:
-<<<<<<< HEAD
     m_Mesh: {fileID: 734979737}
-=======
-    m_Mesh: {fileID: 549386135}
->>>>>>> 6d4b960378ad0140b41528bbf0b01d10096eafac
     m_LocalBounds:
       m_Center: {x: 0, y: 0, z: 0}
       m_Extent: {x: 0, y: 0, z: 0}
