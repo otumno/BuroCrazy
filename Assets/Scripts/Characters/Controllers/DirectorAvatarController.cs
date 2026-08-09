@@ -46,6 +46,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     public bool IsInUninterruptibleAction { get; private set; } = false;
     // Флаг, указывающий, находится ли директор физически у своего стола
     public bool IsAtDesk { get; private set; } = false;
+    
     #endregion
 
     #region Unity Methods
@@ -382,22 +383,27 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     /// </summary>
     public void GoToDesk()
     {
-        if (directorChairPoint != null)
-        {
-            var wp = FindNearestWaypointTo(directorChairPoint.position);
-            if (wp != null)
-            {
-                StartCoroutine(GoToDeskRoutine(wp));
-            }
-            else
-            {
-                Debug.LogError("Не найдена путевая точка рядом с directorChairPoint!");
-            }
-        }
-        else
+        if (directorChairPoint == null)
         {
             Debug.LogError("DirectorChairPoint не назначен! Невозможно отправить директора к столу.");
+            return;
         }
+
+        var targetWaypoint = FindNearestWaypointTo(directorChairPoint.position);
+        if (targetWaypoint == null)
+        {
+            Debug.LogError("Не найдена путевая точка рядом с directorChairPoint!");
+            return;
+        }
+
+        // Директор уже идёт к столу, не перестраиваем маршрут снова.
+        if (currentState == DirectorState.MovingToPoint && agentMover?.DestinationWaypoint == targetWaypoint)
+        {
+            Debug.Log("Директор уже идёт к столу, не перестраиваем маршрут снова");
+            return;
+        }
+
+        StartCoroutine(GoToDeskRoutine(targetWaypoint));
     }
 
     private IEnumerator GoToDeskRoutine(Waypoint wp)
