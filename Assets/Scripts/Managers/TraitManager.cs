@@ -76,6 +76,35 @@ namespace Managers
             return new Dictionary<string, int>(traitScores);
         }
 
+#if DEBUG_ENABLED || UNITY_EDITOR
+        /// <summary>
+        /// (Debug) Принудительно устанавливает очки одной черты.
+        /// Не используется в проде — только из ClientDebugMenu.
+        /// </summary>
+        public void SetTrait(string traitKey, int value)
+        {
+            if (string.IsNullOrEmpty(traitKey)) return;
+            int maxScore = AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.maxTraitScore : 100;
+            traitScores[traitKey] = Mathf.Clamp(value, 0, maxScore);
+            OnTraitsChanged?.Invoke(traitScores);
+        }
+
+        /// <summary>
+        /// (Debug) Устанавливает одно и то же значение всем 4 чертам.
+        /// Используется для принудительного сброса перед запуском концовки.
+        /// </summary>
+        public void SetAllTraits(int value)
+        {
+            int maxScore = AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.maxTraitScore : 100;
+            int v = Mathf.Clamp(value, 0, maxScore);
+            foreach (var t in AllTraits)
+            {
+                traitScores[t] = v;
+            }
+            OnTraitsChanged?.Invoke(traitScores);
+        }
+#endif
+
         public string GetDominantTrait()
         {
             var list = GetDominantTraits();

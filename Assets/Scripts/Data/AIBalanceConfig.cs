@@ -217,6 +217,9 @@ namespace Gameplay
         public int traitMaxStep = 2;
 
         [Header("🎞️ Титры арок")]
+        [Tooltip("Задержка перед появлением титра арки (сек)")]
+        public float arcTitleInitialDelay = 2f;
+
         [Tooltip("Длительность появления титра арки (сек)")]
         public float arcTitleFadeIn = 1f;
 

@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using Data;
+using DialogueSystem.Data;
+using StorySystem;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -120,6 +123,13 @@ namespace BuroDebug
 
             // Кнопки для групп - теперь под Content
             CreateGroupButtons(contentRect);
+
+#if DEBUG_ENABLED || UNITY_EDITOR
+            // Секции отладки сюжета: Диалоги / Арки / Концовки
+            CreateDialogueSection(contentRect);
+            CreateArcSection(contentRect);
+            CreateEndingsSection(contentRect);
+#endif
 
             panel.SetActive(false);
         }
@@ -380,5 +390,229 @@ namespace BuroDebug
             testCleanersText.alignment = TextAnchor.MiddleCenter;
             testCleanersText.text = "Тест: Уборщики";
         }
+
+#if DEBUG_ENABLED || UNITY_EDITOR
+        // ==================== STORY DEBUG UI ====================
+
+        private void CreateDialogueSection(Transform parent)
+        {
+            CreateLabel(parent, "💬 Диалоги (Debug)");
+
+            var dropdownGO = new GameObject("DialogueDropdown");
+            dropdownGO.transform.SetParent(parent, false);
+            var rect = dropdownGO.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(0, 28);
+
+            var dd = dropdownGO.AddComponent<TMP_Dropdown>();
+            dd.captionText = CreateTextForTMP(dd);
+            var dialogues = debugMenu.GetAllDialogues();
+            var opts = new List<TMP_Dropdown.OptionData>();
+            foreach (var d in dialogues)
+            {
+                if (d != null) opts.Add(new TMP_Dropdown.OptionData(d.name));
+            }
+            dd.options = opts;
+            dd.captionText.text = dialogues.Count > 0 ? "Выберите диалог..." : "Нет диалогов в Resources";
+
+            var playGO = new GameObject("Btn_PlayDialogue");
+            playGO.transform.SetParent(parent, false);
+            var playRect = playGO.AddComponent<RectTransform>();
+            playRect.sizeDelta = new Vector2(0, 22);
+            var playImg = playGO.AddComponent<Image>();
+            playImg.color = new Color(0.3f, 0.5f, 0.7f);
+            var playBtn = playGO.AddComponent<Button>();
+            playBtn.onClick.AddListener(() =>
+            {
+                int idx = dd.value;
+                if (idx >= 0 && idx < dialogues.Count)
+                    debugMenu.PlayDialogue(dialogues[idx]);
+            });
+            var playTxt = CreateText(playGO, "▶ Запустить диалог");
+            playTxt.fontSize = 12;
+            playTxt.alignment = TextAnchor.MiddleCenter;
+        }
+
+        private void CreateArcSection(Transform parent)
+        {
+            CreateLabel(parent, "📚 Арки (Debug)");
+
+            var dropdownGO = new GameObject("ArcDropdown");
+            dropdownGO.transform.SetParent(parent, false);
+            var rect = dropdownGO.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(0, 28);
+
+            var dd = dropdownGO.AddComponent<TMP_Dropdown>();
+            dd.captionText = CreateTextForTMP(dd);
+            var arcs = debugMenu.GetAllArcs();
+            var opts = new List<TMP_Dropdown.OptionData>();
+            foreach (var a in arcs)
+            {
+                if (a != null) opts.Add(new TMP_Dropdown.OptionData(string.IsNullOrEmpty(a.displayName) ? a.arcID : a.displayName));
+            }
+            dd.options = opts;
+            dd.captionText.text = arcs.Count > 0 ? "Выберите арку..." : "Нет арок";
+
+            var runGO = new GameObject("Btn_RunArc");
+            runGO.transform.SetParent(parent, false);
+            var runRect = runGO.AddComponent<RectTransform>();
+            runRect.sizeDelta = new Vector2(0, 22);
+            var runImg = runGO.AddComponent<Image>();
+            runImg.color = new Color(0.2f, 0.6f, 0.2f);
+            var runBtn = runGO.AddComponent<Button>();
+            runBtn.onClick.AddListener(() =>
+            {
+                int idx = dd.value;
+                if (idx >= 0 && idx < arcs.Count)
+                    debugMenu.StartDebugArc(arcs[idx], autoToggle != null && autoToggle.isOn);
+            });
+            var runTxt = CreateText(runGO, "▶ Запустить арку");
+            runTxt.fontSize = 12;
+            runTxt.alignment = TextAnchor.MiddleCenter;
+
+            var toggleGO = new GameObject("AutoAdvanceToggle");
+            toggleGO.transform.SetParent(parent, false);
+            var toggleRect = toggleGO.AddComponent<RectTransform>();
+            toggleRect.sizeDelta = new Vector2(0, 22);
+            var toggleImg = toggleGO.AddComponent<Image>();
+            toggleImg.color = new Color(0.4f, 0.4f, 0.4f);
+            autoToggle = toggleGO.AddComponent<Toggle>();
+            autoToggle.targetGraphic = toggleImg;
+            autoToggle.isOn = true;
+            var toggleTxt = CreateText(toggleGO, "Авто-продолжение этапов");
+            toggleTxt.fontSize = 11;
+            toggleTxt.alignment = TextAnchor.MiddleLeft;
+            toggleTxt.rectTransform.anchorMin = Vector2.zero;
+            toggleTxt.rectTransform.anchorMax = Vector2.one;
+            toggleTxt.rectTransform.offsetMin = new Vector2(20, 0);
+            toggleTxt.rectTransform.offsetMax = Vector2.zero;
+
+            var contGO = new GameObject("Btn_ContinueArc");
+            contGO.transform.SetParent(parent, false);
+            var contRect = contGO.AddComponent<RectTransform>();
+            contRect.sizeDelta = new Vector2(0, 22);
+            var contImg = contGO.AddComponent<Image>();
+            contImg.color = new Color(0.4f, 0.4f, 0.8f);
+            continueBtn = contGO.AddComponent<Button>();
+            continueBtn.onClick.AddListener(() => debugMenu.ContinueDebugArc());
+            contGO.SetActive(false);
+            var contTxt = CreateText(contGO, "▶ Продолжить");
+            contTxt.fontSize = 12;
+            contTxt.alignment = TextAnchor.MiddleCenter;
+
+            var stopGO = new GameObject("Btn_StopArc");
+            stopGO.transform.SetParent(parent, false);
+            var stopRect = stopGO.AddComponent<RectTransform>();
+            stopRect.sizeDelta = new Vector2(0, 22);
+            var stopImg = stopGO.AddComponent<Image>();
+            stopImg.color = new Color(0.6f, 0.2f, 0.2f);
+            stopBtn = stopGO.AddComponent<Button>();
+            stopBtn.onClick.AddListener(() => debugMenu.StopDebugArc());
+            stopBtn.interactable = false;
+            var stopTxt = CreateText(stopGO, "⏹ Остановить");
+            stopTxt.fontSize = 12;
+            stopTxt.alignment = TextAnchor.MiddleCenter;
+
+            debugMenu.OnDebugArcStarted += () =>
+            {
+                runBtn.interactable = false;
+                stopBtn.interactable = true;
+                continueBtn.gameObject.SetActive(false);
+            };
+            debugMenu.OnDebugArcStopped += () =>
+            {
+                runBtn.interactable = true;
+                stopBtn.interactable = false;
+                continueBtn.gameObject.SetActive(false);
+            };
+            debugMenu.OnDebugStageWaiting += (index) =>
+            {
+                continueBtn.gameObject.SetActive(autoToggle != null && !autoToggle.isOn);
+            };
+        }
+
+        private void CreateEndingsSection(Transform parent)
+        {
+            CreateLabel(parent, "🏁 Концовки (Debug)");
+
+            var endings = debugMenu.GetAllEndings();
+            if (endings.Count == 0)
+            {
+                var warnGO = new GameObject("NoEndingsWarning");
+                warnGO.transform.SetParent(parent, false);
+                var warnRect = warnGO.AddComponent<RectTransform>();
+                warnRect.sizeDelta = new Vector2(0, 18);
+                var warnText = CreateText(warnGO, "EndingDatabase не назначена");
+                warnText.fontSize = 11;
+                warnText.alignment = TextAnchor.MiddleCenter;
+                warnText.color = new Color(1f, 0.7f, 0.3f);
+                return;
+            }
+
+            foreach (var entry in endings)
+            {
+                if (entry == null) continue;
+                var btnGO = new GameObject("Btn_Ending_" + entry.endingID);
+                btnGO.transform.SetParent(parent, false);
+                var btnRect = btnGO.AddComponent<RectTransform>();
+                btnRect.sizeDelta = new Vector2(0, 22);
+                var img = btnGO.AddComponent<Image>();
+                img.color = entry.isDismissal ? new Color(0.5f, 0.2f, 0.2f) : new Color(0.6f, 0.3f, 0.5f);
+                var btn = btnGO.AddComponent<Button>();
+                string id = entry.endingID;
+                btn.onClick.AddListener(() => debugMenu.TriggerEnding(id));
+                var txt = CreateText(btnGO, string.IsNullOrEmpty(entry.displayName) ? entry.endingID : entry.displayName);
+                txt.fontSize = 11;
+                txt.alignment = TextAnchor.MiddleCenter;
+            }
+        }
+
+        private Toggle autoToggle;
+        private Button continueBtn;
+        private Button stopBtn;
+
+        private Text CreateText(GameObject parent, string text)
+        {
+            var textGO = new GameObject("Text");
+            textGO.transform.SetParent(parent.transform, false);
+            var rect = textGO.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.sizeDelta = Vector2.zero;
+            var t = textGO.AddComponent<Text>();
+            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            t.color = Color.white;
+            t.text = text;
+            return t;
+        }
+
+        private Text CreateLabel(Transform parent, string text)
+        {
+            var go = new GameObject("Label_" + text);
+            go.transform.SetParent(parent, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.sizeDelta = new Vector2(0, 20);
+            var t = CreateText(go, text);
+            t.fontSize = 13;
+            t.fontStyle = FontStyle.Bold;
+            t.alignment = TextAnchor.MiddleCenter;
+            return t;
+        }
+
+        private TextMeshProUGUI CreateTextForTMP(TMP_Dropdown dd)
+        {
+            var go = new GameObject("Caption");
+            go.transform.SetParent(dd.transform, false);
+            var rect = go.AddComponent<RectTransform>();
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(10, 2);
+            rect.offsetMax = new Vector2(-25, -2);
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.color = Color.black;
+            t.fontSize = 12;
+            t.alignment = TextAlignmentOptions.MidlineLeft;
+            return t;
+        }
+#endif
     }
 }

@@ -45,6 +45,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: cef566cc7755e544ab75655decd91e7b, type: 2}
   - {fileID: 11400000, guid: 4aa4715f67a0e0b47b3f6aeca234c379, type: 2}
   - {fileID: 11400000, guid: 0b1a975323deb5940a57ab14548667de, type: 2}
+  - {fileID: 11400000, guid: ff7444e37eb623f43a87ac8c213643ec, type: 2}
+  - {fileID: 11400000, guid: 702d818f6b3482a44a1c5d2ff98ab46b, type: 2}
   spawnWeights:
   - archetype: {fileID: 11400000, guid: 47922ad40e08b414f84f41f113770779, type: 2}
     weight: 10

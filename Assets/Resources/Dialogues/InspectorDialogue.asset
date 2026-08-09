@@ -1,0 +1,437 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8877696143146785842
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: Inspector_Reaction_3
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Inspector
+  text: "\u0410\u043C\u0431\u0438\u0446\u0438\u0438 \u2014 \u0434\u0432\u0438\u0433\u0430\u0442\u0435\u043B\u044C
+    \u043F\u0440\u043E\u0433\u0440\u0435\u0441\u0441\u0430."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts: []
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 5781164108711512513}
+--- !u!114 &-7912288482694560137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: Inspector_Intro
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Inspector
+  text: "\u0417\u0434\u0440\u0430\u0432\u0441\u0442\u0432\u0443\u0439\u0442\u0435.
+    \u042F \u043F\u0440\u0438\u0448\u0451\u043B \u043F\u043E\u0434\u0432\u0435\u0441\u0442\u0438
+    \u0438\u0442\u043E\u0433\u0438 \u0432\u0430\u0448\u0435\u0439 \u0440\u0430\u0431\u043E\u0442\u044B
+    \u0432 \u0411\u044E\u0440\u043E."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts: []
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 7055613889317522587}
+--- !u!114 &-7085075297713568788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: Inspector_Reaction_0
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Inspector
+  text: "\u0417\u0430\u043A\u043E\u043D \u043F\u0440\u0435\u0432\u044B\u0448\u0435
+    \u0432\u0441\u0435\u0433\u043E. \u0417\u0430\u043F\u043E\u043C\u043D\u044E."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts: []
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 5781164108711512513}
+--- !u!114 &-5458048235970776369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619f1e1e8bede14b96118d2e1a8d7a5, type: 3}
+  m_Name: Inspector_AddTrait_0
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  eventType: 5
+  flagKey: Law
+  intValue: 1
+  notificationText: 
+  soundEffect: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: -7085075297713568788}
+--- !u!114 &-5312301072118824064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619f1e1e8bede14b96118d2e1a8d7a5, type: 3}
+  m_Name: Inspector_AddTrait_1
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  eventType: 5
+  flagKey: Empathy
+  intValue: 1
+  notificationText: 
+  soundEffect: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: -2078809290900852478}
+--- !u!114 &-2078809290900852478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: Inspector_Reaction_1
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Inspector
+  text: "\u0421\u043E\u0441\u0442\u0440\u0430\u0434\u0430\u043D\u0438\u0435 \u2014
+    \u0440\u0435\u0434\u043A\u0438\u0439 \u0434\u0430\u0440."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts: []
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 5781164108711512513}
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e7e28d74defd1d54d8957d654b304587, type: 3}
+  m_Name: InspectorDialogue
+  m_EditorClassIdentifier: 
+  startNode: {fileID: 8103022423010132549}
+  allNodes:
+  - {fileID: 8103022423010132549}
+  - {fileID: -7912288482694560137}
+  - {fileID: 7055613889317522587}
+  - {fileID: 2730918622724339744}
+  - {fileID: 5781164108711512513}
+  - {fileID: 3219475586926925580}
+  - {fileID: -5458048235970776369}
+  - {fileID: -7085075297713568788}
+  - {fileID: -5312301072118824064}
+  - {fileID: -2078809290900852478}
+  - {fileID: 218625911043361718}
+  - {fileID: 4368064283691429604}
+  - {fileID: 1035093161315562460}
+  - {fileID: -8877696143146785842}
+--- !u!114 &218625911043361718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619f1e1e8bede14b96118d2e1a8d7a5, type: 3}
+  m_Name: Inspector_AddTrait_2
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  eventType: 5
+  flagKey: Mask
+  intValue: 1
+  notificationText: 
+  soundEffect: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 4368064283691429604}
+--- !u!114 &1035093161315562460
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f619f1e1e8bede14b96118d2e1a8d7a5, type: 3}
+  m_Name: Inspector_AddTrait_3
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  eventType: 5
+  flagKey: Ambition
+  intValue: 1
+  notificationText: 
+  soundEffect: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: -8877696143146785842}
+--- !u!114 &2730918622724339744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5c6f881a8b64bc41a3ec2bc23a605bd, type: 3}
+  m_Name: Inspector_TieChoice
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  queryText: "\u041A\u0430\u043A\u043E\u0439 \u043F\u0443\u0442\u044C \u0431\u044B\u043B
+    \u0434\u043B\u044F \u0432\u0430\u0441 \u0432\u0430\u0436\u043D\u0435\u0435?"
+  options:
+  - text: "\u0417\u0430\u043A\u043E\u043D \u0438 \u043F\u043E\u0440\u044F\u0434\u043E\u043A"
+    nextNode: {fileID: -5458048235970776369}
+    conditionKey: 
+    operation: 
+    conditionValue: 0
+  - text: "\u0421\u043E\u0441\u0442\u0440\u0430\u0434\u0430\u043D\u0438\u0435 \u043A
+      \u043B\u044E\u0434\u044F\u043C"
+    nextNode: {fileID: -5312301072118824064}
+    conditionKey: 
+    operation: 
+    conditionValue: 0
+  - text: "\u0425\u043E\u043B\u043E\u0434\u043D\u044B\u0439 \u0440\u0430\u0441\u0447\u0451\u0442"
+    nextNode: {fileID: 218625911043361718}
+    conditionKey: 
+    operation: 
+    conditionValue: 0
+  - text: "\u041B\u0438\u0447\u043D\u044B\u0435 \u0430\u043C\u0431\u0438\u0446\u0438\u0438"
+    nextNode: {fileID: 1035093161315562460}
+    conditionKey: 
+    operation: 
+    conditionValue: 0
+  nodeImage: {fileID: 0}
+--- !u!114 &3219475586926925580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1af36ba5234e6439af301385bd3bde, type: 3}
+  m_Name: Inspector_End
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  endSound: {fileID: 0}
+  outcome: 2
+  outputEmotion: 0
+  stressModifier: 0
+--- !u!114 &4368064283691429604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: Inspector_Reaction_2
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Inspector
+  text: "\u0425\u043E\u043B\u043E\u0434\u043D\u044B\u0439 \u0440\u0430\u0441\u0447\u0451\u0442.
+    \u041F\u043E\u043D\u0438\u043C\u0430\u044E."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts: []
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 5781164108711512513}
+--- !u!114 &5781164108711512513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: Inspector_Conclusion
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Inspector
+  text: "\u0422\u0430\u043A \u044F \u0438 \u0434\u0443\u043C\u0430\u043B\u2026 \u0427\u0442\u043E
+    \u0436, \u0432\u0430\u0448\u0430 \u043A\u0430\u0440\u044C\u0435\u0440\u0430 \u0432
+    \u0411\u044E\u0440\u043E \u043F\u043E\u0434\u043E\u0448\u043B\u0430 \u043A \u043A\u043E\u043D\u0446\u0443."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts: []
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 3219475586926925580}
+--- !u!114 &7055613889317522587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e81c4cb61cdcfc7408ed0425b349119b, type: 3}
+  m_Name: Inspector_Purpose
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  speakerID: Inspector
+  text: "\u0427\u0442\u043E \u0436, \u043F\u043E\u0441\u043C\u043E\u0442\u0440\u0438\u043C,
+    \u043A\u0430\u043A\u043E\u0439 \u0441\u043B\u0435\u0434 \u0432\u044B \u043E\u0441\u0442\u0430\u0432\u0438\u043B\u0438."
+  speakerPortrait: {fileID: 0}
+  voiceClip: {fileID: 0}
+  variantTexts: []
+  appearSound: {fileID: 0}
+  nodeImage: {fileID: 0}
+  nextNode: {fileID: 2730918622724339744}
+--- !u!114 &8103022423010132549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec49ac1309bd0c94dbba53650b3bee98, type: 3}
+  m_Name: Inspector_Start
+  m_EditorClassIdentifier: 
+  id: 
+  nodeID: 
+  graphPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  startSoundOverride: {fileID: 0}
+  dialogueType: 0
+  defaultBackground: {fileID: 0}
+  nextNode: {fileID: -7912288482694560137}

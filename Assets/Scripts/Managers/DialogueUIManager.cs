@@ -154,12 +154,15 @@ namespace Managers
             try
             {
                 var arcDef = ArcManager.Instance != null ? ArcManager.Instance.FindArcDefinitionForDialogue(graph) : null;
-                if (arcDef != null && !string.IsNullOrEmpty(arcDef.displayName))
+                if (arcDef != null)
                 {
+                    string titleForCard = string.IsNullOrEmpty(arcDef.caseTitle)
+                        ? $"Дело о {arcDef.displayName}"
+                        : arcDef.caseTitle;
                     AudioClip titleSound = Gameplay.AIBalanceConfig.Instance != null
                         ? Gameplay.AIBalanceConfig.Instance.arcTitleSoundClip
                         : null;
-                    UI.ArcTitleDisplay.Instance?.ShowArcTitle(arcDef.displayName, titleSound);
+                    UI.ArcTitleDisplay.Instance?.ShowArcTitle(titleForCard, titleSound);
                 }
             }
             catch (System.Exception ex)

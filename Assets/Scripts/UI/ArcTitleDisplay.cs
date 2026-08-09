@@ -1,5 +1,4 @@
 using System.Collections;
-using DG.Tweening;
 using Gameplay;
 using Managers;
 using Scriptables.Audio;
@@ -22,13 +21,17 @@ namespace UI
         [Header("UI элементы")]
         public CanvasGroup canvasGroup;
         public TextMeshProUGUI titleText;
+        [Tooltip("Опциональный подзаголовок (в текущей версии обычно пуст).")]
+        public TextMeshProUGUI subtitleText;
 
-        [Header("Настройки анимации")]
-        [Tooltip("Длительность fade-in (сек). Если 0 — берётся из AIBalanceConfig.")]
+        [Header("Настройки анимации (сек)")]
+        [Tooltip("Задержка перед появлением титра. Если 0 — берётся из AIBalanceConfig.arcTitleInitialDelay.")]
+        public float initialDelay = 0f;
+        [Tooltip("Длительность fade-in. Если 0 — берётся из AIBalanceConfig.arcTitleFadeIn.")]
         public float fadeInDuration = 0f;
-        [Tooltip("Длительность показа (сек). Если 0 — берётся из AIBalanceConfig.")]
+        [Tooltip("Длительность показа. Если 0 — берётся из AIBalanceConfig.arcTitleHold.")]
         public float holdDuration = 0f;
-        [Tooltip("Длительность fade-out (сек). Если 0 — берётся из AIBalanceConfig.")]
+        [Tooltip("Длительность fade-out. Если 0 — берётся из AIBalanceConfig.arcTitleFadeOut.")]
         public float fadeOutDuration = 0f;
 
         private Coroutine sequenceCoroutine;
@@ -36,7 +39,11 @@ namespace UI
         private void Awake()
         {
             if (Instance == null) Instance = this;
-            else if (Instance != this) Destroy(gameObject);
+            else if (Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
 
             if (canvasGroup != null) canvasGroup.alpha = 0f;
             gameObject.SetActive(false);
@@ -79,7 +86,16 @@ namespace UI
             return instance.GetComponent<ArcTitleDisplay>();
         }
 
+        /// <summary>
+        /// Показать титр арки. Обратно совместимая сигнатура: (title, sound).
+        /// Перегрузка с подзаголовком: (title, subtitle, sound).
+        /// </summary>
         public void ShowArcTitle(string arcTitle, AudioClip sound = null)
+        {
+            ShowArcTitle(arcTitle, string.Empty, sound);
+        }
+
+        public void ShowArcTitle(string arcTitle, string subtitle, AudioClip sound = null)
         {
             if (string.IsNullOrEmpty(arcTitle)) return;
 
@@ -87,7 +103,7 @@ namespace UI
             if (Instance == null) return;
 
             if (sequenceCoroutine != null) StopCoroutine(sequenceCoroutine);
-            sequenceCoroutine = StartCoroutine(PlayArcTitle(arcTitle, sound));
+            sequenceCoroutine = StartCoroutine(PlayArcTitle(arcTitle, subtitle, sound));
         }
 
         private void EnsureLoaded()
@@ -96,16 +112,26 @@ namespace UI
             GetOrCreate();
         }
 
-        private IEnumerator PlayArcTitle(string arcTitle, AudioClip sound)
+        private IEnumerator PlayArcTitle(string arcTitle, string subtitle, AudioClip sound)
         {
-            float fadeIn = fadeInDuration > 0f ? fadeInDuration : (AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.arcTitleFadeIn : 1f);
-            float hold = holdDuration > 0f ? holdDuration : (AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.arcTitleHold : 3f);
-            float fadeOut = fadeOutDuration > 0f ? fadeOutDuration : (AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.arcTitleFadeOut : 2f);
+            float delay = initialDelay > 0f ? initialDelay :
+                (AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.arcTitleInitialDelay : 2f);
+            float fadeIn = fadeInDuration > 0f ? fadeInDuration :
+                (AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.arcTitleFadeIn : 1f);
+            float hold = holdDuration > 0f ? holdDuration :
+                (AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.arcTitleHold : 3f);
+            float fadeOut = fadeOutDuration > 0f ? fadeOutDuration :
+                (AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.arcTitleFadeOut : 2f);
 
             gameObject.SetActive(true);
             if (canvasGroup == null) yield break;
 
             if (titleText != null) titleText.text = arcTitle;
+            if (subtitleText != null)
+            {
+                subtitleText.text = subtitle ?? string.Empty;
+                subtitleText.gameObject.SetActive(!string.IsNullOrEmpty(subtitle));
+            }
 
             if (sound != null && AudioManager.Instance != null)
             {
@@ -116,12 +142,40 @@ namespace UI
                 AudioManager.Instance.PlaySound(SoundID.Arc_Title);
             }
 
+            // Начальное состояние — скрыт
             canvasGroup.alpha = 0f;
-            yield return canvasGroup.DOFade(1f, fadeIn).SetUpdate(true).WaitForCompletion();
 
-            yield return new WaitForSecondsRealtime(hold);
+            // Задержка перед появлением (используем unscaled, чтобы пауза не блокировала)
+            if (delay > 0f)
+            {
+                yield return new WaitForSecondsRealtime(delay);
+            }
 
-            yield return canvasGroup.DOFade(0f, fadeOut).SetUpdate(true).WaitForCompletion();
+            // Fade In
+            float timer = 0f;
+            while (timer < fadeIn)
+            {
+                timer += Time.unscaledDeltaTime;
+                canvasGroup.alpha = Mathf.Lerp(0f, 1f, timer / fadeIn);
+                yield return null;
+            }
+            canvasGroup.alpha = 1f;
+
+            // Показ
+            if (hold > 0f)
+            {
+                yield return new WaitForSecondsRealtime(hold);
+            }
+
+            // Fade Out
+            timer = 0f;
+            while (timer < fadeOut)
+            {
+                timer += Time.unscaledDeltaTime;
+                canvasGroup.alpha = Mathf.Lerp(1f, 0f, timer / fadeOut);
+                yield return null;
+            }
+            canvasGroup.alpha = 0f;
 
             gameObject.SetActive(false);
             sequenceCoroutine = null;

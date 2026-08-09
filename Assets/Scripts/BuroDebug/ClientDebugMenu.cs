@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using AI;
 using Characters;
 using Data;
@@ -534,5 +535,327 @@ namespace BuroDebug
 
             Debug.Log($"<color=green>[Debug] Открыто регионов: {count}</color>");
         }
+
+#if DEBUG_ENABLED || UNITY_EDITOR
+        // ==================== STORY DEBUG (ARCS / ENDINGS) ====================
+
+        [Header("Story Debug")]
+        public EndingDatabase endingDatabase;
+
+        private ArcManager arcManager;
+        private List<ArcDefinition> allArcs = new List<ArcDefinition>();
+        private List<DialogueGraph> allDialogues = new List<DialogueGraph>();
+        private ArcInstance debugArcInstance = null;
+        private bool isDebugArcRunning = false;
+        private bool autoAdvance = true;
+        private int pendingStageIndex = -1;
+
+        // События для UI
+        public System.Action OnDebugArcStarted;
+        public System.Action OnDebugArcStopped;
+        public System.Action<int> OnDebugStageWaiting;
+
+        /// <summary>
+        /// Получить список всех доступных арок (из Resources + ArcManager, приоритет у ArcManager).
+        /// </summary>
+        public List<ArcDefinition> GetAllArcs()
+        {
+            if (arcManager == null)
+            {
+                arcManager = ArcManager.Instance;
+                if (arcManager == null)
+                {
+                    arcManager = FindFirstObjectByType<ArcManager>();
+                }
+            }
+
+            if (arcManager != null && arcManager.GetAllArcDefinitions() != null && arcManager.GetAllArcDefinitions().Count > 0)
+            {
+                allArcs = arcManager.GetAllArcDefinitions();
+            }
+            else if (allArcs.Count == 0)
+            {
+                allArcs.AddRange(Resources.LoadAll<ArcDefinition>("Arcs"));
+            }
+
+            return allArcs;
+        }
+
+        /// <summary>
+        /// Получить список диалогов (из Resources).
+        /// </summary>
+        public List<DialogueGraph> GetAllDialogues()
+        {
+            if (allDialogues.Count == 0)
+            {
+                allDialogues.AddRange(Resources.LoadAll<DialogueGraph>("Dialogues"));
+                allDialogues.AddRange(Resources.LoadAll<DialogueGraph>("DialoguesBase"));
+            }
+            return allDialogues;
+        }
+
+        /// <summary>
+        /// Запустить диалог напрямую (без клиента).
+        /// </summary>
+        public void PlayDialogue(DialogueGraph graph)
+        {
+            if (graph == null)
+            {
+                Debug.LogWarning("[Debug] PlayDialogue: graph == null");
+                return;
+            }
+            if (DialogueUIManager.Instance == null)
+            {
+                Debug.LogWarning("[Debug] DialogueUIManager.Instance недоступен.");
+                return;
+            }
+            Debug.Log($"[Debug] Запуск диалога: {graph.name}");
+            DialogueUIManager.Instance.StartDialogue(graph, null);
+        }
+
+        /// <summary>
+        /// Запуск дебаг-арки. Если autoAdvance == true, диалоги идут подряд;
+        /// иначе после каждого этапа вызывается OnDebugStageWaiting.
+        /// </summary>
+        public void StartDebugArc(ArcDefinition arc, bool autoAdvance = true)
+        {
+            if (arc == null) return;
+            if (isDebugArcRunning)
+            {
+                Debug.LogWarning("[Debug] Арка уже запущена. Сначала остановите её.");
+                return;
+            }
+
+            this.autoAdvance = autoAdvance;
+            int currentDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 1;
+            debugArcInstance = new ArcInstance(arc, currentDay);
+            isDebugArcRunning = true;
+            pendingStageIndex = -1;
+            Debug.Log($"[Debug] Запуск арки: {arc.displayName} ({arc.arcID})");
+
+            OnDebugArcStarted?.Invoke();
+
+            // Запускаем первый доступный этап
+            int firstStage = FindNextAvailableStage(0);
+            if (firstStage >= 0)
+                RunStage(firstStage);
+            else
+                FinishDebugArc();
+        }
+
+        private void RunStage(int stageIndex)
+        {
+            if (debugArcInstance == null || debugArcInstance.definition == null)
+            {
+                FinishDebugArc();
+                return;
+            }
+
+            var stages = debugArcInstance.definition.stages;
+            if (stages == null || stageIndex >= stages.Count)
+            {
+                Debug.Log("[Debug] Все этапы пройдены. Арка завершена.");
+                FinishDebugArc();
+                return;
+            }
+
+            var stage = stages[stageIndex];
+
+            // Проверяем условие этапа (requiredFlag)
+            if (!string.IsNullOrEmpty(stage.requiredFlag))
+            {
+                int flagValue = StoryStateManager.Instance != null ? StoryStateManager.Instance.GetFlag(stage.requiredFlag) : 0;
+                if (flagValue != 1)
+                {
+                    Debug.LogWarning($"[Debug] Этап {stageIndex} пропущен: флаг '{stage.requiredFlag}' не установлен.");
+                    int nextIndex = FindNextAvailableStage(stageIndex + 1);
+                    if (nextIndex >= 0)
+                        RunStage(nextIndex);
+                    else
+                        FinishDebugArc();
+                    return;
+                }
+            }
+
+            // Устанавливаем onStartFlag перед запуском
+            if (!string.IsNullOrEmpty(stage.onStartFlag) && StoryStateManager.Instance != null)
+            {
+                StoryStateManager.Instance.SetFlag(stage.onStartFlag, 1);
+            }
+
+            // Если диалога нет — пропускаем этап, но считаем его «пройденным»
+            if (stage.dialogue == null)
+            {
+                Debug.Log($"[Debug] Этап {stageIndex} без диалога — пропускаем.");
+                OnStageComplete(stageIndex);
+                return;
+            }
+
+            if (DialogueUIManager.Instance == null)
+            {
+                Debug.LogWarning("[Debug] DialogueUIManager.Instance недоступен — пропускаем этап.");
+                OnStageComplete(stageIndex);
+                return;
+            }
+
+            Debug.Log($"[Debug] Запуск этапа {stageIndex}: {stage.characterName}");
+
+            int currentStageIndex = stageIndex; // захватываем для замыкания
+            DialogueUIManager.Instance.StartDialogue(stage.dialogue, null, () =>
+            {
+                OnStageComplete(currentStageIndex);
+            });
+        }
+
+        private void OnStageComplete(int completedStageIndex)
+        {
+            if (!isDebugArcRunning) return;
+
+            var stages = debugArcInstance.definition.stages;
+            if (completedStageIndex < 0 || completedStageIndex >= stages.Count) return;
+
+            var stage = stages[completedStageIndex];
+            if (!string.IsNullOrEmpty(stage.onCompleteFlag) && StoryStateManager.Instance != null)
+            {
+                StoryStateManager.Instance.SetFlag(stage.onCompleteFlag, 1);
+            }
+
+            int nextIndex = FindNextAvailableStage(completedStageIndex + 1);
+            if (nextIndex >= 0)
+            {
+                if (autoAdvance)
+                {
+                    RunStage(nextIndex);
+                }
+                else
+                {
+                    pendingStageIndex = nextIndex;
+                    OnDebugStageWaiting?.Invoke(nextIndex);
+                    Debug.Log($"[Debug] Этап {completedStageIndex} завершён. Ожидание продолжения.");
+                }
+            }
+            else
+            {
+                Debug.Log("[Debug] Все доступные этапы пройдены. Арка завершена.");
+                FinishDebugArc();
+            }
+        }
+
+        private int FindNextAvailableStage(int startIndex)
+        {
+            if (debugArcInstance == null || debugArcInstance.definition == null) return -1;
+            var stages = debugArcInstance.definition.stages;
+            if (stages == null) return -1;
+
+            for (int i = startIndex; i < stages.Count; i++)
+            {
+                var stage = stages[i];
+                if (string.IsNullOrEmpty(stage.requiredFlag))
+                    return i;
+                int flagValue = StoryStateManager.Instance != null ? StoryStateManager.Instance.GetFlag(stage.requiredFlag) : 0;
+                if (flagValue == 1)
+                    return i;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Продолжить выполнение арки в ручном режиме.
+        /// </summary>
+        public void ContinueDebugArc()
+        {
+            if (!isDebugArcRunning) return;
+            if (pendingStageIndex < 0)
+            {
+                Debug.LogWarning("[Debug] Нет ожидающих этапов для продолжения.");
+                return;
+            }
+            int index = pendingStageIndex;
+            pendingStageIndex = -1;
+            RunStage(index);
+        }
+
+        /// <summary>
+        /// Остановить выполнение арки.
+        /// </summary>
+        public void StopDebugArc()
+        {
+            if (!isDebugArcRunning) return;
+            FinishDebugArc();
+        }
+
+        private void FinishDebugArc()
+        {
+            isDebugArcRunning = false;
+            debugArcInstance = null;
+            pendingStageIndex = -1;
+            Debug.Log("[Debug] Дебаг-арка завершена.");
+            OnDebugArcStopped?.Invoke();
+        }
+
+        // ==================== ENDINGS ====================
+
+        /// <summary>
+        /// Получить список концовок из базы.
+        /// </summary>
+        public List<EndingEntry> GetAllEndings()
+        {
+            if (endingDatabase == null)
+            {
+                endingDatabase = Resources.Load<EndingDatabase>("EndingDatabase");
+            }
+            if (endingDatabase != null) return endingDatabase.endings;
+            return new List<EndingEntry>();
+        }
+
+        /// <summary>
+        /// Принудительно запустить концовку по ID.
+        /// Сбрасывает черты и (если ID == имени черты) выставляет её в максимум,
+        /// чтобы доминирующая черта совпала с endingID.
+        /// </summary>
+        public void TriggerEnding(string endingID)
+        {
+            if (string.IsNullOrEmpty(endingID)) return;
+
+            var entry = GetAllEndings().FirstOrDefault(e => e != null && e.endingID == endingID);
+            if (entry == null)
+            {
+                Debug.LogWarning($"[Debug] Концовка '{endingID}' не найдена в EndingDatabase.");
+                return;
+            }
+
+            if (TraitManager.Instance != null)
+            {
+                TraitManager.Instance.SetAllTraits(0);
+                // Если endingID совпадает с одной из черт — поднимаем её.
+                if (endingID == TraitManager.TRAIT_LAW ||
+                    endingID == TraitManager.TRAIT_EMPATHY ||
+                    endingID == TraitManager.TRAIT_MASK ||
+                    endingID == TraitManager.TRAIT_AMBITION)
+                {
+                    TraitManager.Instance.SetTrait(endingID, 100);
+                }
+            }
+
+            if (EndingManager.Instance == null)
+            {
+                Debug.LogWarning("[Debug] EndingManager.Instance недоступен.");
+                return;
+            }
+
+            Debug.Log($"[Debug] Принудительный запуск концовки: {endingID}");
+            EndingManager.Instance.TriggerEnding(endingID);
+        }
+
+        /// <summary>
+        /// Запуск концовки по индексу в списке.
+        /// </summary>
+        public void TriggerEndingByIndex(int index)
+        {
+            var endings = GetAllEndings();
+            if (index >= 0 && index < endings.Count && endings[index] != null)
+                TriggerEnding(endings[index].endingID);
+        }
+#endif
     }
 }

@@ -1,0 +1,184 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-6071254127116662305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 703dab99c1634ea4e9af95b065316969, type: 3}
+  m_Name: MoveToNode_3
+  m_EditorClassIdentifier: 
+  id: 25478b60-e30a-496b-ad98-0168163531fe
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  nextNode: {fileID: 4535317756014500438}
+  targetKey: InspectorStandPoint
+  speed: -1
+  waitForCompletion: 1
+  usePathfinding: 1
+  characterID: Inspector
+--- !u!114 &-5045996705190576688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 109bbf69897321d4f98891d6b9ae451e, type: 3}
+  m_Name: SpawnCharacterNode_2
+  m_EditorClassIdentifier: 
+  id: bf08e563-e2ee-4858-b046-1d3750f5b034
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  nextNode: {fileID: -6071254127116662305}
+  archetypeID: Inspector_Male
+  spawnPointKey: DoorSpawnPoint
+  targetKeyForReference: Inspector
+  forcedGoal: 4
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e6f799f0586ead4d880a3d621cb35fd, type: 3}
+  m_Name: InspectorVisit
+  m_EditorClassIdentifier: 
+  graphID: InspectorVisit
+  graphName: "\u0412\u0438\u0437\u0438\u0442 \u0418\u043D\u0441\u043F\u0435\u043A\u0442\u043E\u0440\u0430
+    (\u0434\u0435\u043D\u044C 30)"
+  allNodes:
+  - {fileID: 2714123368256841451}
+  - {fileID: 8070723814656196454}
+  - {fileID: -5045996705190576688}
+  - {fileID: -6071254127116662305}
+  - {fileID: 4535317756014500438}
+  - {fileID: 3881768764305302100}
+  startNode: {fileID: 2714123368256841451}
+  isBackground: 0
+  links:
+  - fromNodeId: e0cc739b-70ba-4b9d-ad61-83a492a30309
+    toNodeId: 9ac7bd75-1df9-46e4-8177-7f2f86e073cc
+    linkType: next
+  - fromNodeId: 9ac7bd75-1df9-46e4-8177-7f2f86e073cc
+    toNodeId: bf08e563-e2ee-4858-b046-1d3750f5b034
+    linkType: next
+  - fromNodeId: bf08e563-e2ee-4858-b046-1d3750f5b034
+    toNodeId: 25478b60-e30a-496b-ad98-0168163531fe
+    linkType: next
+  - fromNodeId: 25478b60-e30a-496b-ad98-0168163531fe
+    toNodeId: ca377daf-c032-4a27-98ec-baaa0ed0c813
+    linkType: next
+  - fromNodeId: ca377daf-c032-4a27-98ec-baaa0ed0c813
+    toNodeId: 0bd142fa-05bf-444f-9316-df90c2157e00
+    linkType: next
+--- !u!114 &2714123368256841451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a82ee4a73e769749acc301af11c71f4, type: 3}
+  m_Name: StartNode_0
+  m_EditorClassIdentifier: 
+  id: e0cc739b-70ba-4b9d-ad61-83a492a30309
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  nextNode: {fileID: 8070723814656196454}
+  characterID: Director
+--- !u!114 &3881768764305302100
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a71103aa059d0ad48bb46416e9329e66, type: 3}
+  m_Name: EndNode_5
+  m_EditorClassIdentifier: 
+  id: 0bd142fa-05bf-444f-9316-df90c2157e00
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+--- !u!114 &4535317756014500438
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99904e51ecb670e4cb6af08abeaf339d, type: 3}
+  m_Name: CallDialogueNode_4
+  m_EditorClassIdentifier: 
+  id: ca377daf-c032-4a27-98ec-baaa0ed0c813
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  nextNode: {fileID: 3881768764305302100}
+  dialogueGraph: {fileID: 11400000, guid: c215df8faa7b5a340a0d199f6339919d, type: 2}
+  targetClient: {fileID: 0}
+--- !u!114 &8070723814656196454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 703dab99c1634ea4e9af95b065316969, type: 3}
+  m_Name: MoveToNode_1
+  m_EditorClassIdentifier: 
+  id: 9ac7bd75-1df9-46e4-8177-7f2f86e073cc
+  nodeName: 
+  editorPosition:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  nextNode: {fileID: -5045996705190576688}
+  targetKey: DirectorChairPoint
+  speed: -1
+  waitForCompletion: 1
+  usePathfinding: 1
+  characterID: Director

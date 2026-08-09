@@ -69,6 +69,9 @@ namespace StorySystem
         [Tooltip("Отображаемое имя (для отладки).")]
         public string displayName;
 
+        [Tooltip("Заголовок «дела» для титра в начале диалога. Если пусто — используется displayName с префиксом «Дело о ».")]
+        public string caseTitle;
+
         [TextArea(3, 6)]
         [Tooltip("Описание сюжета.")]
         public string description;
