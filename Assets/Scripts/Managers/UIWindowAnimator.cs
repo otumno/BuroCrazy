@@ -29,6 +29,8 @@ public class UIWindowAnimator : MonoBehaviour
     private Vector3 originalScale;
     private bool isClosing = false;
 
+    public bool IsVisible() => canvasGroup is {alpha: > 0};
+
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();

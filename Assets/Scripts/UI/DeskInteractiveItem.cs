@@ -74,13 +74,6 @@ public class DeskInteractiveItem : MonoBehaviour, IPointerEnterHandler, IPointer
         OnClick?.Invoke();
     }
 
-    // --- ПУБЛИЧНЫЕ МЕТОДЫ ---
-
-    public void SetNotificationState(bool isActive)
-    {
-        if (notificationOverlay != null) notificationOverlay.SetActive(isActive);
-    }
-
     public virtual void CheckAvailability() 
     { 
         // Базовая реализация пустая, переопределяется в наследниках (DeskCalculator)

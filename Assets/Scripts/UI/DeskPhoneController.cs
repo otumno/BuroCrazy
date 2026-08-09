@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 using Managers;
@@ -19,92 +20,64 @@ public class DeskPhoneController : DeskInteractiveItem
     [Header("Звук")]
     [SerializeField] private SoundID blinkSound = SoundID.RedLight;
 
-    private bool _isBlinking;
-    private float _timer;
-    private bool _wasRinging;
-    private bool _soundPlayedInCycle;
+    [Header("Определение стейта вкл/выкл")]
+    [SerializeField]
+    private UIWindowAnimator _startOfDaypanelUiWindowAnimator;
+
+    private Sequence _blinkSequence;
 
     protected override void Start()
     {
         base.Start();
-        if (notificationImage == null && notificationOverlay != null)
-        {
-            notificationImage = notificationOverlay.GetComponent<Image>();
-        }
-        SetAlpha(minAlpha);
+        
+        var startColor = notificationImage.color;
+        startColor.a = minAlpha;
+        notificationImage.color = startColor;
+    }
+
+    private void SetupAnimation()
+    {
+        // animation is playing
+        if (_blinkSequence.IsActive())
+            return;
+        
+        var defaultColor = notificationImage.color;
+        var startColor = new Color(defaultColor.r, defaultColor.g, defaultColor.b, minAlpha);
+        var endColor = new Color(defaultColor.r, defaultColor.g, defaultColor.b, 1.0f);
+        
+        _blinkSequence = DOTween.Sequence();
+        _blinkSequence
+            .SetLoops(-1, LoopType.Restart)                         // -1 == infinite
+            .SetUpdate(UpdateType.Late, isIndependentUpdate: true) // independent == unscaled delta time
+            .SetLink(gameObject, LinkBehaviour.KillOnDestroy)       // if gameObject is destroyed must kill sequence
+            .AppendCallback(PlayBlinkSound)
+            .Append(notificationImage.DOColor(startColor, 0f))
+            .Append(notificationImage.DOColor(endColor, blinkDuration))
+            .AppendInterval(pauseBetweenBlinks)
+            .Play();
+    }
+
+    private void CancelAnimation()
+    {
+        if (_blinkSequence.IsActive())
+            _blinkSequence.Kill();
     }
 
     private void Update()
     {
-        if (PhoneManager.Instance == null) return;
+        if (PhoneManager.Instance == null)
+            return;
 
-        bool isRinging = PhoneManager.Instance.HasActiveCalls;
+        var isVisible = _startOfDaypanelUiWindowAnimator.IsVisible();
+        var hasCalls = PhoneManager.Instance.HasActiveCalls;
+        
+        var shouldShow = isVisible && hasCalls;
+        notificationOverlay.SetActive(shouldShow);
 
-        if (isRinging && !_wasRinging)
-        {
-            // Начало звонка - включаем мигание
-            _isBlinking = true;
-            _timer = 0f;
-            _soundPlayedInCycle = false;
-        }
-        else if (!isRinging && _wasRinging)
-        {
-            // Конец звонка
-            _isBlinking = false;
-            SetAlpha(minAlpha);
-        }
-        _wasRinging = isRinging;
-
-        // Визуальная обводка (базовая логика)
-        SetNotificationState(isRinging);
-
-        // Анимация мигания + звук в начале каждого цикла
-        if (_isBlinking && notificationImage != null)
-        {
-            HandleBlinkCycle();
-        }
-    }
-
-    private void HandleBlinkCycle()
-    {
-        _timer += Time.unscaledDeltaTime;
-        float totalCycle = blinkDuration + pauseBetweenBlinks;
-
-        // Проверяем начало нового цикла (лампочка начинает разгораться)
-        bool isStartOfCycle = _timer < Time.unscaledDeltaTime;
-
-        if (_timer <= blinkDuration)
-        {
-            // ФАЗА 1: Разгорание (0.0 -> 1.0)
-            float t = _timer / blinkDuration;
-            SetAlpha(Mathf.Lerp(minAlpha, 1f, t));
-            
-            // ЗВУК: играем в начале разгорания, если лампочка видима
-            if (isStartOfCycle && !_soundPlayedInCycle && notificationOverlay != null && notificationOverlay.activeSelf)
-            {
-                PlayBlinkSound();
-                _soundPlayedInCycle = true;
-            }
-        }
-        else if (_timer <= totalCycle)
-        {
-            // ФАЗА 2: Пауза (лампа выключена)
-            SetAlpha(minAlpha);
-        }
+        if (shouldShow)
+            SetupAnimation();
         else
-        {
-            // Сброс цикла для следующего повтора
-            _timer = 0f;
-            _soundPlayedInCycle = false;
-        }
-    }
-
-    private void SetAlpha(float a)
-    {
-        if (notificationImage == null) return;
-        Color c = notificationImage.color;
-        c.a = a;
-        notificationImage.color = c;
+            CancelAnimation();
     }
 
     private void PlayBlinkSound()
@@ -118,21 +91,12 @@ public class DeskPhoneController : DeskInteractiveItem
 
         if (AudioManager.Instance != null && blinkSound != SoundID.None)
         {
-            Debug.Log($"[DeskPhone] Играем звук: {blinkSound}");
             // Используем 2D звук для UI
             AudioManager.Instance.PlaySound(blinkSound);
         }
         else
         {
             Debug.LogWarning($"[DeskPhone] Невозможно.playSound: AudioManager={AudioManager.Instance != null}, blinkSound={blinkSound}");
-        }
-    }
-
-    public void OpenPhoneInterface()
-    {
-        if (PhoneManager.Instance?.phonePanelUI != null)
-        {
-            PhoneManager.Instance.phonePanelUI.Show();
         }
     }
 }
