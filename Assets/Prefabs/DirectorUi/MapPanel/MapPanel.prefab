@@ -3822,6 +3822,7 @@ MonoBehaviour:
   j_ActionButton: {fileID: 513898288612314382}
   j_ButtonText: {fileID: 5176344147310258886}
   jobDocPrefab: {fileID: 798599227355505824, guid: b6d90a9e440643341aa7d1e91c8bbddb, type: 3}
+  currentJobTitleUI: {fileID: 0}
   directorInboxStack: {fileID: 0}
   regionSlots:
   - {fileID: 4774998403930406898}
@@ -3849,7 +3850,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6770724124710862556}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0.97
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0

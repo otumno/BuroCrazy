@@ -32,6 +32,13 @@ namespace UI.Map
         [SerializeField] private TextMeshProUGUI j_ButtonText;
         [SerializeField] private GameObject jobDocPrefab;
 
+        [Header("Дерево карьеры — новые ссылки")]
+        [SerializeField] private Transform treeZone;
+        [SerializeField] private MapJobInfoPanelUI jobInfoPanelUI;
+
+        [Header("Дерево карьеры")]
+        [SerializeField] private CurrentJobTitleUI currentJobTitleUI;
+
         [Header("Связи со сценой")]
         [SerializeField] private DocumentStack directorInboxStack;
 
@@ -56,6 +63,12 @@ namespace UI.Map
             MainUIManager.Instance?.PushPause();
             InitializeSlots();
             RefreshAllButtons();
+
+            // Подписать ноды из treeZone (если назначен) на ShowJobInfo
+            SetupTreeNodes();
+
+            // Обновить верхнюю панель с текущей должностью
+            if (currentJobTitleUI != null) currentJobTitleUI.Refresh();
 
             selectedRegion = null;
             foreach (var slot in regionSlots) if (slot != null) slot.SetSelected(false);
@@ -98,17 +111,41 @@ namespace UI.Map
             }
         }
 
-        private void InitializeSlots()
+    private void InitializeSlots()
+    {
+        foreach (var slot in regionSlots)
         {
-            foreach (var slot in regionSlots)
-            {
-                if (slot != null) slot.Setup(slot.regionData, ShowRegionInfo);
-            }
-            foreach (var node in jobNodes)
-            {
-                if (node != null) node.Setup(node.jobData, ShowJobInfo);
-            }
+            if (slot != null) slot.Setup(slot.regionData, ShowRegionInfo);
         }
+        foreach (var node in jobNodes)
+        {
+            if (node != null) node.Setup(node.jobData, ShowJobInfo);
+        }
+    }
+
+    /// <summary>
+    /// Автоподписка нод из treeZone (Transform) на ShowJobInfo.
+    /// Если treeZone не назначен в инспекторе — ищет его в сцене автоматически (fallback).
+    /// Каждая нода с ненулевым jobData получает Setup(jobData, ShowJobInfo).
+    /// </summary>
+    private void SetupTreeNodes()
+    {
+        // Fallback: если treeZone не привязан, ищем первый Transform с JobNodeUI в сцене
+        if (treeZone == null)
+        {
+            var anyNode = Object.FindFirstObjectByType<JobNodeUI>();
+            if (anyNode != null) treeZone = anyNode.transform.parent;
+        }
+
+        if (treeZone == null) return;
+
+        var nodes = treeZone.GetComponentsInChildren<JobNodeUI>(includeInactive: true);
+        foreach (var node in nodes)
+        {
+            if (node == null || node.jobData == null) continue;
+            node.Setup(node.jobData, ShowJobInfo);
+        }
+    }
 
         public void ShowRegionInfo(RegionData region)
         {
@@ -293,96 +330,105 @@ namespace UI.Map
             Debug.Log($"Документ на захват '{selectedRegion.displayName}' отправлен директору.");
         }
 
-        public void ShowJobInfo(JobTitleData job)
+    public void ShowJobInfo(JobTitleData job)
+    {
+        // Новый путь: перенаправить в MapJobInfoPanelUI если он назначен
+        if (jobInfoPanelUI != null)
         {
-            Debug.Log($"[MapPanelUI] ShowJobInfo called with job: {job?.jobID ?? "NULL"}");
-
             selectedJob = job;
-            if (selectedJob == null)
+            jobInfoPanelUI.ShowJobInfo(job);
+            return;
+        }
+
+        // Старая логика (fallback если jobInfoPanelUI не привязан)
+        Debug.Log($"[MapPanelUI] ShowJobInfo called with job: {job?.jobID ?? "NULL"}");
+
+        selectedJob = job;
+        if (selectedJob == null)
+        {
+            Debug.LogWarning("[MapPanelUI] selectedJob is null, returning early.");
+            return;
+        }
+
+        if (jobInfoPanel == null)
+        {
+            Debug.LogError("[MapPanelUI] jobInfoPanel is NOT assigned in Inspector!");
+            return;
+        }
+
+        Debug.Log($"[MapPanelUI] Activating jobInfoPanel for {selectedJob.titleName}");
+        jobInfoPanel.SetActive(true);
+
+        if (j_Title != null) j_Title.text = job.titleName ?? "Unknown";
+
+        if (ProgressionManager.Instance == null)
+        {
+            Debug.LogError("[MapPanelUI] ProgressionManager.Instance is null!");
+            return;
+        }
+
+        int currentRegions = ProgressionManager.Instance.GetCapturedRegionsCount();
+        int requiredRegions = job.requiredCapturedRegionsCount;
+        string regionColor = currentRegions >= requiredRegions ? "green" : "red";
+
+        string reqText = $"Требуется регионов: <color={regionColor}>{currentRegions} / {requiredRegions}</color>";
+
+        if (j_Desc != null)
+            j_Desc.text = $"{job.description}\n\n{reqText}";
+
+        bool isUnlocked = ProgressionManager.Instance.IsJobUnlocked(job.jobID);
+        bool canStart = ProgressionManager.Instance.CanStartUnlockJob(job);
+
+        bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(job.jobID);
+
+        if (j_Cost != null)
+        {
+            if (isUnlocked)
             {
-                Debug.LogWarning("[MapPanelUI] selectedJob is null, returning early.");
-                return;
+                j_Cost.text = "<color=green>ТЕКУЩАЯ ДОЛЖНОСТЬ</color>";
             }
-
-            if (jobInfoPanel == null)
+            else if (isPending)
             {
-                Debug.LogError("[MapPanelUI] jobInfoPanel is NOT assigned in Inspector!");
-                return;
+                j_Cost.text = "<color=yellow>РАССМОТРЕНИЕ...</color>";
             }
-
-            Debug.Log($"[MapPanelUI] Activating jobInfoPanel for {selectedJob.titleName}");
-            jobInfoPanel.SetActive(true);
-
-            if (j_Title != null) j_Title.text = job.titleName ?? "Unknown";
-
-            if (ProgressionManager.Instance == null)
+            else
             {
-                Debug.LogError("[MapPanelUI] ProgressionManager.Instance is null!");
-                return;
-            }
-
-            int currentRegions = ProgressionManager.Instance.GetCapturedRegionsCount();
-            int requiredRegions = job.requiredCapturedRegionsCount;
-            string regionColor = currentRegions >= requiredRegions ? "green" : "red";
-
-            string reqText = $"Требуется регионов: <color={regionColor}>{currentRegions} / {requiredRegions}</color>";
-
-            if (j_Desc != null)
-                j_Desc.text = $"{job.description}\n\n{reqText}";
-
-            bool isUnlocked = ProgressionManager.Instance.IsJobUnlocked(job.jobID);
-            bool canStart = ProgressionManager.Instance.CanStartUnlockJob(job);
-
-            bool isPending = DocumentManager.Instance != null && DocumentManager.Instance.IsProjectDocPending(job.jobID);
-
-            if (j_Cost != null)
-            {
-                if (isUnlocked)
-                {
-                    j_Cost.text = "<color=green>ТЕКУЩАЯ ДОЛЖНОСТЬ</color>";
-                }
-                else if (isPending)
-                {
-                    j_Cost.text = "<color=yellow>РАССМОТРЕНИЕ...</color>";
-                }
-                else
-                {
-                    j_Cost.text = $"Взнос: ${job.costMoney}\nВлияние: {job.costInfluence}";
-                }
-            }
-
-            if (j_ActionButton != null)
-            {
-                j_ActionButton.interactable = false;
-
-                if (isUnlocked)
-                {
-                    j_ActionButton.interactable = false;
-                    if (j_ButtonText != null) j_ButtonText.text = "Получено";
-                }
-                else if (isPending)
-                {
-                    j_ActionButton.interactable = false;
-                    if (j_ButtonText != null) j_ButtonText.text = "Ждите";
-                }
-                else
-                {
-                    bool enoughMoney = PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= job.costMoney;
-                    bool enoughInf = ProgressionManager.Instance.GetInfluence() >= job.costInfluence;
-
-                    j_ActionButton.interactable = canStart && enoughMoney && enoughInf;
-
-                    if (j_ButtonText != null)
-                    {
-                        if (!canStart) j_ButtonText.text = "Недоступно";
-                        else j_ButtonText.text = "Подать прошение";
-                    }
-
-                    j_ActionButton.onClick.RemoveAllListeners();
-                    j_ActionButton.onClick.AddListener(SpawnJobDocument);
-                }
+                j_Cost.text = $"Взнос: ${job.costMoney}\nВлияние: {job.costInfluence}";
             }
         }
+
+        if (j_ActionButton != null)
+        {
+            j_ActionButton.interactable = false;
+
+            if (isUnlocked)
+            {
+                j_ActionButton.interactable = false;
+                if (j_ButtonText != null) j_ButtonText.text = "Получено";
+            }
+            else if (isPending)
+            {
+                j_ActionButton.interactable = false;
+                if (j_ButtonText != null) j_ButtonText.text = "Ждите";
+            }
+            else
+            {
+                bool enoughMoney = PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= job.costMoney;
+                bool enoughInf = ProgressionManager.Instance.GetInfluence() >= job.costInfluence;
+
+                j_ActionButton.interactable = canStart && enoughMoney && enoughInf;
+
+                if (j_ButtonText != null)
+                {
+                    if (!canStart) j_ButtonText.text = "Недоступно";
+                    else j_ButtonText.text = "Подать прошение";
+                }
+
+                j_ActionButton.onClick.RemoveAllListeners();
+                j_ActionButton.onClick.AddListener(SpawnJobDocument);
+            }
+        }
+    }
 
         private void SpawnJobDocument()
         {

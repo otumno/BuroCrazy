@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b489b2b5d527f044b45e341e9b697bc, type: 3}
+  m_Name: Job_RegionalManager
+  m_EditorClassIdentifier: 
+  jobID: Job_RegionalManager
+  titleName: "\u0420\u0435\u0433\u0438\u043E\u043D\u0430\u043B\u044C\u043D\u044B\u0439
+    \u0440\u0430\u0441\u043F\u043E\u0440\u044F\u0434\u0438\u0442\u0435\u043B\u044C"
+  description: "\u041A\u043E\u043D\u0442\u0440\u043E\u043B\u0438\u0440\u0443\u0435\u0442
+    \u0444\u0438\u043B\u0438\u0430\u043B\u044B \u0432 \u0440\u0435\u0433\u0438\u043E\u043D\u0430\u0445.
+    \u0420\u0430\u0437\u0431\u043B\u043E\u043A\u0438\u0440\u0443\u0435\u0442 'Copier'
+    \u0438 'PhoneLine'."
+  tierLevel: 6
+  requiredPreviousJob: {fileID: 11400000, guid: 744ddd5cce534ca8abe09c0c506c6665, type: 2}
+  costInfluence: 0
+  costMoney: 0
+  requiredCapturedRegionsCount: 4
+  isMinisterPosition: 0
+  caseTitle: "\u0414\u0435\u043B\u043E \u043E \u0440\u0435\u0433\u0438\u043E\u043D\u0430\u0445"
+  isMandatory: 0
+  iconLocked: {fileID: 0}
+  iconUnlocked: {fileID: 0}
+  policyID: Policy_RegionalBonus
+  unlockedRoles: 
+  unlockedUpgrades:
+  - Upgrade_Copier
+  - Upgrade_PhoneLine
+  correctPath:
+    isValid: 1
+    requiredDays: 18
+    requiredClients: 0
+    requiredStaff: 0
+    requiredRegions: 4
+    requiredUpgrades: 5
+    requiredDocuments: 0
+    requiredMoney: 0
+    moneyCost: 0
+    corruptionCost: 0
+  alternatePath:
+    isValid: 1
+    requiredDays: 18
+    requiredClients: 0
+    requiredStaff: 0
+    requiredRegions: 0
+    requiredUpgrades: 0
+    requiredDocuments: 0
+    requiredMoney: 0
+    moneyCost: 3000
+    corruptionCost: 20

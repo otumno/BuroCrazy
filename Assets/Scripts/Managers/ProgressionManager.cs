@@ -444,16 +444,189 @@ namespace Managers
             if (job == null) return;
             if (IsJobUnlocked(job.jobID)) return;
 
+            // 1. Отметить как открытую
             unlockedJobIDs.Add(job.jobID);
             Debug.Log($"<color=magenta>[Progression] ПОВЫШЕНИЕ ПОЛУЧЕНО: {job.titleName}</color>");
+
+            // 2. Активировать политику (если есть)
+            if (!string.IsNullOrEmpty(job.policyID) && PolicyManager.Instance != null)
+            {
+                PolicyManager.Instance.ActivatePolicy(job.policyID);
+                Debug.Log($"[Progression] Политика активирована: {job.policyID}");
+            }
+
+            // 3. Открыть роли для найма (если есть)
+            if (job.unlockedRoles != null && job.unlockedRoles.Count > 0)
+            {
+                // TODO: реальная разблокировка ролей — нужно дополнить HiringManager
+                Debug.Log($"[Progression] Роли разблокированы: {string.Join(", ", job.unlockedRoles)}");
+            }
+
+            // 4. Активировать апгрейды (если есть) — сработают хуки
+            if (job.unlockedUpgrades != null && job.unlockedUpgrades.Count > 0)
+            {
+                foreach (var upgradeID in job.unlockedUpgrades)
+                {
+                    if (UpgradeManager.Instance != null)
+                    {
+                        UpgradeManager.Instance.ActivateUpgradeByID(upgradeID);
+                        Debug.Log($"[Progression] Апгрейд активирован: {upgradeID}");
+                    }
+                }
+            }
+
+            // 5. Уведомить подписчиков
+            OnProgressionUpdated?.Invoke();
 
             if (job.isMinisterPosition)
             {
                 Debug.Log("!!! ПОБЕДА !!! Игрок достиг ранга Министр.");
                 // TODO: TriggerWinSequence();
             }
+        }
 
-            OnProgressionUpdated?.Invoke();
+        /// <summary>
+        /// Запуск процесса повышения: проверка условий, списание денег (для alternate),
+        /// создание ProjectDocumentDefinition и укладка на стол директора.
+        /// </summary>
+        public void StartJobPromotion(JobTitleData job, ProjectDocumentDefinition.PathType path)
+        {
+            if (job == null) return;
+            if (IsJobUnlocked(job.jobID))
+            {
+                Debug.LogWarning($"[Progression] Должность {job.jobID} уже открыта.");
+                return;
+            }
+
+            if (!CanStartUnlockJob(job))
+            {
+                Debug.LogWarning($"[Progression] Базовые условия для {job.jobID} не выполнены.");
+                return;
+            }
+
+            // Проверяем валидность пути
+            if (path == ProjectDocumentDefinition.PathType.Correct)
+            {
+                if (job.correctPath == null || !job.correctPath.isValid)
+                {
+                    Debug.LogWarning($"[Progression] Правильный путь для {job.jobID} недоступен.");
+                    return;
+                }
+                if (!CheckCorrectPathConditions(job))
+                {
+                    Debug.LogWarning($"[Progression] Условия правильного пути для {job.jobID} не выполнены.");
+                    return;
+                }
+            }
+            else if (path == ProjectDocumentDefinition.PathType.Alternate)
+            {
+                if (job.alternatePath == null || !job.alternatePath.isValid)
+                {
+                    Debug.LogWarning($"[Progression] Обходной путь для {job.jobID} недоступен.");
+                    return;
+                }
+                if (PlayerWallet.Instance == null ||
+                    PlayerWallet.Instance.GetCurrentMoney() < job.alternatePath.moneyCost)
+                {
+                    Debug.LogWarning($"[Progression] Недостаточно денег для обходного пути {job.jobID}");
+                    return;
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[Progression] Неизвестный путь для {job.jobID}: {path}");
+                return;
+            }
+
+            // Создаём документ
+            var docDef = new ProjectDocumentDefinition(job);
+            docDef.jobPathType = path;
+            docDef.jobMoneyCost = (path == ProjectDocumentDefinition.PathType.Alternate) ? job.alternatePath.moneyCost : 0;
+            docDef.jobCorruptionCost = (path == ProjectDocumentDefinition.PathType.Alternate) ? job.alternatePath.corruptionCost : 0;
+
+            // Регистрация (защита от дублей)
+            if (DocumentManager.Instance != null)
+                DocumentManager.Instance.RegisterActiveProjectDoc(job.jobID);
+
+            // Укладка на стол директора
+            var directorInbox = PolicyManager.Instance != null ? PolicyManager.Instance.directorInboxStack : null;
+            if (directorInbox == null)
+            {
+                // Fallback: ищем DocumentStack с именем DirectorInbox в сцене
+                var stacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
+                foreach (var s in stacks)
+                {
+                    if (s.gameObject.name.IndexOf("Director", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        directorInbox = s;
+                        break;
+                    }
+                }
+            }
+
+            if (directorInbox != null)
+            {
+                // Ищем префаб документа в сцене/проекте — берём любой существующий ProjectDocumentObject как шаблон
+                var docPrefab = FindJobDocPrefab();
+                directorInbox.AddProjectDocument(docDef, docPrefab);
+                Debug.Log($"[Progression] Документ повышения создан для {job.jobID} (путь: {path})");
+            }
+            else
+            {
+                Debug.LogError("[Progression] Не найден directorInboxStack для укладки документа!");
+            }
+        }
+
+        /// <summary>
+        /// Проверка условий правильного пути для должности.
+        /// Вызывается из StartJobPromotion перед созданием документа.
+        /// </summary>
+        private bool CheckCorrectPathConditions(JobTitleData job)
+        {
+            if (job.correctPath == null || !job.correctPath.isValid) return false;
+            var p = job.correctPath;
+
+            // Дни
+            if (p.requiredDays > 0 && TimeManager.Instance != null &&
+                TimeManager.Instance.GetCurrentDay() < p.requiredDays)
+                return false;
+
+            // Клиенты
+            if (p.requiredClients > 0 && ClientPathfinding.clientsExitedProcessed < p.requiredClients)
+                return false;
+
+            // Сотрудники
+            if (p.requiredStaff > 0 && HiringManager.Instance != null &&
+                HiringManager.Instance.AllStaff.Count < p.requiredStaff)
+                return false;
+
+            // Регионы
+            if (p.requiredRegions > 0 && GetCapturedRegionsCount() < p.requiredRegions)
+                return false;
+
+            // Апгрейды
+            if (p.requiredUpgrades > 0 && UpgradeManager.Instance != null &&
+                UpgradeManager.Instance.GetPurchasedUpgradeNamesForSave().Count < p.requiredUpgrades)
+                return false;
+
+            // Деньги
+            if (p.requiredMoney > 0 && PlayerWallet.Instance != null &&
+                PlayerWallet.Instance.GetCurrentMoney() < p.requiredMoney)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Найти префаб ProjectDocumentObject для создания документа о должности.
+        /// Берём первый попавшийся экземпляр/префаб в сцене.
+        /// </summary>
+        private GameObject FindJobDocPrefab()
+        {
+            // 1. Ищем любой существующий ProjectDocumentObject в сцене — используем как шаблон
+            var existing = FindFirstObjectByType<Gameplay.Documents.ProjectDocumentObject>();
+            if (existing != null) return existing.gameObject;
+            return null;
         }
 
         #endregion
@@ -475,6 +648,22 @@ namespace Managers
                     if (DocumentManager.Instance != null) DocumentManager.Instance.UnregisterActiveProjectDoc(doc.targetRegion.regionID);
                     break;
                 case ProjectDocumentType.JobPromotion:
+                    // Для alternate пути — списать деньги и начислить коррупцию при архивации
+                    if (doc.jobPathType == ProjectDocumentDefinition.PathType.Alternate && doc.targetJob != null)
+                    {
+                        if (PlayerWallet.Instance != null && doc.jobMoneyCost > 0)
+                        {
+                            PlayerWallet.Instance.AddMoney(-doc.jobMoneyCost,
+                                $"Должность (обходной путь): {doc.targetJob.titleName}",
+                                IncomeType.Shadow);
+                        }
+                        if (doc.jobCorruptionCost > 0 && FinancialLedgerManager.Instance != null)
+                        {
+                            // Начисляем corruption напрямую в globalCorruptionScore
+                            FinancialLedgerManager.Instance.globalCorruptionScore += doc.jobCorruptionCost;
+                            Debug.Log($"[Progression] +{doc.jobCorruptionCost}% коррупции (обходной путь: {doc.targetJob.titleName})");
+                        }
+                    }
                     FinalizeJobPromotion(doc.targetJob);
                     if (DocumentManager.Instance != null) DocumentManager.Instance.UnregisterActiveProjectDoc(doc.targetJob.jobID);
                     break;

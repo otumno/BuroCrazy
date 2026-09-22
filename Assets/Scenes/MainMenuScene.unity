@@ -216,6 +216,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   numberOfSlots: 3
   isNewGame: 1
+  pendingNewGameSetup: 0
 --- !u!82 &96204286
 AudioSource:
   m_ObjectHideFlags: 0
@@ -371,8 +372,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 6b5ab1b480378254ea939188135c5c70, type: 2}
   - {fileID: 11400000, guid: a5a1a320397b6f247940635fcf00d64d, type: 2}
   - {fileID: 11400000, guid: 1b4105eb69cd8ea4caefb99aa8fa4ba2, type: 2}
-  allJobsDatabase:
-  - {fileID: 11400000, guid: c1e14a88f48100445906024f6aeb56d9, type: 2}
+  allJobsDatabase: []
   regionRuntimeStates: []
 --- !u!114 &96204290
 MonoBehaviour:

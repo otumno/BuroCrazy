@@ -24,6 +24,12 @@ namespace Managers
         private HashSet<string> purchasedUpgradeNames = new HashSet<string>();
         // -------------------------------------
 
+        // --- Хуки на активацию ---
+        // Вызываются после ApplyUpgradeEffects, чтобы выполнить кастомную логику
+        // (например, разблокировка диванов, повышение комфорта и т.п.)
+        private Dictionary<string, System.Action> upgradeHooks = new Dictionary<string, System.Action>();
+        // -------------------------------
+
         // --- Событие для оповещения UI об изменениях ---
         public event System.Action OnUpgradePurchased;
         // ---------------------------------------------
@@ -135,6 +141,9 @@ namespace Managers
 
             // 4. Применение эффекта активации/деактивации объектов
             ApplyUpgradeEffects(upgrade);
+
+            // 4.1 Вызов хука (если зарегистрирован)
+            FireUpgradeHook(upgrade.name);
 
             // 5. Оповещение UI и других систем
             OnUpgradePurchased?.Invoke(); // Вызываем событие, чтобы UI мог обновиться
@@ -250,6 +259,7 @@ namespace Managers
                 {
                     purchasedUpgradeNames.Add(name); // Добавляем в список купленных
                     ApplyUpgradeEffects(upgrade); // Применяем эффект активации
+                    FireUpgradeHook(name); // Вызов хука при загрузке
                     appliedCount++;
                 }
                 else
@@ -280,6 +290,57 @@ namespace Managers
             purchasedUpgradeNames.Clear();
             Debug.Log("[UpgradeManager] Статус всех апгрейдов сброшен.");
             OnUpgradePurchased?.Invoke(); // Оповестить UI
+        }
+
+        // --- Система хуков ---
+
+        /// <summary>
+        /// Зарегистрировать Action, который будет вызван при активации указанного апгрейда
+        /// (через PurchaseUpgrade или ActivateUpgradeByID).
+        /// Идемпотентно — повторная регистрация перезаписывает хук.
+        /// </summary>
+        public void RegisterUpgradeHook(string upgradeID, System.Action onActivate)
+        {
+            if (string.IsNullOrEmpty(upgradeID))
+            {
+                Debug.LogWarning("[UpgradeManager] RegisterUpgradeHook: пустой upgradeID");
+                return;
+            }
+            if (onActivate == null)
+            {
+                Debug.LogWarning($"[UpgradeManager] RegisterUpgradeHook: null callback для '{upgradeID}'");
+                return;
+            }
+            upgradeHooks[upgradeID] = onActivate;
+            Debug.Log($"[UpgradeManager] Хук зарегистрирован для '{upgradeID}'");
+        }
+
+        /// <summary>
+        /// Удалить хук для апгрейда.
+        /// </summary>
+        public void UnregisterUpgradeHook(string upgradeID)
+        {
+            if (string.IsNullOrEmpty(upgradeID)) return;
+            if (upgradeHooks.Remove(upgradeID))
+                Debug.Log($"[UpgradeManager] Хук удалён для '{upgradeID}'");
+        }
+
+        /// <summary>
+        /// Вызвать зарегистрированный хук для апгрейда (если есть).
+        /// </summary>
+        private void FireUpgradeHook(string upgradeID)
+        {
+            if (upgradeHooks.TryGetValue(upgradeID, out var hook) && hook != null)
+            {
+                try
+                {
+                    hook.Invoke();
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"[UpgradeManager] Ошибка в хуке для '{upgradeID}': {e}");
+                }
+            }
         }
 
         // --- Конец методов сохранения/загрузки ---
@@ -355,7 +416,7 @@ namespace Managers
 	public void ActivateUpgradeByID(string upgradeID)
     {
         UpgradeData upgrade = allUpgradesDatabase.FirstOrDefault(u => u != null && u.name == upgradeID);
-        
+
         if (upgrade == null)
         {
             Debug.LogError($"[UpgradeManager] Не удалось найти апгрейд с ID '{upgradeID}' для активации!");
@@ -370,13 +431,16 @@ namespace Managers
 
         // Добавляем в список купленных
         purchasedUpgradeNames.Add(upgrade.name);
-        
+
         // Применяем эффекты (появление мебели и т.д.)
         ApplyUpgradeEffects(upgrade);
 
+        // Вызов хука (если зарегистрирован)
+        FireUpgradeHook(upgrade.name);
+
         Debug.Log($"<color=green>[UpgradeManager] Апгрейд '{upgrade.upgradeName}' УСПЕШНО АКТИВИРОВАН через приказ!</color>");
         OnUpgradePurchased?.Invoke();
-        
+
         // Перестраиваем граф навигации
         var graphBuilder = FindFirstObjectByType<GraphBuilder>();
         graphBuilder?.BuildGraph();

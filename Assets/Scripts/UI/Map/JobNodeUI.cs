@@ -20,7 +20,13 @@ namespace UI.Map
         [SerializeField] private Button selectButton;
         [SerializeField] private GameObject lockedOverlay;
 
-        [Header("Цвета")]
+        [Header("Иконка должности")]
+        [Tooltip("Иконка должности (ЧБ или цветная). Если null — используется fallback на bgImage.color.")]
+        [SerializeField] private Image iconImage;
+        [Tooltip("Рамка вокруг иконки (опционально).")]
+        [SerializeField] private Image frameImage;
+
+        [Header("Цвета (fallback если иконок нет)")]
         [SerializeField] private Color ownedColor = Color.green;
         [SerializeField] private Color availableColor = Color.yellow;
         [SerializeField] private Color lockedColor = Color.gray;
@@ -29,12 +35,42 @@ namespace UI.Map
         {
             jobData = data;
 
-            titleText.text = data.titleName;
+            if (titleText != null) titleText.text = data.titleName;
 
-            selectButton.onClick.RemoveAllListeners();
-            selectButton.onClick.AddListener(() => onClick?.Invoke(jobData));
+            if (selectButton != null)
+            {
+                selectButton.onClick.RemoveAllListeners();
+                selectButton.onClick.AddListener(() => onClick?.Invoke(jobData));
+            }
 
             UpdateState();
+        }
+
+        /// <summary>
+        /// Перезагрузить отображение без повторного Setup.
+        /// Нужен для внешнего обновления (например, после изменения состояния прогрессии).
+        /// </summary>
+        public void RefreshFromData()
+        {
+            UpdateState();
+        }
+
+        private void OnEnable()
+        {
+            // Подписываемся на обновления прогрессии — нода автоматически перерисуется
+            // при открытии новой должности, региона или смены других условий.
+            if (ProgressionManager.Instance != null)
+            {
+                ProgressionManager.Instance.OnProgressionUpdated += RefreshFromData;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (ProgressionManager.Instance != null)
+            {
+                ProgressionManager.Instance.OnProgressionUpdated -= RefreshFromData;
+            }
         }
 
         public void UpdateState()
@@ -53,21 +89,72 @@ namespace UI.Map
 
             bool isOwned = ProgressionManager.Instance.IsJobUnlocked(jobData.jobID);
             bool isAvailable = !isOwned && ProgressionManager.Instance.CanStartUnlockJob(jobData);
+            bool isLocked = !isOwned && !isAvailable;
 
-            lockedOverlay.SetActive(!isOwned && !isAvailable);
+            // lockedOverlay показываем только если должность заблокирована
+            if (lockedOverlay != null) lockedOverlay.SetActive(isLocked);
 
-            if (isOwned)
+            // Если в JobTitleData есть иконки — используем Вариант А (иконка + цвет рамки).
+            // Иначе — fallback на bgImage.color (Вариант Б).
+            bool hasIcons = (jobData.iconLocked != null) || (jobData.iconUnlocked != null);
+
+            if (hasIcons)
             {
-                bgImage.color = ownedColor;
-            }
-            else if (isAvailable)
-            {
-                bgImage.color = availableColor;
+                ApplyIconVariant(isOwned, isAvailable, isLocked);
             }
             else
             {
-                bgImage.color = lockedColor;
+                ApplyColorFallback(isOwned, isAvailable, isLocked);
             }
+        }
+
+        // ----- Вариант А: иконки заданы в JobTitleData -----
+        private void ApplyIconVariant(bool isOwned, bool isAvailable, bool isLocked)
+        {
+            if (iconImage != null)
+            {
+                iconImage.enabled = true;
+
+                if (isOwned)
+                {
+                    iconImage.sprite = jobData.iconUnlocked != null ? jobData.iconUnlocked : jobData.iconLocked;
+                    iconImage.color = Color.white;
+                }
+                else
+                {
+                    // isAvailable или isLocked — показываем ЧБ-иконку
+                    iconImage.sprite = jobData.iconLocked;
+                    iconImage.color = Color.white;
+                }
+            }
+
+            // Цвет рамки: зелёный/жёлтый/серый
+            Color frameColor;
+            if (isOwned) frameColor = ownedColor;
+            else if (isAvailable) frameColor = availableColor;
+            else frameColor = lockedColor;
+
+            if (frameImage != null)
+            {
+                frameImage.color = frameColor;
+            }
+            else if (bgImage != null)
+            {
+                // fallback: если рамки нет, красим bgImage
+                bgImage.color = frameColor;
+            }
+        }
+
+        // ----- Вариант Б: иконок нет, красим фон (старая логика) -----
+        private void ApplyColorFallback(bool isOwned, bool isAvailable, bool isLocked)
+        {
+            if (iconImage != null) iconImage.enabled = false;
+
+            if (bgImage == null) return;
+
+            if (isOwned) bgImage.color = ownedColor;
+            else if (isAvailable) bgImage.color = availableColor;
+            else bgImage.color = lockedColor;
         }
     }
 }
