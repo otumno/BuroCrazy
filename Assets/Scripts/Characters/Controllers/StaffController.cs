@@ -273,7 +273,8 @@ public class StaffController : MonoBehaviour
     public ThoughtBubbleController thoughtBubble;
     public CharacterStateLogger logger;
     public CharacterVisuals visuals; 
-    public VoiceData voiceProfile; 
+    public VoiceData voiceProfile;
+    public VoiceData femaleVoiceProfile;
 
     [Header("Состояние")]
     public float energy = 100f;
@@ -889,6 +890,19 @@ public class StaffController : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Голос с учётом пола. Если женский голос не назначен, возвращает основной voiceProfile.
+    /// </summary>
+    public VoiceData GetVoiceProfile()
+    {
+        if (gender == Gender.Female && femaleVoiceProfile != null)
+        {
+            return femaleVoiceProfile;
+        }
+
+        return voiceProfile;
+    }
+
     /// <summary>
     /// Показывает визуальный эффект успеха/неудачи над головой персонажа.
     /// Директор переопределит этот метод как пустой.

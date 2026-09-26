@@ -518,6 +518,7 @@ MonoBehaviour:
   logger: {fileID: 0}
   visuals: {fileID: 0}
   voiceProfile: {fileID: 0}
+  femaleVoiceProfile: {fileID: 0}
   energy: 1
   stress: 0
   frustration: 0

@@ -357,9 +357,9 @@ namespace Managers
                 speakerName = "Директор";
                 isDirector = true;
                 
-                if (DirectorAvatarController.Instance != null) 
-                    voice = DirectorAvatarController.Instance.voiceProfile;
-                if (voice == null) 
+                if (DirectorAvatarController.Instance != null)
+                    voice = DirectorAvatarController.Instance.GetVoiceProfile();
+                if (voice == null)
                     voice = directorVoiceProfile;
             }
             else if (phrase.speakerID == "Client" && currentClientContext != null)
@@ -530,9 +530,9 @@ namespace Managers
 
                 // Озвучка голосом Директора
                 VoiceData voice = null;
-                if (DirectorAvatarController.Instance != null) 
-                    voice = DirectorAvatarController.Instance.voiceProfile;
-                else 
+                if (DirectorAvatarController.Instance != null)
+                    voice = DirectorAvatarController.Instance.GetVoiceProfile();
+                if (voice == null)
                     voice = directorVoiceProfile;
 
                 if (typingCoroutine != null) StopCoroutine(typingCoroutine);
