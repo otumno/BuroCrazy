@@ -29,7 +29,7 @@ MonoBehaviour:
     - {r: 1, g: 1, b: 1, a: 1}
   femaleBodySets:
   - idleBody: {fileID: -1879888799911037929, guid: 32a694ee5b9f5534fa0001f7a6bd106a, type: 3}
-    portrait: {fileID: 8206839613880520507, guid: a225f84ffd0cb014a94a0859578e7a57, type: 3}
+    portrait: {fileID: -1466615226170666830, guid: d6efe59e8823e7d41b97038be6132bca, type: 3}
     walkBody1: {fileID: 960396895554040329, guid: e9e46291d719f974a8b023bf9714ce49, type: 3}
     walkBody2: {fileID: 3212380323889677878, guid: ccff3f630d2cb484aaccb3070da6e3a3, type: 3}
     hairSprites: []
