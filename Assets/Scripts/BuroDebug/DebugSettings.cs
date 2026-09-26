@@ -33,6 +33,6 @@ namespace BuroDebug
 #else
             return defaultValue;
 #endif
-        } 
+        }
     }
 }

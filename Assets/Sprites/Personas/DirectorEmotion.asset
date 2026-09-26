@@ -14,12 +14,34 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maleBodySets:
   - idleBody: {fileID: -1879888799911037929, guid: 32a694ee5b9f5534fa0001f7a6bd106a, type: 3}
+    portrait: {fileID: 6892078087679127301, guid: 7a93b45c1e8465e4b9587c6e04b2143d, type: 3}
     walkBody1: {fileID: 6859326965049662136, guid: 00e6be823e8fb304ab86be6fc0c6f594, type: 3}
     walkBody2: {fileID: -5397753365343789046, guid: 34594ad59abd42a45a25ede94167e6e5, type: 3}
+    hairSprites: []
+    hairColors:
+    - {r: 0.2, g: 0.1, b: 0, a: 1}
+    - {r: 0.4, g: 0.25, b: 0.1, a: 1}
+    - {r: 0.6, g: 0.4, b: 0.2, a: 1}
+    - {r: 0.8, g: 0.7, b: 0.5, a: 1}
+    - {r: 0.9, g: 0.9, b: 0.85, a: 1}
+    outfitSprites: []
+    outfitColors:
+    - {r: 1, g: 1, b: 1, a: 1}
   femaleBodySets:
   - idleBody: {fileID: -1879888799911037929, guid: 32a694ee5b9f5534fa0001f7a6bd106a, type: 3}
-    walkBody1: {fileID: 6859326965049662136, guid: 00e6be823e8fb304ab86be6fc0c6f594, type: 3}
-    walkBody2: {fileID: -5397753365343789046, guid: 34594ad59abd42a45a25ede94167e6e5, type: 3}
+    portrait: {fileID: 8206839613880520507, guid: a225f84ffd0cb014a94a0859578e7a57, type: 3}
+    walkBody1: {fileID: 960396895554040329, guid: e9e46291d719f974a8b023bf9714ce49, type: 3}
+    walkBody2: {fileID: 3212380323889677878, guid: ccff3f630d2cb484aaccb3070da6e3a3, type: 3}
+    hairSprites: []
+    hairColors:
+    - {r: 0.2, g: 0.1, b: 0, a: 1}
+    - {r: 0.4, g: 0.25, b: 0.1, a: 1}
+    - {r: 0.6, g: 0.4, b: 0.2, a: 1}
+    - {r: 0.8, g: 0.7, b: 0.5, a: 1}
+    - {r: 0.9, g: 0.9, b: 0.85, a: 1}
+    outfitSprites: []
+    outfitColors:
+    - {r: 1, g: 1, b: 1, a: 1}
   emotionFaces:
   - emotion: 0
     maleFace: {fileID: -4423278522076559584, guid: b0b69cc47f42f984ab3ba2793b0b0ba4, type: 3}

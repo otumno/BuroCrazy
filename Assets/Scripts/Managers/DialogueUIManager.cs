@@ -200,6 +200,12 @@ namespace Managers
             if (directorPortrait)
             {
                 directorPortrait.gameObject.SetActive(true);
+
+                // Портрет берём из текущего набора тела директора: он выбран по полу в CharacterVisuals.Setup.
+                // Не GetPortraitSprite(): без портрета он вернёт спрайт тела, а нам лучше оставить портрет из префаба.
+                Sprite directorFace = GetDirectorPortraitSprite();
+                if (directorFace != null) directorPortrait.sprite = directorFace;
+
                 if(directorNameText) directorNameText.text = "Директор"; 
                 SetVisualState(directorPortrait, directorPortraitFrame, directorNameText, false);
             }
@@ -221,6 +227,15 @@ namespace Managers
                     }
                 }
             }
+        }
+
+        private static Sprite GetDirectorPortraitSprite()
+        {
+            var director = DirectorAvatarController.Instance;
+            if (director?.visuals == null)
+                return null;
+            
+            return director.visuals.currentBodySet?.portrait;
         }
 
         private void UpdateNodeImage(DialogueNode node)

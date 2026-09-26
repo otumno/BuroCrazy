@@ -125,7 +125,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
 
     /// <summary>
     /// Переназначает пол (и опционально коллекцию спрайтов) директора и перерисовывает внешний вид.
-    /// Вызывается при старте новой игры, чтобы применить выбор из книги создания директора.
+    /// Вызывается при старте новой игры (выбор из книги создания директора) и при загрузке сейва (SaveData.gender).
     /// Повторяет путь настройки из Start(), т.к. на момент вызова визуал уже отрисован полом по умолчанию.
     /// </summary>
     public void ApplyAppearance(Enums.Gender newGender, EmotionSpriteCollection newCollection = null)

@@ -130,6 +130,12 @@ namespace Managers
                 TraitManager.Instance.Save(ref data);
             }
 
+            // 10. Пол Директора (выбран в книге создания, влияет на внешность и портрет)
+            if (DirectorAvatarController.Instance != null)
+            {
+                data.gender = DirectorAvatarController.Instance.gender;
+            }
+
             // Запись на диск
             WriteSaveDataToFile(slotIndex, data);
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
@@ -298,6 +304,13 @@ namespace Managers
                 if (TraitManager.Instance != null)
                 {
                     TraitManager.Instance.Load(data);
+                }
+
+                // 9. Пол Директора. Директор лежит в GameScene префабом с полом по умолчанию,
+                //    поэтому пол из сейва накатываем поверх и перерисовываем внешность.
+                if (DirectorAvatarController.Instance != null)
+                {
+                    DirectorAvatarController.Instance.ApplyAppearance(data.gender);
                 }
 
                 PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
