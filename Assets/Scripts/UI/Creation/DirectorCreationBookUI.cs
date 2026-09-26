@@ -52,10 +52,6 @@ namespace UI.Creation
         [Tooltip("Сгенерированный код (A1B2C1D3E3)")]
         public string creationCode = "";
 
-        [Header("Настройки")]
-        [Tooltip("Имя сцены для запуска игры")]
-        public string gameSceneName = "GameScene";
-
         private Stack<BookPageData> pageHistory = new Stack<BookPageData>();
         private List<BookPageData> allPages;
         private string currentPageLetter = "";

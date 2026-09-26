@@ -4,6 +4,7 @@ using UnityEngine;
 using Managers;
 using Enums;
 using Characters;
+using Data.Creation;
 using StorySystem;
 
 [System.Serializable]
@@ -14,6 +15,9 @@ public class SaveData
     public int money;
     public int archiveDocumentCount;
     public bool firstDayTutorialCompleted = false;
+    public int influence;
+    public Gender gender;
+    public int strikes;
     
     // --- Создание директора ---
     [Tooltip("Код создания директора (A1B2C1D3E3)")]
@@ -49,6 +53,28 @@ public class SaveData
 
     [Tooltip("true после успешного финала (книга учёта). При отстранении остаётся false.")]
     public bool gameCompleted = false;
+
+    private SaveData() { }
+
+    public static SaveData CreateEmpty() => new SaveData();
+
+    public static SaveData CreateDefault()
+    {
+        return new SaveData()
+        {
+            day = 1,
+            money = 1000,
+        };
+    }
+
+    public SaveData(DirectorInitialState initialState)
+    {
+        day = 1;
+        money = initialState.startingMoney;
+        influence =  initialState.startingInfluence;
+        gender = initialState.startingGender;
+        strikes = initialState.startingStrikes;
+    }
 
     public Dictionary<string, int> GetTraitScoresDictionary()
     {

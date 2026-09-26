@@ -37,7 +37,7 @@ namespace Managers
         {
             isNewGame = false;
             currentSlotIndex = slotIndex;
-            SaveData data = new SaveData();
+            SaveData data = SaveData.CreateEmpty();
 
             // 1. Глобальные счетчики
             data.day = CalendarManager.Instance.CurrentDay;

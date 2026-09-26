@@ -61,7 +61,6 @@ namespace DI
             BindSingleton<AcademyScenarioManager>(() => AcademyScenarioManager.Instance);
             BindSingleton<TutorialBureaucracyQuest>(() => TutorialBureaucracyQuest.Instance);
             BindSingleton<DocumentQualityManager>(() => DocumentQualityManager.Instance);
-            BindSingleton<GameLifecycleManager>(() => GameLifecycleManager.Instance);
             BindSingleton<NotificationManager>(() => NotificationManager.Instance);
 
             // Tooltip system — используется сценический экземпляр TooltipManager (TooltipTarget берёт его через TooltipManager.Instance).

@@ -207,7 +207,7 @@ namespace Managers
             SaveLoadManager.Instance.SetCurrentSlot(slotIndex);
             SaveLoadManager.Instance.isNewGame = true;
             SaveLoadManager.Instance.pendingNewGameSetup = true;
-            SaveData newGameData = new SaveData { day = 1, money = 1000 };
+            SaveData newGameData = SaveData.CreateDefault();
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }
@@ -221,14 +221,8 @@ namespace Managers
 
             _pendingDirectorInitialState = initialState;
             _pendingDirectorCreationCode = creationCode;
-            
-            SaveData newGameData = new SaveData 
-            { 
-                day = 1, 
-                money = initialState.startingMoney,
-                directorCreationCode = creationCode
-            };
-            
+
+            SaveData newGameData = new SaveData(initialState);
             SaveLoadManager.Instance.SaveNewGame(slotIndex, newGameData);
             StartCoroutine(LoadSceneRoutine(gameSceneName));
         }

@@ -167,10 +167,6 @@ namespace Managers.Academy
         {
             // Бонус за прохождение Кобаяши Мару
             // Например: дополнительное влияние или особый предмет
-            if (Managers.GameLifecycleManager.Instance != null)
-            {
-                // Можно добавить специальный флаг
-            }
         }
 
         private void FinishTraining()

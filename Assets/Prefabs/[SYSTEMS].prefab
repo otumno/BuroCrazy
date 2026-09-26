@@ -1903,7 +1903,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1664084752037518102}
   - component: {fileID: 6323726595607129623}
-  - component: {fileID: 2160086566635130149}
   m_Layer: 0
   m_Name: '[SYSTEMS]'
   m_TagString: Untagged
@@ -1948,20 +1947,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91b3430746e9bac4c894f45bdc5cad7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2160086566635130149
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7573636373502958441}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c689699d786247a47a9d91e94aefb7c3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Managers.GameLifecycleManager
-  gameSceneName: GameScene
-  mainMenuSceneName: MainMenuScene
 --- !u!1 &7669570337387737985
 GameObject:
   m_ObjectHideFlags: 0
