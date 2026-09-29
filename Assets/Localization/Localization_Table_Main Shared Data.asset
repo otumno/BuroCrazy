@@ -14,7 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
   m_TableCollectionName: Localization_Table_Main
   m_TableCollectionNameGuidString: 88c9dd150195c614ca60bd00de15adf9
-  m_Entries: []
+  m_Entries:
+  - m_Id: 947427707230969181
+    m_Key: hiring.temporary
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:
