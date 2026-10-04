@@ -386,39 +386,8 @@ namespace Managers
             // !!! ВАЖНО !!! Ставим паузу ДО любых действий
             PauseGame(true);
 
-            // Загрузка данных
-            bool loadSuccess = SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
-
-            if (!loadSuccess && SaveLoadManager.Instance.isNewGame)
-            {
-                PlayerWallet.Instance.ResetState();
-                CalendarManager.Instance.StartNewGame();
-                ArchiveManager.Instance.ResetState();
-            }
-
-            // Проверяем pendingNewGameSetup, а не isNewGame: последний уже сброшен в false
-            // (SaveNewGame при старте новой игры и LoadGame выше), поэтому по isNewGame этот блок
-            // для новой игры не выполнялся бы никогда.
-            if (SaveLoadManager.Instance.pendingNewGameSetup)
-            {
-                DirectorManager.Instance.ResetState();
-                HiringManager.Instance.ResetState();
-                OrderManager.Instance.ResetState();
-                StoryStateManager.Instance?.ResetState();
-
-                // [НОВОЕ] Инициализировать ArcManager для новой игры (выбирает арки)
-                if (StorySystem.ArcManager.Instance != null)
-                {
-                    StorySystem.ArcManager.Instance.Initialize();
-                }
-
-                ApplyDirectorCreationSettings();
-
-                // Потребляем флаг: инициализация новой игры нужна один раз за загрузку GameScene.
-                SaveLoadManager.Instance.pendingNewGameSetup = false;
-            }
-
-            DirectorManager.Instance.PrepareDay();
+            // Привязка постоянных менеджеров к сцене, сброс партии, сейв или настройки новой игры, подготовка дня.
+            GameSession.Begin();
 
             // Подготавливаем ссылки на панели (для возможного использования)
             var desk = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include);
@@ -495,70 +464,6 @@ namespace Managers
             }
 
             isTransitioning = false;
-        }
-
-        private void ApplyDirectorCreationSettings()
-        {
-            var initialState = GetPendingDirectorInitialState();
-            if (initialState == null)
-            {
-                Debug.Log("[MainUIManager] Нет данных о создании директора, используем настройки по умолчанию.");
-                return;
-            }
-
-            Debug.Log($"[MainUIManager] Применяем настройки создания директора: {GetPendingDirectorCreationCode()}");
-
-            if (PlayerWallet.Instance != null)
-            {
-                PlayerWallet.Instance.ResetState(initialState.startingMoney);
-            }
-
-            if (ProgressionManager.Instance != null)
-            {
-                ProgressionManager.Instance.AddInfluence(initialState.startingInfluence);
-
-                foreach (var regionID in initialState.unlockedRegions)
-                {
-                    ProgressionManager.Instance.UnlockRegion(regionID);
-                }
-            }
-
-            if (DirectorManager.Instance != null)
-            {
-                DirectorManager.Instance.SetStrikes(initialState.startingStrikes);
-            }
-
-            if (initialState.startingStaff.Count > 0 && HiringManager.Instance != null)
-            {
-                foreach (var staffData in initialState.startingStaff)
-                {
-                    HiringManager.Instance.SpawnStaff(staffData.role, staffData.customName, staffData.skillLevel);
-                }
-            }
-
-            // Применяем внешность всегда: пол задаётся книгой (SetGender), а spriteCollectionID
-            // ни один выбор пока не устанавливает — поэтому по нему гейтить вызов нельзя.
-            ApplyDirectorAppearance(initialState.spriteCollectionID, initialState.startingGender);
-
-            ClearPendingDirectorData();
-        }
-
-        private void ApplyDirectorAppearance(string spriteCollectionID, Enums.Gender gender)
-        {
-            var director = DirectorAvatarController.Instance;
-            if (director == null) return;
-
-            EmotionSpriteCollection collection = null;
-            if (!string.IsNullOrEmpty(spriteCollectionID))
-            {
-                collection = Resources.Load<EmotionSpriteCollection>($"DirectorSprites/{spriteCollectionID}");
-                if (collection == null)
-                {
-                    Debug.LogWarning($"[MainUIManager] Коллекция спрайтов '{spriteCollectionID}' не найдена в Resources/DirectorSprites.");
-                }
-            }
-
-            director.ApplyAppearance(gender, collection);
         }
     }
 }

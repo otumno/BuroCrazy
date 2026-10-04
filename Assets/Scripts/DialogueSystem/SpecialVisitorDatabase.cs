@@ -12,7 +12,7 @@ public class SpecialVisitorDatabase : ScriptableObject
     {
         [Header("Основное")]
         public string name;
-        [Tooltip("День, в который должен прийти посетитель.")]
+        [Tooltip("День, в который должен прийти посетитель. Дни считаются с 1, как на заставке дня.")]
         public int dayToSpawn;
         [Tooltip("Диалог, который запустится при клике.")]
         public DialogueGraph dialogue;

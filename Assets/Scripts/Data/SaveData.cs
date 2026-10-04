@@ -49,6 +49,9 @@ public class SaveData
     [Tooltip("ID открытых должностей (JobTitleData.jobID).")]
     public List<string> unlockedJobIDs;
 
+    [Tooltip("Захваченные регионы и сколько дней ими владеем (от этого зависит поток клиентов).")]
+    public List<RegionSaveData> unlockedRegions;
+
     public HashSet<string> watchedDialogues;
 
     // [НОВОЕ] Прогресс сюжетных арок (текущее прохождение)
@@ -152,6 +155,13 @@ public struct StaffSaveData
     
     // Особенность (Trait)
     public StaffController.TraitType trait;
+}
+
+[System.Serializable]
+public struct RegionSaveData
+{
+    public string regionID;
+    public int daysOwned;
 }
 
 [System.Serializable]

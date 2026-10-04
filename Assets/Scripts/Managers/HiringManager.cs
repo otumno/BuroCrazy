@@ -890,11 +890,10 @@ namespace Managers
 
         public void ResetState()
         {
+            // Через DestroyAllStaff, а не просто очистку списков: сброс бывает и поверх идущей сцены
+            // (перезагрузка после отстранения), и объекты сотрудников остались бы в ней без учёта.
+            DestroyAllStaff();
             AvailableCandidates.Clear();
-            occupiedPoints.Clear();
-            UnassignedStaff.Clear();
-            AllStaff.Clear();
-            staffBeingModified.Clear();
         }
 
         public void SpawnStaff(StaffController.Role role, string customName, int skillLevel)

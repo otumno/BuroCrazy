@@ -120,10 +120,18 @@ namespace Managers
                 data.cinematicTriggerStates = CinematicSystem.CinematicTriggerManager.Instance.GetTriggerStates();
             }
 
-            // 7.1. Открытые должности Директора (от них зависит, кого можно нанимать)
+            // 7.1. Прогресс Директора: должности (от них зависит, кого можно нанимать), влияние, регионы
             if (ProgressionManager.Instance != null)
             {
                 data.unlockedJobIDs = ProgressionManager.Instance.GetUnlockedJobIDsForSave();
+                data.influence = ProgressionManager.Instance.GetInfluence();
+                data.unlockedRegions = ProgressionManager.Instance.GetRegionsForSave();
+            }
+
+            // 7.2. Страйки
+            if (DirectorManager.Instance != null)
+            {
+                data.strikes = DirectorManager.Instance.currentStrikes;
             }
 
             // 8. [НОВОЕ] Прогресс сюжетных арок
@@ -362,10 +370,18 @@ namespace Managers
                     CinematicSystem.CinematicTriggerManager.Instance.RestoreTriggerStates(data.cinematicTriggerStates);
                 }
 
-                // 6.1. Открытые должности Директора
+                // 6.1. Прогресс Директора: должности, влияние, регионы
                 if (ProgressionManager.Instance != null)
                 {
                     ProgressionManager.Instance.LoadUnlockedJobIDs(data.unlockedJobIDs);
+                    ProgressionManager.Instance.SetInfluence(data.influence);
+                    ProgressionManager.Instance.LoadRegions(data.unlockedRegions);
+                }
+
+                // 6.2. Страйки
+                if (DirectorManager.Instance != null)
+                {
+                    DirectorManager.Instance.SetStrikes(data.strikes);
                 }
 
                 // 7. [НОВОЕ] Восстановление прогресса сюжетных арок

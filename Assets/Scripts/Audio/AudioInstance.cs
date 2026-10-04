@@ -163,6 +163,9 @@ namespace Audio
             _isReserved = false;
             _volumeSequence.SafeKill();
 
+            if (_audioSource == null)
+                return;
+
             if (instant || soundData.FadeOutDuration <= 0)
             {
                 _audioSource.Stop();

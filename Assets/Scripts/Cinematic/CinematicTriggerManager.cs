@@ -100,6 +100,12 @@ namespace CinematicSystem
         [Tooltip("Отладочные сообщения")]
         public bool debugLog = true;
 
+        /// <summary>
+        /// Граф триггера доигран до конца (аргумент — id триггера). Через него игровая логика реагирует
+        /// на окончание катсцены (например, EndingManager на визит Инспектора), не запуская граф сама.
+        /// </summary>
+        public event Action<string> OnTriggerCompleted;
+
         private void Awake()
         {
             if (Instance != null)
@@ -405,7 +411,10 @@ namespace CinematicSystem
             {
                 player.OnFinished -= onFinished;
                 // Play другого графа прерывает текущий через Stop() без OnFinished — тогда событие не доиграно.
-                if (player.CurrentGraph == trigger.graphToPlay) trigger.hasCompleted = true;
+                if (player.CurrentGraph != trigger.graphToPlay) return;
+
+                trigger.hasCompleted = true;
+                OnTriggerCompleted?.Invoke(trigger.id);
             };
             player.OnFinished += onFinished;
 

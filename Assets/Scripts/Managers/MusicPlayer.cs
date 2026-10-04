@@ -84,13 +84,22 @@ namespace Managers
         {
             SceneManager.sceneLoaded += OnSceneLoaded;
             OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
-            
-            if (TimeManager.Instance != null)
-            {
-                TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
-            }
+            BindToScene();
         }
-        
+
+        /// <summary>
+        /// Подписка на объекты GameScene. MusicPlayer живёт в [SYSTEMS] (создаётся в меню), а TimeManager —
+        /// в GameScene и пересоздаётся при каждой её загрузке, поэтому подписки из Start не хватает:
+        /// вызывается из GameSession.Begin() при каждом старте сессии.
+        /// </summary>
+        public void BindToScene()
+        {
+            if (TimeManager.Instance == null) return;
+
+            TimeManager.Instance.OnPeriodChanged -= OnPeriodChanged;
+            TimeManager.Instance.OnPeriodChanged += OnPeriodChanged;
+        }
+
         void OnDestroy()
         {
              SceneManager.sceneLoaded -= OnSceneLoaded;

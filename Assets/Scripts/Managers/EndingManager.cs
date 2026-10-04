@@ -9,30 +9,27 @@ using UnityEngine;
 namespace Managers
 {
     /// <summary>
-    /// Менеджер концовок. Подписан на TimeManager.OnDayChanged.
-    /// На finalDay запускает визит Инспектора.
-    /// При превышении лимита страйков — досрочное отстранение.
+    /// Менеджер концовок. Подписан на TimeManager.OnDayChanged (досрочное отстранение по страйкам).
+    /// Визит Инспектора — обычное событие CinematicTriggerManager (триггер InspectorVisit, начало finalDay):
+    /// граф запускает менеджер событий, а EndingManager только реагирует на его окончание.
     /// После диалога Инспектора (с EventNode AddTraitPoint при ничьей) — вычисляет доминанту и запускает TriggerEnding.
     /// </summary>
     public class EndingManager : MonoBehaviour
     {
+        public const string InspectorVisitTriggerId = "InspectorVisit";
+
         public static EndingManager Instance { get; private set; }
 
         [Header("База концовок")]
         [SerializeField] private EndingDatabase endingDatabase;
 
-        [Header("Граф визита Инспектора (день 30)")]
-        [Tooltip("CinematicGraph, проигрываемый при наступлении finalDay. Если null — берётся по имени 'InspectorVisit' из Resources/CinematicGraphs/.")]
-        [SerializeField] private CinematicGraph inspectorVisitCinematic;
-
         [Header("Диалог Инспектора (опционально)")]
         [SerializeField] private DialogueSystem.Data.DialogueGraph inspectorDialogue;
 
-        [Header("Ключ графа визита в Resources/CinematicGraphs/")]
-        [SerializeField] private string inspectorVisitGraphName = "InspectorVisit";
-
         public bool isEndingTriggered { get; private set; }
         public string selectedEndingID { get; private set; }
+
+        private int FinalDay => AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.finalDay : 30;
 
         private void Awake()
         {
@@ -44,6 +41,8 @@ namespace Managers
         {
             if (TimeManager.Instance != null)
                 TimeManager.Instance.OnDayChanged -= OnDayChanged;
+            if (CinematicTriggerManager.Instance != null)
+                CinematicTriggerManager.Instance.OnTriggerCompleted -= CinematicTriggerManager_TriggerCompleted;
             if (Instance == this) Instance = null;
         }
 
@@ -53,6 +52,21 @@ namespace Managers
                 TimeManager.Instance.OnDayChanged += OnDayChanged;
             else
                 Debug.LogWarning("[EndingManager] TimeManager.Instance не найден в Start(). OnDayChanged не будет вызван.");
+
+            var triggerManager = CinematicTriggerManager.Instance;
+            if (triggerManager == null)
+            {
+                Debug.LogWarning("[EndingManager] CinematicTriggerManager не найден — визит Инспектора не запустится.");
+                return;
+            }
+
+            triggerManager.OnTriggerCompleted += CinematicTriggerManager_TriggerCompleted;
+
+            // День визита задаёт баланс (AIBalanceConfig.finalDay), а не значение в списке триггеров сцены —
+            // чтобы финальный день настраивался в одном месте.
+            var inspectorVisit = triggerManager.GetTrigger(InspectorVisitTriggerId);
+            if (inspectorVisit != null) inspectorVisit.requiredDay = FinalDay;
+            else Debug.LogWarning($"[EndingManager] В CinematicTriggerManager нет триггера '{InspectorVisitTriggerId}'.");
         }
 
         private void OnDayChanged(int day)
@@ -61,11 +75,23 @@ namespace Managers
 
             CheckForEarlyEnding();
 
-            int finalDay = AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.finalDay : 30;
-            if (day >= finalDay)
+            // Если события визита нет (или у него нет графа), концовку всё равно нужно дать.
+            if (day >= FinalDay && !HasInspectorVisitCinematic())
             {
-                CheckForDay30Ending();
+                Debug.LogError($"[EndingManager] Нет катсцены '{InspectorVisitTriggerId}' — определяем концовку без визита.");
+                DetermineAndTrigger(null);
             }
+        }
+
+        private static bool HasInspectorVisitCinematic()
+        {
+            var trigger = CinematicTriggerManager.Instance != null ? CinematicTriggerManager.Instance.GetTrigger(InspectorVisitTriggerId) : null;
+            return trigger != null && trigger.enabled && trigger.graphToPlay != null;
+        }
+
+        private void CinematicTriggerManager_TriggerCompleted(string triggerId)
+        {
+            if (triggerId == InspectorVisitTriggerId) OnInspectorCinematicFinished();
         }
 
         public void CheckForEarlyEnding()
@@ -81,43 +107,8 @@ namespace Managers
             }
         }
 
-        public void CheckForDay30Ending()
-        {
-            if (isEndingTriggered) return;
-
-            CinematicGraph graph = inspectorVisitCinematic;
-            if (graph == null)
-            {
-                graph = CinematicGraphLibrary.LoadGraph(inspectorVisitGraphName);
-            }
-
-            if (graph == null)
-            {
-                Debug.LogError($"[EndingManager] Не удалось загрузить InspectorVisit (имя: {inspectorVisitGraphName}).");
-                DetermineAndTrigger(null);
-                return;
-            }
-
-            var player = FindFirstObjectByType<CinematicPlayer>();
-            if (player == null)
-            {
-                Debug.LogError("[EndingManager] CinematicPlayer не найден на сцене.");
-                DetermineAndTrigger(null);
-                return;
-            }
-
-            player.OnFinished -= OnInspectorCinematicFinished;
-            player.OnFinished += OnInspectorCinematicFinished;
-
-            Debug.Log("[EndingManager] Запуск визита Инспектора (день 30).");
-            player.Play(graph);
-        }
-
         private void OnInspectorCinematicFinished()
         {
-            var player = FindFirstObjectByType<CinematicPlayer>();
-            if (player != null) player.OnFinished -= OnInspectorCinematicFinished;
-
             if (isEndingTriggered) return;
 
             var dominants = TraitManager.Instance != null ? TraitManager.Instance.GetDominantTraits() : new List<string>();
@@ -191,8 +182,7 @@ namespace Managers
                     onReload: () =>
                     {
                         if (MainUIManager.Instance != null) MainUIManager.Instance.PopPause();
-                        if (SaveLoadManager.Instance != null)
-                            SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
+                        GameSession.ReloadCurrentSlot();
                     },
                     onMenu: () =>
                     {

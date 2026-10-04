@@ -49,4 +49,4 @@
 
 1. Открыть `EndingDatabase.asset` и заменить placeholder-описания/иллюстрации/музыку на финальные.
 2. Расставить `InspectorStandPoint` (у стола Директора) и `DoorSpawnPoint` (у входа в кабинет) в нужные позиции на сцене.
-3. При необходимости — настроить `inspectorVisitGraphName` в EndingManager (по умолчанию `InspectorVisit`).
+3. Визит Инспектора — обычное событие: триггер `InspectorVisit` в `CinematicTriggerManager` (GameScene) с графом `Resources/CinematicGraphs/InspectorVisit`. День визита берётся из `AIBalanceConfig.finalDay`, EndingManager выставляет его триггеру сам. Подробнее — `Assets/Scripts/Cinematic/README_CinematicSystem.txt`.

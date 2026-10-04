@@ -51,17 +51,20 @@ namespace Managers
         {
             // Инициализируем состояние регионов
             InitializeRegionStates();
+            BindToScene();
+        }
 
-            // Подписываемся на смену дня
-            if (TimeManager.Instance != null)
-            {
-                TimeManager.Instance.OnDayChanged += OnDayChanged;
-                Debug.Log("[ProgressionManager] Подписан на TimeManager.OnDayChanged");
-            }
-            else
-            {
-                Debug.LogWarning("[ProgressionManager] TimeManager.Instance не найден! Daily flow не будет обновляться.");
-            }
+        /// <summary>
+        /// Подписка на объекты GameScene. ProgressionManager живёт в [SYSTEMS] и переживает смену сцен,
+        /// а TimeManager — объект GameScene и при уничтожении обнуляет свои события, поэтому подписки из Start
+        /// не хватает: вызывается из GameSession.Begin() при каждом старте сессии.
+        /// </summary>
+        public void BindToScene()
+        {
+            if (TimeManager.Instance == null) return;
+
+            TimeManager.Instance.OnDayChanged -= OnDayChanged;
+            TimeManager.Instance.OnDayChanged += OnDayChanged;
         }
 
         /// <summary>
@@ -140,6 +143,15 @@ namespace Managers
 
         public int GetInfluence() => currentInfluence;
 
+        /// <summary>
+        /// Устанавливает влияние напрямую (загрузка сейва).
+        /// </summary>
+        public void SetInfluence(int amount)
+        {
+            currentInfluence = amount;
+            OnInfluenceChanged?.Invoke(currentInfluence);
+        }
+
         public void AddInfluence(int amount)
         {
             if (amount == 0) return;
@@ -189,6 +201,48 @@ namespace Managers
         }
 
         public int GetCapturedRegionsCount() => unlockedRegionIDs.Count;
+
+        public List<RegionSaveData> GetRegionsForSave()
+        {
+            var result = new List<RegionSaveData>();
+            foreach (var regionID in unlockedRegionIDs)
+            {
+                var state = GetRegionRuntimeState(regionID);
+                result.Add(new RegionSaveData { regionID = regionID, daysOwned = state != null ? state.daysOwned : 1 });
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Восстанавливает захваченные регионы из сейва. Только состояние: побочные эффекты захвата
+        /// (контакты телефона) сохраняются отдельно, поэтому FinalizeRegionUnlock не вызываем.
+        /// </summary>
+        public void LoadRegions(List<RegionSaveData> regions)
+        {
+            // null — старый сейв без регионов: оставляем как есть, чтобы не обнулить стартовый регион.
+            if (regions == null) return;
+
+            unlockedRegionIDs.Clear();
+            foreach (var region in regions)
+            {
+                if (!string.IsNullOrEmpty(region.regionID)) unlockedRegionIDs.Add(region.regionID);
+            }
+
+            InitializeRegionStates();
+
+            // InitializeRegionStates считает регион только что захваченным — возвращаем набранный поток.
+            foreach (var region in regions)
+            {
+                var state = GetRegionRuntimeState(region.regionID);
+                if (state == null || region.daysOwned <= 0) continue;
+
+                state.daysOwned = region.daysOwned;
+                state.currentDailyTarget = Scriptables.Progression.RegionRuntimeState.CalculateDailyTarget(state.data, state.daysOwned);
+            }
+
+            OnProgressionUpdated?.Invoke();
+            OnDailyFlowUpdated?.Invoke();
+        }
 
         // Этот метод будет вызываться, когда документ о захвате успешно обработан
         public void FinalizeRegionUnlock(RegionData region)
@@ -615,7 +669,7 @@ namespace Managers
 
             // Дни
             if (p.requiredDays > 0 && TimeManager.Instance != null &&
-                TimeManager.Instance.GetCurrentDay() < p.requiredDays)
+                TimeManager.Instance.GetCurrentDay() - 1 < p.requiredDays) // дни нумеруются с 1, прошло — на день меньше
                 return false;
 
             // Клиенты
