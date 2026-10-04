@@ -255,7 +255,7 @@ namespace Managers
                 StartCoroutine(leaf.AnimateMovement(startTransform.position, landingTransform.position, duration, true)); // useEaseIn = true (default)
                 // --- End Point Selection ---
             }
-            Debug.Log($"[TransitionManager] Создано {activeLeaves.Count} листьев для перехода.");
+            // Debug.Log($"[TransitionManager] Создано {activeLeaves.Count} листьев для перехода.");
         }
 
 
