@@ -23,5 +23,6 @@ namespace Utilities
         public int Experience;           // Начальный опыт
         public StaffController.StaffNameData NameData;   // Данные об имени для динамического отображения
         public StaffController.TraitType Trait = StaffController.TraitType.None; // Особенность персонажа
+        public EmploymentAvailability Availability = EmploymentAvailability.Any; // На каких условиях можно нанять
     }
 }

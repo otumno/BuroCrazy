@@ -33,6 +33,9 @@ namespace Data.Calendar
         public static bool IsNight(this CalendarDayPeriodType type) =>
             (type & FullNight) != 0; // Проверка битовой маски
 
+        public static bool IsEndDay(this CalendarDayPeriodType type) =>
+            type == CalendarDayPeriodType.StartNight;
+
         public static string GetLocalization(this CalendarDayPeriodType type)
         {
             switch (type)

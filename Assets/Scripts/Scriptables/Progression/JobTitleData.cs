@@ -54,8 +54,11 @@ namespace Scriptables.Progression
         public string policyID;
 
         [Header("Разблокировки")]
-        [Tooltip("Роли, которые становятся доступны для найма после получения должности.")]
+        [Tooltip("Роли, которые становятся доступны для найма после получения должности (только начальный ранг).")]
         public List<StaffController.Role> unlockedRoles = new List<StaffController.Role>();
+
+        [Tooltip("Доступ к найму ролей вплоть до указанного уровня ранга. Для одной роли берётся максимум по всем открытым должностям.")]
+        public List<HiringAccessRule> hiringAccessRules = new List<HiringAccessRule>();
 
         [Tooltip("ID апгрейдов, которые активируются при получении должности.")]
         public List<string> unlockedUpgrades = new List<string>();

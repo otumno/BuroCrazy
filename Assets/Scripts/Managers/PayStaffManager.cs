@@ -27,6 +27,26 @@ namespace Managers
         private void OnPeriodChanged(PeriodSettings obj)
         {
             PaySalariesForPeriod(obj.PeriodType);
+
+            if (obj.PeriodType.IsEndDay())
+                DismissTemporaryStaff();
+        }
+
+        private void DismissTemporaryStaff()
+        {
+            if (HiringManager.Instance == null)
+                return;
+
+            foreach (var staff in HiringManager.Instance.GetTemporaryStaff())
+            {
+                // Нанятый вечером или в начале ночи работает завтра — его не трогаем.
+                if (!staff.IsTemporaryWorkDayOver())
+                    continue;
+
+                // Смена оплачена вперёд при найме (HiringManager.GetHiringCost), доплачивать нечего.
+                Debug.Log($"[Payroll] Временный сотрудник {staff.characterName} отработал смену и уволен.");
+                HiringManager.Instance.FireStaff(staff);
+            }
         }
 
         private void PaySalariesForPeriod(CalendarDayPeriodType periodName)
@@ -47,7 +67,11 @@ namespace Managers
                     continue;
                 }
 
-                if (staff.WorkShiftMask.HasFlag(periodName)) 
+                // Временным смена оплачена вперёд при найме.
+                if (!staff.HasEmploymentStarted() || staff.IsTemporary)
+                    continue;
+
+                if (staff.WorkShiftMask.HasFlag(periodName))
                 {
                     staff.unpaidPeriods++;  
                     totalDebtAcquired += staff.salaryPerPeriod;

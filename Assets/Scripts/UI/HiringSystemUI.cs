@@ -6,7 +6,9 @@ using System.Text;
 using System.Collections; // <--- Нужно для Coroutines
 using System.Collections.Generic; 
 using System.Linq;
+using Enums;
 using Managers;
+using UI;
 using Utilities;
 
 // Этот скрипт должен висеть на ГЛАВНОЙ ПАНЕЛИ найма.
@@ -30,6 +32,7 @@ public class HiringSystemUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI detailedUniqueSkillText;
     [SerializeField] private Button hireButton;
     [SerializeField] private Button closeButton;
+    [SerializeField] private SwitchToggle isTemporaryWorkerToggle;
 
     [Header("Общая информация")]
     [SerializeField] private TextMeshProUGUI playerMoneyText; 
@@ -81,15 +84,13 @@ public class HiringSystemUI : MonoBehaviour
         if(detailedViewPanel != null) detailedViewPanel.SetActive(false); 
 
         // Назначаем слушателей кнопок
-        if (closeButton != null) {
-             closeButton.onClick.RemoveAllListeners(); 
-             closeButton.onClick.AddListener(CloseDetailedView);
-        } else Debug.LogError("Close Button не назначен в HiringSystemUI!");
+        closeButton.onClick.RemoveAllListeners(); 
+        closeButton.onClick.AddListener(CloseDetailedView);
 
-        if (hireButton != null) {
-             hireButton.onClick.RemoveAllListeners(); 
-             hireButton.onClick.AddListener(OnHire);
-        } else Debug.LogError("Hire Button не назначен в HiringSystemUI!");
+        hireButton.onClick.RemoveAllListeners(); 
+        hireButton.onClick.AddListener(OnHire);
+
+        isTemporaryWorkerToggle.SetListener(TemporaryWorkerToggle_ValueChanged);
     }
 
     private void OnDisable()
@@ -97,6 +98,7 @@ public class HiringSystemUI : MonoBehaviour
         StopAllCoroutines(); // Останавливаем ожидание, если панель закрыли раньше времени
         if (closeButton != null) closeButton.onClick.RemoveAllListeners();
         if (hireButton != null) hireButton.onClick.RemoveAllListeners();
+        if (isTemporaryWorkerToggle != null) isTemporaryWorkerToggle.SetListener(null);
     }
 
     /// <summary>
@@ -190,7 +192,6 @@ public class HiringSystemUI : MonoBehaviour
         
         if (detailedNameText != null) detailedNameText.text = candidate.Name ?? "Безымянный";
         if (detailedBioText != null) detailedBioText.text = candidate.Bio ?? "Биография отсутствует.";
-        if (detailedCostText != null) detailedCostText.text = $"Стоимость: ${candidate.HiringCost}";
 
         if (detailedRoleRankText != null)
         {
@@ -232,12 +233,8 @@ public class HiringSystemUI : MonoBehaviour
         if (detailedPanelBackground != null) detailedPanelBackground.color = bgColor;
 
         UpdatePlayerMoneyDisplay();
-
-        if (hireButton != null)
-        {
-            bool canAfford = PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= candidate.HiringCost;
-            hireButton.interactable = canAfford;
-        }
+        SetupEmploymentToggle(candidate);
+        UpdateHiringCostDisplay();
 
         detailedViewPanel.SetActive(true);
         if (currentlyViewedPin != null) currentlyViewedPin.SetActive(false); 
@@ -300,7 +297,7 @@ public class HiringSystemUI : MonoBehaviour
     {
          if (candidate == null || HiringManager.Instance == null) return;
 
-        bool success = HiringManager.Instance.HireCandidate(candidate);
+        bool success = HiringManager.Instance.HireCandidate(candidate, GetSelectedEmploymentType());
 
         if (success)
         {
@@ -318,11 +315,62 @@ public class HiringSystemUI : MonoBehaviour
              HiringPanelUI hiringPanel = FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include);
              if (hiringPanel != null) hiringPanel.RefreshTeamList();
         }
-        else 
+        else
         {
-           if (currentlyViewedCandidate == candidate && hireButton != null && PlayerWallet.Instance != null) {
-                 hireButton.interactable = PlayerWallet.Instance.GetCurrentMoney() >= candidate.HiringCost;
-             }
+            if (currentlyViewedCandidate == candidate) UpdateHiringCostDisplay();
+        }
+    }
+
+    private EmploymentType GetSelectedEmploymentType()
+    {
+        bool isTemporary = isTemporaryWorkerToggle != null && isTemporaryWorkerToggle.IsOn;
+        return isTemporary ? EmploymentType.Temporary : EmploymentType.Permanent;
+    }
+
+    // Переключатель «временно» блокируется, если кандидата можно нанять только на одних условиях
+    // (например, сюжетного — см. Candidate.Availability).
+    private void SetupEmploymentToggle(Candidate candidate)
+    {
+        if (isTemporaryWorkerToggle == null || HiringManager.Instance == null) return;
+
+        bool canHirePermanent = HiringManager.Instance.CanHireAs(candidate, EmploymentType.Permanent);
+        bool canHireTemporary = HiringManager.Instance.CanHireAs(candidate, EmploymentType.Temporary);
+
+        // По умолчанию — полная ставка; «временно» включаем, только если иначе нанять нельзя.
+        isTemporaryWorkerToggle.SetState(!canHirePermanent && canHireTemporary, silent: true);
+        isTemporaryWorkerToggle.SetInteractable(canHirePermanent && canHireTemporary);
+    }
+
+    private void TemporaryWorkerToggle_ValueChanged(bool isTemporary)
+    {
+        UpdateHiringCostDisplay();
+    }
+
+    // Временному показываем, из чего сложилась сумма: он платит вперёд и за найм, и за всю смену.
+    private static string GetHiringCostText(Candidate candidate, EmploymentType employmentType, int hiringCost)
+    {
+        if (employmentType != EmploymentType.Temporary) return $"Стоимость: ${hiringCost}";
+
+        int periodsCount = HiringManager.GetShiftPeriodsCount(candidate.Rank);
+        int salaryPerPeriod = HiringManager.Instance.GetSalaryPerPeriod(candidate.Rank);
+        int hiringPart = hiringCost - periodsCount * salaryPerPeriod;
+
+        return $"Стоимость: ${hiringCost}\n(найм ${hiringPart} + смена {periodsCount} × ${salaryPerPeriod})";
+    }
+
+    private void UpdateHiringCostDisplay()
+    {
+        if (currentlyViewedCandidate == null || HiringManager.Instance == null) return;
+
+        EmploymentType employmentType = GetSelectedEmploymentType();
+        int hiringCost = HiringManager.Instance.GetHiringCost(currentlyViewedCandidate, employmentType);
+
+        if (detailedCostText != null) detailedCostText.text = GetHiringCostText(currentlyViewedCandidate, employmentType, hiringCost);
+
+        if (hireButton != null)
+        {
+            bool canAfford = PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= hiringCost;
+            hireButton.interactable = canAfford && HiringManager.Instance.CanHireAs(currentlyViewedCandidate, employmentType);
         }
     }
 

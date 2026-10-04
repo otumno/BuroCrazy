@@ -4,6 +4,7 @@ using UnityEngine;
 using Managers;
 using Enums;
 using Characters;
+using Data.Calendar;
 using Data.Creation;
 using StorySystem;
 
@@ -40,6 +41,10 @@ public class SaveData
 
     // --- Контакты телефона ---
     public List<string> unlockedContactIDs;
+
+    // --- Карьера Директора ---
+    [Tooltip("ID открытых должностей (JobTitleData.jobID).")]
+    public List<string> unlockedJobIDs;
 
     public HashSet<string> watchedDialogues;
 
@@ -101,27 +106,42 @@ public class SaveData
 [System.Serializable]
 public struct StaffSaveData
 {
+    [Tooltip("true — нанятый сотрудник, при загрузке создаётся заново. false — объект сцены (директор) или запись из старого сейва: ищется в сцене по имени.")]
+    public bool isHired;
+
     public string gameObjectName;
     public StaffController.StaffNameData nameData;
     public float stressLevel;
     public Vector3 position;
-    
+
     // Характеристики
     public StaffController.Role role;
     public Gender gender;
     public int salary;
-    public int experience;
-    
+    // float, а не int: опыт копится дробными порциями. Старые сейвы с int читаются JsonUtility без проблем.
+    public float experience;
+    [Tooltip("Имя ассета RankData (ищется в HiringManager.rankDatabase).")]
+    public string rankName;
+    public EmploymentType employmentType;
+    [Tooltip("Имена ассетов StaffAction, выбранных сотруднику.")]
+    public List<string> activeActionNames;
+
     // Навыки
     public float paperworkMastery;
     public float sedentaryResilience;
     public float pedantry;
     public float softSkills;
     public float corruption;
-    
+    public float dirtyHands;
+
     // Рабочее место и расписание
     public int assignedWorkstationId;
     public int scheduleTrackIndex;
+    public CalendarDayPeriodType workShiftMask;
+
+    // Зарплата
+    public int unpaidPeriods;
+    public int missedPaymentCount;
 
     // Статистика посещаемости
     public int totalLatenessCount;

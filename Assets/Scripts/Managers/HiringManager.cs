@@ -10,6 +10,7 @@ using Characters;
 using UI;
 using Enums;
 using Managers.Teletype;
+using Scriptables.Progression;
 
 namespace Managers
 {
@@ -34,11 +35,24 @@ namespace Managers
         public AnimationCurve internCountOverTime = new AnimationCurve(new Keyframe(1, 4), new Keyframe(30, 1));
         // Дебаг: на любой день минимум 1 специалист (по одной вакансии каждой роли).
         public AnimationCurve specialistCountOverTime = new AnimationCurve(new Keyframe(1, 1), new Keyframe(10, 2), new Keyframe(30, 3));
+        [Tooltip("Шанс кандидата с рангом выше начального. Работает, только если такой ранг роли открыт карьерой Директора.")]
         public AnimationCurve experiencedInternChance = new AnimationCurve(new Keyframe(1, 0), new Keyframe(5, 0.1f), new Keyframe(30, 0.5f));
 
         [Header("Стоимость найма")]
         public int baseCost = 100;
         public int costPerSkillPoint = 150;
+        [Tooltip("Множитель стоимости найма временного сотрудника (на текущий день).")]
+        [Range(0f, 1f)]
+        public float temporaryHiringCostMultiplier = 0.5f;
+
+        [Header("Доступ к найму (карьера Директора)")]
+        [Tooltip("Что доступно для найма без должностей. Остальное открывают JobTitleData.hiringAccessRules и unlockedRoles.")]
+        public List<HiringAccessRule> startingHiringAccess = new List<HiringAccessRule>
+        {
+            new HiringAccessRule { role = StaffController.Role.Intern, maxRankLevel = 0 },
+            new HiringAccessRule { role = StaffController.Role.Janitor, maxRankLevel = 0 },
+            new HiringAccessRule { role = StaffController.Role.ServiceWorker, maxRankLevel = 0 }
+        };
 
         // --- Списки Имен ---
         // Все списки имён, фамилий и патронимов перенесены в Utilities.NameGenerator
@@ -102,8 +116,11 @@ namespace Managers
         private IEnumerator RegisterExistingStaffAndAssignDatabases()
         {
             yield return new WaitForEndOfFrame();
-            AllStaff.Clear(); 
-            StaffController[] existingStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
+            // Не Clear(): к этому моменту SaveLoadManager мог уже пересоздать сотрудников из сейва,
+            // а они выключены (сидят дома) — FindObjectsByType без Include их бы не нашёл, и они выпали бы из AllStaff.
+            AllStaff.RemoveAll(s => s == null);
+            UnassignedStaff.RemoveAll(s => s == null);
+            StaffController[] existingStaff = FindObjectsByType<StaffController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
             ActionDatabase systemActions = null;
             var firstValidStaff = existingStaff.FirstOrDefault(s => s != null && !(s is DirectorAvatarController));
@@ -160,44 +177,131 @@ namespace Managers
             }
         }
 
-        public bool HireCandidate(Candidate candidate)
+        /// <summary>
+        /// Можно ли нанять кандидата на указанных условиях (без учёта денег).
+        /// </summary>
+        public bool CanHireAs(Candidate candidate, EmploymentType employmentType)
         {
-            if (candidate == null || PlayerWallet.Instance == null) return false;
-            if (PlayerWallet.Instance.GetCurrentMoney() < candidate.HiringCost) return false;
+            if (candidate == null) return false;
 
-            Transform freePoint = unassignedStaffPoints.FirstOrDefault(p => p != null && !occupiedPoints.ContainsKey(p));
+            if (employmentType == EmploymentType.Temporary)
+            {
+                if (candidate.Availability == EmploymentAvailability.PermanentOnly) return false;
+
+                // Смена оплачена целиком, поэтому нанимаем, только если она вся помещается до ночи.
+                return TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out _, out _);
+            }
+
+            return candidate.Availability != EmploymentAvailability.TemporaryOnly;
+        }
+
+        /// <summary>
+        /// Сколько игрок платит при найме. Временный — предоплата всего за раз:
+        /// найм со скидкой плюс полная смена (workPeriodsCount периодов ранга). За периоды ему потом не начисляется.
+        /// </summary>
+        public int GetHiringCost(Candidate candidate, EmploymentType employmentType)
+        {
+            if (candidate == null)
+                return 0;
+            
+            if (employmentType == EmploymentType.Permanent)
+                return candidate.HiringCost;
+
+            int hiringPart = Mathf.Max(0, Mathf.RoundToInt(candidate.HiringCost * temporaryHiringCostMultiplier));
+            int shiftPart = GetShiftPeriodsCount(candidate.Rank) * GetSalaryPerPeriod(candidate.Rank);
+            return hiringPart + shiftPart;
+        }
+
+        public int GetSalaryPerPeriod(RankData rank)
+        {
+            return rank != null && rank.salaryMultiplier > 0 ? Mathf.RoundToInt(baseCost * rank.salaryMultiplier) : baseCost;
+        }
+
+        // Длина смены по рангу; 3 — как в панели расписания, если ранга нет.
+        public static int GetShiftPeriodsCount(RankData rank)
+        {
+            return rank != null ? rank.workPeriodsCount : 3;
+        }
+
+        /// <summary>
+        /// Смена временного: periodsCount периодов подряд, начиная со следующего после текущего, в порядке календаря.
+        /// Ночные пропускаются (ночью временные не работают), через ночь смена не переходит:
+        /// если до ночи периодов не осталось, она начинается с утра следующего дня.
+        /// </summary>
+        /// <param name="isNextDay">true, если смена выпала уже на следующий день.</param>
+        /// <returns>true, если смена помещается целиком (все periodsCount периодов).</returns>
+        private static bool TryBuildTemporaryShiftMask(int periodsCount, out Data.Calendar.CalendarDayPeriodType mask, out bool isNextDay)
+        {
+            isNextDay = false;
+            mask = Data.Calendar.CalendarDayPeriodType.None;
+
+            var periods = TimeManager.Instance != null && TimeManager.Instance.mainCalendarDay != null
+                ? TimeManager.Instance.mainCalendarDay.periodSettings
+                : null;
+            if (periods == null || periods.Count == 0) return false;
+
+            int currentIndex = periods.FindIndex(p => p.PeriodType == TimeManager.Instance.GetCurrentPeriodType());
+            if (currentIndex < 0) return false;
+
+            int collected = 0;
+            for (int offset = 1; offset <= periods.Count && collected < periodsCount; offset++)
+            {
+                int index = currentIndex + offset;
+                var periodType = periods[index % periods.Count].PeriodType;
+
+                if (periodType.IsNight())
+                {
+                    if (collected > 0) break;
+                    continue;
+                }
+
+                // День сменяется при переходе через конец списка периодов (см. TimeManager.GoToNextPeriod).
+                if (collected == 0) isNextDay = index >= periods.Count;
+
+                mask |= periodType;
+                collected++;
+            }
+
+            return collected >= periodsCount;
+        }
+
+        private Transform GetFreeStaffPoint()
+        {
+            return unassignedStaffPoints.FirstOrDefault(p => p != null && !occupiedPoints.ContainsKey(p));
+        }
+
+        private RoleData GetRoleData(StaffController.Role role)
+        {
+            return allRoleData?.FirstOrDefault(data => data != null && data.roleType == role);
+        }
+
+        /// <summary>
+        /// Создаёт сотрудника с контроллером нужной роли — выключенным, в зоне дома.
+        /// Общая часть найма и загрузки сейва.
+        /// </summary>
+        private StaffController CreateStaffObject(StaffController.Role role, Transform freePoint)
+        {
+            // Используем единый префаб, скрипты накинутся сами
+            if (internPrefab == null) { Debug.LogWarning($"[HiringManager] Prefab не найден!"); return null; }
+
             // Если точек нет, спавним просто где-то (чтобы найм не ломался)
             Vector3 spawnPos = freePoint != null ? freePoint.position : Vector3.zero;
+            GameObject newStaffGO = Instantiate(internPrefab, spawnPos, Quaternion.identity);
 
-            RoleData roleData = allRoleData?.FirstOrDefault(data => data != null && data.roleType == candidate.Role);
-            GameObject prefabToSpawn = internPrefab; // Используем единый префаб, скрипты накинутся сами
-
-            if (roleData == null) Debug.LogWarning($"[HiringManager] RoleData не найден для роли {candidate.Role}");
-            if (prefabToSpawn == null) { Debug.LogWarning($"[HiringManager] Prefab не найден!"); return false; }
-
-            GameObject newStaffGO = Instantiate(prefabToSpawn, spawnPos, Quaternion.identity);
-            
-            // --- ПЕРЕМЕЩАЕМ НАЙМА В ЗОНУ ДОМА И СКРЫВАЕМ ---
-            // Переместим объект в точку дома
+            // --- ПЕРЕМЕЩАЕМ В ЗОНУ ДОМА И СКРЫВАЕМ ---
             if (Managers.ScenePointsRegistry.Instance != null && Managers.ScenePointsRegistry.Instance.staffHomeZone != null)
             {
                 newStaffGO.transform.position = Managers.ScenePointsRegistry.Instance.staffHomeZone.GetRandomPointInside();
             }
-            
+
             // Сразу выключаем объект - он появится только когда менеджер смен решит его разбудить
             newStaffGO.SetActive(false);
-            // ----------------------------------------------------
-            
-            // ВАЖНО: Удаляем старый компонент (InternController), если роль другая, и добавляем нужный
-            // Или используем универсальный StaffController и Rebuild.
-            // Для упрощения предположим, что префаб пустой или Rebuild сработает.
-            // Но лучше сразу добавить правильный компонент.
-            
+
             StaffController staffController = newStaffGO.GetComponent<StaffController>();
             if (staffController == null) staffController = newStaffGO.AddComponent<StaffController>(); // Fallback
 
             // Сразу меняем тип контроллера на правильный
-            var targetType = GetControllerTypeForRole(candidate.Role);
+            var targetType = GetControllerTypeForRole(role);
             if (targetType != null && staffController.GetType() != targetType)
             {
                 // Удаляем InternNotification если конвертируем из Intern во что-то другое
@@ -206,7 +310,7 @@ namespace Managers
                     var internNotification = newStaffGO.GetComponent<InternNotification>();
                     if (internNotification != null) DestroyImmediate(internNotification);
                 }
-                
+
                 // Удаляем старый контроллер если это не StaffController
                 var currentType = staffController.GetType();
                 if (currentType != typeof(StaffController))
@@ -222,113 +326,208 @@ namespace Managers
                 }
             }
 
-            if (staffController != null)
+            if (staffController == null)
             {
-                // Инициализируем базовые компоненты как для существующих сотрудников
-                var agentMover = newStaffGO.GetComponent<AgentMover>();
-                var visuals = newStaffGO.GetComponent<CharacterVisuals>();
-                var logger = newStaffGO.GetComponent<CharacterStateLogger>();
-                if (agentMover != null && visuals != null && logger != null)
+                Destroy(newStaffGO);
+                return null;
+            }
+
+            // Инициализируем базовые компоненты как для существующих сотрудников
+            var agentMover = newStaffGO.GetComponent<AgentMover>();
+            var visuals = newStaffGO.GetComponent<CharacterVisuals>();
+            var logger = newStaffGO.GetComponent<CharacterStateLogger>();
+            if (agentMover != null && visuals != null && logger != null)
+            {
+                staffController.ForceInitializeBaseComponents(agentMover, visuals, logger);
+            }
+
+            return staffController;
+        }
+
+        /// <summary>
+        /// Пересоздаёт нанятого сотрудника из сейва: выключенным дома, смену начнёт CheckAllStaffShiftsImmediately.
+        /// Рабочее место назначает SaveLoadManager — общим кодом со старым форматом сейва.
+        /// Перед серией вызовов нужен DestroyAllStaff, иначе штат задвоится.
+        /// </summary>
+        public StaffController RestoreStaff(StaffSaveData data)
+        {
+            Transform freePoint = GetFreeStaffPoint();
+            StaffController staff = CreateStaffObject(data.role, freePoint);
+            if (staff == null) return null;
+
+            staff.nameData = data.nameData;
+            // Сразу обёртку, а не CharacterSkills: неявное приведение копирует значения,
+            // и правка исходного объекта потом не дошла бы до сотрудника.
+            staff.skills = new StaffController.CharacterSkillsWrapper
+            {
+                paperworkMastery = data.paperworkMastery,
+                sedentaryResilience = data.sedentaryResilience,
+                pedantry = data.pedantry,
+                softSkills = data.softSkills,
+                corruption = data.corruption
+            };
+            staff.gender = data.gender;
+            staff.currentRole = data.role;
+            staff.currentRank = rankDatabase?.FirstOrDefault(r => r != null && r.name == data.rankName)
+                                ?? rankDatabase?.FirstOrDefault(r => r != null && r.associatedRole == data.role && r.rankLevel == 0);
+            staff.experiencePoints = data.experience;
+            staff.salaryPerPeriod = data.salary;
+            staff.permanentTrait = data.trait;
+            staff.activeActions = FindActionsByName(data.activeActionNames);
+
+            RoleData roleData = GetRoleData(data.role);
+            if (roleData != null) staff.InitializeFromData(roleData);
+            // После InitializeFromData: он сбрасывает dirtyHands бухгалтера в базовое значение роли.
+            staff.skills.dirtyHands = data.dirtyHands;
+
+            // hireDay не восстанавливаем (остаётся -1): загрузка начинает день заново, и все — включая
+            // временного, нанятого на завтра, — выходят уже в этот день. Временный отработает его и уволится.
+            staff.employmentType = data.employmentType;
+            staff.WorkShiftMask = data.workShiftMask;
+            staff.uiScheduleTrackIndex = data.scheduleTrackIndex;
+            staff.unpaidPeriods = data.unpaidPeriods;
+            staff.missedPaymentCount = data.missedPaymentCount;
+            staff.gameObject.name = data.gameObjectName;
+
+            AllStaff.Add(staff);
+            if (data.assignedWorkstationId == -999) UnassignedStaff.Add(staff);
+            if (freePoint != null) occupiedPoints.Add(freePoint, staff);
+
+            return staff;
+        }
+
+        // Действия ищем и в ActionDatabase, и в рангах: тактики рангов в общую базу не входят.
+        private List<StaffAction> FindActionsByName(List<string> actionNames)
+        {
+            var result = new List<StaffAction>();
+            if (actionNames == null) return result;
+
+            var knownActions = new List<StaffAction>();
+            var actionDatabase = Resources.Load<ActionDatabase>("Databases/ActionDatabase");
+            if (actionDatabase != null && actionDatabase.allActions != null) knownActions.AddRange(actionDatabase.allActions);
+            if (rankDatabase != null)
+            {
+                foreach (var rank in rankDatabase)
                 {
-                    staffController.ForceInitializeBaseComponents(agentMover, visuals, logger);
+                    if (rank != null && rank.unlockedActions != null) knownActions.AddRange(rank.unlockedActions);
                 }
+            }
 
-                staffController.nameData = candidate.NameData;
-                staffController.skills = candidate.Skills;
-                staffController.gender = candidate.Gender;
-                staffController.currentRank = candidate.Rank;
-                staffController.experiencePoints = candidate.Experience;
-                staffController.salaryPerPeriod = candidate.Rank.salaryMultiplier > 0 ? Mathf.RoundToInt(baseCost * candidate.Rank.salaryMultiplier) : baseCost;
-                staffController.currentRole = candidate.Role; // ВАЖНО!
-                staffController.permanentTrait = candidate.Trait; // Передаём трейт
-                
-                staffController.activeActions = new List<StaffAction>();
+            foreach (var actionName in actionNames)
+            {
+                var action = knownActions.FirstOrDefault(a => a != null && a.name == actionName);
+                if (action != null && !result.Contains(action)) result.Add(action);
+                else if (action == null) Debug.LogWarning($"[HiringManager] Действие '{actionName}' из сейва не найдено.");
+            }
 
-                // ---> ИСПРАВЛЕНИЕ: ВЫДАЕМ СТАРТОВЫЕ ДЕЙСТВИЯ ИЗ РАНГА <---
-                if (candidate.Rank != null && candidate.Rank.unlockedActions != null)
+            return result;
+        }
+
+        public bool HireCandidate(Candidate candidate, EmploymentType employmentType = EmploymentType.Permanent)
+        {
+            if (candidate == null || PlayerWallet.Instance == null) return false;
+            if (!CanHireAs(candidate, employmentType)) return false;
+
+            int hiringCost = GetHiringCost(candidate, employmentType);
+            if (PlayerWallet.Instance.GetCurrentMoney() < hiringCost) return false;
+
+            Transform freePoint = GetFreeStaffPoint();
+            RoleData roleData = GetRoleData(candidate.Role);
+            if (roleData == null) Debug.LogWarning($"[HiringManager] RoleData не найден для роли {candidate.Role}");
+
+            StaffController staffController = CreateStaffObject(candidate.Role, freePoint);
+            if (staffController == null) return false;
+            GameObject newStaffGO = staffController.gameObject;
+
+            staffController.nameData = candidate.NameData;
+            staffController.skills = candidate.Skills;
+            staffController.gender = candidate.Gender;
+            staffController.currentRank = candidate.Rank;
+            staffController.experiencePoints = candidate.Experience;
+            staffController.salaryPerPeriod = GetSalaryPerPeriod(candidate.Rank);
+            staffController.currentRole = candidate.Role; // ВАЖНО!
+            staffController.permanentTrait = candidate.Trait; // Передаём трейт
+            
+            staffController.activeActions = new List<StaffAction>();
+
+            // ---> ИСПРАВЛЕНИЕ: ВЫДАЕМ СТАРТОВЫЕ ДЕЙСТВИЯ ИЗ РАНГА <---
+            if (candidate.Rank != null && candidate.Rank.unlockedActions != null)
+            {
+                foreach (var action in candidate.Rank.unlockedActions)
                 {
-                    foreach (var action in candidate.Rank.unlockedActions)
+                    if (action != null && action.category == ActionCategory.Tactic)
                     {
-                        if (action != null && action.category == ActionCategory.Tactic)
-                        {
-                            staffController.activeActions.Add(action);
-                        }
+                        staffController.activeActions.Add(action);
                     }
                 }
-                // ---------------------------------------------------------
-                
-                if (roleData != null) staffController.InitializeFromData(roleData);
-                
-                // График работы: по умолчанию - УТРО (Morning) для всех сотрудников
-                staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
-
-                newStaffGO.name = $"{candidate.NameData.lastName} {candidate.NameData.firstName}";
-
-                AllStaff.Add(staffController);
-                UnassignedStaff.Add(staffController);
-                newStaffGO.name = candidate.Name;
-                if(freePoint != null) occupiedPoints.Add(freePoint, staffController);
-                AvailableCandidates.Remove(candidate);
-
-                // Логирование найма с трейтом
-                string traitName = StaffController.TraitLibrary[candidate.Trait].Name;
-                Debug.Log($"<color=cyan>[HIRING]</color> Нанят сотрудник {candidate.Name}. Особенность: <b>{traitName}</b>");
-                
-                // Лог в Телетайп
-                if (TeletypeManager.Instance != null)
-                {
-                    TeletypeManager.Instance.LogImportant($"Новый сотрудник: {candidate.NameData.shortName}. Особенность: {traitName}");
-                }
-
-                PlayerWallet.Instance.AddMoney(-candidate.HiringCost, $"Наём: {candidate.Name}");
-
-                // Сначала добавляем в AllStaff ЧТОБЫ таблица расписания видела сотрудника
-                // Потом уже запускаем смену
-                
-                // ----- ИСПРАВЛЕНИЕ ЗДЕСЬ -----
-                // Intern всегда выходит на работу сразу после найма
-                bool isIntern = candidate.Role == StaffController.Role.Intern;
-
-                // Проверяем расписание для не-Intern
-                bool isScheduled = true;
-                if (!isIntern)
-                {
-                    var periodType = TimeManager.Instance.GetCurrentPeriodType();
-                    isScheduled = (staffController.WorkShiftMask & periodType) != 0;
-                }
-
-                // Вызываем StartShift() чтобы сотрудник инициализировался
-                Debug.Log($"[HiringManager] Нанят {staffController.characterName}. Инициализация смены.");
-                staffController.StartShift();
-
-                // Для Intern - всегда visible, для остальных - проверяем расписание
-                if (!isScheduled)
-                {
-                    Debug.Log($"[HiringManager] {staffController.characterName}: Сейчас не его смена. Скрываем до начала работы.");
-                    staffController.gameObject.SetActive(false);
-                }
-                // -----------------------------
-
-                FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
-
-                // Обновляем панель расписания если она открыта
-                var schedulePanel = FindFirstObjectByType<StaffSchedulePanelUI>(FindObjectsInactive.Include);
-                if (schedulePanel != null)
-                {
-                    schedulePanel.RefreshTable();
-                }
-
-                // Ачивка: найм клерка
-                if (candidate.Role == StaffController.Role.Clerk)
-                {
-                    AchievementManager.Instance?.UnlockAchievement("Achv_ExperiencedClerkStory");
-                }
-
-                return true;
             }
+            // ---------------------------------------------------------
             
-            Destroy(newStaffGO);
-            return false;
+            if (roleData != null) staffController.InitializeFromData(roleData);
+            
+            staffController.employmentType = employmentType;
+            int currentDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 0;
+            if (TimeManager.Instance != null)
+            {
+                staffController.hireDay = currentDay;
+                staffController.hirePeriod = TimeManager.Instance.GetCurrentPeriodType();
+            }
+
+            // График работы: постоянному по умолчанию - УТРО (Morning), временному - сразу полная оплаченная смена
+            // со следующего периода. В обоих случаях игрок может передвинуть смену в панели расписания.
+            if (employmentType == EmploymentType.Temporary)
+            {
+                // Что смена помещается целиком, уже проверил CanHireAs в начале найма.
+                TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out var shiftMask, out bool isNextDay);
+                staffController.WorkShiftMask = shiftMask;
+                staffController.temporaryWorkDay = isNextDay ? currentDay + 1 : currentDay;
+            }
+            else
+            {
+                staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
+            }
+
+            newStaffGO.name = $"{candidate.NameData.lastName} {candidate.NameData.firstName}";
+
+            AllStaff.Add(staffController);
+            UnassignedStaff.Add(staffController);
+            newStaffGO.name = candidate.Name;
+            if(freePoint != null) occupiedPoints.Add(freePoint, staffController);
+            AvailableCandidates.Remove(candidate);
+
+            // Логирование найма с трейтом
+            string traitName = StaffController.TraitLibrary[candidate.Trait].Name;
+            string employmentLabel = employmentType == EmploymentType.Temporary ? "временный" : "постоянный";
+            Debug.Log($"<color=cyan>[HIRING]</color> Нанят сотрудник {candidate.Name} ({employmentLabel}). Особенность: <b>{traitName}</b>");
+
+            // Лог в Телетайп
+            if (TeletypeManager.Instance != null)
+            {
+                TeletypeManager.Instance.LogImportant($"Новый сотрудник ({employmentLabel}): {candidate.NameData.shortName}. Особенность: {traitName}");
+            }
+
+            PlayerWallet.Instance.AddMoney(-hiringCost, $"Наём: {candidate.Name}");
+
+            // Смену сразу НЕ запускаем: сотрудник остаётся выключенным дома, а CheckAllStaffShiftsImmediately
+            // разбудит его, когда наступит его смена: постоянного — со следующего дня, временного — со следующего
+            // периода (см. StaffController.HasEmploymentStarted).
+
+            FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+
+            // Обновляем панель расписания если она открыта
+            var schedulePanel = FindFirstObjectByType<StaffSchedulePanelUI>(FindObjectsInactive.Include);
+            if (schedulePanel != null)
+            {
+                schedulePanel.RefreshTable();
+            }
+
+            // Ачивка: найм клерка
+            if (candidate.Role == StaffController.Role.Clerk)
+            {
+                AchievementManager.Instance?.UnlockAchievement("Achv_ExperiencedClerkStory");
+            }
+
+            return true;
         }
 
         // ... (Остальные методы: FireStaff, CheckAllStaffShiftsImmediately и т.д. без изменений)
@@ -343,6 +542,69 @@ namespace Managers
             staffToFire.FireAndGoHome();
             staffBeingModified.RemoveAll(s => s == null || s == staffToFire);
             FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+        }
+
+        /// <summary>
+        /// Убирает всех нанятых сотрудников. Нужно перед загрузкой сейва поверх уже идущей сцены
+        /// (перезагрузка после отстранения), иначе RestoreStaff задвоит штат.
+        /// </summary>
+        public void DestroyAllStaff()
+        {
+            foreach (var staff in AllStaff.ToList())
+            {
+                if (staff != null) staff.FireAndGoHome();
+            }
+
+            AllStaff.Clear();
+            UnassignedStaff.Clear();
+            occupiedPoints.Clear();
+            staffBeingModified.Clear();
+        }
+
+        public List<StaffController> GetTemporaryStaff()
+        {
+            return AllStaff.Where(s => s != null && s.IsTemporary).ToList();
+        }
+
+        /// <summary>
+        /// Максимальный уровень ранга, с которым можно нанять роль: стартовый доступ плюс все открытые должности Директора.
+        /// </summary>
+        /// <returns>-1, если роль для найма закрыта.</returns>
+        public int GetMaxHireRankLevel(StaffController.Role role)
+        {
+            int maxRankLevel = GetMaxRankLevel(startingHiringAccess, role);
+
+            var progression = ProgressionManager.Instance;
+            if (progression == null || progression.allJobsDatabase == null) return maxRankLevel;
+
+            foreach (var job in progression.allJobsDatabase)
+            {
+                if (job == null || !progression.IsJobUnlocked(job.jobID)) continue;
+
+                // unlockedRoles — старый формат: открывает роль только с начальным рангом.
+                if (job.unlockedRoles != null && job.unlockedRoles.Contains(role))
+                    maxRankLevel = Mathf.Max(maxRankLevel, 0);
+
+                maxRankLevel = Mathf.Max(maxRankLevel, GetMaxRankLevel(job.hiringAccessRules, role));
+            }
+
+            return maxRankLevel;
+        }
+
+        public bool IsRoleHireable(StaffController.Role role) => GetMaxHireRankLevel(role) >= 0;
+
+        private static int GetMaxRankLevel(List<HiringAccessRule> rules, StaffController.Role role)
+        {
+            int maxRankLevel = -1;
+            if (rules == null) return maxRankLevel;
+
+            foreach (var rule in rules)
+            {
+                if (rule != null && rule.role == role)
+                    maxRankLevel = Mathf.Max(maxRankLevel, rule.maxRankLevel);
+            }
+
+            return maxRankLevel;
         }
 
         public void RemoveStaff(StaffController staff)
@@ -361,7 +623,8 @@ namespace Managers
             foreach (var staff in AllStaff.ToList())
             {
                 if (staff == null) continue;
-                
+                if (!staff.HasEmploymentStarted()) continue;
+
                 var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
                 var isOnDuty = staff.IsOnDuty();
 
@@ -427,30 +690,34 @@ namespace Managers
             int specialistsToCreate = Mathf.Max(0, Mathf.RoundToInt(specialistCountOverTime.Evaluate(currentDay)));
             float experiencedChance = Mathf.Clamp01(experiencedInternChance.Evaluate(currentDay));
 
+            // Только роли, открытые карьерой Директора (на старте — никого, кроме стажёров).
             var specialistRoles = System.Enum.GetValues(typeof(StaffController.Role))
                 .Cast<StaffController.Role>()
                 .Where(r => r != StaffController.Role.Intern && r != StaffController.Role.Unassigned && r != StaffController.Role.Director)
+                .Where(IsRoleHireable)
                 .ToList();
 
-            int totalSpecialists = specialistsToCreate;
-            
+            int totalSpecialists = specialistRoles.Count > 0 ? specialistsToCreate : 0;
+
             if (totalSpecialists >= 1 && totalSpecialists <= 3)
             {
                 foreach (var role in specialistRoles)
                 {
-                    Candidate candidate = CreateRandomCandidate(role, 0f);
+                    Candidate candidate = CreateRandomCandidate(role, experiencedChance);
                     if (candidate != null) AvailableCandidates.Add(candidate);
                 }
             }
             else
             {
-                for (int i = 0; i < specialistsToCreate; i++)
+                for (int i = 0; i < totalSpecialists; i++)
                 {
                     StaffController.Role randomRole = specialistRoles[Random.Range(0, specialistRoles.Count)];
-                    Candidate newSpecialist = CreateRandomCandidate(randomRole, 0f);
+                    Candidate newSpecialist = CreateRandomCandidate(randomRole, experiencedChance);
                     if (newSpecialist != null) AvailableCandidates.Add(newSpecialist);
                 }
             }
+
+            if (!IsRoleHireable(StaffController.Role.Intern)) return;
 
             for (int i = 0; i < internsToCreate; i++)
             {
@@ -484,10 +751,16 @@ namespace Managers
 
             if (rankDatabase == null) return null;
 
+            // Ранг выше начального — только если его открыла карьера Директора.
+            int maxRankLevel = GetMaxHireRankLevel(role);
             RankData startingRank = null;
-            if (role == StaffController.Role.Intern && Random.value < experiencedChance)
+            if (maxRankLevel > 0 && Random.value < experiencedChance)
             {
-                startingRank = rankDatabase.FirstOrDefault(r => r != null && r.associatedRole == StaffController.Role.Intern && r.rankLevel > 0);
+                var experiencedRanks = rankDatabase
+                    .Where(r => r != null && r.associatedRole == role && r.rankLevel > 0 && r.rankLevel <= maxRankLevel)
+                    .ToList();
+                if (experiencedRanks.Count > 0)
+                    startingRank = experiencedRanks[Random.Range(0, experiencedRanks.Count)];
             }
             if (startingRank == null)
             {

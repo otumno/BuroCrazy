@@ -42,7 +42,14 @@ namespace Characters
         public static void CalculateArrivalTime(this StaffController staff)
         {
             if (staff == null) return;
-            
+
+            // Временные не болеют и не опаздывают: игрок заплатил вперёд за полную смену.
+            if (staff.IsTemporary)
+            {
+                staff.currentLateness = 0f;
+                return;
+            }
+
             float punctuality = GetPrivateField<float>(staff, "punctuality");
             float maxLateness = 30f;
             

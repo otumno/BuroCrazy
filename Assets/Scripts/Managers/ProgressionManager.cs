@@ -419,6 +419,33 @@ namespace Managers
 
         public bool IsJobUnlocked(string jobID) => unlockedJobIDs.Contains(jobID);
 
+        public List<string> GetUnlockedJobIDsForSave() => unlockedJobIDs.ToList();
+
+        /// <summary>
+        /// Восстанавливает открытые должности из сейва. Только ID: политики и апгрейды должностей
+        /// здесь НЕ активируются повторно (FinalizeJobPromotion не вызываем), чтобы не применить их эффекты дважды.
+        /// </summary>
+        public void LoadUnlockedJobIDs(List<string> jobIDs)
+        {
+            unlockedJobIDs.Clear();
+
+            if (jobIDs != null)
+            {
+                foreach (var jobID in jobIDs)
+                {
+                    if (!string.IsNullOrEmpty(jobID)) unlockedJobIDs.Add(jobID);
+                }
+            }
+
+            // Стартовая должность открыта всегда (как в ResetState) — в том числе для новой игры и старых сейвов без списка.
+            if (allJobsDatabase != null && allJobsDatabase.Count > 0 && allJobsDatabase[0] != null)
+            {
+                unlockedJobIDs.Add(allJobsDatabase[0].jobID);
+            }
+
+            OnProgressionUpdated?.Invoke();
+        }
+
         // Проверка: можно ли начать процесс получения должности (создать документ)?
         public bool CanStartUnlockJob(JobTitleData job)
         {
@@ -455,10 +482,10 @@ namespace Managers
                 Debug.Log($"[Progression] Политика активирована: {job.policyID}");
             }
 
-            // 3. Открыть роли для найма (если есть)
+            // 3. Роли для найма: HiringManager сам читает unlockedRoles/hiringAccessRules открытых должностей
+            // при генерации кандидатов, поэтому здесь только лог.
             if (job.unlockedRoles != null && job.unlockedRoles.Count > 0)
             {
-                // TODO: реальная разблокировка ролей — нужно дополнить HiringManager
                 Debug.Log($"[Progression] Роли разблокированы: {string.Join(", ", job.unlockedRoles)}");
             }
 

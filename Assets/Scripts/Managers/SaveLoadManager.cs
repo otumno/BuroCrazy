@@ -52,30 +52,22 @@ namespace Managers
             }
 
             // 3. Персонал
+            // Берём список из HiringManager, а не FindObjectsByType: сотрудники вне смены выключены (сидят дома)
+            // и поиском по сцене не находятся. Временных тоже сохраняем: их смена оплачена вперёд.
             data.allStaffData = new List<StaffSaveData>();
-            StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
-            foreach (var staffMember in allStaff)
+            if (HiringManager.Instance != null)
             {
-                StaffSaveData staffData = new StaffSaveData();
-                staffData.gameObjectName = staffMember.gameObject.name;
-                staffData.nameData = staffMember.nameData;
-                staffData.position = staffMember.transform.position;
-                staffData.stressLevel = staffMember.GetCurrentFrustration();
-            
-                staffData.assignedWorkstationId = staffMember.assignedWorkstation != null ? staffMember.assignedWorkstation.deskId : -999;
-                staffData.scheduleTrackIndex = staffMember.uiScheduleTrackIndex;
-                
-                // Сохраняем статистику посещаемости
-                staffData.totalLatenessCount = staffMember.totalLatenessCount;
-                staffData.sickDaysCount = staffMember.sickDaysCount;
-                
-                // Сохраняем особенность (trait)
-                staffData.trait = staffMember.permanentTrait;
-                
-                // Сохраняем навыки и роль (если нужно глубокое сохранение, добавьте сюда поля из StaffController)
-                // staffData.role = staffMember.currentRole;
-                
-                data.allStaffData.Add(staffData);
+                foreach (var staffMember in HiringManager.Instance.AllStaff)
+                {
+                    if (staffMember == null) continue;
+                    data.allStaffData.Add(CaptureStaff(staffMember, isHired: true));
+                }
+            }
+
+            // Директор лежит в сцене — его, как и раньше, только находим по имени и обновляем.
+            if (DirectorAvatarController.Instance != null)
+            {
+                data.allStaffData.Add(CaptureStaff(DirectorAvatarController.Instance, isHired: false));
             }
 
             // 4. Стопки документов
@@ -118,6 +110,12 @@ namespace Managers
                 data.unlockedContactIDs = PhoneManager.Instance.GetUnlockedContactIDs();
             }
 
+            // 7.1. Открытые должности Директора (от них зависит, кого можно нанимать)
+            if (ProgressionManager.Instance != null)
+            {
+                data.unlockedJobIDs = ProgressionManager.Instance.GetUnlockedJobIDsForSave();
+            }
+
             // 8. [НОВОЕ] Прогресс сюжетных арок
             if (StorySystem.ArcManager.Instance != null)
             {
@@ -140,6 +138,52 @@ namespace Managers
             WriteSaveDataToFile(slotIndex, data);
             PlayerPrefs.SetInt("LastUsedSlot", slotIndex);
             // Debug.Log($"Игра сохранена в слот {slotIndex}");
+        }
+
+        private static StaffSaveData CaptureStaff(StaffController staffMember, bool isHired)
+        {
+            StaffSaveData staffData = new StaffSaveData();
+            staffData.isHired = isHired;
+            staffData.gameObjectName = staffMember.gameObject.name;
+            staffData.nameData = staffMember.nameData;
+            staffData.position = staffMember.transform.position;
+            staffData.stressLevel = staffMember.GetCurrentFrustration();
+
+            staffData.role = staffMember.currentRole;
+            staffData.gender = staffMember.gender;
+            staffData.salary = staffMember.salaryPerPeriod;
+            staffData.experience = staffMember.experiencePoints;
+            staffData.rankName = staffMember.currentRank != null ? staffMember.currentRank.name : "";
+            staffData.employmentType = staffMember.employmentType;
+            staffData.activeActionNames = staffMember.activeActions != null
+                ? staffMember.activeActions.Where(a => a != null).Select(a => a.name).ToList()
+                : new List<string>();
+
+            if (staffMember.skills != null)
+            {
+                staffData.paperworkMastery = staffMember.skills.paperworkMastery;
+                staffData.sedentaryResilience = staffMember.skills.sedentaryResilience;
+                staffData.pedantry = staffMember.skills.pedantry;
+                staffData.softSkills = staffMember.skills.softSkills;
+                staffData.corruption = staffMember.skills.corruption;
+                staffData.dirtyHands = staffMember.skills.dirtyHands;
+            }
+
+            staffData.assignedWorkstationId = staffMember.assignedWorkstation != null ? staffMember.assignedWorkstation.deskId : -999;
+            staffData.scheduleTrackIndex = staffMember.uiScheduleTrackIndex;
+            staffData.workShiftMask = staffMember.WorkShiftMask;
+
+            staffData.unpaidPeriods = staffMember.unpaidPeriods;
+            staffData.missedPaymentCount = staffMember.missedPaymentCount;
+
+            // Статистика посещаемости
+            staffData.totalLatenessCount = staffMember.totalLatenessCount;
+            staffData.sickDaysCount = staffMember.sickDaysCount;
+
+            // Особенность (trait)
+            staffData.trait = staffMember.permanentTrait;
+
+            return staffData;
         }
 
         public void SaveNewGame(int slotIndex, SaveData initialData)
@@ -229,13 +273,19 @@ namespace Managers
                 }
 
                 // 3. Восстановление персонала
+                // Нанятых пересоздаём, остальных (директор, записи старых сейвов) ищем по имени.
+                // Сначала убираем текущий штат: LoadGame вызывают и поверх идущей сцены (перезагрузка после отстранения).
+                HiringManager.Instance?.DestroyAllStaff();
                 StaffController[] allStaff = FindObjectsByType<StaffController>(FindObjectsSortMode.None);
-                foreach (var staffData in data.allStaffData)
+                foreach (var staffData in data.allStaffData ?? new List<StaffSaveData>())
                 {
-                    StaffController staffMember = allStaff.FirstOrDefault(s => s.gameObject.name == staffData.gameObjectName);
+                    StaffController staffMember = staffData.isHired
+                        ? HiringManager.Instance?.RestoreStaff(staffData)
+                        : allStaff.FirstOrDefault(s => s.gameObject.name == staffData.gameObjectName);
                     if (staffMember != null)
                     {
-                        staffMember.transform.position = staffData.position;
+                        // Нанятые стартуют дома (их выводит на смену менеджер смен), позицию берём только у объектов сцены.
+                        if (!staffData.isHired) staffMember.transform.position = staffData.position;
                         staffMember.SetCurrentFrustration(staffData.stressLevel);
                         staffMember.nameData = staffData.nameData;
                         
@@ -256,6 +306,9 @@ namespace Managers
                         }
                     }
                 }
+
+                // Если загрузились посреди дня, выводим на смену тех, чей период уже идёт, не дожидаясь следующего.
+                HiringManager.Instance?.CheckAllStaffShiftsImmediately();
 
                 // 4. Восстановление документов
                 DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
@@ -292,6 +345,12 @@ namespace Managers
                 if (PhoneManager.Instance != null && data.unlockedContactIDs != null)
                 {
                     PhoneManager.Instance.LoadUnlockedContacts(data.unlockedContactIDs);
+                }
+
+                // 6.1. Открытые должности Директора
+                if (ProgressionManager.Instance != null)
+                {
+                    ProgressionManager.Instance.LoadUnlockedJobIDs(data.unlockedJobIDs);
                 }
 
                 // 7. [НОВОЕ] Восстановление прогресса сюжетных арок

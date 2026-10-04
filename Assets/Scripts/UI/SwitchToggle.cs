@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using DoTweenExt;
 using UnityEngine;
@@ -31,6 +32,35 @@ namespace UI
 
         private float _knobPosition;
         private Sequence _switchSequence;
+        private Action<bool> _callback;
+
+        public bool IsOn => _toggle.isOn;
+
+        /// <summary>
+        /// Единственный подписчик на переключение игроком. Повторный вызов заменяет предыдущего.
+        /// </summary>
+        public void SetListener(Action<bool> callback)
+        {
+            _callback = callback;
+        }
+
+        public void SetInteractable(bool isInteractable)
+        {
+            _toggle.interactable = isInteractable;
+        }
+
+        public void SetState(bool isOn, bool silent)
+        {
+            if (silent)
+            {
+                _toggle.SetIsOnWithoutNotify(isOn);
+                ApplyState(isOn, instant: true);
+            }
+            else
+            {
+                _toggle.isOn = isOn;
+            }
+        }
 
         private void Awake()
         {
@@ -47,7 +77,11 @@ namespace UI
             _toggle.onValueChanged.RemoveListener(OnToggleValueChanged);
         }
 
-        private void OnToggleValueChanged(bool isOn) => ApplyState(isOn, instant: false);
+        private void OnToggleValueChanged(bool isOn)
+        {
+            ApplyState(isOn, instant: false);
+            _callback?.Invoke(isOn);
+        }
 
         private void ApplyState(bool isOn, bool instant = false)
         {

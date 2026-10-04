@@ -234,6 +234,42 @@ public class StaffController : MonoBehaviour
     [Header("График работы")]
     public CalendarDayPeriodType WorkShiftMask = CalendarDayPeriodTypeExtensions.FullDay;
 
+    [Header("Занятость")]
+    public EmploymentType employmentType = EmploymentType.Permanent;
+    [Tooltip("День найма (TimeManager.GetCurrentDay). -1 — уже работает (стартовый штат или загружен из сейва).")]
+    public int hireDay = -1;
+    [Tooltip("Период, в который сотрудника наняли.")]
+    public CalendarDayPeriodType hirePeriod = CalendarDayPeriodType.None;
+    [Tooltip("Только для временного: день, на который выпала его смена. В конце этого дня он увольняется.")]
+    public int temporaryWorkDay = -1;
+
+    public bool IsTemporary => employmentType == EmploymentType.Temporary;
+
+    /// <summary>
+    /// Можно ли уже выводить сотрудника на смены: постоянный выходит со следующего дня,
+    /// временный — со следующего периода после найма.
+    /// </summary>
+    public bool HasEmploymentStarted()
+    {
+        if (hireDay < 0 || TimeManager.Instance == null) return true;
+
+        int currentDay = TimeManager.Instance.GetCurrentDay();
+        if (currentDay > hireDay) return true;
+        if (employmentType == EmploymentType.Permanent) return false;
+
+        return TimeManager.Instance.GetCurrentPeriodType() != hirePeriod;
+    }
+
+    /// <summary>
+    /// Отработал ли временный свой день (проверяется в конце дня).
+    /// </summary>
+    public bool IsTemporaryWorkDayOver()
+    {
+        if (!IsTemporary) return false;
+        if (TimeManager.Instance == null) return true;
+        return TimeManager.Instance.GetCurrentDay() >= temporaryWorkDay;
+    }
+
     [Header("Пунктуальность")]
     [Tooltip("Педантичность (0-1).")]
     [Range(0f, 1f)]
