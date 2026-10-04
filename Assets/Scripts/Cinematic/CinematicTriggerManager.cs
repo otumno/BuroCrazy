@@ -60,6 +60,11 @@ namespace CinematicSystem
         
         [Tooltip("Уже сработал (внутреннее поле)")]
         public bool hasTriggered = false;
+
+        // Граф доигран до конца. Именно это сохраняется в сейв, а не hasTriggered: если выйти посреди
+        // катсцены, событие при загрузке должно повториться.
+        [NonSerialized]
+        public bool hasCompleted = false;
         
         /// <summary>
         /// Проверить, выполняются ли условия триггера.
@@ -151,21 +156,34 @@ namespace CinematicSystem
         private void OnDayChanged(int day)
         {
             if (debugLog) Debug.Log($"[CinematicTriggerManager] День изменился: {day}");
-            
+            TriggerDayStart(day);
+        }
+
+        /// <summary>
+        /// Запускает события начала дня (OnDayStart). Вызывается при смене дня, а также MainUIManager'ом
+        /// после загрузки: сессия всегда начинается с начала дня, но TimeManager.OnDayChanged при этом не приходит.
+        /// </summary>
+        /// <returns>true, если сразу (без задержки) запущена катсцена с полным контролем.</returns>
+        public bool TriggerDayStart(int day)
+        {
+            bool isFullControlStarted = false;
+
             foreach (var trigger in triggers)
             {
                 if (!trigger.enabled) continue;
                 if (trigger.triggerType != TriggerType.OnDayStart) continue;
                 if (trigger.hasTriggered && trigger.once && !trigger.repeatOnCondition) continue;
-                
+
                 if (trigger.requiredDay <= 0 || trigger.requiredDay == day)
                 {
-                    if (trigger.CheckConditions())
+                    if (trigger.CheckConditions() && TryTrigger(trigger))
                     {
-                        TryTrigger(trigger);
+                        isFullControlStarted |= !trigger.forceBackground && trigger.executionMode == ExecutionMode.FullControl;
                     }
                 }
             }
+
+            return isFullControlStarted;
         }
 
         private void OnPeriodChanged(PeriodSettings period)
@@ -244,6 +262,7 @@ namespace CinematicSystem
             if (trigger != null)
             {
                 trigger.hasTriggered = false;
+                trigger.hasCompleted = false;
                 if (debugLog) Debug.Log($"[CinematicTriggerManager] Триггер {id} сброшен");
             }
         }
@@ -256,6 +275,7 @@ namespace CinematicSystem
             foreach (var trigger in triggers)
             {
                 trigger.hasTriggered = false;
+                trigger.hasCompleted = false;
             }
             if (debugLog) Debug.Log("[CinematicTriggerManager] Все триггеры сброшены");
         }
@@ -304,12 +324,13 @@ namespace CinematicSystem
         /// <summary>
         /// Попытка запустить триггер с задержкой.
         /// </summary>
-        private void TryTrigger(CinematicTriggerData trigger, float periodDuration = 0f)
+        /// <returns>true, если граф запущен сразу (без задержки).</returns>
+        private bool TryTrigger(CinematicTriggerData trigger, float periodDuration = 0f)
         {
             if (trigger.graphToPlay == null)
             {
                 Debug.LogWarning($"[CinematicTriggerManager] Граф для триггера '{trigger.id}' не назначен");
-                return;
+                return false;
             }
 
             // Вычисляем задержку
@@ -335,11 +356,10 @@ namespace CinematicSystem
             if (calculatedDelay > 0)
             {
                 StartCoroutine(DelayedTriggerCoroutine(trigger, calculatedDelay));
+                return false;
             }
-            else
-            {
-                ExecuteTrigger(trigger);
-            }
+
+            return ExecuteTrigger(trigger);
         }
 
         private System.Collections.IEnumerator DelayedTriggerCoroutine(CinematicTriggerData trigger, float delay)
@@ -351,12 +371,12 @@ namespace CinematicSystem
         /// <summary>
         /// Выполнить триггер.
         /// </summary>
-        private void ExecuteTrigger(CinematicTriggerData trigger)
+        private bool ExecuteTrigger(CinematicTriggerData trigger)
         {
             if (trigger.hasTriggered && trigger.once && !trigger.repeatOnCondition)
             {
                 if (debugLog) Debug.Log($"[CinematicTriggerManager] Триггер '{trigger.id}' уже сработал и неповторяемый");
-                return;
+                return false;
             }
 
             if (debugLog) Debug.Log($"[CinematicTriggerManager] Запуск триггера: {trigger.id}");
@@ -379,41 +399,53 @@ namespace CinematicSystem
 
             // Определяем режим выполнения
             var mode = trigger.forceBackground ? ExecutionMode.Background : trigger.executionMode;
-            
+
+            Action onFinished = null;
+            onFinished = () =>
+            {
+                player.OnFinished -= onFinished;
+                // Play другого графа прерывает текущий через Stop() без OnFinished — тогда событие не доиграно.
+                if (player.CurrentGraph == trigger.graphToPlay) trigger.hasCompleted = true;
+            };
+            player.OnFinished += onFinished;
+
             player.Play(trigger.graphToPlay, mode);
+            return true;
         }
 
         // === JSON сохранение/загрузка состояния ===
 
         /// <summary>
-        /// Получить состояние всех триггеров для сохранения.
+        /// Получить состояние всех триггеров для сохранения: какие события доиграны до конца.
         /// </summary>
         public List<SerializableTriggerState> GetTriggerStates()
         {
             var states = new List<SerializableTriggerState>();
             foreach (var trigger in triggers)
             {
+                if (string.IsNullOrEmpty(trigger.id)) continue;
+
                 states.Add(new SerializableTriggerState
                 {
                     id = trigger.id,
-                    hasTriggered = trigger.hasTriggered
+                    hasCompleted = trigger.hasCompleted
                 });
             }
             return states;
         }
 
         /// <summary>
-        /// Восстановить состояние триггеров из сохранения.
+        /// Восстановить состояние триггеров из сохранения. Триггеры, которых нет в сейве, считаются несработавшими:
+        /// загрузку вызывают и поверх идущей сцены (перезагрузка после отстранения).
         /// </summary>
         public void RestoreTriggerStates(List<SerializableTriggerState> states)
         {
-            foreach (var state in states)
+            foreach (var trigger in triggers)
             {
-                var trigger = triggers.Find(t => t.id == state.id);
-                if (trigger != null)
-                {
-                    trigger.hasTriggered = state.hasTriggered;
-                }
+                var state = states?.Find(s => s.id == trigger.id);
+                bool isCompleted = state != null && state.hasCompleted;
+                trigger.hasCompleted = isCompleted;
+                trigger.hasTriggered = isCompleted;
             }
         }
     }
@@ -425,6 +457,6 @@ namespace CinematicSystem
     public class SerializableTriggerState
     {
         public string id;
-        public bool hasTriggered;
+        public bool hasCompleted;
     }
 }

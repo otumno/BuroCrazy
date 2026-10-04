@@ -37,7 +37,11 @@ namespace Managers
         {
             isNewGame = false;
             currentSlotIndex = slotIndex;
-            SaveData data = SaveData.CreateEmpty();
+            // Берём за основу текущий файл слота, а не пустой SaveData: часть полей живёт только в файле
+            // (gameCompleted, код создания директора и т.п.) и ни один менеджер
+            // их не держит — с CreateEmpty() каждое сохранение молча сбрасывало их в значения по умолчанию.
+            // Всё, что собирается ниже, перезаписывается целиком (списки — новыми списками).
+            SaveData data = GetDataForSlot(slotIndex) ?? SaveData.CreateEmpty();
 
             // 1. Глобальные счетчики
             data.day = CalendarManager.Instance.CurrentDay;
@@ -108,6 +112,12 @@ namespace Managers
             if (PhoneManager.Instance != null)
             {
                 data.unlockedContactIDs = PhoneManager.Instance.GetUnlockedContactIDs();
+            }
+
+            // 7.0. Доигранные события (катсцены, в том числе туториал)
+            if (CinematicSystem.CinematicTriggerManager.Instance != null)
+            {
+                data.cinematicTriggerStates = CinematicSystem.CinematicTriggerManager.Instance.GetTriggerStates();
             }
 
             // 7.1. Открытые должности Директора (от них зависит, кого можно нанимать)
@@ -190,7 +200,6 @@ namespace Managers
         {
             isNewGame = false;
             currentSlotIndex = slotIndex;
-            initialData.firstDayTutorialCompleted = false;
             WriteSaveDataToFile(slotIndex, initialData);
             
             if (StoryStateManager.Instance != null)
@@ -345,6 +354,12 @@ namespace Managers
                 if (PhoneManager.Instance != null && data.unlockedContactIDs != null)
                 {
                     PhoneManager.Instance.LoadUnlockedContacts(data.unlockedContactIDs);
+                }
+
+                // 6.0. Доигранные события — до того, как MainUIManager запустит события начала дня
+                if (CinematicSystem.CinematicTriggerManager.Instance != null)
+                {
+                    CinematicSystem.CinematicTriggerManager.Instance.RestoreTriggerStates(data.cinematicTriggerStates);
                 }
 
                 // 6.1. Открытые должности Директора

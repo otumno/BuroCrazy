@@ -3,7 +3,7 @@ using System;
 
 namespace Managers
 {
-    // че-то на второй взгляд выглядит избыточно. можно всю эту логику в таймМанагер убрать
+    // Хранит номер текущего дня (он же сохраняется в сейв). Двигает его TimeManager при смене дня.
     public class CalendarManager : MonoBehaviour
     {
         public static CalendarManager Instance { get; private set; }

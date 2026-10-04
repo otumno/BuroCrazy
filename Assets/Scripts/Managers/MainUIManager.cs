@@ -388,14 +388,7 @@ namespace Managers
 
             // Загрузка данных
             bool loadSuccess = SaveLoadManager.Instance.LoadGame(SaveLoadManager.Instance.GetCurrentSlot());
-            
-            // Подготовка данных - проверяем туториал СРАЗУ
-            int currentSlot = SaveLoadManager.Instance.GetCurrentSlot();
-            var saveData = SaveLoadManager.Instance.GetDataForSlot(currentSlot);
-            bool isFirstDay = CalendarManager.Instance.CurrentDay == 1;
-            bool isTutorialNeeded = isFirstDay && !saveData.firstDayTutorialCompleted;
-            Debug.Log($"[Tutorial] day={CalendarManager.Instance.CurrentDay}, flag={saveData.firstDayTutorialCompleted}");
-            
+
             if (!loadSuccess && SaveLoadManager.Instance.isNewGame)
             {
                 PlayerWallet.Instance.ResetState();
@@ -453,15 +446,21 @@ namespace Managers
             ResumeGame();
             Debug.Log($"[Unveil] После сплеша, время = {Time.timeScale}");
 
-            // 5. Проверяем туториал ПОСЛЕ скрытия сплэша
-            if (isTutorialNeeded)
+            // 5. События начала дня (катсцены). Туториал — одно из них (триггер Tutorial_Day1 в CinematicTriggerManager).
+            // Загрузка всегда начинает день заново, а TimeManager.OnDayChanged для первого дня сессии не приходит,
+            // поэтому сообщаем о начале дня сами.
+            // isTransitioning снимаем заранее: катсцена может открыть стол (ShowDirectorDesk), а во время перехода он не открывается.
+            isTransitioning = false;
+            var triggerManager = CinematicTriggerManager.Instance;
+            if (triggerManager != null && triggerManager.TriggerDayStart(CalendarManager.Instance.CurrentDay))
             {
-                Debug.Log("[MainUIManager] Туториал активен, запускаем FirstDayTutorial");
-                
-                // НЕ создаем панели - туториал сам покажет свой UI
-                isTransitioning = false;
-                yield return StartCoroutine(StartTutorialRoutine());
-                yield break;
+                var cinematicPlayer = FindFirstObjectByType<CinematicPlayer>();
+                while (cinematicPlayer != null && cinematicPlayer.IsPlaying) yield return null;
+
+                // Игрок вышел в меню посреди катсцены: GoToMainMenu останавливает плеер и запускает переход сцены.
+                if (cinematicPlayer == null || isTransitioning) yield break;
+                // Катсцена сама открыла стол (как туториал) — стандартный старт не нужен.
+                if (desk != null && desk.gameObject.activeInHierarchy) yield break;
             }
 
             // 6. ОБЫЧНЫЙ СТАРТ - показываем стол и приказы
@@ -495,70 +494,6 @@ namespace Managers
                 if(orderCG) { orderCG.interactable = true; orderCG.blocksRaycasts = true; }
             }
 
-            isTransitioning = false;
-        }
-
-        private IEnumerator StartTutorialRoutine()
-        {
-            Debug.Log("[MainUIManager] StartTutorialRoutine: Запуск туториала первого дня через CinematicGraph");
-            
-            // Загружаем граф туториала
-            var tutorialGraph = CinematicGraphLibrary.LoadGraph("Tutorial_Day1");
-            if (tutorialGraph == null)
-            {
-                Debug.LogError("[MainUIManager] Tutorial_Day1.graph не найден!");
-                isTransitioning = false;
-                yield break;
-            }
-            
-            // Находим или создаём CinematicPlayer
-            var cinematicPlayer = FindObjectOfType<CinematicPlayer>();
-            if (cinematicPlayer == null)
-            {
-                var playerObject = new GameObject("CinematicPlayer");
-                cinematicPlayer = playerObject.AddComponent<CinematicPlayer>();
-            }
-            
-            // Подписываемся на завершение
-            bool graphFinished = false;
-            System.Action onFinishedHandler = null;
-            onFinishedHandler = () =>
-            {
-                graphFinished = true;
-                // Устанавливаем флаг завершения туториала
-                var slotIndex = SaveLoadManager.Instance?.GetCurrentSlot() ?? 0;
-                var saveData = SaveLoadManager.Instance?.GetDataForSlot(slotIndex);
-                if (saveData != null)
-                {
-                    saveData.firstDayTutorialCompleted = true;
-                    // Сохраняем обратно через WriteSaveDataToFile (нужно добавить публичный метод)
-                    // Временное решение: используем PlayerPrefs для флага
-                    PlayerPrefs.SetInt("FirstDayTutorialCompleted", 1);
-                    Debug.Log("[MainUIManager] firstDayTutorialCompleted = true сохранено");
-                }
-                cinematicPlayer.OnFinished -= onFinishedHandler;
-            };
-            cinematicPlayer.OnFinished += onFinishedHandler;
-            
-            // Запускаем граф (CinematicSystem.ExecutionMode.FullControl блокирует управление)
-            cinematicPlayer.Play(tutorialGraph, CinematicSystem.ExecutionMode.FullControl);
-            
-            // Ждём завершения графа. Дополнительно выходим, если плеер остановлен или уничтожен
-            // (например, игрок вышел в меню посреди туториала) — иначе корутина висела бы вечно
-            // на персистентном MainUIManager в ожидании graphFinished, который уже не придёт.
-            // На штатном завершении Finish() выставляет IsPlaying=false и graphFinished=true в
-            // одном кадре, поэтому проверка while(!graphFinished) отработает раньше этой ветки.
-            while (!graphFinished)
-            {
-                if (cinematicPlayer == null || !cinematicPlayer.IsPlaying)
-                {
-                    Debug.Log("[MainUIManager] Туториал прерван (катсцена остановлена) — выходим из ожидания");
-                    yield break; // управление сценой/паузой берёт на себя GoToMainMenu
-                }
-                yield return null;
-            }
-
-            Debug.Log("[MainUIManager] Туториал первого дня завершен (через CinematicGraph)");
             isTransitioning = false;
         }
 

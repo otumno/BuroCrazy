@@ -15,7 +15,6 @@ public class SaveData
     public int day;
     public int money;
     public int archiveDocumentCount;
-    public bool firstDayTutorialCompleted = false;
     public int influence;
     public Gender gender;
     public int strikes;
@@ -41,6 +40,10 @@ public class SaveData
 
     // --- Контакты телефона ---
     public List<string> unlockedContactIDs;
+
+    // --- События (катсцены, в том числе туториал) ---
+    [Tooltip("Какие одноразовые события CinematicTriggerManager уже доиграны до конца.")]
+    public List<CinematicSystem.SerializableTriggerState> cinematicTriggerStates;
 
     // --- Карьера Директора ---
     [Tooltip("ID открытых должностей (JobTitleData.jobID).")]

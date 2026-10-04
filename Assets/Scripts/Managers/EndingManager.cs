@@ -242,6 +242,9 @@ namespace Managers
             // day = finalDay — финальное сохранение всегда на день finalDay
             int finalDay = AIBalanceConfig.Instance != null ? AIBalanceConfig.Instance.finalDay : 30;
             if (data.day < finalDay) data.day = finalDay;
+            // Следом вызывается SaveGame, а он пишет день из CalendarManager — подтягиваем и его, иначе день откатится.
+            if (CalendarManager.Instance != null && CalendarManager.Instance.CurrentDay < data.day)
+                CalendarManager.Instance.SetDay(data.day);
             // Сохраняем изменения обратно через JsonUtility (перезапись того же файла)
             string path = System.IO.Path.Combine(Application.persistentDataPath, $"save_slot_{slot}.json");
             string json = JsonUtility.ToJson(data, true);

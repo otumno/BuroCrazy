@@ -106,7 +106,17 @@ namespace Managers
             bool isNewDay = (currentPeriodIndex == 0);
             if (isNewDay)
             {
-                dayCounter++;
+                // Номер дня ведёт CalendarManager: он сохраняется в сейв. Свой счётчик TimeManager обнулялся
+                // при каждой загрузке сцены, и день в сейве навсегда оставался первым.
+                if (CalendarManager.Instance != null)
+                {
+                    CalendarManager.Instance.AdvanceDay();
+                    dayCounter = CalendarManager.Instance.CurrentDay;
+                }
+                else
+                {
+                    dayCounter++;
+                }
                 dayStartTime = Time.time;
                 OnDayChanged?.Invoke(dayCounter);
             }
@@ -116,7 +126,7 @@ namespace Managers
         }
 
         // Public API
-        public int GetCurrentDay() => dayCounter;
+        public int GetCurrentDay() => CalendarManager.Instance != null ? CalendarManager.Instance.CurrentDay : dayCounter;
         public CalendarDayPeriodType GetCurrentPeriodType() => currentPeriodType;
         public PeriodSettings GetCurrentPeriodSettings() => currentPeriodSettings;
         public float GetPeriodTimer() => periodTimer;
