@@ -21,6 +21,9 @@ public class Action_GoToBreak : StaffAction
         return staff.energy <= (energyThreshold * 100f) && !staff.IsOnBreak();
     }
 
+    // По приказу отдыхают, даже если не устали. Текущий перерыв приказ и так прерывает (StaffController.ReceiveOrder).
+    public override bool CanBeOrdered(StaffController staff) => staff.IsOnDuty();
+
     public override float CalculateUtility(StaffController staff)
     {
         // Инверсия: при 100 энергии желание отдыхать = 0, при 20 энергии желание = 80

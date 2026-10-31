@@ -11,6 +11,7 @@ using Scriptables.Audio;
 using Characters;
 using Managers.Teletype;
 using Enums;
+using StaffOrders;
 
 [RequireComponent(typeof(AgentMover))]
 [RequireComponent(typeof(CharacterStateLogger))]
@@ -326,7 +327,10 @@ public class StaffController : MonoBehaviour
     public ActionExecutor currentExecutor;
     
     // === СИСТЕМА МИКРОМЕНЕДЖМЕНТА ===
-    public StaffAction forcedAction; // Принудительное действие от директора
+    /// <summary>
+    /// Текущий приказ директора. Сбрасывается, когда приказанное действие завершилось или бонус приказа упал до нуля.
+    /// </summary>
+    public StaffOrder ActiveOrder { get; private set; }
 
     private Coroutine aiLoopCoroutine;
 
@@ -711,28 +715,56 @@ public class StaffController : MonoBehaviour
 
     // === СИСТЕМА МИКРОМЕНЕДЖМЕНТА ===
     /// <summary>
-    /// Получить приказ от директора. Принудительно заставляет сотрудника выполнить действие.
+    /// Получить приказ от директора с настройками по умолчанию (используется окном тактики).
     /// </summary>
-    public virtual void ReceiveOrder(StaffAction action)
+    public void ReceiveOrder(StaffAction action)
     {
         if (action == null) return;
-        
-        // Записываем приказ
-        forcedAction = action;
-        
-        // Добавляем стресс от приказа
-        stress = Mathf.Clamp(stress + 15f, 0f, 100f);
-        
-        // Показываем реакцию
+
+        ReceiveOrder(new StaffOrder(action));
+    }
+
+    /// <summary>
+    /// Получить приказ от директора. Сотрудник бросает текущее дело и берётся за приказ;
+    /// бонус приказа со временем падает, после чего сотрудник снова решает сам.
+    /// </summary>
+    public virtual void ReceiveOrder(StaffOrder order)
+    {
+        if (order == null || order.Action == null) return;
+
+        // Стресс копится: если приказ потом заменят новым, стресс от старого не снимается.
+        stress = Mathf.Clamp(stress + order.StressCost, 0f, 100f);
         thoughtBubble?.ShowPriorityMessage("Да иду я, иду...", 2f, Color.yellow);
-        
-        // Если есть выполняемое действие и оно прерываемое - прерываем
+
+        // Сначала прерываем текущее дело: прерывание закрывает и прошлый приказ (см. OnActionFinished),
+        // поэтому новый записываем только после.
         if (currentExecutor != null && currentExecutor.IsInterruptible)
         {
             currentExecutor.Interrupt();
         }
-        
-        Debug.Log($"[MicroManagement] {characterName} получил приказ: {action.displayName}");
+        if (IsOnBreak()) EndBreak();
+
+        order.Start(Time.time);
+        ActiveOrder = order;
+        Debug.Log($"[MicroManagement] {characterName} получил приказ: {order.Action.displayName}");
+
+        // Не ждём тика AI: он бывает раз в секунду и пропускает ход, пока сотрудник идёт.
+        // Если текущее дело непрерываемое, приказ подхватится, когда оно закончится.
+        if (currentExecutor == null && IsOnDuty())
+        {
+            TryPickAction();
+        }
+    }
+
+    // Просроченный приказ снимаем здесь, а не по таймеру: решение всё равно принимается только в TryPickAction.
+    private StaffOrder GetActiveOrder()
+    {
+        if (ActiveOrder != null && ActiveOrder.IsExpired(Time.time))
+        {
+            Debug.Log($"[MicroManagement] {characterName}: приказ «{ActiveOrder.Action.displayName}» утратил силу.");
+            ActiveOrder = null;
+        }
+        return ActiveOrder;
     }
 
     public float GetCurrentStress() => stress;
@@ -761,6 +793,11 @@ public class StaffController : MonoBehaviour
         if (systemActionDatabase != null && systemActionDatabase.allActions != null)
             allAvailable.AddRange(systemActionDatabase.allActions);
 
+        // Приказанное действие участвует в выборе, даже если его нет в тактике сотрудника.
+        StaffOrder order = GetActiveOrder();
+        if (order != null && !allAvailable.Contains(order.Action))
+            allAvailable.Add(order.Action);
+
         StaffAction bestAction = null;
         float highestUtility = -1f;
 
@@ -768,19 +805,21 @@ public class StaffController : MonoBehaviour
         {
             if (action == null) continue;
 
-            bool conditionsMet = action.AreConditionsMet(this);
+            bool isOrdered = order != null && action == order.Action;
+            bool conditionsMet = isOrdered ? action.CanBeOrdered(this) : action.AreConditionsMet(this);
             float utility = 0f;
 
             if (conditionsMet)
             {
                 utility = action.CalculateUtility(this);
-                
-                // === ПРИНУДИТЕЛЬНОЕ ДЕЙСТВИЕ (МИКРОМЕНЕДЖМЕНТ) ===
-                if (forcedAction != null && action == forcedAction)
+
+                // === ПРИКАЗ ДИРЕКТОРА (МИКРОМЕНЕДЖМЕНТ) ===
+                // Бонус падает со временем, поэтому приказ не держит сотрудника вечно.
+                if (isOrdered)
                 {
-                    utility = 10000f; // Абсолютный приоритет
+                    utility += order.GetPriorityBonus(Time.time);
                 }
-                
+
                 // Немного рандома для живости
                 utility += Random.Range(0f, 2f);
                 
@@ -885,9 +924,6 @@ public class StaffController : MonoBehaviour
             LogTaskStart(taskNameToLog);
             
             ExecuteAction(bestAction);
-            
-            // Сбрасываем приказ после выполнения (одноразовый приказ)
-            forcedAction = null;
         }
         else
         {
@@ -1127,7 +1163,20 @@ public class StaffController : MonoBehaviour
         Destroy(gameObject);
     }
     
-    public void OnActionFinished(StaffAction action = null, bool success = true) { currentExecutor = null; }
+    public void OnActionFinished(StaffAction action = null, bool success = true)
+    {
+        // Приказанное действие закончилось (или его прервали) — приказ выполнен, дальше сотрудник решает сам.
+        // Смотрим на currentAction, а не на параметр: FinishAction у исполнителей вызывает этот метод без него.
+        if (ActiveOrder != null && currentAction == ActiveOrder.Action)
+        {
+            ActiveOrder = null;
+        }
+
+        currentExecutor = null;
+        // Раньше currentAction оставался после завершения, и TryPickAction считал законченное действие текущим:
+        // если оно снова оказывалось лучшим, сотрудник «оставался на нём» и стоял без дела.
+        currentAction = null;
+    }
     
     public void ExecuteAction(StaffAction action)
     {

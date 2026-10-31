@@ -24,6 +24,9 @@ public class Action_GoToToilet : StaffAction
         return staff.bladder >= (bladderThreshold * 100f) && !staff.IsOnBreak();
     }
 
+    // По приказу идут, даже если не приспичило. Перерыв приказ и так прерывает (StaffController.ReceiveOrder).
+    public override bool CanBeOrdered(StaffController staff) => staff.IsOnDuty();
+
     public override float CalculateUtility(StaffController staff)
     {
         // Экспоненциальный рост желания.

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections;
 using Managers;
 using UI;
+using UI.StaffOrders;
 using Clinch;
 
 public class PlayerInputController : MonoBehaviour
@@ -25,6 +26,9 @@ public class PlayerInputController : MonoBehaviour
     [Header("Ссылки для взаимодействия")]
     [Tooltip("Перетащите сюда объект ActionConfigPopup из UI")]
     public ActionConfigPopupUI actionConfigPopup;
+
+    [Tooltip("Меню приказов по ПКМ на сотруднике (создаётся командой Bureau → Create Staff Order Menu)")]
+    public StaffOrderMenuUI staffOrderMenu;
     
     [Tooltip("Курсор-контроллер для смены курсора во время катсцен")]
     public CursorController cursorController;
@@ -64,6 +68,10 @@ public class PlayerInputController : MonoBehaviour
         if (cursorController == null)
         {
             cursorController = FindFirstObjectByType<CursorController>();
+        }
+        if (staffOrderMenu == null)
+        {
+            staffOrderMenu = FindFirstObjectByType<StaffOrderMenuUI>(FindObjectsInactive.Include);
         }
     }
 
@@ -257,10 +265,22 @@ public class PlayerInputController : MonoBehaviour
                 StaffController clickedStaff = hit.collider.GetComponentInParent<StaffController>();
                 if (clickedStaff != null && !(clickedStaff is DirectorAvatarController))
                 {
-                    StartCoroutine(DirectorInteractRoutine(clickedStaff));
+                    OpenStaffInteraction(clickedStaff);
                 }
             }
         }
+    }
+
+    private void OpenStaffInteraction(StaffController targetStaff)
+    {
+        if (staffOrderMenu != null)
+        {
+            staffOrderMenu.Open(targetStaff, Input.mousePosition);
+            return;
+        }
+
+        // Меню приказов ещё не поставлено в сцену — оставляем старое поведение: директор идёт к сотруднику и открывает тактику.
+        StartCoroutine(DirectorInteractRoutine(targetStaff));
     }
 
     private IEnumerator DirectorInteractRoutine(StaffController targetStaff)

@@ -46,6 +46,12 @@ public abstract class StaffAction : ScriptableObject
     public abstract bool AreConditionsMet(StaffController staff);
     public abstract System.Type GetExecutorType();
 
+    /// <summary>
+    /// Можно ли выполнить действие по приказу директора. По умолчанию — те же условия, что и для AI.
+    /// Действия «по нужде» (туалет, отдых) переопределяют это: приказ не ждёт, пока сотруднику приспичит.
+    /// </summary>
+    public virtual bool CanBeOrdered(StaffController staff) => AreConditionsMet(staff);
+
     public virtual float CalculateUtility(StaffController staff)
     {
         float utility = priority * 10f;

@@ -45,6 +45,15 @@ public class TakeStackToArchiveAction : StaffAction
         return false;
     }
 
+    // По приказу несут даже неполную стопку и не ждут, пока у стола не останется клиентов.
+    public override bool CanBeOrdered(StaffController staff)
+    {
+        if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null) return false;
+
+        var stack = clerk.assignedWorkstation.documentStack;
+        return stack != null && stack.CurrentSize > 0;
+    }
+
     public override System.Type GetExecutorType()
     {
         return typeof(TakeStackToArchiveExecutor);

@@ -7,6 +7,7 @@ using Managers;
 using Utilities;
 using Characters;
 using UI.Bookkeeping;
+using StaffOrders;
 
 [RequireComponent(typeof(AgentMover), typeof(CharacterVisuals), typeof(ThoughtBubbleController))]
 public class DirectorAvatarController : StaffController, IServiceProvider
@@ -69,12 +70,22 @@ public class DirectorAvatarController : StaffController, IServiceProvider
 
     // === СИСТЕМА МИКРОМЕНЕДЖМЕНТА ===
     /// <summary>
-    /// Отдать приказ сотруднику. Директор приказывает выполнить определённое действие.
+    /// Отдать приказ сотруднику с настройками по умолчанию (используется окном тактики).
     /// </summary>
     public void GiveOrder(StaffController target, StaffAction action)
     {
-        if (target == null || action == null) return;
-        
+        if (action == null) return;
+
+        GiveOrder(target, new StaffOrder(action));
+    }
+
+    /// <summary>
+    /// Отдать приказ сотруднику. Приказ действует сразу, издалека: идти к сотруднику не нужно.
+    /// </summary>
+    public void GiveOrder(StaffController target, StaffOrder order)
+    {
+        if (target == null || order == null || order.Action == null) return;
+
         // Показываем реакцию директора
         thoughtBubble?.ShowPriorityMessage("Немедленно займись этим!", 2f, Color.red);
         
@@ -86,9 +97,9 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         }
         
         // Отдаём приказ сотруднику
-        target.ReceiveOrder(action);
-        
-        Debug.Log($"[MicroManagement] Директор приказал {target.characterName} выполнить: {action.displayName}");
+        target.ReceiveOrder(order);
+
+        Debug.Log($"[MicroManagement] Директор приказал {target.characterName} выполнить: {order.Action.displayName}");
     }
 
     /// <summary>

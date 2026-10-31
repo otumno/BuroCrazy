@@ -175,6 +175,12 @@
   - `ExperienceManager`.
   - `StaffScheduleExtensions` — смены, опоздания, больничные.
 - **UI персонала**: `HiringSystemUI` (доска резюме + `SwitchToggle` «временный»), `StaffSchedulePanelUI`, `ActionConfigPopupUI` (тактика), `PromotionPanelUI`.
+- **Приказы сотрудникам по ПКМ** (ТЗ п.3):
+  - ПКМ по сотруднику → `UI/StaffOrders/StaffOrderMenuUI` (контекстное меню у курсора, игра на паузе): шапка (портрет `UI/StaffPortraitUI`, имя, роль `UI/StaffRoleNames`), приказы для роли и последний пункт «Тактика…» (старое `ActionConfigPopupUI`). Если меню нет в сцене, `PlayerInputController` по-старому ведёт директора к сотруднику и открывает тактику.
+  - Список приказов — ассет `StaffOrders/StaffOrderCatalog` (`Assets/Data/StaffOrders/StaffOrderCatalog.asset`): пункты `StaffOrderDefinition` (текст, `StaffAction`, роли — пусто = всем, `RequiredJob` — должность директора, открывающая приказ, цена стресса), плюс общие `InitialPriority` и `PriorityDecaySeconds`.
+  - Префабы и экземпляр в сцене создаёт Editor-команда **Bureau → Create Staff Order Menu** (`UI/StaffOrders/Editor/StaffOrderMenuBuilder.cs`). Повторный запуск перезаписывает префабы, каталог не трогает.
+  - Логика: `DirectorAvatarController.GiveOrder` → `StaffController.ReceiveOrder(StaffOrder)`: +стресс (копится и при замене приказа), прерывание текущего дела и перерыва, `ActiveOrder` = новый приказ, сразу `TryPickAction`. В `TryPickAction` приказанное действие добавляется в пул, проверяется через `StaffAction.CanBeOrdered` (туалет и отдых по приказу не ждут «нужды») и получает линейно падающий бонус. Приказ снимается, когда его действие завершилось/прервано (`OnActionFinished`) или бонус упал до нуля.
+  - `OnActionFinished` теперь сбрасывает `currentAction`. Раньше он оставался после завершения, и если то же действие снова было лучшим, `TryPickAction` «оставался на нём» и сотрудник стоял без дела.
 - **Расписание** (`StaffSchedulePanelUI`):
   - Менять смены можно, только пока день не начат: `Managers/ShiftPlanning.IsOpen`. Окно открывается в `GameSession.ResetGameState` (старт сессии) и в `EndOfDaySequence` (ночь), закрывается в `MainUIManager.StartOrResumeGameplay` («Начать день»). Во время дня `Show()` открывает панель только для просмотра (кнопки ячеек `interactable = false`).
   - `ShowPlanning()` — шаг ночной цепочки: всегда редактируется, клик мимо окна и по имени не закрывает панель.
