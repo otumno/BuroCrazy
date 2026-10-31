@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Managers;
 using TMPro;
@@ -8,8 +9,10 @@ namespace UI.Bookkeeping
 {
     public class BookkeepingPanelUI : MonoBehaviour
     {
-        [Header("Ссылки на UI элементы")] 
+        [Header("Ссылки на UI элементы")]
         [SerializeField] private Button closeButton;
+        [Tooltip("Кнопка «Далее» для итогов дня. Необязательна: без неё дальше ведёт closeButton.")]
+        [SerializeField] private Button nextButton;
 
         [Header("Поля статистики")] 
         [SerializeField] private TextMeshProUGUI officialGrossText;
@@ -27,12 +30,38 @@ namespace UI.Bookkeeping
         // --- УМНАЯ ПАУЗА ---
         private bool _isPausedByMe = false;
 
+        public event Action Closed;
+
         private void Awake()
         {
             if (closeButton != null) closeButton.onClick.AddListener(Hide);
+            if (nextButton != null) nextButton.onClick.AddListener(Hide);
         }
 
         public void Show()
+        {
+            SetDayResultsMode(false);
+            Open();
+        }
+
+        /// <summary>
+        /// Итоги дня в цепочке конца дня: вместо крестика показывается «Далее» (если она назначена).
+        /// </summary>
+        public void ShowDayResults()
+        {
+            SetDayResultsMode(true);
+            Open();
+        }
+
+        private void SetDayResultsMode(bool isDayResults)
+        {
+            if (nextButton == null) return;
+
+            nextButton.gameObject.SetActive(isDayResults);
+            if (closeButton != null) closeButton.gameObject.SetActive(!isDayResults);
+        }
+
+        private void Open()
         {
             var animator = GetComponent<UIWindowAnimator>();
             if (animator != null) animator.Open();
@@ -50,23 +79,24 @@ namespace UI.Bookkeeping
 
         public void Hide()
         {
-            // Снимаем паузу ДО начала анимации закрытия, гарантированно и один раз
-            if (_isPausedByMe && MainUIManager.Instance != null)
-            {
-                MainUIManager.Instance.PopPause();
-                _isPausedByMe = false;
-            }
-
             var animator = GetComponent<UIWindowAnimator>();
             if (animator != null)
             {
+                // Паузу снимает сам UIWindowAnimator по окончании закрытия. Раньше мы снимали её ещё и здесь,
+                // и одно закрытие съедало чужую паузу (например, паузу цепочки конца дня).
                 animator.Close();
             }
             else
             {
                 gameObject.SetActive(false);
+                if (_isPausedByMe) MainUIManager.Instance?.PopPause();
             }
+            _isPausedByMe = false;
+
+            OnClosed();
         }
+
+        private void OnClosed() => Closed?.Invoke();
 
         public void UpdateAllData()
         {

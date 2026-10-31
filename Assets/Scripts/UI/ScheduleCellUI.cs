@@ -29,7 +29,7 @@ public class ScheduleCellUI : MonoBehaviour
     
     private static List<CalendarDayPeriodType> _cachedAllPeriods;
 
-    public void Setup(StaffController staff, CalendarDayPeriodType period, StaffScheduleRowUI parentRow)
+    public void Setup(StaffController staff, CalendarDayPeriodType period, StaffScheduleRowUI parentRow, bool isEditable)
     {
         _staff = staff;
         _periodType = period;
@@ -39,6 +39,7 @@ public class ScheduleCellUI : MonoBehaviour
         {
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(OnCellClicked);
+            button.interactable = isEditable;
         }
         
         if (_cachedAllPeriods == null && TimeManager.Instance != null)

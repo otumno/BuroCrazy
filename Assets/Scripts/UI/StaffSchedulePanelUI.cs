@@ -1,14 +1,18 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 using Managers;
-using Data.Calendar;
+using TMPro;
 
 public class StaffSchedulePanelUI : MonoBehaviour
 {
     [Header("Управление окном")]
     [SerializeField] private Button closeButton;
     [SerializeField] private Button backgroundButton;
+    [Tooltip("Кнопка «Далее» для планирования в конце дня. Необязательна: без неё дальше ведёт closeButton.")]
+    [SerializeField] private Button nextButton;
+    [Tooltip("Подсказка, что днём смены менять нельзя. Необязательна.")]
+    [SerializeField] private TextMeshProUGUI lockedHintText;
 
     [Header("Часть 2: Заголовки периодов")]
     [SerializeField] private Transform periodHeaderContainer;
@@ -29,14 +33,61 @@ public class StaffSchedulePanelUI : MonoBehaviour
     [Tooltip("Ссылка на ActionConfigPopupUI на сцене (для открытия настроек сотрудника)")]
     [SerializeField] private ActionConfigPopupUI configPopup;
 
+    /// <summary>
+    /// Можно ли менять смены. Во время активного дня панель открывается только для просмотра (см. ShiftPlanning).
+    /// </summary>
+    public bool IsEditable { get; private set; }
+
+    // Панель открыта как шаг ночной цепочки конца дня: закрытие ведёт к следующему экрану.
+    private bool _isPlanningStep;
+
+    public event Action Closed;
+
     private void Awake()
     {
         if (closeButton != null) closeButton.onClick.AddListener(Hide);
-        if (backgroundButton != null) backgroundButton.onClick.AddListener(Hide);
+        if (backgroundButton != null) backgroundButton.onClick.AddListener(BackgroundButton_Clicked);
+        if (nextButton != null) nextButton.onClick.AddListener(Hide);
     }
 
-    // Создаем публичный метод Show() - переносим логику из OnEnable
+    /// <summary>
+    /// Расписание из окна персонала: редактируется, только пока день не начат.
+    /// </summary>
     public void Show()
+    {
+        SetMode(ShiftPlanning.IsOpen, false);
+        Open();
+    }
+
+    /// <summary>
+    /// Экран планирования смен на следующий день (цепочка конца дня).
+    /// </summary>
+    public void ShowPlanning()
+    {
+        SetMode(true, true);
+        Open();
+    }
+
+    private void SetMode(bool isEditable, bool isPlanningStep)
+    {
+        IsEditable = isEditable;
+        _isPlanningStep = isPlanningStep;
+
+        if (lockedHintText != null) lockedHintText.gameObject.SetActive(!isEditable);
+
+        if (nextButton == null) return;
+        nextButton.gameObject.SetActive(isPlanningStep);
+        if (closeButton != null) closeButton.gameObject.SetActive(!isPlanningStep);
+    }
+
+    // На экране планирования клик мимо окна не закрывает его, чтобы игрок случайно не проскочил шаг цепочки.
+    private void BackgroundButton_Clicked()
+    {
+        if (_isPlanningStep) return;
+        Hide();
+    }
+
+    private void Open()
     {
         // Паттерн Smart UI: сначала аниматор
         var animator = GetComponent<UIWindowAnimator>();
@@ -67,7 +118,11 @@ public class StaffSchedulePanelUI : MonoBehaviour
         
         // Применяем новое расписание сразу после закрытия панели
         HiringManager.Instance?.CheckAllStaffShiftsImmediately();
+
+        OnClosed();
     }
+
+    private void OnClosed() => Closed?.Invoke();
 
     // Публичный метод для принудительного обновления
     public void RefreshTable()
@@ -81,6 +136,9 @@ public class StaffSchedulePanelUI : MonoBehaviour
     // Метод, который будет вызываться при клике на имя сотрудника
     private void OnStaffNameClicked(StaffController staff)
     {
+        // На экране планирования тактику не открываем: попап закрывает расписание и тем самым продвинул бы цепочку конца дня.
+        if (_isPlanningStep) return;
+
         if (configPopup != null)
         {
             configPopup.OpenForStaff(staff); // Открываем настройки
@@ -129,7 +187,7 @@ public class StaffSchedulePanelUI : MonoBehaviour
             StaffScheduleRowUI rowUI = rowObj.GetComponent<StaffScheduleRowUI>(); 
             if (rowUI != null)
             {
-                rowUI.Setup(staff, periods);
+                rowUI.Setup(staff, periods, IsEditable);
             }
         }
     }

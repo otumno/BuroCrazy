@@ -16,10 +16,12 @@ public class StaffScheduleRowUI : MonoBehaviour
     private List<ScheduleCellUI> _cells = new List<ScheduleCellUI>();
     private List<CalendarDayPeriodType> _periodTypes = new List<CalendarDayPeriodType>();
     private StaffController _staff;
+    private bool _isEditable;
 
-    public void Setup(StaffController staff, List<PeriodSettings> periods)
+    public void Setup(StaffController staff, List<PeriodSettings> periods, bool isEditable)
     {
         _staff = staff;
+        _isEditable = isEditable;
         _cells.Clear();
         _periodTypes.Clear();
         
@@ -34,7 +36,7 @@ public class StaffScheduleRowUI : MonoBehaviour
             
             if (cellUI != null)
             {
-                cellUI.Setup(staff, period.PeriodType, this);
+                cellUI.Setup(staff, period.PeriodType, this, isEditable);
                 _cells.Add(cellUI);
             }
         }
@@ -48,7 +50,7 @@ public class StaffScheduleRowUI : MonoBehaviour
     // ИЗМЕНЕНИЕ: Принимаем объект ячейки
     public void StartShiftAnimation(ScheduleCellUI startCell)
     {
-        if (_staff == null) return;
+        if (_staff == null || !_isEditable) return;
         StopAllCoroutines();
         StartCoroutine(AnimateShiftFill(startCell));
     }

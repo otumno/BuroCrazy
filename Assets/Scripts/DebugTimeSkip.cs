@@ -25,7 +25,8 @@ public class DebugTimeSkip : MonoBehaviour
         if (Input.GetKeyDown(skipPeriod))
         {
             Debug.Log("Debug Skip period ++");
-            TimeManager.Instance.GoToNextPeriod();
+            // Через RequestNextPeriod, чтобы пропуск ночи тоже запускал экраны конца дня.
+            TimeManager.Instance.RequestNextPeriod();
         }
     }
 #endif

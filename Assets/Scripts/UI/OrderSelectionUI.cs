@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,7 +11,25 @@ public class OrderSelectionUI : MonoBehaviour
     [SerializeField] private List<OrderCardUI> orderCards;
     private CanvasGroup canvasGroup;
 
+    /// <summary>
+    /// Игрок выбрал приказ. Сам выбор закрывает экран.
+    /// </summary>
+    public event Action OrderSelected;
+
     private void Awake() { canvasGroup = GetComponent<CanvasGroup>(); }
+
+    /// <summary>
+    /// Показывает выбор приказа с плавным появлением (цепочка конца дня).
+    /// </summary>
+    public void Show()
+    {
+        gameObject.SetActive(true);
+        if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
+
+        Setup();
+        StopAllCoroutines();
+        StartCoroutine(Fade(true));
+    }
 
     public void Setup()
     {
@@ -23,7 +42,7 @@ public class OrderSelectionUI : MonoBehaviour
         {
             if (i < availableOrders.Count)
             {
-                orderCards[i].Setup(availableOrders[i], OnOrderSelected);
+                orderCards[i].Setup(availableOrders[i], OrderCard_Clicked);
                 orderCards[i].gameObject.SetActive(true);
             }
             else
@@ -33,7 +52,7 @@ public class OrderSelectionUI : MonoBehaviour
         }
     }
 
-    private void OnOrderSelected(DirectorOrder selectedOrder)
+    private void OrderCard_Clicked(DirectorOrder selectedOrder)
     {
         // ИСПРАВЛЕНИЕ: Используем OrderManager
         if (OrderManager.Instance != null)
@@ -41,7 +60,10 @@ public class OrderSelectionUI : MonoBehaviour
             OrderManager.Instance.SelectOrder(selectedOrder);
         }
         StartCoroutine(UpdateAndFadeOut());
+        OnOrderSelected();
     }
+
+    private void OnOrderSelected() => OrderSelected?.Invoke();
 
     private IEnumerator UpdateAndFadeOut()
     {

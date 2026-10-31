@@ -32,7 +32,18 @@ namespace Managers
         public event Action<PeriodSettings> OnPeriodChanged;
         public event Action<int> OnDayChanged;
 
+        /// <summary>
+        /// Последний период дня закончился, но день ещё не сменился. Подписчик может задержать смену дня
+        /// через <see cref="HoldDayEnd"/> (например, чтобы показать экраны итогов) и отпустить через <see cref="ReleaseDayEnd"/>.
+        /// </summary>
+        public event Action DayEnding;
+
         private PeriodSettings currentPeriodSettings;
+
+        // Почему не PushPause: паузу жёстко сбрасывают HardResetPauseRoutine (кнопка «Начать день») и ручная пауза
+        // на пробел в PlayerInputController. Свой счётчик держит смену дня независимо от timeScale.
+        private int _dayEndHoldCount;
+        private bool _isWaitingForDayEnd;
 
         private void Awake()
         {
@@ -47,15 +58,57 @@ namespace Managers
 
         private void Update()
         {
-            if (Time.timeScale == 0f || currentPeriodSettings == null) return;
+            if (Time.timeScale == 0f || currentPeriodSettings == null || _isWaitingForDayEnd) return;
 
             periodTimer += Time.deltaTime;
 
             if (periodTimer >= currentPeriodSettings.durationInSeconds)
             {
-                GoToNextPeriod();
+                RequestNextPeriod();
             }
         }
+
+        /// <summary>
+        /// Переход к следующему периоду с учётом удержания конца дня.
+        /// Перед сменой дня рассылает <see cref="DayEnding"/>; если кто-то вызвал <see cref="HoldDayEnd"/>,
+        /// время встаёт до <see cref="ReleaseDayEnd"/>.
+        /// </summary>
+        public void RequestNextPeriod()
+        {
+            var periods = mainCalendarDay.periodSettings;
+            if (periods == null || periods.Count == 0 || _isWaitingForDayEnd) return;
+
+            bool isDayEnding = (currentPeriodIndex + 1) % periods.Count == 0;
+            if (!isDayEnding)
+            {
+                GoToNextPeriod();
+                return;
+            }
+
+            OnDayEnding();
+            if (_dayEndHoldCount > 0)
+            {
+                _isWaitingForDayEnd = true;
+                return;
+            }
+
+            GoToNextPeriod();
+        }
+
+        public void HoldDayEnd() => _dayEndHoldCount++;
+
+        public void ReleaseDayEnd()
+        {
+            if (_dayEndHoldCount == 0) return;
+
+            _dayEndHoldCount--;
+            if (_dayEndHoldCount > 0 || !_isWaitingForDayEnd) return;
+
+            _isWaitingForDayEnd = false;
+            GoToNextPeriod();
+        }
+
+        private void OnDayEnding() => DayEnding?.Invoke();
 
         private void InitializeTime()
         {
@@ -193,6 +246,7 @@ namespace Managers
         {
             OnDayChanged = null;
             OnPeriodChanged = null;
+            DayEnding = null;
             Instance = null;
         }
     }

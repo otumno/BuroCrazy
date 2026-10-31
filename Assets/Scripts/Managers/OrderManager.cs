@@ -55,6 +55,10 @@ namespace Managers
 
         public void SelectOrder(DirectorOrder selectedOrder)
         {
+            // Приказ выбирается каждый день, а дневные приказы больше никто не снимает.
+            // Новый выбор заменяет прошлый дневной приказ; постоянные остаются.
+            activeOrders.RemoveAll(order => order == null || order.duration != OrderDuration.Permanent);
+
             if (!activeOrders.Contains(selectedOrder))
             {
                 activeOrders.Add(selectedOrder);

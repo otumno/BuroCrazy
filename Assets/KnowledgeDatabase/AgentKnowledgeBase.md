@@ -130,6 +130,8 @@
   - `UpgradeManager.OnUpgradePurchased`
   - `TraitManager.OnTraitsChanged`
 - **Пауза**: стек `MainUIManager.PushPause()` / `PopPause()` (счётчик `_pauseCount`). Пользовательская пауза — пробел.
+  - Панель с `UIWindowAnimator` ставит паузу сама в `Show`, а снимает её **аниматор** в `Close()` (по окончании твина). Не вызывай `PopPause` ещё и в `Hide`, иначе съешь чужую паузу.
+  - `StartOrResumeGameplay` («Начать день») через `HardResetPauseRoutine` жёстко обнуляет счётчик. Держать время через паузу поверх стола нельзя.
 - Известная проблема из ТЗ: «UI управляется из менеджеров». Направление рефакторинга — UI сам смотрит в менеджеры, а менеджеры содержат только логику («ёлочка»: Менеджер → Система → Компонент → Данные).
 
 ---
@@ -143,7 +145,10 @@
 | `Managers/TimeManager.cs` | Главные часы: идёт по периодам `CalendarDay.periodSettings`; переход на индекс 0 = новый день → `CalendarManager.AdvanceDay()` |
 | `Managers/CalendarManager.cs` | `CurrentDay` — именно он сохраняется |
 | `Data/Calendar/CalendarDayPeriodType.cs` | `[Flags]`: Morning, EarlyDay, Noon, Day, LateDay, Evening, StartNight, EndNight; есть хелперы `FullDay`, `FullNight`, `IsNight`. **Это же маска смен сотрудников** |
-| `Assets/Data/Calendar/MainGameCalendar.asset` | Конфиг дня: EndNight 10 с → 6 дневных периодов по 60 с → StartNight 50 с. Игровой день ≈ 7 минут |
+| `Assets/Data/Calendar/MainGameCalendar.asset` | Конфиг дня: EndNight 10 с → 6 дневных периодов по 60 с → StartNight 50 с. Игровой день ≈ 7 минут. **День сменяется на переходе StartNight → EndNight** (индекс 7 → 0), т.е. посреди ночи |
+| `UI/EndOfDay/EndOfDaySequence.cs` | Цепочка конца дня (ТЗ п.2.2). На `TimeManager.DayEnding` держит смену дня (`HoldDayEnd`), ставит паузу и показывает: итоги дня (`BookkeepingPanelUI.ShowDayResults`) → планирование смен (`StaffSchedulePanelUI.ShowPlanning`) → приказ на завтра (`OrderSelectionUI.Show`). Потом `ReleaseDayEnd` (наступает новый день), телепорт директора в кресло и стол (`MainUIManager.ShowDirectorDesk`) с «Начать день». Пропускается, если сработала концовка |
+
+**Шлюз конца дня.** Таймер периода вызывает `TimeManager.RequestNextPeriod()`. Перед сменой дня он рассылает `DayEnding`; если подписчик вызвал `HoldDayEnd()`, время стоит (независимо от `timeScale`) до `ReleaseDayEnd()`. `GoToNextPeriod()` — «сырой» переход без шлюза, для отладки используй `RequestNextPeriod()` (так делает F11 в `DebugTimeSkip`).
 
 Связанное: `LightingManager`, `TimeOfDaySpriteController`, UI-часы (`GameClockUI`, `IconClockUI`, `DayCounterUI`, `TimelineController`, `DaySplashScreenController`).
 
@@ -170,6 +175,11 @@
   - `ExperienceManager`.
   - `StaffScheduleExtensions` — смены, опоздания, больничные.
 - **UI персонала**: `HiringSystemUI` (доска резюме + `SwitchToggle` «временный»), `StaffSchedulePanelUI`, `ActionConfigPopupUI` (тактика), `PromotionPanelUI`.
+- **Расписание** (`StaffSchedulePanelUI`):
+  - Менять смены можно, только пока день не начат: `Managers/ShiftPlanning.IsOpen`. Окно открывается в `GameSession.ResetGameState` (старт сессии) и в `EndOfDaySequence` (ночь), закрывается в `MainUIManager.StartOrResumeGameplay` («Начать день»). Во время дня `Show()` открывает панель только для просмотра (кнопки ячеек `interactable = false`).
+  - `ShowPlanning()` — шаг ночной цепочки: всегда редактируется, клик мимо окна и по имени не закрывает панель.
+  - Клик по ячейке сразу пишет `StaffController.WorkShiftMask` (длина смены = `RankData.workPeriodsCount`), а при закрытии панели `HiringManager.CheckAllStaffShiftsImmediately()` применяет расписание.
+  - Смена по умолчанию у постоянных (`HireCandidate`) и стартовых (`SpawnStaff`) сотрудников — `workPeriodsCount` дневных периодов с утра (`HiringManager.BuildMorningShiftMask`).
 
 ### Клиенты и спавн
 
@@ -178,6 +188,8 @@
 - **Архетипы**: `Characters/ClientArchetype.cs`, `Data/ArchetypeDatabase.cs`, 36 ассетов (мужские и женские варианты 15+ групп из «Таблицы архетипов» в Yonote).
 - **Спавн**:
   - `Managers/WaveManager.cs` — дневной план спавна из потоков регионов (`ProgressionManager`), очередь спавна, визитёры к директору и визитёры арок.
+  - **Автоспавн** (`WaveManager.enableAutoSpawn`) в сцене выключен. Его включают квест захвата первого района (`TutorialBureaucracyQuest.CompleteQuest`) и `GameSession.SyncClientAutoSpawn` (флаг = «есть хотя бы один район»). Без районов клиентов нет: поток нулевой.
+  - ID районов в эффектах книги директора (`UnlockRegion`) — это `RegionData.regionID` (`SLUMS`), а не имя ассета. В базе `ProgressionManager.allRegionsDatabase` (override в `MainMenuScene`) 3 района: `SLUMS`, `OLD_CITY`, `NOBLE_PARK`. Ассеты `Region_01..10` с ID `REG_*` в базу не входят.
   - `ClientSpawner` — ссылки на зоны сцены.
   - `ClientSpawnerWithArchetypes` в сценах **не используется**.
 - **Очереди**: `ClientQueueManager`, `Objects/TicketTerminal.cs` (автомат номерков), `Gameplay/LimitedCapacityZone.cs`, `WaitingZone`.
@@ -205,7 +217,7 @@
 | Беспорядок и износ | `MessManager`, `DirtGridManager`, `Gameplay/MessPoint.cs`, `Puddle`, `TrashCan`, `DurabilityManager`, `Gameplay/OfficeObjectDurability.cs` |
 | Охрана | `GuardManager` («доска заявок»), `Gameplay/SecurityBarrier.cs` |
 
-**Приказы дня.** Из эффектов приказа в коде используются только `allowedDirectorErrorRate` и `oneTimeMoneyBonus`. Множители (`staffMoveSpeedMultiplier`, `clientSpawnRateMultiplier`, `clientPatienceMultiplier`, `disableGuards`, `removeStrike`, `permanentDailyIncome` …) **нигде не читаются**.
+**Приказы дня.** Выбираются ночью в цепочке конца дня (на следующий день) и утром при загрузке сцены (`MainUIManager.UnveilSequence`). `OrderManager.SelectOrder` заменяет прошлый дневной (`SingleDay`) приказ в `activeOrders`, постоянные остаются. `currentMandates` нигде не заполняется. Из эффектов приказа в коде используются только `allowedDirectorErrorRate` и `oneTimeMoneyBonus`. Множители (`staffMoveSpeedMultiplier`, `clientSpawnRateMultiplier`, `clientPatienceMultiplier`, `disableGuards`, `removeStrike`, `permanentDailyIncome` …) **нигде не читаются**.
 
 ### Прогрессия (мета-слой)
 

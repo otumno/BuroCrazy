@@ -44,7 +44,7 @@ MonoBehaviour:
       \u043D\u0435\u0431\u043E\u043B\u044C\u0448\u0438\u043C \u0440\u0430\u0439\u043E\u043D\u043E\u043C."
     effects:
     - type: 14
-      targetID: Region_Slums
+      targetID: SLUMS
       value: 0
       addInsteadOfSet: 0
     nextPageID: page_D

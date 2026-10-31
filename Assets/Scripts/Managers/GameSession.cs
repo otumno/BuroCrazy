@@ -31,6 +31,7 @@ namespace Managers
             BindPersistentManagers();
             ResetGameState();
             ApplySave(isNewGame);
+            SyncClientAutoSpawn();
             DirectorManager.Instance?.PrepareDay();
         }
 
@@ -43,7 +44,18 @@ namespace Managers
             Debug.Log("[GameSession] Перезагрузка текущего слота поверх сцены");
             ResetGameState();
             ApplySave(isNewGame: false);
+            SyncClientAutoSpawn();
             DirectorManager.Instance?.PrepareDay();
+        }
+
+        // В сцене автоспавн выключен, и включал его только квест захвата первого района (TutorialBureaucracyQuest.CompleteQuest).
+        // Поэтому после загрузки сейва или с районом из книги директора клиенты не приходили никогда.
+        // Без районов дневной поток всё равно нулевой, так что флаг просто следует за наличием районов.
+        private static void SyncClientAutoSpawn()
+        {
+            if (WaveManager.Instance == null || ProgressionManager.Instance == null) return;
+
+            WaveManager.Instance.enableAutoSpawn = ProgressionManager.Instance.GetCapturedRegionsCount() > 0;
         }
 
         private static void BindPersistentManagers()
@@ -65,6 +77,8 @@ namespace Managers
             OrderManager.Instance?.ResetState();
             StoryStateManager.Instance?.ResetState();
             CinematicTriggerManager.Instance?.ResetAllTriggers();
+            // Сессия начинается до первого «Начать день» — смены на первый день можно расставить.
+            ShiftPlanning.Open();
         }
 
         private static void ApplySave(bool isNewGame)

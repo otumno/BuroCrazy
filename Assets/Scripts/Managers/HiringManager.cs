@@ -265,6 +265,36 @@ namespace Managers
             return collected >= periodsCount;
         }
 
+        /// <summary>
+        /// Смена постоянного по умолчанию: periodsCount дневных периодов подряд, начиная с утра.
+        /// Если календаря нет, остаётся одно утро, как было раньше.
+        /// </summary>
+        private static Data.Calendar.CalendarDayPeriodType BuildMorningShiftMask(int periodsCount)
+        {
+            const Data.Calendar.CalendarDayPeriodType fallbackMask = Data.Calendar.CalendarDayPeriodType.Morning;
+
+            var periods = TimeManager.Instance != null && TimeManager.Instance.mainCalendarDay != null
+                ? TimeManager.Instance.mainCalendarDay.periodSettings
+                : null;
+            if (periods == null) return fallbackMask;
+
+            int startIndex = periods.FindIndex(p => p.PeriodType == Data.Calendar.CalendarDayPeriodType.Morning);
+            if (startIndex < 0) return fallbackMask;
+
+            var mask = Data.Calendar.CalendarDayPeriodType.None;
+            int collected = 0;
+            for (int index = startIndex; index < periods.Count && collected < periodsCount; index++)
+            {
+                var periodType = periods[index].PeriodType;
+                if (periodType.IsNight()) break;
+
+                mask |= periodType;
+                collected++;
+            }
+
+            return mask == Data.Calendar.CalendarDayPeriodType.None ? fallbackMask : mask;
+        }
+
         private Transform GetFreeStaffPoint()
         {
             return unassignedStaffPoints.FirstOrDefault(p => p != null && !occupiedPoints.ContainsKey(p));
@@ -473,8 +503,8 @@ namespace Managers
                 staffController.hirePeriod = TimeManager.Instance.GetCurrentPeriodType();
             }
 
-            // График работы: постоянному по умолчанию - УТРО (Morning), временному - сразу полная оплаченная смена
-            // со следующего периода. В обоих случаях игрок может передвинуть смену в панели расписания.
+            // График работы: постоянному по умолчанию - полная смена ранга с утра, временному - сразу полная оплаченная смена
+            // со следующего периода. Постоянному игрок может передвинуть смену в панели расписания (вне активного дня).
             if (employmentType == EmploymentType.Temporary)
             {
                 // Что смена помещается целиком, уже проверил CanHireAs в начале найма.
@@ -484,7 +514,7 @@ namespace Managers
             }
             else
             {
-                staffController.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
+                staffController.WorkShiftMask = BuildMorningShiftMask(GetShiftPeriodsCount(candidate.Rank));
             }
 
             newStaffGO.name = $"{candidate.NameData.lastName} {candidate.NameData.firstName}";
@@ -949,6 +979,10 @@ namespace Managers
             {
                 staffController.experiencePoints = skillLevel * 100;
             }
+
+            // Без этого остаётся маска из префаба: у стажёра она пустая и превращается в одно утро (InternController.StartShift),
+            // хотя ранг даёт больше рабочих периодов.
+            staffController.WorkShiftMask = BuildMorningShiftMask(GetShiftPeriodsCount(staffController.currentRank));
 
             AllStaff.Add(staffController);
             UnassignedStaff.Add(staffController);

@@ -298,6 +298,9 @@ namespace Managers
             isTransitioning = true;
             if (pausePanel != null) pausePanel.SetActive(false);
 
+            // День начат (или продолжен) — менять смены больше нельзя до ночного планирования.
+            ShiftPlanning.Close();
+
 
             // 1. Прячем стол
             var desk = FindFirstObjectByType<StartOfDayPanel>(FindObjectsInactive.Include); 
