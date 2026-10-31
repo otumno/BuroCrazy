@@ -96,6 +96,7 @@ namespace Managers
             if (TimeManager.Instance != null)
             {
                 TimeManager.Instance.OnPeriodChanged += OnTimePeriodChanged;
+                TimeManager.Instance.OnDayChanged += TimeManager_DayChanged;
             }
         }
 
@@ -104,13 +105,31 @@ namespace Managers
             if (Instance == this)
             {
                 SceneManager.sceneLoaded -= OnSceneLoaded;
-                if (TimeManager.Instance != null) TimeManager.Instance.OnPeriodChanged -= OnTimePeriodChanged;
+                if (TimeManager.Instance != null)
+                {
+                    TimeManager.Instance.OnPeriodChanged -= OnTimePeriodChanged;
+                    TimeManager.Instance.OnDayChanged -= TimeManager_DayChanged;
+                }
             }
         }
 
         private void OnTimePeriodChanged(PeriodSettings settings)
         {
             CheckAllStaffShiftsImmediately();
+        }
+
+        // Дневные флаги прихода раньше не сбрасывались. CheckAllStaffShiftsImmediately не пересчитывает приход,
+        // пока hasArrivedToday == true, поэтому заболевший оставался на больничном навсегда.
+        // OnDayChanged приходит раньше OnPeriodChanged, так что к проверке смен флаги уже чистые.
+        private void TimeManager_DayChanged(int day)
+        {
+            foreach (var staff in AllStaff)
+            {
+                // Тем, кто ещё на смене (ночные смены), день не обрываем.
+                if (staff == null || staff.gameObject.activeSelf) continue;
+
+                staff.ResetDailySchedule();
+            }
         }
 
         private IEnumerator RegisterExistingStaffAndAssignDatabases()

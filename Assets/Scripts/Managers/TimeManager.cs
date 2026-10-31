@@ -95,6 +95,11 @@ namespace Managers
             GoToNextPeriod();
         }
 
+        /// <summary>
+        /// День закончился, но его смену держит подписчик <see cref="DayEnding"/> (например, экраны конца дня).
+        /// </summary>
+        public bool IsWaitingForDayEnd => _isWaitingForDayEnd;
+
         public void HoldDayEnd() => _dayEndHoldCount++;
 
         public void ReleaseDayEnd()

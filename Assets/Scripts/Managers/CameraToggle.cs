@@ -66,7 +66,7 @@ namespace Managers
             // Отладка
             if (scrollInput > 0.01f || scrollInput < -0.01f || hasTabInput)
             {
-                Debug.Log($"[CameraToggle] Ввод: scroll={scrollInput:F3}, tab={hasTabInput}, isOverUI={isPointerOverUI}");
+                // Debug.Log($"[CameraToggle] Ввод: scroll={scrollInput:F3}, tab={hasTabInput}, isOverUI={isPointerOverUI}");
             }
 
             // Tab - переключение по кругу

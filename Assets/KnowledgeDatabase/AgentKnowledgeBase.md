@@ -336,7 +336,7 @@
 | Где | Проблема |
 |---|---|
 | `StaffController.AIUpdateLoop` | Цикл ждёт `WaitForSeconds(1f)`, но умножает скорости потребностей на `Time.deltaTime`. Потребности меняются в ~50–60 раз медленнее, чем задумано в `AIBalanceConfig` |
-| `PlayerWallet.Start()` | `AddMoney(10000, "DEBUG…")` — временный хак. После него `GameSession` и загрузка перезаписывают баланс, но в лог бухгалтерии попадает запись |
+| `StaffScheduleExtensions.ResetDailySchedule` | Ищет поля рефлексией; `HasTakenBreakToday` — свойство, его она молча пропускает. Вызывается из `HiringManager` на смене дня для сотрудников дома (раньше не вызывался нигде, и заболевший оставался на больничном навсегда) |
 | `PlayerInputController.Update` | Чит **M** (+10000 теневых денег) **не обёрнут в define** — работает в релизном билде |
 | `AchievementManager` | `Resources.Load("Thoughts/Achivments")`, но `Assets/Thoughts` не под Resources. В редакторе работает через AssetDatabase, **в билде ачивки не загрузятся** |
 | `GameSession` | Грузит `Resources.Load("DirectorSprites/{id}")` — такой папки нет |
@@ -367,6 +367,8 @@
 | F1 | `ClientDebugMenu` — спавн клиентов и архетипов, арки, концовки |
 | M | +10000 денег (чит) |
 | B | Принудительно открыть бухгалтерию (только Editor и Dev-билд) |
+| F10 | Пропуск до следующего дня: проходит все периоды до конца дня, ночью запускает экраны конца дня (`DebugTimeSkip`, `DEBUG_ENABLED`) |
+| F11 | Пропуск на следующий период (`DebugTimeSkip`, `DEBUG_ENABLED`) |
 | F12 | Тумблер «все ачивки» (`AchievementListUI`) + тест тултипа (`TooltipManager`) |
 
 **Editor-окна и тулы** (`Assets/Editor/`):
