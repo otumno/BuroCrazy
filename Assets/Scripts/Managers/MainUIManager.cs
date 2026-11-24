@@ -300,6 +300,7 @@ namespace Managers
 
             // День начат (или продолжен) — менять смены больше нельзя до ночного планирования.
             ShiftPlanning.Close();
+            HiringManager.Instance?.CheckAllStaffShiftsImmediately();
 
 
             // 1. Прячем стол
@@ -388,6 +389,7 @@ namespace Managers
         {
             // !!! ВАЖНО !!! Ставим паузу ДО любых действий
             PauseGame(true);
+            if (orderSelectionUI != null) orderSelectionUI.gameObject.SetActive(false);
 
             // Привязка постоянных менеджеров к сцене, сброс партии, сейв или настройки новой игры, подготовка дня.
             GameSession.Begin();
@@ -419,12 +421,12 @@ namespace Managers
             Debug.Log($"[Unveil] После сплеша, время = {Time.timeScale}");
 
             // 5. События начала дня (катсцены). Туториал — одно из них (триггер Tutorial_Day1 в CinematicTriggerManager).
-            // Загрузка всегда начинает день заново, а TimeManager.OnDayChanged для первого дня сессии не приходит,
-            // поэтому сообщаем о начале дня сами.
+            // A saved period resumes without replaying daily cutscenes; fresh sessions still need the initial trigger.
             // isTransitioning снимаем заранее: катсцена может открыть стол (ShowDirectorDesk), а во время перехода он не открывается.
             isTransitioning = false;
             var triggerManager = CinematicTriggerManager.Instance;
-            if (triggerManager != null && triggerManager.TriggerDayStart(CalendarManager.Instance.CurrentDay))
+            if (triggerManager != null && (TimeManager.Instance == null || !TimeManager.Instance.HasRestoredProgress)
+                && triggerManager.TriggerDayStart(CalendarManager.Instance.CurrentDay))
             {
                 var cinematicPlayer = FindFirstObjectByType<CinematicPlayer>();
                 while (cinematicPlayer != null && cinematicPlayer.IsPlaying) yield return null;
@@ -458,12 +460,9 @@ namespace Managers
             }
 
             // Показываем Приказы
-            if (orderSelectionUI != null)
+            if (orderSelectionUI != null && (OrderManager.Instance == null || !OrderManager.Instance.HasSelectedOrderForDay))
             {
-                orderSelectionUI.gameObject.SetActive(true);
-                orderSelectionUI.Setup();
-                var orderCG = orderSelectionUI.GetComponent<CanvasGroup>();
-                if(orderCG) { orderCG.interactable = true; orderCG.blocksRaycasts = true; }
+                orderSelectionUI.Show();
             }
 
             isTransitioning = false;

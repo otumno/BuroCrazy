@@ -10,6 +10,9 @@ public class OrderSelectionUI : MonoBehaviour
     [Header("UI Компоненты")]
     [SerializeField] private List<OrderCardUI> orderCards;
     private CanvasGroup canvasGroup;
+    private bool _selectionInProgress;
+    private bool _forNextDay;
+    private bool _hasChoices;
 
     /// <summary>
     /// Игрок выбрал приказ. Сам выбор закрывает экран.
@@ -23,26 +26,54 @@ public class OrderSelectionUI : MonoBehaviour
     /// </summary>
     public void Show()
     {
+        ShowInternal(false);
+    }
+
+    public void ShowForNextDay() => ShowInternal(true);
+
+    private void ShowInternal(bool forNextDay)
+    {
+        _forNextDay = forNextDay;
         gameObject.SetActive(true);
         if (canvasGroup == null) canvasGroup = GetComponent<CanvasGroup>();
 
         Setup();
+        if (!_hasChoices) return;
         StopAllCoroutines();
         StartCoroutine(Fade(true));
     }
 
     public void Setup()
     {
+        _selectionInProgress = false;
+        _hasChoices = false;
+        StopAllCoroutines();
         if (OrderManager.Instance == null)
+        {
+            Debug.LogError("[OrderSelectionUI] OrderManager отсутствует; этап выбора пропущен.");
+            gameObject.SetActive(false);
+            OnOrderSelected();
             return;
+        }
         
         List<DirectorOrder> availableOrders = OrderManager.Instance.GetAvailableOrdersForDay();
+        _hasChoices = availableOrders.Count > 0 && orderCards != null && orderCards.Exists(c => c != null);
+        if (!_hasChoices)
+        {
+            // Exhausting one-time choices must not trap the night sequence on an empty screen.
+            Debug.LogWarning("[OrderSelectionUI] Доступных приказов нет; этап выбора пропущен.");
+            gameObject.SetActive(false);
+            OnOrderSelected();
+            return;
+        }
         
+        int orderIndex = 0;
         for (int i = 0; i < orderCards.Count; i++)
         {
-            if (i < availableOrders.Count)
+            if (orderCards[i] == null) continue;
+            if (orderIndex < availableOrders.Count)
             {
-                orderCards[i].Setup(availableOrders[i], OrderCard_Clicked);
+                orderCards[i].Setup(availableOrders[orderIndex++], OrderCard_Clicked);
                 orderCards[i].gameObject.SetActive(true);
             }
             else
@@ -54,13 +85,17 @@ public class OrderSelectionUI : MonoBehaviour
 
     private void OrderCard_Clicked(DirectorOrder selectedOrder)
     {
+        if (_selectionInProgress || selectedOrder == null) return;
+        _selectionInProgress = true;
+        // Иначе незавершённое появление окна продолжает повышать alpha во время закрытия.
+        StopAllCoroutines();
         // ИСПРАВЛЕНИЕ: Используем OrderManager
         if (OrderManager.Instance != null)
         {
-            OrderManager.Instance.SelectOrder(selectedOrder);
+            if (_forNextDay) OrderManager.Instance.SelectOrderForNextDay(selectedOrder);
+            else OrderManager.Instance.SelectOrder(selectedOrder);
         }
         StartCoroutine(UpdateAndFadeOut());
-        OnOrderSelected();
     }
 
     private void OnOrderSelected() => OrderSelected?.Invoke();
@@ -74,6 +109,8 @@ public class OrderSelectionUI : MonoBehaviour
         {
             StartOfDayPanel.Instance.UpdatePanelInfo();
         }
+        // День меняем только после закрытия окна, чтобы не оставить его поверх стола/катсцены.
+        OnOrderSelected();
     }
 
     public IEnumerator Fade(bool fadeIn)

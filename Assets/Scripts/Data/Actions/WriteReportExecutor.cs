@@ -13,7 +13,7 @@ public class WriteReportExecutor : ActionExecutor
         if (guard == null) { FinishAction(false); yield break; }
 
         var desk = ScenePointsRegistry.Instance?.guardReportDesk;
-        if (desk == null) 
+        if (desk == null || desk.clerkStandPoint == null || desk.documentStack == null)
         {
             staff.thoughtBubble?.ShowPriorityMessage("Нет стола для отчетов!", 2f, Color.red);
             FinishAction(false); 
@@ -21,7 +21,7 @@ public class WriteReportExecutor : ActionExecutor
         }
 
         // Идем к столу
-        yield return staff.StartCoroutine(staff.MoveToTarget(desk.clerkStandPoint.position, "Walking"));
+        yield return staff.MoveToTarget(desk.clerkStandPoint.position, "Walking");
 
         guard.SetState(GuardMovement.GuardState.WritingReport);
         staff.thoughtBubble?.ShowPriorityMessage("Пишу рапорт...", 3f, Color.cyan);
@@ -34,20 +34,22 @@ public class WriteReportExecutor : ActionExecutor
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         
         // Физически спавним рапорты на столе
+        int deposited = 0;
         if (desk.documentStack != null)
         {
             for (int i = 0; i < guard.unwrittenReportPoints; i++)
             {
-                desk.documentStack.AddDocumentToStack();
+                if (!desk.documentStack.AddDocumentToStack()) break;
+                deposited++;
             }
         }
         
         // Сбрасываем очки
-        guard.unwrittenReportPoints = 0;
+        guard.unwrittenReportPoints -= deposited;
         
         staff.thoughtBubble?.ShowPriorityMessage("Рапорт сдан.", 2f, Color.green);
 
         guard.SetState(GuardMovement.GuardState.Idle);
-        FinishAction(true);
+        FinishAction(deposited > 0);
     }
 }

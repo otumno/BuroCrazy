@@ -38,7 +38,7 @@ public class ReplenishResourceExecutor : ActionExecutor
         manager.SetState(OfficeManagerController.ManagerState.RefillingWater); // Используем пока это состояние для всего
         manager.thoughtBubble?.ShowPriorityMessage($"Нужна {GetResourceName(targetContainer.resourceType)}...", 2f, Color.white);
         
-        yield return staff.StartCoroutine(manager.MoveToTarget(source.transform.position, OfficeManagerController.ManagerState.Idle));
+        yield return manager.MoveToTarget(source.transform.position, OfficeManagerController.ManagerState.Idle);
 
         // Анимация "берет со склада"
         yield return new WaitForSeconds(1f);
@@ -51,7 +51,7 @@ public class ReplenishResourceExecutor : ActionExecutor
         manager.thoughtBubble?.ShowPriorityMessage("Несу!", 2f, Color.cyan);
 
         // 4. Идем к контейнеру
-        yield return staff.StartCoroutine(manager.MoveToTarget(targetContainer.transform.position, OfficeManagerController.ManagerState.CarryingDoc));
+        yield return manager.MoveToTarget(targetContainer.transform.position, OfficeManagerController.ManagerState.CarryingDoc);
 
         // 5. Пополняем
         yield return new WaitForSeconds(1.5f); // Время установки бутыли/бумаги

@@ -17,6 +17,32 @@ namespace Managers
         public List<DirectorOrder> completedOneTimeOrders = new List<DirectorOrder>();
         public List<DirectorOrder> currentMandates = new List<DirectorOrder>();
         public List<DirectorOrder> offeredOrders = new List<DirectorOrder>();
+        public DirectorOrder PendingOrder { get; private set; }
+        public bool HasSelectedOrderForDay { get; private set; }
+
+        public void RestoreSelection(IEnumerable<DirectorOrder> orders, DirectorOrder pending, bool selected)
+        {
+            activeOrders.Clear();
+            foreach (var order in orders)
+                if (order != null && !activeOrders.Contains(order)) activeOrders.Add(order);
+            PendingOrder = pending;
+            HasSelectedOrderForDay = selected;
+        }
+
+        public void SelectOrderForNextDay(DirectorOrder order)
+        {
+            PendingOrder = order;
+            offeredOrders.Clear();
+        }
+
+        public void BeginNextDay()
+        {
+            HasSelectedOrderForDay = false;
+            activeOrders.RemoveAll(order => order == null || order.duration != OrderDuration.Permanent);
+            var order = PendingOrder;
+            PendingOrder = null;
+            if (order != null) SelectOrder(order);
+        }
 
         private void Awake()
         {
@@ -40,7 +66,7 @@ namespace Managers
 
             var orderPool = new List<DirectorOrder>(allPossibleOrders);
             // Исключаем уже выполненные одноразовые приказы
-            orderPool.RemoveAll(order => completedOneTimeOrders.Contains(order));
+            orderPool.RemoveAll(order => order == null || completedOneTimeOrders.Contains(order) || activePermanentOrders.Contains(order));
 
             offeredOrders.Clear();
             int numberOfChoices = 3;
@@ -55,6 +81,8 @@ namespace Managers
 
         public void SelectOrder(DirectorOrder selectedOrder)
         {
+            if (selectedOrder == null) return;
+            HasSelectedOrderForDay = true;
             // Приказ выбирается каждый день, а дневные приказы больше никто не снимает.
             // Новый выбор заменяет прошлый дневной приказ; постоянные остаются.
             activeOrders.RemoveAll(order => order == null || order.duration != OrderDuration.Permanent);
@@ -84,6 +112,8 @@ namespace Managers
 
         public void ResetState()
         {
+            PendingOrder = null;
+            HasSelectedOrderForDay = false;
             activeOrders.Clear();
             activePermanentOrders.Clear();
             completedOneTimeOrders.Clear();

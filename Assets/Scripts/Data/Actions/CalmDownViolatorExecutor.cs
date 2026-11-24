@@ -12,18 +12,22 @@ public class CalmDownViolatorExecutor : ActionExecutor
         var guard = staff.GetComponent<GuardMovement>();
         if (guard == null) { FinishAction(false); yield break; }
 
-        var violator = GuardManager.Instance?.currentViolator;
+        var violator = GuardManager.Instance?.GetViolator();
         if (violator == null) { FinishAction(true); yield break; }
 
         guard.SetState(GuardMovement.GuardState.Chasing); // Используем Chasing для подхода
         staff.thoughtBubble?.ShowPriorityMessage("Гражданин, успокойтесь!", 2f, Color.yellow);
 
         // Подходим к нарушителю
-        while (violator != null && Vector3.Distance(staff.transform.position, violator.transform.position) > 2f)
+        float chaseDeadline = Time.time + 20f;
+        while (Time.time < chaseDeadline && violator != null && Vector3.Distance(staff.transform.position, violator.transform.position) > 2f)
         {
             staff.agentMover.SetTarget(violator.transform.position);
             yield return new WaitForSeconds(0.2f);
         }
+
+        if (violator != null && Vector3.Distance(staff.transform.position, violator.transform.position) > 2f)
+        { staff.AgentMover?.Stop(); FinishAction(false); yield break; }
 
         if (violator != null)
         {
@@ -34,7 +38,8 @@ public class CalmDownViolatorExecutor : ActionExecutor
             yield return new WaitForSeconds(guard.talkTime);
 
             // Результат
-            // GuardManager.Instance.PacifyViolator(violator);
+            if (GuardManager.Instance == null || !GuardManager.Instance.PacifyViolator(violator))
+            { FinishAction(false); yield break; }
             staff.thoughtBubble?.ShowPriorityMessage("Конфликт исчерпан.", 2f, Color.green);
 
             guard.unwrittenReportPoints++;

@@ -57,6 +57,7 @@ public class StartOfDayPanel : MonoBehaviour
     private Sequence _sequence;
 
     private bool _isFirstShow = true;
+    private TimeManager subscribedClock;
     
     private void Awake()
     {
@@ -66,10 +67,16 @@ public class StartOfDayPanel : MonoBehaviour
 
     private void OnEnable()
     {
+        if (subscribedClock != null) subscribedClock.OnDayChanged -= SwitchFirstShow;
+        subscribedClock = TimeManager.Instance;
+        if (subscribedClock != null)
+        {
+            subscribedClock.OnDayChanged += SwitchFirstShow;
+            if (subscribedClock.HasRestoredProgress && !subscribedClock.IsNight()) _isFirstShow = false;
+        }
         Debug.Log($"<color=orange>[StartOfDayPanel] OnEnable called. _pauseCount before: {MainUIManager.Instance?.pauseCount ?? -1}</color>");
         UpdatePanelInfo();
         UpdateBackground(); // Обновляем фон при открытии
-        TimeManager.Instance.OnDayChanged += SwitchFirstShow;
     }
     
     // --- МЕТОД ОБНОВЛЕНИЯ ФОНА ---
@@ -268,7 +275,6 @@ public class StartOfDayPanel : MonoBehaviour
 
     private void OnDestroy()
     {
-        if (TimeManager.Instance)
-            TimeManager.Instance.OnDayChanged -= SwitchFirstShow;
+        if (subscribedClock != null) subscribedClock.OnDayChanged -= SwitchFirstShow;
     }
 }

@@ -19,6 +19,7 @@ namespace UI.EndOfDay
         private TimeManager _timeManager;
         private CinematicPlayer _cinematicPlayer;
         private StartOfDayPanel _desk;
+        private bool _isRunning;
 
         private void Start()
         {
@@ -41,7 +42,8 @@ namespace UI.EndOfDay
 
         private void TimeManager_DayEnding()
         {
-            if (IsEndingTriggered()) return;
+            if (_isRunning || IsEndingTriggered()) return;
+            _isRunning = true;
 
             _timeManager.HoldDayEnd();
             StartCoroutine(RunSequence());
@@ -55,8 +57,11 @@ namespace UI.EndOfDay
             // Окно планирования открыто до «Начать день»: смены можно поправить и со стола после цепочки.
             ShiftPlanning.Open();
 
+            Debug.Log("[EndOfDaySequence] Шаг 1: статистика");
             yield return ShowDayResults();
+            Debug.Log("[EndOfDaySequence] Шаг 2: расписание");
             yield return ShowSchedulePlanning();
+            Debug.Log("[EndOfDaySequence] Шаг 3: приказ");
             yield return ShowOrderSelection();
 
             // Смена дня: OnDayChanged запускает катсцены нового дня, страйки и проверку концовок.
@@ -80,6 +85,8 @@ namespace UI.EndOfDay
             }
 
             if (isPausedBySequence) MainUIManager.Instance?.PopPause();
+            _isRunning = false;
+            Debug.Log("[EndOfDaySequence] Цепочка завершена");
         }
 
         private IEnumerator ShowDayResults()
@@ -116,7 +123,7 @@ namespace UI.EndOfDay
             void OrderSelection_OrderSelected() => isSelected = true;
 
             orderSelection.OrderSelected += OrderSelection_OrderSelected;
-            orderSelection.Show();
+            orderSelection.ShowForNextDay();
             yield return new WaitUntil(() => isSelected);
             orderSelection.OrderSelected -= OrderSelection_OrderSelected;
         }

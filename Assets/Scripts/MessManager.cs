@@ -43,12 +43,12 @@ public class MessManager : MonoBehaviour
         }
     }
 
-    public List<MessPoint> GetSortedMessList(Vector3 position)
+    public List<MessPoint> GetSortedMessList(Vector3 position, bool availableOnly = false)
     {
         if (allMesses.Count == 0) return new List<MessPoint>();
 
         return allMesses
-            .Where(m => m != null) // Добавим проверку на случай, если объект был уничтожен некорректно
+            .Where(m => m != null && m.gameObject.activeInHierarchy && (!availableOnly || !m.IsReserved))
             .OrderBy(m => Vector3.Distance(position, m.transform.position))
             .ToList();
     }

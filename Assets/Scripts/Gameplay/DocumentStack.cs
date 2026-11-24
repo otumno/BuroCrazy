@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Gameplay.Documents;
 using Data.Documents;
 using Managers;
+using System.Linq;
 
 public class DocumentStack : MonoBehaviour
 {
@@ -20,6 +21,17 @@ public class DocumentStack : MonoBehaviour
 
     // Внутренний список объектов
     private List<GameObject> visualStack = new List<GameObject>();
+    private static readonly Dictionary<GameObject, DocumentStack> inTransit = new();
+
+    public int OrdinaryDocumentCount => visualStack.Count(d => d != null && d.GetComponent<ProjectDocumentObject>() == null);
+    public List<GameObject> GetDocumentsForSave() => visualStack.Where(d => d != null)
+        .Concat(inTransit.Where(p => p.Value == this && p.Key != null).Select(p => p.Key)).Distinct().ToList();
+    public static void CompleteTransit(GameObject document) { if (document != null) inTransit.Remove(document); }
+
+    private void OnDestroy()
+    {
+        foreach (var document in inTransit.Where(p => p.Value == this).Select(p => p.Key).ToList()) inTransit.Remove(document);
+    }
 
     // --- СВОЙСТВА ---
     public bool IsEmpty => visualStack.Count == 0;
@@ -41,7 +53,40 @@ public class DocumentStack : MonoBehaviour
     public bool AddDocumentToStack()
     {
         if (visualStack.Count >= maxStackSize) return false;
-        AddDocumentInternal(documentPrefab);
+        return AddDocumentInternal(documentPrefab) != null;
+    }
+
+    public List<GameObject> TakeOrdinaryDocuments(int count)
+    {
+        var documents = new List<GameObject>();
+        for (int i = visualStack.Count - 1; i >= 0 && documents.Count < count; i--)
+        {
+            var document = visualStack[i];
+            if (document == null || document.GetComponent<ProjectDocumentObject>() != null) continue;
+            visualStack.RemoveAt(i);
+            inTransit[document] = this;
+            document.transform.SetParent(null);
+            document.SetActive(false);
+            documents.Add(document);
+        }
+        return documents;
+    }
+
+    public bool ReceiveExistingDocument(GameObject document, bool returningToSource = false)
+    {
+        if (document == null) return false;
+        if (visualStack.Contains(document)) return true;
+        // A rollback must preserve the original even if someone filled the source during transport.
+        if (!returningToSource && IsFull) return false;
+        CompleteTransit(document);
+        if (stackRoot == null) stackRoot = transform;
+        document.transform.SetParent(stackRoot);
+        document.transform.position = stackRoot.position + Vector3.up * (visualStack.Count * stackOffset);
+        document.transform.rotation = stackRoot.rotation;
+        foreach (var renderer in document.GetComponentsInChildren<SpriteRenderer>(true))
+            renderer.sortingOrder = 50 + visualStack.Count;
+        document.SetActive(true);
+        visualStack.Add(document);
         return true;
     }
 
@@ -96,7 +141,7 @@ public class DocumentStack : MonoBehaviour
         // Спавним нужное количество
         for (int i = 0; i < count; i++)
         {
-            if (visualStack.Count >= maxStackSize) break;
+            // Saves can contain a rollback overflow; capacity must not destroy already-owned papers.
             AddDocumentInternal(documentPrefab);
         }
     }
@@ -163,6 +208,7 @@ public class DocumentStack : MonoBehaviour
     {
         if (targetDoc == null || !visualStack.Contains(targetDoc.gameObject)) return null;
         visualStack.Remove(targetDoc.gameObject);
+        inTransit[targetDoc.gameObject] = this;
         return targetDoc.gameObject;
     }
 
@@ -172,7 +218,8 @@ public class DocumentStack : MonoBehaviour
 
     private GameObject AddDocumentInternal(GameObject prefabToSpawn)
     {
-        if (prefabToSpawn == null || stackRoot == null) return null;
+        if (prefabToSpawn == null) return null;
+        if (stackRoot == null) stackRoot = transform;
 
         GameObject newDoc = Instantiate(prefabToSpawn, stackRoot);
         

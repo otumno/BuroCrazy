@@ -70,7 +70,7 @@ namespace CinematicSystem.Nodes
             
             if (client != null)
             {
-                client.mainGoal = forcedGoal;
+                client.AssignVisitGoal(forcedGoal);
                 client.SetupFromArchetype(archetype);
                 client.SetupGrumblingFromArchetype(archetype);
                 

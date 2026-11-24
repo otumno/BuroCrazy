@@ -47,10 +47,21 @@ namespace Managers
             data.day = CalendarManager.Instance.CurrentDay;
             data.money = PlayerWallet.Instance.GetCurrentMoney();
             data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
+            data.periodSpawnProgress = WaveManager.Instance?.CaptureSpawnProgress();
+            if (TimeManager.Instance != null)
+            {
+                data.hasCalendarProgress = true;
+                data.savedPeriod = TimeManager.Instance.GetCurrentPeriodType();
+                data.savedPeriodElapsed = TimeManager.Instance.GetPeriodTimer();
+            }
 
             // 2. Приказы
             if (OrderManager.Instance != null)
             {
+                data.hasOrderState = true;
+                data.hasSelectedDailyOrder = OrderManager.Instance.HasSelectedOrderForDay;
+                data.activeOrderNames = OrderManager.Instance.activeOrders.Where(o => o != null).Select(o => o.name).ToList();
+                data.pendingOrderName = OrderManager.Instance.PendingOrder != null ? OrderManager.Instance.PendingOrder.name : null;
                 data.activePermanentOrderNames = OrderManager.Instance.activePermanentOrders.Select(order => order.name).ToList();
                 data.completedOneTimeOrderNames = OrderManager.Instance.completedOneTimeOrders.Select(order => order.name).ToList();
             }
@@ -79,12 +90,18 @@ namespace Managers
             DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
             foreach (var stack in allStacks)
             {
-                // Пропускаем архив, он сохраняется отдельно
-                if (ArchiveManager.Instance != null && stack == ArchiveManager.Instance.mainDocumentStack) continue;
-                
-                DocumentStackSaveData stackData = new DocumentStackSaveData();
-                stackData.stackOwnerName = stack.gameObject.name;
-                stackData.documentCount = stack.CurrentSize;
+                var documents = stack.GetDocumentsForSave();
+                var projects = documents.Select(d => d.GetComponent<Gameplay.Documents.ProjectDocumentObject>())
+                    .Where(d => d != null && d.documentData != null).ToList();
+                DocumentStackSaveData stackData = new DocumentStackSaveData
+                {
+                    stackOwnerName = stack.gameObject.name,
+                    hierarchyPath = GetHierarchyPath(stack.transform),
+                    documentCount = documents.Count,
+                    hasDocumentContents = true,
+                    ordinaryCount = documents.Count - projects.Count,
+                    projects = projects.Select(d => CaptureProject(d.documentData)).ToList()
+                };
                 data.allDocumentStackData.Add(stackData);
             }
             
@@ -158,6 +175,54 @@ namespace Managers
             // Debug.Log($"Игра сохранена в слот {slotIndex}");
         }
 
+        private static string GetHierarchyPath(Transform target)
+        {
+            string path = target.name + "[" + target.GetSiblingIndex() + "]";
+            while (target.parent != null)
+            {
+                target = target.parent;
+                path = target.name + "[" + target.GetSiblingIndex() + "]/" + path;
+            }
+            return path;
+        }
+
+        private static ProjectDocumentSaveData CaptureProject(Data.Documents.ProjectDocumentDefinition doc) => new ProjectDocumentSaveData
+        {
+            documentName = doc.documentName, docType = doc.docType,
+            regionId = doc.targetRegion != null ? doc.targetRegion.regionID : null,
+            jobId = doc.targetJob != null ? doc.targetJob.jobID : null,
+            targetUpgradeID = doc.targetUpgradeID, signedByDirector = doc.signedByDirector,
+            processedByRegistrar = doc.processedByRegistrar, paidAtCashier = doc.paidAtCashier,
+            archived = doc.archived, jobPathType = doc.jobPathType,
+            jobMoneyCost = doc.jobMoneyCost, jobCorruptionCost = doc.jobCorruptionCost
+        };
+
+        private static void RestoreProject(DocumentStack stack, ProjectDocumentSaveData saved)
+        {
+            if (saved == null) return;
+            var progression = ProgressionManager.Instance;
+            var data = new Data.Documents.ProjectDocumentDefinition
+            {
+                documentName = saved.documentName, docType = saved.docType,
+                targetRegion = progression?.allRegionsDatabase?.FirstOrDefault(r => r != null && r.regionID == saved.regionId),
+                targetJob = progression?.allJobsDatabase?.FirstOrDefault(j => j != null && j.jobID == saved.jobId),
+                targetUpgradeID = saved.targetUpgradeID, signedByDirector = saved.signedByDirector,
+                processedByRegistrar = saved.processedByRegistrar, paidAtCashier = saved.paidAtCashier,
+                archived = saved.archived, jobPathType = saved.jobPathType,
+                jobMoneyCost = saved.jobMoneyCost, jobCorruptionCost = saved.jobCorruptionCost
+            };
+            var map = FindFirstObjectByType<UI.Map.MapPanelUI>(FindObjectsInactive.Include);
+            var prefab = map != null ? map.GetProjectDocumentPrefab(saved.docType) : null;
+            if (prefab == null && PolicyManager.Instance != null) prefab = PolicyManager.Instance.policyDocumentPrefab;
+            // Preserve the business document even when a visual prefab is missing in a custom scene.
+            if (prefab == null) prefab = stack.documentPrefab;
+            var go = prefab != null ? Instantiate(prefab) : new GameObject(saved.documentName);
+            var document = go.GetComponent<Gameplay.Documents.ProjectDocumentObject>()
+                ?? go.AddComponent<Gameplay.Documents.ProjectDocumentObject>();
+            document.Initialize(data);
+            stack.ReceiveExistingDocument(go, returningToSource: true);
+        }
+
         private static StaffSaveData CaptureStaff(StaffController staffMember, bool isHired)
         {
             StaffSaveData staffData = new StaffSaveData();
@@ -166,6 +231,13 @@ namespace Managers
             staffData.nameData = staffMember.nameData;
             staffData.position = staffMember.transform.position;
             staffData.stressLevel = staffMember.GetCurrentFrustration();
+            staffData.hasVitals = true;
+            staffData.savedStress = staffMember.stress;
+            staffData.savedBladder = staffMember.bladder;
+            staffData.savedEnergy = staffMember.energy;
+            staffData.hasStartedAnyShift = staffMember.HasStartedAnyShift;
+            if (isHired && HiringManager.Instance != null)
+                HiringManager.Instance.CaptureAttendance(staffMember, ref staffData, CalendarManager.Instance.CurrentDay);
 
             staffData.role = staffMember.currentRole;
             staffData.gender = staffMember.gender;
@@ -173,6 +245,10 @@ namespace Managers
             staffData.experience = staffMember.experiencePoints;
             staffData.rankName = staffMember.currentRank != null ? staffMember.currentRank.name : "";
             staffData.employmentType = staffMember.employmentType;
+            staffData.hasEmploymentTiming = true;
+            staffData.hireDay = staffMember.hireDay;
+            staffData.hirePeriod = staffMember.hirePeriod;
+            staffData.temporaryWorkDay = staffMember.temporaryWorkDay;
             staffData.activeActionNames = staffMember.activeActions != null
                 ? staffMember.activeActions.Where(a => a != null).Select(a => a.name).ToList()
                 : new List<string>();
@@ -249,7 +325,14 @@ namespace Managers
 
                 // 1. Восстановление глобальных данных
                 CalendarManager.Instance.SetDay(data.day);
+                if (TimeManager.Instance != null)
+                {
+                    TimeManager.Instance.RestoreProgress(data.hasCalendarProgress ? data.savedPeriod : Data.Calendar.CalendarDayPeriodType.EndNight,
+                        data.hasCalendarProgress ? data.savedPeriodElapsed : 0, data.hasCalendarProgress);
+                    if (data.hasCalendarProgress && !TimeManager.Instance.IsNight()) ShiftPlanning.Close();
+                }
                 PlayerWallet.Instance.SetMoney(data.money);
+                WaveManager.Instance?.RestoreSpawnProgress(data.periodSpawnProgress);
                 ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
                 
                 if (StoryStateManager.Instance != null)
@@ -260,7 +343,7 @@ namespace Managers
                 // 2. Восстановление приказов
                 if (OrderManager.Instance != null)
                 {
-                    var allOrders = OrderManager.Instance.allPossibleOrders;
+                    var allOrders = OrderManager.Instance.allPossibleOrders ?? new List<DirectorOrder>();
                     OrderManager.Instance.activePermanentOrders.Clear();
                     OrderManager.Instance.completedOneTimeOrders.Clear();
 
@@ -268,7 +351,7 @@ namespace Managers
                     {
                         foreach (string orderName in data.activePermanentOrderNames)
                         {
-                            DirectorOrder orderAsset = allOrders.FirstOrDefault(o => o.name == orderName);
+                            DirectorOrder orderAsset = allOrders.FirstOrDefault(o => o != null && o.name == orderName);
                             if (orderAsset != null)
                             {
                                 OrderManager.Instance.activePermanentOrders.Add(orderAsset);
@@ -280,13 +363,24 @@ namespace Managers
                     {
                         foreach (string orderName in data.completedOneTimeOrderNames)
                         {
-                            DirectorOrder orderAsset = allOrders.FirstOrDefault(o => o.name == orderName);
+                            DirectorOrder orderAsset = allOrders.FirstOrDefault(o => o != null && o.name == orderName);
                             if (orderAsset != null)
                             {
                                 OrderManager.Instance.completedOneTimeOrders.Add(orderAsset);
                             }
                         }
                     }
+                }
+
+                if (OrderManager.Instance != null)
+                {
+                    var orders = OrderManager.Instance;
+                    var all = orders.allPossibleOrders ?? new List<DirectorOrder>();
+                    var active = data.hasOrderState && data.activeOrderNames != null
+                        ? all.Where(o => o != null && data.activeOrderNames.Contains(o.name)).ToList()
+                        : new List<DirectorOrder>(orders.activePermanentOrders);
+                    var pending = all.FirstOrDefault(o => o != null && o.name == data.pendingOrderName);
+                    orders.RestoreSelection(active, pending, data.hasOrderState && data.hasSelectedDailyOrder);
                 }
 
                 // 3. Восстановление персонала
@@ -304,6 +398,13 @@ namespace Managers
                         // Нанятые стартуют дома (их выводит на смену менеджер смен), позицию берём только у объектов сцены.
                         if (!staffData.isHired) staffMember.transform.position = staffData.position;
                         staffMember.SetCurrentFrustration(staffData.stressLevel);
+                        if (staffData.hasVitals)
+                        {
+                            staffMember.stress = Mathf.Clamp(staffData.savedStress, 0, 100);
+                            staffMember.bladder = Mathf.Clamp(staffData.savedBladder, 0, 100);
+                            staffMember.energy = Mathf.Clamp(staffData.savedEnergy, 0, 100);
+                            staffMember.HasStartedAnyShift = staffData.hasStartedAnyShift;
+                        }
                         staffMember.nameData = staffData.nameData;
                         
                         // Загружаем статистику посещаемости
@@ -328,14 +429,29 @@ namespace Managers
                 HiringManager.Instance?.CheckAllStaffShiftsImmediately();
 
                 // 4. Восстановление документов
+                // Overflow stacks are created at runtime, so recreate their known registry locations before matching saved stacks.
+                var archive = ArchiveManager.Instance;
+                if (archive != null && archive.overflowPoints != null)
+                    foreach (var point in archive.overflowPoints)
+                        if (point != null) archive.GetDropOffStack(point);
                 DocumentStack[] allStacks = FindObjectsByType<DocumentStack>(FindObjectsSortMode.None);
-                foreach (var stackData in data.allDocumentStackData)
+                foreach (var stackData in data.allDocumentStackData ?? new List<DocumentStackSaveData>())
                 {
-                    DocumentStack stack = allStacks.FirstOrDefault(s => s.gameObject.name == stackData.stackOwnerName);
-                    if (stack != null)
+                    DocumentStack stack = !string.IsNullOrEmpty(stackData.hierarchyPath)
+                        ? allStacks.FirstOrDefault(st => GetHierarchyPath(st.transform) == stackData.hierarchyPath)
+                        : allStacks.FirstOrDefault(st => st.gameObject.name == stackData.stackOwnerName);
+                    if (stack == null)
                     {
-                        stack.SetCount(stackData.documentCount);
+                        Debug.LogWarning($"[SaveLoadTrace] Не найдена стопка {stackData.stackOwnerName} ({stackData.hierarchyPath})");
+                        continue;
                     }
+                    if (!stackData.hasDocumentContents) stack.SetCount(stackData.documentCount);
+                    else
+                    {
+                        stack.SetCount(stackData.ordinaryCount);
+                        foreach (var project in stackData.projects ?? new List<ProjectDocumentSaveData>()) RestoreProject(stack, project);
+                    }
+
                 }
 
                 // 5. [НОВОЕ] Восстановление прочности объектов

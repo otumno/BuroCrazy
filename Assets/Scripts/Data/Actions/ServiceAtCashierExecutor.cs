@@ -14,6 +14,8 @@ public class ServiceAtCashierExecutor : ActionExecutor
 
     protected override IEnumerator ActionRoutine()
     {
+        yield return ReturnToWorkstation();
+        if (!IsAtWorkstation) { FinishAction(false); yield break; }
         var cashier = staff as ClerkController;
         if (cashier == null || cashier.assignedWorkstation == null)
         {
@@ -76,7 +78,7 @@ public class ServiceAtCashierExecutor : ActionExecutor
             }
         }
         // После WaitWhile ОБЯЗАТЕЛЬНАЯ ПРОВЕРКА для всех экзекуторов:
-        if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.LeavingUpset)
+        if (client == null || !client.CanContinueService)
         {
             // Клиент обиделся и ушел по таймауту клинча
             if (staff is ClerkController c) c.SetState(ClerkController.ClerkState.Working);
@@ -109,7 +111,10 @@ public class ServiceAtCashierExecutor : ActionExecutor
         
         // --- ПРИМЕНЕНИЕ ЭФФЕКТИВНОСТИ ---
         // Ожидание зависит от состояния кассы
-        yield return new WaitForSeconds(Random.Range(2f, 4f) / efficiency);
+        float processingTime = Random.Range(2f, 4f) / Mathf.Max(.05f, efficiency);
+        ShowProcessing(client.transform.position, processingTime);
+        yield return new WaitForSeconds(processingTime);
+        if (client == null || !client.CanContinueService) { FinishAction(false); yield break; }
 
         // --- НАНЕСЕНИЕ УРОНА КАССЕ ---
         if (durability != null)
@@ -122,7 +127,7 @@ public class ServiceAtCashierExecutor : ActionExecutor
         int bill = client.billToPay;
         int totalSkimAmount = 0;
         
-        RoleData roleData = cashier.allRoleData.FirstOrDefault(d => d.roleType == cashier.currentRole);
+        RoleData roleData = cashier.roleData ?? cashier.allRoleData?.FirstOrDefault(d => d != null && d.roleType == cashier.currentRole);
         float corruptionChanceMult = 1.0f;
         float maxSkimAmount = 0.3f;
         if (roleData != null)
@@ -139,6 +144,13 @@ public class ServiceAtCashierExecutor : ActionExecutor
             yield return new WaitForSeconds(2f);
         }
 
+        if (client == null || !client.CanContinueService || client.billToPay != bill || bill <= 0 || PlayerWallet.Instance == null)
+        {
+            Debug.LogWarning("[ClientServiceTrace] Payment postponed: client/bill/wallet changed.");
+            FinishAction(false);
+            yield break;
+        }
+        int walletBefore = PlayerWallet.Instance.GetCurrentMoney();
         int officialAmount = bill - totalSkimAmount;
         if (officialAmount > 0)
         {
@@ -153,6 +165,7 @@ public class ServiceAtCashierExecutor : ActionExecutor
 
         if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, staff.transform.position);
         client.billToPay = 0;
+        Debug.Log($"[ClientServiceTrace] Оплата: клиент={client.name}, счёт={bill}, кошелёк={walletBefore}->{PlayerWallet.Instance.GetCurrentMoney()}");
         
         client.isLeavingSuccessfully = true;
         client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;

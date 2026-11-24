@@ -25,11 +25,11 @@ public class PrepareSalariesExecutor : ActionExecutor
         var accountant = staff as ClerkController;
         if (accountant != null && accountant.assignedWorkstation != null)
         {
-            yield return staff.StartCoroutine(accountant.MoveToTarget(accountant.assignedWorkstation.clerkStandPoint.position, "Working"));
+            yield return accountant.MoveToTarget(accountant.assignedWorkstation.clerkStandPoint.position, "Working");
         }
         else
         {
-            yield return staff.StartCoroutine(staff.MoveToTarget(envelopeStack.transform.position, "Working"));
+            yield return staff.MoveToTarget(envelopeStack.transform.position, "Working");
         }
 
         while (true)

@@ -11,7 +11,7 @@ public class CalmDownViolatorAction : StaffAction
         var guard = staff.GetComponent<GuardMovement>();
         if (guard == null || guard.IsOnBreak()) return false;
 
-        return GuardManager.Instance != null && GuardManager.Instance.currentViolator != null;
+        return GuardManager.Instance != null && GuardManager.Instance.GetViolator() != null;
     }
 
     public override float CalculateUtility(StaffController staff)

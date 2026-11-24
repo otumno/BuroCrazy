@@ -71,7 +71,7 @@ namespace UI.StaffOrders
 
         public void Open(StaffController staff, Vector2 screenPosition)
         {
-            if (staff == null) return;
+            if (staff == null || !staff.IsOnDuty() || !staff.gameObject.activeInHierarchy) return;
             if (catalog == null)
             {
                 Debug.LogError("[StaffOrderMenuUI] Не назначен каталог приказов (StaffOrderCatalog).");
@@ -98,6 +98,14 @@ namespace UI.StaffOrders
             IsOpen = false;
             _staff = null;
             gameObject.SetActive(false);
+            MainUIManager.Instance?.PopPause();
+        }
+
+        private void OnDisable()
+        {
+            if (!IsOpen) return;
+            IsOpen = false;
+            _staff = null;
             MainUIManager.Instance?.PopPause();
         }
 

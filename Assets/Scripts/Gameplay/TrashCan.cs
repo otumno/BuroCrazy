@@ -57,6 +57,13 @@ public class TrashCan : MonoBehaviour
         UpdateVisuals();
     }
 
+    public void ReturnCollectedTrash(int count)
+    {
+        // Do not discard carried trash if the bin filled again while a delivery was cancelled.
+        CurrentFillCount += Mathf.Max(0, count);
+        UpdateVisuals();
+    }
+
     /// <summary>
     /// Обновляет спрайт в зависимости от наполненности.
     /// </summary>

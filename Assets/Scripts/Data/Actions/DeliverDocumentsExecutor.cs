@@ -10,10 +10,10 @@ public class DeliverDocumentsExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var intern = staff as InternController;
-        if (intern == null) { FinishAction(false); yield break; }
+        if (intern == null || ArchiveManager.Instance == null) { FinishAction(false); yield break; }
 
         var targetStack = Object.FindObjectsByType<DocumentStack>(FindObjectsSortMode.None)
-            .Where(s => s != ArchiveManager.Instance.mainDocumentStack && !s.IsEmpty)
+            .Where(s => !ArchiveManager.Instance.OwnsStack(s) && s.OrdinaryDocumentCount > 0)
             .OrderByDescending(s => s.CurrentSize)
             .FirstOrDefault();
 
@@ -33,25 +33,28 @@ public class DeliverDocumentsExecutor : ActionExecutor
         intern.SetState(InternController.InternState.TakingStackToArchive);
         intern.thoughtBubble?.ShowPriorityMessage("Заберу документы...", 3f, Color.gray);
 
-        yield return staff.StartCoroutine(intern.MoveToTarget(servicePoint.internCollectionPoint.position, intern.GetCurrentState()));
+        yield return intern.MoveToTarget(servicePoint.internCollectionPoint.position, intern.GetCurrentState());
 
         if (targetStack == null) { FinishAction(false); yield break; }
 
-        int docCount = targetStack.TakeEntireStack();
-        var stackHolder = staff.GetComponent<StackHolder>();
-        stackHolder?.ShowStack(docCount, targetStack.maxStackSize);
-
-        Transform archivePoint = ArchiveManager.Instance.RequestDropOffPoint();
+        var archive = ArchiveManager.Instance;
+        Transform archivePoint = archive.RequestDropOffPoint();
         if (archivePoint == null) { FinishAction(false); yield break; }
+        RegisterCleanup(() => { if (archive != null) archive.FreeOverflowPoint(archivePoint); });
+        var transfer = new DocumentStackTransfer(targetStack, targetStack.CurrentSize);
+        RegisterCleanup(transfer.Dispose);
+        var stackHolder = staff.GetComponent<StackHolder>();
+        RegisterCleanup(() => { if (stackHolder != null) stackHolder.HideStack(); });
+        stackHolder?.ShowStack(transfer.Count, targetStack.maxStackSize);
 
-        yield return staff.StartCoroutine(intern.MoveToTarget(archivePoint.position, intern.GetCurrentState()));
+        yield return intern.MoveToTarget(archivePoint.position, intern.GetCurrentState());
         
-        for (int i = 0; i < docCount; i++) { ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack(); }
+        int delivered = transfer.DeliverTo(archive.GetDropOffStack(archivePoint));
         stackHolder?.HideStack();
         ArchiveManager.Instance.FreeOverflowPoint(archivePoint);
 
         intern.SetState(InternController.InternState.Patrolling);
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction(true);
+        FinishAction(delivered > 0);
     }
 }

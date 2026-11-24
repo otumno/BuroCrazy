@@ -14,7 +14,7 @@ public class GoToJanitorHomeExecutor : ActionExecutor
         if (target != null)
         {
             // ИСПРАВЛЕНИЕ: target.transform.position
-            yield return staff.StartCoroutine(staff.MoveToTarget(target.transform.position, "Idle"));
+            yield return staff.MoveToTarget(target.transform.position, "Idle");
             
             // Восстанавливаемся
             staff.ChangeEnergy(50);

@@ -129,6 +129,32 @@ namespace Managers
         public System.Action OnSpawnPlanUpdated;
 
         private Coroutine spawnCoroutine;
+        private readonly Dictionary<CalendarDayPeriodType, int> spawnedInPeriod = new();
+        private int spawnProgressDay = -1;
+
+        public List<PeriodSpawnSaveData> CaptureSpawnProgress() => spawnedInPeriod
+            .Select(p => new PeriodSpawnSaveData { period = p.Key, spawned = p.Value }).ToList();
+
+        public void RestoreSpawnProgress(List<PeriodSpawnSaveData> saved)
+        {
+            spawnedInPeriod.Clear();
+            if (saved != null)
+                foreach (var entry in saved) spawnedInPeriod[entry.period] = Mathf.Max(0, entry.spawned);
+            spawnProgressDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : -1;
+        }
+
+        public void ResetSpawnProgress()
+        {
+            if (spawnCoroutine != null) StopCoroutine(spawnCoroutine);
+            if (directorSpawnCoroutine != null) StopCoroutine(directorSpawnCoroutine);
+            spawnCoroutine = null;
+            directorSpawnCoroutine = null;
+            spawnedInPeriod.Clear();
+            spawnProgressDay = -1;
+            pendingSpawnQueue.Clear();
+            SpawnSchedule.Clear();
+            lastCheckedMorningDay = -1;
+        }
         private Coroutine queueCheckerCoroutine;
         private Coroutine directorSpawnCoroutine;
 
@@ -481,6 +507,14 @@ namespace Managers
         public void StartSpawningForCurrentPeriod()
         {
             if (TimeManager.Instance == null) return;
+            if (spawnCoroutine != null) StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
+            int day = TimeManager.Instance.GetCurrentDay();
+            if (spawnProgressDay != day)
+            {
+                spawnedInPeriod.Clear();
+                spawnProgressDay = day;
+            }
 
             var currentPeriod = TimeManager.Instance.GetCurrentPeriodType();
             if (currentPeriod.IsNight())
@@ -509,7 +543,7 @@ namespace Managers
             var currentSettings = TimeManager.Instance.GetCurrentPeriodSettings();
             if (currentSettings != null)
             {
-                StartCoroutine(SpawnRoutineFromPlan(currentPeriod, currentSettings, clientsForPeriod));
+                spawnCoroutine = StartCoroutine(SpawnRoutineFromPlan(currentPeriod, currentSettings, clientsForPeriod));
             }
         }
 		
@@ -539,6 +573,7 @@ namespace Managers
         private void OnPeriodChanged(PeriodSettings settings)
         {
             if (spawnCoroutine != null) StopCoroutine(spawnCoroutine);
+            spawnCoroutine = null;
 
             if (settings.PeriodType.IsNight())
             {
@@ -613,15 +648,17 @@ namespace Managers
             }
 
             bool guestSpawned = false;
-            int archetypeIndex = 0;
-            float currentTime = TimeManager.Instance.GetCurrentTimeSinceDayStart();
+            int archetypeIndex = spawnedInPeriod.TryGetValue(period, out int alreadySpawned) ? alreadySpawned : 0;
 
-            foreach (float t in timesForPeriod)
+            foreach (float t in timesForPeriod.Skip(archetypeIndex))
             {
                 // Вычисляем задержку от текущего времени
-                float delay = t - currentTime;
-                if (delay > 0) yield return new WaitForSeconds(delay);
-                currentTime = t; // обновляем текущее время после ожидания
+                while (TimeManager.Instance != null && TimeManager.Instance.GetCurrentDay() == currentDay
+                    && TimeManager.Instance.GetCurrentPeriodType() == period
+                    && TimeManager.Instance.GetPeriodTimer() < t - periodStart)
+                    yield return null;
+                if (TimeManager.Instance == null || TimeManager.Instance.GetCurrentDay() != currentDay
+                    || TimeManager.Instance.GetCurrentPeriodType() != period || !enableAutoSpawn) yield break;
 
                 // Внедряем дневного гостя в середину волны
                 if (!guestSpawned && dayGuest != null && archetypeIndex >= timesForPeriod.Count / 2)
@@ -645,6 +682,7 @@ namespace Managers
                     SpawnClientInternal(archetype, $"Plan_{period}");
                 }
                 archetypeIndex++;
+                spawnedInPeriod[period] = archetypeIndex;
             }
 
             // Debug.Log($"[WaveManager] SpawnRoutineFromPlan завершён для {period}: {timesForPeriod.Count} клиентов");
@@ -1054,6 +1092,7 @@ namespace Managers
                 }
 
                 // ПОТОМ инициализируем - теперь bodySpriteAlreadySet = true и спрайт НЕ будет перезаписан
+                if (_pendingForcedGoal != (ClientGoal)(-1)) client.AssignVisitGoal(_pendingForcedGoal);
                 client.Initialize(waitingZoneObject, exitWaypoint);
 
                 // Применяем ожидающие goal/dialogue к свежезаспавненному клиенту.
@@ -1098,7 +1137,7 @@ namespace Managers
             }
 
             // Устанавливаем принудительную цель ДО инициализации
-            client.mainGoal = goal;
+            client.AssignVisitGoal(goal);
 
             client.SetupFromArchetype(archetype);
             client.SetupGrumblingFromArchetype(archetype);
@@ -1207,21 +1246,16 @@ namespace Managers
         }
 
         /// <summary>
-        /// Применяет ожидающие (_pending*) переопределения goal/dialogue/gender к свежему клиенту.
-        /// Вызывается из обоих спавн-методов (SpawnClientInternal и SpawnClientInternalWithGoal)
-        /// сразу после client.Initialize(...). Не перетирает уже выставленные поля, если
+        /// Применяет ожидающие dialogue/gender к свежему клиенту после Initialize.
+        /// Цель задаётся раньше, чтобы Initialize создал правильный документ.
+        /// Не перетирает уже выставленные поля, если
         /// pending-флаги не заданы.
         /// </summary>
         private void ApplyPendingClientOverrides(ClientPathfinding client)
         {
             if (client == null) return;
 
-            // Goal: применяем только если pending задан явно. ClientGoal.none == 0,
-            // поэтому нулём не маркируем "не задано". Используем sentinel (-1).
-            if (_pendingForcedGoal != (ClientGoal)(-1))
-            {
-                client.mainGoal = _pendingForcedGoal;
-            }
+            // Goal is assigned before Initialize, which creates the matching document and initial route.
 
             // Dialogue: применяем всегда, если задан.
             if (_pendingSpecificDialogue != null)

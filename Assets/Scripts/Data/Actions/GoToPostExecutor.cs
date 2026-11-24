@@ -15,7 +15,7 @@ public class GoToPostExecutor : ActionExecutor
         if (post != null)
         {
             // ИСПРАВЛЕНИЕ: .transform.position
-            yield return staff.StartCoroutine(staff.MoveToTarget(post.transform.position, "Guarding"));
+            yield return staff.MoveToTarget(post.transform.position, "Guarding");
             
             while(true)
             {

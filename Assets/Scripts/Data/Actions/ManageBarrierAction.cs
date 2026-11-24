@@ -16,7 +16,7 @@ public class ManageBarrierAction : StaffAction
             return false;
         
         var currentPeriodType = TimeManager.Instance.GetCurrentPeriodType();
-        if (currentPeriodType == CalendarDayPeriodType.Morning && barrier.IsActive())
+        if (!currentPeriodType.IsNight() && barrier.IsActive())
             return true;
 
         var activeClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);

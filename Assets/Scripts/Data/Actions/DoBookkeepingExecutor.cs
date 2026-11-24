@@ -7,6 +7,7 @@ public class DoBookkeepingExecutor : ActionExecutor
 {
     public override bool IsInterruptible => true;
     private ClerkController bookkeeper;
+    private bool bonusApplied;
 
     protected override IEnumerator ActionRoutine()
     {
@@ -14,14 +15,17 @@ public class DoBookkeepingExecutor : ActionExecutor
         // Используем стол бухгалтера из реестра
         var bookkeepingDesk = ScenePointsRegistry.Instance?.bookkeepingDesk;
         
-        if (bookkeeper == null || bookkeepingDesk == null) 
+        if (bookkeeper == null || bookkeepingDesk == null || bookkeepingDesk.clerkStandPoint == null ||
+            bookkeeper.assignedWorkstation != bookkeepingDesk)
         {
             FinishAction(false); 
             yield break; 
         }
 
         // Идем к столу
-        yield return staff.StartCoroutine(bookkeeper.MoveToTarget(bookkeepingDesk.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
+        yield return bookkeeper.MoveToTarget(bookkeepingDesk.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
+        if (Vector2.Distance(bookkeeper.transform.position, bookkeepingDesk.clerkStandPoint.position) > 1f)
+        { FinishAction(false); yield break; }
         
         bookkeeper.IsDoingBooks = true;
         bookkeeper.SetState(ClerkController.ClerkState.Working);
@@ -30,7 +34,11 @@ public class DoBookkeepingExecutor : ActionExecutor
         // Включаем бонус!
         // Чем выше навык PaperworkMastery, тем больше бонус (от 5% до 15%)
         float bonus = 0.05f + (bookkeeper.skills.paperworkMastery * 0.1f);
-        PlayerWallet.Instance?.SetAccountantBonus(bonus);
+        if (PlayerWallet.Instance != null)
+        {
+            PlayerWallet.Instance.SetAccountantBonus(bonus);
+            bonusApplied = true;
+        }
 
         while (true)
         {
@@ -47,14 +55,15 @@ public class DoBookkeepingExecutor : ActionExecutor
         }
     }
 
-    private void OnDestroy()
+    protected override void OnResourcesReleased()
     {
         // Когда действие прерывается (например, пошел спать или принесли папку), 
         // ВЫКЛЮЧАЕМ бонус
-        if (PlayerWallet.Instance != null)
+        if (bonusApplied && PlayerWallet.Instance != null)
         {
             PlayerWallet.Instance.SetAccountantBonus(0f);
         }
+        bonusApplied = false;
 
         if (bookkeeper != null)
         {

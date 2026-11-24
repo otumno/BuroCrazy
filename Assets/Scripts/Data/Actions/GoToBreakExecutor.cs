@@ -13,7 +13,12 @@ public class GoToBreakExecutor : ActionExecutor
 
         if (occupiedPoint != null)
         {
-            yield return staff.StartCoroutine(staff.MoveToTarget(occupiedPoint.transform.position, "Break"));
+            staff.BeginNeedActivity(false);
+            RegisterCleanup(() => { if (staff != null) staff.ClearNeedActivity(); });
+            yield return staff.MoveToTarget(occupiedPoint.transform.position, "OnBreak");
+            if (Vector2.Distance(staff.transform.position, occupiedPoint.transform.position) > 2f)
+            { FinishAction(false); yield break; }
+            staff.CurrentSubStatus = "Отдыхает";
 
             float breakDuration = 10f;
             float timer = 0;
@@ -33,12 +38,16 @@ public class GoToBreakExecutor : ActionExecutor
         else
         {
             staff.thoughtBubble?.ShowPriorityMessage("Нет места!", 2f, Color.red);
+            FinishAction(false);
+            yield break;
         }
 
+        staff.ClearNeedActivity();
+        yield return ReturnToWorkstation();
         FinishAction(true);
     }
 
-    private void OnDestroy()
+    protected override void OnResourcesReleased()
     {
         if (occupiedPoint != null && ScenePointsRegistry.Instance != null)
             ScenePointsRegistry.Instance.FreeKitchenPoint(occupiedPoint);

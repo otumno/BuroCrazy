@@ -31,10 +31,12 @@ public class CatchThiefExecutor : ActionExecutor
 
         // Ускоряем (используем AgentMover через мост или напрямую через staff)
         float originalSpeed = staff.agentMover.moveSpeed;
+        RegisterCleanup(() => { if (staff != null && staff.agentMover != null) staff.agentMover.moveSpeed = originalSpeed; });
         staff.agentMover.moveSpeed *= guard.chaseSpeedMultiplier;
 
         // Логика преследования
-        while (thief != null && Vector3.Distance(staff.transform.position, thief.transform.position) > 1.5f)
+        float chaseDeadline = Time.time + 20f;
+        while (Time.time < chaseDeadline && thief != null && Vector3.Distance(staff.transform.position, thief.transform.position) > 1.5f)
         {
             // Обновляем цель каждые 0.2 сек
             staff.agentMover.SetTarget(thief.transform.position);
@@ -44,10 +46,14 @@ public class CatchThiefExecutor : ActionExecutor
         // Поймали!
         staff.agentMover.moveSpeed = originalSpeed; // Возвращаем скорость
         
+        if (thief != null && Vector3.Distance(staff.transform.position, thief.transform.position) > 1.5f)
+        { staff.AgentMover?.Stop(); FinishAction(false); yield break; }
+
         if (thief != null)
         {
             // Логика поимки (например, удаление вора или вывод из здания)
-            // GuardManager.Instance.ArrestThief(thief); // Если есть такой метод
+            thief.GetComponent<ClientPathfinding>()?.ForceLeave(ClientPathfinding.LeaveReason.Theft);
+            if (GuardManager.Instance != null && GuardManager.Instance.currentThief == thief) GuardManager.Instance.currentThief = null;
             staff.thoughtBubble?.ShowPriorityMessage("Попался!", 2f, Color.green);
 
             // Очки за отчет

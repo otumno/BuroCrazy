@@ -247,8 +247,7 @@ public class StaffController : MonoBehaviour
     public bool IsTemporary => employmentType == EmploymentType.Temporary;
 
     /// <summary>
-    /// Можно ли уже выводить сотрудника на смены: постоянный выходит со следующего дня,
-    /// временный — со следующего периода после найма.
+    /// Оба типа найма начинают работу со следующего периода после найма.
     /// </summary>
     public bool HasEmploymentStarted()
     {
@@ -256,9 +255,15 @@ public class StaffController : MonoBehaviour
 
         int currentDay = TimeManager.Instance.GetCurrentDay();
         if (currentDay > hireDay) return true;
-        if (employmentType == EmploymentType.Permanent) return false;
+        if (currentDay < hireDay) return false;
 
-        return TimeManager.Instance.GetCurrentPeriodType() != hirePeriod;
+        var clock = TimeManager.Instance;
+        var periods = clock.mainCalendarDay?.periodSettings;
+        if (periods == null) return false;
+        int hiredIndex = periods.FindIndex(p => p.PeriodType == hirePeriod);
+        int currentIndex = periods.FindIndex(p => p.PeriodType == clock.GetCurrentPeriodType());
+        // Загрузка начинает день заново: другой период может быть РАНЬШЕ найма.
+        return hiredIndex >= 0 && currentIndex > hiredIndex;
     }
 
     /// <summary>
@@ -333,6 +338,37 @@ public class StaffController : MonoBehaviour
     public StaffOrder ActiveOrder { get; private set; }
 
     private Coroutine aiLoopCoroutine;
+    private Coroutine arrivalCoroutine;
+    private Coroutine needCoroutine;
+    private static long nextShiftSequence;
+    public long ShiftSequence { get; private set; }
+    public bool HasStartedAnyShift { get; set; }
+    private float shiftSpeedMultiplier = 1f;
+
+    protected void MarkShiftStarted()
+    {
+        ShiftSequence = ++nextShiftSequence;
+        HasStartedAnyShift = true;
+        shiftStartTime = Time.time;
+        hasLeftToday = false;
+        hasArrivedToday = true;
+        currentLateness = 0;
+        HasTakenBreakToday = false;
+        ResetShiftSpeedBonus();
+        if (permanentTrait == TraitType.Sprinter && agentMover != null)
+        {
+            shiftSpeedMultiplier = 1.3f;
+            agentMover.moveSpeed *= shiftSpeedMultiplier;
+        }
+    }
+
+    private void ResetShiftSpeedBonus()
+    {
+        // The trait is a shift bonus, not an exponential multiplier on every return to work.
+        if (agentMover != null && shiftSpeedMultiplier != 1f) agentMover.moveSpeed /= shiftSpeedMultiplier;
+        shiftSpeedMultiplier = 1f;
+    }
+
 
     protected virtual void Awake()
     {
@@ -349,6 +385,7 @@ public class StaffController : MonoBehaviour
         // --- StartShift с новой логикой ---
     public virtual void StartShift()
     {
+        MarkShiftStarted();
         // Логируем начало смены в дневнике задач
         LogTaskStart($"Смена: {role}");
         
@@ -362,17 +399,7 @@ public class StaffController : MonoBehaviour
         
         gameObject.SetActive(true); // Включаем, если был выключен
         
-        // Спринтер - повышаем скорость на 30%
-        if (permanentTrait == TraitType.Sprinter && agentMover != null)
-        {
-            agentMover.moveSpeed *= 1.3f;
-            if (thoughtBubble != null)
-            {
-                thoughtBubble.ShowPriorityMessage("Погнали!", 1.5f, Color.yellow);
-            }
-        }
-
-        CalculateArrivalTime();
+        // Arrival is rolled once by HiringManager, never again while starting the shift.
 
         // 1. Попытка авто-назначения (только для ролей, которым нужен стол)
         bool needsDesk = (role == Role.Clerk || role == Role.Registrar || role == Role.Cashier || role == Role.Archivist || role == Role.Accountant);
@@ -385,13 +412,13 @@ public class StaffController : MonoBehaviour
         if (assignedWorkstation != null)
         {
             Debug.Log($"[StaffController] {characterName}: Иду на место {assignedWorkstation.name}");
-            StartCoroutine(GoToWorkstationRoutine());
+            arrivalCoroutine = StartCoroutine(GoToWorkstationRoutine());
         }
         else if (needsDesk)
         {
              // Только если нужен стол, но не нашли - идем в зону ожидания
              Debug.Log($"[StaffController] {characterName}: Нет места, иду в зону ожидания");
-             StartCoroutine(GoToHangoutRoutine());
+             arrivalCoroutine = StartCoroutine(GoToHangoutRoutine());
         }
         // Для ролей без стола (Intern, Guard, Janitor, OfficeManager) - сразу начинаем работу
 
@@ -458,35 +485,50 @@ public class StaffController : MonoBehaviour
         
         // Инициализируем время проверки с вариацией чтобы не ходили толпой
         lastBreakCheckTime = Time.time + Random.Range(-breakCheckVariation, breakCheckVariation);
+        float previousNeedsUpdate = Time.time;
+#if DEBUG_ENABLED
+        float nextNeedsTrace = Time.time + 30f;
+#endif
         
         while (IsOnDuty())
         {
             yield return new WaitForSeconds(1f);
-            
+            // This coroutine ticks once a second, so frame deltaTime would slow needs down with higher FPS.
+            float needsElapsed = Mathf.Max(0f, Time.time - previousNeedsUpdate);
+            previousNeedsUpdate = Time.time;
+            if (TimeManager.Instance != null && (WorkShiftMask & TimeManager.Instance.GetCurrentPeriodType()) == 0
+                && (currentExecutor == null || currentExecutor.IsInterruptible))
+            {
+                EndShift();
+                yield break;
+            }
+
+            GetActiveOrder();
+
             // === МЕТАБОЛИЗМ (каждую секунду) ===
             var aiConfig = AIBalanceConfig.Instance;
             if (aiConfig != null)
             {
                 // Energy: падает, модификатор - resilience
                 float energyResilience = 1f - (skills.sedentaryResilience * 0.5f);
-                float energyDelta = aiConfig.baseEnergyLoss * energyResilience * Time.deltaTime;
+                float energyDelta = aiConfig.baseEnergyLoss * energyResilience * needsElapsed;
                 energyDelta = ApplyTraitModifiers("Energy", energyDelta);
                 energy = Mathf.Clamp(energy - energyDelta, 0f, 100f);
                 
                 // Bladder: растет, модификатор - resilience
                 float bladderResilience = 1f - (skills.sedentaryResilience * 0.5f);
-                float bladderDelta = aiConfig.baseBladderGain * bladderResilience * Time.deltaTime;
+                float bladderDelta = aiConfig.baseBladderGain * bladderResilience * needsElapsed;
                 bladderDelta = ApplyTraitModifiers("Bladder", bladderDelta);
                 bladder = Mathf.Clamp(bladder + bladderDelta, 0f, 100f);
                 
                 // Morale: падает, интроверты теряют медленнее
                 float moraleResilience = 1f - (skills.softSkills * 0.3f);
-                float moraleDelta = aiConfig.baseMoraleLoss * moraleResilience * Time.deltaTime;
+                float moraleDelta = aiConfig.baseMoraleLoss * moraleResilience * needsElapsed;
                 moraleDelta = ApplyTraitModifiers("Morale", moraleDelta);
                 morale = Mathf.Clamp(morale - moraleDelta, 0f, 100f);
                 
                 // Stress: базовая скорость + бонус от мусора
-                float stressDelta = aiConfig.baseStressGain * Time.deltaTime;
+                float stressDelta = aiConfig.baseStressGain * needsElapsed;
                 
                 // Проверка мусора рядом
                 bool hasMess = false;
@@ -503,6 +545,13 @@ public class StaffController : MonoBehaviour
                 stressDelta = ApplyTraitModifiers("Stress", stressDelta);
                 stress = Mathf.Clamp(stress + stressDelta, 0f, 100f);
             }
+#if DEBUG_ENABLED
+            if (Time.time >= nextNeedsTrace)
+            {
+                nextNeedsTrace = Time.time + 30f;
+                Debug.Log($"[StaffNeedsTrace] {characterName}: energy={energy:F1}, bladder={bladder:F1}, stress={stress:F1}, morale={morale:F1}, state={GetCurrentStateName()}");
+            }
+#endif
             
             // === ОБРАБОТКА ТРЕЙТОВ ===
             ProcessTraitBehavior();
@@ -527,7 +576,7 @@ public class StaffController : MonoBehaviour
             {
                 if (AssignmentManager.Instance != null && AssignmentManager.Instance.AutoAssignStaff(this))
                 {
-                    StartCoroutine(GoToWorkstationRoutine());
+                    arrivalCoroutine = StartCoroutine(GoToWorkstationRoutine());
                 }
                 continue;
             }
@@ -572,7 +621,7 @@ public class StaffController : MonoBehaviour
             var targetPoint = breakZone[Random.Range(0, breakZone.Count)];
             if (targetPoint != null && targetPoint.transform != null)
             {
-                StartCoroutine(BreakRoutine(targetPoint.transform.position));
+                needCoroutine = StartCoroutine(BreakRoutine(targetPoint.transform.position));
                 return true;
             }
         }
@@ -587,7 +636,7 @@ public class StaffController : MonoBehaviour
             var targetPoint = toiletPoints[Random.Range(0, toiletPoints.Count)];
             if (targetPoint != null && targetPoint.transform != null)
             {
-                StartCoroutine(ToiletRoutine(targetPoint.transform.position));
+                needCoroutine = StartCoroutine(ToiletRoutine(targetPoint.transform.position));
                 return true;
             }
         }
@@ -596,48 +645,52 @@ public class StaffController : MonoBehaviour
 
     private IEnumerator BreakRoutine(Vector3 breakPos)
     {
-        SetBreakState(true);
-        thoughtBubble?.ShowPriorityMessage("Перерыв...", 2f, Color.white);
-        
-        // Идём на точку
-        yield return StartCoroutine(MoveToTarget(breakPos, "Break"));
-        
-        // Снимаем стресс во время перерыва
-        float elapsed = 0f;
-        while (elapsed < breakDuration && IsOnDuty())
+        BeginNeedActivity(false);
+        try
         {
-            stress = Mathf.Lerp(stress, 0f, Time.deltaTime * 5f);
-            elapsed += Time.deltaTime;
-            yield return null;
+            thoughtBubble?.ShowPriorityMessage("Перерыв...", 2f, Color.white);
+            yield return MoveToTarget(breakPos, "OnBreak");
+            if (Vector2.Distance(transform.position, breakPos) > 2f) yield break;
+            CurrentSubStatus = "Отдыхает";
+            float elapsed = 0f;
+            while (elapsed < breakDuration && IsOnDuty())
+            {
+                stress = Mathf.Lerp(stress, 0f, Time.deltaTime * 5f);
+                energy = Mathf.Min(100f, energy + Time.deltaTime * 10f);
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            lastToiletBreak = Time.time;
+            hasTakenBreakInCurrentPeriod = true;
+            yield return ReturnAfterNeed();
         }
-        
-        lastToiletBreak = Time.time; // Обновляем кулдаун туалета тоже
-        hasTakenBreakInCurrentPeriod = true;
-        
-        SetBreakState(false);
-        thoughtBubble?.ShowPriorityMessage("К работе!", 2f, Color.white);
+        finally { ClearNeedActivity(); needCoroutine = null; }
     }
 
     private IEnumerator ToiletRoutine(Vector3 toiletPos)
     {
-        SetBreakState(true);
-        thoughtBubble?.ShowPriorityMessage("Туалет...", 2f, Color.white);
-        
-        yield return StartCoroutine(MoveToTarget(toiletPos, "Toilet"));
-        
-        // Быстрый перерыв
-        yield return new WaitForSeconds(15f);
-        
-        lastToiletBreak = Time.time;
-        stress *= 0.7f; // Снимаем 30% стресса
-        
-        SetBreakState(false);
-        thoughtBubble?.ShowPriorityMessage("Лучше...", 2f, Color.white);
+        BeginNeedActivity(true);
+        try
+        {
+            thoughtBubble?.ShowPriorityMessage("Туалет...", 2f, Color.white);
+            yield return MoveToTarget(toiletPos, "AtToilet");
+            if (Vector2.Distance(transform.position, toiletPos) > 2f) yield break;
+            CurrentSubStatus = "В туалете";
+            yield return new WaitForSeconds(15f);
+            lastToiletBreak = Time.time;
+            bladder = 0f;
+            stress *= 0.7f;
+            yield return ReturnAfterNeed();
+        }
+        finally { ClearNeedActivity(); needCoroutine = null; }
     }
 
-    private void SetBreakState(bool onBreak)
+    private IEnumerator ReturnAfterNeed()
     {
-        isOnBreak = onBreak;
+        // Keep the break flag during the walk so the legacy intern AI cannot start a second action.
+        if (assignedWorkstation?.clerkStandPoint == null || !IsOnDuty()) yield break;
+        CurrentSubStatus = "Возвращается к работе";
+        yield return MoveToTarget(assignedWorkstation.clerkStandPoint.position, "ReturningToWork");
     }
 
     // Общий метод проверки перерывов - возвращает true если перерыв начался
@@ -730,39 +783,38 @@ public class StaffController : MonoBehaviour
     /// </summary>
     public virtual void ReceiveOrder(StaffOrder order)
     {
-        if (order == null || order.Action == null) return;
+        if (order == null || order.Action == null || !gameObject.activeInHierarchy || !IsOnDuty()
+            || !order.Action.CanBeOrdered(this)) return;
+        var executorType = order.Action.GetExecutorType();
+        if (executorType == null || executorType.IsAbstract || !typeof(ActionExecutor).IsAssignableFrom(executorType)) return;
 
-        // Стресс копится: если приказ потом заменят новым, стресс от старого не снимается.
-        stress = Mathf.Clamp(stress + order.StressCost, 0f, 100f);
-        thoughtBubble?.ShowPriorityMessage("Да иду я, иду...", 2f, Color.yellow);
-
-        // Сначала прерываем текущее дело: прерывание закрывает и прошлый приказ (см. OnActionFinished),
-        // поэтому новый записываем только после.
-        if (currentExecutor != null && currentExecutor.IsInterruptible)
-        {
-            currentExecutor.Interrupt();
-        }
+        // Director orders override normal AI locks, after synchronous resource rollback.
+        var previousAction = currentAction;
+        currentExecutor?.Interrupt();
+        if (arrivalCoroutine != null) StopCoroutine(arrivalCoroutine);
+        if (needCoroutine != null) StopCoroutine(needCoroutine);
+        arrivalCoroutine = null;
+        needCoroutine = null;
+        agentMover?.Stop();
         if (IsOnBreak()) EndBreak();
 
+        AddStress(order.StressCost);
         order.Start(Time.time);
         ActiveOrder = order;
-        Debug.Log($"[MicroManagement] {characterName} получил приказ: {order.Action.displayName}");
-
-        // Не ждём тика AI: он бывает раз в секунду и пропускает ход, пока сотрудник идёт.
-        // Если текущее дело непрерываемое, приказ подхватится, когда оно закончится.
-        if (currentExecutor == null && IsOnDuty())
-        {
-            TryPickAction();
-        }
+        thoughtBubble?.ShowPriorityMessage("Да иду я, иду...", 2f, Color.yellow);
+        Debug.Log($"[StaffOrderTrace] {characterName}: приказ={order.Action.name}, отменён={previousAction?.name}, стресс={stress:F1}, срок={order.DecaySeconds:F1}");
+        ExecuteAction(order.Action);
     }
 
-    // Просроченный приказ снимаем здесь, а не по таймеру: решение всё равно принимается только в TryPickAction.
     private StaffOrder GetActiveOrder()
     {
         if (ActiveOrder != null && ActiveOrder.IsExpired(Time.time))
         {
-            Debug.Log($"[MicroManagement] {characterName}: приказ «{ActiveOrder.Action.displayName}» утратил силу.");
+            var expiredAction = ActiveOrder.Action;
             ActiveOrder = null;
+            // Expiry must also stop an infinite patrol while moving, before the AI early returns.
+            if (currentAction == expiredAction) currentExecutor?.Interrupt();
+            Debug.Log($"[StaffOrderTrace] {characterName}: истёк приказ={expiredAction.name}");
         }
         return ActiveOrder;
     }
@@ -888,6 +940,8 @@ public class StaffController : MonoBehaviour
                 return; // Остаемся на текущем действии
             }
             
+            if (currentExecutor != null && !currentExecutor.IsInterruptible) return;
+
             // Если есть текущее действие и оно прерываемое - прерываем
             if (currentExecutor != null && currentExecutor.IsInterruptible)
             {
@@ -941,6 +995,16 @@ public class StaffController : MonoBehaviour
     
     public virtual void EndShift()
     {
+        if (hasLeftToday) return;
+        // Movement coroutines belong to StaffController, so stopping only the executor leaves stale paths running.
+        StopAllCoroutines();
+        if (currentExecutor != null) currentExecutor.Interrupt();
+        ResetShiftSpeedBonus();
+        currentAction = null;
+        currentExecutor = null;
+        ActiveOrder = null;
+        isOnBreak = false;
+        agentMover?.Stop();
         // Логируем окончание смены в дневнике задач
         LogTaskEnd();
         
@@ -1032,11 +1096,28 @@ public class StaffController : MonoBehaviour
             while (agentMover.IsMoving()) yield return null;
         }
         gameObject.SetActive(false);
+        // A new scheduled period may have started while this employee was still walking home.
+        HiringManager.Instance?.CheckAllStaffShiftsImmediately();
     }
 
     // --- Методы состояния ---
 
     public virtual bool IsOnBreak() => isOnBreak;
+
+    public void BeginNeedActivity(bool toilet)
+    {
+        isOnBreak = true;
+        SetArrivalState(toilet ? "GoingToToilet" : "GoingToBreak");
+        CurrentSubStatus = toilet ? "Идёт в туалет" : "Идёт отдыхать";
+    }
+
+    public void ClearNeedActivity()
+    {
+        isOnBreak = false;
+        // Enum names differ between roles; leaving a clerk in OnBreak stalls its AI forever.
+        SetArrivalState(this is ClerkController ? "Working" : this is InternController ? "Patrolling" : "Idle");
+        CurrentSubStatus = "";
+    }
 
     public virtual void GoToBreak(float duration)
     {
@@ -1048,7 +1129,7 @@ public class StaffController : MonoBehaviour
 
     protected virtual void EndBreak()
     {
-        isOnBreak = false;
+        ClearNeedActivity();
         if (thoughtBubble != null)
         {
             thoughtBubble.ShowPriorityMessage("Перерыв окончен", 2f, Color.white);
@@ -1147,6 +1228,7 @@ public class StaffController : MonoBehaviour
     
     public void FireAndGoHome()
     {
+        PrepareForRoleChange();
         if (assignedWorkstation != null)
         {
             assignedWorkstation.ClearAssignedStaff();
@@ -1162,7 +1244,39 @@ public class StaffController : MonoBehaviour
         }
         Destroy(gameObject);
     }
+
+    public void PrepareForRoleChange()
+    {
+        StopAllCoroutines();
+        currentExecutor?.Interrupt();
+        ResetShiftSpeedBonus();
+        currentExecutor = null;
+        currentAction = null;
+        ActiveOrder = null;
+        agentMover?.Stop();
+        ClearNeedActivity();
+        if (this is InternController intern) intern.AssignCoveredWorkstation(null);
+        if (assignedWorkstation != null && this is IServiceProvider provider
+            && ClientSpawner.GetServiceProviderAtDesk(assignedWorkstation.deskId) == provider)
+            ClientSpawner.UnassignServiceProviderFromDesk(assignedWorkstation.deskId);
+    }
+
+    public void ResumeAfterRoleChange(long originalSequence)
+    {
+        StartShift();
+        ShiftSequence = originalSequence;
+    }
     
+    public void OnExecutorFinished(ActionExecutor executor, StaffAction action, bool success)
+    {
+        // Отложенный callback старого исполнителя не должен стирать уже запущенный приказ.
+        if (currentExecutor != executor) return;
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"[StaffActionTrace] {characterName}: завершено={action?.name}, успех={success}, исполнитель={executor.GetType().Name}");
+#endif
+        OnActionFinished(action, success);
+    }
+
     public void OnActionFinished(StaffAction action = null, bool success = true)
     {
         // Приказанное действие закончилось (или его прервали) — приказ выполнен, дальше сотрудник решает сам.

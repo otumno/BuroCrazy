@@ -286,7 +286,7 @@ namespace BuroDebug
 
                 if (client != null)
                 {
-                    client.mainGoal = ClientGoal.DirectorApproval; // ЖЕСТКО ЗАДАЕМ ЦЕЛЬ ДО ИНИЦИАЛИЗАЦИИ
+                    client.AssignVisitGoal(ClientGoal.DirectorApproval); // До инициализации стартового документа
                     
                     client.SetupFromArchetype(archetype);
                     client.SetupGrumblingFromArchetype(archetype);
@@ -371,7 +371,7 @@ namespace BuroDebug
             if (client != null)
             {
                 client.gameObject.name = visitorData.name;
-                client.mainGoal = visitorData.forcedGoal;
+                client.AssignVisitGoal(visitorData.forcedGoal);
                 client.specificDialogue = visitorData.dialogue;
 
                 if (archetype != null)
@@ -479,7 +479,7 @@ namespace BuroDebug
             GameObject clientObj = Instantiate(waveManager.clientPrefab, waveManager.spawnPoint.position, Quaternion.identity);
             ClientPathfinding client = clientObj.GetComponent<ClientPathfinding>();
             if (client != null) {
-                client.mainGoal = ClientGoal.DirectorAudience;
+                client.AssignVisitGoal(ClientGoal.DirectorAudience);
                 client.specificDialogue = Resources.Load<DialogueSystem.Data.DialogueGraph>("DialoguesBase/Test_Client_Dialogue");
                 client.SetupFromArchetype(archetype);
                 client.Initialize(waveManager.waitingZoneObject, waveManager.exitWaypoint);

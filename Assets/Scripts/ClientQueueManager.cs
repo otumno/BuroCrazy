@@ -47,17 +47,17 @@ public class ClientQueueManager : MonoBehaviour
     
     private IServiceProvider FindAvailableWorker()
     {
-        // Проверяем все столы: Регистратура (0), Клерк 1 (1), Клерк 2 (2), Касса (-1)
-        int[] deskIds = { 0, 1, 2, -1 };
+        // Global tickets are for registration. Specialist rooms have their own zone queues.
+        int[] deskIds = { 0 };
 
         foreach (int deskId in deskIds)
         {
-            // ШАГ 1: Пропускаем авто-пуш для регистратуры (deskId=0) - она работает по Pull-модели
-            if (deskId == 0) continue;
-
             var worker = ClientSpawner.GetServiceProviderAtDesk(deskId);
+            // Regular registrars pull tickets themselves; a covering intern/director needs a call here.
+            if (worker is ClerkController) continue;
             if (worker != null && worker.IsAvailableToServe)
             {
+                if (worker.GetWorkstation()?.CurrentClient != null) continue;
                 var zone = ClientSpawner.GetZoneByDeskId(deskId);
                 if (zone != null)
                 {
@@ -86,13 +86,27 @@ public class ClientQueueManager : MonoBehaviour
         return FindAvailableWorker() != null;
     }
 
+    public bool CanCallForRegistration(ClientPathfinding client, int ticket)
+    {
+        if (client == null || client.stateMachine == null || !client.gameObject.activeInHierarchy ||
+            client.mainGoal == ClientGoal.VisitToilet || currentlyCalledNumbers.Contains(ticket)) return false;
+        var state = client.stateMachine.GetCurrentState();
+        // A ticket survives a temporary toilet visit. Only call visitors in (or approaching)
+        // the main waiting area, never from another room or while waiting for a document.
+        bool waitingForRegistration = state == ClientState.AtWaitingArea || state == ClientState.SittingInWaitingArea ||
+            state == ClientState.MovingToSeat || (state == ClientState.MovingToGoal &&
+            IsWaypointInWaitingZone(client.stateMachine.GetCurrentGoal()));
+        return waitingForRegistration &&
+            !(ArchiveRequestManager.Instance?.IsWaitingForCourier(client) ?? false);
+    }
+
     private void ProcessNextClientCall()
     {
         IServiceProvider availableWorker = FindAvailableWorker();
         if (availableWorker == null) return;
 
         var nextInQueue = queue
-            .Where(c => c.Key != null && !currentlyCalledNumbers.Contains(c.Value))
+            .Where(c => CanCallForRegistration(c.Key, c.Value))
             .OrderBy(kvp => kvp.Value)
             .FirstOrDefault();
 
@@ -114,7 +128,7 @@ public class ClientQueueManager : MonoBehaviour
 
             int calledNumber = nextInQueue.Value;
             currentlyCalledNumbers.Add(calledNumber);
-            clientsAwaitingResponse.Add(calledNumber, Time.time);
+            clientsAwaitingResponse[calledNumber] = Time.time;
             
             // --- Логирование вызова клиента в его ActionDiary ---
             nextClient?.GetComponent<ActionDiary>()?.LogEvent($"Вызван к окну №{calledNumber}");
@@ -177,13 +191,7 @@ public class ClientQueueManager : MonoBehaviour
                 RemoveClientFromQueue(client);
                 
                 // Очищаем клиента из всех зон перед переходом в Confused
-                var targetZone = client.stateMachine?.GetTargetZone();
-                if (targetZone != null)
-                {
-                    targetZone.LeaveQueue(client.gameObject);
-                    var goal = client.stateMachine?.GetCurrentGoal();
-                    if (goal != null) targetZone.ReleaseWaypoint(goal);
-                }
+                client.stateMachine?.ReleaseZoneReservation();
                 
                 // Очищаем из всех зон
                 var allZones = FindObjectsOfType<LimitedCapacityZone>();
@@ -264,6 +272,13 @@ public class ClientQueueManager : MonoBehaviour
     public void ClientArrivedAtDesk(int number) { if (clientsAwaitingResponse.ContainsKey(number)) { clientsAwaitingResponse.Remove(number); } }
     public void ServiceFinishedForNumber(int number) { if (currentlyCalledNumbers.Contains(number)) { currentlyCalledNumbers.Remove(number); } if (clientsAwaitingResponse.ContainsKey(number)) { clientsAwaitingResponse.Remove(number); } }
     public void ResetQueueNumber() { nextQueueNumber = 1; currentlyCalledNumbers.Clear(); clientsAwaitingResponse.Clear(); }
+    public void ResetForSession()
+    {
+        StopAllCoroutines();
+        queue.Clear(); occupiedSeats.Clear(); standingClients.Clear(); dissatisfiedClients.Clear();
+        ResetQueueNumber();
+        lastCallTime = -100f;
+    }
     public void JoinQueue(ClientPathfinding c)
     {
         if (!queue.ContainsKey(c))
@@ -303,7 +318,7 @@ public class ClientQueueManager : MonoBehaviour
 
 	       // Ищем в очереди первого клиента, который соответствует цели и еще не был вызван.
 	       var nextInQueue = queue
-	           .Where(c => c.Key != null && c.Key.mainGoal == goal && !currentlyCalledNumbers.Contains(c.Value))
+	           .Where(c => c.Key != null && c.Key.mainGoal == goal && CanCallForRegistration(c.Key, c.Value))
 	           .OrderBy(kvp => kvp.Value)
 	           .FirstOrDefault();
 

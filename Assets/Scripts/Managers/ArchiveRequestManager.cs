@@ -17,6 +17,14 @@ namespace Managers
         public bool IsTaken = false; // Отметка о том, что архивариус взял запрос в работу (чтобы другой не взял)
         public bool IsDelegated = false; // Флаг: задача передана курьеру
         public bool IsTakenByCourier = false; // Флаг: курьер уже принял задачу и идет за ней
+        public bool IsDelivered;
+        public bool IsCancelled;
+
+        public bool IsActive => !IsDelivered && !IsCancelled && RequestingRegistrar != null &&
+            WaitingClient != null && WaitingClient.gameObject.activeInHierarchy && WaitingClient.stateMachine != null &&
+            WaitingClient.stateMachine.GetCurrentState() != ClientState.Leaving &&
+            WaitingClient.stateMachine.GetCurrentState() != ClientState.LeavingUpset &&
+            WaitingClient.stateMachine.GetCurrentState() != ClientState.Enraged;
     }
 
     public class ArchiveRequestManager : MonoBehaviour
@@ -55,7 +63,8 @@ namespace Managers
                 return;
             }
 
-            if (pendingRequestsList.Any(req => req.WaitingClient == client && !req.IsFulfilled))
+            pendingRequestsList.RemoveAll(req => !req.IsActive);
+            if (pendingRequestsList.Any(req => req.WaitingClient == client))
             {
                 Debug.LogWarning($"[ArchiveRequestManager] Для клиента {client.name} уже существует активный запрос.");
                 return;
@@ -83,7 +92,7 @@ namespace Managers
         public ArchiveRequest GetNextRequest()
         {
             // Ищем первый запрос, который еще не был взят (IsTaken == false)
-            ArchiveRequest request = pendingRequestsList.FirstOrDefault(req => !req.IsTaken && !req.IsFulfilled);
+            ArchiveRequest request = pendingRequestsList.FirstOrDefault(req => req.IsActive && !req.IsTaken && !req.IsFulfilled);
 
             if (request != null)
             {
@@ -104,12 +113,13 @@ namespace Managers
         /// </summary>
         /// <param name="registrar">Регистратор, чей запрос ищем.</param>
         /// <returns>Найденный запрос или null.</returns>
-        public ArchiveRequest GetOurRequest(ClerkController registrar)
+        public ArchiveRequest GetOurRequest(ClerkController registrar, ClientPathfinding client = null)
         {
             if (registrar == null) return null;
 
-            // Ищем первый НЕ выполненный запрос от этого регистратора
-            return pendingRequestsList.FirstOrDefault(req => req.RequestingRegistrar == registrar && !req.IsFulfilled);
+            // Ready is not delivered: the registrar may return after the archivist finishes.
+            return pendingRequestsList.FirstOrDefault(req => req.IsActive && req.RequestingRegistrar == registrar &&
+                (client == null || req.WaitingClient == client));
         }
 
         /// <summary>
@@ -119,19 +129,30 @@ namespace Managers
         public bool HasPendingRequests()
         {
             // Проверяем, есть ли хотя бы один запрос, который не выполнен И не взят
-            return pendingRequestsList.Any(req => !req.IsFulfilled && !req.IsTaken);
+            return pendingRequestsList.Any(req => req.IsActive && !req.IsFulfilled && !req.IsTaken);
         }
 
         public ArchiveRequest GetNextDelegatedRequest()
         {
-            ArchiveRequest request = pendingRequestsList.FirstOrDefault(req => req.IsDelegated && !req.IsTakenByCourier && !req.IsFulfilled);
+            ArchiveRequest request = pendingRequestsList.FirstOrDefault(req => req.IsActive && req.IsDelegated && !req.IsTakenByCourier);
             if (request != null) request.IsTakenByCourier = true; // Сразу бронируем задачу за курьером
             return request;
         }
 
         public bool HasPendingDelegatedRequests()
         {
-            return pendingRequestsList.Any(req => req.IsDelegated && !req.IsTakenByCourier && !req.IsFulfilled);
+            return pendingRequestsList.Any(req => req.IsActive && req.IsDelegated && !req.IsTakenByCourier);
+        }
+
+        public bool IsWaitingForCourier(ClientPathfinding client) => pendingRequestsList.Any(req =>
+            req.IsActive && req.IsDelegated && req.WaitingClient == client);
+
+        public void CompleteDelivery(ArchiveRequest request)
+        {
+            if (request == null) return;
+            request.IsDelivered = true;
+            pendingRequestsList.Remove(request);
+            Debug.Log($"[ArchiveRequestTrace] Delivered to {request.WaitingClient?.name}");
         }
 
         /// <summary>
@@ -139,7 +160,7 @@ namespace Managers
         /// </summary>
         /// <param name="request">Выполненный запрос.</param>
         public void FulfillRequest(ArchiveRequest request) {
-            if (request != null) {
+            if (request != null && request.IsActive) {
                 request.IsFulfilled = true;
                 Debug.Log($"[ArchiveRequestManager] Запрос для {request.WaitingClient?.name} помечен как выполненный (IsFulfilled = true).");
                 // Можно удалить из списка здесь, если выполненные запросы больше не нужны
@@ -154,6 +175,7 @@ namespace Managers
         /// <param name="request">Запрос для отмены.</param>
         public void CancelRequest(ArchiveRequest request)
         {
+            if (request != null) request.IsCancelled = true;
             if (request != null && pendingRequestsList.Contains(request))
             {
                 bool removed = pendingRequestsList.Remove(request);
@@ -163,7 +185,7 @@ namespace Managers
                 }
             }
             // Дополнительно чистим список от "мертвых" запросов (например, если клиент был уничтожен)
-            pendingRequestsList.RemoveAll(req => req.WaitingClient == null || req.RequestingRegistrar == null);
+            pendingRequestsList.RemoveAll(req => !req.IsActive);
         }
 
         /// <summary>
@@ -171,6 +193,7 @@ namespace Managers
         /// </summary>
         public void ClearAllRequests()
         {
+            foreach (var request in pendingRequestsList) request.IsCancelled = true;
             pendingRequestsList.Clear();
             Debug.Log("[ArchiveRequestManager] Все запросы в архив очищены.");
         }

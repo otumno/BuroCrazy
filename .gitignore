@@ -79,3 +79,6 @@ Assets/Resources/embeddedCommandLineArgs.txt
 Assets/Resources/embeddedCommandLineArgs.txt.meta
 nul
 opencode.json
+
+# Python cache for the Yonote reader (credentials live outside the repository)
+/Tools/Yonote/__pycache__/

@@ -52,7 +52,7 @@ public class GuardMovement : StaffController
 
     public override bool IsOnBreak()
     {
-        return currentState == GuardState.OnBreak ||
+        return base.IsOnBreak() || currentState == GuardState.OnBreak ||
                currentState == GuardState.GoingToBreak ||
                currentState == GuardState.AtToilet ||
                currentState == GuardState.GoingToToilet ||
@@ -125,7 +125,7 @@ public class GuardMovement : StaffController
             var target = points[index];
             if (target != null)
             {
-                yield return StartCoroutine(MoveToTarget(target.transform.position, GuardState.Patrolling));
+                yield return MoveToTarget(target.transform.position, GuardState.Patrolling);
                 yield return new WaitForSeconds(2f);
             }
             index++;

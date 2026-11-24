@@ -15,7 +15,7 @@ public class ScreamInClosetExecutor : ActionExecutor
         if (closet != null)
         {
             // ИСПРАВЛЕНИЕ: closet.transform.position
-            yield return staff.StartCoroutine(staff.MoveToTarget(closet.transform.position, "Crying"));
+            yield return staff.MoveToTarget(closet.transform.position, "Crying");
             
             if (AudioManager.Instance != null)
                 AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.Voice_Secretary, transform.position); // Крик

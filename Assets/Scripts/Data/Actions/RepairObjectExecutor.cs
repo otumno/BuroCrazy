@@ -35,7 +35,7 @@ public class RepairObjectExecutor : ActionExecutor
         var sp = target.GetComponent<ServicePoint>();
         if (sp != null && sp.clerkStandPoint != null) targetPos = sp.clerkStandPoint.position;
 
-        yield return staff.StartCoroutine(worker.MoveToTarget(targetPos, ServiceWorkerController.WorkerState.Cleaning));
+        yield return worker.MoveToTarget(targetPos, ServiceWorkerController.WorkerState.Cleaning);
 
         // 2. Проверяем по прибытии (вдруг починили или уничтожили)
         if (target == null || target.currentHealth >= target.maxHealth)

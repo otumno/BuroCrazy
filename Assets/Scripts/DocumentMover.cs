@@ -11,6 +11,7 @@ public class DocumentMover : MonoBehaviour
 
     public void StartMove(Transform newTarget, Action onDone = null)
     {
+        CancelMove();
         this.target = newTarget;
         this.onArrival = onDone;
 
@@ -22,6 +23,13 @@ public class DocumentMover : MonoBehaviour
         {
             Destroy(gameObject);
         }
+    }
+
+    public void CancelMove()
+    {
+        StopAllCoroutines();
+        onArrival = null;
+        target = null;
     }
     
     // Start() теперь пустой.

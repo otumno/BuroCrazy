@@ -7,6 +7,7 @@ public class ClientActionExecutor : MonoBehaviour
 {
     private ClientPathfinding _client;
     private AgentMover _mover;
+    public bool ReachedDestination { get; private set; }
 
     public void Initialize(ClientPathfinding client)
     {
@@ -34,6 +35,7 @@ public class ClientActionExecutor : MonoBehaviour
 
     public IEnumerator MoveToGoalRoutine(Waypoint goal)
     {
+        ReachedDestination = false;
         if (goal == null)
         {
             Debug.LogWarning($"{name}: Цель движения null!");
@@ -46,12 +48,16 @@ public class ClientActionExecutor : MonoBehaviour
         yield return new WaitUntil(() => !_mover.IsMoving());
         
         _client.movement.StopStuckCheck();
+        ReachedDestination = goal != null && Vector2.Distance(transform.position, goal.transform.position) <= 1f;
+        if (!ReachedDestination)
+            Debug.LogWarning($"[ClientPathTrace] {name}: stopped before goal={goal?.name}, position={transform.position}");
     }
 
     // --- ИСПРАВЛЕНИЕ 2: Добавлен метод MoveToSeatRoutine ---
     // Специальный метод для движения к Transform (так как стулья пока не Waypoint'ы)
     public IEnumerator MoveToSeatRoutine(Transform seatTarget)
     {
+        ReachedDestination = false;
         if (seatTarget == null) yield break;
 
         _client.movement.StartStuckCheck();
@@ -60,6 +66,9 @@ public class ClientActionExecutor : MonoBehaviour
         yield return new WaitUntil(() => !_mover.IsMoving());
         
         _client.movement.StopStuckCheck();
+        ReachedDestination = seatTarget != null && Vector2.Distance(transform.position, seatTarget.position) <= 1f;
+        if (!ReachedDestination)
+            Debug.LogWarning($"[ClientPathTrace] {name}: stopped before seat={seatTarget?.name}, position={transform.position}");
     }
 
     public IEnumerator EnterZoneRoutine(LimitedCapacityZone targetZone)

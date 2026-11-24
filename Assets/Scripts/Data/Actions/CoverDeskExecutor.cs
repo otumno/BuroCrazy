@@ -9,7 +9,7 @@ public class CoverDeskExecutor : ActionExecutor
     protected override IEnumerator ActionRoutine()
     {
         var intern = staff as InternController;
-        if (intern == null) { FinishAction(false); yield break; }
+        if (intern == null || HiringManager.Instance == null) { FinishAction(false); yield break; }
 
         ClerkController.ClerkRole targetRole;
 
@@ -26,21 +26,31 @@ public class CoverDeskExecutor : ActionExecutor
         }
 
         var clerkOnBreak = HiringManager.Instance.AllStaff.OfType<ClerkController>()
-            .FirstOrDefault(c => c.clerkRole == targetRole && c.IsOnBreak());
+            .FirstOrDefault(c => c != null && c.clerkRole == targetRole && c.IsOnBreak() &&
+                c.assignedWorkstation != null && !c.assignedWorkstation.HasCoverReservation);
         if (clerkOnBreak == null || clerkOnBreak.assignedWorkstation == null) { FinishAction(false); yield break; }
 
         var targetPoint = clerkOnBreak.assignedWorkstation;
-        intern.SetState(InternController.InternState.CoveringDesk);
+        if (targetPoint.clerkStandPoint == null || !targetPoint.TryReserveCover(intern))
+        { FinishAction(false); yield break; }
+        RegisterCleanup(() =>
+        {
+            if (targetPoint != null) targetPoint.ReleaseCover(intern);
+            if (targetPoint != null && ClientSpawner.GetServiceProviderAtDesk(targetPoint.deskId) == intern)
+                ClientSpawner.UnassignServiceProviderFromDesk(targetPoint.deskId);
+            if (intern != null) intern.AssignCoveredWorkstation(null);
+        });
         intern.thoughtBubble?.ShowPriorityMessage("Подменю!", 2f, Color.cyan);
-        yield return staff.StartCoroutine(intern.MoveToTarget(targetPoint.clerkStandPoint.position, InternController.InternState.CoveringDesk));
-        
+        yield return intern.MoveToTarget(targetPoint.clerkStandPoint.position, InternController.InternState.CoveringDesk);
+        if (clerkOnBreak == null || !clerkOnBreak.IsOnBreak() ||
+            Vector2.Distance(intern.transform.position, targetPoint.clerkStandPoint.position) > 1f)
+        { FinishAction(false); yield break; }
         intern.AssignCoveredWorkstation(targetPoint);
         ClientSpawner.AssignServiceProviderToDesk(intern, targetPoint.deskId);
         
         yield return new WaitUntil(() => clerkOnBreak == null || !clerkOnBreak.IsOnBreak());
 
-        ClientSpawner.UnassignServiceProviderFromDesk(targetPoint.deskId);
-        intern.AssignCoveredWorkstation(null);
+        // Cleanup removes only our registration: the returning clerk may already have reclaimed the desk.
         intern.SetState(InternController.InternState.Patrolling);
         Managers.AchievementManager.Instance?.UnlockAchievement("Achv_InternStory");
         FinishAction(true);

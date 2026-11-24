@@ -40,6 +40,7 @@ public class StaffSchedulePanelUI : MonoBehaviour
 
     // Панель открыта как шаг ночной цепочки конца дня: закрытие ведёт к следующему экрану.
     private bool _isPlanningStep;
+    private bool _isOpen;
 
     public event Action Closed;
 
@@ -89,6 +90,9 @@ public class StaffSchedulePanelUI : MonoBehaviour
 
     private void Open()
     {
+        if (_isOpen) return;
+        _isOpen = true;
+        gameObject.SetActive(true);
         // Паттерн Smart UI: сначала аниматор
         var animator = GetComponent<UIWindowAnimator>();
         if (animator != null) animator.Open();
@@ -105,6 +109,8 @@ public class StaffSchedulePanelUI : MonoBehaviour
 
     public void Hide()
     {
+        if (!_isOpen) return;
+        _isOpen = false;
         var animator = GetComponent<UIWindowAnimator>();
         if (animator != null)
         {
@@ -116,8 +122,8 @@ public class StaffSchedulePanelUI : MonoBehaviour
             MainUIManager.Instance?.PopPause();
         }
         
-        // Применяем новое расписание сразу после закрытия панели
-        HiringManager.Instance?.CheckAllStaffShiftsImmediately();
+        // Night planning edits tomorrow; do not spawn staff into the ending day from this close callback.
+        if (!ShiftPlanning.IsOpen) HiringManager.Instance?.CheckAllStaffShiftsImmediately();
 
         OnClosed();
     }

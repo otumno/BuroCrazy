@@ -94,7 +94,7 @@ public class ClerkController : StaffController, IServiceProvider
 
     public override bool IsOnBreak()
     {
-        return currentState == ClerkState.OnBreak ||
+        return base.IsOnBreak() || currentState == ClerkState.OnBreak ||
                currentState == ClerkState.GoingToBreak || 
                currentState == ClerkState.AtToilet || 
                currentState == ClerkState.GoingToToilet ||
@@ -103,7 +103,7 @@ public class ClerkController : StaffController, IServiceProvider
 
     public override string GetStatusInfo() => currentState.ToString();
     public override string GetCurrentStateName() => currentState.ToString();
-    public void InitializeFromData(RoleData data) { /* ... */ }
+    public override void InitializeFromData(RoleData data) => base.InitializeFromData(data);
 
     // --- НОВЫЙ МЕТОД: Правильное заступление на пост ---
     protected override IEnumerator GoToWorkstationRoutine()
@@ -130,7 +130,7 @@ public class ClerkController : StaffController, IServiceProvider
     }
 
     #region IServiceProvider Implementation
-    public bool IsAvailableToServe => !IsOnBreak() && (currentState == ClerkState.Working || currentState == ClerkState.ChairPatrol);
+    public bool IsAvailableToServe => gameObject.activeInHierarchy && IsOnDuty() && !IsMoving && !IsOnBreak() && (currentState == ClerkState.Working || currentState == ClerkState.ChairPatrol);
     public Transform GetClientStandPoint() => assignedWorkstation != null ? assignedWorkstation.clientStandPoint.transform : transform;
     public ServicePoint GetWorkstation() => assignedWorkstation;
 

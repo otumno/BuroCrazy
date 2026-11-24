@@ -32,6 +32,7 @@ namespace Managers
             ResetGameState();
             ApplySave(isNewGame);
             SyncClientAutoSpawn();
+            StartDebugMoney(isNewGame);
             DirectorManager.Instance?.PrepareDay();
         }
 
@@ -45,7 +46,16 @@ namespace Managers
             ResetGameState();
             ApplySave(isNewGame: false);
             SyncClientAutoSpawn();
+            StartDebugMoney(isNewGame: false);
             DirectorManager.Instance?.PrepareDay();
+        }
+
+        // Строго после ApplySave: сброс состояния и загрузка сейва перезаписывают баланс кошелька.
+        private static void StartDebugMoney(bool isNewGame)
+        {
+#if DEBUG_ENABLED
+            BuroDebug.DebugMoney.StartSession(isNewGame);
+#endif
         }
 
         // В сцене автоспавн выключен, и включал его только квест захвата первого района (TutorialBureaucracyQuest.CompleteQuest).
@@ -56,6 +66,9 @@ namespace Managers
             if (WaveManager.Instance == null || ProgressionManager.Instance == null) return;
 
             WaveManager.Instance.enableAutoSpawn = ProgressionManager.Instance.GetCapturedRegionsCount() > 0;
+            WaveManager.Instance.RebuildDailySpawnPlan();
+            if (WaveManager.Instance.enableAutoSpawn) WaveManager.Instance.StartSpawningForCurrentPeriod();
+            Debug.Log($"[ClientFlowTrace] Автоспавн={WaveManager.Instance.enableAutoSpawn}, районов={ProgressionManager.Instance.GetCapturedRegionsCount()}, дневной поток={ProgressionManager.Instance.GetTotalDailyFlow()}");
         }
 
         private static void BindPersistentManagers()
@@ -70,9 +83,22 @@ namespace Managers
         {
             CalendarManager.Instance?.StartNewGame();
             PlayerWallet.Instance?.ResetState();
+            GuardManager.Instance?.ResetState();
+            WaveManager.Instance?.ResetSpawnProgress();
+            HiringManager.Instance?.ResetState();
+            ClientSpawner.ClearServiceProviders();
+            // ReloadCurrentSlot reuses the scene; visitors and queue reservations belong to the old session.
+            foreach (var client in Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None))
+            {
+                client.Freeze();
+                client.gameObject.SetActive(false);
+                Object.Destroy(client.gameObject);
+            }
+            ClientQueueManager.Instance?.ResetForSession();
+            ArchiveRequestManager.Instance?.ClearAllRequests();
+            foreach (var desk in Object.FindObjectsByType<ServicePoint>(FindObjectsSortMode.None)) desk.ClearClient();
             ArchiveManager.Instance?.ResetState();
             DirectorManager.Instance?.ResetState();
-            HiringManager.Instance?.ResetState();
             ProgressionManager.Instance?.ResetState();
             OrderManager.Instance?.ResetState();
             StoryStateManager.Instance?.ResetState();

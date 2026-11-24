@@ -4,7 +4,6 @@ using System.Collections;
 using System.Linq;
 using Managers;
 using Gameplay; // Подключаем пространство имен с OfficeObjectDurability
-using Gameplay;
 using Clinch;
 using Enums;
 
@@ -14,6 +13,8 @@ public class ProcessDocumentCat1Executor : ActionExecutor
 
     protected override IEnumerator ActionRoutine()
     {
+        yield return ReturnToWorkstation();
+        if (!IsAtWorkstation) { FinishAction(false); yield break; }
         var clerk = staff as ClerkController;
         // Проверки на null
         if (clerk == null || clerk.assignedWorkstation == null) 
@@ -33,7 +34,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
                 Vector2.Distance(c.transform.position, clerk.assignedWorkstation.clientStandPoint.transform.position) < 1.5f);
         }
 
-        if (client == null || client.docHolder == null)
+        if (client == null || !client.CanContinueService || client.docHolder == null)
         {
             FinishAction(false);
             yield break;
@@ -77,7 +78,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
             }
         }
         // После WaitWhile ОБЯЗАТЕЛЬНАЯ ПРОВЕРКА для всех экзекуторов:
-        if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.LeavingUpset)
+        if (client == null || !client.CanContinueService)
         {
             // Клиент обиделся и ушел по таймауту клинча
             if (staff is ClerkController c) c.SetState(ClerkController.ClerkState.Working);
@@ -102,7 +103,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         }
 
         // 3. Считаем эффективность (если компонента нет, множитель будет 1.0)
-        float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
+        float efficiency = Mathf.Max(.05f, durability != null ? durability.GetEfficiencyMultiplier() : 1.0f);
         // --- ИНТЕГРАЦИЯ ИЗНОСА (КОНЕЦ) ---
 
         clerk.SetState(ClerkController.ClerkState.Working);
@@ -123,11 +124,13 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         {
             clerk.thoughtBubble?.ShowPriorityMessage("Проверяю...", 2f, Color.yellow);
             yield return new WaitForSeconds(Random.Range(1f, 3f));
+            if (client == null || !client.CanContinueService) { FinishAction(false); yield break; }
             if (Random.value < (1f - client.documentQuality) && Random.value < clerk.skills.pedantry)
             {
                 clerk.thoughtBubble?.ShowPriorityMessage("Здесь ошибка!\nНужно переделать.", 3f, Color.red);
                 client.ApplyStressJump(client.stressJump_Refusal);
                 yield return new WaitForSeconds(2f);
+                if (client == null || !client.CanContinueService) { FinishAction(false); yield break; }
                 client.stateMachine.GoGetFormAndReturn();
                 FinishAction(true); // Задача выполнена (ошибка найдена)
                 yield break;
@@ -138,16 +141,42 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         DocumentHolder clientDocHolder = client.docHolder;
         Transform clientHand = clientDocHolder?.handPoint;
         Transform deskPoint = clerk.assignedWorkstation.documentPointOnDesk;
-        GameObject currentClientDocObject = (clientHand != null && clientHand.childCount > 0) ? clientHand.GetChild(0).gameObject : null;
+        GameObject currentClientDocObject = null;
         GameObject flyingDoc = null;
+        GameObject outgoingDocument = null;
+        bool documentCommitted = false;
+        bool documentBorrowed = false;
+        var originalType = clientDocHolder.GetCurrentDocumentType();
+        var originalData = clientDocHolder.GetCurrentDocumentData();
+        RegisterCleanup(() =>
+        {
+            if (outgoingDocument != null)
+            {
+                outgoingDocument.GetComponent<DocumentMover>()?.CancelMove();
+                if (!documentCommitted) Destroy(outgoingDocument);
+            }
+            if (currentClientDocObject != null)
+                currentClientDocObject.GetComponent<DocumentMover>()?.CancelMove();
+            if (documentBorrowed && !documentCommitted && clientDocHolder != null)
+            {
+                if (originalData != null) clientDocHolder.SetDocument(originalData);
+                else clientDocHolder.SetDocument(originalType);
+            }
+            if (currentClientDocObject != null) Destroy(currentClientDocObject);
+        });
+        if (deskPoint != null)
+        {
+            currentClientDocObject = clientDocHolder.DetachDocument();
+            documentBorrowed = true;
+        }
 
         if (currentClientDocObject != null && deskPoint != null)
         {
-            clientDocHolder.SetDocument(DocumentType.None); // Убираем документ из данных
-            DocumentMover mover = currentClientDocObject.AddComponent<DocumentMover>();
+            DocumentMover mover = currentClientDocObject.GetComponent<DocumentMover>() ?? currentClientDocObject.AddComponent<DocumentMover>();
             bool arrived = false;
             mover.StartMove(deskPoint, () => { arrived = true; });
-            yield return new WaitUntil(() => arrived);
+            yield return new WaitUntil(() => arrived || currentClientDocObject == null || deskPoint == null);
+            if (client == null || !client.CanContinueService || deskPoint == null) { FinishAction(false); yield break; }
             flyingDoc = currentClientDocObject; // Запоминаем документ на столе
             if (flyingDoc != null) 
             {
@@ -172,6 +201,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         if (refs != null && refs.processingIconPrefab != null)
         {
             GameObject iconObj = Instantiate(refs.processingIconPrefab);
+            RegisterCleanup(() => { if (iconObj != null) Destroy(iconObj); });
             ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
             if (animScript != null)
             {
@@ -180,6 +210,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         }
 
         yield return new WaitForSeconds(workTime);
+        if (client == null || !client.CanContinueService || client.docHolder == null) { FinishAction(false); yield break; }
         
         // --- НАНЕСЕНИЕ УРОНА СТОЛУ ---
         if (durability != null)
@@ -197,7 +228,8 @@ public class ProcessDocumentCat1Executor : ActionExecutor
         if (certificatePrefab != null && deskPoint != null && clientHand != null && client.stateMachine != null)
         {
             GameObject newCertGO = Instantiate(certificatePrefab, deskPoint.position, deskPoint.rotation);
-            DocumentMover mover = newCertGO.AddComponent<DocumentMover>();
+            outgoingDocument = newCertGO;
+            DocumentMover mover = newCertGO.GetComponent<DocumentMover>() ?? newCertGO.AddComponent<DocumentMover>();
             bool arrived = false;
             mover.StartMove(clientHand, () => {
                 if (client != null && client.docHolder != null) {
@@ -208,7 +240,8 @@ public class ProcessDocumentCat1Executor : ActionExecutor
                 }
                 arrived = true;
             });
-            yield return new WaitUntil(() => arrived);
+            yield return new WaitUntil(() => arrived || newCertGO == null || client == null);
+            if (client == null || !client.CanContinueService) { FinishAction(false); yield break; }
         }
         else 
         {
@@ -227,6 +260,7 @@ public class ProcessDocumentCat1Executor : ActionExecutor
             client.stateMachine.SetState(ClientState.MovingToGoal);
         }
         
+        documentCommitted = true;
         clerk.ServiceComplete();
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         FinishAction(true);

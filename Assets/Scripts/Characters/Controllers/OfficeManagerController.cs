@@ -59,7 +59,7 @@ public class OfficeManagerController : StaffController
 
     public override bool IsOnBreak()
     {
-        return currentState == ManagerState.OnBreak || currentState == ManagerState.AtToilet;
+        return base.IsOnBreak() || currentState == ManagerState.OnBreak || currentState == ManagerState.AtToilet;
     }
 
     public override void StartShift()
@@ -77,15 +77,7 @@ public class OfficeManagerController : StaffController
             // Логистика документов
             if (TryFindDocumentJob(out DocumentStack source, out DocumentStack target, out ProjectDocumentObject doc))
             {
-                // Если target == null, значит это ПОЛИТИКА (см. TryFindDocumentJob)
-                if (target == null && doc.documentData.docType == ProjectDocumentType.Policy)
-                {
-                    yield return StartCoroutine(ExecutePolicyTransport(source, doc));
-                }
-                else
-                {
-                    ExecuteTransport(source, target, doc);
-                }
+                ExecuteTransport(source, target, doc);
             }
             // Ресурсы и прочее...
             else
@@ -180,7 +172,8 @@ public class OfficeManagerController : StaffController
     {
         if (transportAction == null)
         {
-            transportAction = Resources.Load<StaffAction>("Actions/Action_TransportProjectDocument");
+            transportAction = Resources.Load<StaffAction>("Actions/Action_TransportProjectDocument")
+                ?? systemActionDatabase?.allActions?.FirstOrDefault(a => a != null && a.actionType == ActionType.TransportProjectDocument);
         }
 
         if (transportAction != null)
@@ -190,39 +183,13 @@ public class OfficeManagerController : StaffController
             executor.TargetStack = target;
             executor.TargetDoc = doc;
             
-            // Запускаем executor
+            currentAction = transportAction;
+            currentExecutor = executor;
             executor.Execute(this, transportAction);
         }
     }
 	
-	private IEnumerator ExecutePolicyTransport(DocumentStack sourceStack, ProjectDocumentObject doc)
-    {
-        var board = ScenePointsRegistry.Instance.noticeBoard;
-        if (board == null) yield break;
-
-        // 1. Идем к столу (где лежит указ)
-        thoughtBubble?.ShowPriorityMessage("Новый указ!", 2f, Color.magenta);
-        yield return StartCoroutine(MoveToTarget(sourceStack.transform.position, ManagerState.CarryingDoc));
-
-        // 2. Берем
-        var heldDoc = sourceStack.TakeSpecificDocument(doc);
-        if (heldDoc != null)
-        {
-            heldDoc.transform.SetParent(transform);
-            heldDoc.transform.localPosition = new Vector3(0, 0.5f, 0);
-            
-            // 3. Идем к Доске
-            thoughtBubble?.ShowPriorityMessage("На всеобщее обозрение!", 2f, Color.magenta);
-            yield return StartCoroutine(MoveToTarget(board.interactionPoint.position, ManagerState.CarryingDoc));
-
-            // 4. Вешаем
-            yield return new WaitForSeconds(0.5f);
-            board.PinPolicy(heldDoc.GetComponent<ProjectDocumentObject>());
-            
-            ExperienceManager.Instance?.GrantXP(this, ActionType.TransportProjectDocument); // Даем опыт
-        }
-        SetState(ManagerState.Idle);
-    }
+    // Policy transport uses the same tracked executor as other folders, so orders can cancel it safely.
 
     // Хелперы поиска целевых стопок
     private DocumentStack GetRegistrarStack() => ClientSpawner.GetZoneByDeskId(0)?.GetComponentInChildren<ServicePoint>()?.documentStack;

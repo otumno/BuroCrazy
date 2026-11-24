@@ -94,7 +94,7 @@ public class ServiceWorkerController : StaffController
     
     public override bool IsOnBreak()
     {
-        return currentState == WorkerState.OnBreak ||
+        return base.IsOnBreak() || currentState == WorkerState.OnBreak ||
                currentState == WorkerState.GoingToBreak ||
                currentState == WorkerState.AtToilet ||
                currentState == WorkerState.GoingToToilet ||
@@ -106,8 +106,10 @@ public class ServiceWorkerController : StaffController
         return currentState.ToString();
     }
 
-    public void InitializeFromData(RoleData data)
+    public override void InitializeFromData(RoleData data)
     {
+        base.InitializeFromData(data);
+        if (data == null) return;
         if (agentMover != null)
         {
             agentMover.moveSpeed = data.moveSpeed;

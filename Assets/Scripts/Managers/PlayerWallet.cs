@@ -32,8 +32,8 @@ namespace Managers
 
         void Start()
         {
-            // Тестовых денег здесь больше не выдаём: GameSession всё равно сбрасывает кошелёк к стартовой сумме,
-            // и от хака оставалась только запись «DEBUG» в итогах дня. Для тестов есть чит M.
+            // Тестовые деньги здесь не выдаём: при старте сессии GameSession сбрасывает кошелёк и загружает сейв,
+            // и начисление отсюда затиралось. Их выдаёт BuroDebug.DebugMoney из GameSession, после загрузки сейва.
             UpdateMoneyText();
         }
         
@@ -73,6 +73,20 @@ namespace Managers
 
             UpdateMoneyText();
         }
+
+#if DEBUG_ENABLED
+        /// <summary>
+        /// Тестовые деньги: зачисляются целиком, в обход доли с официального дохода.
+        /// </summary>
+        // Не через AddMoney: официальный доход урезается до officialIncomeRate (10%), а теневой поднимает коррупцию
+        // и бьёт по репутации. В журнал бухгалтерии тоже не пишем: запись исказила бы итоги дня.
+        public void AddDebugMoney(int amount, string reason)
+        {
+            currentMoney += amount;
+            UpdateMoneyText();
+            Debug.Log($"[PlayerWallet] DEBUG: +{amount} ({reason}). Баланс: {currentMoney}");
+        }
+#endif
 
         // ... (остальные методы: GetCurrentMoney, SetMoney, ResetState без изменений) ...
         public int GetCurrentMoney() { return currentMoney; }

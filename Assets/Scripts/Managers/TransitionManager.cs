@@ -54,8 +54,6 @@ namespace Managers
         [Tooltip("Звук, который проигрывается, когда листья улетают")]
         [SerializeField] private AudioClip leavesExitSound;
 
-        private readonly WaitForSeconds _waitForSeconds = new(0.05f);
-
         public bool isTransitioning => loadScreenRaycaster.enabled;
 
         private void Awake()
@@ -98,6 +96,7 @@ namespace Managers
         /// </summary>
         private IEnumerator TransitionRoutine(string sceneName)
         {
+            Debug.Log($"[TransitionManager] Начало перехода: {sceneName}, timeScale={Time.timeScale}");
             // включаем рейкаст, чтобы нельзя было кликнуть сквозь экран загрузки
             loadScreenRaycaster.enabled = true;
 
@@ -118,9 +117,11 @@ namespace Managers
             // ждём пока сцена загрузится! не переходим дальше, если сцена не готова
             while (!asyncLoad.isDone)
             {
-                // You could update a loading bar here using asyncLoad.progress
-                yield return _waitForSeconds;
+                // Загрузка сцены не зависит от игрового времени. При паузе WaitForSeconds
+                // навсегда оставлял корутину здесь даже после завершения LoadSceneAsync.
+                yield return null;
             }
+            Debug.Log($"[TransitionManager] Сцена загружена: {sceneName}, timeScale={Time.timeScale}");
             
             // Debug.Log($"[TransitionManager] Сцена {sceneName} загружена.");
 
@@ -139,6 +140,7 @@ namespace Managers
 
             // выключаем рейкаст, чтобы можно было кликать через экран загрузки
             loadScreenRaycaster.enabled = false;
+            Debug.Log($"[TransitionManager] Переход завершён: {sceneName}");
         }
 
         /// <summary>

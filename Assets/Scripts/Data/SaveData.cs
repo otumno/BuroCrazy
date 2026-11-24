@@ -15,6 +15,14 @@ public class SaveData
     public int day;
     public int money;
     public int archiveDocumentCount;
+    public bool hasCalendarProgress;
+    public CalendarDayPeriodType savedPeriod;
+    public float savedPeriodElapsed;
+    public bool hasOrderState;
+    public bool hasSelectedDailyOrder;
+    public List<string> activeOrderNames;
+    public string pendingOrderName;
+    public List<PeriodSpawnSaveData> periodSpawnProgress;
     public int influence;
     public Gender gender;
     public int strikes;
@@ -129,6 +137,19 @@ public struct StaffSaveData
     [Tooltip("Имя ассета RankData (ищется в HiringManager.rankDatabase).")]
     public string rankName;
     public EmploymentType employmentType;
+    // Флаг отличает старые сейвы без сроков найма от найма в день 0.
+    public bool hasEmploymentTiming;
+    public int hireDay;
+    public CalendarDayPeriodType hirePeriod;
+    public int temporaryWorkDay;
+    public bool hasVitals;
+    public float savedStress;
+    public float savedBladder;
+    public float savedEnergy;
+    public bool hasStartedAnyShift;
+    public bool hasAttendanceState;
+    public int attendanceDay;
+    public float arrivalDelayRemaining;
     [Tooltip("Имена ассетов StaffAction, выбранных сотруднику.")]
     public List<string> activeActionNames;
 
@@ -169,6 +190,34 @@ public struct DocumentStackSaveData
 {
     public string stackOwnerName;
     public int documentCount;
+    public string hierarchyPath;
+    public bool hasDocumentContents;
+    public int ordinaryCount;
+    public List<ProjectDocumentSaveData> projects;
+}
+
+[System.Serializable]
+public class ProjectDocumentSaveData
+{
+    public string documentName;
+    public Enums.ProjectDocumentType docType;
+    public string regionId;
+    public string jobId;
+    public string targetUpgradeID;
+    public bool signedByDirector;
+    public bool processedByRegistrar;
+    public bool paidAtCashier;
+    public bool archived;
+    public Data.Documents.ProjectDocumentDefinition.PathType jobPathType;
+    public int jobMoneyCost;
+    public int jobCorruptionCost;
+}
+
+[System.Serializable]
+public struct PeriodSpawnSaveData
+{
+    public CalendarDayPeriodType period;
+    public int spawned;
 }
 
 // [НОВОЕ] Структура для сохранения прочности

@@ -13,13 +13,19 @@ public class ArchiveDocumentExecutor : ActionExecutor
         var archivist = staff;
         if (archivist == null) { FinishAction(false); yield break; }
 
-        if (!ArchiveManager.Instance.mainDocumentStack.TakeOneDocument())
+        var source = ArchiveManager.Instance != null ? ArchiveManager.Instance.GetStackToProcess() : null;
+        if (source == null)
         {
             FinishAction(false);
             yield break;
         }
 
+        var transfer = new DocumentStackTransfer(source, 1);
+        RegisterCleanup(transfer.Dispose);
+        if (transfer.Count == 0) { FinishAction(false); yield break; }
+
         var stackHolder = archivist.GetComponent<StackHolder>();
+        RegisterCleanup(() => { if (stackHolder != null) stackHolder.HideStack(); });
         stackHolder?.ShowSingleDocumentSprite();
 
         bool canCorrectDocuments = archivist.activeActions.Any(a => a.actionType == ActionType.CorrectDocument);
@@ -43,7 +49,10 @@ public class ArchiveDocumentExecutor : ActionExecutor
         archivist.AgentMover.SetPath(PathfindingUtility.BuildPathTo(staff.transform.position, targetCabinet.transform.position, staff.gameObject));
         yield return new WaitUntil(() => !archivist.AgentMover.IsMoving());
 
-        yield return new WaitForSeconds(Random.Range(2f, 4f));
+        float filingTime = Random.Range(2f, 4f);
+        ShowProcessing(targetCabinet.transform.position, filingTime);
+        yield return new WaitForSeconds(filingTime);
+        transfer.Archive();
         stackHolder?.HideStack();
 
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);

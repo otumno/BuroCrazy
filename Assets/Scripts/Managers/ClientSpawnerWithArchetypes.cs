@@ -119,10 +119,6 @@ namespace Managers
         {
             client.name = $"{archetype.displayName} #{Random.Range(100, 999)}";
 
-            // Инициализируем клиента (устанавливает gender, факторы, терпение)
-            Waypoint exitWP = exitPoint != null ? exitPoint.GetComponent<Waypoint>() : null;
-            client.Initialize(spawnPoint?.gameObject, exitWP);
-
             // Параметры из архетипа
             client.SetupFromArchetype(archetype);
 
@@ -142,8 +138,12 @@ namespace Managers
 
             if (archetype.allowedGoals != null && archetype.allowedGoals.Count > 0)
             {
-                client.mainGoal = archetype.allowedGoals[Random.Range(0, archetype.allowedGoals.Count)];
+                client.AssignVisitGoal(archetype.allowedGoals[Random.Range(0, archetype.allowedGoals.Count)]);
             }
+
+            // The selected goal must precede document creation and state-machine startup.
+            Waypoint exitWP = exitPoint != null ? exitPoint.GetComponent<Waypoint>() : null;
+            client.Initialize(spawnPoint?.gameObject, exitWP);
 
             var stateMachine = client.stateMachine;
             if (stateMachine != null)

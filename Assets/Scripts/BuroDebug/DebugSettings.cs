@@ -8,9 +8,14 @@ namespace BuroDebug
         // serialize fields
         [SerializeField]
         private bool _enableBookKeeping;
-        
-        // getters which work with define 
+
+        [SerializeField]
+        [Tooltip("Тестовые деньги при старте сессии и в начале каждого дня (только с DEBUG_ENABLED). 0 — отключить.")]
+        private int _debugMoneyPerDay = 10000;
+
+        // getters which work with define
         public bool enableBookKeeping => GetValueOrDefault(_enableBookKeeping);
+        public int debugMoneyPerDay => GetValueOrDefault(_debugMoneyPerDay);
         
         // singleton
         public static DebugSettings instance

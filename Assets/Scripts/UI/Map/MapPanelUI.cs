@@ -11,6 +11,12 @@ namespace UI.Map
 {
     public class MapPanelUI : MonoBehaviour
     {
+        public GameObject GetProjectDocumentPrefab(Enums.ProjectDocumentType type)
+        {
+            if (type == Enums.ProjectDocumentType.RegionUnlock) return regionDocPrefab;
+            if (type == Enums.ProjectDocumentType.JobPromotion) return jobDocPrefab;
+            return Managers.PolicyManager.Instance != null ? Managers.PolicyManager.Instance.policyDocumentPrefab : regionDocPrefab;
+        }
         [Header("Общее управление")]
         [SerializeField] private Button closeButton;
 

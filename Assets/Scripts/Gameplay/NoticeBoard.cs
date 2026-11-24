@@ -61,6 +61,7 @@ namespace Gameplay
         public void PinPolicy(ProjectDocumentObject doc)
         {
             if (doc == null || doc.documentData == null) return;
+            DocumentStack.CompleteTransit(doc.gameObject);
 
             string policyID = doc.documentData.targetUpgradeID;
             

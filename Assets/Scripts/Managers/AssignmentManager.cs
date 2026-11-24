@@ -27,6 +27,7 @@ namespace Managers
             var oldAssignment = assignments.FirstOrDefault(kvp => kvp.Value == staff);
             if (oldAssignment.Key != null)
             {
+                oldAssignment.Key.ClearAssignedStaff();
                 assignments.Remove(oldAssignment.Key);
             }
             
@@ -43,6 +44,7 @@ namespace Managers
 
             assignments[workstation] = staff;
             staff.assignedWorkstation = workstation;
+            workstation.SetAssignedStaff(staff);
             Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} назначен на {workstation.name}");
         }
 

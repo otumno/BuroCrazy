@@ -45,10 +45,13 @@ public class ClientStateMachine : MonoBehaviour
     private int myQueueNumber = -1;
     public int MyQueueNumber => myQueueNumber;
     private IServiceProvider myServiceProvider;
+    private ServicePoint assignedServicePoint;
     public IServiceProvider MyServiceProvider => myServiceProvider;
 
     // --- Routine Handles ---
     private Coroutine mainActionCoroutine;
+    private bool isActionRunning;
+    private int actionVersion;
     private Coroutine zonePatienceCoroutine;
 
     public void Initialize(ClientPathfinding p)
@@ -83,11 +86,10 @@ public class ClientStateMachine : MonoBehaviour
         {
             yield return wait;
 
-            if (currentState == ClientState.Grumbling) continue;
-
-            // Если уходим - стоп
+            // Keep one monitor alive across temporary states. Grumbling still accumulates
+            // stress; its own routine decides what happens when patience runs out.
             if (IsLeavingState(currentState) || currentState == ClientState.PassedRegistration ||
-                currentState == ClientState.Enraged || currentState == ClientState.Confused) yield break;
+                currentState == ClientState.Enraged || currentState == ClientState.Confused) continue;
 
             // 1. Базовая скорость накопления зависит от состояния
             float currentMultiplier = parent.stressMod_Standing; // База (1.0)
@@ -144,6 +146,7 @@ public class ClientStateMachine : MonoBehaviour
 
             // 3. Применяем стресс
             parent.AddStress(checkInterval * currentMultiplier);
+            if (currentState == ClientState.Grumbling) continue;
 
             // 4. Проверка перехода в Grumbling (промежуточное недовольство)
             if (currentState != ClientState.Grumbling && parent.canGrumble &&
@@ -151,7 +154,7 @@ public class ClientStateMachine : MonoBehaviour
             {
                 // Начинает ворчать - лог убран
                 SetState(ClientState.Grumbling);
-                yield break;
+                continue;
             }
 
             // 5. Проверка срыва (100%)
@@ -159,7 +162,6 @@ public class ClientStateMachine : MonoBehaviour
             {
                 // Терпение лопнуло - лог убран
                 HandlePatienceExhausted();
-                yield break;
             }
         }
     }
@@ -253,11 +255,32 @@ public class ClientStateMachine : MonoBehaviour
             if (parent.notification != null) parent.notification.UpdateNotification();
             
             // Если текущее действие завершилось, запускаем новое в зависимости от состояния
-            if (mainActionCoroutine == null)
+            if (!isActionRunning)
             {
-                mainActionCoroutine = StartCoroutine(HandleCurrentState());
+                int version = ++actionVersion;
+                isActionRunning = true;
+                var routine = StartCoroutine(RunCurrentState(version));
+                // StartCoroutine may finish synchronously (e.g. Spawning chooses a goal).
+                // Never store its completed handle as evidence that an action is still running.
+                if (isActionRunning && version == actionVersion) mainActionCoroutine = routine;
             }
             yield return null;
+        }
+    }
+
+    private IEnumerator RunCurrentState(int version)
+    {
+        try
+        {
+            yield return HandleCurrentState();
+        }
+        finally
+        {
+            if (version == actionVersion)
+            {
+                isActionRunning = false;
+                mainActionCoroutine = null;
+            }
         }
     }
 
@@ -321,6 +344,8 @@ public class ClientStateMachine : MonoBehaviour
     // --- ИСПРАВЛЕНИЕ: Вернули метод StopAllActionCoroutines (public, т.к. нужен в ClientPathfinding) ---
     public void StopAllActionCoroutines()
     {
+        ++actionVersion;
+        isActionRunning = false;
         // 1. Останавливаем логические корутины
         if (mainActionCoroutine != null) StopCoroutine(mainActionCoroutine);
         mainActionCoroutine = null;
@@ -346,11 +371,12 @@ public class ClientStateMachine : MonoBehaviour
 
             // Аппарат талонов
             case ClientState.MovingToTerminal:
-                yield return StartCoroutine(actionExecutor.MoveToGoalRoutine(currentGoal));
+                yield return actionExecutor.MoveToGoalRoutine(currentGoal);
+                if (!actionExecutor.ReachedDestination) { SetState(ClientState.Confused); break; }
                 SetState(ClientState.GettingTicket);
                 break;
             case ClientState.GettingTicket:
-                yield return StartCoroutine(GetTicketRoutine());
+                yield return GetTicketRoutine();
                 break;
 
             // Группа состояний "Движение"
@@ -360,13 +386,27 @@ public class ClientStateMachine : MonoBehaviour
             case ClientState.LeavingUpset:
             case ClientState.MovingToRegistrarImpolite:
             case ClientState.ReturningToRegistrar:
-                yield return StartCoroutine(actionExecutor.MoveToGoalRoutine(currentGoal));
-                HandleMovementArrival(); // Прибыли, решаем что дальше
+                yield return actionExecutor.MoveToGoalRoutine(currentGoal);
+                if (!actionExecutor.ReachedDestination)
+                {
+                    // A failed exit path must not despawn a visitor still inside the building.
+                    // Retry the exit after a pause; other routes use the existing recovery state.
+                    if (IsLeavingState(currentState)) yield return new WaitForSeconds(3f);
+                    else SetState(ClientState.Confused);
+                    break;
+                }
+                yield return HandleMovementArrival(); // Прибыли, решаем что дальше
                 break;
 
             case ClientState.MovingToSeat:
                 // Используем seatTarget, который теперь объявлен
-                yield return StartCoroutine(actionExecutor.MoveToSeatRoutine(seatTarget));
+                yield return actionExecutor.MoveToSeatRoutine(seatTarget);
+                if (!actionExecutor.ReachedDestination)
+                {
+                    ClientQueueManager.Instance?.OnClientLeavesWaitingZone(parent);
+                    SetState(ClientState.Confused);
+                    break;
+                }
                 SetState(ClientState.SittingInWaitingArea);
                 break;
 
@@ -376,7 +416,7 @@ public class ClientStateMachine : MonoBehaviour
                 //zonePatienceCoroutine = StartCoroutine(PatienceMonitorForZone(targetZone));
                 
                 // Делегируем сложную логику входа экзекьютору
-                yield return StartCoroutine(actionExecutor.EnterZoneRoutine(targetZone));
+                yield return actionExecutor.EnterZoneRoutine(targetZone);
                 break;
 
             // Группа состояний "Ожидание обслуживания"
@@ -386,13 +426,13 @@ public class ClientStateMachine : MonoBehaviour
             case ClientState.AtDesk1:
             case ClientState.AtDesk2:
                 // Спец. логика для туалета
-                if (targetZone == ClientSpawner.GetToiletZone())
+                if (targetZone != null && targetZone == ClientSpawner.GetToiletZone())
                 {
-                    yield return StartCoroutine(HandleToiletVisitRoutine());
+                    yield return HandleToiletVisitRoutine();
                     break;
                 }
                 // Пассивное ожидание. Сотрудник сам пнет нас дальше.
-                yield return StartCoroutine(WaitForServiceRoutine());
+                yield return WaitForServiceRoutine();
                 break;
 
             case ClientState.SittingInWaitingArea:
@@ -400,21 +440,21 @@ public class ClientStateMachine : MonoBehaviour
                 //ClientQueueManager.Instance.StartPatienceTimer(parent);
                 // Если стоим - можем слоняться и разговаривать
                 if (currentState == ClientState.AtWaitingArea) 
-                    yield return StartCoroutine(MillAroundWithChatRoutine());
+                    yield return MillAroundWithChatRoutine();
                 else 
-                    yield return StartCoroutine(WaitingInSeatWithChatRoutine());
+                    yield return WaitingInSeatWithChatRoutine();
                 break;
 
             case ClientState.Confused:
-                yield return StartCoroutine(ConfusedRoutine());
+                yield return ConfusedRoutine();
                 break;
 
             case ClientState.Grumbling:
-                yield return StartCoroutine(GrumblingRoutine());
+                yield return GrumblingRoutine();
                 break;
 
             case ClientState.Enraged:
-                yield return StartCoroutine(EnragedRoutine());
+                yield return EnragedRoutine();
                 break;
             
             case ClientState.WaitingForDocument:
@@ -428,7 +468,7 @@ public class ClientStateMachine : MonoBehaviour
                 break;
 
             case ClientState.PassedRegistration:
-                yield return StartCoroutine(PassedRegistrationRoutine());
+                yield return PassedRegistrationRoutine();
                 break;
 
             default:
@@ -437,7 +477,6 @@ public class ClientStateMachine : MonoBehaviour
                 break;
         }
 
-        mainActionCoroutine = null;
     }
 
     // --- Callbacks from Executor ---
@@ -459,9 +498,7 @@ public class ClientStateMachine : MonoBehaviour
     {
         if (newState == currentState) return;
 
-        bool wasGrumbling = (currentState == ClientState.Grumbling);
-
-        CleanupOldState(currentState, newState);
+        CleanupOldState(newState);
         
         // --- ИСПРАВЛЕНИЕ: Используем централизованный метод остановки ---
         StopAllActionCoroutines();
@@ -472,14 +509,10 @@ public class ClientStateMachine : MonoBehaviour
             feedbackController.PlayStateSound(ClientState.Confused);
         }
 
+#if DEBUG_ENABLED
+        Debug.Log($"[ClientFlowTrace] {name}: state={currentState}->{newState}, goal={currentGoal?.name}");
+#endif
         currentState = newState;
-        
-        // --- Перезапуск монитора стресса при выходе из Grumbling ---
-        if (wasGrumbling && newState != ClientState.Grumbling)
-        {
-            StopCoroutine(GlobalPatienceMonitor());
-            StartCoroutine(GlobalPatienceMonitor());
-        }
         
         // --- Логирование в ActionDiary (только важные состояния) ---
         LogImportantStateChange(newState);
@@ -562,7 +595,16 @@ public class ClientStateMachine : MonoBehaviour
         }
     }
 
-    public void SetGoal(Waypoint g) => currentGoal = g;
+    public void SetGoal(Waypoint g)
+    {
+        if (g != currentGoal && (occupiedWaypoint == null || g != occupiedWaypoint))
+            ReleaseZoneReservation();
+        if (g != currentGoal && assignedServicePoint != null && g != assignedServicePoint.clientStandPoint)
+            ReleaseServiceAssignment();
+        if (g != currentGoal && myServiceProvider is MonoBehaviour provider && provider != null
+            && (g == null || g.transform != myServiceProvider.GetClientStandPoint())) myServiceProvider = null;
+        currentGoal = g;
+    }
 
     // --- Helper Logic ---
 
@@ -634,7 +676,7 @@ public class ClientStateMachine : MonoBehaviour
         {
             // Фоллбэк, если терминала нет на сцене
             Waypoint initialGoal = (parent.mainGoal == ClientGoal.VisitToilet)
-                ? ClientSpawner.GetToiletZone().waitingWaypoint
+                ? ClientSpawner.GetToiletZone()?.waitingWaypoint
                 : ClientQueueManager.Instance.ChooseNewGoal(parent);
 
             if (initialGoal != null)
@@ -680,7 +722,7 @@ public class ClientStateMachine : MonoBehaviour
 
         // Выбираем место для ожидания
         Waypoint nextGoal = (parent.mainGoal == ClientGoal.VisitToilet)
-            ? ClientSpawner.GetToiletZone().waitingWaypoint
+            ? ClientSpawner.GetToiletZone()?.waitingWaypoint
             : ClientQueueManager.Instance.ChooseNewGoal(parent);
             
         // nextGoal лог убран
@@ -688,7 +730,8 @@ public class ClientStateMachine : MonoBehaviour
         if (nextGoal != null)
         {
             SetGoal(nextGoal);
-            Transform seat = ClientQueueManager.Instance.FindSeatForClient(parent);
+            Transform seat = parent.mainGoal == ClientGoal.VisitToilet
+                ? null : ClientQueueManager.Instance.FindSeatForClient(parent);
             // seat лог убран
             if (seat != null) GoToSeat(seat);
             else SetState(ClientState.MovingToGoal);
@@ -700,7 +743,7 @@ public class ClientStateMachine : MonoBehaviour
         }
     }
 
-    private void HandleMovementArrival()
+    private IEnumerator HandleMovementArrival()
     {
         // HandleMovementArrival лог убран
         
@@ -709,17 +752,17 @@ public class ClientStateMachine : MonoBehaviour
             (currentGoal != null && Managers.ClientSpawner.Instance != null && currentGoal == Managers.ClientSpawner.Instance.exitWaypoint))
         {
             parent.OnClientExit();
-            return;
+            yield break;
         }
         if (currentState == ClientState.GoingToCashier)
         {
             SetState(ClientState.AtCashier);
-            return;
+            yield break;
         }
         if (currentState == ClientState.ReturningToRegistrar)
         {
             SetState(ClientState.AtRegistration);
-            return;
+            yield break;
         }
         // Проверка: если клиент уже получил талон (myQueueNumber != -1), не запускать GetTicketRoutine повторно
         if (currentState == ClientState.MovingToTerminal || (currentGoal != null && currentGoal.name == "TicketStandPoint"))
@@ -740,13 +783,13 @@ public class ClientStateMachine : MonoBehaviour
                     SetState(ClientState.Confused);
                 }
             }
-            return;
+            yield break;
         }
         // currentGoal лог убран
         if (currentGoal == null) {
             // currentGoal == NULL - лог убран
             SetState(ClientState.Confused);
-            return;
+            yield break;
         }
 
         // БРОНЕБОЙНЫЙ ПОИСК: Ищем ServicePoint по ссылке, даже если забыли галочку isServicePoint
@@ -765,7 +808,7 @@ public class ClientStateMachine : MonoBehaviour
                 SetState(ClientState.InsideLimitedZone);
 
                 TryGreetWorkerAtServicePoint(currentGoal);
-                return;
+                yield break;
             }
         }
 
@@ -773,7 +816,7 @@ public class ClientStateMachine : MonoBehaviour
         if (targetZone != null && targetZone.insideWaypoints.Contains(currentGoal))
         {
             SetState(ClientState.InsideLimitedZone);
-            return;
+            yield break;
         }
 
         // Проверка: это точка входа в LimitedCapacityZone (waitingWaypoint)?
@@ -784,7 +827,7 @@ public class ClientStateMachine : MonoBehaviour
         {
             targetZone = newTargetZone;
             SetState(ClientState.AtLimitedZoneEntrance);
-            return; // Немедленно прерываем - они уже перешли в состояние входа в зону!
+            yield break; // Немедленно прерываем - они уже перешли в состояние входа в зону!
         }
 
         // Проверка: это точка ожидания в зоне очереди?
@@ -802,7 +845,7 @@ public class ClientStateMachine : MonoBehaviour
                 {
                     SetState(ClientState.Confused);
                 }
-                return;
+                yield break;
             }
 
             // Для обычных клиентов:
@@ -815,36 +858,67 @@ public class ClientStateMachine : MonoBehaviour
             {
                 SetState(ClientState.AtWaitingArea);
             }
-            return;
+            yield break;
         }
 
         // Проверка: это стол с формой?
         if (ClientSpawner.Instance.formTable != null && currentGoal == ClientSpawner.Instance.formTable.tableWaypoint)
         {
-            StartCoroutine(GetFormFromTableRoutine());
-            return;
+            yield return GetFormFromTableRoutine();
+            yield break;
         }
 
         SetState(ClientState.Confused);
     }
 
-    private void CleanupOldState(ClientState oldState, ClientState newState)
+    private void CleanupOldState(ClientState newState)
     {
-        bool wasInsideZone = IsInsideZoneState(oldState);
-        bool willBeOutsideZone = newState != ClientState.InsideLimitedZone;
+        // Admission reserves the destination BEFORE walking there. Releasing on every
+        // MovingToGoal transition lets a second visitor claim it and breaks toilet visits.
+        bool walkingToReservedPlace = newState == ClientState.MovingToGoal &&
+                                      occupiedWaypoint != null && currentGoal == occupiedWaypoint;
+        if (!IsInsideZoneState(newState) && newState != ClientState.WaitingForDocument && !walkingToReservedPlace)
+            ReleaseZoneReservation();
 
-        if (wasInsideZone && willBeOutsideZone && targetZone != null)
-        {
-            targetZone.LeaveQueue(parent?.gameObject);
-            targetZone.ReleaseWaypoint(occupiedWaypoint);
-            occupiedWaypoint = null;
-        }
+        bool walkingToAssignedDesk = newState == ClientState.MovingToGoal && assignedServicePoint != null &&
+                                     currentGoal == assignedServicePoint.clientStandPoint;
+        if (!IsInsideZoneState(newState) && newState != ClientState.WaitingForDocument && !walkingToAssignedDesk)
+            ReleaseServiceAssignment();
 
         if (IsLeavingState(newState) && myQueueNumber != -1)
         {
             if (newState != ClientState.Leaving || parent?.reasonForLeaving != ClientPathfinding.LeaveReason.Processed)
                 ClientQueueManager.Instance?.ServiceFinishedForNumber(myQueueNumber);
         }
+    }
+
+    public void ReleaseZoneReservation()
+    {
+        if (targetZone != null)
+        {
+            targetZone.LeaveQueue(gameObject);
+            targetZone.ReleaseWaypoint(occupiedWaypoint, gameObject);
+#if DEBUG_ENABLED
+            Debug.Log($"[ClientZoneTrace] {name}: released zone={targetZone.name}, spot={occupiedWaypoint?.name}, state={currentState}");
+#endif
+        }
+        occupiedWaypoint = null;
+        targetZone = null;
+    }
+
+    private void OnDisable()
+    {
+        StopAllActionCoroutines();
+        ReleaseZoneReservation();
+        ReleaseServiceAssignment();
+    }
+
+    private void ReleaseServiceAssignment()
+    {
+        if (assignedServicePoint != null && assignedServicePoint.CurrentClient == parent)
+            assignedServicePoint.ClearClient();
+        assignedServicePoint = null;
+        myServiceProvider = null;
     }
 
     // --- Action Routines ---
@@ -981,27 +1055,33 @@ public class ClientStateMachine : MonoBehaviour
         if (thoughtController != null) thoughtController.StopThinking();
 
         float rageTimer = Time.time + rageDuration;
-        while (Time.time < rageTimer)
+        var waypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
+        var mover = GetComponent<AgentMover>();
+        while (Time.time < rageTimer && currentState == ClientState.Enraged)
         {
-            if (Random.value < 0.05f && thoughtController != null)
+            string[] shouts = { "БЕЗОБРАЗИЕ!", "Я БУДУ ЖАЛОВАТЬСЯ!", "ВЫ ВСЕ УВОЛЕНЫ!" };
+            thoughtController?.ShowPriorityMessage(shouts[Random.Range(0, shouts.Length)], 2f, Color.red);
+            var affected = new System.Collections.Generic.HashSet<GameObject>();
+            foreach (var hit in Physics2D.OverlapCircleAll(transform.position, 3f))
             {
-                string[] rageShouts = { "БЕЗОБРАЗИЕ!", "Я БУДУ ЖАЛОВАТЬСЯ!", "ВЫ ВСЕ УВОЛЕНЫ!", "РРРАААА!" };
-                thoughtController.ShowPriorityMessage(rageShouts[Random.Range(0, rageShouts.Length)], 2f, Color.red);
+                var employee = hit.GetComponentInParent<StaffController>();
+                if (employee != null && affected.Add(employee.gameObject)) employee.AddStress(2f);
+                var visitor = hit.GetComponentInParent<ClientPathfinding>();
+                if (visitor != null && visitor != parent && affected.Add(visitor.gameObject)
+                    && visitor.stateMachine != null && visitor.stateMachine.GetCurrentState() != ClientState.Leaving
+                    && visitor.stateMachine.GetCurrentState() != ClientState.LeavingUpset)
+                    visitor.ApplyStressJump(.03f);
             }
-
-            if (Random.value < 0.02f && parent.trashPrefabs != null && parent.trashPrefabs.Count > 0)
+            if (waypoints.Length > 0 && mover != null)
             {
-                Instantiate(parent.trashPrefabs[Random.Range(0, parent.trashPrefabs.Count)], transform.position, Quaternion.identity);
+                var target = waypoints[Random.Range(0, waypoints.Length)];
+                if (target != null) mover.SetTarget(target.transform.position);
             }
-
-            Waypoint[] allWaypoints = FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
-            if (allWaypoints.Length > 0)
-            {
-                Waypoint randomTarget = allWaypoints[Random.Range(0, allWaypoints.Length)];
-                yield return StartCoroutine(actionExecutor.MoveToGoalRoutine(randomTarget));
-            }
-            yield return null;
+            // Fixed cadence: shouting/stress must not depend on frame rate or a blocked path.
+            yield return new WaitForSeconds(2f);
         }
+        mover?.Stop();
+        if (currentState != ClientState.Enraged) yield break;
 
         parent.reasonForLeaving = ClientPathfinding.LeaveReason.Angry;
         SetGoal(ClientSpawner.Instance?.exitWaypoint);
@@ -1023,7 +1103,7 @@ public class ClientStateMachine : MonoBehaviour
             if (randomPoint != null)
             {
                 SetGoal(randomPoint);
-                yield return StartCoroutine(actionExecutor.MoveToGoalRoutine(randomPoint));
+                yield return actionExecutor.MoveToGoalRoutine(randomPoint);
             }
             yield return new WaitForSeconds(Random.Range(2f, 4f));
         }
@@ -1053,7 +1133,7 @@ public class ClientStateMachine : MonoBehaviour
             if (randomPoint != null)
             {
                 SetGoal(randomPoint);
-                yield return StartCoroutine(actionExecutor.MoveToGoalRoutine(randomPoint));
+                yield return actionExecutor.MoveToGoalRoutine(randomPoint);
             }
             yield return new WaitForSeconds(Random.Range(2f, 4f));
         }
@@ -1136,12 +1216,31 @@ public class ClientStateMachine : MonoBehaviour
         
         ClientQueueManager.Instance.OnClientLeavesWaitingZone(parent);
         myQueueNumber = queueNumber;
-        myServiceProvider = provider;
         
         // --- Логирование вызова клиента к стойке ---
         actionDiary?.LogEvent($"Вызван к окну №{queueNumber}");
         
         SetGoal(destination);
+        myServiceProvider = provider;
+        assignedServicePoint = provider?.GetWorkstation();
+        SetState(ClientState.MovingToGoal);
+    }
+
+    public void CancelServiceCall(IServiceProvider provider)
+    {
+        if (myServiceProvider != provider || provider == null) return;
+        myServiceProvider = null;
+        if (currentState == ClientState.Leaving || currentState == ClientState.LeavingUpset || currentState == ClientState.Enraged) return;
+        StopAllActionCoroutines();
+        var queue = ClientQueueManager.Instance;
+        if (queue == null) { SetState(ClientState.Confused); return; }
+        queue.currentlyCalledNumbers.Remove(myQueueNumber);
+        queue.clientsAwaitingResponse.Remove(myQueueNumber);
+        queue.JoinQueue(parent);
+        if (queue.queue.TryGetValue(parent, out int ticket)) myQueueNumber = ticket;
+        var goal = queue.ChooseNewGoal(parent);
+        if (goal == null) { SetState(ClientState.Confused); return; }
+        SetGoal(goal);
         SetState(ClientState.MovingToGoal);
     }
 
@@ -1149,10 +1248,16 @@ public class ClientStateMachine : MonoBehaviour
     {
         if (currentState == ClientState.AtWaitingArea || currentState == ClientState.SittingInWaitingArea)
         {
+            var toiletEntrance = ClientSpawner.GetToiletZone()?.waitingWaypoint;
+            if (toiletEntrance == null)
+            {
+                Debug.LogWarning($"[ClientFlowTrace] {name}: toilet visit skipped, entrance is not configured.");
+                return;
+            }
             StopAllActionCoroutines();
             ClientQueueManager.Instance.OnClientLeavesWaitingZone(parent);
             previousGoal = currentGoal;
-            SetGoal(ClientSpawner.GetToiletZone().waitingWaypoint);
+            SetGoal(toiletEntrance);
             SetState(ClientState.MovingToGoal);
         }
     }
@@ -1174,12 +1279,7 @@ public class ClientStateMachine : MonoBehaviour
             messGenerator.TrySpawnPuddle();
         }
 
-        if (targetZone != null && occupiedWaypoint != null)
-        {
-            targetZone.ReleaseWaypoint(occupiedWaypoint);
-        }
-        targetZone = null;
-        occupiedWaypoint = null;
+        ReleaseZoneReservation();
 
         bool shouldReturnToPrevious = previousGoal != null && parent.mainGoal != ClientGoal.VisitToilet;
         
@@ -1202,7 +1302,6 @@ public class ClientStateMachine : MonoBehaviour
     {
         zoneToReturnTo = targetZone;
         parent.hasBeenSentForRevision = true;
-        if (targetZone != null) targetZone.ReleaseWaypoint(occupiedWaypoint);
         SetGoal(ClientSpawner.Instance.formTable.tableWaypoint);
         SetState(ClientState.MovingToGoal);
     }
@@ -1281,23 +1380,22 @@ public class ClientStateMachine : MonoBehaviour
     // --- Система приветствий ---
     private void TryGreetWorkerAtServicePoint(Waypoint destPoint)
     {
-        if (parent == null) return;
+        if (parent == null || destPoint == null) return;
 
-        ServicePoint targetDesk = null;
-        if (myServiceProvider != null) targetDesk = myServiceProvider.GetWorkstation();
-
-        // Ищем стол напрямую через вейпоинт (самый надежный способ)
-        if (targetDesk == null)
-        {
-            targetDesk = destPoint.GetComponentInParent<ServicePoint>() ??
-                         FindObjectsByType<ServicePoint>(FindObjectsSortMode.None).FirstOrDefault(d => d.clientStandPoint == destPoint);
-        }
+        // Resolve the destination before the previous provider, otherwise cashier arrivals notify registration.
+        ServicePoint targetDesk = destPoint.GetComponentInParent<ServicePoint>() ??
+            FindObjectsByType<ServicePoint>(FindObjectsSortMode.None).FirstOrDefault(d => d.clientStandPoint == destPoint);
 
         if (targetDesk != null)
         {
+            assignedServicePoint = targetDesk;
             if (targetDesk.CurrentClient != parent) targetDesk.AssignClient(parent); // Наглый клиент садится сам
             
             targetDesk.SetClientReady(); // ГОВОРИМ СТОЛУ "Я ПРИШЕЛ!"
+            myServiceProvider = ClientSpawner.GetServiceProviderAtDesk(targetDesk.deskId);
+            if (myServiceProvider != null && myServiceProvider.IsAvailableToServe)
+                myServiceProvider.AssignClient(parent);
+            Debug.Log($"[ClientServiceTrace] {parent.name}: прибыл к столу={targetDesk.deskId}, сотрудник={(myServiceProvider as MonoBehaviour)?.name}");
 
             var worker = targetDesk.GetAssignedStaff();
             if (worker != null)

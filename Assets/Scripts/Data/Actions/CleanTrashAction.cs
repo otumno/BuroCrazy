@@ -13,7 +13,7 @@ public class CleanTrashAction : StaffAction
         }
 
         // Ищем в MessManager ближайший мусор.
-        return MessManager.Instance.GetSortedMessList(worker.transform.position)
+        return MessManager.Instance != null && MessManager.Instance.GetSortedMessList(worker.transform.position, availableOnly: true)
             .Any(m => m != null && m.type == MessPoint.MessType.Trash);
     }
 

@@ -35,7 +35,7 @@ public class InternPatrolExecutor : ActionExecutor
             var target = validPoints[Random.Range(0, validPoints.Count)];
             Debug.Log($"[InternPatrolExecutor] {staff?.characterName}: Иду к точке {target.name}");
             
-            yield return staff.StartCoroutine(staff.MoveToTarget(target.transform.position, "Patrolling"));
+            yield return staff.MoveToTarget(target.transform.position, "Patrolling");
             yield return new WaitForSeconds(Random.Range(3f, 7f));
 
             yield return new WaitForSeconds(0.5f);

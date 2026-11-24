@@ -49,9 +49,7 @@ namespace Managers
         [Tooltip("Что доступно для найма без должностей. Остальное открывают JobTitleData.hiringAccessRules и unlockedRoles.")]
         public List<HiringAccessRule> startingHiringAccess = new List<HiringAccessRule>
         {
-            new HiringAccessRule { role = StaffController.Role.Intern, maxRankLevel = 0 },
-            new HiringAccessRule { role = StaffController.Role.Janitor, maxRankLevel = 0 },
-            new HiringAccessRule { role = StaffController.Role.ServiceWorker, maxRankLevel = 0 }
+            new HiringAccessRule { role = StaffController.Role.Intern, maxRankLevel = 0 }
         };
 
         // --- Списки Имен ---
@@ -63,6 +61,9 @@ namespace Managers
 
         public List<Candidate> AvailableCandidates { get; private set; } = new List<Candidate>();
         private List<StaffController> staffBeingModified = new List<StaffController>();
+        private readonly Dictionary<StaffController, int> pendingArrivals = new Dictionary<StaffController, int>();
+        private readonly Dictionary<StaffController, float> arrivalReadyTimes = new Dictionary<StaffController, float>();
+        private readonly Dictionary<StaffController, int> arrivalRollDays = new Dictionary<StaffController, int>();
 
         void Awake()
         {
@@ -116,6 +117,13 @@ namespace Managers
         private void OnTimePeriodChanged(PeriodSettings settings)
         {
             CheckAllStaffShiftsImmediately();
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            foreach (var staff in AllStaff)
+            {
+                if (staff == null) continue;
+                Debug.Log($"[StaffShiftTrace] {staff.characterName}: день={TimeManager.Instance.GetCurrentDay()}, период={settings.PeriodType}, тип={staff.employmentType}, найм={staff.hireDay}/{staff.hirePeriod}, смена={staff.WorkShiftMask}, допущен={staff.HasEmploymentStarted()}, активен={staff.gameObject.activeSelf}, ушёл={staff.hasLeftToday}, опоздание={staff.currentLateness}, ожидает={pendingArrivals.ContainsKey(staff)}, выход={staff.ShiftSequence}");
+            }
+#endif
         }
 
         // Дневные флаги прихода раньше не сбрасывались. CheckAllStaffShiftsImmediately не пересчитывает приход,
@@ -123,6 +131,8 @@ namespace Managers
         // OnDayChanged приходит раньше OnPeriodChanged, так что к проверке смен флаги уже чистые.
         private void TimeManager_DayChanged(int day)
         {
+            pendingArrivals.Clear();
+            arrivalReadyTimes.Clear();
             foreach (var staff in AllStaff)
             {
                 // Тем, кто ещё на смене (ночные смены), день не обрываем.
@@ -177,7 +187,8 @@ namespace Managers
                 case StaffController.Role.Cashier:
                 case StaffController.Role.Archivist: 
                 case StaffController.Role.Accountant: return typeof(ClerkController);
-                case StaffController.Role.Janitor: return typeof(ServiceWorkerController);
+                case StaffController.Role.Janitor:
+                case StaffController.Role.ServiceWorker: return typeof(ServiceWorkerController);
                 case StaffController.Role.Intern: return typeof(InternController);
                 case StaffController.Role.OfficeManager: return typeof(OfficeManagerController);
                 default: return null;
@@ -207,7 +218,7 @@ namespace Managers
             {
                 if (candidate.Availability == EmploymentAvailability.PermanentOnly) return false;
 
-                // Смена оплачена целиком, поэтому нанимаем, только если она вся помещается до ночи.
+                // На текущий день: хотя бы один рабочий период должен оставаться до ночи.
                 return TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out _, out _);
             }
 
@@ -227,7 +238,8 @@ namespace Managers
                 return candidate.HiringCost;
 
             int hiringPart = Mathf.Max(0, Mathf.RoundToInt(candidate.HiringCost * temporaryHiringCostMultiplier));
-            int shiftPart = GetShiftPeriodsCount(candidate.Rank) * GetSalaryPerPeriod(candidate.Rank);
+            TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out var paidMask, out _);
+            int shiftPart = StaffScheduleMath.CountPeriods(paidMask) * GetSalaryPerPeriod(candidate.Rank);
             return hiringPart + shiftPart;
         }
 
@@ -244,8 +256,7 @@ namespace Managers
 
         /// <summary>
         /// Смена временного: periodsCount периодов подряд, начиная со следующего после текущего, в порядке календаря.
-        /// Ночные пропускаются (ночью временные не работают), через ночь смена не переходит:
-        /// если до ночи периодов не осталось, она начинается с утра следующего дня.
+        /// Работает только до ближайшей ночи в текущем дне. Ночью найм на завтра запрещён.
         /// </summary>
         /// <param name="isNextDay">true, если смена выпала уже на следующий день.</param>
         /// <returns>true, если смена помещается целиком (все periodsCount периодов).</returns>
@@ -262,26 +273,8 @@ namespace Managers
             int currentIndex = periods.FindIndex(p => p.PeriodType == TimeManager.Instance.GetCurrentPeriodType());
             if (currentIndex < 0) return false;
 
-            int collected = 0;
-            for (int offset = 1; offset <= periods.Count && collected < periodsCount; offset++)
-            {
-                int index = currentIndex + offset;
-                var periodType = periods[index % periods.Count].PeriodType;
-
-                if (periodType.IsNight())
-                {
-                    if (collected > 0) break;
-                    continue;
-                }
-
-                // День сменяется при переходе через конец списка периодов (см. TimeManager.GoToNextPeriod).
-                if (collected == 0) isNextDay = index >= periods.Count;
-
-                mask |= periodType;
-                collected++;
-            }
-
-            return collected >= periodsCount;
+            mask = StaffScheduleMath.BuildTemporaryShift(periods, currentIndex, periodsCount);
+            return mask != CalendarDayPeriodType.None;
         }
 
         /// <summary>
@@ -312,6 +305,18 @@ namespace Managers
             }
 
             return mask == Data.Calendar.CalendarDayPeriodType.None ? fallbackMask : mask;
+        }
+
+        private static CalendarDayPeriodType BuildNextPeriodShiftMask(int periodsCount)
+        {
+            var clock = TimeManager.Instance;
+            var periods = clock != null ? clock.mainCalendarDay?.periodSettings : null;
+            if (periods == null || periods.Count == 0) return BuildMorningShiftMask(periodsCount);
+            int current = periods.FindIndex(p => p.PeriodType == clock.GetCurrentPeriodType());
+            if (current < 0) return BuildMorningShiftMask(periodsCount);
+            // Постоянный сотрудник может работать ночью: смена циклически продолжается
+            // после границы дня, вместо ожидания следующего утра.
+            return StaffScheduleMath.BuildShift(periods, (current + 1) % periods.Count, periodsCount);
         }
 
         private Transform GetFreeStaffPoint()
@@ -353,26 +358,12 @@ namespace Managers
             var targetType = GetControllerTypeForRole(role);
             if (targetType != null && staffController.GetType() != targetType)
             {
-                // Удаляем InternNotification если конвертируем из Intern во что-то другое
-                if (staffController.GetType() == typeof(InternController) && targetType != typeof(InternController))
-                {
-                    var internNotification = newStaffGO.GetComponent<InternNotification>();
-                    if (internNotification != null) DestroyImmediate(internNotification);
-                }
+                RemoveRoleNotifications(newStaffGO);
 
-                // Удаляем старый контроллер если это не StaffController
-                var currentType = staffController.GetType();
-                if (currentType != typeof(StaffController))
-                {
-                    DestroyImmediate(staffController);
-                    staffController = (StaffController)newStaffGO.AddComponent(targetType);
-                }
-                else if (newStaffGO.GetComponent(targetType) == null)
-                {
-                    // StaffController (базовый) остаётся, добавляем нужный тип
-                    newStaffGO.AddComponent(targetType);
-                    staffController = newStaffGO.GetComponent<StaffController>();
-                }
+                // На выключенном новом объекте должен остаться ровно один контроллер.
+                // Иначе GetComponent возвращал базовый компонент вместо специализированного.
+                DestroyImmediate(staffController);
+                staffController = (StaffController)newStaffGO.AddComponent(targetType);
             }
 
             if (staffController == null)
@@ -380,6 +371,10 @@ namespace Managers
                 Destroy(newStaffGO);
                 return null;
             }
+
+            staffController.currentRole = role;
+            if (staffController is ClerkController clerk)
+                clerk.clerkRole = GetClerkRoleFromStaffRole(role);
 
             // Инициализируем базовые компоненты как для существующих сотрудников
             var agentMover = newStaffGO.GetComponent<AgentMover>();
@@ -390,7 +385,25 @@ namespace Managers
                 staffController.ForceInitializeBaseComponents(agentMover, visuals, logger);
             }
 
+            EnsureRoleNotification(staffController);
             return staffController;
+        }
+
+        private static void RemoveRoleNotifications(GameObject go)
+        {
+            // RequireComponent prevents replacing a controller until its old notification is removed.
+            foreach (var component in go.GetComponents<MonoBehaviour>())
+                if (component is InternNotification || component is ClerkNotification || component is GuardNotification || component is ServiceWorkerNotification)
+                    DestroyImmediate(component);
+        }
+
+        private static void EnsureRoleNotification(StaffController staff)
+        {
+            System.Type notification = staff is InternController ? typeof(InternNotification)
+                : staff is ClerkController ? typeof(ClerkNotification)
+                : staff is GuardMovement ? typeof(GuardNotification)
+                : staff is ServiceWorkerController ? typeof(ServiceWorkerNotification) : null;
+            if (notification != null && staff.GetComponent(notification) == null) staff.gameObject.AddComponent(notification);
         }
 
         /// <summary>
@@ -429,9 +442,13 @@ namespace Managers
             // После InitializeFromData: он сбрасывает dirtyHands бухгалтера в базовое значение роли.
             staff.skills.dirtyHands = data.dirtyHands;
 
-            // hireDay не восстанавливаем (остаётся -1): загрузка начинает день заново, и все — включая
-            // временного, нанятого на завтра, — выходят уже в этот день. Временный отработает его и уволится.
+            // Старые сейвы не содержат срока найма: сохраняем прежнее поведение для них.
+            // Новые записи не должны выводить сотрудника раньше оплаченного периода после загрузки.
             staff.employmentType = data.employmentType;
+            staff.hireDay = data.hasEmploymentTiming ? data.hireDay : -1;
+            staff.hirePeriod = data.hasEmploymentTiming ? data.hirePeriod : CalendarDayPeriodType.None;
+            staff.temporaryWorkDay = data.hasEmploymentTiming ? data.temporaryWorkDay
+                : (TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : -1);
             staff.WorkShiftMask = data.workShiftMask;
             staff.uiScheduleTrackIndex = data.scheduleTrackIndex;
             staff.unpaidPeriods = data.unpaidPeriods;
@@ -442,7 +459,26 @@ namespace Managers
             if (data.assignedWorkstationId == -999) UnassignedStaff.Add(staff);
             if (freePoint != null) occupiedPoints.Add(freePoint, staff);
 
+            RestoreAttendance(staff, data, TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : -1);
             return staff;
+        }
+
+        public void CaptureAttendance(StaffController staff, ref StaffSaveData data, int day)
+        {
+            bool working = staff.gameObject.activeInHierarchy && staff.IsOnDuty() && staff.HasStartedAnyShift;
+            data.hasAttendanceState = working || (arrivalRollDays.TryGetValue(staff, out int rolledDay) && rolledDay == day);
+            data.attendanceDay = day;
+            data.arrivalDelayRemaining = working ? 0 : arrivalReadyTimes.TryGetValue(staff, out float readyAt)
+                ? Mathf.Max(0, readyAt - Time.time) : staff.currentLateness;
+        }
+
+        public void RestoreAttendance(StaffController staff, StaffSaveData data, int day)
+        {
+            if (!data.hasAttendanceState || data.attendanceDay != day) return;
+            // Loading must not reroll illness or restart a completed lateness wait.
+            arrivalRollDays[staff] = day;
+            staff.currentLateness = data.arrivalDelayRemaining < 0 ? -1 : Mathf.Max(0, data.arrivalDelayRemaining);
+            Debug.Log($"[StaffShiftTrace] Восстановлен выход {staff.characterName}: день={day}, ожидание={staff.currentLateness:F1}");
         }
 
         // Действия ищем и в ActionDatabase, и в рангах: тактики рангов в общую базу не входят.
@@ -522,18 +558,17 @@ namespace Managers
                 staffController.hirePeriod = TimeManager.Instance.GetCurrentPeriodType();
             }
 
-            // График работы: постоянному по умолчанию - полная смена ранга с утра, временному - сразу полная оплаченная смена
-            // со следующего периода. Постоянному игрок может передвинуть смену в панели расписания (вне активного дня).
+            // Оба типа найма выходят со следующего периода без ручного планирования.
             if (employmentType == EmploymentType.Temporary)
             {
-                // Что смена помещается целиком, уже проверил CanHireAs в начале найма.
+                // CanHireAs проверил наличие хотя бы одного дневного периода.
                 TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out var shiftMask, out bool isNextDay);
                 staffController.WorkShiftMask = shiftMask;
                 staffController.temporaryWorkDay = isNextDay ? currentDay + 1 : currentDay;
             }
             else
             {
-                staffController.WorkShiftMask = BuildMorningShiftMask(GetShiftPeriodsCount(candidate.Rank));
+                staffController.WorkShiftMask = BuildNextPeriodShiftMask(GetShiftPeriodsCount(candidate.Rank));
             }
 
             newStaffGO.name = $"{candidate.NameData.lastName} {candidate.NameData.firstName}";
@@ -558,8 +593,8 @@ namespace Managers
             PlayerWallet.Instance.AddMoney(-hiringCost, $"Наём: {candidate.Name}");
 
             // Смену сразу НЕ запускаем: сотрудник остаётся выключенным дома, а CheckAllStaffShiftsImmediately
-            // разбудит его, когда наступит его смена: постоянного — со следующего дня, временного — со следующего
-            // периода (см. StaffController.HasEmploymentStarted).
+            // разбудит его со следующего периода (см. StaffController.HasEmploymentStarted).
+            Debug.Log($"[HiringManager] Найм: {staffController.characterName}, тип={employmentType}, день={currentDay}, период={staffController.hirePeriod}, смена={staffController.WorkShiftMask}, стоимость={hiringCost}");
 
             FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
 
@@ -599,6 +634,9 @@ namespace Managers
         /// </summary>
         public void DestroyAllStaff()
         {
+            pendingArrivals.Clear();
+            arrivalReadyTimes.Clear();
+            arrivalRollDays.Clear();
             foreach (var staff in AllStaff.ToList())
             {
                 if (staff != null) staff.FireAndGoHome();
@@ -659,6 +697,9 @@ namespace Managers
         public void RemoveStaff(StaffController staff)
         {
             if (staff == null) return;
+            pendingArrivals.Remove(staff);
+            arrivalReadyTimes.Remove(staff);
+            arrivalRollDays.Remove(staff);
             AllStaff.Remove(staff);
             UnassignedStaff.Remove(staff);
             staffBeingModified.RemoveAll(s => s == null || s == staff);
@@ -666,69 +707,61 @@ namespace Managers
 
         public void CheckAllStaffShiftsImmediately()
         {
-            if (TimeManager.Instance == null) return;
-            var periodType = TimeManager.Instance.GetCurrentPeriodType();
-
+            var clock = TimeManager.Instance;
+            if (clock == null) return;
+            var period = clock.GetCurrentPeriodType();
+            int day = clock.GetCurrentDay();
             foreach (var staff in AllStaff.ToList())
             {
-                if (staff == null) continue;
-                if (!staff.HasEmploymentStarted()) continue;
+                if (staff == null || !staff.HasEmploymentStarted()) continue;
+                if (staff.IsTemporary && (period.IsNight() || (staff.temporaryWorkDay >= 0 && day != staff.temporaryWorkDay))) continue;
+                if ((staff.WorkShiftMask & period) == 0 || staff.gameObject.activeSelf || pendingArrivals.ContainsKey(staff)) continue;
 
-                var isScheduledNow = (staff.WorkShiftMask & periodType) != 0;
-                var isOnDuty = staff.IsOnDuty();
-
-                // === ИСПРАВЛЕНИЕ "ЭФФЕКТА ЛИМБА" ===
-                // Если запланирован И (выключен ИЛИ уже уходил)
-                if (isScheduledNow && (!staff.gameObject.activeSelf || staff.hasLeftToday))
+                if (!arrivalRollDays.TryGetValue(staff, out int rolledDay) || rolledDay != day)
                 {
-                    // Сбрасываем флаг ухода
-                    staff.hasLeftToday = false;
-                    
-                    // Если ещё не приходил - рассчитываем время прихода
-                    if (!staff.hasArrivedToday)
-                    {
+                    arrivalRollDays[staff] = day;
+                    // Первый выход после покупки гарантирован: случайное опоздание/болезнь
+                    // не должны отменять обещанный игроку быстрый результат найма.
+                    if (!staff.HasStartedAnyShift && staff.hireDay >= 0)
+                        staff.currentLateness = 0;
+                    else
                         staff.CalculateArrivalTime();
-                    }
-                    
-                    float lateness = staff.currentLateness;
-
-                    if (lateness == -1f) // Заболел
-                    {
-                        Managers.Teletype.TeletypeManager.Instance?.LogImportant($"ВНИМАНИЕ: {staff.characterName} взял больничный и сегодня не выйдет!");
-                        staff.hasArrivedToday = true;
-                        staff.gameObject.SetActive(false);
-                    }
-                    else if (lateness > 0f) // Опаздывает
-                    {
-                        Managers.Teletype.TeletypeManager.Instance?.Log($"{staff.characterName} задерживается на {Mathf.RoundToInt(lateness)}");
-                        staff.hasArrivedToday = true;
-                        StartCoroutine(DelayedStartShift(staff, lateness));
-                    }
-                    else // Пришел вовремя
-                    {
-                        if (!staff.gameObject.activeSelf) staff.gameObject.SetActive(true);
-                        staff.StartShift();
-                    }
+                    if (staff.currentLateness < 0)
+                        TeletypeManager.Instance?.LogImportant($"ВНИМАНИЕ: {staff.characterName} взял больничный и сегодня не выйдет!");
                 }
-                else if (!isScheduledNow && isOnDuty)
+                if (staff.currentLateness < 0) continue;
+                if (staff.currentLateness > 0)
                 {
-                    // УБИРАЕМ принудительное завершение смены - теперь AI сам решит, когда уйти!
-                    // staff.EndShift();
+                    pendingArrivals[staff] = day;
+                    arrivalReadyTimes[staff] = Time.time + staff.currentLateness;
+                    StartCoroutine(DelayedStartShift(staff, staff.currentLateness, day));
+                }
+                else
+                {
+                    Debug.Log($"[HiringManager] Выход на смену: {staff.characterName}, день={day}, период={period}, смена={staff.WorkShiftMask}");
+                    staff.StartShift();
                 }
             }
         }
 
-        private IEnumerator DelayedStartShift(StaffController staff, float delay)
+        private IEnumerator DelayedStartShift(StaffController staff, float delay, int scheduledDay)
         {
             yield return new WaitForSeconds(delay);
-            if (staff != null)
-            {
-                if (!staff.gameObject.activeSelf) staff.gameObject.SetActive(true);
-                staff.StartShift();
-                staff.thoughtBubble?.ShowPriorityMessage("Ох, пробки...", 3f, Color.yellow);
-            }
+            // An old day's delayed arrival must not erase a new day's pending arrival.
+            if (!pendingArrivals.TryGetValue(staff, out int pendingDay) || pendingDay != scheduledDay) yield break;
+            pendingArrivals.Remove(staff);
+            arrivalReadyTimes.Remove(staff);
+            var clock = TimeManager.Instance;
+            if (staff == null || !AllStaff.Contains(staff) || clock == null || clock.GetCurrentDay() != scheduledDay) yield break;
+            staff.currentLateness = 0;
+            // F10 and a changed schedule can end the shift while the lateness timer is running.
+            if ((staff.WorkShiftMask & clock.GetCurrentPeriodType()) == 0 || staff.gameObject.activeSelf) yield break;
+            if (staff.IsTemporary && clock.IsNight()) yield break;
+            staff.currentLateness = 0;
+            staff.StartShift();
+            staff.thoughtBubble?.ShowPriorityMessage("Ох, пробки...", 3f, Color.yellow);
         }
-        
+
         // ... (GenerateNewCandidates и прочее оставляем)
         public void GenerateNewCandidates()
         {
@@ -889,52 +922,60 @@ namespace Managers
         public IEnumerator RebuildControllerComponent(StaffController staff, StaffController.Role newRole, List<StaffAction> newActions)
         {
             if (staff == null) yield break;
-
-            System.Type targetType = GetControllerTypeForRole(newRole);
-            if (targetType == null) { yield break; }
-
-            // Если уже нужный тип — просто обновим действия
-            var existing = staff.GetComponent(targetType);
-            if (existing != null)
+            var targetType = GetControllerTypeForRole(newRole);
+            if (targetType == null) yield break;
+            bool onDuty = staff.gameObject.activeInHierarchy && staff.IsOnDuty();
+            long sequence = staff.ShiftSequence;
+            bool startedBefore = staff.HasStartedAnyShift;
+            int attendanceDay = TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : -1;
+            var attendance = new StaffSaveData();
+            CaptureAttendance(staff, ref attendance, attendanceDay);
+            staff.PrepareForRoleChange();
+            AssignmentManager.Instance?.UnassignStaff(staff);
+            staff.assignedWorkstation = null;
+            var replacement = staff;
+            if (staff.GetType() != targetType)
             {
-                if (newActions != null) staff.activeActions = new List<StaffAction>(newActions);
-                staff.currentRole = newRole;
-                yield break;
+                // Preserve serialized identity, rank, needs, skills and employment timing, not just the new role.
+                string state = JsonUtility.ToJson(staff);
+                var go = staff.gameObject;
+                bool active = go.activeSelf;
+                go.SetActive(false);
+                int staffIndex = AllStaff.IndexOf(staff);
+                bool unassigned = UnassignedStaff.Remove(staff);
+                staffBeingModified.Remove(staff);
+                pendingArrivals.Remove(staff);
+                arrivalReadyTimes.Remove(staff);
+                arrivalRollDays.Remove(staff);
+                var points = occupiedPoints.Where(p => p.Value == staff).Select(p => p.Key).ToList();
+                // GetComponent must never return the obsolete controller when the new role starts.
+                RemoveRoleNotifications(go);
+                DestroyImmediate(staff);
+                replacement = (StaffController)go.AddComponent(targetType);
+                JsonUtility.FromJsonOverwrite(state, replacement);
+                replacement.ForceInitializeBaseComponents(go.GetComponent<AgentMover>(), go.GetComponent<Characters.CharacterVisuals>(), go.GetComponent<CharacterStateLogger>());
+                if (staffIndex >= 0) AllStaff[staffIndex] = replacement;
+                if (unassigned) UnassignedStaff.Add(replacement);
+                foreach (var point in points) occupiedPoints[point] = replacement;
+                if (targetType != typeof(InternController))
+                {
+                    var notification = go.GetComponent<InternNotification>();
+                    if (notification != null) Destroy(notification);
+                }
+                go.SetActive(active);
             }
-
-            // Старый контроллер — снимаем, если он InternController
-            var oldIntern = staff.GetComponent<InternController>();
-            if (oldIntern != null) Destroy(oldIntern);
-
-            var oldNotification = staff.GetComponent<InternNotification>();
-            if (oldNotification != null) Destroy(oldNotification);
-
-            // Удаляем прочие специализированные контроллеры ClerkController и т.п., чтобы не было конфликтов
-            foreach (var c in staff.GetComponents<ClerkController>())
-            {
-                if (c.GetType() != targetType) Destroy(c);
-            }
-
-            // Добавляем новый контроллер
-            staff.gameObject.AddComponent(targetType);
-
-            // Применяем данные от роли
-            var roleData = allRoleData?.FirstOrDefault(d => d != null && d.roleType == newRole);
-            if (roleData != null)
-            {
-                staff.InitializeFromData(roleData);
-            }
-
-            staff.currentRole = newRole;
-            if (newActions != null) staff.activeActions = new List<StaffAction>(newActions);
-
-            // Инициализируем dirtyHands для Accountant
-            if (newRole == StaffController.Role.Accountant && roleData != null && staff.skills != null)
-            {
-                staff.skills.dirtyHands = roleData.accountant_dirtyHandsBase;
-            }
-
-            yield return null;
+            replacement.HasStartedAnyShift = startedBefore;
+            replacement.currentRole = newRole;
+            EnsureRoleNotification(replacement);
+            if (replacement is ClerkController clerk) clerk.clerkRole = GetClerkRoleFromStaffRole(newRole);
+            if (newActions != null) replacement.activeActions = new List<StaffAction>(newActions);
+            replacement.InitializeFromData(GetRoleData(newRole));
+            RestoreAttendance(replacement, attendance, attendanceDay);
+            if (onDuty) replacement.ResumeAfterRoleChange(sequence);
+            else CheckAllStaffShiftsImmediately();
+            Debug.Log($"[StaffRoleTrace] {replacement.characterName}: роль={newRole}, контроллер={replacement.GetType().Name}, на смене={onDuty}");
+            FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
+            yield break;
         }
 
         public void ResetState()

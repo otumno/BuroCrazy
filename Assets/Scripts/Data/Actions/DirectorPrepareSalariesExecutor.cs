@@ -20,7 +20,7 @@ public class DirectorPrepareSalariesExecutor : ActionExecutor
         }
 
         // Идем к сейфу
-        yield return staff.StartCoroutine(staff.MoveToTarget(envelopeStack.transform.position, "Working"));
+        yield return staff.MoveToTarget(envelopeStack.transform.position, "Working");
 
         int costPerEnvelope = 100; // Условная цена
         int envelopesToMake = 5;

@@ -37,6 +37,16 @@ public class DocumentHolder : MonoBehaviour
 
     public DocumentType GetCurrentDocumentType() => currentDocumentType;
 
+    public GameObject DetachDocument()
+    {
+        var document = currentDocumentObject;
+        currentDocumentObject = null;
+        currentDocumentType = DocumentType.None;
+        currentDocumentData = null;
+        if (document != null) document.transform.SetParent(null, true);
+        return document;
+    }
+
     public DocumentData GetCurrentDocumentData()
     {
         return currentDocumentData;

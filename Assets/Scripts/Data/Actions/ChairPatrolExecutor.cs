@@ -35,7 +35,7 @@ public class ChairPatrolExecutor : ActionExecutor
         FinishAction(true);
     }
 
-    private void OnDestroy()
+    protected override void OnResourcesReleased()
     {
         if (registrar != null)
         {

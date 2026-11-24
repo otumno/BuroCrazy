@@ -258,7 +258,7 @@ public class AgentMover : MonoBehaviour
                 _distAcc = 0f;
                 var staff = GetComponent<StaffController>();
                 if (staff != null) {
-                    Debug.Log($"<color=magenta>[TRAIT FIRE]</color> Проверка трейтов в движении для {staff.name}...");
+                    // Debug.Log($"<color=magenta>[TRAIT FIRE]</color> Проверка трейтов в движении для {staff.name}...");
                     staff.ProcessTraitBehavior();
                 }
             }

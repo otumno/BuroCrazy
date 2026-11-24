@@ -24,33 +24,30 @@ public class TakeStackToArchiveExecutor : ActionExecutor
         clerk.SetState(ClerkController.ClerkState.GoingToArchive);
         clerk.thoughtBubble?.ShowPriorityMessage("Стол завален!\nНесу в архив...", 3f, new Color(1f, 0.5f, 0f));
 
-        int docCount = deskStack.TakeEntireStack();
+        var archive = ArchiveManager.Instance;
+        Transform archivePoint = archive != null ? archive.RequestDropOffPoint() : null;
+        if (archivePoint == null) { FinishAction(false); yield break; }
+        RegisterCleanup(() => { if (archive != null) archive.FreeOverflowPoint(archivePoint); });
+        var transfer = new DocumentStackTransfer(deskStack, deskStack.CurrentSize);
+        RegisterCleanup(transfer.Dispose);
         var stackHolder = staff.GetComponent<StackHolder>();
-        stackHolder?.ShowStack(docCount, deskStack.maxStackSize);
+        RegisterCleanup(() => { if (stackHolder != null) stackHolder.HideStack(); });
+        stackHolder?.ShowStack(transfer.Count, deskStack.maxStackSize);
 
-        Transform archivePoint = ArchiveManager.Instance.RequestDropOffPoint();
-        if (archivePoint == null)
-        {
-            FinishAction(false);
-            yield break;
-        }
-
-        yield return staff.StartCoroutine(clerk.MoveToTarget(archivePoint.position, ClerkController.ClerkState.AtArchive.ToString()));
+        yield return clerk.MoveToTarget(archivePoint.position, ClerkController.ClerkState.AtArchive.ToString());
         
         clerk.thoughtBubble?.ShowPriorityMessage("Складываю...", 2f, Color.gray);
         yield return new WaitForSeconds(2f);
 
-        for (int i = 0; i < docCount; i++)
-        {
-            ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
-        }
+        int delivered = transfer.DeliverTo(archive.GetDropOffStack(archivePoint));
+        transfer.Dispose();
         stackHolder?.HideStack();
         ArchiveManager.Instance.FreeOverflowPoint(archivePoint);
 
         clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-        yield return staff.StartCoroutine(clerk.MoveToTarget(clerk.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
+        yield return clerk.MoveToTarget(clerk.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
         
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
-        FinishAction(true);
+        FinishAction(delivered > 0);
     }
 }

@@ -36,7 +36,7 @@ public class StaffScheduleRowUI : MonoBehaviour
             
             if (cellUI != null)
             {
-                cellUI.Setup(staff, period.PeriodType, this, isEditable);
+                cellUI.Setup(staff, period.PeriodType, this, isEditable && !staff.IsTemporary);
                 _cells.Add(cellUI);
             }
         }
@@ -57,25 +57,15 @@ public class StaffScheduleRowUI : MonoBehaviour
 
     private IEnumerator AnimateShiftFill(ScheduleCellUI startCell)
     {
-        // 1. Стираем старое
-        _staff.WorkShiftMask = 0;
-        RefreshAllCells();
-
-        // 2. Ищем индекс
         int startIndex = _cells.IndexOf(startCell);
-        if (startIndex == -1) yield break;
-
-        int shiftDuration = _staff.currentRank != null ? _staff.currentRank.workPeriodsCount : 3;
-
-        // 3. Рисуем
-        for (int i = 0; i < shiftDuration; i++)
+        if (startIndex < 0 || _staff.IsTemporary) yield break;
+        int shiftDuration = HiringManager.GetShiftPeriodsCount(_staff.currentRank);
+        var periods = TimeManager.Instance.mainCalendarDay.periodSettings;
+        // Commit the complete mask before yielding: closing/rebuilding UI must not truncate a shift.
+        _staff.WorkShiftMask = StaffScheduleMath.BuildShift(periods, startIndex, shiftDuration);
+        RefreshAllCells();
+        for (int i = 0; i < Mathf.Min(shiftDuration, _periodTypes.Count); i++)
         {
-            int currentIndex = (startIndex + i) % _periodTypes.Count;
-            var targetPeriod = _periodTypes[currentIndex];
-
-            _staff.WorkShiftMask |= targetPeriod;
-            RefreshAllCells();
-
             if (AudioManager.Instance != null)
             {
                 AudioManager.Instance.PlaySound(hatchSoundId); 

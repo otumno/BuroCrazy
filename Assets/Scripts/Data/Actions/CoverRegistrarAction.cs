@@ -15,11 +15,11 @@ public class CoverRegistrarAction : StaffAction
         }
 
         // ПРАВИЛЬНОЕ УСЛОВИЕ: Ищем регистратора, который сейчас на перерыве
-        return Managers.HiringManager.Instance.AllStaff.Any(s =>
+        return Managers.HiringManager.Instance != null && Managers.HiringManager.Instance.AllStaff.Any(s =>
             s is ClerkController c &&
             c.clerkRole == ClerkController.ClerkRole.Registrar &&
             c.IsOnBreak() &&
-            c.assignedWorkstation != null);
+            c.assignedWorkstation != null && !c.assignedWorkstation.HasCoverReservation);
     }
 
     public override System.Type GetExecutorType() { return typeof(CoverDeskExecutor); }

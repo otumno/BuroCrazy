@@ -39,13 +39,14 @@ namespace Managers
 
         public Transform RequestDropOffPoint()
         {
-            if (mainDocumentStack.CurrentSize < maxCapacityBeforeOverflow)
+            if (mainDocumentStack != null && !mainDocumentStack.IsFull && mainDocumentStack.CurrentSize < maxCapacityBeforeOverflow)
             {
                 return mainDocumentStack.transform;
             }
             else
             {
-                Transform freePoint = overflowPoints.FirstOrDefault(p => !occupiedOverflowPoints.Contains(p));
+                Transform freePoint = overflowPoints?.FirstOrDefault(p => p != null && !occupiedOverflowPoints.Contains(p)
+                    && (p.GetComponent<DocumentStack>() == null || !p.GetComponent<DocumentStack>().IsFull));
                 if (freePoint != null)
                 {
                     occupiedOverflowPoints.Add(freePoint);
@@ -59,7 +60,25 @@ namespace Managers
 
         public DocumentStack GetStackToProcess()
         {
-            return mainDocumentStack;
+            if (mainDocumentStack != null && mainDocumentStack.OrdinaryDocumentCount > 0) return mainDocumentStack;
+            return overflowPoints?.Where(p => p != null).Select(p => p.GetComponent<DocumentStack>())
+                .FirstOrDefault(s => s != null && s.OrdinaryDocumentCount > 0);
+        }
+
+        public bool OwnsStack(DocumentStack stack) => stack == mainDocumentStack ||
+            (stack != null && overflowPoints != null && overflowPoints.Contains(stack.transform));
+
+        public DocumentStack GetDropOffStack(Transform point)
+        {
+            if (point == null) return null;
+            var stack = point.GetComponent<DocumentStack>();
+            if (stack == null)
+            {
+                stack = point.gameObject.AddComponent<DocumentStack>();
+                stack.stackRoot = point;
+                stack.documentPrefab = mainDocumentStack != null ? mainDocumentStack.documentPrefab : null;
+            }
+            return stack;
         }
     
         public ArchiveCabinet GetRandomCabinet()
@@ -81,17 +100,13 @@ namespace Managers
         public int GetCurrentDocumentCount()
         {
             if (mainDocumentStack == null) return 0;
-            return mainDocumentStack.CurrentSize;
+            return mainDocumentStack.GetDocumentsForSave().Count;
         }
 
         public void SetDocumentCount(int count)
         {
             if (mainDocumentStack == null) return;
-            mainDocumentStack.TakeEntireStack(); // Очищаем стопку
-            for (int i = 0; i < count; i++)
-            {
-                mainDocumentStack.AddDocumentToStack();
-            }
+            mainDocumentStack.SetCount(count);
         }
 
         public void ResetState()
@@ -101,6 +116,9 @@ namespace Managers
                 mainDocumentStack.TakeEntireStack();
             }
             occupiedOverflowPoints.Clear();
+            if (overflowPoints != null)
+                foreach (var point in overflowPoints)
+                    if (point != null) point.GetComponent<DocumentStack>()?.TakeEntireStack();
         }
     }
 }

@@ -69,9 +69,15 @@ public class LimitedCapacityZone : MonoBehaviour
     public List<ClientPathfinding> GetOccupyingClients()
     {
         List<ClientPathfinding> clients = new List<ClientPathfinding>();
-        foreach (GameObject owner in occupiedWaypointOwners.Values)
+        foreach (var reservation in occupiedWaypointOwners)
         {
-            if (owner != null && owner.GetComponent<ClientPathfinding>() is ClientPathfinding client)
+            GameObject owner = reservation.Value;
+            // Capacity includes visitors still approaching; service actions must only see arrivals.
+            if (owner != null && owner.activeInHierarchy && reservation.Key != null &&
+                Vector2.Distance(owner.transform.position, reservation.Key.transform.position) <= 1f &&
+                owner.GetComponent<ClientPathfinding>() is ClientPathfinding client &&
+                client.stateMachine != null && client.stateMachine.GetTargetZone() == this &&
+                client.stateMachine.GetCurrentState() != ClientState.MovingToGoal)
             {
                 clients.Add(client);
             }
@@ -117,6 +123,14 @@ public class LimitedCapacityZone : MonoBehaviour
         {
             occupiedWaypointOwners.Remove(waypointToRelease);
         }
+    }
+
+    public void ReleaseWaypoint(Waypoint waypointToRelease, GameObject owner)
+    {
+        // A delayed cleanup must not evict a new visitor who already owns the same spot.
+        if (waypointToRelease != null && occupiedWaypointOwners.TryGetValue(waypointToRelease, out var currentOwner)
+            && currentOwner == owner)
+            ReleaseWaypoint(waypointToRelease);
     }
 
     public Waypoint GetRandomInsideWaypoint() 

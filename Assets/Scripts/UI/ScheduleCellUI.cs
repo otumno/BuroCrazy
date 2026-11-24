@@ -26,6 +26,7 @@ public class ScheduleCellUI : MonoBehaviour
     private StaffController _staff;
     private CalendarDayPeriodType _periodType;
     private StaffScheduleRowUI _parentRow;
+    private UI.SchedulePendingHatch pendingHatch;
     
     private static List<CalendarDayPeriodType> _cachedAllPeriods;
 
@@ -34,6 +35,18 @@ public class ScheduleCellUI : MonoBehaviour
         _staff = staff;
         _periodType = period;
         _parentRow = parentRow;
+        if (pendingHatch == null && fillImage != null)
+        {
+            var hatchObject = new GameObject("PendingShift", typeof(RectTransform), typeof(UI.SchedulePendingHatch));
+            hatchObject.layer = gameObject.layer;
+            hatchObject.transform.SetParent(fillImage.transform, false);
+            var rect = (RectTransform)hatchObject.transform;
+            rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
+            pendingHatch = hatchObject.GetComponent<UI.SchedulePendingHatch>();
+            pendingHatch.color = new Color(1, 1, 1, .4f);
+            pendingHatch.raycastTarget = false;
+        }
 
         if (button != null)
         {
@@ -53,6 +66,8 @@ public class ScheduleCellUI : MonoBehaviour
 
     private void Update()
     {
+        if (pendingHatch != null && _staff != null)
+            pendingHatch.enabled = (_staff.WorkShiftMask & _periodType) != 0;
         if (currentPeriodOverlay != null && TimeManager.Instance != null)
         {
             bool isNow = TimeManager.Instance.GetCurrentPeriodType() == _periodType;

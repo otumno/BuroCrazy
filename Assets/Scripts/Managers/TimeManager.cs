@@ -53,7 +53,25 @@ namespace Managers
 
         private void Start()
         {
-            InitializeTime();
+            if (currentPeriodSettings == null) InitializeTime();
+        }
+
+        public bool HasRestoredProgress { get; private set; }
+
+        public void RestoreProgress(CalendarDayPeriodType period, float elapsed, bool resumeSavedProgress = true)
+        {
+            if (mainCalendarDay == null || mainCalendarDay.periodSettings.Count == 0) return;
+            int index = mainCalendarDay.periodSettings.FindIndex(p => p.PeriodType == period);
+            if (index < 0) index = 0;
+            currentPeriodIndex = index;
+            HasRestoredProgress = resumeSavedProgress;
+            currentPeriodSettings = mainCalendarDay.periodSettings[index];
+            currentPeriodType = currentPeriodSettings.PeriodType;
+            periodTimer = Mathf.Clamp(elapsed, 0, currentPeriodSettings.durationInSeconds);
+            _dayEndHoldCount = 0;
+            _isWaitingForDayEnd = false;
+            dayStartTime = Time.time - GetCurrentTimeSinceDayStart();
+            // No period events: loading must not charge this period's payroll a second time.
         }
 
         private void Update()
@@ -164,6 +182,7 @@ namespace Managers
             bool isNewDay = (currentPeriodIndex == 0);
             if (isNewDay)
             {
+                HasRestoredProgress = false;
                 // Номер дня ведёт CalendarManager: он сохраняется в сейв. Свой счётчик TimeManager обнулялся
                 // при каждой загрузке сцены, и день в сейве навсегда оставался первым.
                 if (CalendarManager.Instance != null)
@@ -176,6 +195,7 @@ namespace Managers
                     dayCounter++;
                 }
                 dayStartTime = Time.time;
+                OrderManager.Instance?.BeginNextDay();
                 OnDayChanged?.Invoke(dayCounter);
             }
 
@@ -198,7 +218,18 @@ namespace Managers
         /// <summary>
         /// Возвращает количество секунд, прошедших с начала текущего дня
         /// </summary>
-        public float GetCurrentTimeSinceDayStart() => Time.time - dayStartTime;
+        public float GetCurrentTimeSinceDayStart()
+        {
+            // Calendar time also follows debug skips; Time.time - dayStartTime does not.
+            float elapsed = periodTimer;
+            if (mainCalendarDay == null) return elapsed;
+            foreach (var period in mainCalendarDay.periodSettings)
+            {
+                if (period.PeriodType == currentPeriodType) break;
+                elapsed += period.durationInSeconds;
+            }
+            return elapsed;
+        }
 
         /// <summary>
         /// Возвращает общую длительность дня в секундах

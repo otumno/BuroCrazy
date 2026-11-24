@@ -27,7 +27,15 @@ public class OperateBarrierExecutor : ActionExecutor
         staff.AgentMover.Stop();
 
         // Экшен вызывается только если состояние двери нужно изменить
-        barrier.ToggleBarrier();
+        if (Vector2.Distance(staff.transform.position, barrier.interactionPoint.position) > 2.5f)
+        { FinishAction(false); yield break; }
+        bool close = TimeManager.Instance != null && TimeManager.Instance.IsNight();
+        if (close && Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length > 0)
+        { FinishAction(false); yield break; }
+        // Recheck the desired state on arrival: another guard may already have operated the door.
+        if (close) barrier.ActivateBarrier();
+        else barrier.DeactivateBarrier();
+        Debug.Log($"[GuardTrace] {staff.characterName}: дверь {(close ? "закрыта" : "открыта")}");
         guard.unwrittenReportPoints++; // Отчет за работу!
         
         if (AudioManager.Instance != null)

@@ -35,6 +35,8 @@ public class InternController : StaffController, IServiceProvider
     [Header("Настройки стажера")]
     private InternState currentState = InternState.Inactive;
     private ServicePoint coveredServicePoint;
+    private Coroutine serviceCoroutine;
+    private ClientPathfinding servingClient;
 
     public EmotionSpriteCollection spriteCollection;
     public StateEmotionMap stateEmotionMap;
@@ -48,6 +50,7 @@ public class InternController : StaffController, IServiceProvider
     // --- ПЕРЕОПРЕДЕЛЕНИЕ СТАРТА СМЕНЫ ---
     public override void StartShift()
     {
+        MarkShiftStarted();
         if (WorkShiftMask == 0 || WorkShiftMask == CalendarDayPeriodType.None)
         {
             WorkShiftMask = CalendarDayPeriodType.Morning;
@@ -92,6 +95,8 @@ public class InternController : StaffController, IServiceProvider
             }
         }
 
+        hasArrivedToday = true;
+        currentState = InternState.Patrolling;
         // Используем базовый AI вместо hardcoded логики
         StartCoroutine(AIUpdateLoop());
     }
@@ -233,6 +238,19 @@ public class InternController : StaffController, IServiceProvider
 
     public void AssignCoveredWorkstation(ServicePoint point)
     {
+        if (point != coveredServicePoint)
+        {
+            if (serviceCoroutine != null) StopCoroutine(serviceCoroutine);
+            serviceCoroutine = null;
+            var interruptedClient = servingClient != null ? servingClient : coveredServicePoint?.CurrentClient;
+            if (interruptedClient != null && interruptedClient.stateMachine?.MyServiceProvider == this)
+            {
+                if (coveredServicePoint != null && coveredServicePoint.CurrentClient == interruptedClient)
+                    coveredServicePoint.ClearClient();
+                interruptedClient.stateMachine.CancelServiceCall(this);
+            }
+            servingClient = null;
+        }
         coveredServicePoint = point;
     }
 
@@ -281,7 +299,7 @@ public class InternController : StaffController, IServiceProvider
 
     public override bool IsOnBreak()
     {
-        return currentState == InternState.OnBreak ||
+        return base.IsOnBreak() || currentState == InternState.OnBreak ||
                currentState == InternState.GoingToBreak ||
                currentState == InternState.AtToilet ||
                currentState == InternState.GoingToToilet;
@@ -292,8 +310,10 @@ public class InternController : StaffController, IServiceProvider
         return currentState.ToString();
     }
 
-    public void InitializeFromData(RoleData data)
+    public override void InitializeFromData(RoleData data)
     {
+        base.InitializeFromData(data);
+        if (data == null) return;
         if (agentMover != null)
         {
             agentMover.moveSpeed = data.moveSpeed;
@@ -311,7 +331,9 @@ public class InternController : StaffController, IServiceProvider
 
     #region IServiceProvider Implementation
 
-    public bool IsAvailableToServe => GetCurrentState() == InternState.CoveringDesk;
+    public bool IsAvailableToServe => gameObject.activeInHierarchy && IsOnDuty() && !IsOnBreak() &&
+        coveredServicePoint != null && servingClient == null &&
+        (agentMover == null || !agentMover.IsMoving()) && GetCurrentState() == InternState.CoveringDesk;
 
     public Transform GetClientStandPoint()
     {
@@ -325,12 +347,26 @@ public class InternController : StaffController, IServiceProvider
 
     public void AssignClient(ClientPathfinding client)
     {
-        StartCoroutine(InternServiceRoutine(client));
+        if (!IsAvailableToServe || client == null || !client.CanContinueService) return;
+        servingClient = client;
+        var routine = StartCoroutine(ServeCoveredClient(client));
+        // A broken desk may finish synchronously, before StartCoroutine returns its handle.
+        if (servingClient != null) serviceCoroutine = routine;
+    }
+
+    private IEnumerator ServeCoveredClient(ClientPathfinding client)
+    {
+        yield return InternServiceRoutine(client);
+        if (coveredServicePoint != null && coveredServicePoint.CurrentClient == client) coveredServicePoint.ClearClient();
+        if (client != null && client.CanContinueService && client.stateMachine.MyServiceProvider == this)
+            client.stateMachine.CancelServiceCall(this);
+        servingClient = null;
+        serviceCoroutine = null;
     }
 
     private IEnumerator InternServiceRoutine(ClientPathfinding client)
     {
-        if (client == null || coveredServicePoint == null) yield break;
+        if (client == null || !client.CanContinueService || coveredServicePoint == null) yield break;
 
         int deskId = coveredServicePoint.deskId;
 
@@ -340,12 +376,14 @@ public class InternController : StaffController, IServiceProvider
             thoughtBubble?.ShowPriorityMessage("Стол сломан!\nЯ не могу...", 3f, Color.red);
             yield break;
         }
-        float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
+        float efficiency = Mathf.Max(.05f, durability != null ? durability.GetEfficiencyMultiplier() : 1.0f);
 
         if (deskId == 0)
         {
             thoughtBubble?.ShowPriorityMessage("Попробую помочь...", 2f, Color.yellow);
             yield return new WaitForSeconds(3f / efficiency);
+
+            if (client == null || !client.CanContinueService) yield break;
 
             Waypoint destination = DetermineCorrectGoalForClient(client);
 
@@ -371,11 +409,16 @@ public class InternController : StaffController, IServiceProvider
             thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
             yield return new WaitForSeconds(3f / efficiency);
 
+            if (client == null || !client.CanContinueService || PlayerWallet.Instance == null) yield break;
+            if (client.billToPay == 0 && client.mainGoal == ClientGoal.PayTax) client.billToPay = Random.Range(20, 121);
             if (client.billToPay > 0)
             {
+                int bill = client.billToPay;
+                int walletBefore = PlayerWallet.Instance.GetCurrentMoney();
                 PlayerWallet.Instance?.AddMoney(client.billToPay, "Оплата (Стажер)");
                 if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
                 client.billToPay = 0;
+                Debug.Log($"[ClientServiceTrace] Оплата стажёру: клиент={client.name}, счёт={bill}, кошелёк={walletBefore}->{PlayerWallet.Instance.GetCurrentMoney()}");
                 coveredServicePoint.documentStack?.AddDocumentToStack();
                 thoughtBubble?.ShowPriorityMessage("Оплачено!", 2f, Color.green);
             }
@@ -388,6 +431,8 @@ public class InternController : StaffController, IServiceProvider
         {
             thoughtBubble?.ShowPriorityMessage("Так... посмотрим...", 2f, Color.yellow);
             yield return new WaitForSeconds(1.5f / efficiency);
+
+            if (client == null || !client.CanContinueService) yield break;
 
             if (client.docHolder == null)
             {
@@ -408,9 +453,10 @@ public class InternController : StaffController, IServiceProvider
                 float processingTime = Random.Range(5f, 8f) / efficiency;
                 yield return new WaitForSeconds(processingTime);
 
-                client.docHolder.SetDocument(DocumentType.None);
+                if (client == null || !client.CanContinueService) yield break;
                 if (client.stampSound != null) AudioSource.PlayClipAtPoint(client.stampSound, transform.position);
                 yield return new WaitForSeconds(1f);
+                if (client == null || !client.CanContinueService || client.docHolder == null) yield break;
 
                 DocumentType newDocType = (deskId == 1) ? DocumentType.Certificate1 : DocumentType.Certificate2;
                 client.docHolder.SetDocument(newDocType);

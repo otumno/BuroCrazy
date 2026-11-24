@@ -18,6 +18,9 @@ public class ClientPathfinding : MonoBehaviour
     public ClientMovement movement;
     public ClientNotification notification;
     public DocumentHolder docHolder;
+    public bool CanContinueService => gameObject.activeInHierarchy && stateMachine != null && !isLeavingSuccessfully &&
+        stateMachine.GetCurrentState() != ClientState.Leaving && stateMachine.GetCurrentState() != ClientState.LeavingUpset &&
+        stateMachine.GetCurrentState() != ClientState.Enraged;
 	
 	[Header("Настройки Стресса (Баланс)")]
 	   [Tooltip("Множитель скорости стресса, когда клиент стоит в очереди (База = 1.0)")]
@@ -68,6 +71,27 @@ public class ClientPathfinding : MonoBehaviour
 
     [Header("Цели и Характер")]
     public ClientGoal mainGoal;
+    private bool hasAssignedVisitGoal;
+
+    public void AssignVisitGoal(ClientGoal goal)
+    {
+        mainGoal = goal.ToServiceGoal();
+        hasAssignedVisitGoal = true;
+    }
+
+    private void ResolveVisitGoal()
+    {
+        // GetCertificate1 is enum value 0, so a separate flag distinguishes an explicit visit from the prefab default.
+        if (!hasAssignedVisitGoal && mainGoal == default(ClientGoal))
+        {
+            var archetype = GetComponent<CharacterVisuals>()?.currentArchetype;
+            var goals = archetype != null && archetype.allowedGoals != null && archetype.allowedGoals.Count > 0
+                ? archetype.allowedGoals.ToArray() : ClientGoalExtensions.FallbackGoals;
+            mainGoal = goals[Random.Range(0, goals.Length)];
+        }
+        mainGoal = mainGoal.ToServiceGoal();
+        hasAssignedVisitGoal = true;
+    }
     [Range(0f, 1f)] public float babushkaFactor;
     [Range(0f, 1f)] public float suetunFactor;
     [Range(0f, 1f)] public float prolazaFactor;
@@ -251,29 +275,8 @@ public class ClientPathfinding : MonoBehaviour
 
 		_currentStressValue = 0f;
         
-        if (mainGoal == default(ClientGoal))
-        {
-            // Пытаемся взять цель из текущего архетипа клиента
-            var visualsComp = GetComponent<CharacterVisuals>();
-            var currentArchetype = visualsComp != null ? visualsComp.currentArchetype : null;
-
-            if (currentArchetype != null && currentArchetype.allowedGoals != null && currentArchetype.allowedGoals.Count > 0)
-            {
-                mainGoal = currentArchetype.allowedGoals[Random.Range(0, currentArchetype.allowedGoals.Count)];
-            }
-            else
-            {
-                var goals = System.Enum.GetValues(typeof(ClientGoal));
-                if (goals.Length > 0)
-                {
-                    mainGoal = (ClientGoal)goals.GetValue(Random.Range(0, goals.Length));
-                }
-                else
-                {
-                    mainGoal = ClientGoal.AskAndLeave;
-                }
-            }
-        }
+        ResolveVisitGoal();
+        Debug.Log($"[ClientFlowTrace] {name}: цель визита={mainGoal}");
 
         DocumentType startingDoc = DocumentType.None;
 
@@ -371,25 +374,13 @@ public class ClientPathfinding : MonoBehaviour
 	
         if (ClientQueueManager.Instance != null)
         {
-            ClientQueueManager.Instance.RemoveClientFromQueue(this);
+            ClientQueueManager.Instance?.RemoveClientFromQueue(this);
         }
 
         StartOfDayPanel.Instance?.RemoveDocumentIcon(this);
 
         // --- Очистка зон ---
-        if (stateMachine != null)
-        {
-            var zone = stateMachine.GetTargetZone();
-            var goal = stateMachine.GetCurrentGoal();
-            if (zone != null && goal != null)
-            {
-                zone.ReleaseWaypoint(goal);
-            }
-            if (zone != null)
-            {
-                zone.LeaveQueue(gameObject);
-            }
-        }
+        stateMachine?.ReleaseZoneReservation();
         
         // Очистка из всех зон через FindObjectsOfType если нужно
         var allZones = FindObjectsByType<LimitedCapacityZone>(FindObjectsSortMode.None);
@@ -504,7 +495,7 @@ public class ClientPathfinding : MonoBehaviour
 
     public void UnfreezeAndRestartAI() { if(stateMachine != null) stateMachine.StartCoroutine(stateMachine.MainLogicLoop()); }
     
-    public void CalmDownAndLeave() { if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) { reasonForLeaving = LeaveReason.CalmedDown; stateMachine.SetState(ClientState.Leaving); } }
+    public void CalmDownAndLeave() { if (stateMachine != null && stateMachine.GetCurrentState() == ClientState.Enraged) ForceLeave(LeaveReason.CalmedDown); }
     
     public void CalmDownAndReturnToQueue()
     {
@@ -519,11 +510,14 @@ public class ClientPathfinding : MonoBehaviour
     
     public void ForceLeave(LeaveReason reason = LeaveReason.CalmedDown)
     {
+        if (stateMachine == null) return;
         if (stateMachine.GetCurrentState() == ClientState.Leaving || stateMachine.GetCurrentState() == ClientState.LeavingUpset)
         {
             reasonForLeaving = reason;
             return;
         }
+        stateMachine.StopAllActionCoroutines();
+        GetComponent<AgentMover>()?.Stop();
 
         LimitedCapacityZone currentZone = stateMachine.GetCurrentGoal()?.GetComponentInParent<LimitedCapacityZone>();
         if(currentZone != null)
@@ -531,19 +525,19 @@ public class ClientPathfinding : MonoBehaviour
             currentZone.LeaveQueue(gameObject);
             currentZone.ReleaseWaypoint(stateMachine.GetCurrentGoal());
         }
-        ClientQueueManager.Instance.RemoveClientFromQueue(this);
-        if(ClientQueueManager.Instance.dissatisfiedClients.Contains(this))
+        ClientQueueManager.Instance?.RemoveClientFromQueue(this);
+        if(ClientQueueManager.Instance != null && ClientQueueManager.Instance.dissatisfiedClients.Contains(this))
         {
             ClientQueueManager.Instance.dissatisfiedClients.Remove(this);
         }
 
         reasonForLeaving = reason;
-        if (reason == LeaveReason.Angry && !ClientQueueManager.Instance.dissatisfiedClients.Contains(this))
+        if (reason == LeaveReason.Angry && ClientQueueManager.Instance != null && !ClientQueueManager.Instance.dissatisfiedClients.Contains(this))
         {
             ClientQueueManager.Instance.dissatisfiedClients.Add(this);
         }
         
-        stateMachine.SetGoal(ClientSpawner.Instance.exitWaypoint);
+        stateMachine.SetGoal(ClientSpawner.Instance != null ? ClientSpawner.Instance.exitWaypoint : null);
         if (reason == LeaveReason.Upset)
         {
             stateMachine.SetState(ClientState.LeavingUpset);

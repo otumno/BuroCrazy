@@ -11,7 +11,7 @@ public class ArchiveDocumentAction : StaffAction
         {
             return false;
         }
-        return !ArchiveManager.Instance.mainDocumentStack.IsEmpty;
+        return ArchiveManager.Instance != null && ArchiveManager.Instance.GetStackToProcess() != null;
     }
 
     public override System.Type GetExecutorType()

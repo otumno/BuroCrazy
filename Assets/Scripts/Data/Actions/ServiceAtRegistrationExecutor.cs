@@ -10,12 +10,17 @@ using Enums;
 public class ServiceAtRegistrationExecutor : ActionExecutor
 {
     public override bool IsInterruptible => false; // Цикл контролирует себя сам
+    private ClientPathfinding servingClient;
+    private ServicePoint servingDesk;
+    private ArchiveRequest activeArchiveRequest;
     private float currentEfficiency = 1.0f;
     private OfficeObjectDurability currentDurabilityComponent;
     private bool _lastServiceSuccess = true; // FIXED: Track success state for the loop
 
     protected override IEnumerator ActionRoutine()
     {
+        yield return ReturnToWorkstation();
+        if (!IsAtWorkstation) { FinishAction(false); yield break; }
         var registrar = staff as ClerkController;
         if (registrar == null || registrar.assignedWorkstation == null) { FinishAction(false); yield break; }
 
@@ -29,6 +34,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         currentEfficiency = currentDurabilityComponent != null ? currentDurabilityComponent.GetEfficiencyMultiplier() : 1.0f;
 
         ServicePoint desk = registrar.assignedWorkstation;
+        servingDesk = desk;
 
         // === ПОЛНЫЙ ЦИКЛ ОБСЛУЖИВАНИЯ (PULL-МОДЕЛЬ) ===
         while (true)
@@ -42,7 +48,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             if (client == null && ClientQueueManager.Instance != null && ClientQueueManager.Instance.queue.Count > 0)
             {
                 var nextInQueue = ClientQueueManager.Instance.queue
-                    .Where(c => c.Key != null && !ClientQueueManager.Instance.currentlyCalledNumbers.Contains(c.Value))
+                    .Where(c => ClientQueueManager.Instance.CanCallForRegistration(c.Key, c.Value))
                     .OrderBy(kvp => kvp.Value)
                     .FirstOrDefault();
 
@@ -52,7 +58,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 {
                     int ticketNum = nextInQueue.Value;
                     ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
-                    ClientQueueManager.Instance.clientsAwaitingResponse.Add(ticketNum, Time.time);
+                    ClientQueueManager.Instance.clientsAwaitingResponse[ticketNum] = Time.time;
                     desk.AssignClient(client);
 
                     registrar.thoughtBubble?.ShowPriorityMessage($"Талон №{ticketNum}, подойдите!", 3f, Color.green);
@@ -65,6 +71,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
             // Если после всех проверок клиента нет - очередь пуста, выходим сортировать бумаги
             if (client == null) break;
+            servingClient = client;
 
             // --- ЛОГИКА НАГЛЕЦОВ (QUEUE JUMPERS) ---
             if (client != null && client.isQueueJumper)
@@ -279,9 +286,9 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             if (client == null || client.stateMachine == null) continue;
             
             if (client.mainGoal == ClientGoal.GetArchiveRecord)
-                yield return staff.StartCoroutine(HandleArchiveRequest(registrar, client));
+                yield return HandleArchiveRequest(registrar, client);
             else
-                yield return staff.StartCoroutine(HandleStandardRegistration(registrar, client));
+                yield return HandleStandardRegistration(registrar, client);
 
             // 6. ОТЧЕТ НА СТОЛ (Обязательная генерация макулатуры)
             if (desk.documentStack != null) desk.documentStack.AddDocumentToStack();
@@ -290,20 +297,24 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             desk.ClearClient();
             if (currentDurabilityComponent != null) currentDurabilityComponent.Degrade(2f);
 
-            // FIXED: Показываем иконку И регистрируем Х.П. вручную (т.к. цикл не вызывает FinishAction)
-            staff.ShowActionEffect(_lastServiceSuccess);
-            if (Managers.DirectorManager.Instance != null)
-            {
-                if (_lastServiceSuccess) Managers.DirectorManager.Instance.RegisterSuccess(staff.currentRole);
-                else Managers.DirectorManager.Instance.RegisterFailure(staff.currentRole);
-            }
-
-            _lastServiceSuccess = true; // Reset for the next client
-
-            yield return new WaitForSeconds(1f);
+            // Return to AI after each client: otherwise a continuous queue prevents shift end.
+            FinishAction(_lastServiceSuccess);
+            yield break;
         }
 
         FinishAction(true);
+    }
+
+    protected override void OnResourcesReleased()
+    {
+        if (servingDesk != null && servingClient != null && servingDesk.CurrentClient == servingClient)
+        {
+            servingDesk.ClearClient();
+            servingClient.stateMachine?.CancelServiceCall(staff as IServiceProvider);
+        }
+        if (activeArchiveRequest != null && !activeArchiveRequest.IsDelegated && !activeArchiveRequest.IsDelivered)
+            ArchiveRequestManager.Instance?.CancelRequest(activeArchiveRequest);
+        if (staff != null) staff.CurrentSubStatus = "";
     }
 
     private IEnumerator HandleStandardRegistration(ClerkController registrar, ClientPathfinding client)
@@ -321,6 +332,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
         float waitTime = Random.Range(1f, 2.5f) / currentEfficiency;
         registrar.thoughtBubble?.ShowPriorityMessage("Минутку, смотрю...", waitTime, Color.cyan);
+        ShowProcessing(client.transform.position, waitTime);
         yield return new WaitForSeconds(waitTime);
         if (client == null || client.stateMachine == null) yield break;
 
@@ -381,7 +393,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         yield return new WaitForSeconds(2.5f);
 
         // FIXED: Проверяем, есть ли вообще архивариус на работе
-        bool hasArchivist = HiringManager.Instance != null && HiringManager.Instance.AllStaff.Any(s => s.currentRole == StaffController.Role.Archivist && s.IsOnDuty());
+        bool hasArchivist = HiringManager.Instance != null && HiringManager.Instance.AllStaff.Any(s => s != null && s.currentRole == StaffController.Role.Archivist && s.gameObject.activeInHierarchy && s.IsOnDuty());
         if (!hasArchivist)
         {
             registrar.thoughtBubble?.ShowPriorityMessage("Архивариуса нет на месте!\nПриходите позже.", 3f, Color.red);
@@ -396,10 +408,12 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         }
 
         // --- НОВАЯ ЛОГИКА ДЕЛЕГИРОВАНИЯ ---
-        bool hasCouriers = HiringManager.Instance != null && HiringManager.Instance.AllStaff.Any(s => (s.currentRole == StaffController.Role.Intern || s.currentRole == StaffController.Role.OfficeManager) && s.IsOnDuty());
+        bool hasCouriers = HiringManager.Instance != null && HiringManager.Instance.AllStaff.Any(s => s != null &&
+            (s.currentRole == StaffController.Role.Intern || s.currentRole == StaffController.Role.OfficeManager) &&
+            s.gameObject.activeInHierarchy && s.IsOnDuty());
         
         // Шанс делегировать (пока 50%, если есть свободные руки. Позже можно привязать к softSkills)
-        bool willDelegate = hasCouriers && (Random.value < 0.5f);
+        bool willDelegate = hasCouriers && ClientQueueManager.Instance?.mainWaitingZone != null && (Random.value < 0.5f);
 
         if (willDelegate)
         {
@@ -410,10 +424,12 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             
             // 1. Создаем делегированный запрос (Стажеры его перехватят)
             ArchiveRequestManager.Instance.CreateRequest(registrar, client, true);
+            activeArchiveRequest = ArchiveRequestManager.Instance.GetOurRequest(registrar, client);
             
             // 2. Отправляем клиента ждать на диванчик
-            client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
-            client.stateMachine.SetState(ClientState.WaitingForDocument);
+            ClientQueueManager.Instance.ServiceFinishedForNumber(client.stateMachine.MyQueueNumber);
+            client.stateMachine.SetGoal(ClientQueueManager.Instance.ChooseNewGoal(client));
+            client.stateMachine.SetState(ClientState.MovingToGoal);
             
             // 3. Освобождаем стол регистратора физически
             var desk = ScenePointsRegistry.Instance?.GetServicePointByID(registrar.assignedWorkstation?.deskId ?? 0);
@@ -437,6 +453,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         }
 
         ArchiveRequestManager.Instance.CreateRequest(registrar, client, false);
+        activeArchiveRequest = ArchiveRequestManager.Instance.GetOurRequest(registrar, client);
         registrar.SetState(ClerkController.ClerkState.WaitingForArchive);
         client.stateMachine.SetState(ClientState.WaitingForDocument);
 
@@ -447,16 +464,16 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
             client.stateMachine.SetState(ClientState.LeavingUpset);
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
-            yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
+            yield return registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
             yield break;
         }
 
-        yield return staff.StartCoroutine(registrar.MoveToTarget(archivistDesk.clerkStandPoint.position, ClerkController.ClerkState.WaitingForArchive.ToString()));
+        yield return registrar.MoveToTarget(archivistDesk.clerkStandPoint.position, ClerkController.ClerkState.WaitingForArchive.ToString());
 
         float waitTimer = 0f;
         float maxWaitTime = Gameplay.AIBalanceConfig.Instance != null ? Gameplay.AIBalanceConfig.Instance.archiveWaitTimeout : 60f;
         bool requestFulfilled = false;
-        ArchiveRequest request = ArchiveRequestManager.Instance.GetOurRequest(registrar);
+        ArchiveRequest request = activeArchiveRequest;
 
         int lastBubbleQuarter = 0;
 
@@ -468,7 +485,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
             if (request != null && request.IsFulfilled) { requestFulfilled = true; break; }
             else if (request == null && ArchiveRequestManager.Instance.HasPendingRequests()) {
-                request = ArchiveRequestManager.Instance.GetOurRequest(registrar);
+                request = ArchiveRequestManager.Instance.GetOurRequest(registrar, client);
             }
 
             // --- Flavor thoughts ---
@@ -490,12 +507,14 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         {
             registrar.GetComponent<StackHolder>()?.ShowSingleDocumentSprite(); 
             registrar.SetState(ClerkController.ClerkState.ReturningToWork); 
-            yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
+            yield return registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
             registrar.GetComponent<StackHolder>()?.HideStack(); 
 
             if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.WaitingForDocument)
             {
                 client.billToPay += 150;
+                ArchiveRequestManager.Instance.CompleteDelivery(request);
+                ClientQueueManager.Instance?.RemoveClientFromQueue(client);
                 client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
                 client.stateMachine.SetState(ClientState.MovingToGoal);
                 _lastServiceSuccess = true; // FIXED: Store success
@@ -513,7 +532,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 _lastServiceSuccess = false; // FIXED: Store failure
             }
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
-            yield return staff.StartCoroutine(registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
+            yield return registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
         }
     }
 

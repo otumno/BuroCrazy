@@ -20,6 +20,21 @@ public class MessPoint : MonoBehaviour
     [Tooltip("Используется только для грязи, чтобы уборщик знал, сколько времени её убирать.")]
     public int dirtLevel = 1;
 
+    private StaffController reservedBy;
+    public bool IsReserved => reservedBy != null;
+
+    public bool TryReserve(StaffController worker)
+    {
+        if (worker == null || !gameObject.activeInHierarchy || IsReserved) return false;
+        reservedBy = worker;
+        return true;
+    }
+
+    public void ReleaseReservation(StaffController worker)
+    {
+        if (reservedBy == worker) reservedBy = null;
+    }
+
     void Start()
     {
         // При появлении на сцене, регистрируемся в центральном менеджере.

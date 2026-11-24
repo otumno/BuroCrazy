@@ -25,6 +25,20 @@ public class ServicePoint : MonoBehaviour
     public Transform internCollectionPoint;
 
     private StaffController assignedStaff;
+    private StaffController coveringStaff;
+    public bool HasCoverReservation => coveringStaff != null;
+
+    public bool TryReserveCover(StaffController staff)
+    {
+        if (staff == null || coveringStaff != null) return false;
+        coveringStaff = staff;
+        return true;
+    }
+
+    public void ReleaseCover(StaffController staff)
+    {
+        if (coveringStaff == staff) coveringStaff = null;
+    }
 
     // === НОВАЯ СИСТЕМА СИНХРОНИЗАЦИИ ===
     [Tooltip("Текущий клиент, направленный к этой стойке")]

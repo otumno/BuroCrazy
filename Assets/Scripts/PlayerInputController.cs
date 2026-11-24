@@ -197,6 +197,16 @@ public class PlayerInputController : MonoBehaviour
 
             Vector2 clickWorldPosition = mainCamera.ScreenToWorldPoint(Input.mousePosition);
 
+            foreach (var hit in Physics2D.OverlapPointAll(clickWorldPosition))
+            {
+                var client = hit.GetComponentInParent<ClientPathfinding>();
+                if (client == null || client.stateMachine == null || client.stateMachine.GetCurrentState() != ClientState.Enraged) continue;
+                client.ForceLeave(ClientPathfinding.LeaveReason.CalmedDown);
+                Debug.Log($"[GuardTrace] Игрок выдворил {client.name}");
+                _isHoldingMouse = false;
+                return;
+            }
+
             // Сначала проверяем клик по активному клинчу
             if (TryHandleClinchClick(clickWorldPosition))
             {

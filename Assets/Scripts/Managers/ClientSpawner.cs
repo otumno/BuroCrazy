@@ -54,8 +54,17 @@ namespace Managers
 
         public static IServiceProvider GetServiceProviderAtDesk(int deskId)
         {
-            return serviceProviderAssignments.GetValueOrDefault(deskId);
+            var provider = serviceProviderAssignments.GetValueOrDefault(deskId);
+            // Interfaces do not use Unity's destroyed-object null comparison.
+            if (provider is Object unityObject && unityObject == null)
+            {
+                serviceProviderAssignments.Remove(deskId);
+                return null;
+            }
+            return provider;
         }
+
+        public static void ClearServiceProviders() => serviceProviderAssignments.Clear();
 
         public static void AssignServiceProviderToDesk(IServiceProvider provider, int deskId)
         {
