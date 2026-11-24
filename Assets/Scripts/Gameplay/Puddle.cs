@@ -24,7 +24,7 @@ public class Puddle : MonoBehaviour
         if (Random.value < slipChance)
         {
             // Debug.Log($"ПОСКОЛЬЗНУЛСЯ! Вызов SlipAndRecover для {other.name}");
-            mover.SlipAndRecover();
+            mover.SlipAndRecover("поскользнулся на луже");
         }
     }
 }

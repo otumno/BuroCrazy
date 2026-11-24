@@ -49,9 +49,17 @@ public class ServicePoint : MonoBehaviour
 
     public void AssignClient(ClientPathfinding client)
     {
+        TryAssignClient(client);
+    }
+
+    public bool TryAssignClient(ClientPathfinding client)
+    {
+        if (client == null || (CurrentClient != null && CurrentClient != client)) return false;
+        if (CurrentClient == client) return true;
         CurrentClient = client;
         IsClientPhysicallyReady = false;
         Debug.Log($"[ServicePoint {name}] Ожидаю клиента {client.name}");
+        return true;
     }
 
     public void SetClientReady()
@@ -67,6 +75,11 @@ public class ServicePoint : MonoBehaviour
     {
         CurrentClient = null;
         IsClientPhysicallyReady = false;
+    }
+
+    public void ClearClient(ClientPathfinding client)
+    {
+        if (CurrentClient == client) ClearClient();
     }
     // ===================================
 

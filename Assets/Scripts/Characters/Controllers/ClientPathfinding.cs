@@ -232,6 +232,7 @@ public class ClientPathfinding : MonoBehaviour
     
     public void Initialize(GameObject wZ, Waypoint eW)
     {
+        CharacterActivityOverlay.Ensure(gameObject);
         totalClients++;
         stateMachine = gameObject.GetComponent<ClientStateMachine>();
         movement = gameObject.GetComponent<ClientMovement>();

@@ -144,16 +144,20 @@ public class LimitedCapacityZone : MonoBehaviour
         return occupiedWaypointOwners.ContainsValue(character);
     }
 	
-	public void ManuallyOccupyWaypoint(Waypoint wp, GameObject occupier)
-{
-    if (wp == null || occupier == null) return;
-
-    if (!occupiedWaypoints.Contains(wp))
+    public bool TryOccupyWaypoint(Waypoint wp, GameObject occupier)
     {
+        if (wp == null || occupier == null) return false;
+        if (occupiedWaypointOwners.TryGetValue(wp, out var owner)) return owner == occupier;
+        if (occupiedWaypoints.Contains(wp) || occupiedWaypoints.Count >= capacity) return false;
         occupiedWaypoints.Add(wp);
+        occupiedWaypointOwners[wp] = occupier;
+        return true;
     }
-    occupiedWaypointOwners[wp] = occupier;
-    Debug.Log($"[LimitedCapacityZone] {occupier.name} вручную занял точку {wp.name} в зоне {this.name}.");
-}
+
+    public void ManuallyOccupyWaypoint(Waypoint wp, GameObject occupier)
+    {
+        if (!TryOccupyWaypoint(wp, occupier))
+            Debug.LogWarning($"[ClientZoneTrace] {name}: cannot claim {wp?.name} for {occupier?.name}, already reserved or full.");
+    }
 	
 }

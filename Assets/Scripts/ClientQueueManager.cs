@@ -118,10 +118,8 @@ public class ClientQueueManager : MonoBehaviour
             if (workstation == null) return;
 
             // === НОВАЯ СИСТЕМА: Назначаем клиента на стойку ===
-            workstation.AssignClient(nextClient);
-
             Waypoint destination = workstation.clientStandPoint;
-            if (destination == null) return;
+            if (!nextClient.stateMachine.TryGetCalledToSpecificDesk(destination, nextInQueue.Value, availableWorker)) return;
 
             lastCallTime = Time.time;
             if (nextClientSound != null) Managers.AudioManager.Instance?.PlayAudioClip2D(nextClientSound);
@@ -142,7 +140,6 @@ public class ClientQueueManager : MonoBehaviour
             }
             // ------------------------------
 
-            nextClient.stateMachine.GetCalledToSpecificDesk(destination, calledNumber, availableWorker);
         }
     }
 
@@ -188,7 +185,10 @@ public class ClientQueueManager : MonoBehaviour
                 }
                 // ================================================================
 
-                RemoveClientFromQueue(client);
+                // A missed call cancels the appointment, not the visitor's ticket.
+                // Otherwise recovery sends them back to a waiting area they can never be called from.
+                ServiceFinishedForNumber(ticketNumber);
+                OnClientLeavesWaitingZone(client);
                 
                 // Очищаем клиента из всех зон перед переходом в Confused
                 client.stateMachine?.ReleaseZoneReservation();
@@ -327,6 +327,7 @@ public class ClientQueueManager : MonoBehaviour
 	       // Если такой клиент найден
 	       if (targetClient != null)
 	       {
+	           if (!targetClient.stateMachine.TryGetCalledToSpecificDesk(provider.GetWorkstation()?.clientStandPoint, nextInQueue.Value, provider)) return false;
 	           lastCallTime = Time.time;
 	           if (nextClientSound != null) Managers.AudioManager.Instance?.PlayAudioClip2D(nextClientSound);
 
@@ -347,7 +348,6 @@ public class ClientQueueManager : MonoBehaviour
 	           Debug.Log($"<color=cyan>ОЧЕРЕДЬ (ПРИОРИТЕТ):</color> Работник {(provider as MonoBehaviour).name} вызывает клиента #{calledNumber} ({targetClient.name}) с целью '{goal}'");
 
 	           // Вызываем клиента к стойке того, кто инициировал действие
-	           targetClient.stateMachine.GetCalledToSpecificDesk(provider.GetClientStandPoint().GetComponent<Waypoint>(), calledNumber, provider);
 
 	           return true;
 	       }
@@ -366,6 +366,7 @@ public class ClientQueueManager : MonoBehaviour
 	    if (queue.ContainsKey(targetClient))
 	    {
 	        int calledNumber = queue[targetClient];
+	        if (targetClient.stateMachine == null || !targetClient.stateMachine.TryGetCalledToSpecificDesk(provider.GetWorkstation()?.clientStandPoint, calledNumber, provider)) return false;
 	        
 	        if (!currentlyCalledNumbers.Contains(calledNumber))
 	        {
@@ -386,7 +387,6 @@ public class ClientQueueManager : MonoBehaviour
 
 	        Debug.Log($"<color=cyan>ОЧЕРЕДЬ (VIP):</color> Работник {workerMono?.name} вызывает клиента #{calledNumber} ({targetClient.name}) вне очереди");
 
-	        targetClient.stateMachine.GetCalledToSpecificDesk(provider.GetClientStandPoint().GetComponent<Waypoint>(), calledNumber, provider);
 	        return true;
 	    }
 	    return false;

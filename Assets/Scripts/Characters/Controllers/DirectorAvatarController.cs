@@ -43,6 +43,8 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     private bool isManuallyWorking = false;
 
     private ClientPathfinding clientBeingServed = null;
+    public ClientPathfinding ClientBeingServed => clientBeingServed;
+    public ServicePoint CurrentWorkstation => currentWorkstation;
     // Флаг, указывающий, занят ли директор действием, которое нельзя прервать (например, падением)
     public bool IsInUninterruptibleAction { get; private set; } = false;
     // Флаг, указывающий, находится ли директор физически у своего стола
@@ -300,6 +302,9 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         // Если было назначено рабочее место
         if(currentWorkstation != null)
         {
+            var interruptedClient = currentWorkstation.CurrentClient;
+            interruptedClient?.stateMachine?.CancelServiceCall(this);
+            currentWorkstation.ClearClient(interruptedClient);
             // Снимаем Директора с этого стола в ClientSpawner
             ClientSpawner.UnassignServiceProviderFromDesk(currentWorkstation.deskId);
              Debug.Log($"[DirectorController] {characterName} снят с рабочего места {currentWorkstation.name} (ID: {currentWorkstation.deskId}).");
@@ -648,7 +653,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
 
                         // Обслуживаем клиента
                         clientBeingServed = client;
-                        yield return StartCoroutine(DirectorServiceRoutine(client));
+                        yield return DirectorServiceRoutine(client);
                         clientBeingServed = null;
 
                         // --- ИЗНОС: Наносим урон ПОСЛЕ обслуживания ---
@@ -666,7 +671,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                 if (clientToServe == null && workstation.deskId == 0 && ClientQueueManager.Instance != null && ClientQueueManager.Instance.queue.Count > 0)
                 {
                     var nextInQueue = ClientQueueManager.Instance.queue
-                        .Where(c => c.Key != null && !ClientQueueManager.Instance.currentlyCalledNumbers.Contains(c.Value))
+                        .Where(c => ClientQueueManager.Instance.CanCallForRegistration(c.Key, c.Value))
                         .OrderBy(kvp => kvp.Value)
                         .FirstOrDefault();
 
@@ -674,19 +679,21 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                     {
                         clientToServe = nextInQueue.Key;
                         int ticketNum = nextInQueue.Value;
+                        if (!clientToServe.stateMachine.TryGetCalledToSpecificDesk(workstation.clientStandPoint, ticketNum, this))
+                        {
+                            yield return new WaitForSeconds(0.5f);
+                            continue;
+                        }
                         
                         ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
                         ClientQueueManager.Instance.clientsAwaitingResponse.Add(ticketNum, Time.time);
                         
-                        workstation.AssignClient(clientToServe);
 
                         string callMsg = ticketNum > 10000 ? "Следующий!" : $"Талон №{ticketNum}, подойдите!";
                         thoughtBubble?.ShowPriorityMessage(callMsg, 3f, Color.green);
                         if (ClientQueueManager.Instance.nextClientSound != null)
                             Managers.AudioManager.Instance?.PlayAudioClip2D(ClientQueueManager.Instance.nextClientSound);
 
-                        Waypoint wp = workstation.clientStandPoint != null ? workstation.clientStandPoint : workstation.GetComponentInChildren<Waypoint>();
-                        clientToServe.stateMachine.GetCalledToSpecificDesk(wp, ticketNum, this);
                     }
                 }
 
@@ -703,10 +710,9 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                             
                         if (clientToServe != null)
                         {
-                            workstation.AssignClient(clientToServe);
                             thoughtBubble?.ShowPriorityMessage("Эй, вы, подходите!", 2f, Color.green);
                             Waypoint wp = workstation.clientStandPoint != null ? workstation.clientStandPoint : workstation.GetComponentInChildren<Waypoint>();
-                            clientToServe.stateMachine.GetCalledToSpecificDesk(wp, clientToServe.stateMachine.MyQueueNumber, this);
+                            if (!clientToServe.stateMachine.TryGetCalledToSpecificDesk(wp, clientToServe.stateMachine.MyQueueNumber, this)) clientToServe = null;
                         }
                     }
                 }
@@ -730,7 +736,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                         }
                         else clientToServe.stateMachine.SetState(ClientState.Confused);
                         
-                        workstation.ClearClient();
+                        workstation.ClearClient(clientToServe);
                         yield return new WaitForSeconds(2f);
                         continue; // Ждем следующего
                     }
@@ -761,7 +767,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                     {
                         if (clientToServe == null || clientToServe.stateMachine == null || workstation.CurrentClient != clientToServe) break;
 
-                        if (workstation.IsClientPhysicallyReady || Vector2.Distance(clientToServe.transform.position, wpPos) < 1.5f)
+                        if (workstation.IsClientPhysicallyReady && clientToServe.CanContinueService)
                         {
                             clientArrived = true;
                             // --- ИСПРАВЛЕНИЕ: Принудительно останавливаем клиента у стола ---
@@ -783,19 +789,18 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                     if (!clientArrived)
                     {
                         thoughtBubble?.ShowPriorityMessage("Следующий!", 2f, Color.red);
-                        workstation.ClearClient();
+                        workstation.ClearClient(clientToServe);
                         if (clientToServe != null && ClientQueueManager.Instance != null)
                         {
-                            ClientQueueManager.Instance.RemoveClientFromQueue(clientToServe);
-                            clientToServe.stateMachine?.SetState(ClientState.Confused);
+                            clientToServe.stateMachine?.CancelServiceCall(this);
                         }
                     }
                     else
                     {
                         clientBeingServed = clientToServe;
-                        yield return StartCoroutine(DirectorServiceRoutine(clientToServe));
+                        yield return DirectorServiceRoutine(clientToServe);
                         clientBeingServed = null;
-                        workstation.ClearClient();
+                        workstation.ClearClient(clientToServe);
 
                         if (durability != null) durability.Degrade(Random.Range(1f, 2f));
                     }

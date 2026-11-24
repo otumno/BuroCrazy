@@ -144,7 +144,42 @@ public static class ClientZoneReservationCheck
             Set(visitor, "assignedServicePoint", desk);
             visitor.SetState(ClientState.LeavingUpset);
             Require(desk.CurrentClient == nextClient, "Stale cleanup cleared the next desk client.");
-            return "PASS: zone reservations/arrival/cancellation, coroutine ownership, registration eligibility, stress recovery, desk cleanup and successor ownership.";
+            desk.ClearClient(nextClient);
+            zone.ReleaseWaypoint(spot);
+            desk.transform.SetParent(zone.transform);
+            var nextVisitor = second.AddComponent<ClientStateMachine>();
+            nextClient.stateMachine = nextVisitor;
+            Set(nextVisitor, "parent", nextClient);
+            Set(nextVisitor, "feedbackController", second.GetComponent<ClientFeedbackController>());
+            Set(nextVisitor, "actionDiary", second.GetComponent<ActionDiary>());
+            Set(visitor, "currentState", ClientState.AtWaitingArea);
+            var provider = new CheckProvider(desk);
+            Require(visitor.TryGetCalledToSpecificDesk(spot, 2, provider), "First ticket could not reserve the desk.");
+            Require(!nextVisitor.TryGetCalledToSpecificDesk(spot, 5, provider), "Second ticket replaced the pending first visitor.");
+            Require(!zone.TryOccupyWaypoint(spot, second) && desk.CurrentClient == client,
+                "Walk-in stole a called visitor's place.");
+            Set(client, "_currentStressValue", 90f);
+            client.canGrumble = true;
+            monitor = (IEnumerator)typeof(ClientStateMachine).GetMethod("GlobalPatienceMonitor",
+                BindingFlags.NonPublic | BindingFlags.Instance).Invoke(visitor, null);
+            monitor.MoveNext();
+            monitor.MoveNext();
+            Require(visitor.GetCurrentState() == ClientState.MovingToGoal, "Grumbling interrupted an accepted service appointment.");
+            ((IDisposable)monitor).Dispose();
+            visitor.SetState(ClientState.LeavingUpset);
+            Require(nextVisitor.TryGetCalledToSpecificDesk(spot, 5, provider), "Desk stayed blocked after the first visitor left.");
+            nextVisitor.SetState(ClientState.LeavingUpset);
+            visitor.GetComponent<ClientFeedbackController>().Initialize(client);
+            Set(visitor, "currentState", ClientState.MovingToGoal);
+            queue.queue[client] = 2;
+            queue.currentlyCalledNumbers.Add(2);
+            queue.clientsAwaitingResponse[2] = Time.time - queue.clientResponseTimeout - 1f;
+            typeof(ClientQueueManager).GetMethod("HandleTimedOutClients", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(queue, null);
+            Require(queue.queue.ContainsKey(client) && !queue.currentlyCalledNumbers.Contains(2) && !queue.clientsAwaitingResponse.ContainsKey(2),
+                "Timeout lost the visitor ticket or kept the expired call active.");
+            Set(visitor, "currentState", ClientState.AtWaitingArea);
+            Require(queue.CanCallForRegistration(client, 2), "Visitor cannot be called again after timeout recovery.");
+            return "PASS: client lifecycle, exclusive desk admission for tickets 2/5, walk-in conflict, appointment stress, successor admission, timeout retains ticket and permits recall.";
         }
         finally
         {
@@ -168,5 +203,15 @@ public static class ClientZoneReservationCheck
     private static void Require(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException(message);
+    }
+
+    private sealed class CheckProvider : IServiceProvider
+    {
+        private readonly ServicePoint desk;
+        public CheckProvider(ServicePoint desk) => this.desk = desk;
+        public bool IsAvailableToServe => true;
+        public Transform GetClientStandPoint() => desk.clientStandPoint.transform;
+        public ServicePoint GetWorkstation() => desk;
+        public void AssignClient(ClientPathfinding client) { }
     }
 }

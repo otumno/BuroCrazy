@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a0f9dd6dcabc744e8e24cd5c8d89068, type: 3}
+  m_Name: CharacterActivityStyle
+  m_EditorClassIdentifier: 
+  font: {fileID: 11400000, guid: 15800273e01a7d545831c02db15529ef, type: 2}
+  offset: {x: 0, y: 0.65, z: 0}
+  panelSize: {x: 250, y: 82}
+  worldScale: 0.01

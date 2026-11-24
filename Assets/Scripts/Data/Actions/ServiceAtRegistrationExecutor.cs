@@ -57,15 +57,14 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 if (client != null)
                 {
                     int ticketNum = nextInQueue.Value;
+                    if (!client.stateMachine.TryGetCalledToSpecificDesk(desk.clientStandPoint, ticketNum, registrar)) break;
                     ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
                     ClientQueueManager.Instance.clientsAwaitingResponse[ticketNum] = Time.time;
-                    desk.AssignClient(client);
 
                     registrar.thoughtBubble?.ShowPriorityMessage($"Талон №{ticketNum}, подойдите!", 3f, Color.green);
                     if (ClientQueueManager.Instance.nextClientSound != null)
                         Managers.AudioManager.Instance?.PlayAudioClip2D(ClientQueueManager.Instance.nextClientSound);
 
-                    client.stateMachine.GetCalledToSpecificDesk(desk.clientStandPoint, ticketNum, registrar);
                 }
             }
 
@@ -159,11 +158,10 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
                 if (client != null)
                 {
-                    desk.AssignClient(client);
                     registrar.thoughtBubble?.ShowPriorityMessage("Эй, вы, подходите!", 3f, Color.green);
                     // Защита от null clientStandPoint
                     Waypoint wp = desk.clientStandPoint != null ? desk.clientStandPoint : desk.GetComponentInChildren<Waypoint>();
-                    client.stateMachine.GetCalledToSpecificDesk(wp, 999, registrar);
+                    if (!client.stateMachine.TryGetCalledToSpecificDesk(wp, client.stateMachine.MyQueueNumber, registrar)) client = null;
                 }
             }
 
@@ -186,7 +184,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             {
                 if (client == null || client.stateMachine == null || desk.CurrentClient != client) break;
 
-                if (desk.IsClientPhysicallyReady || Vector2.Distance(client.transform.position, wpPos) < 1.5f)
+                if (desk.IsClientPhysicallyReady && client.CanContinueService)
                 {
                     clientArrived = true;
                     // --- ИСПРАВЛЕНИЕ: Принудительно останавливаем клиента у стола ---
@@ -208,7 +206,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 if (waitTimer == 10f) registrar.thoughtBubble?.ShowPriorityMessage("Я долго ждать буду?!", 2f, new Color(1f, 0.5f, 0f));
 
                 waitTimer += 0.5f;
-                staff.CurrentSubStatus = $"[Ожидание] Идет к стойке ({waitTimer:F1}s)";
+                staff.CurrentSubStatus = $"Ждёт: {client.name}\n{CharacterActivityOverlay.DeskName(desk)} ({waitTimer:F0} с)";
                 yield return new WaitForSeconds(0.5f);
             }
 
@@ -216,18 +214,17 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             if (!clientArrived)
             {
                 registrar.thoughtBubble?.ShowPriorityMessage("Не пришел. Следующий!", 2f, Color.red);
-                desk.ClearClient();
+                desk.ClearClient(client);
                 if (client != null && ClientQueueManager.Instance != null)
                 {
-                    ClientQueueManager.Instance.RemoveClientFromQueue(client);
-                    client.stateMachine?.SetState(ClientState.Confused);
+                    client.stateMachine?.CancelServiceCall(registrar);
                 }
                 yield return new WaitForSeconds(1f);
                 continue; // Крутим цикл заново
             }
 
             // 5. КЛИЕНТ ПОДОШЕЛ - НАЧИНАЕМ ОБСЛУЖИВАНИЕ
-            staff.CurrentSubStatus = $"[Обслуживание] {client.name}";
+            staff.CurrentSubStatus = $"Обслуживает: {CharacterActivityOverlay.DeskName(desk)}\n{client.name}";
             
             // --- ЖЕЛЕЗОБЕТОННЫЙ КЛИНЧ (НЕЗАВИСИМЫЕ КУБИКИ) ---
             var clinchConfig = Gameplay.AIBalanceConfig.Instance;

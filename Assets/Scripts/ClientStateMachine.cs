@@ -47,6 +47,7 @@ public class ClientStateMachine : MonoBehaviour
     private IServiceProvider myServiceProvider;
     private ServicePoint assignedServicePoint;
     public IServiceProvider MyServiceProvider => myServiceProvider;
+    public ServicePoint AssignedServicePoint => assignedServicePoint;
 
     // --- Routine Handles ---
     private Coroutine mainActionCoroutine;
@@ -149,7 +150,8 @@ public class ClientStateMachine : MonoBehaviour
             if (currentState == ClientState.Grumbling) continue;
 
             // 4. Проверка перехода в Grumbling (промежуточное недовольство)
-            if (currentState != ClientState.Grumbling && parent.canGrumble &&
+            bool hasServiceAppointment = assignedServicePoint != null && assignedServicePoint.CurrentClient == parent;
+            if (!hasServiceAppointment && currentState != ClientState.Grumbling && parent.canGrumble &&
                 parent.PatienceHeat >= parent.GetEffectiveGrumblingThreshold() && parent.PatienceHeat < 1.0f)
             {
                 // Начинает ворчать - лог убран
@@ -802,7 +804,11 @@ public class ClientStateMachine : MonoBehaviour
             var owningZone = currentGoal.GetComponentInParent<LimitedCapacityZone>() ?? servicePoint?.GetComponentInParent<LimitedCapacityZone>();
             if (owningZone != null)
             {
-                owningZone.ManuallyOccupyWaypoint(currentGoal, parent.gameObject);
+                if (!owningZone.TryOccupyWaypoint(currentGoal, parent.gameObject))
+                {
+                    ReturnToZoneEntrance(owningZone);
+                    yield break;
+                }
                 targetZone = owningZone;
                 occupiedWaypoint = currentGoal;
                 SetState(ClientState.InsideLimitedZone);
@@ -915,6 +921,8 @@ public class ClientStateMachine : MonoBehaviour
 
     private void ReleaseServiceAssignment()
     {
+        if (assignedServicePoint != null)
+            ClientQueueManager.Instance?.ServiceFinishedForNumber(myQueueNumber);
         if (assignedServicePoint != null && assignedServicePoint.CurrentClient == parent)
             assignedServicePoint.ClearClient();
         assignedServicePoint = null;
@@ -1211,10 +1219,27 @@ public class ClientStateMachine : MonoBehaviour
 
     public void GetCalledToSpecificDesk(Waypoint destination, int queueNumber, IServiceProvider provider)
     {
+        if (!TryGetCalledToSpecificDesk(destination, queueNumber, provider))
+            ClientQueueManager.Instance?.ServiceFinishedForNumber(queueNumber);
+    }
+
+    public bool TryGetCalledToSpecificDesk(Waypoint destination, int queueNumber, IServiceProvider provider)
+    {
+        var desk = provider?.GetWorkstation();
+        if (parent == null || !parent.CanContinueService || destination == null || desk == null ||
+            desk.clientStandPoint != destination || (desk.CurrentClient != null && desk.CurrentClient != parent)) return false;
+        var zone = destination.GetComponentInParent<LimitedCapacityZone>() ?? desk.GetComponentInParent<LimitedCapacityZone>();
+        // Reserve before calling: a walk-in must not take the place while the ticket holder approaches.
+        if (zone != null && !zone.TryOccupyWaypoint(destination, gameObject)) return false;
+        if (!desk.TryAssignClient(parent))
+        {
+            zone?.ReleaseWaypoint(destination, gameObject);
+            return false;
+        }
         // --- ИСПРАВЛЕНИЕ: Используем централизованный метод остановки ---
         StopAllActionCoroutines();
         
-        ClientQueueManager.Instance.OnClientLeavesWaitingZone(parent);
+        ClientQueueManager.Instance?.OnClientLeavesWaitingZone(parent);
         myQueueNumber = queueNumber;
         
         // --- Логирование вызова клиента к стойке ---
@@ -1223,7 +1248,21 @@ public class ClientStateMachine : MonoBehaviour
         SetGoal(destination);
         myServiceProvider = provider;
         assignedServicePoint = provider?.GetWorkstation();
+        targetZone = zone;
+        occupiedWaypoint = zone != null ? destination : null;
         SetState(ClientState.MovingToGoal);
+        Debug.Log($"[ClientServiceTrace] {name}: ticket={queueNumber}, reserved desk={desk.name}");
+        return true;
+    }
+
+    private void ReturnToZoneEntrance(LimitedCapacityZone zone)
+    {
+        ClientQueueManager.Instance?.ServiceFinishedForNumber(myQueueNumber);
+        ReleaseZoneReservation();
+        ReleaseServiceAssignment();
+        SetGoal(zone != null ? zone.waitingWaypoint : ClientQueueManager.Instance?.ChooseNewGoal(parent));
+        SetState(currentGoal != null ? ClientState.MovingToGoal : ClientState.Confused);
+        Debug.Log($"[ClientServiceTrace] {name}: desk busy, returning to queue, ticket={myQueueNumber}");
     }
 
     public void CancelServiceCall(IServiceProvider provider)
@@ -1388,10 +1427,15 @@ public class ClientStateMachine : MonoBehaviour
 
         if (targetDesk != null)
         {
+            if (!targetDesk.TryAssignClient(parent))
+            {
+                ReturnToZoneEntrance(targetZone);
+                return;
+            }
             assignedServicePoint = targetDesk;
-            if (targetDesk.CurrentClient != parent) targetDesk.AssignClient(parent); // Наглый клиент садится сам
             
             targetDesk.SetClientReady(); // ГОВОРИМ СТОЛУ "Я ПРИШЕЛ!"
+            ClientQueueManager.Instance?.ClientArrivedAtDesk(myQueueNumber);
             myServiceProvider = ClientSpawner.GetServiceProviderAtDesk(targetDesk.deskId);
             if (myServiceProvider != null && myServiceProvider.IsAvailableToServe)
                 myServiceProvider.AssignClient(parent);

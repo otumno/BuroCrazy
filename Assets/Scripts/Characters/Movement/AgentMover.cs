@@ -84,6 +84,8 @@ public class AgentMover : MonoBehaviour
     public AudioClip fallSound;
     private bool isSlipping = false; // Flag indicating the character is currently falling/recovering
     public bool IsSlipping => isSlipping; // Public getter for the slipping state
+    public string FallReason { get; private set; }
+    public Waypoint Destination => path != null && path.Count > 0 ? path.Last() : null;
 
     // --- Система "Втягивания живота" при столкновении ---
     private Collider2D mainCollider;
@@ -697,7 +699,13 @@ public class AgentMover : MonoBehaviour
     /// </summary>
     public void SlipAndRecover()
     {
+        SlipAndRecover("потерял равновесие");
+    }
+
+    public void SlipAndRecover(string reason)
+    {
         if (isSlipping) return; // Prevent triggering multiple times
+        FallReason = reason;
         StartCoroutine(SlipAndRecoverRoutine());
     }
 

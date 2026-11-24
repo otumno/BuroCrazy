@@ -372,6 +372,7 @@ public class StaffController : MonoBehaviour
 
     protected virtual void Awake()
     {
+        CharacterActivityOverlay.Ensure(gameObject);
         agentMover = GetComponent<AgentMover>();
         thoughtBubble = GetComponent<ThoughtBubbleController>();
         logger = GetComponent<CharacterStateLogger>();
