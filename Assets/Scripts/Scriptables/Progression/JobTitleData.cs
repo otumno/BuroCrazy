@@ -60,6 +60,10 @@ namespace Scriptables.Progression
         [Tooltip("Доступ к найму ролей вплоть до указанного уровня ранга. Для одной роли берётся максимум по всем открытым должностям.")]
         public List<HiringAccessRule> hiringAccessRules = new List<HiringAccessRule>();
 
+        [Tooltip("Повышает доступный ранг уже открытых ролей, не открывая новые. -1 — без изменения. Правила отдельных ролей продолжают действовать.")]
+        [Min(-1)]
+        public int maxUnlockedRoleHireRankLevel = -1;
+
         [Tooltip("ID апгрейдов, которые активируются при получении должности.")]
         public List<string> unlockedUpgrades = new List<string>();
 

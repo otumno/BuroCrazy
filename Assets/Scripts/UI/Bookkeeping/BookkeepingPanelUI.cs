@@ -63,6 +63,7 @@ namespace UI.Bookkeeping
 
         private void Open()
         {
+            gameObject.SetActive(true);
             var animator = GetComponent<UIWindowAnimator>();
             if (animator != null) animator.Open();
             else gameObject.SetActive(true);
@@ -102,7 +103,7 @@ namespace UI.Bookkeeping
         {
             var ledger = FinancialLedgerManager.Instance;
             var wallet = PlayerWallet.Instance;
-            var staffList = HiringManager.Instance.AllStaff;
+            var staffList = HiringManager.Instance != null ? HiringManager.Instance.AllStaff : null;
 
             if (ledger == null || wallet == null || staffList == null || CalendarManager.Instance == null)
             {

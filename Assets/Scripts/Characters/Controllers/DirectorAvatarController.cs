@@ -41,6 +41,10 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     private ServicePoint currentWorkstation;
     private Coroutine workCoroutine;
     private bool isManuallyWorking = false;
+    private DocumentStackTransfer documentTransfer;
+    private ArchiveManager deliveryArchive;
+    private Transform deliveryPoint;
+    private System.Action manualServiceCleanup;
 
     private ClientPathfinding clientBeingServed = null;
     public ClientPathfinding ClientBeingServed => clientBeingServed;
@@ -89,7 +93,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         if (target == null || order == null || order.Action == null) return;
 
         // Показываем реакцию директора
-        thoughtBubble?.ShowPriorityMessage("Немедленно займись этим!", 2f, Color.red);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.order_now"), 2f, Color.red);
         
         // Проигрываем звук (защита от NullReference)
         if (AudioManager.Instance != null)
@@ -241,7 +245,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         StopAllCoroutines();
         
         // Запускаем движение
-        yield return StartCoroutine(MoveToTargetAndSetState(targetWaypoint.transform.position, stateAfterArrival));
+        yield return MoveToTargetAndSetState(targetWaypoint.transform.position, stateAfterArrival);
         
         // Разблокируем управление
         if (inputController != null)
@@ -257,7 +261,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     /// </summary>
     private IEnumerator MoveToTargetAndSetState(Vector2 targetPosition, DirectorState stateAfterArrival)
     {
-        yield return StartCoroutine(MoveToTargetRoutine(targetPosition)); // Ждем завершения движения
+        yield return MoveToTargetRoutine(targetPosition); // Ждем завершения движения
         SetState(stateAfterArrival); // Устанавливаем состояние после
     }
 
@@ -288,6 +292,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     /// <param name="moveAway">Если true, Директор немного отойдет от стола после остановки.</param>
     public void StopManualWork(bool moveAway = true)
     {
+        CleanupManualService();
         if (!isManuallyWorking) return; // Если не работали вручную, выходим
 
         // Останавливаем корутину работы
@@ -341,9 +346,11 @@ public class DirectorAvatarController : StaffController, IServiceProvider
         // Не выполняем, если Директор занят чем-то непрерываемым
         if (IsInUninterruptibleAction)
         {
-            thoughtBubble?.ShowPriorityMessage("Я занят!", 2f, Color.yellow);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.busy"), 2f, Color.yellow);
             return;
         }
+        StopManualWork(false);
+        CleanupDocumentDelivery();
         StopAllCoroutines(); // Останавливаем текущие действия
         StartCoroutine(OperateBarrierRoutine()); // Запускаем корутину барьера
     }
@@ -385,7 +392,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     SetUninterruptible(true);
     SetState(DirectorState.MovingToPoint);
     
-    yield return StartCoroutine(MoveToTargetRoutine(board.interactionPoint.position));
+    yield return MoveToTargetRoutine(board.interactionPoint.position);
     
     SetState(DirectorState.Idle);
     SetUninterruptible(false);
@@ -427,7 +434,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         SetUninterruptible(true);
         SetState(DirectorState.MovingToPoint);
         
-        yield return StartCoroutine(MoveToTargetRoutine(wp.transform.position));
+        yield return MoveToTargetRoutine(wp.transform.position);
         
         SetState(DirectorState.AtDesk);
         SetUninterruptible(false);
@@ -473,6 +480,52 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         // ForceSetAtDeskState(Vector2.Distance(position, directorChairPoint.position) < 0.5f);
     }
 
+    /// <summary>Ends the previous day's actions before returning to the director's desk.</summary>
+    public void ReturnToDeskAfterDayEnd()
+    {
+        if (directorChairPoint == null) return;
+        StopManualWork(false);
+        // Stopping the mover alone lets old arrival coroutines resume at the new position.
+        PrepareForRoleChange();
+        CleanupDocumentDelivery();
+        workCoroutine = null;
+        SetUninterruptible(agentMover != null && agentMover.IsSlipping);
+        SetState(DirectorState.Idle);
+        TeleportTo(directorChairPoint.position);
+        var body = GetComponent<Rigidbody2D>();
+        if (body != null)
+        {
+            body.position = directorChairPoint.position;
+            body.linearVelocity = Vector2.zero;
+            body.angularVelocity = 0f;
+        }
+        ForceSetAtDeskState(true);
+        Debug.Log("[EndOfDaySequence] Директор вернулся к столу; прежние действия отменены.");
+    }
+
+    private void CleanupDocumentDelivery()
+    {
+        documentTransfer?.Dispose();
+        documentTransfer = null;
+        if (deliveryArchive != null && deliveryPoint != null) deliveryArchive.FreeOverflowPoint(deliveryPoint);
+        deliveryArchive = null;
+        deliveryPoint = null;
+        stackHolder?.HideStack();
+    }
+
+    private void CleanupManualService()
+    {
+        var cleanup = manualServiceCleanup;
+        manualServiceCleanup = null;
+        cleanup?.Invoke();
+    }
+
+    private void OnDisable()
+    {
+        StopManualWork(false);
+        CleanupDocumentDelivery();
+    }
+
 
     /// <summary>
     /// Принудительно устанавливает флаг IsAtDesk и соответствующее состояние.
@@ -505,7 +558,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     // 1. Проверка на непрерываемое действие (падение и т.д.)
     if (IsInUninterruptibleAction)
     {
-         thoughtBubble?.ShowPriorityMessage("Я сейчас занят!", 2f, Color.yellow);
+         thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.busy_now"), 2f, Color.yellow);
          Debug.Log("[Director] Не могу идти к бухгалтерии, занят непрерываемым действием.");
          yield break;
     }
@@ -524,7 +577,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
 
     // 3. Запускаем движение
     Debug.Log("[Director] Начинаю движение к столу бухгалтерии...");
-    yield return StartCoroutine(MoveToTargetRoutine(targetPosition)); // Ждем завершения движения
+    yield return MoveToTargetRoutine(targetPosition); // Ждем завершения движения
 
     // 4. Устанавливаем состояние Idle ПОСЛЕ движения
     SetState(DirectorState.Idle);
@@ -564,7 +617,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         var durability = workstation.GetComponent<Gameplay.OfficeObjectDurability>();
         if (durability != null && !durability.IsUsable())
         {
-            thoughtBubble?.ShowPriorityMessage("Здесь всё сломано!\nНе могу работать.", 3f, Color.red);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.broken_station"), 3f, Color.red);
             isManuallyWorking = false;
             yield break;
         }
@@ -575,7 +628,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         Debug.Log($"[DirectorController] {characterName} назначен на {workstation.name}.");
 
         if (workstation.clerkStandPoint != null) {
-            yield return StartCoroutine(MoveToTargetRoutine(workstation.clerkStandPoint.position)); 
+            yield return MoveToTargetRoutine(workstation.clerkStandPoint.position); 
         } else {
              StopManualWork(false);
              yield break;
@@ -588,7 +641,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             // --- ИЗНОС: Периодическая проверка и Эффективность ---
             if (durability != null && !durability.IsUsable())
             {
-                thoughtBubble?.ShowPriorityMessage("Стол сломался!", 2f, Color.red);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.desk_broke"), 2f, Color.red);
                 StopManualWork(true); // Автоматически встаем и отходим
                 yield break;
             }
@@ -600,70 +653,19 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             {
                 if (ArchiveRequestManager.Instance != null && ArchiveRequestManager.Instance.HasPendingRequests())
                 {
-                    yield return StartCoroutine(DirectorArchiveRetrieveRoutine());
+                    yield return DirectorArchiveRetrieveRoutine();
                     continue;
                 }
-                else if (ArchiveManager.Instance != null && !ArchiveManager.Instance.mainDocumentStack.IsEmpty)
+                else if (ArchiveManager.Instance != null && ArchiveManager.Instance.GetStackToProcess() != null)
                 {
                     // Архивируем документы со стола
-                    yield return StartCoroutine(DirectorArchiveStoreRoutine());
+                    yield return DirectorArchiveStoreRoutine();
                     continue;
                 }
             }
             // -----------------------------------------------------
 
-            // --- PULL-МОДЕЛЬ ДЛЯ РЕГИСТРАТУРЫ (deskId == 0) ---
-            if (workstation.deskId == 0)
-            {
-                if (ClientQueueManager.Instance != null && clientBeingServed == null)
-                {
-                    var nextInQueue = ClientQueueManager.Instance.queue
-                        .Where(kvp => kvp.Key != null && !ClientQueueManager.Instance.currentlyCalledNumbers.Contains(kvp.Value))
-                        .OrderBy(kvp => kvp.Value)
-                        .FirstOrDefault();
-
-                    var client = nextInQueue.Key;
-                    if (client != null)
-                    {
-                        int ticketNum = nextInQueue.Value;
-                        ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
-                        ClientQueueManager.Instance.clientsAwaitingResponse.Add(ticketNum, Time.time);
-
-                        Waypoint wp = workstation.clientStandPoint != null ? workstation.clientStandPoint : workstation.GetComponentInChildren<Waypoint>();
-                        client.stateMachine.GetCalledToSpecificDesk(wp, ticketNum, this);
-
-                        // Ждём прибытия клиента (с таймаутом 15f)
-                        float waitTimer = 0f;
-                        yield return new WaitUntil(() =>
-                        {
-                            waitTimer += Time.deltaTime;
-                            if (waitTimer >= 15f) return true;
-                            var z = ClientSpawner.GetZoneByDeskId(workstation.deskId);
-                            return z?.GetOccupyingClients().Contains(client) ?? false;
-                        });
-
-                        if (waitTimer >= 15f)
-                        {
-                            // Клиент не пришёл за 15ф — убираем из вызванных
-                            ClientQueueManager.Instance.currentlyCalledNumbers.Remove(ticketNum);
-                            ClientQueueManager.Instance.clientsAwaitingResponse.Remove(ticketNum);
-                            yield return new WaitForSeconds(0.5f);
-                            continue;
-                        }
-
-                        // Обслуживаем клиента
-                        clientBeingServed = client;
-                        yield return DirectorServiceRoutine(client);
-                        clientBeingServed = null;
-
-                        // --- ИЗНОС: Наносим урон ПОСЛЕ обслуживания ---
-                        if (durability != null) durability.Degrade(Random.Range(2f, 4f));
-                        if (efficiency < 1.0f) yield return new WaitForSeconds(1.0f);
-                    }
-                }
-            }
-            // --- ЛОГИКА КЛЕРКОВ И РЕГИСТРАТОРА ---
-            else
+            // Registration and walk-in desks share reservation, arrival and cancellation handling.
             {
                 ClientPathfinding clientToServe = workstation.CurrentClient;
 
@@ -686,10 +688,10 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                         }
                         
                         ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
-                        ClientQueueManager.Instance.clientsAwaitingResponse.Add(ticketNum, Time.time);
+                        ClientQueueManager.Instance.clientsAwaitingResponse[ticketNum] = Time.time;
                         
 
-                        string callMsg = ticketNum > 10000 ? "Следующий!" : $"Талон №{ticketNum}, подойдите!";
+                        string callMsg = ticketNum > 10000 ? UI.GameText.Get("staff.registration.next") : UI.GameText.Get("staff.registration.call_ticket", ticketNum);
                         thoughtBubble?.ShowPriorityMessage(callMsg, 3f, Color.green);
                         if (ClientQueueManager.Instance.nextClientSound != null)
                             Managers.AudioManager.Instance?.PlayAudioClip2D(ClientQueueManager.Instance.nextClientSound);
@@ -704,13 +706,13 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                     if (zone != null)
                     {
                         clientToServe = zone.GetOccupyingClients().FirstOrDefault(c =>
-                            c.stateMachine.GetCurrentState() != ClientState.Leaving &&
-                            c.stateMachine.GetCurrentState() != ClientState.LeavingUpset &&
+                            c != null && c.CanContinueService && c.stateMachine.GetCurrentGoal() == workstation.clientStandPoint &&
+                            (c.stateMachine.AssignedServicePoint == null || c.stateMachine.AssignedServicePoint == workstation) &&
                             c.stateMachine.MyServiceProvider == null);
                             
                         if (clientToServe != null)
                         {
-                            thoughtBubble?.ShowPriorityMessage("Эй, вы, подходите!", 2f, Color.green);
+                            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.walk_in"), 2f, Color.green);
                             Waypoint wp = workstation.clientStandPoint != null ? workstation.clientStandPoint : workstation.GetComponentInChildren<Waypoint>();
                             if (!clientToServe.stateMachine.TryGetCalledToSpecificDesk(wp, clientToServe.stateMachine.MyQueueNumber, this)) clientToServe = null;
                         }
@@ -725,8 +727,8 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                     
                     if (Random.value < currentSoftSkills)
                     {
-                        thoughtBubble?.ShowPriorityMessage("В общую очередь, пожалуйста!", 3f, Color.red);
-                        clientToServe.ShowThoughtBubble("Извините, шеф...", 2f);
+                        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.join_queue"), 3f, Color.red);
+                        clientToServe.ShowThoughtBubble(UI.GameText.Get("client.director.apology"), 2f);
                         clientToServe.isQueueJumper = false;
                         
                         if (Objects.TicketTerminal.Instance != null && Objects.TicketTerminal.Instance.GetStandWaypoint() != null)
@@ -744,13 +746,13 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                     {
                         if (Random.value < currentCorruption)
                         {
-                            thoughtBubble?.ShowPriorityMessage("Ладно, давайте сюда...", 2f, Color.green);
-                            if (PlayerWallet.Instance != null) PlayerWallet.Instance.AddMoney(150, "Взятка Директору", IncomeType.Shadow);
+                            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.accept_bribe"), 2f, Color.green);
+                            if (PlayerWallet.Instance != null) PlayerWallet.Instance.AddMoney(150, UI.GameText.Get("ledger.director_bribe"), IncomeType.Shadow);
                             if (AudioManager.Instance != null) AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Money_Income, transform.position);
                         }
                         else
                         {
-                            thoughtBubble?.ShowPriorityMessage("Так уж и быть, давайте...", 2f, Color.gray);
+                            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.accept_jumper"), 2f, Color.gray);
                         }
                         clientToServe.isQueueJumper = false; // Снимаем флаг наглеца
                     }
@@ -788,7 +790,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
 
                     if (!clientArrived)
                     {
-                        thoughtBubble?.ShowPriorityMessage("Следующий!", 2f, Color.red);
+                        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.next"), 2f, Color.red);
                         workstation.ClearClient(clientToServe);
                         if (clientToServe != null && ClientQueueManager.Instance != null)
                         {
@@ -815,89 +817,79 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     // --- НОВАЯ СИСТЕМА АРХИВА ДЛЯ ДИРЕКТОРА ---
     private IEnumerator DirectorArchiveRetrieveRoutine()
     {
-        var request = ArchiveRequestManager.Instance.GetNextRequest();
+        var manager = ArchiveRequestManager.Instance;
+        var request = manager != null ? manager.GetNextRequest() : null;
         if (request == null) yield break;
-
-        // 1. Идем к случайному шкафу
-        var cabinet = ArchiveManager.Instance.GetRandomCabinet();
-        if (cabinet != null)
+        System.Action cleanup = () =>
         {
-            SetState(DirectorState.MovingToPoint);
-            yield return StartCoroutine(MoveToTargetRoutine(cabinet.transform.position));
-        }
-
-        SetState(DirectorState.WorkingAtStation);
-        thoughtBubble?.ShowPriorityMessage("Ищу выписку (Архив)...", 2f, Color.yellow);
-        
-        // Директор ищет быстро (1-2 шага поиска вместо 2-4 как у обычного клерка)
-        int searchSteps = Random.Range(1, 3);
-        string[] searchThoughts = { "Где же она...", "Так, так, так...", "Пыли-то сколько..." };
-        for(int i = 0; i < searchSteps; i++)
-        {
-            thoughtBubble?.ShowPriorityMessage(searchThoughts[Random.Range(0, searchThoughts.Length)], 1.5f, Color.gray);
-            yield return new WaitForSeconds(1.5f);
-        }
-
-        thoughtBubble?.ShowPriorityMessage("Нашел!", 1.5f, Color.green);
-        stackHolder?.ShowSingleDocumentSprite();
-        
-        var registrar = request.RequestingRegistrar;
-        if (registrar != null)
-        {
-            // Несем документ регистратору
-            SetState(DirectorState.MovingToPoint);
-            yield return StartCoroutine(MoveToTargetRoutine(registrar.transform.position));
-            
+            if (!request.IsFulfilled) request.IsTaken = false;
             stackHolder?.HideStack();
-            request.IsFulfilled = true;
-            
-            thoughtBubble?.ShowPriorityMessage("Вот ваша выписка.", 2f, Color.white);
-            yield return new WaitForSeconds(1f);
-            
-            // Возвращаемся за свой стол в архиве
-            SetState(DirectorState.MovingToPoint);
-            yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
-            SetState(DirectorState.WorkingAtStation);
-        }
-        else
+        };
+        manualServiceCleanup = cleanup;
+        try
         {
-            stackHolder?.HideStack();
-            request.IsFulfilled = true;
-            // Если регистратор пропал, просто возвращаемся за свой стол
-            SetState(DirectorState.MovingToPoint);
-            yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
+            var cabinet = ArchiveManager.Instance != null ? ArchiveManager.Instance.GetRandomCabinet() : null;
+            if (cabinet == null) yield break;
+            yield return MoveToTargetRoutine(cabinet.transform.position);
+            if (!request.IsActive || cabinet == null || Vector2.Distance(transform.position, cabinet.transform.position) > 1f) yield break;
             SetState(DirectorState.WorkingAtStation);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.searching"), 2f, Color.yellow);
+            float remaining = Random.Range(1, 3) * 1.5f;
+            while (remaining > 0 && request.IsActive)
+            {
+                remaining -= Time.deltaTime;
+                yield return null;
+            }
+            if (!request.IsActive || currentWorkstation == null || currentWorkstation.clerkStandPoint == null) yield break;
+            stackHolder?.ShowSingleDocumentSprite();
+            // Fulfilled records wait at the archive desk; registrar and delegated courier both collect there.
+            yield return MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position);
+            if (!request.IsActive || currentWorkstation == null || currentWorkstation.clerkStandPoint == null ||
+                Vector2.Distance(transform.position, currentWorkstation.clerkStandPoint.position) > 1f) yield break;
+            manager?.FulfillRequest(request);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.record_ready"), 2f, Color.white);
+        }
+        finally
+        {
+            cleanup();
+            if (manualServiceCleanup == cleanup) manualServiceCleanup = null;
+            if (isManuallyWorking) SetState(DirectorState.WorkingAtStation);
         }
     }
 
     private IEnumerator DirectorArchiveStoreRoutine()
     {
-        // Берем один документ из главной кучи
-        if (ArchiveManager.Instance.mainDocumentStack.TakeOneDocument())
+        var source = ArchiveManager.Instance != null ? ArchiveManager.Instance.GetStackToProcess() : null;
+        var cabinet = ArchiveManager.Instance != null ? ArchiveManager.Instance.GetRandomCabinet() : null;
+        if (source == null || cabinet == null) yield break;
+        var sourceDesk = source.GetComponentInParent<ServicePoint>();
+        var pickup = sourceDesk != null && sourceDesk.internCollectionPoint != null ? sourceDesk.internCollectionPoint : source.transform;
+        yield return MoveToTargetRoutine(pickup.position);
+        if (source == null || pickup == null || Vector2.Distance(transform.position, pickup.position) > 1f) yield break;
+        var transfer = new DocumentStackTransfer(source, 1);
+        System.Action cleanup = () => { transfer.Dispose(); stackHolder?.HideStack(); };
+        manualServiceCleanup = cleanup;
+        try
         {
-            // 1. Идем к случайному шкафу
-            var cabinet = ArchiveManager.Instance.GetRandomCabinet();
-            if (cabinet != null)
-            {
-                SetState(DirectorState.MovingToPoint);
-                yield return StartCoroutine(MoveToTargetRoutine(cabinet.transform.position));
-            }
-
-            SetState(DirectorState.WorkingAtStation);
-            thoughtBubble?.ShowPriorityMessage("Архивирую...", 1.0f, Color.gray);
-            
-            // Директор кладет бумаги в шкаф
+            if (transfer.Count == 0) yield break;
             stackHolder?.ShowSingleDocumentSprite();
-            yield return new WaitForSeconds(1.0f);
-            stackHolder?.HideStack();
-
-            // 2. Возвращаемся за свой стол в архиве за следующей партией
-            if (currentWorkstation != null && currentWorkstation.clerkStandPoint != null)
-            {
-                SetState(DirectorState.MovingToPoint);
-                yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
-                SetState(DirectorState.WorkingAtStation);
-            }
+            yield return MoveToTargetRoutine(cabinet.transform.position);
+            if (cabinet == null || Vector2.Distance(transform.position, cabinet.transform.position) > 1f) yield break;
+            SetState(DirectorState.WorkingAtStation);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.filing"), 1f, Color.gray);
+            yield return new WaitForSeconds(1f);
+            if (cabinet == null) yield break;
+            transfer.Archive();
+        }
+        finally
+        {
+            cleanup();
+            if (manualServiceCleanup == cleanup) manualServiceCleanup = null;
+        }
+        if (currentWorkstation != null && currentWorkstation.clerkStandPoint != null)
+        {
+            yield return MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position);
+            SetState(DirectorState.WorkingAtStation);
         }
     }
 
@@ -950,7 +942,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             yield break;
         }
 
-        yield return StartCoroutine(MoveToTargetRoutine(barrier.guardInteractionPoint.position));
+        yield return MoveToTargetRoutine(barrier.guardInteractionPoint.position);
         SetState(DirectorState.MovingToPoint);
 
         if (agentMover != null && agentMover.IsSlipping)
@@ -988,85 +980,42 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     /// </summary>
     private IEnumerator CollectAndDeliverRoutine(DocumentStack stack)
     {
-         if (stack == null) {
-              Debug.LogError("CollectAndDeliverRoutine: stack is null!");
-              yield break;
-         }
-         if (ArchiveManager.Instance == null) {
-              Debug.LogError("CollectAndDeliverRoutine: ArchiveManager не найден!");
-              yield break;
-        }
-
-
-        SetUninterruptible(true); // Блокируем другие действия
-        SetState(DirectorState.GoingForDocuments); // Устанавливаем состояние
-        Debug.Log($"[DirectorController] {characterName} идет за документами к {stack.name}.");
-
-        // Двигаемся к стопке документов
-        yield return StartCoroutine(MoveToTargetRoutine(stack.transform.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
-        // Состояние GoingForDocuments остается
-
-        // Проверяем стопку еще раз после прибытия
-         if (stack == null) { // Могла быть уничтожена, пока шли
-             Debug.LogWarning($"Стопка {stack?.name} исчезла, пока {characterName} шел.");
-              SetState(DirectorState.Idle);
-              SetUninterruptible(false);
-              yield break;
-         }
-
-        // Забираем все документы из стопки
-        int docCount = stack.TakeEntireStack();
-        Debug.Log($" -> Забрано {docCount} документов.");
-
-
-        if (docCount > 0) // Если были документы
+        var archive = ArchiveManager.Instance;
+        if (stack == null || archive == null) yield break;
+        SetUninterruptible(true);
+        SetState(DirectorState.GoingForDocuments);
+        try
         {
-            // Показываем стопку в руках
-            stackHolder?.ShowStack(docCount, stack.maxStackSize);
-            SetState(DirectorState.CarryingDocuments); // Меняем состояние
+            yield return MoveToTargetRoutine(stack.transform.position);
+            if (stack == null || Vector2.Distance(transform.position, stack.transform.position) > 1f)
+                yield break;
 
-            // Запрашиваем точку сброса в архиве
-            Transform archivePoint = ArchiveManager.Instance.RequestDropOffPoint();
-            if (archivePoint != null)
-            {
-                 Debug.Log($" -> Идем к точке архива: {archivePoint.name}.");
-                // Двигаемся к точке архива
-                 yield return StartCoroutine(MoveToTargetRoutine(archivePoint.position)); // <<< ИЗМЕНЕНИЕ: Убран второй аргумент
-                 // Состояние CarryingDocuments остается
+            deliveryArchive = archive;
+            deliveryPoint = archive.RequestDropOffPoint();
+            if (deliveryPoint == null) yield break;
 
-                // Добавляем документы в главную стопку архива
-                 if (ArchiveManager.Instance.mainDocumentStack != null) {
-                     for (int i = 0; i < docCount; i++)
-                     {
-                         ArchiveManager.Instance.mainDocumentStack.AddDocumentToStack();
-                     }
-                      Debug.Log($" -> {docCount} документов добавлено в mainDocumentStack.");
-                 } else {
-                      Debug.LogError("mainDocumentStack в ArchiveManager не найден! Документы потеряны.");
-                }
+            // Preserve the actual papers and their save identities. Taking a numeric count
+            // destroyed them, lost overflow, and left nothing to restore on a night teleport.
+            documentTransfer = new DocumentStackTransfer(stack, stack.OrdinaryDocumentCount);
+            if (documentTransfer.Count == 0) yield break;
+            stackHolder?.ShowStack(documentTransfer.Count, stack.maxStackSize);
+            SetState(DirectorState.CarryingDocuments);
+            yield return MoveToTargetRoutine(deliveryPoint.position);
+            if (deliveryPoint == null || Vector2.Distance(transform.position, deliveryPoint.position) > 1f)
+                yield break;
 
-                // Прячем стопку в руках
-                stackHolder?.HideStack();
-                // Освобождаем точку сброса в архиве
-                ArchiveManager.Instance.FreeOverflowPoint(archivePoint);
-            }
-             else {
-                  Debug.LogError($"Не найдена точка сброса в архиве для {characterName}! Документы (кол-во: {docCount}) остались в руках?");
-                  // Документы останутся "висеть" в руках, т.к. HideStack не вызван
-                  // Можно добавить логику возврата документов или сброса stackHolder
-                  stackHolder?.HideStack(); // Пытаемся спрятать стопку
-             }
+            int delivered = documentTransfer.DeliverTo(archive.GetDropOffStack(deliveryPoint));
+            Debug.Log($"[DirectorDocumentTrace] Доставлено в архив: {delivered}; возвращено на исходный стол: {documentTransfer.Count}.");
         }
-        else // Если в стопке не оказалось документов к моменту прихода
+        finally
         {
-             Debug.Log($" -> В стопке {stack.name} не оказалось документов к моменту прихода {characterName}.");
+            // Explicit cleanup in ReturnToDeskAfterDayEnd/OnDisable also covers Unity
+            // coroutine cancellation, which must not depend on iterator disposal.
+            CleanupDocumentDelivery();
+            SetState(DirectorState.Idle);
+            SetUninterruptible(agentMover != null && agentMover.IsSlipping);
         }
-
-        SetState(DirectorState.Idle); // Возвращаемся в состояние бездействия
-        SetUninterruptible(false); // Снимаем блокировку
-         Debug.Log($"[DirectorController] {characterName} завершил сбор/доставку документов.");
     }
-
 
     /// <summary>
     /// Находит ближайшую путевую точку к указанной позиции.
@@ -1117,7 +1066,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         SetUninterruptible(true);
 
         SetState(DirectorState.AtDesk);
-        thoughtBubble?.ShowPriorityMessage("Так, вот этот приказ...", 2f, Color.white);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.register_order"), 2f, Color.white);
         yield return new WaitForSeconds(1.5f);
         
         // --- ОЧИЩАЕМ СТОЛ И СПАВНИМ ДОКУМЕНТ В РУКЕ ---
@@ -1168,9 +1117,9 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
 
         // 2. Идем в Регистратуру
         SetState(DirectorState.MovingToPoint);
-        yield return StartCoroutine(MoveToTargetRoutine(quest.registrarStandPoint.position));
+        yield return MoveToTargetRoutine(quest.registrarStandPoint.position);
         SetState(DirectorState.WorkingAtStation);
-        thoughtBubble?.ShowPriorityMessage("Никого нет в регистратуре...\nЗарегистрирую сам.", 3f, Color.yellow);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.registrar_absent"), 3f, Color.yellow);
         yield return new WaitForSeconds(3f);
 
         // Ставим печать регистрации
@@ -1180,21 +1129,21 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
 
         // 3. Идем в Офис
         SetState(DirectorState.MovingToPoint);
-        yield return StartCoroutine(MoveToTargetRoutine(quest.officeStandPoint.position));
+        yield return MoveToTargetRoutine(quest.officeStandPoint.position);
         SetState(DirectorState.WorkingAtStation);
-        thoughtBubble?.ShowPriorityMessage("Ставлю печать клерка.", 2f, Color.gray);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.stamp_document"), 2f, Color.gray);
         yield return new WaitForSeconds(2f);
         if (Managers.AudioManager.Instance != null) Managers.AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Stamp_Approve, transform.position);
 
         // 4. Идем в Кассу
         SetState(DirectorState.MovingToPoint);
-        yield return StartCoroutine(MoveToTargetRoutine(quest.cashierStandPoint.position));
+        yield return MoveToTargetRoutine(quest.cashierStandPoint.position);
         SetState(DirectorState.WorkingAtStation);
-        thoughtBubble?.ShowPriorityMessage("Сам себе плачу пошлину...", 3f, Color.yellow);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.pay_fee"), 3f, Color.yellow);
         
         if (Managers.PlayerWallet.Instance != null)
         {
-            Managers.PlayerWallet.Instance.AddMoney(-5, "Пошлина (Оформление)");
+            Managers.PlayerWallet.Instance.AddMoney(-5, UI.GameText.Get("ledger.registration_fee"));
             if (Managers.AudioManager.Instance != null) Managers.AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Money_Income, transform.position);
         }
         yield return new WaitForSeconds(2f);
@@ -1205,9 +1154,9 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
 
         // 5. Идем в Архив
         SetState(DirectorState.MovingToPoint);
-        yield return StartCoroutine(MoveToTargetRoutine(quest.archiveStandPoint.position));
+        yield return MoveToTargetRoutine(quest.archiveStandPoint.position);
         SetState(DirectorState.WorkingAtStation);
-        thoughtBubble?.ShowPriorityMessage("И наконец, в архив!", 2f, Color.green);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.finally_archive"), 2f, Color.green);
         
         // Убираем документ
         if (physicalDoc != null) Destroy(physicalDoc.gameObject);
@@ -1215,7 +1164,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
 
         yield return new WaitForSeconds(2f);
 
-        thoughtBubble?.ShowPriorityMessage("Готово!", 1.5f, Color.green);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.action.done"), 1.5f, Color.green);
         yield return new WaitForSeconds(1.5f);
 
         SetState(DirectorState.Idle);
@@ -1249,310 +1198,214 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     /// <summary>
     /// Корутина, моделирующая процесс обслуживания клиента Директором на разных типах столов.
     /// </summary>
+    private bool CanContinueManualService(ClientPathfinding client, ServicePoint desk)
+    {
+        if (!isManuallyWorking || desk == null || desk != currentWorkstation || desk.clientStandPoint == null ||
+            client == null || !client.CanContinueService || desk.CurrentClient != client) return false;
+        var assignment = client.stateMachine.AssignedServicePoint;
+        return (assignment == desk || (assignment == null && client.stateMachine.GetCurrentGoal() == desk.clientStandPoint)) &&
+               Vector2.Distance(client.transform.position, desk.clientStandPoint.transform.position) <= 1.5f;
+    }
+
+    private IEnumerator WaitForManualService(ClientPathfinding client, ServicePoint desk, float duration)
+    {
+        while (duration > 0f && CanContinueManualService(client, desk))
+        {
+            duration -= Time.deltaTime;
+            yield return null;
+        }
+    }
+
     private IEnumerator DirectorServiceRoutine(ClientPathfinding client)
     {
-        if (client == null || client.stateMachine == null || currentWorkstation == null)
-        {
-            Debug.LogError($"DirectorServiceRoutine: client ({client?.name}) или currentWorkstation ({currentWorkstation?.name}) равен null!");
-            clientBeingServed = null;
-            SetState(DirectorState.WorkingAtStation);
-            yield break;
-        }
-
-        if (clientBeingServed != null && clientBeingServed != client)
-        {
-            Debug.LogWarning($"DirectorServiceRoutine: Попытка обслужить {client.name}, когда уже обслуживается {clientBeingServed.name}.");
-            yield break;
-        }
-
+        var desk = currentWorkstation;
+        if (!CanContinueManualService(client, desk)) yield break;
         clientBeingServed = client;
         SetState(DirectorState.ServingClient);
-        Debug.Log($"<color=#00FFFF>ДИРЕКТОР:</color> {characterName} начал обслуживание {client.name} (Цель: {client.mainGoal}) на {currentWorkstation.name} (ID: {currentWorkstation.deskId}).");
-
-        int deskId = currentWorkstation.deskId;
-        bool jobDone = false;
-        GameObject flyingDoc = null;
-
-        // --- Логика для столов Клерков (ID 1 и 2) ---
-        if (deskId == 1 || deskId == 2)
+        bool jobDone = false, committed = false, borrowed = false, cleaned = false;
+        var holder = client.docHolder;
+        var originalType = holder != null ? holder.GetCurrentDocumentType() : DocumentType.None;
+        var originalData = holder != null ? holder.GetCurrentDocumentData() : null;
+        GameObject incoming = null, outgoing = null, processing = null;
+        System.Action cleanup = () =>
         {
-            thoughtBubble?.ShowPriorityMessage("Так... посмотрю...", 2f, Color.yellow);
-            yield return new WaitForSeconds(1.0f);
-
-            DocumentType requiredDocType = (deskId == 1) ? DocumentType.Form1 : DocumentType.Form2;
-            GameObject certificatePrefab = (deskId == 1) ? certificate1Prefab : certificate2Prefab;
-            DocumentType certificateType = (deskId == 1) ? DocumentType.Certificate1 : DocumentType.Certificate2;
-            int serviceCost = (deskId == 1) ? 100 : 250;
-
-            if (client.docHolder == null)
+            if (cleaned) return;
+            cleaned = true;
+            if (incoming != null) { incoming.GetComponent<DocumentMover>()?.CancelMove(); Destroy(incoming); }
+            if (outgoing != null)
             {
-                Debug.LogError($"У клиента {client.name} отсутствует DocumentHolder!");
+                outgoing.GetComponent<DocumentMover>()?.CancelMove();
+                if (!committed) Destroy(outgoing);
             }
-            else if (client.docHolder.GetCurrentDocumentType() != requiredDocType)
+            if (borrowed && !committed && holder != null)
             {
-                thoughtBubble?.ShowPriorityMessage("У вас бланк не тот!\nВозьмите другой.", 3f, Color.red);
-                yield return new WaitForSeconds(1.5f);
-                client.stateMachine?.GoGetFormAndReturn();
-                jobDone = true;
-                Debug.Log($" -> Клиент {client.name} отправлен за другим бланком.");
+                if (originalData != null) holder.SetDocument(originalData);
+                else holder.SetDocument(originalType);
             }
-            else
+            if (processing != null) Destroy(processing);
+            stackHolder?.HideStack();
+            if (desk != null && client != null && desk.CurrentClient == client)
             {
-                Debug.Log($" -> У клиента {client.name} правильный бланк ({requiredDocType}). Начинаем обработку...");
-                DocumentHolder clientDocHolder = client.docHolder;
-                Transform clientHand = clientDocHolder?.handPoint;
-                Transform deskPoint = currentWorkstation.documentPointOnDesk;
-                GameObject currentClientDocObject = (clientHand != null && clientHand.childCount > 0) ? clientHand.GetChild(0).gameObject : null;
-
-                if (currentClientDocObject != null && deskPoint != null)
+                client.stateMachine?.CancelServiceCall(this);
+                desk.ClearClient(client);
+            }
+        };
+        // StopCoroutine does not guarantee disposal of nested iterators in Unity.
+        // StopManualWork and OnDisable therefore invoke the same idempotent cleanup explicitly.
+        manualServiceCleanup = cleanup;
+        try
+        {
+            if (desk.deskId == 1 || desk.deskId == 2)
+            {
+                var cashier = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+                if (holder == null || cashier == null) yield break;
+                var form = desk.deskId == 1 ? DocumentType.Form1 : DocumentType.Form2;
+                var certificate = desk.deskId == 1 ? DocumentType.Certificate1 : DocumentType.Certificate2;
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.checking"), 2f, Color.yellow);
+                yield return WaitForManualService(client, desk, 1f);
+                if (!CanContinueManualService(client, desk)) yield break;
+                if (holder.GetCurrentDocumentType() != form)
                 {
-                    clientDocHolder.SetDocument(DocumentType.None);
-                    DocumentMover mover = currentClientDocObject.AddComponent<DocumentMover>();
-                    bool arrived = false;
-                    mover.StartMove(deskPoint, () => { arrived = true; });
-                    yield return new WaitUntil(() => arrived);
-                    flyingDoc = currentClientDocObject;
-                    if (flyingDoc != null)
+                    thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.wrong_form"), 3f, Color.red);
+                    yield return WaitForManualService(client, desk, 1.5f);
+                    if (!CanContinueManualService(client, desk)) yield break;
+                    client.stateMachine.GoGetFormAndReturn();
+                    jobDone = true;
+                    yield break;
+                }
+                var point = desk.documentPointOnDesk;
+                if (point != null)
+                {
+                    incoming = holder.DetachDocument();
+                    borrowed = true;
+                    if (incoming != null)
                     {
-                        flyingDoc.transform.SetParent(deskPoint);
-                        flyingDoc.transform.localPosition = Vector3.zero;
-                        flyingDoc.transform.localRotation = Quaternion.identity;
-                        Debug.Log($" -> Документ {flyingDoc.name} перемещен на стол.");
+                        bool arrived = false;
+                        var mover = incoming.GetComponent<DocumentMover>() ?? incoming.AddComponent<DocumentMover>();
+                        mover.StartMove(point, () => arrived = true);
+                        float deadline = Time.time + 30f;
+                        yield return new WaitUntil(() => arrived || incoming == null || point == null ||
+                            !CanContinueManualService(client, desk) || Time.time >= deadline);
+                        if (!arrived || incoming == null || point == null || !CanContinueManualService(client, desk)) yield break;
+                        incoming.transform.SetParent(point, false);
+                        incoming.transform.localPosition = Vector3.zero;
                     }
                 }
-
-                thoughtBubble?.ShowPriorityMessage("Обрабатываю...", 3f, Color.white);
-                float processTime = Random.Range(2.5f, 4.0f);
-
+                float duration = Random.Range(2.5f, 4f);
                 if (processingIconPrefab != null)
                 {
-                    GameObject iconObj = Instantiate(processingIconPrefab);
-                    ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
-                    if (animScript != null)
-                    {
-                        animScript.Play(transform.position, client.transform.position, processTime);
-                    }
+                    processing = Instantiate(processingIconPrefab);
+                    processing.GetComponent<ProcessingAnimationUI>()?.Play(transform.position, client.transform.position, duration);
                 }
-
-                yield return new WaitForSeconds(processTime);
-
-                if (client == null || client.stateMachine == null || currentWorkstation == null)
+                yield return WaitForManualService(client, desk, duration);
+                if (!CanContinueManualService(client, desk) || holder == null || cashier == null) yield break;
+                var prefab = holder.GetPrefabForType(certificate) ?? (desk.deskId == 1 ? certificate1Prefab : certificate2Prefab);
+                if (prefab != null && point != null && holder.handPoint != null)
                 {
-                    Debug.LogWarning("Клиент или рабочее место исчезли во время обработки документа.");
-                    if (flyingDoc != null) Destroy(flyingDoc);
-                    jobDone = false;
+                    outgoing = Instantiate(prefab, point.position, point.rotation);
+                    bool arrived = false;
+                    var mover = outgoing.GetComponent<DocumentMover>() ?? outgoing.AddComponent<DocumentMover>();
+                    mover.StartMove(holder.handPoint, () => arrived = true);
+                    float deadline = Time.time + 30f;
+                    yield return new WaitUntil(() => arrived || outgoing == null || holder == null || holder.handPoint == null ||
+                        !CanContinueManualService(client, desk) || Time.time >= deadline);
+                    if (!arrived || outgoing == null || holder == null || !CanContinueManualService(client, desk)) yield break;
+                    holder.ReceiveTransferredDocument(certificate, outgoing);
                 }
-                else
-                {
-                    if (flyingDoc != null) Destroy(flyingDoc);
-                    deskPoint = currentWorkstation.documentPointOnDesk;
-                    clientHand = client.docHolder?.handPoint;
-
-                    if (certificatePrefab != null && deskPoint != null && clientHand != null)
-                    {
-                        GameObject newCertGO = Instantiate(certificatePrefab, deskPoint.position, deskPoint.rotation);
-                        DocumentMover mover = newCertGO.AddComponent<DocumentMover>();
-                        bool arrived = false;
-                        mover.StartMove(clientHand, () => { arrived = true; });
-                        yield return new WaitUntil(() => arrived);
-
-                        if (client != null && client.docHolder != null)
-                        {
-                            client.docHolder.ReceiveTransferredDocument(certificateType, newCertGO);
-                            Debug.Log($" -> Сертификат {newCertGO.name} передан клиенту {client.name}.");
-                        }
-                    }
-
-                    if (client != null && client.stateMachine != null)
-                    {
-                        client.billToPay += serviceCost;
-                        thoughtBubble?.ShowPriorityMessage("Готово! Теперь в кассу.", 3f, Color.green);
-                        Debug.Log($" -> Клиент {client.name} отправлен в кассу (Счет: {client.billToPay}).");
-                        client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
-                        client.stateMachine.SetState(ClientState.MovingToGoal);
-                    }
-                    jobDone = true;
-                }
+                else holder.SetDocument(certificate);
+                client.billToPay += desk.deskId == 1 ? 100 : 250;
+                committed = true;
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.go_to_cashier"), 3f, Color.green);
+                client.stateMachine.SetGoal(cashier);
+                client.stateMachine.SetState(ClientState.MovingToGoal);
+                jobDone = true;
             }
-        }
-        // --- Логика для Регистратуры (ID 0) ---
-        else if (deskId == 0)
-        {
-            thoughtBubble?.ShowPriorityMessage("Смотрю, куда вас направить...", 2f, Color.cyan);
-            yield return new WaitForSeconds(Random.Range(1.0f, 2.0f));
-
-            if (client == null || client.stateMachine == null)
+            else if (desk.deskId == 0)
             {
-                Debug.LogWarning("Клиент исчез во время обработки в регистратуре.");
-                jobDone = false;
-            }
-            else
-            {
-                Waypoint destination = null;
-                bool leavingUpset = false;
-
-                if (client.billToPay > 0)
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.checking"), 2f, Color.cyan);
+                yield return WaitForManualService(client, desk, Random.Range(1f, 2f));
+                if (!CanContinueManualService(client, desk)) yield break;
+                Waypoint destination;
+                if (client.billToPay > 0 || client.mainGoal == ClientGoal.PayTax)
+                    destination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+                else if (client.mainGoal == ClientGoal.GetCertificate1)
+                    destination = ClientSpawner.GetDesk1Zone()?.waitingWaypoint;
+                else if (client.mainGoal == ClientGoal.GetCertificate2)
+                    destination = ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
+                else if (client.mainGoal == ClientGoal.DirectorApproval || client.mainGoal == ClientGoal.DirectorAudience)
+                    destination = ClientSpawner.Instance?.directorReceptionZone?.waitingWaypoint;
+                else if (client.mainGoal == ClientGoal.VisitToilet)
+                    destination = ClientSpawner.GetToiletZone()?.waitingWaypoint;
+                else if (client.mainGoal == ClientGoal.GetArchiveRecord)
                 {
                     destination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+                    var cabinet = ArchiveManager.Instance != null ? ArchiveManager.Instance.GetRandomCabinet() : null;
+                    if (cabinet == null || desk.clerkStandPoint == null || destination == null) yield break;
+                    client.stateMachine.SetState(ClientState.WaitingForDocument);
+                    thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.requesting"), 2f, Color.cyan);
+                    SetState(DirectorState.MovingToPoint);
+                    yield return MoveToTargetRoutine(cabinet.transform.position);
+                    if (cabinet == null || !CanContinueManualService(client, desk) ||
+                        Vector2.Distance(transform.position, cabinet.transform.position) > 1f) yield break;
+                    stackHolder?.ShowSingleDocumentSprite();
+                    yield return WaitForManualService(client, desk, 3f);
+                    if (!CanContinueManualService(client, desk) || desk.clerkStandPoint == null) yield break;
+                    yield return MoveToTargetRoutine(desk.clerkStandPoint.position);
+                    if (!CanContinueManualService(client, desk) || desk.clerkStandPoint == null ||
+                        Vector2.Distance(transform.position, desk.clerkStandPoint.position) > 1f) yield break;
+                    stackHolder?.HideStack();
+                    SetState(DirectorState.ServingClient);
+                    client.billToPay += 150;
                 }
-                else
+                else destination = ClientSpawner.Instance?.exitWaypoint;
+                if (destination == null) yield break;
+                string destinationName = string.IsNullOrEmpty(destination.friendlyName) ? destination.name : destination.friendlyName;
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.direction", destinationName), 3f, Color.white);
+                ClientQueueManager.Instance?.RemoveClientFromQueue(client);
+                if (destination == ClientSpawner.Instance?.exitWaypoint)
                 {
-                    switch (client.mainGoal)
-                    {
-                        case ClientGoal.PayTax:
-                            destination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
-                            break;
-                        case ClientGoal.GetCertificate1:
-                            destination = ClientSpawner.GetDesk1Zone()?.waitingWaypoint;
-                            break;
-                        case ClientGoal.GetCertificate2:
-                            destination = ClientSpawner.GetDesk2Zone()?.waitingWaypoint;
-                            break;
-                        case ClientGoal.GetArchiveRecord:
-                            // Директор сам бежит в архив к шкафу!
-                            thoughtBubble?.ShowPriorityMessage("Минутку, я мигом в архив!", 2f, Color.cyan);
-                            yield return new WaitForSeconds(1.5f);
-                            
-                            var targetCabinet = ArchiveManager.Instance?.GetRandomCabinet();
-                            if (targetCabinet != null)
-                            {
-                                // Бежим к шкафу
-                                SetState(DirectorState.MovingToPoint);
-                                yield return StartCoroutine(MoveToTargetRoutine(targetCabinet.transform.position));
-                                
-                                SetState(DirectorState.WorkingAtStation);
-                                thoughtBubble?.ShowPriorityMessage("Где же это дело...", 1.5f, Color.gray);
-                                yield return new WaitForSeconds(1.5f);
-                                
-                                thoughtBubble?.ShowPriorityMessage("Нашел!", 1.0f, Color.green);
-                                stackHolder?.ShowSingleDocumentSprite();
-                                yield return new WaitForSeconds(1.0f);
-                                
-                                // Возвращаемся к клиенту за свою стойку регистратуры
-                                SetState(DirectorState.MovingToPoint);
-                                yield return StartCoroutine(MoveToTargetRoutine(currentWorkstation.clerkStandPoint.position));
-                                SetState(DirectorState.ServingClient);
-                                
-                                stackHolder?.HideStack();
-                                client.billToPay += 150;
-                                destination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
-                                leavingUpset = false;
-                            }
-                            else
-                            {
-                                 thoughtBubble?.ShowPriorityMessage("А где архив?!", 2f, Color.red);
-                                 destination = ClientSpawner.Instance?.exitWaypoint;
-                                 leavingUpset = true;
-                            }
-                            break;
-                        default:
-                            client.isLeavingSuccessfully = true;
-                            client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-                            destination = ClientSpawner.Instance?.exitWaypoint;
-                            break;
-                    }
+                    client.isLeavingSuccessfully = true;
+                    client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
                 }
-
-                if (destination != null)
+                client.stateMachine.SetGoal(destination);
+                client.stateMachine.SetState(ClientState.MovingToGoal);
+                jobDone = true;
+            }
+            else if (desk.deskId == -1)
+            {
+                yield return WaitForManualService(client, desk, Random.Range(2f, 3.5f));
+                if (!CanContinueManualService(client, desk) || PlayerWallet.Instance == null) yield break;
+                if (client.billToPay == 0 && client.mainGoal == ClientGoal.PayTax) client.billToPay = Random.Range(20, 121);
+                int bill = client.billToPay;
+                if (bill <= 0) yield break;
+                if (client.moneyPrefab != null)
                 {
-                    string destinationName = string.IsNullOrEmpty(destination.friendlyName) ? destination.name : destination.friendlyName;
-                    if (!leavingUpset) thoughtBubble?.ShowPriorityMessage($"Пройдите к\n'{destinationName}'", 3f, Color.white);
-
-                    if (client.stateMachine.MyQueueNumber != -1)
-                    {
-                        ClientQueueManager.Instance?.RemoveClientFromQueue(client);
-                    }
-
-                    client.stateMachine.SetGoal(destination);
-                    client.stateMachine.SetState(leavingUpset ? ClientState.LeavingUpset : ClientState.MovingToGoal);
-                    Debug.Log($" -> Клиент {client.name} отправлен к {destinationName}.");
+                    var effect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
+                    var mover = effect.GetComponent<MoneyMover>();
+                    if (mover != null) mover.StartMove(desk.moneyTrayPoint != null ? desk.moneyTrayPoint : desk.transform);
+                    else Destroy(effect);
                 }
-                else
-                {
-                    thoughtBubble?.ShowPriorityMessage("Не могу вас направить.\nИзвините.", 3f, Color.red);
-                    yield return new WaitForSeconds(1.5f);
-                    if (client.stateMachine != null && client.stateMachine.MyQueueNumber != -1)
-                    {
-                        ClientQueueManager.Instance?.RemoveClientFromQueue(client);
-                    }
-                    client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                    client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-                    client.stateMachine?.SetState(ClientState.LeavingUpset);
-                    Debug.LogError($"Не найдена точка назначения для клиента {client.name}.");
-                }
+                int before = PlayerWallet.Instance.GetCurrentMoney();
+                PlayerWallet.Instance.AddMoney(bill, UI.GameText.Get("ledger.service_payment", client.name), IncomeType.Official);
+                client.billToPay = 0;
+                Debug.Log($"[ClientServiceTrace] Director payment: client={client.name}, bill={bill}, wallet={before}->{PlayerWallet.Instance.GetCurrentMoney()}");
+                if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
+                client.isLeavingSuccessfully = true;
+                client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
+                client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
+                client.stateMachine.SetState(ClientState.Leaving);
                 jobDone = true;
             }
         }
-        // --- Логика для Кассы (ID -1 или 4) ---
-        else if (deskId == -1)
+        finally
         {
-            thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
-            yield return new WaitForSeconds(Random.Range(2.0f, 3.5f));
-
-            if (client == null || client.stateMachine == null)
-            {
-                Debug.LogWarning("Клиент исчез во время ожидания оплаты.");
-                jobDone = false;
-            }
-            else
-            {
-                if (client.billToPay == 0 && client.mainGoal == ClientGoal.PayTax)
-                {
-                    client.billToPay = Random.Range(20, 121);
-                    Debug.Log($" -> Назначен счет за налог для {client.name}: ${client.billToPay}");
-                }
-
-                if (PlayerWallet.Instance != null && client.billToPay > 0)
-                {
-                    if (client.moneyPrefab != null)
-                    {
-                        GameObject moneyEffect = Instantiate(client.moneyPrefab, client.transform.position + Vector3.up, Quaternion.identity);
-                        MoneyMover mover = moneyEffect.GetComponent<MoneyMover>();
-                        Transform moneyTarget = currentWorkstation?.moneyTrayPoint ?? currentWorkstation?.transform ?? this.transform;
-                        if (mover != null) mover.StartMove(moneyTarget);
-                        else Destroy(moneyEffect);
-                    }
-
-                    PlayerWallet.Instance.AddMoney(client.billToPay, $"Оплата услуги ({client.name})", IncomeType.Official);
-                    Debug.Log($" -> Получена оплата от {client.name}: ${client.billToPay}");
-
-                    if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
-                    client.billToPay = 0;
-                    jobDone = true;
-                }
-                else if (client.billToPay <= 0)
-                {
-                    Debug.Log($" -> У клиента {client.name} нет счета для оплаты.");
-                    jobDone = true;
-                }
-
-                client.isLeavingSuccessfully = true;
-                client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
-                client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-                client.stateMachine?.SetState(ClientState.Leaving);
-                Debug.Log($" -> Клиент {client.name} отправлен на выход после кассы.");
-            }
+            cleanup();
+            if (manualServiceCleanup == cleanup) manualServiceCleanup = null;
+            if (jobDone && desk != null && desk.documentStack != null) desk.documentStack.AddDocumentToStack();
+            if (clientBeingServed == client) clientBeingServed = null;
+            if (isManuallyWorking && currentWorkstation == desk) SetState(DirectorState.WorkingAtStation);
+            Debug.Log($"[ClientServiceTrace] Director service complete: client={client?.name}, success={jobDone}");
         }
-        else
-        {
-            Debug.LogError($"DirectorServiceRoutine: Неизвестный deskId = {deskId} для {currentWorkstation.name}!");
-            if (client != null && client.stateMachine != null)
-            {
-                client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-                client.stateMachine?.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-                client.stateMachine?.SetState(ClientState.LeavingUpset);
-            }
-        }
-
-        // --- Завершение обслуживания ---
-        if (jobDone && currentWorkstation?.documentStack != null)
-        {
-            currentWorkstation.documentStack.AddDocumentToStack();
-        }
-
-        clientBeingServed = null;
-        SetState(DirectorState.WorkingAtStation);
-        Debug.Log($"[DirectorController] {characterName} завершил обслуживание {client?.name}.");
     }
 
     /// <summary>
@@ -1666,7 +1519,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         }
         else if (target != null && !target.IsActive)
         {
-            thoughtBubble?.ShowPriorityMessage("Не успел...", 2f, Color.gray);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("director.too_late"), 2f, Color.gray);
         }
     }
     #endregion

@@ -30,21 +30,24 @@ public class StaffController : MonoBehaviour
     {
         public string Name;
         public string Description;
+        public string LocalizationKey;
+        public string LocalizedName => string.IsNullOrEmpty(LocalizationKey) ? Name : UI.GameText.Get(LocalizationKey + ".name");
+        public string LocalizedDescription => string.IsNullOrEmpty(LocalizationKey) ? Description : UI.GameText.Get(LocalizationKey + ".description");
     }
 
     public static readonly Dictionary<TraitType, TraitStaticData> TraitLibrary = new Dictionary<TraitType, TraitStaticData>
     {
         { TraitType.None, new TraitStaticData { Name = "", Description = "" } },
-        { TraitType.Shilo, new TraitStaticData { Name = "Шило", Description = "Не может стоять на месте" } },
-        { TraitType.Gossip, new TraitStaticData { Name = "Сплетник", Description = "Любит поболтать при встрече" } },
-        { TraitType.Allergy, new TraitStaticData { Name = "Аллергик", Description = "Чихает и расталкивает всех" } },
-        { TraitType.Sloppy, new TraitStaticData { Name = "Неряха", Description = "Оставляет после себя лужи" } },
-        { TraitType.Forgetful, new TraitStaticData { Name = "Забывчивый", Description = "Иногда теряет цель пути" } },
-        { TraitType.Clumsy, new TraitStaticData { Name = "Неуклюжий", Description = "Падает на ровном месте" } },
-        { TraitType.Sprinter, new TraitStaticData { Name = "Спринтер", Description = "Бежит быстро, но недолго" } },
-        { TraitType.Panicky, new TraitStaticData { Name = "Паникёр", Description = "Ускоряется при скоплении людей" } },
-        { TraitType.Loudmouth, new TraitStaticData { Name = "Несдержанный", Description = "Внезапно кричит от стресса" } },
-        { TraitType.ToiletRush, new TraitStaticData { Name = "Туалетная Тревога", Description = "Бежит в туалет быстрее" } }
+        { TraitType.Shilo, new TraitStaticData { LocalizationKey = "trait.shilo", Name = "Шило", Description = "Не может стоять на месте" } },
+        { TraitType.Gossip, new TraitStaticData { LocalizationKey = "trait.gossip", Name = "Сплетник", Description = "Любит поболтать при встрече" } },
+        { TraitType.Allergy, new TraitStaticData { LocalizationKey = "trait.allergy", Name = "Аллергик", Description = "Чихает и расталкивает всех" } },
+        { TraitType.Sloppy, new TraitStaticData { LocalizationKey = "trait.sloppy", Name = "Неряха", Description = "Оставляет после себя лужи" } },
+        { TraitType.Forgetful, new TraitStaticData { LocalizationKey = "trait.forgetful", Name = "Забывчивый", Description = "Иногда теряет цель пути" } },
+        { TraitType.Clumsy, new TraitStaticData { LocalizationKey = "trait.clumsy", Name = "Неуклюжий", Description = "Падает на ровном месте" } },
+        { TraitType.Sprinter, new TraitStaticData { LocalizationKey = "trait.sprinter", Name = "Спринтер", Description = "Бежит быстро, но недолго" } },
+        { TraitType.Panicky, new TraitStaticData { LocalizationKey = "trait.panicky", Name = "Паникёр", Description = "Ускоряется при скоплении людей" } },
+        { TraitType.Loudmouth, new TraitStaticData { LocalizationKey = "trait.loudmouth", Name = "Несдержанный", Description = "Внезапно кричит от стресса" } },
+        { TraitType.ToiletRush, new TraitStaticData { LocalizationKey = "trait.toiletrush", Name = "Туалетная Тревога", Description = "Бежит в туалет быстрее" } }
     };
 
     public bool HasTrait(TraitType type) => permanentTrait == type;
@@ -65,7 +68,7 @@ public class StaffController : MonoBehaviour
 
         public string GetDisplayName(StaffController.Role role, Enums.Gender gender)
         {
-            string elderPrefix = (gender == Enums.Gender.Male) ? "Дядя" : "Тётя";
+            string elderPrefix = (gender == Enums.Gender.Male) ? UI.GameText.Get("name.uncle") : UI.GameText.Get("name.aunt");
             switch (role)
             {
                 case StaffController.Role.Janitor:
@@ -86,7 +89,7 @@ public class StaffController : MonoBehaviour
 
     [Header("Базовые настройки")]
     public StaffNameData nameData;
-    public string characterName => nameData != null ? nameData.GetDisplayName(currentRole, gender) : "Сотрудник";
+    public string characterName => nameData != null ? nameData.GetDisplayName(currentRole, gender) : UI.GameText.Get("role.staff");
     public Role role = Role.Unassigned;
     
     // === Для отладки и мониторинга ===
@@ -390,7 +393,7 @@ public class StaffController : MonoBehaviour
         // Логируем начало смены в дневнике задач
         LogTaskStart($"Смена: {role}");
         
-        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На работу!", 2f, Color.white);
+        if (thoughtBubble) thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.shift.start"), 2f, Color.white);
 
         hasArrivedToday = false;
         hasLeftToday = false;
@@ -649,10 +652,10 @@ public class StaffController : MonoBehaviour
         BeginNeedActivity(false);
         try
         {
-            thoughtBubble?.ShowPriorityMessage("Перерыв...", 2f, Color.white);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.break.started"), 2f, Color.white);
             yield return MoveToTarget(breakPos, "OnBreak");
             if (Vector2.Distance(transform.position, breakPos) > 2f) yield break;
-            CurrentSubStatus = "Отдыхает";
+            CurrentSubStatus = UI.GameText.Get("staff.break.resting");
             float elapsed = 0f;
             while (elapsed < breakDuration && IsOnDuty())
             {
@@ -673,10 +676,10 @@ public class StaffController : MonoBehaviour
         BeginNeedActivity(true);
         try
         {
-            thoughtBubble?.ShowPriorityMessage("Туалет...", 2f, Color.white);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.toilet.started"), 2f, Color.white);
             yield return MoveToTarget(toiletPos, "AtToilet");
             if (Vector2.Distance(transform.position, toiletPos) > 2f) yield break;
-            CurrentSubStatus = "В туалете";
+            CurrentSubStatus = UI.GameText.Get("staff.toilet.using");
             yield return new WaitForSeconds(15f);
             lastToiletBreak = Time.time;
             bladder = 0f;
@@ -690,7 +693,7 @@ public class StaffController : MonoBehaviour
     {
         // Keep the break flag during the walk so the legacy intern AI cannot start a second action.
         if (assignedWorkstation?.clerkStandPoint == null || !IsOnDuty()) yield break;
-        CurrentSubStatus = "Возвращается к работе";
+        CurrentSubStatus = UI.GameText.Get("activity.returning");
         yield return MoveToTarget(assignedWorkstation.clerkStandPoint.position, "ReturningToWork");
     }
 
@@ -802,7 +805,7 @@ public class StaffController : MonoBehaviour
         AddStress(order.StressCost);
         order.Start(Time.time);
         ActiveOrder = order;
-        thoughtBubble?.ShowPriorityMessage("Да иду я, иду...", 2f, Color.yellow);
+        thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.order.accept"), 2f, Color.yellow);
         Debug.Log($"[StaffOrderTrace] {characterName}: приказ={order.Action.name}, отменён={previousAction?.name}, стресс={stress:F1}, срок={order.DecaySeconds:F1}");
         ExecuteAction(order.Action);
     }
@@ -902,7 +905,7 @@ public class StaffController : MonoBehaviour
                                 if (!isLeaving && Vector2.Distance(client.transform.position, clientStandPoint.position) < 1.5f)
                                 {
                                     // Клиент найден - повышаем приоритет Action_ServiceAtRegistration
-                                    if (action.displayName.Contains("Регистрац") || action.displayName.Contains("ServiceAtRegistration"))
+                                    if (action is Action_ServiceAtRegistration)
                                     {
                                         utility += 2000f;
                                         Debug.Log($"[RegistrarPriority] {characterName}: Клиент обнаружен, повышаю приоритет регистрации!");
@@ -953,23 +956,23 @@ public class StaffController : MonoBehaviour
             // --- ЖИВЫЕ РЕАКЦИИ ПЕРЕД ВЫПОЛНЕНИЕМ ---
             if (bestAction is Action_GoToToilet && highestUtility > 80f)
             {
-                thoughtBubble?.ShowPriorityMessage("Ой-ой, срочно отлучусь!", 3f, Color.yellow);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.need.urgent"), 3f, Color.yellow);
             }
             else if (bestAction.actionType == ActionType.ServiceAtRegistration || bestAction.actionType == ActionType.ProcessDocumentCat1)
             {
                 if (highestUtility > 100f) 
                 {
-                    thoughtBubble?.ShowPriorityMessage("Ужас, какая толпа! Работаю!", 2f, new Color(1f, 0.4f, 0.4f));
+                    thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.need.crowd"), 2f, new Color(1f, 0.4f, 0.4f));
                 }
             }
             else if (bestAction is Action_GoToCooler)
             {
-                thoughtBubble?.ShowPriorityMessage("Горло пересохло...", 2f, Color.cyan);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.need.thirst"), 2f, Color.cyan);
             }
             else if (bestAction is SortPapersAction)
             {
                 if (Random.value < 0.3f) 
-                    thoughtBubble?.ShowPriorityMessage("Пока никого нет...", 2f, Color.gray);
+                    thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.need.quiet"), 2f, Color.gray);
             }
 
             Debug.Log($"[Utility AI] {characterName} выбрал {bestAction.displayName} (Вес: {highestUtility:F1})");
@@ -987,9 +990,9 @@ public class StaffController : MonoBehaviour
                 // --- ИСПРАВЛЕНО: Только клерки и бухгалтеры нуждаются в столах ---
                 bool needsDesk = (role == Role.Clerk || role == Role.Registrar || role == Role.Cashier || role == Role.Archivist || role == Role.Accountant);
                 if (assignedWorkstation == null && needsDesk)
-                    thoughtBubble?.ShowPriorityMessage("Мне негде работать...", 3f, Color.red);
+                    thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.no_workstation"), 3f, Color.red);
                 else
-                    thoughtBubble?.ShowPriorityMessage("Что бы поделать?", 2f, Color.gray);
+                    thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.idle"), 2f, Color.gray);
             }
         }
     }
@@ -1011,7 +1014,7 @@ public class StaffController : MonoBehaviour
         
         if (aiLoopCoroutine != null) StopCoroutine(aiLoopCoroutine);
 
-        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Домой...", 2f, Color.white);
+        if (thoughtBubble) thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.shift.home"), 2f, Color.white);
         TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: false);
         hasLeftToday = true;
         currentEarlyLeave = CalculateEarlyLeave();
@@ -1109,7 +1112,7 @@ public class StaffController : MonoBehaviour
     {
         isOnBreak = true;
         SetArrivalState(toilet ? "GoingToToilet" : "GoingToBreak");
-        CurrentSubStatus = toilet ? "Идёт в туалет" : "Идёт отдыхать";
+        CurrentSubStatus = toilet ? UI.GameText.Get("activity.going_toilet") : UI.GameText.Get("activity.going_break");
     }
 
     public void ClearNeedActivity()
@@ -1133,7 +1136,7 @@ public class StaffController : MonoBehaviour
         ClearNeedActivity();
         if (thoughtBubble != null)
         {
-            thoughtBubble.ShowPriorityMessage("Перерыв окончен", 2f, Color.white);
+            thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.break.finished"), 2f, Color.white);
         }
     }
 
@@ -1429,7 +1432,7 @@ public class StaffController : MonoBehaviour
                     {
                         if (thoughtBubble != null)
                         {
-                            thoughtBubble.ShowPriorityMessage("Слышали новость?", 3f, Color.cyan);
+                            thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.gossip"), 3f, Color.cyan);
                         }
                         
                         // Останавливаем обоих на 3 секунды
@@ -1460,7 +1463,7 @@ public class StaffController : MonoBehaviour
             {
                 if (thoughtBubble != null)
                 {
-                    thoughtBubble.ShowPriorityMessage("Ой... Упс!", 3f, Color.gray);
+                    thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.oops"), 3f, Color.gray);
                 }
                 
                 // Проверяем лимит MessManager перед спавном
@@ -1524,7 +1527,7 @@ public class StaffController : MonoBehaviour
             {
                 if (thoughtBubble != null)
                 {
-                    thoughtBubble.ShowPriorityMessage("БРЯК!", 3f, Color.red);
+                    thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.crash"), 3f, Color.red);
                 }
                 
                 // Вызов SlipAndRecover
@@ -1553,7 +1556,7 @@ public class StaffController : MonoBehaviour
             
             if (thoughtBubble != null)
             {
-                thoughtBubble.ShowPriorityMessage("Ффух...", 1.5f, Color.cyan);
+                thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.phew"), 1.5f, Color.cyan);
             }
             
             // Возврат скорости к норме (если была увеличена)
@@ -1583,10 +1586,10 @@ public class StaffController : MonoBehaviour
         float allergyRadius = aiConfig != null ? aiConfig.allergyRadius : 2.5f;
         float allergyPushForce = aiConfig != null ? aiConfig.allergyPushForce : 200f;
         
-        // Показываем бабл "А-аааПЧХИИИ!" на короткое время
+        // Показываем бабл UI.GameText.Get("staff.trait.sneeze") на короткое время
         if (thoughtBubble != null)
         {
-            thoughtBubble.ShowPriorityMessage("А-аааПЧХИИИ!", 0.8f, Color.white);
+            thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.sneeze"), 0.8f, Color.white);
         }
         
         // Звук чихания
@@ -1634,7 +1637,7 @@ public class StaffController : MonoBehaviour
             
             if (thoughtBubble != null)
             {
-                thoughtBubble.ShowPriorityMessage("А я куда?", 2f, Color.yellow);
+                thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.where"), 2f, Color.yellow);
             }
             
             StartCoroutine(ForgetfulRecover());
@@ -1657,7 +1660,7 @@ public class StaffController : MonoBehaviour
         
         if (thoughtBubble != null)
         {
-            thoughtBubble.ShowPriorityMessage("А, не забыл!", 2f, Color.green);
+            thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.remember"), 2f, Color.green);
         }
     }
     
@@ -1680,7 +1683,7 @@ public class StaffController : MonoBehaviour
             // Показываем мысль
             if (thoughtBubble != null)
             {
-                thoughtBubble.ShowPriorityMessage("Надо куда-нибудь пойти!", 1.5f, Color.yellow);
+                thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.fidget"), 1.5f, Color.yellow);
             }
             
             // Запускаем перемещение
@@ -1695,7 +1698,7 @@ public class StaffController : MonoBehaviour
         {
             if (thoughtBubble != null)
             {
-                thoughtBubble.ShowPriorityMessage("ААААААА!!!", 3f, Color.red);
+                thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.scream"), 3f, Color.red);
             }
             
             // Пытаемся воспроизвести крик напрямую без AudioManager
@@ -1748,7 +1751,7 @@ public class StaffController : MonoBehaviour
             // Бабл
             if (thoughtBubble != null)
             {
-                thoughtBubble.ShowPriorityMessage("ИХ СЛИШКОМ МНОГО!", 1.5f, new Color(1f, 0.5f, 0f)); // Оранжевый
+                thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.trait.crowd"), 1.5f, new Color(1f, 0.5f, 0f)); // Оранжевый
             }
             
             // Бросаем текущее действие

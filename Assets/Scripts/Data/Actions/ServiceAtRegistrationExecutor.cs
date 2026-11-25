@@ -15,7 +15,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
     private ArchiveRequest activeArchiveRequest;
     private float currentEfficiency = 1.0f;
     private OfficeObjectDurability currentDurabilityComponent;
-    private bool _lastServiceSuccess = true; // FIXED: Track success state for the loop
+    private bool _lastServiceSuccess;
 
     protected override IEnumerator ActionRoutine()
     {
@@ -27,18 +27,19 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         currentDurabilityComponent = registrar.assignedWorkstation.GetComponent<OfficeObjectDurability>();
         if (currentDurabilityComponent != null && !currentDurabilityComponent.IsUsable())
         {
-            registrar.thoughtBubble?.ShowPriorityMessage("Стойка сломана!", 3f, Color.red);
+            registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.broken"), 3f, Color.red);
             FinishAction(false);
             yield break;
         }
-        currentEfficiency = currentDurabilityComponent != null ? currentDurabilityComponent.GetEfficiencyMultiplier() : 1.0f;
+        currentEfficiency = Mathf.Max(.05f, currentDurabilityComponent != null ? currentDurabilityComponent.GetEfficiencyMultiplier() : 1.0f);
 
         ServicePoint desk = registrar.assignedWorkstation;
         servingDesk = desk;
 
         // === ПОЛНЫЙ ЦИКЛ ОБСЛУЖИВАНИЯ (PULL-МОДЕЛЬ) ===
-        while (true)
+        while (desk != null && registrar.assignedWorkstation == desk)
         {
+            _lastServiceSuccess = false;
             registrar.SetState(ClerkController.ClerkState.Working);
 
             // 1. Проверяем, есть ли уже наглый клиент у стола
@@ -61,7 +62,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                     ClientQueueManager.Instance.currentlyCalledNumbers.Add(ticketNum);
                     ClientQueueManager.Instance.clientsAwaitingResponse[ticketNum] = Time.time;
 
-                    registrar.thoughtBubble?.ShowPriorityMessage($"Талон №{ticketNum}, подойдите!", 3f, Color.green);
+                    registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.call_ticket", ticketNum), 3f, Color.green);
                     if (ClientQueueManager.Instance.nextClientSound != null)
                         Managers.AudioManager.Instance?.PlayAudioClip2D(ClientQueueManager.Instance.nextClientSound);
 
@@ -85,8 +86,8 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
                 if (willKickOut)
                 {
-                    staff.thoughtBubble?.ShowPriorityMessage("В общую очередь, пожалуйста!", 3f, Color.red);
-                    client.ShowThoughtBubble("Вот бюрократы...", 2f);
+                    staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.join_queue"), 3f, Color.red);
+                    client.ShowThoughtBubble(UI.GameText.Get("client.registration.bureaucrats"), 2f);
                     
                     // Снимаем флаг наглеца (теперь он послушный, но злой)
                     client.isQueueJumper = false;
@@ -102,7 +103,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                         client.stateMachine.SetState(ClientState.Confused);
                     }
                     
-                    desk.ClearClient();
+                    desk.ClearClient(client);
                     yield return new WaitForSeconds(2f);
                     continue; // Пропускаем обслуживание, ждем нормального клиента
                 }
@@ -114,12 +115,12 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                     if (willTakeBribe)
                     {
                         staff.thoughtBubble?.ShowPriorityMessage("$$$", 2f, Color.green);
-                        if (Managers.PlayerWallet.Instance != null) Managers.PlayerWallet.Instance.AddMoney(50, "Взятка", IncomeType.Shadow);
+                        if (Managers.PlayerWallet.Instance != null) Managers.PlayerWallet.Instance.AddMoney(50, UI.GameText.Get("ledger.bribe"), IncomeType.Shadow);
                         if (Managers.AudioManager.Instance != null) Managers.AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Money_Income, staff.transform.position);
                     }
                     else
                     {
-                        staff.thoughtBubble?.ShowPriorityMessage("Ладно, давайте ваши документы...", 2f, Color.gray);
+                        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.accept_jumper"), 2f, Color.gray);
                     }
                     
                     // Снимаем флаг, чтобы нормально обслужить
@@ -127,51 +128,6 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 }
             }
             // --- КОНЕЦ ЛОГИКИ НАГЛЕЦОВ ---
-
-            // 3. БРОНЕБОЙНАЯ ТЯГА: Если очередь пуста (или дебаг-клиенты), берем ближайшего неприкаянного клиента из сцены
-            if (client == null)
-            {
-                var allClients = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
-                float minDistance = float.MaxValue;
-                Vector3 myPos = registrar.transform.position;
-
-                foreach (var c in allClients)
-                {
-                    if (c != null && !c.isLeavingSuccessfully && c.stateMachine != null)
-                    {
-                        var state = c.stateMachine.GetCurrentState();
-                        // Ищем тех, кто просто стоит, потерялся или идет куда-то без назначения
-                        if (state != ClientState.Leaving && state != ClientState.LeavingUpset && state != ClientState.Enraged && state != ClientState.AtDesk1 && state != ClientState.AtDesk2 && state != ClientState.AtCashier)
-                        {
-                            if (c.stateMachine.MyServiceProvider == null) // Только тех, кто еще не закреплен
-                            {
-                                float dist = Vector2.Distance(myPos, c.transform.position);
-                                if (dist < minDistance)
-                                {
-                                    minDistance = dist;
-                                    client = c;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (client != null)
-                {
-                    registrar.thoughtBubble?.ShowPriorityMessage("Эй, вы, подходите!", 3f, Color.green);
-                    // Защита от null clientStandPoint
-                    Waypoint wp = desk.clientStandPoint != null ? desk.clientStandPoint : desk.GetComponentInChildren<Waypoint>();
-                    if (!client.stateMachine.TryGetCalledToSpecificDesk(wp, client.stateMachine.MyQueueNumber, registrar)) client = null;
-                }
-            }
-
-            // === КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: ЗАЩИТА ОТ МИКРОЦИКЛА ===
-            if (client == null)
-            {
-                // Если Мозг ошибся и послал работать, но рук не нашли кого обслужить - ждем 1 секунду перед выходом
-                yield return new WaitForSeconds(1f);
-                break;
-            }
 
             // 3. ЖДЕМ КЛИЕНТА (Таймаут уменьшен до 15 секунд!)
             float waitTimer = 0f;
@@ -202,18 +158,18 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 }
 
                 // Визуальная реакция ИИ - он ждет и раздражается!
-                if (waitTimer == 5f) registrar.thoughtBubble?.ShowPriorityMessage("Ну и где клиент?", 2f, Color.yellow);
-                if (waitTimer == 10f) registrar.thoughtBubble?.ShowPriorityMessage("Я долго ждать буду?!", 2f, new Color(1f, 0.5f, 0f));
+                if (waitTimer == 5f) registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.where_client"), 2f, Color.yellow);
+                if (waitTimer == 10f) registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.impatient"), 2f, new Color(1f, 0.5f, 0f));
 
                 waitTimer += 0.5f;
-                staff.CurrentSubStatus = $"Ждёт: {client.name}\n{CharacterActivityOverlay.DeskName(desk)} ({waitTimer:F0} с)";
+                staff.CurrentSubStatus = UI.GameText.Get("staff.registration.waiting", client.name, CharacterActivityOverlay.DeskName(desk), waitTimer);
                 yield return new WaitForSeconds(0.5f);
             }
 
             // 4. ТАЙМАУТ - СБРАСЫВАЕМ И БЕРЕМ СЛЕДУЮЩЕГО
             if (!clientArrived)
             {
-                registrar.thoughtBubble?.ShowPriorityMessage("Не пришел. Следующий!", 2f, Color.red);
+                registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.no_show"), 2f, Color.red);
                 desk.ClearClient(client);
                 if (client != null && ClientQueueManager.Instance != null)
                 {
@@ -224,7 +180,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             }
 
             // 5. КЛИЕНТ ПОДОШЕЛ - НАЧИНАЕМ ОБСЛУЖИВАНИЕ
-            staff.CurrentSubStatus = $"Обслуживает: {CharacterActivityOverlay.DeskName(desk)}\n{client.name}";
+            staff.CurrentSubStatus = UI.GameText.Get("staff.service.serving", CharacterActivityOverlay.DeskName(desk), client.name);
             
             // --- ЖЕЛЕЗОБЕТОННЫЙ КЛИНЧ (НЕЗАВИСИМЫЕ КУБИКИ) ---
             var clinchConfig = Gameplay.AIBalanceConfig.Instance;
@@ -259,20 +215,20 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 {
                     Debug.Log($"<color=orange>[Клинч-Тест]</color> Запускаем TriggerClinch(). Ставим обслуживание на паузу.");
                     clinchToTrigger.TriggerClinch();
-                    registrar.thoughtBubble?.ShowPriorityMessage("Эмм... Директор!", 3f, Color.yellow);
+                    registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.call_director"), 3f, Color.yellow);
                     
                     // ЖДЕМ РАЗРЕШЕНИЯ КЛИНЧА
-                    yield return new WaitWhile(() => clinchToTrigger.IsActive);
-                    yield return new WaitForSeconds(2.5f); // Даём реакции проявиться
+                    yield return new WaitWhile(() => clinchToTrigger != null && clinchToTrigger.IsActive && CanServeAtWorkstation(client));
+                    yield return WaitForClientService(client, 2.5f); // Даём реакции проявиться
                     
                     Debug.Log($"<color=orange>[Клинч-Тест]</color> Клинч завершен. Проверяем статус клиента.");
                     
                     // ПРОВЕРКА: Если клиент расстроился и ушел (провал клинча)
-                    if (client?.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.LeavingUpset)
+                    if (!CanServeAtWorkstation(client))
                     {
                         Debug.Log($"<color=orange>[Клинч-Тест]</color> Клиент ушел злым. Прерываем обслуживание.");
                         _lastServiceSuccess = false;
-                        desk.ClearClient();
+                        desk.ClearClient(client);
                         yield return new WaitForSeconds(1f);
                         continue; // Переходим к следующему клиенту в очереди
                     }
@@ -280,7 +236,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             }
             // --- КОНЕЦ КЛИНЧА ---
             
-            if (client == null || client.stateMachine == null) continue;
+            if (!CanServeAtWorkstation(client)) { FinishAction(false); yield break; }
             
             if (client.mainGoal == ClientGoal.GetArchiveRecord)
                 yield return HandleArchiveRequest(registrar, client);
@@ -288,11 +244,13 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
                 yield return HandleStandardRegistration(registrar, client);
 
             // 6. ОТЧЕТ НА СТОЛ (Обязательная генерация макулатуры)
-            if (desk.documentStack != null) desk.documentStack.AddDocumentToStack();
+            if (_lastServiceSuccess && desk.documentStack != null) desk.documentStack.AddDocumentToStack();
 
             // 7. ОЧИСТКА И ПЕРЕХОД К СЛЕДУЮЩЕМУ
-            desk.ClearClient();
-            if (currentDurabilityComponent != null) currentDurabilityComponent.Degrade(2f);
+            if (!_lastServiceSuccess && desk.CurrentClient == client)
+                client.stateMachine?.CancelServiceCall(registrar);
+            desk.ClearClient(client);
+            if (_lastServiceSuccess && currentDurabilityComponent != null) currentDurabilityComponent.Degrade(2f);
 
             // Return to AI after each client: otherwise a continuous queue prevents shift end.
             FinishAction(_lastServiceSuccess);
@@ -306,7 +264,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
     {
         if (servingDesk != null && servingClient != null && servingDesk.CurrentClient == servingClient)
         {
-            servingDesk.ClearClient();
+            servingDesk.ClearClient(servingClient);
             servingClient.stateMachine?.CancelServiceCall(staff as IServiceProvider);
         }
         if (activeArchiveRequest != null && !activeArchiveRequest.IsDelegated && !activeArchiveRequest.IsDelivered)
@@ -316,34 +274,24 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
     private IEnumerator HandleStandardRegistration(ClerkController registrar, ClientPathfinding client)
     {
-        client.ShowThoughtBubble("Здравствуйте.", 1.5f);
-        yield return new WaitForSeconds(1.5f);
-        if (client == null || client.stateMachine == null) yield break;
+        client.ShowThoughtBubble(UI.GameText.Get("client.registration.hello"), 1.5f);
+        yield return WaitForClientService(client, 1.5f);
+        if (!CanServeAtWorkstation(client)) yield break;
 
-        string[] greetings = { "Слушаю вас.", "Какая у вас цель?", "Что вам нужно?", "Документы давайте." };
+        string[] greetings = { UI.GameText.Get("staff.registration.greeting_listening"), UI.GameText.Get("staff.registration.greeting_purpose"), UI.GameText.Get("staff.registration.greeting_need"), UI.GameText.Get("staff.registration.greeting_documents") };
         registrar.thoughtBubble?.ShowPriorityMessage(greetings[Random.Range(0, greetings.Length)], 2f, Color.white);
-        yield return new WaitForSeconds(2f);
+        yield return WaitForClientService(client, 2f);
+        if (!CanServeAtWorkstation(client)) yield break;
 
         client.ShowThoughtBubble(GetClientGoalText(client.mainGoal), 2.5f);
-        yield return new WaitForSeconds(2.5f);
+        yield return WaitForClientService(client, 2.5f);
+        if (!CanServeAtWorkstation(client)) yield break;
 
         float waitTime = Random.Range(1f, 2.5f) / currentEfficiency;
-        registrar.thoughtBubble?.ShowPriorityMessage("Минутку, смотрю...", waitTime, Color.cyan);
+        registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.checking"), waitTime, Color.cyan);
         ShowProcessing(client.transform.position, waitTime);
-        yield return new WaitForSeconds(waitTime);
-        if (client == null || client.stateMachine == null) yield break;
-
-        if (client.mainGoal == ClientGoal.GetArchiveRecord)
-        {
-            registrar.thoughtBubble?.ShowPriorityMessage("Извините, архив\nсегодня не работает.", 3f, Color.red);
-            yield return new WaitForSeconds(2f);
-            client.ApplyStressJump(client.stressJump_Refusal * 1.5f);
-            if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance?.RemoveClientFromQueue(client);
-            client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
-            client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
-            client.stateMachine.SetState(ClientState.LeavingUpset);
-            yield break;
-        }
+        yield return WaitForClientService(client, waitTime);
+        if (!CanServeAtWorkstation(client)) yield break;
 
         Waypoint correctDestination = DetermineCorrectGoalForClient(client);
         Waypoint actualDestination = correctDestination;
@@ -357,7 +305,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         {
             isSuccess = false;
             client.ApplyStressJump(0.05f);
-            registrar.thoughtBubble?.ShowPriorityMessage("Эээ... наверное туда...", 2f, Color.yellow);
+            registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.unsure"), 2f, Color.yellow);
             List<Waypoint> possibleDestinations = new List<Waypoint>();
             if (ClientSpawner.Instance != null) {
                 possibleDestinations.Add(ClientSpawner.GetQuietestZone(ClientSpawner.Instance.category1DeskZones)?.waitingWaypoint);
@@ -371,9 +319,10 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         if (actualDestination == null) yield break;
 
         string destinationName = string.IsNullOrEmpty(actualDestination.friendlyName) ? actualDestination.name : actualDestination.friendlyName;
-        registrar.thoughtBubble?.ShowPriorityMessage($"Вам нужно в:\n'{destinationName}'", 3f, Color.green);
-        yield return new WaitForSeconds(1.5f);
-        client.ShowThoughtBubble("Понял, спасибо.", 2f);
+        registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.direction", destinationName), 3f, Color.green);
+        yield return WaitForClientService(client, 1.5f);
+        if (!CanServeAtWorkstation(client)) yield break;
+        client.ShowThoughtBubble(UI.GameText.Get("client.registration.thanks"), 2f);
 
         if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance?.RemoveClientFromQueue(client);
         
@@ -386,15 +335,17 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
     private IEnumerator HandleArchiveRequest(ClerkController registrar, ClientPathfinding client)
     {
-        client.ShowThoughtBubble("Мне нужна выписка из архива.", 2.5f);
-        yield return new WaitForSeconds(2.5f);
+        client.ShowThoughtBubble(UI.GameText.Get("client.archive.request"), 2.5f);
+        yield return WaitForClientService(client, 2.5f);
+        if (!CanServeAtWorkstation(client)) yield break;
 
         // FIXED: Проверяем, есть ли вообще архивариус на работе
         bool hasArchivist = HiringManager.Instance != null && HiringManager.Instance.AllStaff.Any(s => s != null && s.currentRole == StaffController.Role.Archivist && s.gameObject.activeInHierarchy && s.IsOnDuty());
-        if (!hasArchivist)
+        if (!hasArchivist || ArchiveRequestManager.Instance == null)
         {
-            registrar.thoughtBubble?.ShowPriorityMessage("Архивариуса нет на месте!\nПриходите позже.", 3f, Color.red);
-            yield return new WaitForSeconds(2f);
+            registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.unavailable"), 3f, Color.red);
+            yield return WaitForClientService(client, 2f);
+            if (!CanServeAtWorkstation(client)) yield break;
             client.ApplyStressJump(client.stressJump_Refusal * 1.5f);
             if (client.stateMachine.MyQueueNumber != -1) ClientQueueManager.Instance?.RemoveClientFromQueue(client);
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
@@ -414,10 +365,11 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
         if (willDelegate)
         {
-            registrar.thoughtBubble?.ShowPriorityMessage("Стажер, принеси справку из архива!", 3f, Color.cyan);
-            yield return new WaitForSeconds(1.5f);
+            registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.call_courier"), 3f, Color.cyan);
+            yield return WaitForClientService(client, 1.5f);
+            if (!CanServeAtWorkstation(client)) yield break;
             
-            client.ShowThoughtBubble("Хорошо, подожду в зале...", 2.5f);
+            client.ShowThoughtBubble(UI.GameText.Get("client.archive.wait_in_hall"), 2.5f);
             
             // 1. Создаем делегированный запрос (Стажеры его перехватят)
             ArchiveRequestManager.Instance.CreateRequest(registrar, client, true);
@@ -430,7 +382,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             
             // 3. Освобождаем стол регистратора физически
             var desk = ScenePointsRegistry.Instance?.GetServicePointByID(registrar.assignedWorkstation?.deskId ?? 0);
-            if (desk != null) desk.ClearClient();
+            if (desk != null) desk.ClearClient(client);
             
             // 4. Завершаем обслуживание успешно и отпускаем регистратора к следующему клиенту!
             _lastServiceSuccess = true;
@@ -439,8 +391,9 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         }
         // --- КОНЕЦ ЛОГИКИ ДЕЛЕГИРОВАНИЯ ---
 
-        registrar.thoughtBubble?.ShowPriorityMessage("Делаю запрос в архив.\nОжидайте.", 3f, Color.yellow);
-        yield return new WaitForSeconds(1.5f);
+        registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.requesting"), 3f, Color.yellow);
+        yield return WaitForClientService(client, 1.5f);
+        if (!CanServeAtWorkstation(client)) yield break;
 
         if (ArchiveRequestManager.Instance == null) {
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
@@ -455,7 +408,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         client.stateMachine.SetState(ClientState.WaitingForDocument);
 
         var archivistDesk = ScenePointsRegistry.Instance?.GetServicePointByID(3);
-        if (archivistDesk == null)
+        if (archivistDesk == null || archivistDesk.clerkStandPoint == null)
         {
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
             client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
@@ -466,6 +419,13 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         }
 
         yield return registrar.MoveToTarget(archivistDesk.clerkStandPoint.position, ClerkController.ClerkState.WaitingForArchive.ToString());
+        if (!CanServeAtWorkstation(client) || archivistDesk == null || archivistDesk.clerkStandPoint == null ||
+            Vector2.Distance(registrar.transform.position, archivistDesk.clerkStandPoint.position) > 1f)
+        {
+            Debug.LogWarning("[ArchiveTrace] Registrar could not reach archive desk; request cancelled.", registrar);
+            yield break;
+        }
+
 
         float waitTimer = 0f;
         float maxWaitTime = Gameplay.AIBalanceConfig.Instance != null ? Gameplay.AIBalanceConfig.Instance.archiveWaitTimeout : 60f;
@@ -476,14 +436,10 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
 
         while(waitTimer < maxWaitTime)
         {
-            if (client == null || client.stateMachine == null) break;
-            var clientState = client.stateMachine.GetCurrentState();
-            if (clientState == ClientState.Leaving || clientState == ClientState.LeavingUpset) break;
+            if (!CanServeAtWorkstation(client) || ArchiveRequestManager.Instance == null || request == null || request.IsCancelled) break;
 
             if (request != null && request.IsFulfilled) { requestFulfilled = true; break; }
-            else if (request == null && ArchiveRequestManager.Instance.HasPendingRequests()) {
-                request = ArchiveRequestManager.Instance.GetOurRequest(registrar, client);
-            }
+
 
             // --- Flavor thoughts ---
             float progress = waitTimer / maxWaitTime;
@@ -491,7 +447,7 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             if (currentQuarter > lastBubbleQuarter)
             {
                 lastBubbleQuarter = currentQuarter;
-                string[] waitingThoughts = { "Где же он...", "Жду-не дождусь!", "Как долго...", "Архив уснул там?" };
+                string[] waitingThoughts = { UI.GameText.Get("staff.archive.wait_where"), UI.GameText.Get("staff.archive.wait_eager"), UI.GameText.Get("staff.archive.wait_long"), UI.GameText.Get("staff.archive.wait_asleep") };
                 registrar.thoughtBubble?.ShowPriorityMessage(waitingThoughts[Random.Range(0, waitingThoughts.Length)], 2f, Color.yellow);
             }
             // -----------------------
@@ -507,22 +463,25 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             yield return registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
             registrar.GetComponent<StackHolder>()?.HideStack(); 
 
-            if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() == ClientState.WaitingForDocument)
+            var cashierDestination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+            if (CanServeAtWorkstation(client) && IsAtWorkstation && cashierDestination != null &&
+                ArchiveRequestManager.Instance != null && client.stateMachine.GetCurrentState() == ClientState.WaitingForDocument)
             {
                 client.billToPay += 150;
                 ArchiveRequestManager.Instance.CompleteDelivery(request);
                 ClientQueueManager.Instance?.RemoveClientFromQueue(client);
-                client.stateMachine.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
+                client.stateMachine.SetGoal(cashierDestination);
                 client.stateMachine.SetState(ClientState.MovingToGoal);
                 _lastServiceSuccess = true; // FIXED: Store success
             }
         }
         else 
         {
-            if (client != null && client.stateMachine != null && client.stateMachine.GetCurrentState() != ClientState.Leaving && client.stateMachine.GetCurrentState() != ClientState.LeavingUpset)
+            if (CanServeAtWorkstation(client))
             {
-                registrar.thoughtBubble?.ShowPriorityMessage("Архив не отвечает...\nИзвините.", 3f, Color.red);
-                yield return new WaitForSeconds(1.0f);
+                registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.timeout"), 3f, Color.red);
+                yield return WaitForClientService(client, 1.0f);
+                if (!CanServeAtWorkstation(client)) yield break;
                 client.reasonForLeaving = ClientPathfinding.LeaveReason.Upset;
                 client.stateMachine.SetGoal(ClientSpawner.Instance?.exitWaypoint);
                 client.stateMachine.SetState(ClientState.LeavingUpset);
@@ -553,15 +512,15 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
     {
         switch(goal)
         {
-            case ClientGoal.GetCertificate1: return "Мне нужна справка.";
-            case ClientGoal.GetCertificate2: return "Оформляю форму 2.";
-            case ClientGoal.PayTax: return "Я налоги заплатить.";
-            case ClientGoal.GetArchiveRecord: return "Мне в архив нужно.";
-            case ClientGoal.VisitToilet: return "Где тут туалет?";
-            case ClientGoal.DirectorApproval: return "Мне к директору на подпись!";
-            case ClientGoal.DirectorAudience: return "У меня личный прием у директора!";
-            case ClientGoal.AskAndLeave: return "Мне бы справочку получить...";
-            default: return "Мне бы справочку получить...";
+            case ClientGoal.GetCertificate1: return UI.GameText.Get("client.goal.certificate1");
+            case ClientGoal.GetCertificate2: return UI.GameText.Get("client.goal.certificate2");
+            case ClientGoal.PayTax: return UI.GameText.Get("client.goal.tax");
+            case ClientGoal.GetArchiveRecord: return UI.GameText.Get("client.goal.archive");
+            case ClientGoal.VisitToilet: return UI.GameText.Get("client.goal.toilet");
+            case ClientGoal.DirectorApproval: return UI.GameText.Get("client.goal.director_signature");
+            case ClientGoal.DirectorAudience: return UI.GameText.Get("client.goal.director_meeting");
+            case ClientGoal.AskAndLeave: return UI.GameText.Get("client.goal.ask");
+            default: return UI.GameText.Get("client.goal.ask");
         }
     }
 }

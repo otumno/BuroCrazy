@@ -28,8 +28,10 @@ public class ProcessingAnimationUI : MonoBehaviour
     private void Awake()
     {
         // Создаем источник звука на лету, если его нет
-        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
         audioSource.spatialBlend = 0f; // 2D звук (UI)
+        audioSource.playOnAwake = false;
+        foreach (var graphic in GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;
         
         // Настраиваем Canvas программно, если забыли в префабе
         if (canvas == null) canvas = GetComponent<Canvas>();
@@ -47,19 +49,20 @@ public class ProcessingAnimationUI : MonoBehaviour
     /// </summary>
     public void Play(Vector3 posA, Vector3 posB, float totalDuration)
     {
+        StopAllCoroutines();
         // 1. Позиционирование в геометрическом центре
         Vector3 centerPos = (posA + posB) / 2f;
         centerPos.y += verticalOffset;
         transform.position = centerPos;
 
-        if (animationFrames == null || animationFrames.Count == 0)
+        if (targetImage == null || animationFrames == null || animationFrames.Count == 0 || animationFrames.Exists(frame => frame == null))
         {
-            Debug.LogError("ProcessingAnimationUI: Нет кадров анимации!");
+            Debug.LogError("[ProcessingAnimationUI] Missing image or animation frames.", this);
             Destroy(gameObject);
             return;
         }
 
-        StartCoroutine(AnimationRoutine(totalDuration));
+        StartCoroutine(AnimationRoutine(float.IsNaN(totalDuration) || float.IsInfinity(totalDuration) ? 1f : Mathf.Max(.01f, totalDuration)));
     }
 
     private IEnumerator AnimationRoutine(float totalDuration)
@@ -68,7 +71,7 @@ public class ProcessingAnimationUI : MonoBehaviour
         
         // Расчет времени
         // Время на "замирание" последнего кадра
-        float holdTime = totalDuration * finalFrameHoldRatio;
+        float holdTime = totalFrames == 1 ? totalDuration : totalDuration * Mathf.Clamp01(finalFrameHoldRatio);
         // Оставшееся время на активную анимацию
         float activeAnimTime = totalDuration - holdTime;
         

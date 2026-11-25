@@ -55,7 +55,7 @@ namespace Managers
                     // Используем динамическое свойство officialIncomeRate
                     amountToWallet = (int)(amount * officialIncomeRate);
                     currentMoney += amountToWallet;
-                    FinancialLedgerManager.Instance?.LogTransaction($"{description} (Вам {officialIncomeRate:P0})", amount, type);
+                    FinancialLedgerManager.Instance?.LogTransaction(UI.GameText.Get("ledger.player_share", description, officialIncomeRate), amount, type);
                 }
                 else // Shadow
                 {
@@ -98,7 +98,8 @@ namespace Managers
         {
             if (moneyText != null)
             {
-                moneyText.text = $"Счет: ${currentMoney}";
+                var localized = moneyText.GetComponent<UI.LocalizedText>() ?? moneyText.gameObject.AddComponent<UI.LocalizedText>();
+                localized.SetReference(UI.GameText.Table, "wallet.balance", currentMoney);
             }
         }
     }

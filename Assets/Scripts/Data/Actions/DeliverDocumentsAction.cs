@@ -11,7 +11,8 @@ public class DeliverDocumentsAction : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is InternController intern) || intern.IsOnBreak())
+        if (staff == null || (!(staff is InternController) && !(staff is OfficeManagerController)) || staff.IsOnBreak() ||
+            ArchiveManager.Instance == null || ScenePointsRegistry.Instance == null)
         {
             return false;
         }
@@ -22,9 +23,9 @@ public class DeliverDocumentsAction : StaffAction
         // Проверяем, есть ли ХОТЯ БЫ ОДНА стопка, которая:
         // 1. Не является главной стопкой в архиве.
         // 2. Заполнена больше, чем наш порог.
-        return allStacks.Any(stack => 
-            stack != ArchiveManager.Instance.mainDocumentStack && 
-            (float)stack.CurrentSize / stack.maxStackSize >= stackFullnessThreshold);
+        return allStacks.Any(stack => !ArchiveManager.Instance.OwnsStack(stack) && stack.OrdinaryDocumentCount > 0 &&
+            (float)stack.OrdinaryDocumentCount / Mathf.Max(1, stack.maxStackSize) >= stackFullnessThreshold &&
+            ScenePointsRegistry.Instance.allServicePoints.Any(point => point != null && point.documentStack == stack && point.internCollectionPoint != null));
     }
 
     public override System.Type GetExecutorType()

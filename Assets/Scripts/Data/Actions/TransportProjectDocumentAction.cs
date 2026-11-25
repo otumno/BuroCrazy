@@ -14,7 +14,9 @@ public class TransportProjectDocumentAction : StaffAction
     // Это действие запускается контроллером напрямую, условия проверяются в "мозге" менеджера
     public override bool AreConditionsMet(StaffController staff)
     {
-        return staff is OfficeManagerController && !staff.IsOnBreak();
+        // Only OfficeManagerController can supply SourceStack/TargetDoc. A generic AI
+        // launch creates an empty executor and repeatedly penalizes a failed task.
+        return false;
     }
 
     public override System.Type GetExecutorType()

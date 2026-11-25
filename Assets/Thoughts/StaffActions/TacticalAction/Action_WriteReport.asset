@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   actionType: 0
   displayName: 
+  localizedNameKey: action.write_report
   description: 
   category: 0
   priority: 0
@@ -35,3 +36,4 @@ MonoBehaviour:
   minRankRequired: 0
   applicableRoles: 
   isUnique: 0
+  minPointsRequired: 1

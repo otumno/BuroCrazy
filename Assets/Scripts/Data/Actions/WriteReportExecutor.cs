@@ -15,20 +15,26 @@ public class WriteReportExecutor : ActionExecutor
         var desk = ScenePointsRegistry.Instance?.guardReportDesk;
         if (desk == null || desk.clerkStandPoint == null || desk.documentStack == null)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Нет стола для отчетов!", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.no_report_desk"), 2f, Color.red);
             FinishAction(false); 
             yield break; 
         }
 
         // Идем к столу
         yield return staff.MoveToTarget(desk.clerkStandPoint.position, "Walking");
+        if (desk == null || desk.clerkStandPoint == null || Vector2.Distance(staff.transform.position, desk.clerkStandPoint.position) > 1f)
+        { FinishAction(false); yield break; }
 
         guard.SetState(GuardMovement.GuardState.WritingReport);
-        staff.thoughtBubble?.ShowPriorityMessage("Пишу рапорт...", 3f, Color.cyan);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.writing_report"), 3f, Color.cyan);
 
         // Пишем отчет (время зависит от кол-ва очков)
-        float duration = guard.unwrittenReportPoints * 2f;
+        int points = guard.unwrittenReportPoints;
+        if (points <= 0) { FinishAction(false); yield break; }
+        float duration = points * 2f;
+        ShowProcessing(desk.transform.position, duration);
         yield return new WaitForSeconds(duration);
+        if (desk == null || desk.documentStack == null) { FinishAction(false); yield break; }
 
         // Сдаем отчет
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
@@ -37,7 +43,7 @@ public class WriteReportExecutor : ActionExecutor
         int deposited = 0;
         if (desk.documentStack != null)
         {
-            for (int i = 0; i < guard.unwrittenReportPoints; i++)
+            for (int i = 0; i < Mathf.Min(points, guard.unwrittenReportPoints); i++)
             {
                 if (!desk.documentStack.AddDocumentToStack()) break;
                 deposited++;
@@ -47,7 +53,7 @@ public class WriteReportExecutor : ActionExecutor
         // Сбрасываем очки
         guard.unwrittenReportPoints -= deposited;
         
-        staff.thoughtBubble?.ShowPriorityMessage("Рапорт сдан.", 2f, Color.green);
+        if (deposited > 0) staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.report_submitted"), 2f, Color.green);
 
         guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(deposited > 0);

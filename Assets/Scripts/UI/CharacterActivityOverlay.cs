@@ -88,11 +88,11 @@ public sealed class CharacterActivityOverlay : MonoBehaviour
     {
         string identity = staff != null ? RoleName(staff.currentRole) : name;
         if (staff != null && !string.IsNullOrWhiteSpace(staff.characterName)) identity += " · " + staff.characterName;
-        if (staff is DirectorAvatarController) identity = "Директор";
+        if (staff is DirectorAvatarController) identity = UI.GameText.Get("role.director");
         string activity;
-        if (mover != null && mover.IsSlipping) activity = $"Упал: {mover.FallReason}";
+        if (mover != null && mover.IsSlipping) activity = UI.GameText.Get("activity.falling", mover.FallReason);
         else if (TryGetComponent<Clinch.ClinchTarget>(out var clinch) && clinch.IsActive)
-            activity = "Затруднение — ждёт помощи";
+            activity = UI.GameText.Get("activity.clinch");
         else if (client != null) activity = ClientActivity();
         else activity = StaffActivity();
         return identity + "\n" + activity;
@@ -101,115 +101,115 @@ public sealed class CharacterActivityOverlay : MonoBehaviour
     private string ClientActivity()
     {
         var sm = client.stateMachine;
-        if (sm == null) return "Появляется";
-        string ticket = sm.MyQueueNumber >= 0 ? $" · талон №{sm.MyQueueNumber}" : "";
+        if (sm == null) return UI.GameText.Get("activity.spawning");
+        string ticket = sm.MyQueueNumber >= 0 ? UI.GameText.Get("activity.ticket", sm.MyQueueNumber) : "";
         var desk = sm.AssignedServicePoint;
         string place = desk != null ? DeskName(desk) : PlaceName(sm.GetCurrentGoal());
         switch (sm.GetCurrentState())
         {
-            case ClientState.Spawning: return "Пришёл в учреждение";
-            case ClientState.MovingToTerminal: return "Идёт за талоном";
-            case ClientState.GettingTicket: return "Получает талон";
-            case ClientState.MovingToSeat: return "Идёт к месту ожидания" + ticket;
+            case ClientState.Spawning: return UI.GameText.Get("activity.arrived");
+            case ClientState.MovingToTerminal: return UI.GameText.Get("activity.going_ticket");
+            case ClientState.GettingTicket: return UI.GameText.Get("activity.getting_ticket");
+            case ClientState.MovingToSeat: return UI.GameText.Get("activity.going_wait") + ticket;
             case ClientState.AtWaitingArea:
-            case ClientState.SittingInWaitingArea: return "Ждёт вызова" + ticket;
-            case ClientState.AtLimitedZoneEntrance: return "Ждёт входа: " + place + ticket;
-            case ClientState.WaitingForDocument: return "Ждёт документ из архива" + ticket;
+            case ClientState.SittingInWaitingArea: return UI.GameText.Get("activity.waiting_call") + ticket;
+            case ClientState.AtLimitedZoneEntrance: return UI.GameText.Get("activity.waiting_entry") + place + ticket;
+            case ClientState.WaitingForDocument: return UI.GameText.Get("activity.waiting_document") + ticket;
             case ClientState.InsideLimitedZone:
             case ClientState.AtRegistration:
             case ClientState.AtDesk1:
             case ClientState.AtDesk2:
             case ClientState.AtCashier:
-                if (sm.GetTargetZone() != null && sm.GetTargetZone() == ClientSpawner.GetToiletZone()) return "В туалете";
+                if (sm.GetTargetZone() != null && sm.GetTargetZone() == ClientSpawner.GetToiletZone()) return UI.GameText.Get("staff.toilet.using");
                 var worker = sm.MyServiceProvider as StaffController;
-                return worker != null ? $"Обслуживается: {place}\nУ {worker.characterName}" : "Ждёт сотрудника: " + place;
-            case ClientState.AtToilet: return "В туалете";
-            case ClientState.PassedRegistration: return "Получает направление";
-            case ClientState.Confused: return "Растерялся — ищет маршрут";
-            case ClientState.Grumbling: return "Ворчит — теряет терпение" + ticket;
-            case ClientState.Enraged: return "Буянит";
-            case ClientState.Leaving: return "Идёт к выходу";
-            case ClientState.LeavingUpset: return "Уходит недовольным";
-            default: return "Идёт: " + place + ticket;
+                return worker != null ? UI.GameText.Get("activity.being_served", place, worker.characterName) : UI.GameText.Get("activity.waiting_staff") + place;
+            case ClientState.AtToilet: return UI.GameText.Get("staff.toilet.using");
+            case ClientState.PassedRegistration: return UI.GameText.Get("activity.direction");
+            case ClientState.Confused: return UI.GameText.Get("activity.confused");
+            case ClientState.Grumbling: return UI.GameText.Get("activity.grumbling") + ticket;
+            case ClientState.Enraged: return UI.GameText.Get("activity.enraged");
+            case ClientState.Leaving: return UI.GameText.Get("activity.exiting");
+            case ClientState.LeavingUpset: return UI.GameText.Get("activity.leaving_upset");
+            default: return UI.GameText.Get("activity.moving_prefix") + place + ticket;
         }
     }
 
     private string StaffActivity()
     {
-        if (staff == null) return "Ожидает";
+        if (staff == null) return UI.GameText.Get("activity.waiting");
         if (staff is DirectorAvatarController director)
         {
             var desk = director.CurrentWorkstation;
-            if (director.ClientBeingServed != null) return $"Обслуживает: {DeskName(desk)}\n{director.ClientBeingServed.name}";
-            if (desk != null && desk.CurrentClient != null) return $"Ждёт: {desk.CurrentClient.name}\n{DeskName(desk)}";
-            if (director.IsMoving) return "Идёт: " + PlaceName(mover != null ? mover.Destination : null);
+            if (director.ClientBeingServed != null) return UI.GameText.Get("staff.service.serving", DeskName(desk), director.ClientBeingServed.name);
+            if (desk != null && desk.CurrentClient != null) return UI.GameText.Get("activity.waiting_client", desk.CurrentClient.name, DeskName(desk));
+            if (director.IsMoving) return UI.GameText.Get("activity.moving_prefix") + PlaceName(mover != null ? mover.Destination : null);
             switch (director.GetCurrentState())
             {
-                case DirectorAvatarController.DirectorState.AtDesk: return "За столом директора";
-                case DirectorAvatarController.DirectorState.WorkingAtStation: return "Работает: " + DeskName(desk);
-                case DirectorAvatarController.DirectorState.GoingForDocuments: return "Идёт за документами";
-                case DirectorAvatarController.DirectorState.CarryingDocuments: return "Несёт документы";
-                default: return "Ожидает команды";
+                case DirectorAvatarController.DirectorState.AtDesk: return UI.GameText.Get("activity.director_desk");
+                case DirectorAvatarController.DirectorState.WorkingAtStation: return UI.GameText.Get("activity.working") + DeskName(desk);
+                case DirectorAvatarController.DirectorState.GoingForDocuments: return UI.GameText.Get("activity.collecting_documents");
+                case DirectorAvatarController.DirectorState.CarryingDocuments: return UI.GameText.Get("activity.carrying_documents");
+                default: return UI.GameText.Get("activity.awaiting_command");
             }
         }
         if (!string.IsNullOrWhiteSpace(staff.CurrentSubStatus)) return staff.CurrentSubStatus;
         var station = (staff as IServiceProvider)?.GetWorkstation() ?? staff.assignedWorkstation;
-        string action = staff.currentAction != null ? staff.currentAction.displayName : "";
-        if (staff.IsMoving) return $"Идёт: {PlaceName(mover != null ? mover.Destination : null)}" +
-            (string.IsNullOrWhiteSpace(action) ? "" : "\nЗадача: " + action);
+        string action = staff.currentAction != null ? staff.currentAction.LocalizedDisplayName : "";
+        if (staff.IsMoving) return UI.GameText.Get("activity.moving", PlaceName(mover != null ? mover.Destination : null)) +
+            (string.IsNullOrWhiteSpace(action) ? "" : UI.GameText.Get("activity.task", action));
         if (station != null && station.CurrentClient != null)
-            return $"{(station.IsClientPhysicallyReady ? "Обслуживает" : "Ждёт клиента")}: {DeskName(station)}\n{station.CurrentClient.name}";
+            return UI.GameText.Get(station.IsClientPhysicallyReady ? "staff.service.serving" : "activity.waiting_at_desk", DeskName(station), station.CurrentClient.name);
         if (!string.IsNullOrWhiteSpace(action)) return action;
         switch (staff.GetCurrentStateName())
         {
-            case "OffDuty": case "Inactive": return "Не на смене";
-            case "OnBreak": return "Отдыхает";
-            case "AtToilet": return "В туалете";
-            case "GoingToBreak": return "Идёт отдыхать";
-            case "GoingToToilet": return "Идёт в туалет";
-            case "StressedOut": return "Не справляется со стрессом";
-            case "Patrolling": case "ChairPatrol": return "Патрулирует";
-            case "Chasing": case "ChasingThief": return "Преследует нарушителя";
-            case "WaitingForArchive": return "Ждёт выписку из архива";
-            case "Cleaning": return "Убирает";
-            case "ReturningToWork": return "Возвращается к работе";
-            default: return staff.IsOnDuty() ? "Ожидает задачу" : "Смена закончена";
+            case "OffDuty": case "Inactive": return UI.GameText.Get("activity.off_duty");
+            case "OnBreak": return UI.GameText.Get("staff.break.resting");
+            case "AtToilet": return UI.GameText.Get("staff.toilet.using");
+            case "GoingToBreak": return UI.GameText.Get("activity.going_break");
+            case "GoingToToilet": return UI.GameText.Get("activity.going_toilet");
+            case "StressedOut": return UI.GameText.Get("activity.stressed");
+            case "Patrolling": case "ChairPatrol": return UI.GameText.Get("activity.patrolling");
+            case "Chasing": case "ChasingThief": return UI.GameText.Get("activity.chasing");
+            case "WaitingForArchive": return UI.GameText.Get("activity.waiting_record");
+            case "Cleaning": return UI.GameText.Get("activity.cleaning");
+            case "ReturningToWork": return UI.GameText.Get("activity.returning");
+            default: return staff.IsOnDuty() ? UI.GameText.Get("activity.waiting_task") : UI.GameText.Get("activity.shift_finished");
         }
     }
 
-    public static string DeskName(ServicePoint desk) => desk == null ? "рабочее место" :
+    public static string DeskName(ServicePoint desk) => desk == null ? UI.GameText.Get("place.workstation") :
         !string.IsNullOrWhiteSpace(desk.friendlyName) ? desk.friendlyName : desk.deskId switch
         {
-            0 => "регистратура", -1 => "касса", 1 => "окно №1", 2 => "окно №2", 3 => "архив", _ => "рабочее место"
+            0 => UI.GameText.Get("place.registration"), -1 => UI.GameText.Get("place.cashier"), 1 => UI.GameText.Get("place.desk1"), 2 => UI.GameText.Get("place.desk2"), 3 => UI.GameText.Get("place.archive"), _ => UI.GameText.Get("place.workstation")
         };
 
     private static string PlaceName(Waypoint point)
     {
-        if (point == null) return "к назначенной цели";
+        if (point == null) return UI.GameText.Get("place.destination");
         if (!string.IsNullOrWhiteSpace(point.friendlyName)) return point.friendlyName;
         var registry = ScenePointsRegistry.Instance;
         if (registry != null)
         {
             foreach (var desk in registry.allServicePoints)
                 if (desk != null && (desk.clientStandPoint == point || desk.clerkStandPoint == point.transform || desk.internCollectionPoint == point.transform)) return DeskName(desk);
-            if (registry.toiletPoints.Contains(point)) return "туалет";
-            if (registry.kitchenPoints.Contains(point)) return "место отдыха";
+            if (registry.toiletPoints.Contains(point)) return UI.GameText.Get("place.toilet");
+            if (registry.kitchenPoints.Contains(point)) return UI.GameText.Get("place.break");
         }
         string key = point.name.ToLowerInvariant();
-        if (key.Contains("toilet")) return "туалет";
-        if (key.Contains("exit")) return "выход";
-        if (key.Contains("ticket")) return "терминал талонов";
-        if (key.Contains("archive")) return "архив";
-        return "точка маршрута";
+        if (key.Contains("toilet")) return UI.GameText.Get("place.toilet");
+        if (key.Contains("exit")) return UI.GameText.Get("place.exit");
+        if (key.Contains("ticket")) return UI.GameText.Get("place.ticket_terminal");
+        if (key.Contains("archive")) return UI.GameText.Get("place.archive");
+        return UI.GameText.Get("place.waypoint");
     }
 
     public static string RoleName(StaffController.Role role) => role switch
     {
-        StaffController.Role.Director => "Директор", StaffController.Role.Intern => "Стажёр",
-        StaffController.Role.Registrar => "Регистратор", StaffController.Role.Cashier => "Кассир",
-        StaffController.Role.Archivist => "Архивариус", StaffController.Role.Guard => "Охранник",
-        StaffController.Role.Janitor => "Уборщик", StaffController.Role.ServiceWorker => "Служащий",
-        StaffController.Role.Clerk => "Клерк", StaffController.Role.OfficeManager => "Офис-менеджер",
-        StaffController.Role.Accountant => "Бухгалтер", _ => "Сотрудник"
+        StaffController.Role.Director => UI.GameText.Get("role.director"), StaffController.Role.Intern => UI.GameText.Get("role.intern"),
+        StaffController.Role.Registrar => UI.GameText.Get("role.registrar"), StaffController.Role.Cashier => UI.GameText.Get("role.cashier"),
+        StaffController.Role.Archivist => UI.GameText.Get("role.archivist"), StaffController.Role.Guard => UI.GameText.Get("role.guard"),
+        StaffController.Role.Janitor => UI.GameText.Get("role.janitor"), StaffController.Role.ServiceWorker => UI.GameText.Get("role.service_worker"),
+        StaffController.Role.Clerk => UI.GameText.Get("role.clerk"), StaffController.Role.OfficeManager => UI.GameText.Get("role.office_manager"),
+        StaffController.Role.Accountant => UI.GameText.Get("role.accountant"), _ => UI.GameText.Get("role.staff")
     };
 }

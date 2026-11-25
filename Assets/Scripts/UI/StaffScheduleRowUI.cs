@@ -50,7 +50,7 @@ public class StaffScheduleRowUI : MonoBehaviour
     // ИЗМЕНЕНИЕ: Принимаем объект ячейки
     public void StartShiftAnimation(ScheduleCellUI startCell)
     {
-        if (_staff == null || !_isEditable) return;
+        if (_staff == null || !_isEditable || !ShiftPlanning.IsOpen) return;
         StopAllCoroutines();
         StartCoroutine(AnimateShiftFill(startCell));
     }

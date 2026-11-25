@@ -15,6 +15,7 @@ MonoBehaviour:
   actionType: 1
   displayName: "\u041E\u0431\u0441\u043B\u0443\u0436\u0438\u0432\u0430\u043D\u0438\u0435
     \u0432 \u043A\u0430\u0441\u0441\u0435"
+  localizedNameKey: action.cashier
   description: 
   category: 0
   priority: 70

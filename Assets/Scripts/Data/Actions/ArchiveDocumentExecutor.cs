@@ -20,6 +20,15 @@ public class ArchiveDocumentExecutor : ActionExecutor
             yield break;
         }
 
+        var sourceDesk = source.GetComponentInParent<ServicePoint>();
+        var pickup = sourceDesk != null && sourceDesk.internCollectionPoint != null ? sourceDesk.internCollectionPoint : source.transform;
+        yield return archivist.MoveToTarget(pickup.position, "Working");
+        if (source == null || pickup == null || Vector2.Distance(archivist.transform.position, pickup.position) > 1f)
+        {
+            Debug.LogWarning("[ArchiveTrace] Pickup unreachable; papers left at source.", archivist);
+            FinishAction(false);
+            yield break;
+        }
         var transfer = new DocumentStackTransfer(source, 1);
         RegisterCleanup(transfer.Dispose);
         if (transfer.Count == 0) { FinishAction(false); yield break; }
@@ -28,30 +37,36 @@ public class ArchiveDocumentExecutor : ActionExecutor
         RegisterCleanup(() => { if (stackHolder != null) stackHolder.HideStack(); });
         stackHolder?.ShowSingleDocumentSprite();
 
-        bool canCorrectDocuments = archivist.activeActions.Any(a => a.actionType == ActionType.CorrectDocument);
-        if (canCorrectDocuments && DocumentQualityManager.Instance.GetCurrentAverageErrorRate() > 0)
+        bool canCorrectDocuments = archivist.activeActions.Any(a => a != null && a.actionType == ActionType.CorrectDocument);
+        if (canCorrectDocuments && DocumentQualityManager.Instance != null && DocumentQualityManager.Instance.GetCurrentAverageErrorRate() > 0)
         {
             float correctionChance = 0.1f + (archivist.skills.pedantry * 0.4f);
             if (Random.value < correctionChance)
             {
-                archivist.thoughtBubble?.ShowPriorityMessage("Тут ошибка... исправлю.", 3f, Color.yellow);
+                archivist.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.correcting"), 3f, Color.yellow);
                 yield return new WaitForSeconds(Random.Range(3f, 5f));
 
                 float correctionStrength = 0.2f + (archivist.skills.paperworkMastery * 0.5f);
-                DocumentQualityManager.Instance.CorrectWorstDocument(correctionStrength);
+                DocumentQualityManager.Instance?.CorrectWorstDocument(correctionStrength);
             }
         }
 
-        var targetCabinet = ArchiveManager.Instance.GetRandomCabinet();
+        var targetCabinet = ArchiveManager.Instance != null ? ArchiveManager.Instance.GetRandomCabinet() : null;
         if (targetCabinet == null) { FinishAction(false); yield break; }
 
-        archivist.thoughtBubble?.ShowPriorityMessage("Архивирую...", 3f, Color.gray);
-        archivist.AgentMover.SetPath(PathfindingUtility.BuildPathTo(staff.transform.position, targetCabinet.transform.position, staff.gameObject));
-        yield return new WaitUntil(() => !archivist.AgentMover.IsMoving());
+        archivist.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.filing"), 3f, Color.gray);
+        yield return archivist.MoveToTarget(targetCabinet.transform.position, "Working");
+        if (targetCabinet == null || Vector2.Distance(archivist.transform.position, targetCabinet.transform.position) > 1f)
+        {
+            Debug.LogWarning("[ArchiveTrace] Cabinet unreachable; returning paper to source.", archivist);
+            FinishAction(false);
+            yield break;
+        }
 
         float filingTime = Random.Range(2f, 4f);
         ShowProcessing(targetCabinet.transform.position, filingTime);
         yield return new WaitForSeconds(filingTime);
+        if (targetCabinet == null) { FinishAction(false); yield break; }
         transfer.Archive();
         stackHolder?.HideStack();
 

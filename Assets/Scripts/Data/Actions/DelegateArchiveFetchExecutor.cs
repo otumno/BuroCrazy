@@ -20,11 +20,11 @@ public class DelegateArchiveFetchExecutor : ActionExecutor
         if (archiveDesk?.internCollectionPoint == null && archiveDesk?.clerkStandPoint == null)
         { FinishAction(false); yield break; }
 
-        staff.CurrentSubStatus = "Получает выписку в архиве";
+        staff.CurrentSubStatus = UI.GameText.Get("staff.archive.collecting_record");
         var collectionPoint = archiveDesk.internCollectionPoint != null
             ? archiveDesk.internCollectionPoint : archiveDesk.clerkStandPoint;
         yield return staff.MoveToTarget(collectionPoint.position, staff.GetCurrentStateName());
-        if (!request.IsActive || Vector2.Distance(staff.transform.position, collectionPoint.position) > 2.5f)
+        if (!request.IsActive || collectionPoint == null || Vector2.Distance(staff.transform.position, collectionPoint.position) > 2.5f)
         { FinishAction(false); yield break; }
 
         float elapsed = 0f;
@@ -37,7 +37,7 @@ public class DelegateArchiveFetchExecutor : ActionExecutor
         if (!request.IsActive || !request.IsFulfilled) { FinishAction(false); yield break; }
 
         staff.GetComponent<StackHolder>()?.ShowSingleDocumentSprite();
-        staff.CurrentSubStatus = "Несёт выписку посетителю";
+        staff.CurrentSubStatus = UI.GameText.Get("staff.archive.delivering_record");
         // A mobile courier has no service desk/Waypoint. Walk to the waiting visitor instead
         // of issuing a desk call that only interns covering an actual workstation can serve.
         var client = request.WaitingClient;
@@ -46,13 +46,13 @@ public class DelegateArchiveFetchExecutor : ActionExecutor
         { FinishAction(false); yield break; }
 
         var cashier = ClientSpawner.GetCashierZone()?.waitingWaypoint;
-        if (cashier == null) { FinishAction(false); yield break; }
+        if (cashier == null || manager == null) { FinishAction(false); yield break; }
         manager.CompleteDelivery(request);
         client.billToPay += 150;
         ClientQueueManager.Instance?.RemoveClientFromQueue(client);
         client.stateMachine.SetGoal(cashier);
         client.stateMachine.SetState(ClientState.MovingToGoal);
-        staff.thoughtBubble?.ShowPriorityMessage("Ваша выписка. Пройдите в кассу.", 3f, Color.green);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.record_cashier"), 3f, Color.green);
         staff.ShowActionEffect(true);
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         FinishAction(true);

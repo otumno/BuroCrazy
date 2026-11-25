@@ -26,15 +26,18 @@ public class EmptyTrashCanExecutor : ActionExecutor
         if (targetCan == null || Vector2.Distance(staff.transform.position, targetCan.transform.position) > 2.5f)
         { FinishAction(false); yield break; }
         yield return new WaitForSeconds(1.5f);
+        if (targetCan == null || dumpster == null) { FinishAction(false); yield break; }
         carried = targetCan.CurrentFillCount;
+        if (carried <= 0) { FinishAction(false); yield break; }
         targetCan.Empty();
         if (worker.broomTransform != null) worker.broomTransform.gameObject.SetActive(false);
         if (worker.TrashBagObject != null) worker.TrashBagObject.SetActive(true);
-        staff.CurrentSubStatus = "Несёт мусор к контейнеру";
+        staff.CurrentSubStatus = UI.GameText.Get("staff.janitor.carrying_trash");
         yield return worker.MoveToTarget(dumpster.position, ServiceWorkerController.WorkerState.Cleaning);
         if (dumpster == null || Vector2.Distance(staff.transform.position, dumpster.position) > 2.5f)
         { FinishAction(false); yield break; }
         yield return new WaitForSeconds(2f);
+        if (dumpster == null) { FinishAction(false); yield break; }
         carried = 0;
         worker.SetState(ServiceWorkerController.WorkerState.Idle);
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);

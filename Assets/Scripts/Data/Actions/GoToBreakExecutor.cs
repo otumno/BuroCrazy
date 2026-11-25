@@ -16,14 +16,15 @@ public class GoToBreakExecutor : ActionExecutor
             staff.BeginNeedActivity(false);
             RegisterCleanup(() => { if (staff != null) staff.ClearNeedActivity(); });
             yield return staff.MoveToTarget(occupiedPoint.transform.position, "OnBreak");
-            if (Vector2.Distance(staff.transform.position, occupiedPoint.transform.position) > 2f)
+            if (occupiedPoint == null || Vector2.Distance(staff.transform.position, occupiedPoint.transform.position) > 2f)
             { FinishAction(false); yield break; }
-            staff.CurrentSubStatus = "Отдыхает";
+            staff.CurrentSubStatus = UI.GameText.Get("staff.break.resting");
 
             float breakDuration = 10f;
             float timer = 0;
             while (timer < breakDuration)
             {
+                if (occupiedPoint == null) { FinishAction(false); yield break; }
                 timer += 1f;
                 // ИСПРАВЛЕНИЕ: Быстро восстанавливаем энергию
                 staff.energy = Mathf.Clamp(staff.energy + 10f, 0f, 100f); 
@@ -33,16 +34,18 @@ public class GoToBreakExecutor : ActionExecutor
             
             // Гарантия полной бодрости после отдыха
             staff.energy = 100f;
-            staff.thoughtBubble?.ShowPriorityMessage("Перерыв окончен", 2f, Color.white);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.break.finished"), 2f, Color.white);
         }
         else
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Нет места!", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.break.no_space"), 2f, Color.red);
             FinishAction(false);
             yield break;
         }
 
         staff.ClearNeedActivity();
+        OnResourcesReleased();
+        occupiedPoint = null;
         yield return ReturnToWorkstation();
         FinishAction(true);
     }

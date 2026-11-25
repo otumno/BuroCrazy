@@ -699,7 +699,7 @@ public class AgentMover : MonoBehaviour
     /// </summary>
     public void SlipAndRecover()
     {
-        SlipAndRecover("потерял равновесие");
+        SlipAndRecover(UI.GameText.Get("fall.balance"));
     }
 
     public void SlipAndRecover(string reason)
@@ -787,7 +787,7 @@ public class AgentMover : MonoBehaviour
     ThoughtBubbleController thoughtBubble = GetComponent<ThoughtBubbleController>();
     if (thoughtBubble != null)
     {
-        string[] fallComments = { "Ой!", "Ай!", "Упс...", "*Неловкий звук*", "Скользко!", "Вот же ж..." };
+        string[] fallComments = { UI.GameText.Get("fall.ouch"), UI.GameText.Get("fall.ow"), UI.GameText.Get("fall.oops"), UI.GameText.Get("fall.sound"), UI.GameText.Get("fall.slippery"), UI.GameText.Get("fall.damn") };
         
         // Маленький бонус: если клиент, можно сделать реплику красной (злой)
         Color msgColor = (clientBrain != null) ? Color.red : Color.yellow;

@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Action_DelegateArchiveFetch
   actionType: 0
   displayName: 
+  localizedNameKey: action.archive_courier
   description: 
   category: 0
   priority: 80

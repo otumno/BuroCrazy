@@ -27,7 +27,7 @@ public class TakeStackToArchiveAction : StaffAction
 
         // Носим бумаги, если накопилось хотя бы 3 штуки, и перед столом нет клиентов
         var stack = clerk.assignedWorkstation.documentStack;
-        if (stack.CurrentSize >= 3)
+        if (stack.OrdinaryDocumentCount >= 3)
         {
             var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
             bool hasClients = zone != null && zone.GetOccupyingClients().Any();
@@ -51,7 +51,8 @@ public class TakeStackToArchiveAction : StaffAction
         if (!(staff is ClerkController clerk) || clerk.assignedWorkstation == null) return false;
 
         var stack = clerk.assignedWorkstation.documentStack;
-        return stack != null && stack.CurrentSize > 0;
+        // Project documents must remain on their desks; the transfer only takes ordinary papers.
+        return stack != null && stack.OrdinaryDocumentCount > 0;
     }
 
     public override System.Type GetExecutorType()

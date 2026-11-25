@@ -537,11 +537,16 @@ namespace Managers
             }
 
             // 3. Роли для найма: HiringManager сам читает unlockedRoles/hiringAccessRules открытых должностей
-            // при генерации кандидатов, поэтому здесь только лог.
+            // при следующем обновлении доски, поэтому здесь только лог.
             if (job.unlockedRoles != null && job.unlockedRoles.Count > 0)
             {
                 Debug.Log($"[Progression] Роли разблокированы: {string.Join(", ", job.unlockedRoles)}");
             }
+#if DEBUG_ENABLED || UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[HiringAccessTrace] Должность={job.jobID}, ранг открытых ролей={job.maxUnlockedRoleHireRankLevel}; " +
+                string.Join(", ", job.hiringAccessRules?.Where(r => r != null).Select(r => $"{r.role}: {r.maxRankLevel}")
+                    ?? System.Array.Empty<string>()));
+#endif
 
             // 4. Активировать апгрейды (если есть) — сработают хуки
             if (job.unlockedUpgrades != null && job.unlockedUpgrades.Count > 0)

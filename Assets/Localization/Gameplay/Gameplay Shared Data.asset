@@ -1,0 +1,996 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: Gameplay Shared Data
+  m_EditorClassIdentifier: 
+  m_TableCollectionName: Gameplay
+  m_TableCollectionNameGuidString: 201dd51703d0cc54aa37d27f76162677
+  m_Entries:
+  - m_Id: 122900439040
+    m_Key: staff.action.return_to_desk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382080
+    m_Key: staff.action.done
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382081
+    m_Key: staff.action.failed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382082
+    m_Key: staff.action.interrupted
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382083
+    m_Key: staff.service.call_director
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382084
+    m_Key: staff.service.desk_broken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382085
+    m_Key: staff.service.call_janitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382086
+    m_Key: staff.service.wrong_form
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382087
+    m_Key: staff.service.checking
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382088
+    m_Key: staff.service.form_error
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382089
+    m_Key: staff.service.processing_cat1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382090
+    m_Key: staff.service.processing_cat2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382091
+    m_Key: staff.service.go_to_cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382092
+    m_Key: staff.cashier.broken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382093
+    m_Key: staff.cashier.payment_due
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770688
+    m_Key: staff.cashier.skim
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770689
+    m_Key: ledger.service_payment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770690
+    m_Key: ledger.skim_share
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770691
+    m_Key: ledger.bribe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770692
+    m_Key: staff.archive.correcting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770693
+    m_Key: staff.archive.filing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770694
+    m_Key: staff.registration.broken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770695
+    m_Key: staff.registration.call_ticket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770696
+    m_Key: staff.registration.join_queue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770697
+    m_Key: client.registration.bureaucrats
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770698
+    m_Key: staff.registration.accept_jumper
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770699
+    m_Key: staff.registration.where_client
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770700
+    m_Key: staff.registration.impatient
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770701
+    m_Key: staff.registration.waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770702
+    m_Key: staff.service.serving
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770703
+    m_Key: staff.registration.no_show
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770704
+    m_Key: client.registration.hello
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770705
+    m_Key: staff.registration.greeting_listening
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770706
+    m_Key: staff.registration.greeting_purpose
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770707
+    m_Key: staff.registration.greeting_need
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770708
+    m_Key: staff.registration.greeting_documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770709
+    m_Key: staff.registration.checking
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770710
+    m_Key: staff.registration.unsure
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770711
+    m_Key: staff.registration.direction
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770712
+    m_Key: client.registration.thanks
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770713
+    m_Key: client.archive.request
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770714
+    m_Key: staff.archive.unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770715
+    m_Key: staff.archive.call_courier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770716
+    m_Key: client.archive.wait_in_hall
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770717
+    m_Key: staff.archive.requesting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770718
+    m_Key: staff.archive.wait_where
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770719
+    m_Key: staff.archive.wait_eager
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770720
+    m_Key: staff.archive.wait_long
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770721
+    m_Key: staff.archive.wait_asleep
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770722
+    m_Key: staff.archive.timeout
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770723
+    m_Key: client.goal.certificate1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770724
+    m_Key: client.goal.certificate2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770725
+    m_Key: client.goal.tax
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770726
+    m_Key: client.goal.archive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770727
+    m_Key: client.goal.toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770728
+    m_Key: client.goal.director_signature
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770729
+    m_Key: client.goal.director_meeting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770730
+    m_Key: client.goal.ask
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770731
+    m_Key: ui.common.next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782589399040
+    m_Key: staff.archive.searching
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593344
+    m_Key: staff.archive.record_ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593345
+    m_Key: director.order_now
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593346
+    m_Key: director.busy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593347
+    m_Key: director.busy_now
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593348
+    m_Key: director.broken_station
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593349
+    m_Key: director.desk_broke
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593350
+    m_Key: staff.registration.next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593351
+    m_Key: staff.registration.walk_in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593352
+    m_Key: client.director.apology
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593353
+    m_Key: director.accept_bribe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593354
+    m_Key: ledger.director_bribe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593355
+    m_Key: director.accept_jumper
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593356
+    m_Key: director.register_order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593357
+    m_Key: director.registrar_absent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593358
+    m_Key: director.stamp_document
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593359
+    m_Key: director.pay_fee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593360
+    m_Key: ledger.registration_fee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593361
+    m_Key: director.finally_archive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593362
+    m_Key: director.too_late
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593363
+    m_Key: staff.delivery.desk_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593364
+    m_Key: staff.delivery.putting_down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593365
+    m_Key: staff.delivery.pickup
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593366
+    m_Key: staff.delivery.folder_missing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593367
+    m_Key: staff.delivery.carrying
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593368
+    m_Key: staff.guard.no_report_desk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593369
+    m_Key: staff.guard.writing_report
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593370
+    m_Key: staff.guard.report_submitted
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593371
+    m_Key: staff.janitor.carrying_trash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593372
+    m_Key: staff.break.resting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593373
+    m_Key: staff.break.finished
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593374
+    m_Key: staff.break.no_space
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593375
+    m_Key: staff.toilet.using
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593376
+    m_Key: staff.archive.collecting_record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593377
+    m_Key: staff.archive.delivering_record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593378
+    m_Key: staff.archive.record_cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593379
+    m_Key: staff.archive.looking
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593380
+    m_Key: staff.archive.search_where
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593381
+    m_Key: staff.archive.search_let_see
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593382
+    m_Key: staff.archive.search_not_shelf
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593383
+    m_Key: staff.archive.search_here
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593384
+    m_Key: staff.archive.search_dust
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593385
+    m_Key: staff.archive.found
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593386
+    m_Key: staff.sorting.tidy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593387
+    m_Key: activity.falling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593388
+    m_Key: activity.ticket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593389
+    m_Key: activity.being_served
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593390
+    m_Key: activity.waiting_client
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593391
+    m_Key: activity.moving
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593392
+    m_Key: activity.task
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593393
+    m_Key: activity.waiting_at_desk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593394
+    m_Key: activity.clinch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593395
+    m_Key: activity.spawning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593396
+    m_Key: activity.arrived
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593397
+    m_Key: activity.getting_ticket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593398
+    m_Key: activity.going_ticket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593399
+    m_Key: activity.going_wait
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593400
+    m_Key: activity.waiting_call
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593401
+    m_Key: activity.waiting_entry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593402
+    m_Key: activity.waiting_document
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593403
+    m_Key: activity.waiting_staff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593404
+    m_Key: activity.direction
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593405
+    m_Key: activity.confused
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593406
+    m_Key: activity.grumbling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593407
+    m_Key: activity.enraged
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593408
+    m_Key: activity.exiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593409
+    m_Key: activity.leaving_upset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593410
+    m_Key: activity.moving_prefix
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593411
+    m_Key: activity.waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593412
+    m_Key: activity.director_desk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593413
+    m_Key: activity.working
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593414
+    m_Key: activity.collecting_documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593415
+    m_Key: activity.carrying_documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593416
+    m_Key: activity.awaiting_command
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593417
+    m_Key: activity.off_duty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593418
+    m_Key: activity.going_break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593419
+    m_Key: activity.going_toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593420
+    m_Key: activity.stressed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593421
+    m_Key: activity.patrolling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593422
+    m_Key: activity.chasing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593423
+    m_Key: activity.waiting_record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593424
+    m_Key: activity.cleaning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593425
+    m_Key: activity.returning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593426
+    m_Key: activity.waiting_task
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593427
+    m_Key: activity.shift_finished
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593428
+    m_Key: place.workstation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593429
+    m_Key: place.registration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593430
+    m_Key: place.cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593431
+    m_Key: place.desk1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593432
+    m_Key: place.desk2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593433
+    m_Key: place.archive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593434
+    m_Key: place.destination
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593435
+    m_Key: place.toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593436
+    m_Key: place.break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593437
+    m_Key: place.exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593438
+    m_Key: place.ticket_terminal
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593439
+    m_Key: place.waypoint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593440
+    m_Key: role.director
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593441
+    m_Key: role.intern
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593442
+    m_Key: role.registrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593443
+    m_Key: role.cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593444
+    m_Key: role.archivist
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593445
+    m_Key: role.guard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593446
+    m_Key: role.janitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593447
+    m_Key: role.service_worker
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593448
+    m_Key: role.clerk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593449
+    m_Key: role.office_manager
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593450
+    m_Key: role.accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593451
+    m_Key: role.staff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593452
+    m_Key: staff.break.started
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593453
+    m_Key: staff.toilet.started
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593454
+    m_Key: fall.balance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593455
+    m_Key: fall.puddle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593456
+    m_Key: calendar.morning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593457
+    m_Key: calendar.day
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593458
+    m_Key: calendar.evening
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593459
+    m_Key: calendar.night
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593460
+    m_Key: action.registration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593461
+    m_Key: action.cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593462
+    m_Key: action.document_cat1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593463
+    m_Key: action.document_cat2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593464
+    m_Key: action.filing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593465
+    m_Key: action.deliver_documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593466
+    m_Key: action.take_stack
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593467
+    m_Key: action.project_transport
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593468
+    m_Key: action.write_report
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593469
+    m_Key: action.empty_bin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593470
+    m_Key: action.break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593471
+    m_Key: action.toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593472
+    m_Key: action.archive_courier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593473
+    m_Key: action.archive_retrieve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593474
+    m_Key: action.sort
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593475
+    m_Key: staff.shift.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593476
+    m_Key: staff.order.accept
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593477
+    m_Key: staff.need.urgent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593478
+    m_Key: staff.need.crowd
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593479
+    m_Key: staff.need.thirst
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593480
+    m_Key: staff.need.quiet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593481
+    m_Key: staff.no_workstation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593482
+    m_Key: staff.idle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593483
+    m_Key: staff.shift.home
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593484
+    m_Key: staff.trait.gossip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593485
+    m_Key: staff.trait.oops
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593486
+    m_Key: staff.trait.crash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593487
+    m_Key: staff.trait.phew
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593488
+    m_Key: staff.trait.sneeze
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593489
+    m_Key: staff.trait.where
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593490
+    m_Key: staff.trait.remember
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593491
+    m_Key: staff.trait.fidget
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593492
+    m_Key: staff.trait.scream
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593493
+    m_Key: staff.trait.crowd
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593494
+    m_Key: name.uncle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593495
+    m_Key: name.aunt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593496
+    m_Key: fall.ouch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593497
+    m_Key: fall.ow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593498
+    m_Key: fall.oops
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593499
+    m_Key: fall.sound
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593500
+    m_Key: fall.slippery
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593501
+    m_Key: fall.damn
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593502
+    m_Key: trait.shilo.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593503
+    m_Key: trait.shilo.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593504
+    m_Key: trait.gossip.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593505
+    m_Key: trait.gossip.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593506
+    m_Key: trait.allergy.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593507
+    m_Key: trait.allergy.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593508
+    m_Key: trait.sloppy.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593509
+    m_Key: trait.sloppy.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593510
+    m_Key: trait.forgetful.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593511
+    m_Key: trait.forgetful.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593512
+    m_Key: trait.clumsy.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787648
+    m_Key: trait.clumsy.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787649
+    m_Key: trait.sprinter.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787650
+    m_Key: trait.sprinter.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787651
+    m_Key: trait.panicky.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787652
+    m_Key: trait.panicky.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787653
+    m_Key: trait.loudmouth.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787654
+    m_Key: trait.loudmouth.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787655
+    m_Key: trait.toiletrush.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787656
+    m_Key: trait.toiletrush.description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787657
+    m_Key: ui.staff.trait
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787658
+    m_Key: ledger.player_share
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787659
+    m_Key: wallet.balance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787660
+    m_Key: ledger.staff_wages
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 1506924130828025944
+  references:
+    version: 2
+    RefIds:
+    - rid: 1506924130828025944
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1795562280920

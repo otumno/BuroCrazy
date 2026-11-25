@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   actionType: 27
   displayName: "\u041E\u0447\u0438\u0441\u0442\u0438\u0442\u044C \u043C\u0443\u0441\u043E\u0440\u043A\u0443"
+  localizedNameKey: action.empty_bin
   description: 
   category: 0
   priority: 50

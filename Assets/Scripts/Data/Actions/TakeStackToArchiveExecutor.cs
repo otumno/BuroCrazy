@@ -14,15 +14,18 @@ public class TakeStackToArchiveExecutor : ActionExecutor
             yield break;
         }
 
+        yield return ReturnToWorkstation();
+        if (!IsAtWorkstation) { FinishAction(false); yield break; }
+
         var deskStack = clerk.assignedWorkstation.documentStack;
-        if (deskStack == null || deskStack.IsEmpty)
+        if (deskStack == null || deskStack.OrdinaryDocumentCount == 0)
         {
             FinishAction(false);
             yield break;
         }
         
         clerk.SetState(ClerkController.ClerkState.GoingToArchive);
-        clerk.thoughtBubble?.ShowPriorityMessage("Стол завален!\nНесу в архив...", 3f, new Color(1f, 0.5f, 0f));
+        clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.delivery.desk_full"), 3f, new Color(1f, 0.5f, 0f));
 
         var archive = ArchiveManager.Instance;
         Transform archivePoint = archive != null ? archive.RequestDropOffPoint() : null;
@@ -30,22 +33,26 @@ public class TakeStackToArchiveExecutor : ActionExecutor
         RegisterCleanup(() => { if (archive != null) archive.FreeOverflowPoint(archivePoint); });
         var transfer = new DocumentStackTransfer(deskStack, deskStack.CurrentSize);
         RegisterCleanup(transfer.Dispose);
+        if (transfer.Count == 0) { FinishAction(false); yield break; }
         var stackHolder = staff.GetComponent<StackHolder>();
         RegisterCleanup(() => { if (stackHolder != null) stackHolder.HideStack(); });
         stackHolder?.ShowStack(transfer.Count, deskStack.maxStackSize);
 
         yield return clerk.MoveToTarget(archivePoint.position, ClerkController.ClerkState.AtArchive.ToString());
+        if (archive == null || archivePoint == null || Vector2.Distance(clerk.transform.position, archivePoint.position) > 1f)
+        { FinishAction(false); yield break; }
         
-        clerk.thoughtBubble?.ShowPriorityMessage("Складываю...", 2f, Color.gray);
+        clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.delivery.putting_down"), 2f, Color.gray);
         yield return new WaitForSeconds(2f);
+        if (archive == null || archivePoint == null) { FinishAction(false); yield break; }
 
         int delivered = transfer.DeliverTo(archive.GetDropOffStack(archivePoint));
         transfer.Dispose();
         stackHolder?.HideStack();
-        ArchiveManager.Instance.FreeOverflowPoint(archivePoint);
+        archive.FreeOverflowPoint(archivePoint);
 
         clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-        yield return clerk.MoveToTarget(clerk.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
+        yield return ReturnToWorkstation();
         
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         FinishAction(delivered > 0);

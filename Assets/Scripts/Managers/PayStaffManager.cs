@@ -51,7 +51,7 @@ namespace Managers
                 return;
 
             // Денег может не хватить — тогда счёт уходит в минус: банкротства в игре пока нет.
-            PlayerWallet.Instance.AddMoney(-total, "Зарплата сотрудникам");
+            PlayerWallet.Instance.AddMoney(-total, UI.GameText.Get("ledger.staff_wages"));
             Debug.Log($"[Payroll] Выплачена зарплата за день: ${total}. Баланс: ${PlayerWallet.Instance.GetCurrentMoney()}.");
         }
 
@@ -70,7 +70,7 @@ namespace Managers
 
             foreach (var staff in HiringManager.Instance.GetTemporaryStaff())
             {
-                // Нанятый вечером или в начале ночи работает завтра — его не трогаем.
+                // Never dismiss a contract whose configured work day has not ended.
                 if (!staff.IsTemporaryWorkDayOver())
                     continue;
 

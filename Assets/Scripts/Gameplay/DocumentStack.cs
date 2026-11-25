@@ -19,6 +19,18 @@ public class DocumentStack : MonoBehaviour
     [Tooltip("Точка, где растет стопка")]
     public Transform stackRoot;
 
+    public Transform EffectiveStackRoot
+    {
+        get
+        {
+            if (stackRoot != null) return stackRoot;
+            var desk = GetComponentInParent<ServicePoint>();
+            // Older scenes left stackRoot empty: the actor/desk origin is not the paper surface.
+            return desk != null && desk.documentStack == this && desk.documentPointOnDesk != null
+                ? desk.documentPointOnDesk : transform;
+        }
+    }
+
     // Внутренний список объектов
     private List<GameObject> visualStack = new List<GameObject>();
     private static readonly Dictionary<GameObject, DocumentStack> inTransit = new();
@@ -40,7 +52,7 @@ public class DocumentStack : MonoBehaviour
 
     private void Start()
     {
-        if (stackRoot == null) stackRoot = transform;
+        if (stackRoot == null) stackRoot = EffectiveStackRoot;
     }
 
     // =================================================================================
@@ -79,7 +91,7 @@ public class DocumentStack : MonoBehaviour
         // A rollback must preserve the original even if someone filled the source during transport.
         if (!returningToSource && IsFull) return false;
         CompleteTransit(document);
-        if (stackRoot == null) stackRoot = transform;
+        if (stackRoot == null) stackRoot = EffectiveStackRoot;
         document.transform.SetParent(stackRoot);
         document.transform.position = stackRoot.position + Vector3.up * (visualStack.Count * stackOffset);
         document.transform.rotation = stackRoot.rotation;
@@ -219,7 +231,7 @@ public class DocumentStack : MonoBehaviour
     private GameObject AddDocumentInternal(GameObject prefabToSpawn)
     {
         if (prefabToSpawn == null) return null;
-        if (stackRoot == null) stackRoot = transform;
+        if (stackRoot == null) stackRoot = EffectiveStackRoot;
 
         GameObject newDoc = Instantiate(prefabToSpawn, stackRoot);
         

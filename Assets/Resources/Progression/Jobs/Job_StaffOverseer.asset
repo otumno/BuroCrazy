@@ -30,6 +30,10 @@ MonoBehaviour:
   iconUnlocked: {fileID: 0}
   policyID: Policy_FlexSchedule
   unlockedRoles: 08000000
+  hiringAccessRules:
+  - role: 6
+    maxRankLevel: 0
+  maxUnlockedRoleHireRankLevel: 1
   unlockedUpgrades:
   - Upgrade_RestRoom
   correctPath:

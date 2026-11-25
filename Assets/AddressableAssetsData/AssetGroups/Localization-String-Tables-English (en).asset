@@ -15,11 +15,19 @@ MonoBehaviour:
   m_GroupName: Localization-String-Tables-English (en)
   m_GUID: 0ca5569a6c640d74eab130c08cf3c84e
   m_SerializeEntries:
+  - m_GUID: 02826f4b42fd4804f9f732cf9aea79ec
+    m_Address: Gameplay_en
+    m_ReadOnly: 1
+    m_SerializedLabels:
+    - Locale-en
+    - Preload
+    FlaggedDuringContentUpdateRestriction: 0
   - m_GUID: 740a1386a8389b6458be64418dfdac99
     m_Address: Localization_Table_Main_en
     m_ReadOnly: 1
     m_SerializedLabels:
     - Locale-en
+    - Preload
     FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 1
   m_Settings: {fileID: 11400000, guid: 14d30d58f2c118642a7caca30f2a3bda, type: 2}

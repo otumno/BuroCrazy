@@ -1,0 +1,1065 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: Gameplay_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 201dd51703d0cc54aa37d27f76162677, type: 2}
+  m_Metadata:
+    m_Items:
+    - rid: 1506924130828025945
+  m_TableData:
+  - m_Id: 122900439040
+    m_Localized: Returning to workstation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382080
+    m_Localized: Done!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382081
+    m_Localized: That didn't work...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382082
+    m_Localized: Dropping everything!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382083
+    m_Localized: Um... Director!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382084
+    m_Localized: The desk is broken!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382085
+    m_Localized: 'The desk is broken!
+
+      Call the janitor!'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382086
+    m_Localized: 'Wrong form.
+
+      Please get the right one.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382087
+    m_Localized: Checking...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382088
+    m_Localized: 'There''s an error!
+
+      Please fill it out again.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382089
+    m_Localized: Processing (Cat. 1)...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382090
+    m_Localized: Processing (Cat. 2)...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382091
+    m_Localized: Done! Please go to the cashier.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382092
+    m_Localized: The cash register is broken!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122942382093
+    m_Localized: 'Amount due: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 122950770688
+    m_Localized: No one will notice...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770689
+    m_Localized: Service payment ({0})
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 122950770690
+    m_Localized: Share of the skim ({0})
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 122950770691
+    m_Localized: Bribe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770692
+    m_Localized: There's an error... I'll fix it.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770693
+    m_Localized: Filing...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770694
+    m_Localized: The counter is broken!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770695
+    m_Localized: Ticket #{0}, please step forward!
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 122950770696
+    m_Localized: Please join the queue!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770697
+    m_Localized: Typical bureaucrats...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770698
+    m_Localized: All right, hand over your documents...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770699
+    m_Localized: Where is the visitor?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770700
+    m_Localized: How long do I have to wait?!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770701
+    m_Localized: 'Waiting for: {0}
+
+      {1} ({2:F0} s)'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 122950770702
+    m_Localized: 'Serving at: {0}
+
+      {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 122950770703
+    m_Localized: No show. Next!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770704
+    m_Localized: Hello.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770705
+    m_Localized: How can I help?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770706
+    m_Localized: What brings you here?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770707
+    m_Localized: What do you need?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770708
+    m_Localized: Your documents, please.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770709
+    m_Localized: One moment, let me check...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770710
+    m_Localized: Uh... probably that way...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770711
+    m_Localized: 'Please go to:
+
+      ''{0}'''
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 122950770712
+    m_Localized: Got it, thank you.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770713
+    m_Localized: I need an archive record.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770714
+    m_Localized: 'The archivist is away!
+
+      Please come back later.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770715
+    m_Localized: Intern, fetch a record from the archive!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770716
+    m_Localized: All right, I'll wait in the hall...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770717
+    m_Localized: 'Requesting an archive record.
+
+      Please wait.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770718
+    m_Localized: Where is it...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770719
+    m_Localized: Still waiting!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770720
+    m_Localized: This is taking forever...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770721
+    m_Localized: Has the archive fallen asleep?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770722
+    m_Localized: 'No response from the archive...
+
+      Sorry.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770723
+    m_Localized: I need a certificate.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770724
+    m_Localized: I'm filing form 2.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770725
+    m_Localized: I'm here to pay my taxes.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770726
+    m_Localized: I need the archive.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770727
+    m_Localized: Where's the toilet?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770728
+    m_Localized: I need the director's signature!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770729
+    m_Localized: I have an appointment with the director!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770730
+    m_Localized: I'd like a certificate, please...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 122950770731
+    m_Localized: Next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782589399040
+    m_Localized: Looking for the archive record...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593344
+    m_Localized: Here is your archive record.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593345
+    m_Localized: Get on it immediately!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593346
+    m_Localized: I am busy!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593347
+    m_Localized: I am busy right now!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593348
+    m_Localized: 'Everything is broken here!
+
+      I cannot work.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593349
+    m_Localized: The desk broke!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593350
+    m_Localized: Next!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593351
+    m_Localized: You there, step forward!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593352
+    m_Localized: Sorry, boss...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593353
+    m_Localized: All right, hand it over...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593354
+    m_Localized: Bribe to the director
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593355
+    m_Localized: Very well, hand it over...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593356
+    m_Localized: Right, this order...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593357
+    m_Localized: 'Nobody at registration...
+
+      I will register it myself.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593358
+    m_Localized: Stamping the document.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593359
+    m_Localized: Paying my own fee...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593360
+    m_Localized: Registration fee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593361
+    m_Localized: And finally, to the archive!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593362
+    m_Localized: Too late...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593363
+    m_Localized: 'The desk is piled high!
+
+      Taking papers to the archive...'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593364
+    m_Localized: Putting papers down...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593365
+    m_Localized: I will collect the documents...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593366
+    m_Localized: Where is the folder?!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593367
+    m_Localized: Delivering...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593368
+    m_Localized: No desk for reports!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593369
+    m_Localized: Writing a report...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593370
+    m_Localized: Report submitted.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593371
+    m_Localized: Carrying trash to the dumpster
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593372
+    m_Localized: Resting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593373
+    m_Localized: Break is over
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593374
+    m_Localized: No room!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593375
+    m_Localized: Using the toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593376
+    m_Localized: Collecting an archive record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593377
+    m_Localized: Delivering an archive record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593378
+    m_Localized: Here is your record. Please go to the cashier.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593379
+    m_Localized: Looking for the record...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593380
+    m_Localized: Where is it...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593381
+    m_Localized: Let me see...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593382
+    m_Localized: Not on this shelf...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593383
+    m_Localized: Maybe here?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593384
+    m_Localized: So much dust...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593385
+    m_Localized: Aha, found it!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593386
+    m_Localized: Time to tidy up...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593387
+    m_Localized: 'Fell: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782593593388
+    m_Localized: " \xB7 ticket #{0}"
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782593593389
+    m_Localized: 'Being served: {0}
+
+      By {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782593593390
+    m_Localized: 'Waiting for: {0}
+
+      {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782593593391
+    m_Localized: 'Going to: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782593593392
+    m_Localized: '
+
+      Task: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782593593393
+    m_Localized: 'Waiting for visitor: {0}
+
+      {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782593593394
+    m_Localized: "In difficulty \u2014 waiting for help"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593395
+    m_Localized: Arriving
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593396
+    m_Localized: Arrived at the office
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593397
+    m_Localized: Getting a ticket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593398
+    m_Localized: Going to get a ticket
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593399
+    m_Localized: Going to the waiting area
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593400
+    m_Localized: Waiting to be called
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593401
+    m_Localized: 'Waiting to enter: '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593402
+    m_Localized: Waiting for an archive document
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593403
+    m_Localized: 'Waiting for staff: '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593404
+    m_Localized: Getting directions
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593405
+    m_Localized: "Confused \u2014 looking for a route"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593406
+    m_Localized: "Grumbling \u2014 losing patience"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593407
+    m_Localized: Causing trouble
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593408
+    m_Localized: Heading for the exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593409
+    m_Localized: Leaving upset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593410
+    m_Localized: 'Going to: '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593411
+    m_Localized: Waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593412
+    m_Localized: At the director's desk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593413
+    m_Localized: 'Working at: '
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593414
+    m_Localized: Going to collect documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593415
+    m_Localized: Carrying documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593416
+    m_Localized: Awaiting an order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593417
+    m_Localized: Off duty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593418
+    m_Localized: Going for a break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593419
+    m_Localized: Going to the toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593420
+    m_Localized: Overwhelmed by stress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593421
+    m_Localized: Patrolling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593422
+    m_Localized: Chasing a troublemaker
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593423
+    m_Localized: Waiting for an archive record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593424
+    m_Localized: Cleaning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593425
+    m_Localized: Returning to work
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593426
+    m_Localized: Waiting for a task
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593427
+    m_Localized: Shift finished
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593428
+    m_Localized: workstation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593429
+    m_Localized: registration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593430
+    m_Localized: cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593431
+    m_Localized: window #1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593432
+    m_Localized: window #2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593433
+    m_Localized: archive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593434
+    m_Localized: assigned destination
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593435
+    m_Localized: toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593436
+    m_Localized: break area
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593437
+    m_Localized: exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593438
+    m_Localized: ticket machine
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593439
+    m_Localized: waypoint
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593440
+    m_Localized: Director
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593441
+    m_Localized: Intern
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593442
+    m_Localized: Registrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593443
+    m_Localized: Cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593444
+    m_Localized: Archivist
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593445
+    m_Localized: Guard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593446
+    m_Localized: Janitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593447
+    m_Localized: Service worker
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593448
+    m_Localized: Clerk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593449
+    m_Localized: Office manager
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593450
+    m_Localized: Accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593451
+    m_Localized: Employee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593452
+    m_Localized: Taking a break...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593453
+    m_Localized: Toilet break...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593454
+    m_Localized: lost balance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593455
+    m_Localized: slipped on a puddle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593456
+    m_Localized: MORNING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593457
+    m_Localized: DAY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593458
+    m_Localized: EVENING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593459
+    m_Localized: NIGHT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593460
+    m_Localized: Serving at registration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593461
+    m_Localized: Serving at the cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593462
+    m_Localized: Processing a category 1 document
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593463
+    m_Localized: Processing a category 2 document
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593464
+    m_Localized: Filing documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593465
+    m_Localized: Delivering documents
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593466
+    m_Localized: Taking a stack to the archive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593467
+    m_Localized: Transporting a folder
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593468
+    m_Localized: Writing a report
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593469
+    m_Localized: Taking out trash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593470
+    m_Localized: Break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593471
+    m_Localized: Toilet break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593472
+    m_Localized: Delivering an archive record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593473
+    m_Localized: Finding an archive record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593474
+    m_Localized: Sorting papers
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593475
+    m_Localized: Time for work!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593476
+    m_Localized: All right, I am going...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593477
+    m_Localized: Oh no, I need a quick break!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593478
+    m_Localized: What a crowd! Back to work!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593479
+    m_Localized: My throat is dry...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593480
+    m_Localized: While nobody is here...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593481
+    m_Localized: I have no workstation...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593482
+    m_Localized: What should I do?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593483
+    m_Localized: Heading home...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593484
+    m_Localized: Have you heard the news?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593485
+    m_Localized: Oh... Oops!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593486
+    m_Localized: CRASH!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593487
+    m_Localized: Phew...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593488
+    m_Localized: A-a-achoo!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593489
+    m_Localized: Where was I going?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593490
+    m_Localized: Oh, I remember!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593491
+    m_Localized: I need to go somewhere!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593492
+    m_Localized: AAAAAAH!!!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593493
+    m_Localized: THERE ARE TOO MANY!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593494
+    m_Localized: Uncle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593495
+    m_Localized: Aunt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593496
+    m_Localized: Ow!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593497
+    m_Localized: Ouch!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593498
+    m_Localized: Oops...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593499
+    m_Localized: '*Awkward noise*'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593500
+    m_Localized: Slippery!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593501
+    m_Localized: Oh, come on...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593502
+    m_Localized: Fidgety
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593503
+    m_Localized: Cannot stand still
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593504
+    m_Localized: Gossip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593505
+    m_Localized: Loves to chat when meeting people
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593506
+    m_Localized: Allergic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593507
+    m_Localized: Sneezes and pushes others aside
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593508
+    m_Localized: Sloppy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593509
+    m_Localized: Leaves puddles behind
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593510
+    m_Localized: Forgetful
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593511
+    m_Localized: Sometimes forgets where to go
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782593593512
+    m_Localized: Clumsy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787648
+    m_Localized: Trips over nothing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787649
+    m_Localized: Sprinter
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787650
+    m_Localized: Runs fast, but tires quickly
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787651
+    m_Localized: Panicky
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787652
+    m_Localized: Speeds up around crowds
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787653
+    m_Localized: Loudmouth
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787654
+    m_Localized: Suddenly shouts when stressed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787655
+    m_Localized: Toilet rush
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787656
+    m_Localized: Runs to the toilet faster
+    m_Metadata:
+      m_Items: []
+  - m_Id: 5782597787657
+    m_Localized: '
+
+      <color=yellow><b>Trait:</b> {0}</color>'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782597787658
+    m_Localized: '{0} (Your share: {1:P0})'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782597787659
+    m_Localized: 'Balance: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 5782597787660
+    m_Localized: Staff wages
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds:
+    - rid: 1506924130828025945
+      type: {class: SmartFormatTag, ns: UnityEngine.Localization.Metadata, asm: Unity.Localization}
+      data:
+        m_Entries: 
+        m_SharedEntries:
+        - id: 122942382093
+        - id: 122950770689
+        - id: 122950770690
+        - id: 122950770695
+        - id: 122950770701
+        - id: 122950770702
+        - id: 122950770711
+        - id: 5782593593387
+        - id: 5782593593388
+        - id: 5782593593389
+        - id: 5782593593390
+        - id: 5782593593391
+        - id: 5782593593392
+        - id: 5782593593393
+        - id: 5782597787657
+        - id: 5782597787658
+        - id: 5782597787659

@@ -48,7 +48,11 @@ public class DocumentMover : MonoBehaviour
             yield return null;
         }
         
-        onArrival?.Invoke();
+        // A disappearing hand/desk is cancellation, not successful delivery.
+        var callback = target != null ? onArrival : null;
+        onArrival = null;
+        target = null;
+        callback?.Invoke();
         // Мы не уничтожаем объект здесь, чтобы скрипт, вызвавший его, мог это сделать.
     }
 }

@@ -77,11 +77,11 @@ namespace UI.EndOfDay
             }
 
             // Концовка показывает свой экран, а катсцена могла сама открыть стол (как туториал) — тогда стол не нужен.
-            if (!IsEndingTriggered() && !IsDeskOpen())
+            if (!IsEndingTriggered())
             {
                 ReturnDirectorToDesk();
                 // Стол ставит свою паузу до «Начать день»; нашу снимаем после, чтобы между ними не было кадра с идущим временем.
-                MainUIManager.Instance?.ShowDirectorDesk();
+                if (!IsDeskOpen()) MainUIManager.Instance?.ShowDirectorDesk();
             }
 
             if (isPausedBySequence) MainUIManager.Instance?.PopPause();
@@ -133,9 +133,7 @@ namespace UI.EndOfDay
             var director = DirectorAvatarController.Instance;
             if (director == null || director.directorChairPoint == null) return;
 
-            director.StopManualWork(false);
-            director.TeleportTo(director.directorChairPoint.position);
-            director.ForceSetAtDeskState(true);
+            director.ReturnToDeskAfterDayEnd();
         }
 
         private bool IsCutsceneOrDialogueActive()

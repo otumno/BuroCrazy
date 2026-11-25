@@ -8,6 +8,7 @@ public abstract class ActionExecutor : MonoBehaviour
     protected StaffController staff;
     public StaffAction actionData { get; private set; }
     private bool _finished;
+    private ServicePoint serviceDesk;
     private readonly System.Collections.Generic.List<System.Action> cleanup = new();
 
     // Cleanup runs synchronously before another order starts; Destroy runs only at frame end.
@@ -54,7 +55,7 @@ public abstract class ActionExecutor : MonoBehaviour
     {
         var point = staff.assignedWorkstation != null ? staff.assignedWorkstation.clerkStandPoint : null;
         if (point == null) yield break;
-        staff.CurrentSubStatus = "Возвращается на рабочее место";
+        staff.CurrentSubStatus = UI.GameText.Get("staff.action.return_to_desk");
         yield return staff.MoveToTarget(point.position, "Working");
         if (staff is IServiceProvider provider && Vector2.Distance(staff.transform.position, point.position) < 1f)
             Managers.ClientSpawner.AssignServiceProviderToDesk(provider, staff.assignedWorkstation.deskId);
@@ -63,6 +64,43 @@ public abstract class ActionExecutor : MonoBehaviour
 
     protected bool IsAtWorkstation => staff.assignedWorkstation != null && staff.assignedWorkstation.clerkStandPoint != null
         && Vector2.Distance(staff.transform.position, staff.assignedWorkstation.clerkStandPoint.position) < 1f;
+
+    protected bool CanServeAtWorkstation(ClientPathfinding client)
+    {
+        var desk = serviceDesk != null ? serviceDesk : staff != null ? staff.assignedWorkstation : null;
+        if (desk == null || desk.clientStandPoint == null || client == null || !client.CanContinueService) return false;
+        if (staff == null || staff.assignedWorkstation != desk) return false;
+        var assigned = client.stateMachine.AssignedServicePoint;
+        // Proximity alone can pick a visitor at the neighbouring window or walking past it.
+        return (assigned == desk || (assigned == null && client.stateMachine.GetCurrentGoal() == desk.clientStandPoint))
+            && (desk.CurrentClient == null || desk.CurrentClient == client)
+            && Vector2.Distance(client.transform.position, desk.clientStandPoint.transform.position) <= 1.5f;
+    }
+
+    protected bool TryBeginClientService(ClientPathfinding client)
+    {
+        if (!CanServeAtWorkstation(client)) return false;
+        var desk = staff.assignedWorkstation;
+        if (!desk.TryAssignClient(client)) return false;
+        serviceDesk = desk;
+        RegisterCleanup(() =>
+        {
+            if (desk == null || client == null || desk.CurrentClient != client) return;
+            client.stateMachine?.CancelServiceCall(staff as IServiceProvider);
+            desk.ClearClient(client);
+        });
+        return true;
+    }
+
+    protected IEnumerator WaitForClientService(ClientPathfinding client, float duration)
+    {
+        float remaining = duration;
+        while (remaining > 0f && CanServeAtWorkstation(client))
+        {
+            remaining -= Time.deltaTime;
+            yield return null;
+        }
+    }
 
     protected void ShowProcessing(Vector3 target, float duration)
     {
@@ -126,16 +164,16 @@ public abstract class ActionExecutor : MonoBehaviour
             actionData.actionType == ActionType.Eat ||
             actionData.actionType == ActionType.Drink
         );
-        if (isBasicNeed) return; // Не спамим "Готово!" для туалета
+        if (isBasicNeed) return; // Не спамим UI.GameText.Get("staff.action.done") для туалета
 
         // Базовая реализация: просто показывает мысль об успехе/провале
         if (success)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Готово!", 2f, Color.green);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.action.done"), 2f, Color.green);
         }
         else
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Эх, не вышло...", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.action.failed"), 2f, Color.red);
         }
     }
 
@@ -149,7 +187,7 @@ public abstract class ActionExecutor : MonoBehaviour
         
         if (staff != null)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Бросаю всё!", 2f, Color.yellow);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.action.interrupted"), 2f, Color.yellow);
             // Тормозим физику
             staff.AgentMover?.Stop();
             staff.OnExecutorFinished(this, actionData, false);

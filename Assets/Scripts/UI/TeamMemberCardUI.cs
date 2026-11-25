@@ -98,7 +98,7 @@ public class TeamMemberCardUI : MonoBehaviour
         if (assignedStaff.permanentTrait != StaffController.TraitType.None)
         {
             var traitInfo = StaffController.TraitLibrary[assignedStaff.permanentTrait];
-            skillsText.text += $"\n<color=yellow><b>Особенность:</b> {traitInfo.Name}</color>";
+            skillsText.text += UI.GameText.Get("ui.staff.trait", traitInfo.LocalizedName);
         }
 
         if (assignedStaff.currentRank != null)

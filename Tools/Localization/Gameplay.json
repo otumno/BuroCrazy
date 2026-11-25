@@ -1,0 +1,1244 @@
+[
+  {
+    "key": "staff.action.return_to_desk",
+    "ru": "Возвращается на рабочее место",
+    "en": "Returning to workstation"
+  },
+  {
+    "key": "staff.action.done",
+    "ru": "Готово!",
+    "en": "Done!"
+  },
+  {
+    "key": "staff.action.failed",
+    "ru": "Эх, не вышло...",
+    "en": "That didn't work..."
+  },
+  {
+    "key": "staff.action.interrupted",
+    "ru": "Бросаю всё!",
+    "en": "Dropping everything!"
+  },
+  {
+    "key": "staff.service.call_director",
+    "ru": "Эмм... Директор!",
+    "en": "Um... Director!"
+  },
+  {
+    "key": "staff.service.desk_broken",
+    "ru": "Стол сломан!",
+    "en": "The desk is broken!"
+  },
+  {
+    "key": "staff.service.call_janitor",
+    "ru": "Стол сломан!\nЗовите уборщика!",
+    "en": "The desk is broken!\nCall the janitor!"
+  },
+  {
+    "key": "staff.service.wrong_form",
+    "ru": "Это не тот бланк,\nвозьмите другой.",
+    "en": "Wrong form.\nPlease get the right one."
+  },
+  {
+    "key": "staff.service.checking",
+    "ru": "Проверяю...",
+    "en": "Checking..."
+  },
+  {
+    "key": "staff.service.form_error",
+    "ru": "Здесь ошибка!\nНужно переделать.",
+    "en": "There's an error!\nPlease fill it out again."
+  },
+  {
+    "key": "staff.service.processing_cat1",
+    "ru": "Обрабатываю (Кат. 1)...",
+    "en": "Processing (Cat. 1)..."
+  },
+  {
+    "key": "staff.service.processing_cat2",
+    "ru": "Обрабатываю (Кат. 2)...",
+    "en": "Processing (Cat. 2)..."
+  },
+  {
+    "key": "staff.service.go_to_cashier",
+    "ru": "Готово! Пройдите в кассу.",
+    "en": "Done! Please go to the cashier."
+  },
+  {
+    "key": "staff.cashier.broken",
+    "ru": "Касса сломана!",
+    "en": "The cash register is broken!"
+  },
+  {
+    "key": "staff.cashier.payment_due",
+    "ru": "К оплате: ${0}",
+    "en": "Amount due: ${0}",
+    "smart": true
+  },
+  {
+    "key": "staff.cashier.skim",
+    "ru": "Никто и не заметит...",
+    "en": "No one will notice..."
+  },
+  {
+    "key": "ledger.service_payment",
+    "ru": "Оплата услуги ({0})",
+    "en": "Service payment ({0})",
+    "smart": true
+  },
+  {
+    "key": "ledger.skim_share",
+    "ru": "Доля от махинации ({0})",
+    "en": "Share of the skim ({0})",
+    "smart": true
+  },
+  {
+    "key": "ledger.bribe",
+    "ru": "Взятка",
+    "en": "Bribe"
+  },
+  {
+    "key": "staff.archive.correcting",
+    "ru": "Тут ошибка... исправлю.",
+    "en": "There's an error... I'll fix it."
+  },
+  {
+    "key": "staff.archive.filing",
+    "ru": "Архивирую...",
+    "en": "Filing..."
+  },
+  {
+    "key": "staff.registration.broken",
+    "ru": "Стойка сломана!",
+    "en": "The counter is broken!"
+  },
+  {
+    "key": "staff.registration.call_ticket",
+    "ru": "Талон №{0}, подойдите!",
+    "en": "Ticket #{0}, please step forward!",
+    "smart": true
+  },
+  {
+    "key": "staff.registration.join_queue",
+    "ru": "В общую очередь, пожалуйста!",
+    "en": "Please join the queue!"
+  },
+  {
+    "key": "client.registration.bureaucrats",
+    "ru": "Вот бюрократы...",
+    "en": "Typical bureaucrats..."
+  },
+  {
+    "key": "staff.registration.accept_jumper",
+    "ru": "Ладно, давайте ваши документы...",
+    "en": "All right, hand over your documents..."
+  },
+  {
+    "key": "staff.registration.where_client",
+    "ru": "Ну и где клиент?",
+    "en": "Where is the visitor?"
+  },
+  {
+    "key": "staff.registration.impatient",
+    "ru": "Я долго ждать буду?!",
+    "en": "How long do I have to wait?!"
+  },
+  {
+    "key": "staff.registration.waiting",
+    "ru": "Ждёт: {0}\n{1} ({2:F0} с)",
+    "en": "Waiting for: {0}\n{1} ({2:F0} s)",
+    "smart": true
+  },
+  {
+    "key": "staff.service.serving",
+    "ru": "Обслуживает: {0}\n{1}",
+    "en": "Serving at: {0}\n{1}",
+    "smart": true
+  },
+  {
+    "key": "staff.registration.no_show",
+    "ru": "Не пришел. Следующий!",
+    "en": "No show. Next!"
+  },
+  {
+    "key": "client.registration.hello",
+    "ru": "Здравствуйте.",
+    "en": "Hello."
+  },
+  {
+    "key": "staff.registration.greeting_listening",
+    "ru": "Слушаю вас.",
+    "en": "How can I help?"
+  },
+  {
+    "key": "staff.registration.greeting_purpose",
+    "ru": "Какая у вас цель?",
+    "en": "What brings you here?"
+  },
+  {
+    "key": "staff.registration.greeting_need",
+    "ru": "Что вам нужно?",
+    "en": "What do you need?"
+  },
+  {
+    "key": "staff.registration.greeting_documents",
+    "ru": "Документы давайте.",
+    "en": "Your documents, please."
+  },
+  {
+    "key": "staff.registration.checking",
+    "ru": "Минутку, смотрю...",
+    "en": "One moment, let me check..."
+  },
+  {
+    "key": "staff.registration.unsure",
+    "ru": "Эээ... наверное туда...",
+    "en": "Uh... probably that way..."
+  },
+  {
+    "key": "staff.registration.direction",
+    "ru": "Вам нужно в:\n'{0}'",
+    "en": "Please go to:\n'{0}'",
+    "smart": true
+  },
+  {
+    "key": "client.registration.thanks",
+    "ru": "Понял, спасибо.",
+    "en": "Got it, thank you."
+  },
+  {
+    "key": "client.archive.request",
+    "ru": "Мне нужна выписка из архива.",
+    "en": "I need an archive record."
+  },
+  {
+    "key": "staff.archive.unavailable",
+    "ru": "Архивариуса нет на месте!\nПриходите позже.",
+    "en": "The archivist is away!\nPlease come back later."
+  },
+  {
+    "key": "staff.archive.call_courier",
+    "ru": "Стажер, принеси справку из архива!",
+    "en": "Intern, fetch a record from the archive!"
+  },
+  {
+    "key": "client.archive.wait_in_hall",
+    "ru": "Хорошо, подожду в зале...",
+    "en": "All right, I'll wait in the hall..."
+  },
+  {
+    "key": "staff.archive.requesting",
+    "ru": "Делаю запрос в архив.\nОжидайте.",
+    "en": "Requesting an archive record.\nPlease wait."
+  },
+  {
+    "key": "staff.archive.wait_where",
+    "ru": "Где же он...",
+    "en": "Where is it..."
+  },
+  {
+    "key": "staff.archive.wait_eager",
+    "ru": "Жду-не дождусь!",
+    "en": "Still waiting!"
+  },
+  {
+    "key": "staff.archive.wait_long",
+    "ru": "Как долго...",
+    "en": "This is taking forever..."
+  },
+  {
+    "key": "staff.archive.wait_asleep",
+    "ru": "Архив уснул там?",
+    "en": "Has the archive fallen asleep?"
+  },
+  {
+    "key": "staff.archive.timeout",
+    "ru": "Архив не отвечает...\nИзвините.",
+    "en": "No response from the archive...\nSorry."
+  },
+  {
+    "key": "client.goal.certificate1",
+    "ru": "Мне нужна справка.",
+    "en": "I need a certificate."
+  },
+  {
+    "key": "client.goal.certificate2",
+    "ru": "Оформляю форму 2.",
+    "en": "I'm filing form 2."
+  },
+  {
+    "key": "client.goal.tax",
+    "ru": "Я налоги заплатить.",
+    "en": "I'm here to pay my taxes."
+  },
+  {
+    "key": "client.goal.archive",
+    "ru": "Мне в архив нужно.",
+    "en": "I need the archive."
+  },
+  {
+    "key": "client.goal.toilet",
+    "ru": "Где тут туалет?",
+    "en": "Where's the toilet?"
+  },
+  {
+    "key": "client.goal.director_signature",
+    "ru": "Мне к директору на подпись!",
+    "en": "I need the director's signature!"
+  },
+  {
+    "key": "client.goal.director_meeting",
+    "ru": "У меня личный прием у директора!",
+    "en": "I have an appointment with the director!"
+  },
+  {
+    "key": "client.goal.ask",
+    "ru": "Мне бы справочку получить...",
+    "en": "I'd like a certificate, please..."
+  },
+  {
+    "key": "ui.common.next",
+    "ru": "Далее",
+    "en": "Next"
+  },
+  {
+    "key": "staff.archive.searching",
+    "ru": "Ищу выписку (Архив)...",
+    "en": "Looking for the archive record..."
+  },
+  {
+    "key": "staff.archive.record_ready",
+    "ru": "Вот ваша выписка.",
+    "en": "Here is your archive record."
+  },
+  {
+    "key": "director.order_now",
+    "ru": "Немедленно займись этим!",
+    "en": "Get on it immediately!"
+  },
+  {
+    "key": "director.busy",
+    "ru": "Я занят!",
+    "en": "I am busy!"
+  },
+  {
+    "key": "director.busy_now",
+    "ru": "Я сейчас занят!",
+    "en": "I am busy right now!"
+  },
+  {
+    "key": "director.broken_station",
+    "ru": "Здесь всё сломано!\nНе могу работать.",
+    "en": "Everything is broken here!\nI cannot work."
+  },
+  {
+    "key": "director.desk_broke",
+    "ru": "Стол сломался!",
+    "en": "The desk broke!"
+  },
+  {
+    "key": "staff.registration.next",
+    "ru": "Следующий!",
+    "en": "Next!"
+  },
+  {
+    "key": "staff.registration.walk_in",
+    "ru": "Эй, вы, подходите!",
+    "en": "You there, step forward!"
+  },
+  {
+    "key": "client.director.apology",
+    "ru": "Извините, шеф...",
+    "en": "Sorry, boss..."
+  },
+  {
+    "key": "director.accept_bribe",
+    "ru": "Ладно, давайте сюда...",
+    "en": "All right, hand it over..."
+  },
+  {
+    "key": "ledger.director_bribe",
+    "ru": "Взятка Директору",
+    "en": "Bribe to the director"
+  },
+  {
+    "key": "director.accept_jumper",
+    "ru": "Так уж и быть, давайте...",
+    "en": "Very well, hand it over..."
+  },
+  {
+    "key": "director.register_order",
+    "ru": "Так, вот этот приказ...",
+    "en": "Right, this order..."
+  },
+  {
+    "key": "director.registrar_absent",
+    "ru": "Никого нет в регистратуре...\nЗарегистрирую сам.",
+    "en": "Nobody at registration...\nI will register it myself."
+  },
+  {
+    "key": "director.stamp_document",
+    "ru": "Ставлю печать клерка.",
+    "en": "Stamping the document."
+  },
+  {
+    "key": "director.pay_fee",
+    "ru": "Сам себе плачу пошлину...",
+    "en": "Paying my own fee..."
+  },
+  {
+    "key": "ledger.registration_fee",
+    "ru": "Пошлина (Оформление)",
+    "en": "Registration fee"
+  },
+  {
+    "key": "director.finally_archive",
+    "ru": "И наконец, в архив!",
+    "en": "And finally, to the archive!"
+  },
+  {
+    "key": "director.too_late",
+    "ru": "Не успел...",
+    "en": "Too late..."
+  },
+  {
+    "key": "staff.delivery.desk_full",
+    "ru": "Стол завален!\nНесу в архив...",
+    "en": "The desk is piled high!\nTaking papers to the archive..."
+  },
+  {
+    "key": "staff.delivery.putting_down",
+    "ru": "Складываю...",
+    "en": "Putting papers down..."
+  },
+  {
+    "key": "staff.delivery.pickup",
+    "ru": "Заберу документы...",
+    "en": "I will collect the documents..."
+  },
+  {
+    "key": "staff.delivery.folder_missing",
+    "ru": "Где папка?!",
+    "en": "Where is the folder?!"
+  },
+  {
+    "key": "staff.delivery.carrying",
+    "ru": "Доставка...",
+    "en": "Delivering..."
+  },
+  {
+    "key": "staff.guard.no_report_desk",
+    "ru": "Нет стола для отчетов!",
+    "en": "No desk for reports!"
+  },
+  {
+    "key": "staff.guard.writing_report",
+    "ru": "Пишу рапорт...",
+    "en": "Writing a report..."
+  },
+  {
+    "key": "staff.guard.report_submitted",
+    "ru": "Рапорт сдан.",
+    "en": "Report submitted."
+  },
+  {
+    "key": "staff.janitor.carrying_trash",
+    "ru": "Несёт мусор к контейнеру",
+    "en": "Carrying trash to the dumpster"
+  },
+  {
+    "key": "staff.break.resting",
+    "ru": "Отдыхает",
+    "en": "Resting"
+  },
+  {
+    "key": "staff.break.finished",
+    "ru": "Перерыв окончен",
+    "en": "Break is over"
+  },
+  {
+    "key": "staff.break.no_space",
+    "ru": "Нет места!",
+    "en": "No room!"
+  },
+  {
+    "key": "staff.toilet.using",
+    "ru": "В туалете",
+    "en": "Using the toilet"
+  },
+  {
+    "key": "staff.archive.collecting_record",
+    "ru": "Получает выписку в архиве",
+    "en": "Collecting an archive record"
+  },
+  {
+    "key": "staff.archive.delivering_record",
+    "ru": "Несёт выписку посетителю",
+    "en": "Delivering an archive record"
+  },
+  {
+    "key": "staff.archive.record_cashier",
+    "ru": "Ваша выписка. Пройдите в кассу.",
+    "en": "Here is your record. Please go to the cashier."
+  },
+  {
+    "key": "staff.archive.looking",
+    "ru": "Ищу выписку...",
+    "en": "Looking for the record..."
+  },
+  {
+    "key": "staff.archive.search_where",
+    "ru": "Где же она...",
+    "en": "Where is it..."
+  },
+  {
+    "key": "staff.archive.search_let_see",
+    "ru": "Так, так, так...",
+    "en": "Let me see..."
+  },
+  {
+    "key": "staff.archive.search_not_shelf",
+    "ru": "Не на этой полке...",
+    "en": "Not on this shelf..."
+  },
+  {
+    "key": "staff.archive.search_here",
+    "ru": "Может здесь?",
+    "en": "Maybe here?"
+  },
+  {
+    "key": "staff.archive.search_dust",
+    "ru": "Пыли-то сколько...",
+    "en": "So much dust..."
+  },
+  {
+    "key": "staff.archive.found",
+    "ru": "Ага, нашел!",
+    "en": "Aha, found it!"
+  },
+  {
+    "key": "staff.sorting.tidy",
+    "ru": "Надо бы прибраться...",
+    "en": "Time to tidy up..."
+  },
+  {
+    "key": "activity.falling",
+    "ru": "Упал: {0}",
+    "en": "Fell: {0}",
+    "smart": true
+  },
+  {
+    "key": "activity.ticket",
+    "ru": " · талон №{0}",
+    "en": " · ticket #{0}",
+    "smart": true
+  },
+  {
+    "key": "activity.being_served",
+    "ru": "Обслуживается: {0}\nУ {1}",
+    "en": "Being served: {0}\nBy {1}",
+    "smart": true
+  },
+  {
+    "key": "activity.waiting_client",
+    "ru": "Ждёт: {0}\n{1}",
+    "en": "Waiting for: {0}\n{1}",
+    "smart": true
+  },
+  {
+    "key": "activity.moving",
+    "ru": "Идёт: {0}",
+    "en": "Going to: {0}",
+    "smart": true
+  },
+  {
+    "key": "activity.task",
+    "ru": "\nЗадача: {0}",
+    "en": "\nTask: {0}",
+    "smart": true
+  },
+  {
+    "key": "activity.waiting_at_desk",
+    "ru": "Ждёт клиента: {0}\n{1}",
+    "en": "Waiting for visitor: {0}\n{1}",
+    "smart": true
+  },
+  {
+    "key": "activity.clinch",
+    "ru": "Затруднение — ждёт помощи",
+    "en": "In difficulty — waiting for help"
+  },
+  {
+    "key": "activity.spawning",
+    "ru": "Появляется",
+    "en": "Arriving"
+  },
+  {
+    "key": "activity.arrived",
+    "ru": "Пришёл в учреждение",
+    "en": "Arrived at the office"
+  },
+  {
+    "key": "activity.getting_ticket",
+    "ru": "Получает талон",
+    "en": "Getting a ticket"
+  },
+  {
+    "key": "activity.going_ticket",
+    "ru": "Идёт за талоном",
+    "en": "Going to get a ticket"
+  },
+  {
+    "key": "activity.going_wait",
+    "ru": "Идёт к месту ожидания",
+    "en": "Going to the waiting area"
+  },
+  {
+    "key": "activity.waiting_call",
+    "ru": "Ждёт вызова",
+    "en": "Waiting to be called"
+  },
+  {
+    "key": "activity.waiting_entry",
+    "ru": "Ждёт входа: ",
+    "en": "Waiting to enter: "
+  },
+  {
+    "key": "activity.waiting_document",
+    "ru": "Ждёт документ из архива",
+    "en": "Waiting for an archive document"
+  },
+  {
+    "key": "activity.waiting_staff",
+    "ru": "Ждёт сотрудника: ",
+    "en": "Waiting for staff: "
+  },
+  {
+    "key": "activity.direction",
+    "ru": "Получает направление",
+    "en": "Getting directions"
+  },
+  {
+    "key": "activity.confused",
+    "ru": "Растерялся — ищет маршрут",
+    "en": "Confused — looking for a route"
+  },
+  {
+    "key": "activity.grumbling",
+    "ru": "Ворчит — теряет терпение",
+    "en": "Grumbling — losing patience"
+  },
+  {
+    "key": "activity.enraged",
+    "ru": "Буянит",
+    "en": "Causing trouble"
+  },
+  {
+    "key": "activity.exiting",
+    "ru": "Идёт к выходу",
+    "en": "Heading for the exit"
+  },
+  {
+    "key": "activity.leaving_upset",
+    "ru": "Уходит недовольным",
+    "en": "Leaving upset"
+  },
+  {
+    "key": "activity.moving_prefix",
+    "ru": "Идёт: ",
+    "en": "Going to: "
+  },
+  {
+    "key": "activity.waiting",
+    "ru": "Ожидает",
+    "en": "Waiting"
+  },
+  {
+    "key": "activity.director_desk",
+    "ru": "За столом директора",
+    "en": "At the director's desk"
+  },
+  {
+    "key": "activity.working",
+    "ru": "Работает: ",
+    "en": "Working at: "
+  },
+  {
+    "key": "activity.collecting_documents",
+    "ru": "Идёт за документами",
+    "en": "Going to collect documents"
+  },
+  {
+    "key": "activity.carrying_documents",
+    "ru": "Несёт документы",
+    "en": "Carrying documents"
+  },
+  {
+    "key": "activity.awaiting_command",
+    "ru": "Ожидает команды",
+    "en": "Awaiting an order"
+  },
+  {
+    "key": "activity.off_duty",
+    "ru": "Не на смене",
+    "en": "Off duty"
+  },
+  {
+    "key": "activity.going_break",
+    "ru": "Идёт отдыхать",
+    "en": "Going for a break"
+  },
+  {
+    "key": "activity.going_toilet",
+    "ru": "Идёт в туалет",
+    "en": "Going to the toilet"
+  },
+  {
+    "key": "activity.stressed",
+    "ru": "Не справляется со стрессом",
+    "en": "Overwhelmed by stress"
+  },
+  {
+    "key": "activity.patrolling",
+    "ru": "Патрулирует",
+    "en": "Patrolling"
+  },
+  {
+    "key": "activity.chasing",
+    "ru": "Преследует нарушителя",
+    "en": "Chasing a troublemaker"
+  },
+  {
+    "key": "activity.waiting_record",
+    "ru": "Ждёт выписку из архива",
+    "en": "Waiting for an archive record"
+  },
+  {
+    "key": "activity.cleaning",
+    "ru": "Убирает",
+    "en": "Cleaning"
+  },
+  {
+    "key": "activity.returning",
+    "ru": "Возвращается к работе",
+    "en": "Returning to work"
+  },
+  {
+    "key": "activity.waiting_task",
+    "ru": "Ожидает задачу",
+    "en": "Waiting for a task"
+  },
+  {
+    "key": "activity.shift_finished",
+    "ru": "Смена закончена",
+    "en": "Shift finished"
+  },
+  {
+    "key": "place.workstation",
+    "ru": "рабочее место",
+    "en": "workstation"
+  },
+  {
+    "key": "place.registration",
+    "ru": "регистратура",
+    "en": "registration"
+  },
+  {
+    "key": "place.cashier",
+    "ru": "касса",
+    "en": "cashier"
+  },
+  {
+    "key": "place.desk1",
+    "ru": "окно №1",
+    "en": "window #1"
+  },
+  {
+    "key": "place.desk2",
+    "ru": "окно №2",
+    "en": "window #2"
+  },
+  {
+    "key": "place.archive",
+    "ru": "архив",
+    "en": "archive"
+  },
+  {
+    "key": "place.destination",
+    "ru": "к назначенной цели",
+    "en": "assigned destination"
+  },
+  {
+    "key": "place.toilet",
+    "ru": "туалет",
+    "en": "toilet"
+  },
+  {
+    "key": "place.break",
+    "ru": "место отдыха",
+    "en": "break area"
+  },
+  {
+    "key": "place.exit",
+    "ru": "выход",
+    "en": "exit"
+  },
+  {
+    "key": "place.ticket_terminal",
+    "ru": "терминал талонов",
+    "en": "ticket machine"
+  },
+  {
+    "key": "place.waypoint",
+    "ru": "точка маршрута",
+    "en": "waypoint"
+  },
+  {
+    "key": "role.director",
+    "ru": "Директор",
+    "en": "Director"
+  },
+  {
+    "key": "role.intern",
+    "ru": "Стажёр",
+    "en": "Intern"
+  },
+  {
+    "key": "role.registrar",
+    "ru": "Регистратор",
+    "en": "Registrar"
+  },
+  {
+    "key": "role.cashier",
+    "ru": "Кассир",
+    "en": "Cashier"
+  },
+  {
+    "key": "role.archivist",
+    "ru": "Архивариус",
+    "en": "Archivist"
+  },
+  {
+    "key": "role.guard",
+    "ru": "Охранник",
+    "en": "Guard"
+  },
+  {
+    "key": "role.janitor",
+    "ru": "Уборщик",
+    "en": "Janitor"
+  },
+  {
+    "key": "role.service_worker",
+    "ru": "Служащий",
+    "en": "Service worker"
+  },
+  {
+    "key": "role.clerk",
+    "ru": "Клерк",
+    "en": "Clerk"
+  },
+  {
+    "key": "role.office_manager",
+    "ru": "Офис-менеджер",
+    "en": "Office manager"
+  },
+  {
+    "key": "role.accountant",
+    "ru": "Бухгалтер",
+    "en": "Accountant"
+  },
+  {
+    "key": "role.staff",
+    "ru": "Сотрудник",
+    "en": "Employee"
+  },
+  {
+    "key": "staff.break.started",
+    "ru": "Перерыв...",
+    "en": "Taking a break..."
+  },
+  {
+    "key": "staff.toilet.started",
+    "ru": "Туалет...",
+    "en": "Toilet break..."
+  },
+  {
+    "key": "fall.balance",
+    "ru": "потерял равновесие",
+    "en": "lost balance"
+  },
+  {
+    "key": "fall.puddle",
+    "ru": "поскользнулся на луже",
+    "en": "slipped on a puddle"
+  },
+  {
+    "key": "calendar.morning",
+    "ru": "УТРО",
+    "en": "MORNING"
+  },
+  {
+    "key": "calendar.day",
+    "ru": "ДЕНЬ",
+    "en": "DAY"
+  },
+  {
+    "key": "calendar.evening",
+    "ru": "ВЕЧЕР",
+    "en": "EVENING"
+  },
+  {
+    "key": "calendar.night",
+    "ru": "НОЧЬ",
+    "en": "NIGHT"
+  },
+  {
+    "key": "action.registration",
+    "ru": "Обслуживание в регистратуре",
+    "en": "Serving at registration",
+    "executor": "ServiceAtRegistrationExecutor"
+  },
+  {
+    "key": "action.cashier",
+    "ru": "Обслуживание в кассе",
+    "en": "Serving at the cashier",
+    "executor": "ServiceAtCashierExecutor"
+  },
+  {
+    "key": "action.document_cat1",
+    "ru": "Обработка документа категории 1",
+    "en": "Processing a category 1 document",
+    "executor": "ProcessDocumentCat1Executor"
+  },
+  {
+    "key": "action.document_cat2",
+    "ru": "Обработка документа категории 2",
+    "en": "Processing a category 2 document",
+    "executor": "ProcessDocumentCat2Executor"
+  },
+  {
+    "key": "action.filing",
+    "ru": "Архивирование",
+    "en": "Filing documents",
+    "executor": "ArchiveDocumentExecutor"
+  },
+  {
+    "key": "action.deliver_documents",
+    "ru": "Перенос документов",
+    "en": "Delivering documents",
+    "executor": "DeliverDocumentsExecutor"
+  },
+  {
+    "key": "action.take_stack",
+    "ru": "Перенос стопки в архив",
+    "en": "Taking a stack to the archive",
+    "executor": "TakeStackToArchiveExecutor"
+  },
+  {
+    "key": "action.project_transport",
+    "ru": "Перенос папки",
+    "en": "Transporting a folder",
+    "executor": "TransportProjectDocumentExecutor"
+  },
+  {
+    "key": "action.write_report",
+    "ru": "Заполнение рапорта",
+    "en": "Writing a report",
+    "executor": "WriteReportExecutor"
+  },
+  {
+    "key": "action.empty_bin",
+    "ru": "Вынос мусора",
+    "en": "Taking out trash",
+    "executor": "EmptyTrashCanExecutor"
+  },
+  {
+    "key": "action.break",
+    "ru": "Перерыв",
+    "en": "Break",
+    "executor": "GoToBreakExecutor"
+  },
+  {
+    "key": "action.toilet",
+    "ru": "Туалет",
+    "en": "Toilet break",
+    "executor": "GoToToiletExecutor"
+  },
+  {
+    "key": "action.archive_courier",
+    "ru": "Доставка выписки",
+    "en": "Delivering an archive record",
+    "executor": "DelegateArchiveFetchExecutor"
+  },
+  {
+    "key": "action.archive_retrieve",
+    "ru": "Поиск выписки",
+    "en": "Finding an archive record",
+    "executor": "RetrieveDocumentExecutor"
+  },
+  {
+    "key": "action.sort",
+    "ru": "Сортировка бумаг",
+    "en": "Sorting papers",
+    "executor": "SortPapersExecutor"
+  },
+  {
+    "key": "staff.shift.start",
+    "ru": "На работу!",
+    "en": "Time for work!"
+  },
+  {
+    "key": "staff.order.accept",
+    "ru": "Да иду я, иду...",
+    "en": "All right, I am going..."
+  },
+  {
+    "key": "staff.need.urgent",
+    "ru": "Ой-ой, срочно отлучусь!",
+    "en": "Oh no, I need a quick break!"
+  },
+  {
+    "key": "staff.need.crowd",
+    "ru": "Ужас, какая толпа! Работаю!",
+    "en": "What a crowd! Back to work!"
+  },
+  {
+    "key": "staff.need.thirst",
+    "ru": "Горло пересохло...",
+    "en": "My throat is dry..."
+  },
+  {
+    "key": "staff.need.quiet",
+    "ru": "Пока никого нет...",
+    "en": "While nobody is here..."
+  },
+  {
+    "key": "staff.no_workstation",
+    "ru": "Мне негде работать...",
+    "en": "I have no workstation..."
+  },
+  {
+    "key": "staff.idle",
+    "ru": "Что бы поделать?",
+    "en": "What should I do?"
+  },
+  {
+    "key": "staff.shift.home",
+    "ru": "Домой...",
+    "en": "Heading home..."
+  },
+  {
+    "key": "staff.trait.gossip",
+    "ru": "Слышали новость?",
+    "en": "Have you heard the news?"
+  },
+  {
+    "key": "staff.trait.oops",
+    "ru": "Ой... Упс!",
+    "en": "Oh... Oops!"
+  },
+  {
+    "key": "staff.trait.crash",
+    "ru": "БРЯК!",
+    "en": "CRASH!"
+  },
+  {
+    "key": "staff.trait.phew",
+    "ru": "Ффух...",
+    "en": "Phew..."
+  },
+  {
+    "key": "staff.trait.sneeze",
+    "ru": "А-аааПЧХИИИ!",
+    "en": "A-a-achoo!"
+  },
+  {
+    "key": "staff.trait.where",
+    "ru": "А я куда?",
+    "en": "Where was I going?"
+  },
+  {
+    "key": "staff.trait.remember",
+    "ru": "А, не забыл!",
+    "en": "Oh, I remember!"
+  },
+  {
+    "key": "staff.trait.fidget",
+    "ru": "Надо куда-нибудь пойти!",
+    "en": "I need to go somewhere!"
+  },
+  {
+    "key": "staff.trait.scream",
+    "ru": "ААААААА!!!",
+    "en": "AAAAAAH!!!"
+  },
+  {
+    "key": "staff.trait.crowd",
+    "ru": "ИХ СЛИШКОМ МНОГО!",
+    "en": "THERE ARE TOO MANY!"
+  },
+  {
+    "key": "name.uncle",
+    "ru": "Дядя",
+    "en": "Uncle"
+  },
+  {
+    "key": "name.aunt",
+    "ru": "Тётя",
+    "en": "Aunt"
+  },
+  {
+    "key": "fall.ouch",
+    "ru": "Ой!",
+    "en": "Ow!"
+  },
+  {
+    "key": "fall.ow",
+    "ru": "Ай!",
+    "en": "Ouch!"
+  },
+  {
+    "key": "fall.oops",
+    "ru": "Упс...",
+    "en": "Oops..."
+  },
+  {
+    "key": "fall.sound",
+    "ru": "*Неловкий звук*",
+    "en": "*Awkward noise*"
+  },
+  {
+    "key": "fall.slippery",
+    "ru": "Скользко!",
+    "en": "Slippery!"
+  },
+  {
+    "key": "fall.damn",
+    "ru": "Вот же ж...",
+    "en": "Oh, come on..."
+  },
+  {
+    "key": "trait.shilo.name",
+    "ru": "Шило",
+    "en": "Fidgety"
+  },
+  {
+    "key": "trait.shilo.description",
+    "ru": "Не может стоять на месте",
+    "en": "Cannot stand still"
+  },
+  {
+    "key": "trait.gossip.name",
+    "ru": "Сплетник",
+    "en": "Gossip"
+  },
+  {
+    "key": "trait.gossip.description",
+    "ru": "Любит поболтать при встрече",
+    "en": "Loves to chat when meeting people"
+  },
+  {
+    "key": "trait.allergy.name",
+    "ru": "Аллергик",
+    "en": "Allergic"
+  },
+  {
+    "key": "trait.allergy.description",
+    "ru": "Чихает и расталкивает всех",
+    "en": "Sneezes and pushes others aside"
+  },
+  {
+    "key": "trait.sloppy.name",
+    "ru": "Неряха",
+    "en": "Sloppy"
+  },
+  {
+    "key": "trait.sloppy.description",
+    "ru": "Оставляет после себя лужи",
+    "en": "Leaves puddles behind"
+  },
+  {
+    "key": "trait.forgetful.name",
+    "ru": "Забывчивый",
+    "en": "Forgetful"
+  },
+  {
+    "key": "trait.forgetful.description",
+    "ru": "Иногда теряет цель пути",
+    "en": "Sometimes forgets where to go"
+  },
+  {
+    "key": "trait.clumsy.name",
+    "ru": "Неуклюжий",
+    "en": "Clumsy"
+  },
+  {
+    "key": "trait.clumsy.description",
+    "ru": "Падает на ровном месте",
+    "en": "Trips over nothing"
+  },
+  {
+    "key": "trait.sprinter.name",
+    "ru": "Спринтер",
+    "en": "Sprinter"
+  },
+  {
+    "key": "trait.sprinter.description",
+    "ru": "Бежит быстро, но недолго",
+    "en": "Runs fast, but tires quickly"
+  },
+  {
+    "key": "trait.panicky.name",
+    "ru": "Паникёр",
+    "en": "Panicky"
+  },
+  {
+    "key": "trait.panicky.description",
+    "ru": "Ускоряется при скоплении людей",
+    "en": "Speeds up around crowds"
+  },
+  {
+    "key": "trait.loudmouth.name",
+    "ru": "Несдержанный",
+    "en": "Loudmouth"
+  },
+  {
+    "key": "trait.loudmouth.description",
+    "ru": "Внезапно кричит от стресса",
+    "en": "Suddenly shouts when stressed"
+  },
+  {
+    "key": "trait.toiletrush.name",
+    "ru": "Туалетная Тревога",
+    "en": "Toilet rush"
+  },
+  {
+    "key": "trait.toiletrush.description",
+    "ru": "Бежит в туалет быстрее",
+    "en": "Runs to the toilet faster"
+  },
+  {
+    "key": "ui.staff.trait",
+    "ru": "\n<color=yellow><b>Особенность:</b> {0}</color>",
+    "en": "\n<color=yellow><b>Trait:</b> {0}</color>",
+    "smart": true
+  },
+  {
+    "key": "ledger.player_share",
+    "ru": "{0} (Вам {1:P0})",
+    "en": "{0} (Your share: {1:P0})",
+    "smart": true
+  },
+  {
+    "key": "wallet.balance",
+    "ru": "Счет: ${0}",
+    "en": "Balance: ${0}",
+    "smart": true
+  },
+  {
+    "key": "ledger.staff_wages",
+    "ru": "Зарплата сотрудникам",
+    "en": "Staff wages"
+  }
+]

@@ -5,6 +5,7 @@ using Managers;
 using Gameplay.Documents;
 using Utilities;
 using Characters;
+using System.Linq;
 
 public class TransportProjectDocumentExecutor : ActionExecutor
 {
@@ -24,19 +25,33 @@ public class TransportProjectDocumentExecutor : ActionExecutor
             yield break;
         }
 
+        var archive = ArchiveManager.Instance;
+        bool toArchive = archive != null && archive.OwnsStack(TargetStack);
+        Transform dropOff = toArchive ? archive.RequestDropOffPoint() : null;
+        if (toArchive)
+        {
+            if (dropOff == null) { FinishAction(false); yield break; }
+            RegisterCleanup(() => { if (archive != null) archive.FreeOverflowPoint(dropOff); });
+            TargetStack = archive.GetDropOffStack(dropOff);
+        }
         var board = TargetStack == null ? ScenePointsRegistry.Instance?.noticeBoard : null;
-        var destination = TargetStack != null ? TargetStack.transform : board != null ? board.interactionPoint : null;
+        var targetDesk = ScenePointsRegistry.Instance?.allServicePoints.FirstOrDefault(point => point != null && point.documentStack == TargetStack);
+        var destination = toArchive ? dropOff : targetDesk != null && targetDesk.internCollectionPoint != null ? targetDesk.internCollectionPoint :
+            TargetStack != null ? TargetStack.transform : board != null ? board.interactionPoint : null;
         if (destination == null) { FinishAction(false); yield break; }
 
         // 1. Идем к источнику
         manager.SetState(OfficeManagerController.ManagerState.MovingToDoc);
-        yield return manager.MoveToTarget(SourceStack.transform.position, OfficeManagerController.ManagerState.MovingToDoc);
+        var sourceDesk = ScenePointsRegistry.Instance?.allServicePoints.FirstOrDefault(point => point != null && point.documentStack == SourceStack);
+        var pickup = sourceDesk != null && sourceDesk.internCollectionPoint != null ? sourceDesk.internCollectionPoint : SourceStack.transform;
+        yield return manager.MoveToTarget(pickup.position, OfficeManagerController.ManagerState.MovingToDoc);
 
         // 2. Забираем документ
         // Проверяем, на месте ли он еще
-        if (TargetDoc == null || !SourceStack.TakeSpecificDocument(TargetDoc))
+        if (SourceStack == null || pickup == null || Vector2.Distance(manager.transform.position, pickup.position) > 1f ||
+            TargetDoc == null || !SourceStack.TakeSpecificDocument(TargetDoc))
         {
-            manager.thoughtBubble?.ShowPriorityMessage("Где папка?!", 2f, Color.red);
+            manager.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.delivery.folder_missing"), 2f, Color.red);
             FinishAction(false);
             yield break;
         }
@@ -58,10 +73,12 @@ public class TransportProjectDocumentExecutor : ActionExecutor
         TargetDoc.transform.localRotation = Quaternion.identity;
 
         manager.SetState(OfficeManagerController.ManagerState.CarryingDoc);
-        manager.thoughtBubble?.ShowPriorityMessage("Доставка...", 2f, Color.white);
+        manager.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.delivery.carrying"), 2f, Color.white);
 
         // 3. Идем к цели
         yield return manager.MoveToTarget(destination.position, OfficeManagerController.ManagerState.CarryingDoc);
+        if (destination == null || Vector2.Distance(manager.transform.position, destination.position) > 1f)
+        { FinishAction(false); yield break; }
         if (board != null)
         {
             if (TargetDoc == null) { FinishAction(false); yield break; }
@@ -77,7 +94,7 @@ public class TransportProjectDocumentExecutor : ActionExecutor
             yield break;
         }
         delivered = true;
-        if (ArchiveManager.Instance != null && TargetStack == ArchiveManager.Instance.mainDocumentStack)
+        if (toArchive && TargetDoc.documentData != null)
         {
             TargetDoc.documentData.archived = true;
             TargetDoc.UpdateVisuals();

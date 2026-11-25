@@ -67,7 +67,8 @@ namespace UI.StaffOrders.Editor
             AddOrder(catalog, "Иди в патруль", ActionsFolder + "/Action_Guard_Patrol_NEW.asset",
                 StaffController.Role.Guard);
             AddOrder(catalog, "Отнеси документы со стола в архив", ActionsFolder + "/TacticalAction/Action_TakeStackToArchive.asset",
-                StaffController.Role.Clerk);
+                StaffController.Role.Clerk, StaffController.Role.Registrar, StaffController.Role.Cashier,
+                StaffController.Role.Archivist, StaffController.Role.Accountant);
             AddOrder(catalog, "Пройдись и прибери", ActionsFolder + "/Action_JanitorPatrol.asset",
                 StaffController.Role.Janitor, StaffController.Role.ServiceWorker);
             AddOrder(catalog, "Обойди офис", ActionsFolder + "/Action_InternPatrol.asset",

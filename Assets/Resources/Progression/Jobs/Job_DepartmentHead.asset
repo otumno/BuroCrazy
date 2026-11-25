@@ -34,6 +34,8 @@ MonoBehaviour:
   iconUnlocked: {fileID: 0}
   policyID: Policy_TotalControl
   unlockedRoles: 
+  hiringAccessRules: []
+  maxUnlockedRoleHireRankLevel: 2
   unlockedUpgrades:
   - Upgrade_DocCat3
   correctPath:

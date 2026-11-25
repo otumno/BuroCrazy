@@ -213,6 +213,9 @@ namespace Managers
         public bool CanHireAs(Candidate candidate, EmploymentType employmentType)
         {
             if (candidate == null) return false;
+            int maxRank = GetMaxHireRankLevel(candidate.Role);
+            if (maxRank < 0 || (candidate.Rank != null &&
+                (candidate.Rank.associatedRole != candidate.Role || candidate.Rank.rankLevel > maxRank))) return false;
 
             if (employmentType == EmploymentType.Temporary)
             {
@@ -227,7 +230,7 @@ namespace Managers
 
         /// <summary>
         /// Сколько игрок платит при найме. Временный — предоплата всего за раз:
-        /// найм со скидкой плюс полная смена (workPeriodsCount периодов ранга). За периоды ему потом не начисляется.
+        /// найм со скидкой плюс доступные до ночи периоды смены. За периоды ему потом не начисляется.
         /// </summary>
         public int GetHiringCost(Candidate candidate, EmploymentType employmentType)
         {
@@ -259,7 +262,7 @@ namespace Managers
         /// Работает только до ближайшей ночи в текущем дне. Ночью найм на завтра запрещён.
         /// </summary>
         /// <param name="isNextDay">true, если смена выпала уже на следующий день.</param>
-        /// <returns>true, если смена помещается целиком (все periodsCount периодов).</returns>
+        /// <returns>true, если до ночи остаётся хотя бы один рабочий период.</returns>
         private static bool TryBuildTemporaryShiftMask(int periodsCount, out Data.Calendar.CalendarDayPeriodType mask, out bool isNextDay)
         {
             isNextDay = false;
@@ -511,6 +514,9 @@ namespace Managers
         public bool HireCandidate(Candidate candidate, EmploymentType employmentType = EmploymentType.Permanent)
         {
             if (candidate == null || PlayerWallet.Instance == null) return false;
+            // UI can still hold an old resume after hiring or regenerating the board.
+            // Reject it here before creating an employee or charging the wallet twice.
+            if (!AvailableCandidates.Contains(candidate)) return false;
             if (!CanHireAs(candidate, employmentType)) return false;
 
             int hiringCost = GetHiringCost(candidate, employmentType);
@@ -580,7 +586,7 @@ namespace Managers
             AvailableCandidates.Remove(candidate);
 
             // Логирование найма с трейтом
-            string traitName = StaffController.TraitLibrary[candidate.Trait].Name;
+            string traitName = StaffController.TraitLibrary[candidate.Trait].LocalizedName;
             string employmentLabel = employmentType == EmploymentType.Temporary ? "временный" : "постоянный";
             Debug.Log($"<color=cyan>[HIRING]</color> Нанят сотрудник {candidate.Name} ({employmentLabel}). Особенность: <b>{traitName}</b>");
 
@@ -660,6 +666,7 @@ namespace Managers
         public int GetMaxHireRankLevel(StaffController.Role role)
         {
             int maxRankLevel = GetMaxRankLevel(startingHiringAccess, role);
+            int unlockedRoleRankLevel = -1;
 
             var progression = ProgressionManager.Instance;
             if (progression == null || progression.allJobsDatabase == null) return maxRankLevel;
@@ -673,9 +680,12 @@ namespace Managers
                     maxRankLevel = Mathf.Max(maxRankLevel, 0);
 
                 maxRankLevel = Mathf.Max(maxRankLevel, GetMaxRankLevel(job.hiringAccessRules, role));
+                unlockedRoleRankLevel = Mathf.Max(unlockedRoleRankLevel, job.maxUnlockedRoleHireRankLevel);
             }
 
-            return maxRankLevel;
+            // Apply the shared rank cap only after resolving role access across ALL jobs.
+            // Otherwise database order could open a locked branch or skip a later unlocked role.
+            return maxRankLevel < 0 ? -1 : Mathf.Max(maxRankLevel, unlockedRoleRankLevel);
         }
 
         public bool IsRoleHireable(StaffController.Role role) => GetMaxHireRankLevel(role) >= 0;
@@ -806,6 +816,10 @@ namespace Managers
                 Candidate newIntern = CreateRandomCandidate(StaffController.Role.Intern, experiencedChance);
                 if (newIntern != null) AvailableCandidates.Add(newIntern);
             }
+#if DEBUG_ENABLED || UNITY_EDITOR || DEVELOPMENT_BUILD
+            Debug.Log($"[HiringAccessTrace] Доска, день={currentDay}: " + string.Join(", ",
+                AvailableCandidates.Select(c => $"{c.Role}/ранг={c.Rank.rankLevel}/доступ={GetMaxHireRankLevel(c.Role)}")));
+#endif
         }
         
         private Candidate CreateRandomCandidate(StaffController.Role role, float experiencedChance)

@@ -35,14 +35,12 @@ namespace Managers
         /// </summary>
         public void LogTransaction(string desc, int amount, IncomeType type)
         {
-            if (ClientSpawner.Instance == null) return;
-
             dailyLog.Add(new Transaction
             {
                 description = desc,
                 amount = amount,
                 type = type,
-                day = CalendarManager.Instance.CurrentDay
+                day = CalendarManager.Instance != null ? CalendarManager.Instance.CurrentDay : TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : 0
             });
 
             // Если транзакция "теневая", увеличиваем уровень коррупции

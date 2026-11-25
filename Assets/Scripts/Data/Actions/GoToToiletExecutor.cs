@@ -15,12 +15,13 @@ public class GoToToiletExecutor : ActionExecutor
             staff.BeginNeedActivity(true);
             RegisterCleanup(() => { if (staff != null) staff.ClearNeedActivity(); });
             yield return staff.MoveToTarget(toiletPoint.transform.position, "AtToilet");
-            if (Vector2.Distance(staff.transform.position, toiletPoint.transform.position) > 2f)
+            if (toiletPoint == null || Vector2.Distance(staff.transform.position, toiletPoint.transform.position) > 2f)
             { FinishAction(false); yield break; }
-            staff.CurrentSubStatus = "В туалете";
+            staff.CurrentSubStatus = UI.GameText.Get("staff.toilet.using");
             
             staff.thoughtBubble?.ShowPriorityMessage("...", 3f, Color.white);
             yield return new WaitForSeconds(3f);
+            if (toiletPoint == null) { FinishAction(false); yield break; }
             
             // ИСПРАВЛЕНИЕ: Сбрасываем нужду!
             staff.bladder = 0f; 

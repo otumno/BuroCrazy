@@ -65,8 +65,8 @@ namespace Managers
                 .FirstOrDefault(s => s != null && s.OrdinaryDocumentCount > 0);
         }
 
-        public bool OwnsStack(DocumentStack stack) => stack == mainDocumentStack ||
-            (stack != null && overflowPoints != null && overflowPoints.Contains(stack.transform));
+        public bool OwnsStack(DocumentStack stack) => stack != null && (stack == mainDocumentStack ||
+            (overflowPoints != null && overflowPoints.Contains(stack.transform)));
 
         public DocumentStack GetDropOffStack(Transform point)
         {

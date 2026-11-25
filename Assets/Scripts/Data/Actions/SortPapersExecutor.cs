@@ -13,7 +13,7 @@ public class SortPapersExecutor : ActionExecutor
             yield break;
         }
 
-        clerk.thoughtBubble?.ShowPriorityMessage("Надо бы прибраться...", 3f, Color.gray);
+        clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.sorting.tidy"), 3f, Color.gray);
         
         yield return new WaitForSeconds(Random.Range(5f, 10f));
         

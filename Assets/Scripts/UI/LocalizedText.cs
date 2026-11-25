@@ -16,6 +16,7 @@ namespace UI
         private LocalizedString _localizedString = new LocalizedString();
 
         private TMP_Text _text;
+        private bool _subscribed;
 
         private void Awake()
         {
@@ -24,19 +25,39 @@ namespace UI
 
         private void OnEnable()
         {
+            if (_text == null) _text = GetComponent<TMP_Text>();
             // Пустой ключ (например, в базовом префабе) — оставляем текст как есть.
-            if (_localizedString.IsEmpty)
+            if (_localizedString.IsEmpty || _text == null || _subscribed)
                 return;
 
             // Подписка сразу запрашивает строку, а дальше LocalizedString сам присылает её при смене языка.
             _localizedString.StringChanged += LocalizedString_StringChanged;
+            _subscribed = true;
         }
 
         private void OnDisable()
         {
             _localizedString.StringChanged -= LocalizedString_StringChanged;
+            _subscribed = false;
         }
 
-        private void LocalizedString_StringChanged(string value) => _text.text = value;
+        public void SetReference(string table, string key, params object[] arguments)
+        {
+            OnDisable();
+            _localizedString.SetReference(table, key);
+            _localizedString.Arguments = arguments;
+            if (isActiveAndEnabled) OnEnable();
+        }
+
+        public void SetArguments(params object[] arguments)
+        {
+            _localizedString.Arguments = arguments;
+            if (_subscribed) _localizedString.RefreshString();
+        }
+
+        private void LocalizedString_StringChanged(string value)
+        {
+            if (_text != null) _text.text = value;
+        }
     }
 }

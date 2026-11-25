@@ -87,8 +87,10 @@ public class OfficeManagerController : StaffController
                 var allActions = new List<StaffAction>(activeActions);
                 if (systemActionDatabase != null) allActions.AddRange(systemActionDatabase.allActions);
                 
-                var replenishAction = allActions.FirstOrDefault(a => a.actionType == ActionType.ReplenishResource); // Или Find
-                if (replenishAction != null && replenishAction.AreConditionsMet(this)) ExecuteAction(replenishAction);
+                var deliveryAction = allActions.FirstOrDefault(a => a is DeliverDocumentsAction && a.AreConditionsMet(this));
+                var replenishAction = allActions.FirstOrDefault(a => a != null && a.actionType == ActionType.ReplenishResource);
+                if (deliveryAction != null) ExecuteAction(deliveryAction);
+                else if (replenishAction != null && replenishAction.AreConditionsMet(this)) ExecuteAction(replenishAction);
                 else SetState(ManagerState.Idle);
             }
             yield return new WaitForSeconds(2f);
@@ -103,12 +105,12 @@ public class OfficeManagerController : StaffController
         
         foreach (var stack in allStacks)
         {
-            if (ArchiveManager.Instance != null && stack == ArchiveManager.Instance.mainDocumentStack) continue;
+            if (ArchiveManager.Instance != null && ArchiveManager.Instance.OwnsStack(stack)) continue;
 
             // --- НОВОЕ: ПОЛИТИКИ (Высший приоритет) ---
             // Ищем документ: Тип Policy, Подписан Директором
             var policyDoc = stack.GetAllProjectDocuments().FirstOrDefault(d => 
-                d.documentData.docType == ProjectDocumentType.Policy && 
+                d != null && d.documentData != null && d.documentData.docType == ProjectDocumentType.Policy &&
                 d.documentData.signedByDirector);
 
             if (policyDoc != null)

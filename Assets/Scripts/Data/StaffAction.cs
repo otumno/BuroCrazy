@@ -21,6 +21,9 @@ public abstract class StaffAction : ScriptableObject
     [Header("Основная информация")]
     public ActionType actionType;
     public string displayName;
+    [Tooltip("Optional semantic key in the Gameplay localization table.")]
+    public string localizedNameKey;
+    public string LocalizedDisplayName => string.IsNullOrWhiteSpace(localizedNameKey) ? displayName : UI.GameText.Get(localizedNameKey);
     [TextArea(2, 4)] public string description;
     public ActionCategory category = ActionCategory.Tactic;
 

@@ -24,18 +24,26 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         }
 
         var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
-        var client = zone?.GetOccupyingClients().FirstOrDefault(c => c != null && !c.isLeavingSuccessfully);
+        var client = zone?.GetOccupyingClients().FirstOrDefault(c => CanServeAtWorkstation(c));
         
         // Бронебойный поиск физически ближайшего клиента у стола
         if (client == null && clerk.assignedWorkstation != null)
         {
             client = Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None)
-                .FirstOrDefault(c => c != null && !c.isLeavingSuccessfully &&
-                Vector2.Distance(c.transform.position, clerk.assignedWorkstation.clientStandPoint.transform.position) < 1.5f);
+                .FirstOrDefault(c => CanServeAtWorkstation(c));
         }
 
-        if (client == null || !client.CanContinueService || client.docHolder == null)
+        if (!CanServeAtWorkstation(client) || client.docHolder == null)
         {
+            FinishAction(false);
+            yield break;
+        }
+
+        if (!TryBeginClientService(client)) { FinishAction(false); yield break; }
+        var cashierDestination = ClientSpawner.GetCashierZone()?.waitingWaypoint;
+        if (cashierDestination == null)
+        {
+            Debug.LogWarning("[ClientServiceTrace] No cashier destination; document and bill unchanged.", clerk);
             FinishAction(false);
             yield break;
         }
@@ -72,13 +80,13 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             if (clinchToTrigger != null)
             {
                 clinchToTrigger.TriggerClinch();
-                staff.thoughtBubble?.ShowPriorityMessage("Эмм... Директор!", 2f, Color.yellow);
-                yield return new WaitWhile(() => clinchToTrigger.IsActive);
-                yield return new WaitForSeconds(2.5f); // Даём реакции проявиться
+                staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.call_director"), 2f, Color.yellow);
+                yield return new WaitWhile(() => clinchToTrigger != null && clinchToTrigger.IsActive && CanServeAtWorkstation(client));
+                yield return WaitForClientService(client, 2.5f); // Даём реакции проявиться
             }
         }
         // После WaitWhile ОБЯЗАТЕЛЬНАЯ ПРОВЕРКА для всех экзекуторов:
-        if (client == null || !client.CanContinueService)
+        if (!CanServeAtWorkstation(client))
         {
             // Клиент обиделся и ушел по таймауту клинча
             if (staff is ClerkController c) c.SetState(ClerkController.ClerkState.Working);
@@ -94,7 +102,7 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         // 2. Проверка на поломку
         if (durability != null && !durability.IsUsable())
         {
-            clerk.thoughtBubble?.ShowPriorityMessage("Стол сломан!", 3f, Color.red);
+            clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.desk_broken"), 3f, Color.red);
             clerk.SetState(ClerkController.ClerkState.Working); 
             FinishAction(false);
             yield break;
@@ -109,7 +117,7 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         // 1. Проверяем, правильный ли бланк у клиента
         if (client.docHolder.GetCurrentDocumentType() != DocumentType.Form2) 
         {
-            clerk.thoughtBubble?.ShowPriorityMessage("Это не тот бланк,\nвозьмите другой.", 3f, Color.yellow);
+            clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.wrong_form"), 3f, Color.yellow);
             client.ApplyStressJump(client.stressJump_Refusal);
             client.stateMachine.GoGetFormAndReturn();
             FinishAction(true); // Задача выполнена (клиент отправлен)
@@ -117,18 +125,18 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         }
         
         // 2. Проверяем документ на ошибки (если клерк умеет)
-        bool canCheckDocuments = clerk.activeActions.Any(a => a.actionType == ActionType.CheckDocument);
+        bool canCheckDocuments = clerk.activeActions.Any(a => a != null && a.actionType == ActionType.CheckDocument);
         if (canCheckDocuments)
         {
-            clerk.thoughtBubble?.ShowPriorityMessage("Проверяю...", 2f, Color.yellow);
-            yield return new WaitForSeconds(Random.Range(1f, 3f));
-            if (client == null || !client.CanContinueService) { FinishAction(false); yield break; }
+            clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.checking"), 2f, Color.yellow);
+            yield return WaitForClientService(client, Random.Range(1f, 3f));
+            if (!CanServeAtWorkstation(client)) { FinishAction(false); yield break; }
             if (Random.value < (1f - client.documentQuality) && Random.value < clerk.skills.pedantry)
             {
-                clerk.thoughtBubble?.ShowPriorityMessage("Здесь ошибка!\nНужно переделать.", 3f, Color.red);
+                clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.form_error"), 3f, Color.red);
                 client.ApplyStressJump(client.stressJump_Refusal);
-                yield return new WaitForSeconds(2f);
-                if (client == null || !client.CanContinueService) { FinishAction(false); yield break; }
+                yield return WaitForClientService(client, 2f);
+                if (!CanServeAtWorkstation(client)) { FinishAction(false); yield break; }
                 client.stateMachine.GoGetFormAndReturn();
                 FinishAction(true); // Задача выполнена (ошибка найдена)
                 yield break;
@@ -173,8 +181,10 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             DocumentMover mover = currentClientDocObject.GetComponent<DocumentMover>() ?? currentClientDocObject.AddComponent<DocumentMover>();
             bool arrived = false;
             mover.StartMove(deskPoint, () => { arrived = true; });
-            yield return new WaitUntil(() => arrived || currentClientDocObject == null || deskPoint == null);
-            if (client == null || !client.CanContinueService || deskPoint == null) { FinishAction(false); yield break; }
+            float flightDeadline = Time.time + 30f;
+            yield return new WaitUntil(() => arrived || currentClientDocObject == null || deskPoint == null ||
+                !CanServeAtWorkstation(client) || Time.time >= flightDeadline);
+            if (!arrived || !CanServeAtWorkstation(client) || deskPoint == null) { FinishAction(false); yield break; }
             flyingDoc = currentClientDocObject; // Запоминаем документ на столе
             if (flyingDoc != null) 
             {
@@ -188,26 +198,15 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         }
         // --- Конец анимации забора ---
 
-        clerk.thoughtBubble?.ShowPriorityMessage("Обрабатываю (Кат. 2)...", 3f, Color.white);
+        clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.processing_cat2"), 3f, Color.white);
         
         // --- ПРИМЕНЕНИЕ ЭФФЕКТИВНОСТИ ---
         float workTime = Random.Range(2f, 4f) / efficiency;
 
-        // Пытаемся достать префаб через ссылки клерка
-        var refs = clerk.GetComponent<StaffPrefabReferences>();
-        if (refs != null && refs.processingIconPrefab != null)
-        {
-            GameObject iconObj = Instantiate(refs.processingIconPrefab);
-            RegisterCleanup(() => { if (iconObj != null) Destroy(iconObj); });
-            ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
-            if (animScript != null)
-            {
-                animScript.Play(clerk.transform.position, client.transform.position, workTime);
-            }
-        }
+        ShowProcessing(client.transform.position, workTime);
 
-        yield return new WaitForSeconds(workTime);
-        if (client == null || !client.CanContinueService || client.docHolder == null) { FinishAction(false); yield break; }
+        yield return WaitForClientService(client, workTime);
+        if (!CanServeAtWorkstation(client) || client.docHolder == null) { FinishAction(false); yield break; }
         
         // --- НАНЕСЕНИЕ УРОНА СТОЛУ ---
         if (durability != null)
@@ -228,17 +227,14 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             outgoingDocument = newCertGO;
             DocumentMover mover = newCertGO.GetComponent<DocumentMover>() ?? newCertGO.AddComponent<DocumentMover>();
             bool arrived = false;
-            mover.StartMove(clientHand, () => {
-                if (client != null && client.docHolder != null) {
-                     // Клиент "получает" прилетевший документ
-                     client.docHolder.ReceiveTransferredDocument(DocumentType.Certificate2, newCertGO); 
-                } else {
-                     Destroy(newCertGO); // Клиент ушел, пока документ летел
-                }
-                arrived = true;
-            });
-            yield return new WaitUntil(() => arrived || newCertGO == null || client == null);
-            if (client == null || !client.CanContinueService) { FinishAction(false); yield break; }
+            // Commit the paper only after the worker confirms the appointment is still valid.
+            mover.StartMove(clientHand, () => arrived = true);
+            float flightDeadline = Time.time + 30f;
+            yield return new WaitUntil(() => arrived || newCertGO == null || clientHand == null ||
+                !CanServeAtWorkstation(client) || Time.time >= flightDeadline);
+            if (!arrived || newCertGO == null || !CanServeAtWorkstation(client) || client.docHolder == null)
+            { FinishAction(false); yield break; }
+            client.docHolder.ReceiveTransferredDocument(DocumentType.Certificate2, newCertGO);
         }
         else 
         {
@@ -252,8 +248,8 @@ public class ProcessDocumentCat2Executor : ActionExecutor
         if (client.stateMachine != null) // Проверяем, что клиент еще тут
         {
             client.billToPay += 250; 
-            clerk.thoughtBubble?.ShowPriorityMessage("Готово! Пройдите в кассу.", 3f, Color.green);
-            client.stateMachine.SetGoal(ClientSpawner.GetCashierZone().waitingWaypoint);
+            clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.go_to_cashier"), 3f, Color.green);
+            client.stateMachine.SetGoal(cashierDestination);
             client.stateMachine.SetState(ClientState.MovingToGoal);
         }
         

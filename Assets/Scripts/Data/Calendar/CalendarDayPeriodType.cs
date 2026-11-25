@@ -49,21 +49,21 @@ namespace Data.Calendar
                 case CalendarDayPeriodType.EarlyDay:
                 case CalendarDayPeriodType.Noon:
                 {
-                    return "УТРО";
+                    return UI.GameText.Get("calendar.morning");
                 }
                 case CalendarDayPeriodType.Day:
                 case CalendarDayPeriodType.LateDay:
                 {
-                    return "ДЕНЬ";
+                    return UI.GameText.Get("calendar.day");
                 }
                 case CalendarDayPeriodType.Evening:
                 {
-                    return "ВЕЧЕР";
+                    return UI.GameText.Get("calendar.evening");
                 }
                 case CalendarDayPeriodType.StartNight:
                 case CalendarDayPeriodType.EndNight:
                 {
-                    return "НОЧЬ";
+                    return UI.GameText.Get("calendar.night");
                 }
             }
         }
