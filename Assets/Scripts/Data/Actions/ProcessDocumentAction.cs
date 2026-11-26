@@ -15,7 +15,7 @@ public class ProcessDocumentAction : StaffAction
         }
 
         // 2. Find clients within the clerk's service zone
-        LimitedCapacityZone myZone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        LimitedCapacityZone myZone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         if (myZone == null)
         {
             return false;

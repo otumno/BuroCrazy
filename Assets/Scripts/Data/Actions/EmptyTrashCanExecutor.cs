@@ -18,6 +18,9 @@ public class EmptyTrashCanExecutor : ActionExecutor
         {
             if (targetCan != null && carried > 0) targetCan.ReturnCollectedTrash(carried);
             if (worker == null) return;
+            if (worker.GetCurrentState() == ServiceWorkerController.WorkerState.GoingToMess ||
+                worker.GetCurrentState() == ServiceWorkerController.WorkerState.Cleaning)
+                worker.SetState(ServiceWorkerController.WorkerState.Idle);
             if (worker.TrashBagObject != null) worker.TrashBagObject.SetActive(false);
             if (worker.broomTransform != null) worker.broomTransform.gameObject.SetActive(true);
         });
@@ -39,7 +42,6 @@ public class EmptyTrashCanExecutor : ActionExecutor
         yield return new WaitForSeconds(2f);
         if (dumpster == null) { FinishAction(false); yield break; }
         carried = 0;
-        worker.SetState(ServiceWorkerController.WorkerState.Idle);
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         FinishAction(true);
     }

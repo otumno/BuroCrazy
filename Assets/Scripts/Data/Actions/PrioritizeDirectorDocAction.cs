@@ -12,11 +12,11 @@ public class PrioritizeDirectorDocAction : StaffAction
         }
 
         // Условие: в общей очереди есть хотя бы один клиент с целью "Просто спросить"
-        return ClientQueueManager.Instance.queue.Any(c => c.Key != null && c.Key.mainGoal == ClientGoal.DirectorApproval);
+        return registrar.IsAvailableToServe && ClientQueueManager.Instance != null && ClientQueueManager.Instance.HasCallableClient(ClientGoal.DirectorApproval);
     }
 
     public override System.Type GetExecutorType()
     {
-        return typeof(PrioritizeDirectorDocAction);
+        return typeof(PrioritizeDirectorDocExecutor);
     }
 }

@@ -12,7 +12,7 @@ public class PrepareSalariesExecutor : ActionExecutor
         // Ссылка на компонент EnvelopeStack
         var envelopeStack = ScenePointsRegistry.Instance?.salaryStackPoint;
 
-        if (envelopeStack == null)
+        if (envelopeStack == null || HiringManager.Instance == null)
         {
             FinishAction(false);
             yield break;
@@ -20,44 +20,38 @@ public class PrepareSalariesExecutor : ActionExecutor
 
         // Динамическая ёмкость: сотрудники + 1 (по ТЗ).
         // Сначала зафиксируем начальное количество сотрудников, чтобы не зациклиться при найме во время работы.
-        int targetCapacity = Mathf.Max(1, HiringManager.Instance.AllStaff.Count + 1);
+        int targetCapacity = Mathf.Min(envelopeStack.maxCapacity, HiringManager.Instance.AllStaff.Count + 1);
 
         var accountant = staff as ClerkController;
-        if (accountant != null && accountant.assignedWorkstation != null)
-        {
-            yield return accountant.MoveToTarget(accountant.assignedWorkstation.clerkStandPoint.position, "Working");
-        }
-        else
-        {
-            yield return staff.MoveToTarget(envelopeStack.transform.position, "Working");
-        }
+        var workPoint = accountant != null && accountant.assignedWorkstation != null
+            ? accountant.assignedWorkstation.clerkStandPoint : envelopeStack.transform;
+        if (workPoint == null) { FinishAction(false); yield break; }
+        yield return staff.MoveToTarget(workPoint.position, "Working");
 
-        while (true)
+        while (envelopeStack != null && workPoint != null && Vector2.Distance(staff.transform.position, workPoint.position) <= 1f)
         {
             // Проверка переполнения (динамический лимит)
             if (envelopeStack.CurrentEnvelopeCount >= targetCapacity)
             {
-                staff.thoughtBubble?.ShowPriorityMessage("Достаточно конвертов", 3f, Color.yellow);
+                staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.payroll.enough"), 3f, Color.yellow);
                 break;
             }
 
             // Тратим время
             yield return new WaitForSeconds(4f);
 
-            int cost = 100;
-            if (PlayerWallet.Instance.GetCurrentMoney() >= cost)
+            if (envelopeStack == null || workPoint == null || Vector2.Distance(staff.transform.position, workPoint.position) > 1f)
+            { FinishAction(false); yield break; }
+            if (envelopeStack.CurrentEnvelopeCount >= Mathf.Min(targetCapacity, envelopeStack.maxCapacity)) break;
+            if (!envelopeStack.TryPrepareEnvelope(PlayerWallet.Instance, UI.GameText.Get("ledger.payroll_fund")))
             {
-                PlayerWallet.Instance.AddMoney(-cost, "Зарплатный фонд");
-                envelopeStack.AddEnvelope();
-                staff.thoughtBubble?.ShowPriorityMessage("Готов конверт", 1f, Color.green);
+                staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.payroll.no_budget"), 2f, Color.red);
+                FinishAction(false);
+                yield break;
             }
-            else
-            {
-                staff.thoughtBubble?.ShowPriorityMessage("Нет бюджета!", 2f, Color.red);
-                yield return new WaitForSeconds(2f); // Ждем и пробуем снова
-            }
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.payroll.ready"), 1f, Color.green);
         }
 
-        FinishAction(true);
+        FinishAction(envelopeStack != null && workPoint != null && Vector2.Distance(staff.transform.position, workPoint.position) <= 1f);
     }
 }

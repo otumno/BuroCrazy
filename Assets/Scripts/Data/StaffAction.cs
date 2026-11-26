@@ -23,7 +23,7 @@ public abstract class StaffAction : ScriptableObject
     public string displayName;
     [Tooltip("Optional semantic key in the Gameplay localization table.")]
     public string localizedNameKey;
-    public string LocalizedDisplayName => string.IsNullOrWhiteSpace(localizedNameKey) ? displayName : UI.GameText.Get(localizedNameKey);
+    public string LocalizedDisplayName => string.IsNullOrWhiteSpace(localizedNameKey) ? UI.GameText.GetAssetText("action.asset." + name, displayName) : UI.GameText.Get(localizedNameKey);
     [TextArea(2, 4)] public string description;
     public ActionCategory category = ActionCategory.Tactic;
 

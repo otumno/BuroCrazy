@@ -50,6 +50,7 @@ public class DocumentMover : MonoBehaviour
         
         // A disappearing hand/desk is cancellation, not successful delivery.
         var callback = target != null ? onArrival : null;
+        if (target != null) transform.position = target.position;
         onArrival = null;
         target = null;
         callback?.Invoke();

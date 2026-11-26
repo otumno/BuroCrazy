@@ -193,14 +193,14 @@ namespace Characters
             var thoughtBubble = staff.GetComponent<ThoughtBubbleController>();
             if (thoughtBubble != null)
             {
-                thoughtBubble.ShowPriorityMessage("Домой...", 2f, Color.white);
+                thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.shift.home"), 2f, Color.white);
             }
             
             float currentLateness = GetPrivateField<float>(staff, "currentLateness");
             if (currentLateness > 10f)
             {
                 if (thoughtBubble != null)
-                    thoughtBubble.ShowPriorityMessage("Опоздал... Извините.", 2f, Color.yellow);
+                    thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.shift.late_apology"), 2f, Color.yellow);
             }
             
             SetPrivateField(staff, "hasLeftToday", true);
@@ -215,7 +215,7 @@ namespace Characters
             var thoughtBubble = staff.GetComponent<ThoughtBubbleController>();
             if (thoughtBubble != null)
             {
-                thoughtBubble.ShowPriorityMessage("На работу!", 2f, Color.white);
+                thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.shift.start"), 2f, Color.white);
             }
 
             TeletypeManager.Instance?.LogStaffWork(staff.characterName, staff.role.ToString(), isStartShift: true);

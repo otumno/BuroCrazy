@@ -20,7 +20,7 @@ public class ScreamInClosetExecutor : ActionExecutor
             if (AudioManager.Instance != null)
                 AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.Voice_Secretary, transform.position); // Крик
 
-            staff.thoughtBubble?.ShowPriorityMessage("ААААА!!!", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.trait.scream"), 2f, Color.red);
             
             // Сброс стресса
             staff.ChangeStress(-50);

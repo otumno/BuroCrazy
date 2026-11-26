@@ -28,7 +28,6 @@ public class GoToToiletExecutor : ActionExecutor
         }
         else { FinishAction(false); yield break; }
 
-        staff.ClearNeedActivity();
         yield return ReturnToWorkstation();
         FinishAction(true);
     }

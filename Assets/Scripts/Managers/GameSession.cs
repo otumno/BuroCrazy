@@ -83,6 +83,7 @@ namespace Managers
         {
             CalendarManager.Instance?.StartNewGame();
             PlayerWallet.Instance?.ResetState();
+            ScenePointsRegistry.Instance?.salaryStackPoint?.RestoreCount(0);
             GuardManager.Instance?.ResetState();
             WaveManager.Instance?.ResetSpawnProgress();
             HiringManager.Instance?.ResetState();
@@ -103,8 +104,6 @@ namespace Managers
             OrderManager.Instance?.ResetState();
             StoryStateManager.Instance?.ResetState();
             CinematicTriggerManager.Instance?.ResetAllTriggers();
-            // Сессия начинается до первого «Начать день» — смены на первый день можно расставить.
-            ShiftPlanning.Open();
         }
 
         private static void ApplySave(bool isNewGame)

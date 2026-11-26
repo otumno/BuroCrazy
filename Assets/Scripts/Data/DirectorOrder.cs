@@ -13,6 +13,7 @@ public class DirectorOrder : ScriptableObject
 {
     [Header("Основная информация")]
     public string orderName;
+    public string LocalizedName => UI.GameText.GetAssetText("daily_order." + name, orderName);
     [TextArea(3, 5)]
     public string description;
     public Sprite icon;

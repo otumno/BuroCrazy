@@ -11,8 +11,12 @@ namespace Utilities
         // Мы берем самую надежную версию BuildPathTo и делаем ее универсальной
         public static Queue<Waypoint> BuildPathTo(Vector2 startPos, Vector2 targetPos, GameObject self)
         {
+            return BuildPathTo(startPos, targetPos, self, Object.FindObjectsByType<Waypoint>(FindObjectsSortMode.None));
+        }
+
+        public static Queue<Waypoint> BuildPathTo(Vector2 startPos, Vector2 targetPos, GameObject self, Waypoint[] allWaypoints)
+        {
             var path = new Queue<Waypoint>();
-            var allWaypoints = Object.FindObjectsByType<Waypoint>(FindObjectsSortMode.None);
 
             if (allWaypoints == null || allWaypoints.Length == 0)
             {
@@ -44,6 +48,8 @@ namespace Utilities
                 Waypoint current = unvisited[0];
                 unvisited.Remove(current);
 
+                // A disconnected goal is still in the sorted list. Returning it alone would send the mover straight through obstacles.
+                if (distances[current] == float.MaxValue) break;
                 if (current == endNode)
                 {
                     // Путь найден, восстанавливаем его

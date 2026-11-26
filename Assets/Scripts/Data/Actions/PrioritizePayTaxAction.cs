@@ -12,7 +12,7 @@ public class PrioritizePayTaxAction : StaffAction
         }
 
         // Условие: в общей очереди есть хотя бы один клиент с целью "Просто спросить"
-        return ClientQueueManager.Instance.queue.Any(c => c.Key != null && c.Key.mainGoal == ClientGoal.PayTax);
+        return registrar.IsAvailableToServe && ClientQueueManager.Instance != null && ClientQueueManager.Instance.HasCallableClient(ClientGoal.PayTax);
     }
 
     public override System.Type GetExecutorType()

@@ -38,7 +38,7 @@ public class ActionIconUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
     public void Setup(StaffAction data, bool showForceButton = false, System.Action<StaffAction> forceCallback = null)
     {
         this.actionData = data;
-        if (actionNameText != null) { actionNameText.text = data.displayName; }
+        RefreshLocale(null);
         
         // Сохраняем callback
         onForceActionClicked = forceCallback;
@@ -48,6 +48,19 @@ public class ActionIconUI : MonoBehaviour, IBeginDragHandler, IDragHandler, IEnd
         {
             forceButton.gameObject.SetActive(showForceButton);
         }
+    }
+
+    private void OnEnable()
+    {
+        UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
+        RefreshLocale(null);
+    }
+
+    private void OnDisable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+
+    private void RefreshLocale(UnityEngine.Localization.Locale locale)
+    {
+        if (actionNameText != null && actionData != null) actionNameText.text = actionData.LocalizedDisplayName;
     }
 
     public void OnBeginDrag(PointerEventData eventData)

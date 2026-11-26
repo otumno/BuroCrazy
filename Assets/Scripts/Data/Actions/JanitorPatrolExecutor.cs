@@ -37,7 +37,7 @@ public class JanitorPatrolExecutor : ActionExecutor
                 if (moveTimeout <= 0)
                 {
                     staff.AgentMover.Stop();
-                    staff.thoughtBubble?.ShowPriorityMessage("Туда не пролезть...", 2f, Color.red);
+                    staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.janitor.blocked"), 2f, Color.red);
                     FinishAction(false);
                     yield break;
                 }

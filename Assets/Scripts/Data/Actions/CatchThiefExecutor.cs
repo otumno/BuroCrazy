@@ -27,7 +27,7 @@ public class CatchThiefExecutor : ActionExecutor
         // Устанавливаем состояние (новое состояние из Enum)
         guard.SetState(GuardMovement.GuardState.ChasingThief);
         
-        staff.thoughtBubble?.ShowPriorityMessage("Стой, ворюга!", 2f, Color.red);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.stop_thief"), 2f, Color.red);
 
         // Ускоряем (используем AgentMover через мост или напрямую через staff)
         float originalSpeed = staff.agentMover.moveSpeed;
@@ -54,7 +54,7 @@ public class CatchThiefExecutor : ActionExecutor
             // Логика поимки (например, удаление вора или вывод из здания)
             thief.GetComponent<ClientPathfinding>()?.ForceLeave(ClientPathfinding.LeaveReason.Theft);
             if (GuardManager.Instance != null && GuardManager.Instance.currentThief == thief) GuardManager.Instance.currentThief = null;
-            staff.thoughtBubble?.ShowPriorityMessage("Попался!", 2f, Color.green);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.caught"), 2f, Color.green);
 
             // Очки за отчет
             guard.unwrittenReportPoints++;

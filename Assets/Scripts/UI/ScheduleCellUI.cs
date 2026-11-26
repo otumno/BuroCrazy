@@ -1,8 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using Data.Calendar;
-using System.Collections.Generic;
-using System.Linq;
 using Managers;
 
 public class ScheduleCellUI : MonoBehaviour
@@ -28,10 +26,13 @@ public class ScheduleCellUI : MonoBehaviour
     private StaffScheduleRowUI _parentRow;
     private UI.SchedulePendingHatch pendingHatch;
     
-    private static List<CalendarDayPeriodType> _cachedAllPeriods;
+    private CalendarDayPeriodType displayedMask;
+    private int periodIndex;
+    private bool editable;
 
     public void Setup(StaffController staff, CalendarDayPeriodType period, StaffScheduleRowUI parentRow, bool isEditable)
     {
+        editable = isEditable;
         _staff = staff;
         _periodType = period;
         _parentRow = parentRow;
@@ -55,19 +56,15 @@ public class ScheduleCellUI : MonoBehaviour
             button.interactable = isEditable;
         }
         
-        if (_cachedAllPeriods == null && TimeManager.Instance != null)
-        {
-            _cachedAllPeriods = TimeManager.Instance.mainCalendarDay.periodSettings
-                                .Select(p => p.PeriodType).ToList();
-        }
-
+        periodIndex = -1;
+        for (int i = 0; i < parentRow.PeriodTypes.Count; i++)
+            if (parentRow.PeriodTypes[i] == period) { periodIndex = i; break; }
         UpdateVisuals();
     }
 
     private void Update()
     {
-        if (pendingHatch != null && _staff != null)
-            pendingHatch.enabled = (_staff.WorkShiftMask & _periodType) != 0;
+        if (_staff != null && displayedMask != _staff.WorkShiftMask) UpdateVisuals();
         if (currentPeriodOverlay != null && TimeManager.Instance != null)
         {
             bool isNow = TimeManager.Instance.GetCurrentPeriodType() == _periodType;
@@ -89,18 +86,18 @@ public class ScheduleCellUI : MonoBehaviour
         if (_staff == null || fillImage == null) return;
 
         bool amIActive = (_staff.WorkShiftMask & _periodType) != 0;
+        displayedMask = _staff.WorkShiftMask;
+        if (button != null) button.interactable = editable &&
+            (!_staff.IsTemporary || ShiftPlanning.GetUpdatedMask(_staff, periodIndex) != displayedMask);
         fillImage.enabled = amIActive;
+        pendingHatch.enabled = amIActive;
 
-        if (amIActive && _cachedAllPeriods != null && _cachedAllPeriods.Count > 0)
+        if (amIActive && periodIndex >= 0)
         {
-            int myIndex = _cachedAllPeriods.IndexOf(_periodType);
-            
-            int prevIndex = (myIndex - 1 + _cachedAllPeriods.Count) % _cachedAllPeriods.Count;
-            var prevType = _cachedAllPeriods[prevIndex];
+            var periods = _parentRow.PeriodTypes;
+            var prevType = periods[(periodIndex - 1 + periods.Count) % periods.Count];
+            var nextType = periods[(periodIndex + 1) % periods.Count];
             bool isPrevActive = (_staff.WorkShiftMask & prevType) != 0;
-
-            int nextIndex = (myIndex + 1) % _cachedAllPeriods.Count;
-            var nextType = _cachedAllPeriods[nextIndex];
             bool isNextActive = (_staff.WorkShiftMask & nextType) != 0;
 
             if (!isPrevActive && !isNextActive) fillImage.sprite = spriteSolo;

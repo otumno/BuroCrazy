@@ -340,7 +340,8 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
         if (!CanServeAtWorkstation(client)) yield break;
 
         // FIXED: Проверяем, есть ли вообще архивариус на работе
-        bool hasArchivist = HiringManager.Instance != null && HiringManager.Instance.AllStaff.Any(s => s != null && s.currentRole == StaffController.Role.Archivist && s.gameObject.activeInHierarchy && s.IsOnDuty());
+        bool hasArchivist = ClientSpawner.GetServiceProviderAtDesk(3) is DirectorAvatarController director && director.isActiveAndEnabled ||
+            HiringManager.Instance != null && HiringManager.Instance.AllStaff.Any(s => s != null && s.currentRole == StaffController.Role.Archivist && s.gameObject.activeInHierarchy && s.IsOnDuty());
         if (!hasArchivist || ArchiveRequestManager.Instance == null)
         {
             registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.unavailable"), 3f, Color.red);
@@ -369,25 +370,21 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             yield return WaitForClientService(client, 1.5f);
             if (!CanServeAtWorkstation(client)) yield break;
             
-            client.ShowThoughtBubble(UI.GameText.Get("client.archive.wait_in_hall"), 2.5f);
-            
-            // 1. Создаем делегированный запрос (Стажеры его перехватят)
-            ArchiveRequestManager.Instance.CreateRequest(registrar, client, true);
-            activeArchiveRequest = ArchiveRequestManager.Instance.GetOurRequest(registrar, client);
-            
-            // 2. Отправляем клиента ждать на диванчик
-            ClientQueueManager.Instance.ServiceFinishedForNumber(client.stateMachine.MyQueueNumber);
-            client.stateMachine.SetGoal(ClientQueueManager.Instance.ChooseNewGoal(client));
-            client.stateMachine.SetState(ClientState.MovingToGoal);
-            
-            // 3. Освобождаем стол регистратора физически
-            var desk = ScenePointsRegistry.Instance?.GetServicePointByID(registrar.assignedWorkstation?.deskId ?? 0);
-            if (desk != null) desk.ClearClient(client);
-            
-            // 4. Завершаем обслуживание успешно и отпускаем регистратора к следующему клиенту!
-            _lastServiceSuccess = true;
-            registrar.SetState(ClerkController.ClerkState.ReturningToWork);
-            yield break;
+            var queue = ClientQueueManager.Instance;
+            var waitingPoint = queue != null && queue.mainWaitingZone != null ? queue.ChooseNewGoal(client) : null;
+            if (waitingPoint != null && ArchiveRequestManager.Instance != null)
+            {
+                activeArchiveRequest = ArchiveRequestManager.Instance.CreateRequest(registrar, client, true);
+                if (activeArchiveRequest == null) yield break;
+                client.ShowThoughtBubble(UI.GameText.Get("client.archive.wait_in_hall"), 2.5f);
+                queue.ServiceFinishedForNumber(client.stateMachine.MyQueueNumber);
+                client.stateMachine.SetGoal(waitingPoint);
+                client.stateMachine.SetState(ClientState.MovingToGoal);
+                registrar.assignedWorkstation.ClearClient(client);
+                _lastServiceSuccess = true;
+                registrar.SetState(ClerkController.ClerkState.ReturningToWork);
+                yield break;
+            }
         }
         // --- КОНЕЦ ЛОГИКИ ДЕЛЕГИРОВАНИЯ ---
 
@@ -402,11 +399,6 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             yield break;
         }
 
-        ArchiveRequestManager.Instance.CreateRequest(registrar, client, false);
-        activeArchiveRequest = ArchiveRequestManager.Instance.GetOurRequest(registrar, client);
-        registrar.SetState(ClerkController.ClerkState.WaitingForArchive);
-        client.stateMachine.SetState(ClientState.WaitingForDocument);
-
         var archivistDesk = ScenePointsRegistry.Instance?.GetServicePointByID(3);
         if (archivistDesk == null || archivistDesk.clerkStandPoint == null)
         {
@@ -418,6 +410,10 @@ public class ServiceAtRegistrationExecutor : ActionExecutor
             yield break;
         }
 
+        activeArchiveRequest = ArchiveRequestManager.Instance.CreateRequest(registrar, client, false);
+        if (activeArchiveRequest == null) yield break;
+        registrar.SetState(ClerkController.ClerkState.WaitingForArchive);
+        client.stateMachine.SetState(ClientState.WaitingForDocument);
         yield return registrar.MoveToTarget(archivistDesk.clerkStandPoint.position, ClerkController.ClerkState.WaitingForArchive.ToString());
         if (!CanServeAtWorkstation(client) || archivistDesk == null || archivistDesk.clerkStandPoint == null ||
             Vector2.Distance(registrar.transform.position, archivistDesk.clerkStandPoint.position) > 1f)

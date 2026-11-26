@@ -46,8 +46,12 @@ public class ResumePin : MonoBehaviour
         }
 
         // Устанавливаем имя и роль
-        if (nameText != null) nameText.text = candidate.Name ?? "Безымянный";
-        if (roleText != null) roleText.text = GetRoleNameInRussian(candidate.Role);
+        if (nameText != null) nameText.text = candidate.Name ?? UI.GameText.Get("hiring.unnamed");
+        if (roleText != null)
+        {
+            var label = roleText.GetComponent<UI.LocalizedText>() ?? roleText.gameObject.AddComponent<UI.LocalizedText>();
+            label.SetReference(UI.GameText.Table, UI.StaffRoleNames.GetKey(candidate.Role));
+        }
 
         // Получаем и применяем цвет
         Color bgColor = Color.white;
@@ -133,23 +137,4 @@ public class ResumePin : MonoBehaviour
             default: return Color.white;
         }
     }
-
-    private string GetRoleNameInRussian(StaffController.Role role)
-    {
-        switch (role)
-        {
-            case StaffController.Role.Intern: return "Стажёр";
-            case StaffController.Role.Clerk: return "Клерк";
-            case StaffController.Role.Registrar: return "Регистратор";
-            case StaffController.Role.Cashier: return "Кассир";
-            case StaffController.Role.Archivist: return "Архивариус";
-            case StaffController.Role.Guard: return "Охранник";
-            case StaffController.Role.Janitor: return "Уборщик";
-            case StaffController.Role.OfficeManager: return "Офис-менеджер";
-            case StaffController.Role.Accountant: return "Бухгалтер";
-            case StaffController.Role.ServiceWorker: return "Сервисный работник";
-            case StaffController.Role.Unassigned: return "Без роли";
-            default: return role.ToString(); // Возвращаем системное имя, если перевод не найден
-        }
-    }
-} // Конец класса ResumePin
+}

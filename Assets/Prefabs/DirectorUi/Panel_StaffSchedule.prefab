@@ -506,6 +506,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StaffSchedulePanelUI
   closeButton: {fileID: 7676119833049763961}
   backgroundButton: {fileID: 5427835538359163832}
+  nextButton: {fileID: 0}
+  lockedHintText: {fileID: 0}
   periodHeaderContainer: {fileID: 3888434340507004035}
   periodTitlePrefab: {fileID: 5688021789712332140, guid: 0ff6488d6b138ec4c9bab3e53ea0e98e, type: 3}
   staffNamesContainer: {fileID: 1309434794562695707}
@@ -671,6 +673,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -952,6 +955,7 @@ GameObject:
   - component: {fileID: 8207081443793528111}
   - component: {fileID: 8260548762117398143}
   - component: {fileID: 7871065370191109845}
+  - component: {fileID: 2417292205686114457}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -1045,6 +1049,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1078,6 +1083,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &2417292205686114457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8368335197196812105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.schedule_title
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1001 &36201200132504147
 PrefabInstance:
   m_ObjectHideFlags: 0

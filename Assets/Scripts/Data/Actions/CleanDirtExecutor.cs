@@ -46,14 +46,14 @@ public class CleanDirtExecutor : ActionExecutor
 
         if (Vector2.Distance(staff.transform.position, messPoint.transform.position) > 2.5f)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Не достать...", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.janitor.out_of_reach"), 2f, Color.red);
             FinishAction(false); // Не смогли дойти
             yield break;
         }
 
         // --- ПРОЦЕСС УБОРКИ ---
         worker.SetState(ServiceWorkerController.WorkerState.Cleaning);
-        staff.thoughtBubble?.ShowPriorityMessage("*Вжик-вжик*", 2f, Color.cyan);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.janitor.scrubbing"), 2f, Color.cyan);
         
         float cleaningTime = worker.cleaningTimePerDirtLevel * messPoint.dirtLevel;
         yield return new WaitForSeconds(cleaningTime);

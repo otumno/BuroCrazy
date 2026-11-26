@@ -73,7 +73,7 @@ public class DirectorControlPanelUI : MonoBehaviour
     {
         if (button == null || points == null) return;
 
-        bool hasFreeStation = points.Any(p => p != null && ClientSpawner.GetServiceProviderAtDesk(p.deskId) == null);
+        bool hasFreeStation = points.Any(p => p != null && ClientSpawner.GetServiceProviderAtDesk(p) == null);
         button.gameObject.SetActive(true);
         button.interactable = !directorIsBusy && hasFreeStation;
     }
@@ -110,10 +110,10 @@ public class DirectorControlPanelUI : MonoBehaviour
             return;
         }
 
-        var unoccupiedPoints = points.Where(p => p != null && ClientSpawner.GetServiceProviderAtDesk(p.deskId) == null).ToList();
+        var unoccupiedPoints = points.Where(p => p != null && ClientSpawner.GetServiceProviderAtDesk(p) == null).ToList();
         if (unoccupiedPoints.Count == 0)
         {
-            DirectorAvatarController.Instance.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage("Все места заняты!", 2f, Color.yellow);
+            DirectorAvatarController.Instance.GetComponent<ThoughtBubbleController>()?.ShowPriorityMessage(UI.GameText.Get("staff.service.all_busy"), 2f, Color.yellow);
             Debug.Log("Директор не может занять место, все станции этой группы заняты.");
             return;
         }

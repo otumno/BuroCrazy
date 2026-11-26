@@ -1240,5 +1240,1605 @@
     "key": "ledger.staff_wages",
     "ru": "Зарплата сотрудникам",
     "en": "Staff wages"
+  },
+  {
+    "key": "staff.guard.calm_down",
+    "ru": "Гражданин, успокойтесь!",
+    "en": "Calm down, citizen!"
+  },
+  {
+    "key": "staff.guard.conflict_resolved",
+    "ru": "Конфликт исчерпан.",
+    "en": "Matter settled."
+  },
+  {
+    "key": "staff.guard.door_switched",
+    "ru": "Дверь переключена!",
+    "en": "Door operated!"
+  },
+  {
+    "key": "staff.guard.stop_thief",
+    "ru": "Стой, ворюга!",
+    "en": "Stop, thief!"
+  },
+  {
+    "key": "staff.guard.caught",
+    "ru": "Попался!",
+    "en": "Got you!"
+  },
+  {
+    "key": "staff.janitor.out_of_reach",
+    "ru": "Не достать...",
+    "en": "Can't reach it..."
+  },
+  {
+    "key": "staff.janitor.scrubbing",
+    "ru": "*Вжик-вжик*",
+    "en": "*Scrub, scrub*"
+  },
+  {
+    "key": "staff.janitor.found_something",
+    "ru": "Ого, да это же...",
+    "en": "Well, look at that..."
+  },
+  {
+    "key": "ledger.trash_find",
+    "ru": "Находка в мусоре",
+    "en": "Found in the trash"
+  },
+  {
+    "key": "staff.janitor.blocked",
+    "ru": "Туда не пролезть...",
+    "en": "Can't get through there..."
+  },
+  {
+    "key": "staff.janitor.resting",
+    "ru": "Отдыхаю...",
+    "en": "Taking a break..."
+  },
+  {
+    "key": "staff.payroll.no_safe",
+    "ru": "Нет места для зарплат!",
+    "en": "Nowhere to put the pay!"
+  },
+  {
+    "key": "staff.payroll.no_money",
+    "ru": "Денег нет!",
+    "en": "No money left!"
+  },
+  {
+    "key": "staff.payroll.safe_full",
+    "ru": "Сейф полон!",
+    "en": "The safe is full!"
+  },
+  {
+    "key": "staff.payroll.added",
+    "ru": "+1 Конверт",
+    "en": "+1 envelope"
+  },
+  {
+    "key": "ledger.payroll_preparation",
+    "ru": "Подготовка зарплаты",
+    "en": "Preparing payroll"
+  },
+  {
+    "key": "staff.payroll.enough",
+    "ru": "Достаточно конвертов",
+    "en": "That's enough envelopes"
+  },
+  {
+    "key": "staff.payroll.ready",
+    "ru": "Готов конверт",
+    "en": "Pay envelope ready"
+  },
+  {
+    "key": "staff.payroll.no_budget",
+    "ru": "Нет бюджета!",
+    "en": "No funds left!"
+  },
+  {
+    "key": "ledger.payroll_fund",
+    "ru": "Зарплатный фонд",
+    "en": "Payroll fund"
+  },
+  {
+    "key": "calendar.early_day",
+    "ru": "До полудня",
+    "en": "Midmorning"
+  },
+  {
+    "key": "calendar.noon",
+    "ru": "Полдень",
+    "en": "Noon"
+  },
+  {
+    "key": "calendar.late_day",
+    "ru": "После полудня",
+    "en": "Afternoon"
+  },
+  {
+    "key": "calendar.start_night",
+    "ru": "Начало ночи",
+    "en": "Early night"
+  },
+  {
+    "key": "calendar.end_night",
+    "ru": "Конец ночи",
+    "en": "Late night"
+  },
+  {
+    "key": "shift.title",
+    "ru": "На смене · {0}",
+    "en": "On duty · {0}",
+    "smart": true
+  },
+  {
+    "key": "shift.empty",
+    "ru": "Сотрудники ещё не вышли",
+    "en": "No staff on duty"
+  },
+  {
+    "key": "shift.bladder",
+    "ru": "Туалет {0}%",
+    "en": "Bladder {0}%",
+    "smart": true
+  },
+  {
+    "key": "shift.stress",
+    "ru": "Стресс {0}%",
+    "en": "Stress {0}%",
+    "smart": true
+  },
+  {
+    "key": "shift.remaining",
+    "ru": "Сегодня ещё {0}",
+    "en": "Time left today: {0}",
+    "smart": true
+  },
+  {
+    "key": "shift.finishing",
+    "ru": "Завершает работу",
+    "en": "Finishing up"
+  },
+  {
+    "key": "role.unassigned",
+    "ru": "Не назначено",
+    "en": "Unassigned"
+  },
+  {
+    "key": "order.tactics",
+    "ru": "Тактика…",
+    "en": "Tactics…"
+  },
+  {
+    "key": "order.break",
+    "ru": "Сделать паузу и отдохнуть",
+    "en": "Take a break"
+  },
+  {
+    "key": "order.toilet",
+    "ru": "Сходить в туалет",
+    "en": "Use the restroom"
+  },
+  {
+    "key": "order.guard_patrol",
+    "ru": "Иди в патруль",
+    "en": "Go on patrol"
+  },
+  {
+    "key": "order.archive",
+    "ru": "Отнеси документы со стола в архив",
+    "en": "Take the documents to the archive"
+  },
+  {
+    "key": "order.clean",
+    "ru": "Пройдись и прибери",
+    "en": "Make a cleaning round"
+  },
+  {
+    "key": "order.intern_patrol",
+    "ru": "Обойди офис",
+    "en": "Make the office rounds"
+  },
+  {
+    "key": "hiring.unnamed",
+    "ru": "Безымянный",
+    "en": "Unnamed"
+  },
+  {
+    "key": "hiring.no_bio",
+    "ru": "Биография отсутствует.",
+    "en": "No biography available."
+  },
+  {
+    "key": "hiring.entry_rank",
+    "ru": "Начальный ранг",
+    "en": "Starting rank"
+  },
+  {
+    "key": "hiring.skills_unknown",
+    "ru": "Навыки неизвестны",
+    "en": "Skills unknown"
+  },
+  {
+    "key": "hiring.talent",
+    "ru": "Особый талант: {0}",
+    "en": "Special talent: {0}",
+    "smart": true
+  },
+  {
+    "key": "hiring.skills_heading",
+    "ru": "<b>Навыки:</b>",
+    "en": "<b>Skills:</b>"
+  },
+  {
+    "key": "hiring.hidden_skill",
+    "ru": "Скрытый навык: ???",
+    "en": "Hidden skill: ???"
+  },
+  {
+    "key": "hiring.cost",
+    "ru": "Стоимость: ${0}",
+    "en": "Cost: ${0}",
+    "smart": true
+  },
+  {
+    "key": "hiring.temp_cost",
+    "ru": "Стоимость: ${0}\n(найм ${1} + смена {2} × ${3})",
+    "en": "Cost: ${0}\n(hiring ${1} + shift: {2} × ${3})",
+    "smart": true
+  },
+  {
+    "key": "hiring.balance",
+    "ru": "Ваш счёт: ${0}",
+    "en": "Balance: ${0}",
+    "smart": true
+  },
+  {
+    "key": "team.salary",
+    "ru": "З/П: ${0} / период",
+    "en": "Pay: ${0} per period",
+    "smart": true
+  },
+  {
+    "key": "team.male",
+    "ru": "Пол: М",
+    "en": "Sex: M"
+  },
+  {
+    "key": "team.female",
+    "ru": "Пол: Ж",
+    "en": "Sex: F"
+  },
+  {
+    "key": "team.no_skills",
+    "ru": "Нет особых навыков",
+    "en": "No special skills"
+  },
+  {
+    "key": "team.max_rank",
+    "ru": "Макс. ранг",
+    "en": "Max rank"
+  },
+  {
+    "key": "team.no_rank",
+    "ru": "Без ранга",
+    "en": "Unranked"
+  },
+  {
+    "key": "team.attendance",
+    "ru": "<color=#FFAA00>Опозданий:</color> {0}\n<color=#FF5555>Больничных:</color> {1}",
+    "en": "<color=#FFAA00>Late arrivals:</color> {0}\n<color=#FF5555>Sick days:</color> {1}",
+    "smart": true
+  },
+  {
+    "key": "hiring.bio",
+    "ru": "<b>Образование:</b> {0}.\n<b>Хобби:</b> {1}.\n<b>О себе:</b> {2}",
+    "en": "<b>Education:</b> {0}.\n<b>Hobby:</b> {1}.\n<b>About me:</b> {2}",
+    "smart": true
+  },
+  {
+    "key": "hiring.bio.educations.0",
+    "ru": "Высшая Школа Канцелярских Наук",
+    "en": "Higher School of Clerical Sciences"
+  },
+  {
+    "key": "hiring.bio.educations.1",
+    "ru": "Институт Бюрократических Искусств",
+    "en": "Institute of Bureaucratic Arts"
+  },
+  {
+    "key": "hiring.bio.educations.2",
+    "ru": "Университет Перекладывания Бумаг им. Архивариуса",
+    "en": "Archivist University of Paper Shuffling"
+  },
+  {
+    "key": "hiring.bio.educations.3",
+    "ru": "Академия Управления Степплерами",
+    "en": "Academy of Stapler Management"
+  },
+  {
+    "key": "hiring.bio.educations.4",
+    "ru": "Колледж Прикладной Печати и Подписи",
+    "en": "College of Applied Stamping and Signing"
+  },
+  {
+    "key": "hiring.bio.hobbies.0",
+    "ru": "разведение кактусов на подоконнике",
+    "en": "growing cacti on the windowsill"
+  },
+  {
+    "key": "hiring.bio.hobbies.1",
+    "ru": "скоростное сшивание документов",
+    "en": "competitive document binding"
+  },
+  {
+    "key": "hiring.bio.hobbies.2",
+    "ru": "коллекционирование редких скрепок",
+    "en": "collecting rare paper clips"
+  },
+  {
+    "key": "hiring.bio.hobbies.3",
+    "ru": "медитация под гул принтера",
+    "en": "meditating to the hum of the printer"
+  },
+  {
+    "key": "hiring.bio.hobbies.4",
+    "ru": "составление диаграмм в Excel о смысле жизни",
+    "en": "charting the meaning of life in Excel"
+  },
+  {
+    "key": "hiring.bio.quirks.0",
+    "ru": "Считает, что принтер - это портал в другое измерение.",
+    "en": "Believes the printer is a portal to another dimension."
+  },
+  {
+    "key": "hiring.bio.quirks.1",
+    "ru": "Убежден, что комнатный фикус - его прямой начальник.",
+    "en": "Is convinced the office ficus is their line manager."
+  },
+  {
+    "key": "hiring.bio.quirks.2",
+    "ru": "Разговаривает с кулером для воды, когда думает, что его никто не видит.",
+    "en": "Talks to the water cooler when nobody is watching."
+  },
+  {
+    "key": "hiring.bio.quirks.3",
+    "ru": "Верит, что тройная копия документа обладает магической силой.",
+    "en": "Believes that a document in triplicate has magical powers."
+  },
+  {
+    "key": "hiring.bio.quirks.4",
+    "ru": "Подозревает, что в подвале живет ручной архиватор.",
+    "en": "Suspects a tame file archiver lives in the basement."
+  },
+  {
+    "key": "staff.skill.PaperworkMastery",
+    "ru": "Мастерство бумажной работы",
+    "en": "Paperwork mastery"
+  },
+  {
+    "key": "staff.skill.SedentaryResilience",
+    "ru": "Устойчивость к малоподвижному образу жизни",
+    "en": "Desk stamina"
+  },
+  {
+    "key": "staff.skill.Pedantry",
+    "ru": "Педантичность",
+    "en": "Attention to detail"
+  },
+  {
+    "key": "staff.skill.SoftSkills",
+    "ru": "Умение общаться",
+    "en": "Communication"
+  },
+  {
+    "key": "staff.skill.Corruption",
+    "ru": "Коррумпированность",
+    "en": "Corruption"
+  },
+  {
+    "key": "staff.skill.DirtyHands",
+    "ru": "Грязные руки",
+    "en": "Dirty hands"
+  },
+  {
+    "key": "rank.Rank_0_Intern_1",
+    "ru": "Новичок Стажер",
+    "en": "New intern"
+  },
+  {
+    "key": "rank.Rank_0_Intern_2",
+    "ru": "Обученный Стажер",
+    "en": "Trained intern"
+  },
+  {
+    "key": "rank.Rank_0_Intern_3",
+    "ru": "Опытный Стажер",
+    "en": "Experienced intern"
+  },
+  {
+    "key": "rank.Rank_1_Accountant",
+    "ru": "Бухгалтер",
+    "en": "Accountant"
+  },
+  {
+    "key": "rank.Rank_1_Accountant_1",
+    "ru": "Бухгалтер",
+    "en": "Accountant"
+  },
+  {
+    "key": "rank.Rank_1_Accountant_2",
+    "ru": "Бухгалтер",
+    "en": "Accountant"
+  },
+  {
+    "key": "rank.Rank_1_Accountant_3",
+    "ru": "Бухгалтер",
+    "en": "Accountant"
+  },
+  {
+    "key": "rank.Rank_1_Archivist_1",
+    "ru": "Младший архивариус",
+    "en": "Junior archivist"
+  },
+  {
+    "key": "rank.Rank_1_Archivist_2",
+    "ru": "Архивариус",
+    "en": "Archivist"
+  },
+  {
+    "key": "rank.Rank_1_Archivist_3",
+    "ru": "Хранитель фонда",
+    "en": "Collection keeper"
+  },
+  {
+    "key": "rank.Rank_1_Cashier_1",
+    "ru": "Кассир-операционист",
+    "en": "Cashier"
+  },
+  {
+    "key": "rank.Rank_1_Cashier_2",
+    "ru": "Кассир-операционист",
+    "en": "Cashier"
+  },
+  {
+    "key": "rank.Rank_1_Cashier_3",
+    "ru": "Кассир-операционист",
+    "en": "Cashier"
+  },
+  {
+    "key": "rank.Rank_1_Clerk_1",
+    "ru": "Младший делопроизводитель",
+    "en": "Junior records clerk"
+  },
+  {
+    "key": "rank.Rank_1_Clerk_2",
+    "ru": "Делопроизводитель",
+    "en": "Records clerk"
+  },
+  {
+    "key": "rank.Rank_1_Clerk_3",
+    "ru": "Старший делопроизводитель",
+    "en": "Senior records clerk"
+  },
+  {
+    "key": "rank.Rank_1_Guard_1",
+    "ru": "Рядовой Охранник",
+    "en": "Security guard"
+  },
+  {
+    "key": "rank.Rank_1_Guard_2",
+    "ru": "Офицер Охраны",
+    "en": "Security officer"
+  },
+  {
+    "key": "rank.Rank_1_Guard_3",
+    "ru": "Старший офицер Охраны",
+    "en": "Senior security officer"
+  },
+  {
+    "key": "rank.Rank_1_Janitor_1",
+    "ru": "Технический служащий",
+    "en": "Custodian"
+  },
+  {
+    "key": "rank.Rank_1_Janitor_2",
+    "ru": "Санитарный специалист",
+    "en": "Sanitation specialist"
+  },
+  {
+    "key": "rank.Rank_1_Janitor_3",
+    "ru": "Технический служащий",
+    "en": "Custodian"
+  },
+  {
+    "key": "rank.Rank_1_OfficeManager",
+    "ru": "Офис-менеджер",
+    "en": "Office manager"
+  },
+  {
+    "key": "rank.Rank_1_Registrar_1",
+    "ru": "Регистратор 3-го класса",
+    "en": "Third-class registrar"
+  },
+  {
+    "key": "rank.Rank_1_Registrar_2",
+    "ru": "Регистратор 2-го класса",
+    "en": "Second-class registrar"
+  },
+  {
+    "key": "rank.Rank_1_Registrar_3",
+    "ru": "Регистратор 2-го класса",
+    "en": "Second-class registrar"
+  },
+  {
+    "key": "daily_order.Order_PointB",
+    "ru": "Перевод на точку Б",
+    "en": "Transfer to Point B"
+  },
+  {
+    "key": "daily_order.Order_MovementLife",
+    "ru": "Движение — это жизнь",
+    "en": "Movement is life"
+  },
+  {
+    "key": "daily_order.Order_SportsDay",
+    "ru": "Матч нашей команды",
+    "en": "Our team’s match"
+  },
+  {
+    "key": "day_results.gross",
+    "ru": "Подотчётный доход: ${0}",
+    "en": "Declared income: ${0}",
+    "smart": true
+  },
+  {
+    "key": "day_results.cut",
+    "ru": "Ваша доля ({0}): ${1}",
+    "en": "Your share ({0}): ${1}",
+    "smart": true
+  },
+  {
+    "key": "day_results.shadow",
+    "ru": "Теневой доход: ${0}",
+    "en": "Undeclared income: ${0}",
+    "smart": true
+  },
+  {
+    "key": "day_results.balance",
+    "ru": "Остаток на счёте: ${0}",
+    "en": "Account balance: ${0}",
+    "smart": true
+  },
+  {
+    "key": "day_results.payroll",
+    "ru": "Зарплатный фонд (к выплате): ${0}",
+    "en": "Outstanding payroll: ${0}",
+    "smart": true
+  },
+  {
+    "key": "day_results.corruption",
+    "ru": "Уровень коррупции: {0}",
+    "en": "Corruption level: {0}",
+    "smart": true
+  },
+  {
+    "key": "day_results.spent",
+    "ru": "Расходы сегодня: ${0}",
+    "en": "Today’s expenses: ${0}",
+    "smart": true
+  },
+  {
+    "key": "desk.day",
+    "ru": "ДЕНЬ {0}",
+    "en": "DAY {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.strikes",
+    "ru": "Ошибки: {0} / {1}",
+    "en": "Strikes: {0} / {1}",
+    "smart": true
+  },
+  {
+    "key": "desk.errors",
+    "ru": "Ошибки: {0} / Норма: {1}",
+    "en": "Error rate: {0} / Allowed: {1}",
+    "smart": true
+  },
+  {
+    "key": "desk.permanent",
+    "ru": "{0} (пост.)",
+    "en": "{0} (permanent)",
+    "smart": true
+  },
+  {
+    "key": "desk.orders",
+    "ru": "<b>Активные приказы:</b>\n",
+    "en": "<b>Active orders:</b>\n"
+  },
+  {
+    "key": "desk.start",
+    "ru": "Начать день",
+    "en": "Start day"
+  },
+  {
+    "key": "desk.resume",
+    "ru": "Продолжить день",
+    "en": "Resume day"
+  },
+  {
+    "key": "staff.registration.call_signature",
+    "ru": "Кто на подпись к директору?",
+    "en": "Anyone here for the director’s signature?"
+  },
+  {
+    "key": "staff.registration.call_payment",
+    "ru": "Подходите с оплатой счетов!",
+    "en": "Step up to pay your bills!"
+  },
+  {
+    "key": "staff.registration.call_question",
+    "ru": "Кто просто спросить?",
+    "en": "Anyone here for a quick question?"
+  },
+  {
+    "key": "panel.hr",
+    "ru": "Отдел кадров",
+    "en": "Human resources"
+  },
+  {
+    "key": "panel.hr_short",
+    "ru": "Отдел\nКадров",
+    "en": "Human\nresources"
+  },
+  {
+    "key": "panel.accounts",
+    "ru": "Бухгалтерия",
+    "en": "Accounts"
+  },
+  {
+    "key": "panel.menu",
+    "ru": "МЕНЮ",
+    "en": "MENU"
+  },
+  {
+    "key": "panel.map",
+    "ru": "Карта",
+    "en": "Map"
+  },
+  {
+    "key": "panel.phone",
+    "ru": "Телефон",
+    "en": "Phone"
+  },
+  {
+    "key": "panel.instructions",
+    "ru": "ДОЛЖНОСТНЫЕ\nИНСТРУКЦИИ",
+    "en": "JOB\nDESCRIPTIONS"
+  },
+  {
+    "key": "panel.sign",
+    "ru": "ПОДПИСАТЬ",
+    "en": "SIGN"
+  },
+  {
+    "key": "panel.defer",
+    "ru": "ОТЛОЖИТЬ",
+    "en": "SET ASIDE"
+  },
+  {
+    "key": "panel.choose_order",
+    "ru": "ВЫБЕРИТЕ ОДИН ПРИКАЗ, ДИРЕКТОР",
+    "en": "DIRECTOR, CHOOSE ONE ORDER"
+  },
+  {
+    "key": "panel.name",
+    "ru": "ИМЯ",
+    "en": "NAME"
+  },
+  {
+    "key": "panel.role",
+    "ru": "РОЛЬ",
+    "en": "ROLE"
+  },
+  {
+    "key": "panel.rank",
+    "ru": "РАНГ",
+    "en": "RANK"
+  },
+  {
+    "key": "panel.back",
+    "ru": "Назад",
+    "en": "Back"
+  },
+  {
+    "key": "panel.shifts",
+    "ru": "График смен",
+    "en": "Shift schedule"
+  },
+  {
+    "key": "panel.promote",
+    "ru": "ПОВЫСИТЬ",
+    "en": "PROMOTE"
+  },
+  {
+    "key": "panel.assign",
+    "ru": "НАЗНАЧИТЬ",
+    "en": "ASSIGN"
+  },
+  {
+    "key": "panel.fire",
+    "ru": "УВОЛИТЬ!",
+    "en": "DISMISS!"
+  },
+  {
+    "key": "panel.hire",
+    "ru": "НАНЯТЬ",
+    "en": "HIRE"
+  },
+  {
+    "key": "panel.approve",
+    "ru": "Утвердить",
+    "en": "Approve"
+  },
+  {
+    "key": "panel.reject",
+    "ru": "Отказать",
+    "en": "Reject"
+  },
+  {
+    "key": "panel.shop_accounts",
+    "ru": "Покупки  Бухгалтерия",
+    "en": "Purchases  Accounts"
+  },
+  {
+    "key": "panel.cancel",
+    "ru": "Отмена",
+    "en": "Cancel"
+  },
+  {
+    "key": "panel.buy",
+    "ru": "Купить",
+    "en": "Buy"
+  },
+  {
+    "key": "panel.schedule_title",
+    "ru": "ГРАФИК СМЕН",
+    "en": "SHIFT SCHEDULE"
+  },
+  {
+    "key": "hiring.full_time",
+    "ru": "На полную ставку",
+    "en": "Full-time"
+  },
+  {
+    "key": "hiring.current_day",
+    "ru": "На текущий день",
+    "en": "Today only"
+  },
+  {
+    "key": "staff.accounts.cover",
+    "ru": "Закрываю дыры...",
+    "en": "Covering the shortfall..."
+  },
+  {
+    "key": "staff.accounts.covered",
+    "ru": "Прикрыл на {0}₽",
+    "en": "Covered ₽{0}",
+    "smart": true
+  },
+  {
+    "key": "staff.accounts.stash",
+    "ru": "Ищу заначки...",
+    "en": "Looking for stashed cash..."
+  },
+  {
+    "key": "staff.accounts.found",
+    "ru": "Нашёл {0}₽",
+    "en": "Found ₽{0}",
+    "smart": true
+  },
+  {
+    "key": "ledger.accountant_named",
+    "ru": "Находка бухгалтера ({0})",
+    "en": "Cash found by the accountant ({0})",
+    "smart": true
+  },
+  {
+    "key": "ledger.accountant_find",
+    "ru": "Находка бухгалтера",
+    "en": "Cash found by the accountant"
+  },
+  {
+    "key": "staff.accounts.taxes",
+    "ru": "Оптимизирую налоги...",
+    "en": "Working on the tax bill..."
+  },
+  {
+    "key": "staff.accounts.extra",
+    "ru": "Хм, лишние деньги!",
+    "en": "Huh, extra cash!"
+  },
+  {
+    "key": "staff.service.ready",
+    "ru": "Готов к работе...",
+    "en": "Ready for work..."
+  },
+  {
+    "key": "staff.service.small_talk",
+    "ru": "Как ваш день? Минуточку...",
+    "en": "How's your day going? Just a moment..."
+  },
+  {
+    "key": "staff.archive.proofreading",
+    "ru": "Ищу ошибки...",
+    "en": "Checking for mistakes..."
+  },
+  {
+    "key": "staff.service.cover",
+    "ru": "Подменю!",
+    "en": "I'll cover the desk!"
+  },
+  {
+    "key": "staff.accounts.tracks",
+    "ru": "Подчищаю хвосты...",
+    "en": "Covering my tracks..."
+  },
+  {
+    "key": "staff.accounts.clear",
+    "ru": "Чисто!",
+    "en": "All clear!"
+  },
+  {
+    "key": "staff.cooler.drink",
+    "ru": "*Глыг-глыг*",
+    "en": "*Gulp, gulp*"
+  },
+  {
+    "key": "staff.cooler.empty",
+    "ru": "Пусто...",
+    "en": "It's empty..."
+  },
+  {
+    "key": "staff.guide.greeting",
+    "ru": "Молодой человек, вам куда?",
+    "en": "Excuse me, where are you headed?"
+  },
+  {
+    "key": "staff.guide.offer",
+    "ru": "Вижу, нужна помощь...",
+    "en": "Looks like you could use a hand..."
+  },
+  {
+    "key": "staff.guide.blocked",
+    "ru": "Не могу пройти!",
+    "en": "I can't get through!"
+  },
+  {
+    "key": "staff.guide.ask",
+    "ru": "Вам куда?",
+    "en": "Where are you headed?"
+  },
+  {
+    "key": "staff.archive.no_reply",
+    "ru": "Архив не отвечает...\nИзвините.",
+    "en": "The archives aren't answering...\nSorry."
+  },
+  {
+    "key": "staff.project.internal_order",
+    "ru": "Внутренний приказ...",
+    "en": "An internal order..."
+  },
+  {
+    "key": "ledger.project_payment",
+    "ru": "Оплата: {0}",
+    "en": "Payment for {0}",
+    "smart": true
+  },
+  {
+    "key": "staff.project.paid",
+    "ru": "Оплачено!",
+    "en": "Paid!"
+  },
+  {
+    "key": "staff.project.no_funds",
+    "ru": "Казна пуста!",
+    "en": "The treasury's empty!"
+  },
+  {
+    "key": "staff.repair.on_the_way",
+    "ru": "Иду чинить!",
+    "en": "On my way to fix it!"
+  },
+  {
+    "key": "staff.repair.working",
+    "ru": "*Ремонт*",
+    "en": "*Tinkering*"
+  },
+  {
+    "key": "staff.supplies.where",
+    "ru": "Где склад?!",
+    "en": "Where's the supply closet?!"
+  },
+  {
+    "key": "staff.supplies.carrying",
+    "ru": "Несу!",
+    "en": "Coming right up!"
+  },
+  {
+    "key": "staff.archive.organizing",
+    "ru": "Навожу порядок...",
+    "en": "Putting the files in order..."
+  },
+  {
+    "key": "staff.service.take_over",
+    "ru": "Не стойте здесь, я вами займусь!",
+    "en": "Right this way, I'll help you!"
+  },
+  {
+    "key": "staff.guide.to_counter",
+    "ru": "Вам в нужное окно!",
+    "en": "Head to the service counter!"
+  },
+  {
+    "key": "staff.guide.to_cashier",
+    "ru": "Вам в кассу!",
+    "en": "Go to the cashier!"
+  },
+  {
+    "key": "staff.guide.to_window_one",
+    "ru": "Вам в окно №1!",
+    "en": "Go to window 1!"
+  },
+  {
+    "key": "staff.guide.to_window_two",
+    "ru": "Вам в окно №2!",
+    "en": "Go to window 2!"
+  },
+  {
+    "key": "staff.guide.to_reception",
+    "ru": "Вам в приёмную директора!",
+    "en": "Head to the director's reception!"
+  },
+  {
+    "key": "staff.guide.to_restroom",
+    "ru": "Вам в туалет!",
+    "en": "You're looking for the restroom!"
+  },
+  {
+    "key": "staff.supplies.need_water",
+    "ru": "Нужна вода...",
+    "en": "We need water..."
+  },
+  {
+    "key": "staff.supplies.need_paper",
+    "ru": "Нужна бумага...",
+    "en": "We need paper..."
+  },
+  {
+    "key": "tactics.count",
+    "ru": "Тактические действия ({0}/{1})",
+    "en": "Tactical actions ({0}/{1})",
+    "smart": true
+  },
+  {
+    "key": "tactics.unassigned",
+    "ru": "Не назначено",
+    "en": "Unassigned"
+  },
+  {
+    "key": "tactics.occupied",
+    "ru": "{0} (занято: {1})",
+    "en": "{0} (occupied by {1})",
+    "smart": true
+  },
+  {
+    "key": "tactics.save",
+    "ru": "СОХРАНИТЬ",
+    "en": "SAVE"
+  },
+  {
+    "key": "tactics.assignment",
+    "ru": "НАЗНАЧЕНИЕ",
+    "en": "WORKSTATION"
+  },
+  {
+    "key": "place.bookkeeping",
+    "ru": "Бухгалтерия",
+    "en": "Accounts"
+  },
+  {
+    "key": "place.desk.Cashier_ServiceDesk",
+    "ru": "Касса",
+    "en": "Cashier"
+  },
+  {
+    "key": "place.desk.Registrar_ServiceDesk_1",
+    "ru": "Регистрация 1",
+    "en": "Registration 1"
+  },
+  {
+    "key": "place.desk.Registrar_ServiceDesk_2",
+    "ru": "Регистрация 2",
+    "en": "Registration 2"
+  },
+  {
+    "key": "place.desk.Office1_ServiceDesk",
+    "ru": "Кабинет 1",
+    "en": "Office 1"
+  },
+  {
+    "key": "place.desk.Office2_ServiceDesk",
+    "ru": "Кабинет 2",
+    "en": "Office 2"
+  },
+  {
+    "key": "place.desk.Archivist_ServiceDesk_2",
+    "ru": "Архив",
+    "en": "Archives"
+  },
+  {
+    "key": "place.label.Стол Директора",
+    "ru": "Стол Директора",
+    "en": "Director’s desk"
+  },
+  {
+    "key": "place.label.выход",
+    "ru": "выход",
+    "en": "exit"
+  },
+  {
+    "key": "place.label.стол с бланками",
+    "ru": "стол с бланками",
+    "en": "forms table"
+  },
+  {
+    "key": "place.label.Выдача номерков",
+    "ru": "Выдача номерков",
+    "en": "Ticket dispenser"
+  },
+  {
+    "key": "place.label.очередь",
+    "ru": "очередь",
+    "en": "queue"
+  },
+  {
+    "key": "place.label.туалет",
+    "ru": "туалет",
+    "en": "restroom"
+  },
+  {
+    "key": "place.label.касса",
+    "ru": "касса",
+    "en": "cashier"
+  },
+  {
+    "key": "place.label.регистратура",
+    "ru": "регистратура",
+    "en": "registration"
+  },
+  {
+    "key": "place.label.кабинет 1",
+    "ru": "кабинет 1",
+    "en": "office 1"
+  },
+  {
+    "key": "place.label.кабинет 2",
+    "ru": "кабинет 2",
+    "en": "office 2"
+  },
+  {
+    "key": "place.label.приёмная",
+    "ru": "приёмная",
+    "en": "reception"
+  },
+  {
+    "key": "team.xp",
+    "ru": "Опыт: {0} / {1}",
+    "en": "XP: {0} / {1}",
+    "smart": true
+  },
+  {
+    "key": "ledger.promotion",
+    "ru": "Повышение: {0}",
+    "en": "Promotion: {0}",
+    "smart": true
+  },
+  {
+    "key": "ledger.order",
+    "ru": "Приказ: {0}",
+    "en": "Order: {0}",
+    "smart": true
+  },
+  {
+    "key": "promotion.employee",
+    "ru": "Сотрудник: {0}",
+    "en": "Employee: {0}",
+    "smart": true
+  },
+  {
+    "key": "promotion.title",
+    "ru": "ПРИКАЗ О ПОВЫШЕНИИ",
+    "en": "PROMOTION ORDER"
+  },
+  {
+    "key": "promotion.assignment",
+    "ru": "ПРИКАЗ О НАЗНАЧЕНИИ",
+    "en": "APPOINTMENT ORDER"
+  },
+  {
+    "key": "promotion.to",
+    "ru": "Повысить до должности:",
+    "en": "Promote to:"
+  },
+  {
+    "key": "promotion.assign_to",
+    "ru": "Назначить на должность:",
+    "en": "Appoint to:"
+  },
+  {
+    "key": "promotion.flavor.0",
+    "ru": "Настоящим, ввиду производственной необходимости и согласно параграфу 7-БИС устава, постановляется:",
+    "en": "In view of operational necessity and pursuant to paragraph 7-bis of the charter, it is hereby decreed:"
+  },
+  {
+    "key": "promotion.flavor.1",
+    "ru": "В соответствии с директивой №1337 о кадровых перестановках и в целях оптимизации рабочих процессов, приказываю:",
+    "en": "Under Directive No. 1337 on staff transfers, and in the interest of efficiency, I hereby order:"
+  },
+  {
+    "key": "promotion.flavor.2",
+    "ru": "Рассмотрев личное дело и приняв во внимание неоценимый вклад в борьбу с энтропией, решено:",
+    "en": "Having reviewed the personnel file and duly noted the employee’s invaluable contribution to the fight against entropy, we resolve:"
+  },
+  {
+    "key": "promotion.flavor.3",
+    "ru": "Во исполнение приказа о повышении эффективности и по итогам квартальной аттестации, надлежит:",
+    "en": "Pursuant to the efficiency order and following the quarterly review, the following action shall be taken:"
+  },
+  {
+    "key": "room.guard_post",
+    "ru": "ПОСТ ОХРАНЫ",
+    "en": "SECURITY POST"
+  },
+  {
+    "key": "room.nobody",
+    "ru": "Никого нет на смене",
+    "en": "Nobody on duty"
+  },
+  {
+    "key": "room.unknown",
+    "ru": "Неизвестно",
+    "en": "Unknown"
+  },
+  {
+    "key": "room.free",
+    "ru": "Свободна",
+    "en": "Available"
+  },
+  {
+    "key": "room.break",
+    "ru": "Перерыв",
+    "en": "On break"
+  },
+  {
+    "key": "room.walk_in",
+    "ru": "Вне очереди",
+    "en": "Walk-in"
+  },
+  {
+    "key": "room.serving",
+    "ru": "Обслуживает {0}",
+    "en": "Serving {0}",
+    "smart": true
+  },
+  {
+    "key": "room.calling",
+    "ru": "Вызывает {0}",
+    "en": "Calling {0}",
+    "smart": true
+  },
+  {
+    "key": "room.busy",
+    "ru": "Занят",
+    "en": "Busy"
+  },
+  {
+    "key": "room.vacant",
+    "ru": "Не назначен",
+    "en": "Unstaffed"
+  },
+  {
+    "key": "room.patrol",
+    "ru": "Патруль",
+    "en": "On patrol"
+  },
+  {
+    "key": "room.on_post",
+    "ru": "На посту",
+    "en": "On duty"
+  },
+  {
+    "key": "room.intervening",
+    "ru": "Разбирается",
+    "en": "Handling an incident"
+  },
+  {
+    "key": "room.lunch",
+    "ru": "Обед",
+    "en": "At lunch"
+  },
+  {
+    "key": "room.toilet",
+    "ru": "В туалете",
+    "en": "In the restroom"
+  },
+  {
+    "key": "room.report",
+    "ru": "Пишет отчёт",
+    "en": "Writing a report"
+  },
+  {
+    "key": "room.idle",
+    "ru": "Бездействует",
+    "en": "Idle"
+  },
+  {
+    "key": "desk.total_visitors",
+    "ru": "Всего: {0}",
+    "en": "Total: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.exited",
+    "ru": "Ушли: {0}",
+    "en": "Left: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.waiting",
+    "ru": "Ожидают: {0}",
+    "en": "Waiting: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.toilet",
+    "ru": "Туалет: {0}",
+    "en": "Restroom: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.at_counters",
+    "ru": "У стоек: {0}",
+    "en": "At the counters: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.confused",
+    "ru": "Потеряшки: {0}",
+    "en": "Lost: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.angry",
+    "ru": "Ушли злыми: {0}",
+    "en": "Left angry: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.processed",
+    "ru": "Обслужено: {0}",
+    "en": "Served: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.registration_closed",
+    "ru": "Регистратура закрыта",
+    "en": "Registration closed"
+  },
+  {
+    "key": "desk.calling",
+    "ru": "Вызываются: {0}",
+    "en": "Now calling: {0}",
+    "smart": true
+  },
+  {
+    "key": "desk.registration_free",
+    "ru": "Регистратура свободна",
+    "en": "Registration available"
+  },
+  {
+    "key": "intern.on_duty",
+    "ru": "На дежурстве",
+    "en": "On duty"
+  },
+  {
+    "key": "intern.broken",
+    "ru": "Стол сломан!\nЯ не могу...",
+    "en": "The desk is broken!\nI can't help..."
+  },
+  {
+    "key": "intern.try_help",
+    "ru": "Попробую помочь...",
+    "en": "I'll try to help..."
+  },
+  {
+    "key": "intern.uncertain",
+    "ru": "Ой, кажется, вам\nтуда...",
+    "en": "Oh, I think it's\nthat way..."
+  },
+  {
+    "key": "intern.directions",
+    "ru": "Ваша следующая остановка: {0}",
+    "en": "Next stop: {0}",
+    "smart": true
+  },
+  {
+    "key": "intern.payment",
+    "ru": "Принимаю оплату...",
+    "en": "Taking your payment..."
+  },
+  {
+    "key": "intern.review",
+    "ru": "Так... посмотрим...",
+    "en": "Right... let's see..."
+  },
+  {
+    "key": "intern.missing",
+    "ru": "Ошибка: нет документа!",
+    "en": "There's no document here!"
+  },
+  {
+    "key": "intern.wrong_form",
+    "ru": "У вас бланк не тот!",
+    "en": "You've got the wrong form!"
+  },
+  {
+    "key": "ledger.intern_payment",
+    "ru": "Оплата (стажёр)",
+    "en": "Payment (intern)"
+  },
+  {
+    "key": "staff.shift.late_apology",
+    "ru": "Опоздал... Извините.",
+    "en": "I'm late... Sorry."
+  },
+  {
+    "key": "staff.service.all_busy",
+    "ru": "Все места заняты!",
+    "en": "All desks are occupied!"
+  },
+  {
+    "key": "action.asset.Action_EndShift",
+    "ru": "Конец смены",
+    "en": "End shift"
+  },
+  {
+    "key": "action.asset.Action_ProcessProjectDocument",
+    "ru": "Оформление приказа",
+    "en": "Process an internal order"
+  },
+  {
+    "key": "action.asset.Action_RepairObject",
+    "ru": "Починка",
+    "en": "Repair equipment"
+  },
+  {
+    "key": "action.asset.Action_ChairPatrol",
+    "ru": "Патруль на стуле",
+    "en": "Monitor the front desk"
+  },
+  {
+    "key": "action.asset.Action_CorrectDocument",
+    "ru": "Коррекция документов",
+    "en": "Correct paperwork"
+  },
+  {
+    "key": "action.asset.Action_GoToCooler",
+    "ru": "Сходить к кулеру",
+    "en": "Get a drink"
+  },
+  {
+    "key": "action.asset.Action_Guard_Patrol_NEW",
+    "ru": "Обход территории",
+    "en": "Patrol the premises"
+  },
+  {
+    "key": "action.asset.Action_InternPatrol",
+    "ru": "Обход зала",
+    "en": "Patrol the waiting room"
+  },
+  {
+    "key": "action.asset.Action_JanitorPatrol",
+    "ru": "Осмотр помещений",
+    "en": "Inspect the rooms"
+  },
+  {
+    "key": "action.asset.Action_MakeArchiveRequest",
+    "ru": "Сделать запрос в архив",
+    "en": "Request an archive record"
+  },
+  {
+    "key": "action.asset.Action_ManageBarrier",
+    "ru": "Открыть/закрыть Главные двери",
+    "en": "Open or close the main doors"
+  },
+  {
+    "key": "action.asset.Action_SystematizeArchive",
+    "ru": "Систематизировать архив",
+    "en": "Organize the archives"
+  },
+  {
+    "key": "action.asset.Action_TakeOverClient",
+    "ru": "Перехватить клиента",
+    "en": "Take over a visitor"
+  },
+  {
+    "key": "action.asset.Action_AccountantCoverSchemes",
+    "ru": "Скрыть недостачу",
+    "en": "Cover up a shortfall"
+  },
+  {
+    "key": "action.asset.Action_AccountantMoneyGen",
+    "ru": "Найти заначку",
+    "en": "Look for stashed cash"
+  },
+  {
+    "key": "action.asset.Action_CheckDocument",
+    "ru": "Проверить документ",
+    "en": "Check paperwork"
+  },
+  {
+    "key": "action.asset.Action_CleanDirt",
+    "ru": "Уборка грязи",
+    "en": "Sweep the floor"
+  },
+  {
+    "key": "action.asset.Action_CleanPuddle",
+    "ru": "Уборка луж",
+    "en": "Mop up puddles"
+  },
+  {
+    "key": "action.asset.Action_CleanTrash",
+    "ru": "Уборка мусора",
+    "en": "Pick up litter"
+  },
+  {
+    "key": "action.asset.Action_ClientOrientedService",
+    "ru": "Клиентоориентированность",
+    "en": "Personal service"
+  },
+  {
+    "key": "action.asset.Action_CoverCashier",
+    "ru": "Подмена кассира",
+    "en": "Cover the cashier"
+  },
+  {
+    "key": "action.asset.Action_CoverClerk",
+    "ru": "Подмена клерка",
+    "en": "Cover a clerk"
+  },
+  {
+    "key": "action.asset.Action_CoverRegistrar",
+    "ru": "Подмена регистратора",
+    "en": "Cover registration"
+  },
+  {
+    "key": "action.asset.Action_CoverYourTracks",
+    "ru": "Прикрыть следы",
+    "en": "Cover your tracks"
+  },
+  {
+    "key": "action.asset.Action_DirectorPrepareSalaries",
+    "ru": "Подготовить зарплату (Директор)",
+    "en": "Prepare payroll (director)"
+  },
+  {
+    "key": "action.asset.Action_DoBookkeeping",
+    "ru": "Бухгалтерия",
+    "en": "Keep the books"
+  },
+  {
+    "key": "action.asset.Action_FindValuables",
+    "ru": "Найти ценности в мусоре",
+    "en": "Find valuables in the trash"
+  },
+  {
+    "key": "action.asset.Action_Guard_CalmDownViolator_NEW",
+    "ru": "Успокоить грубияна",
+    "en": "Calm a disruptive visitor"
+  },
+  {
+    "key": "action.asset.Action_Guard_CatchThief_NEW",
+    "ru": "Поймать неплательщика",
+    "en": "Catch a payment dodger"
+  },
+  {
+    "key": "action.asset.Action_HandleSituation",
+    "ru": "Помочь потерявшемуся",
+    "en": "Help a lost visitor"
+  },
+  {
+    "key": "action.asset.Action_OperateBarrier",
+    "ru": "Управлять шлагбаумом",
+    "en": "Operate the barrier"
+  },
+  {
+    "key": "action.asset.Action_PrepareSalaries",
+    "ru": "Подготовить зарплату",
+    "en": "Prepare payroll"
+  },
+  {
+    "key": "action.asset.Action_PrioritizeConsultation",
+    "ru": "Приоритет: Устная справка",
+    "en": "Prioritize verbal enquiries"
+  },
+  {
+    "key": "action.asset.Action_PrioritizeDirectorDoc",
+    "ru": "Приоритет: На подпись к директору",
+    "en": "Prioritize documents for signature"
+  },
+  {
+    "key": "action.asset.Action_PrioritizePayTax",
+    "ru": "Приоритет: Оплата счетов",
+    "en": "Prioritize bill payments"
+  },
+  {
+    "key": "staff.service.next",
+    "ru": "Следующий!",
+    "en": "Next, please!"
+  },
+  {
+    "key": "hire.news",
+    "ru": "Новый сотрудник ({0}): {1}. Особенность: {2}",
+    "en": "New hire ({0}): {1}. Trait: {2}",
+    "smart": true
+  },
+  {
+    "key": "hire.kind_temp",
+    "ru": "временный",
+    "en": "temporary"
+  },
+  {
+    "key": "hire.kind_perm",
+    "ru": "постоянный",
+    "en": "permanent"
+  },
+  {
+    "key": "ledger.hire",
+    "ru": "Наём: {0}",
+    "en": "Hiring: {0}",
+    "smart": true
+  },
+  {
+    "key": "hire.sick",
+    "ru": "ВНИМАНИЕ: {0} на больничном и сегодня не выйдет!",
+    "en": "NOTICE: {0} is off sick today!",
+    "smart": true
+  },
+  {
+    "key": "shift.traffic",
+    "ru": "Ох, пробки...",
+    "en": "Traffic was awful..."
+  },
+  {
+    "key": "teletype.shift_start",
+    "ru": "{0} ({1}) выходит на смену",
+    "en": "{0} ({1}) is starting work",
+    "smart": true
+  },
+  {
+    "key": "teletype.shift_end",
+    "ru": "{0} ({1}) завершает смену",
+    "en": "{0} ({1}) is finishing work",
+    "smart": true
+  },
+  {
+    "key": "daily_order.tolerance",
+    "ru": "Допустимый процент ошибок: {0}",
+    "en": "Allowed error rate: {0}",
+    "smart": true
   }
 ]

@@ -38,6 +38,14 @@ namespace UI.Bookkeeping
             if (nextButton != null) nextButton.onClick.AddListener(Hide);
         }
 
+        private void OnEnable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
+        private void OnDisable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+
+        private void RefreshLocale(UnityEngine.Localization.Locale locale)
+        {
+            if (_isPausedByMe) UpdateAllData();
+        }
+
         public void Show()
         {
             SetDayResultsMode(false);
@@ -131,13 +139,13 @@ namespace UI.Bookkeeping
                 .Where(t => t.day == currentDay && t.amount < 0)
                 .Sum(t => t.amount);
 
-            officialGrossText.text = $"Подотчетный доход: ${officialGross}";
-            playersCutText.text = $"Ваша доля ({wallet.officialIncomeRate:P0}): ${Mathf.RoundToInt(officialGross * wallet.officialIncomeRate)}";
-            shadowIncomeText.text = $"Теневой доход: ${shadowIncome}";
-            totalBalanceText.text = $"Остаток на счете: ${wallet.GetCurrentMoney()}";
-            salaryFundText.text = $"Зарплатный фонд (к выплате): ${estimatedPayroll}";
-            corruptionLevelText.text = $"Уровень коррупции: {ledger.globalCorruptionScore}";
-            dailyExpensesText.text = $"Расходы сегодня: ${Mathf.Abs(dailyExpenses)}";
+            officialGrossText.text = GameText.Get("day_results.gross", officialGross);
+            playersCutText.text = GameText.Get("day_results.cut", wallet.officialIncomeRate.ToString("P0"), Mathf.RoundToInt(officialGross * wallet.officialIncomeRate));
+            shadowIncomeText.text = GameText.Get("day_results.shadow", shadowIncome);
+            totalBalanceText.text = GameText.Get("day_results.balance", wallet.GetCurrentMoney());
+            salaryFundText.text = GameText.Get("day_results.payroll", estimatedPayroll);
+            corruptionLevelText.text = GameText.Get("day_results.corruption", ledger.globalCorruptionScore);
+            dailyExpensesText.text = GameText.Get("day_results.spent", Mathf.Abs(dailyExpenses));
 
             UpdateLogs(ledger, currentDay);
         }
@@ -160,14 +168,14 @@ namespace UI.Bookkeeping
                 var entryText = entryGO.GetComponent<BookkeepingLog>();
                 if (entryText == null) continue;
                 
-                var sign = transaction.amount >= 0 ? "+" : "";
+                var sign = transaction.amount >= 0 ? "+" : "-";
                 var color = Color.white;
                 
                 if (transaction.amount < 0) color = Color.red;
                 else if (transaction.type == IncomeType.Shadow) color = new Color(0.8f, 0.4f, 1f);
 
                 var textColor = ColorUtility.ToHtmlStringRGB(color);
-                var text = $"<color=#{textColor}>{transaction.description}: {sign}${transaction.amount}</color>";
+                var text = $"<color=#{textColor}>{transaction.description}: {sign}${Mathf.Abs(transaction.amount)}</color>";
                 entryText.Init(text);
             }
         }

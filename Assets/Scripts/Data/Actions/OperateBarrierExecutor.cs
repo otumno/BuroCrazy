@@ -27,9 +27,16 @@ public class OperateBarrierExecutor : ActionExecutor
         staff.AgentMover.Stop();
 
         // Экшен вызывается только если состояние двери нужно изменить
-        if (Vector2.Distance(staff.transform.position, barrier.interactionPoint.position) > 2.5f)
+        if (barrier == null || barrier.interactionPoint == null || TimeManager.Instance == null ||
+            Vector2.Distance(staff.transform.position, barrier.interactionPoint.position) > 2.5f)
         { FinishAction(false); yield break; }
-        bool close = TimeManager.Instance != null && TimeManager.Instance.IsNight();
+        bool close = TimeManager.Instance.IsNight();
+        if (barrier.IsActive() == close)
+        {
+            guard.SetState(GuardMovement.GuardState.Idle);
+            FinishAction(true);
+            yield break;
+        }
         if (close && Object.FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None).Length > 0)
         { FinishAction(false); yield break; }
         // Recheck the desired state on arrival: another guard may already have operated the door.
@@ -41,7 +48,7 @@ public class OperateBarrierExecutor : ActionExecutor
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Click_Default);
 
-        staff.thoughtBubble?.ShowPriorityMessage("Дверь переключена!", 2f, Color.green);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.door_switched"), 2f, Color.green);
 
         yield return new WaitForSeconds(1f);
         guard.SetState(GuardMovement.GuardState.Idle);

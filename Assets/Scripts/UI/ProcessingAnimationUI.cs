@@ -28,7 +28,8 @@ public class ProcessingAnimationUI : MonoBehaviour
     private void Awake()
     {
         // Создаем источник звука на лету, если его нет
-        audioSource = GetComponent<AudioSource>() ?? gameObject.AddComponent<AudioSource>();
+        // Missing native components can compare equal to null in Unity while still passing a CLR null check.
+        if (!TryGetComponent(out audioSource)) audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.spatialBlend = 0f; // 2D звук (UI)
         audioSource.playOnAwake = false;
         foreach (var graphic in GetComponentsInChildren<Graphic>(true)) graphic.raycastTarget = false;

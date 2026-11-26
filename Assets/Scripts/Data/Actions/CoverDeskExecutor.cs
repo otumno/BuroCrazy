@@ -36,17 +36,17 @@ public class CoverDeskExecutor : ActionExecutor
         RegisterCleanup(() =>
         {
             if (targetPoint != null) targetPoint.ReleaseCover(intern);
-            if (targetPoint != null && ClientSpawner.GetServiceProviderAtDesk(targetPoint.deskId) == intern)
-                ClientSpawner.UnassignServiceProviderFromDesk(targetPoint.deskId);
+            if (targetPoint != null && ClientSpawner.GetServiceProviderAtDesk(targetPoint) == intern)
+                ClientSpawner.UnassignServiceProviderFromDesk(targetPoint, intern);
             if (intern != null) intern.AssignCoveredWorkstation(null);
         });
-        intern.thoughtBubble?.ShowPriorityMessage("Подменю!", 2f, Color.cyan);
+        intern.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.cover"), 2f, Color.cyan);
         yield return intern.MoveToTarget(targetPoint.clerkStandPoint.position, InternController.InternState.CoveringDesk);
         if (clerkOnBreak == null || !clerkOnBreak.IsOnBreak() ||
             Vector2.Distance(intern.transform.position, targetPoint.clerkStandPoint.position) > 1f)
         { FinishAction(false); yield break; }
         intern.AssignCoveredWorkstation(targetPoint);
-        ClientSpawner.AssignServiceProviderToDesk(intern, targetPoint.deskId);
+        ClientSpawner.AssignServiceProviderToDesk(intern, targetPoint);
         
         yield return new WaitUntil(() => clerkOnBreak == null || !clerkOnBreak.IsOnBreak());
 

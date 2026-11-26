@@ -20,7 +20,7 @@ public class ChairPatrolAction : StaffAction
             return false;
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         return zone != null && !zone.GetOccupyingClients().Any();
     }
 

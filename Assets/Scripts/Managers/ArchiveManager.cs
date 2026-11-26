@@ -39,13 +39,14 @@ namespace Managers
 
         public Transform RequestDropOffPoint()
         {
-            if (mainDocumentStack != null && !mainDocumentStack.IsFull && mainDocumentStack.CurrentSize < maxCapacityBeforeOverflow)
+            if (AvailableDropOffSlots(mainDocumentStack) > 0)
             {
                 return mainDocumentStack.transform;
             }
             else
             {
-                Transform freePoint = overflowPoints?.FirstOrDefault(p => p != null && !occupiedOverflowPoints.Contains(p)
+                Transform freePoint = overflowPoints?.FirstOrDefault(p => p != null &&
+                    (mainDocumentStack == null || p != mainDocumentStack.transform) && !occupiedOverflowPoints.Contains(p)
                     && (p.GetComponent<DocumentStack>() == null || !p.GetComponent<DocumentStack>().IsFull));
                 if (freePoint != null)
                 {
@@ -56,6 +57,22 @@ namespace Managers
         
             Debug.LogWarning("Нет свободных мест для сдачи документов в архиве!");
             return null;
+        }
+
+        public static bool IsWithinReach(Transform carrier, Vector3 position)
+        {
+            if (carrier == null) return false;
+            // The drop-off marker can be offset from a waypoint, and the mover stops just short of its centre.
+            var mover = carrier.GetComponent<AgentMover>();
+            float reach = 1f + (mover != null ? mover.stoppingDistance : 0f);
+            return Vector2.Distance(carrier.position, position) <= reach;
+        }
+
+        public int AvailableDropOffSlots(DocumentStack stack)
+        {
+            if (stack == null) return 0;
+            int limit = stack == mainDocumentStack ? Mathf.Min(stack.maxStackSize, maxCapacityBeforeOverflow) : stack.maxStackSize;
+            return Mathf.Max(0, limit - stack.CurrentSize);
         }
 
         public DocumentStack GetStackToProcess()

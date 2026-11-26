@@ -15,9 +15,20 @@ namespace Managers
 
         // Текущий бонус от бухгалтера
         private float accountantBonus = 0f;
+        private readonly System.Collections.Generic.Dictionary<DoBookkeepingExecutor, float> bookkeepers = new();
+        private float activeBookkeepingBonus;
+
+        public void SetBookkeeperBonus(DoBookkeepingExecutor worker, float bonus)
+        {
+            if (bonus > 0f) bookkeepers[worker] = bonus;
+            else bookkeepers.Remove(worker);
+            // The best active bookkeeper supplies the office bonus. Leaving one desk must not clear another.
+            activeBookkeepingBonus = 0f;
+            foreach (float value in bookkeepers.Values) activeBookkeepingBonus = Mathf.Max(activeBookkeepingBonus, value);
+        }
 
         // Свойство, которое возвращает итоговый процент
-        public float officialIncomeRate => Mathf.Clamp01(baseIncomeRate + accountantBonus);
+        public float officialIncomeRate => Mathf.Clamp01(baseIncomeRate + Mathf.Max(accountantBonus, activeBookkeepingBonus));
 
         [Header("UI Компоненты")]
         public TextMeshProUGUI moneyText;

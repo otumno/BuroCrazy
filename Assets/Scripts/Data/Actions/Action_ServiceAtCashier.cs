@@ -21,7 +21,7 @@ public class Action_ServiceAtCashier : StaffAction
             return false;
         }
         
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         
         // Проверка по зоне
         bool clientInZone = zone != null && zone.GetOccupyingClients().Any(c => c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax);
@@ -49,7 +49,7 @@ public class Action_ServiceAtCashier : StaffAction
         // Проверяем клиента в зоне и бонус за взятку
         if (staff is ClerkController clerk && clerk.assignedWorkstation != null)
         {
-            var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+            var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
             if (zone != null)
             {
                 var clients = zone.GetOccupyingClients();

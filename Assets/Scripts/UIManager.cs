@@ -19,16 +19,20 @@ public class UIManager : MonoBehaviour
     [Header("UI Регистратуры")] 
     public TextMeshProUGUI nowServingText;
 
+    private float nextRefresh;
+
     void Update() 
     { 
-        totalClientsText.text = $"Всего: {ClientPathfinding.totalClients}";
-        clientsExitedText.text = $"Ушли: {ClientPathfinding.clientsExited}"; 
-        clientsInWaitingText.text = $"Ожидают: {ClientPathfinding.clientsInWaiting}"; 
-        clientsToToiletText.text = $"Туалет: {ClientPathfinding.clientsToToilet}"; 
-        clientsToRegistrationText.text = $"У стоек: {ClientPathfinding.clientsToRegistration}";
-        clientsConfusedText.text = $"Потеряшки: {ClientPathfinding.clientsConfused}"; 
-        if(clientsExitedAngryText != null) clientsExitedAngryText.text = $"Ушли злыми: {ClientPathfinding.clientsExitedAngry}"; 
-        if(clientsExitedProcessedText != null) clientsExitedProcessedText.text = $"Обслужено: {ClientPathfinding.clientsExitedProcessed}";
+        if (Time.unscaledTime < nextRefresh) return;
+        nextRefresh = Time.unscaledTime + 0.2f;
+        totalClientsText.text = UI.GameText.Get("desk.total_visitors", ClientPathfinding.totalClients);
+        clientsExitedText.text = UI.GameText.Get("desk.exited", ClientPathfinding.clientsExited);
+        clientsInWaitingText.text = UI.GameText.Get("desk.waiting", ClientPathfinding.clientsInWaiting);
+        clientsToToiletText.text = UI.GameText.Get("desk.toilet", ClientPathfinding.clientsToToilet);
+        clientsToRegistrationText.text = UI.GameText.Get("desk.at_counters", ClientPathfinding.clientsToRegistration);
+        clientsConfusedText.text = UI.GameText.Get("desk.confused", ClientPathfinding.clientsConfused);
+        if(clientsExitedAngryText != null) clientsExitedAngryText.text = UI.GameText.Get("desk.angry", ClientPathfinding.clientsExitedAngry);
+        if(clientsExitedProcessedText != null) clientsExitedProcessedText.text = UI.GameText.Get("desk.processed", ClientPathfinding.clientsExitedProcessed);
         
         // --- ИЗМЕНЕНИЕ: Новая логика отображения списка номеров ---
         if(nowServingText != null && ClientQueueManager.Instance != null)
@@ -36,7 +40,7 @@ public class UIManager : MonoBehaviour
             var registrarWorker = ClientSpawner.GetServiceProviderAtDesk(0);
             if (registrarWorker == null)
             {
-                nowServingText.text = "Регистратура закрыта";
+                nowServingText.text = UI.GameText.Get("desk.registration_closed");
             }
             else
             {
@@ -45,11 +49,11 @@ public class UIManager : MonoBehaviour
                 if (numbers.Count > 0)
                 {
                     numbers.Sort();
-                    nowServingText.text = $"Вызываются: {string.Join(", ", numbers)}";
+                    nowServingText.text = UI.GameText.Get("desk.calling", string.Join(", ", numbers));
                 }
                 else
                 {
-                    nowServingText.text = "Регистратура свободна";
+                    nowServingText.text = UI.GameText.Get("desk.registration_free");
                 }
             }
         }

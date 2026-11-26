@@ -108,10 +108,7 @@ public class ClientActionExecutor : MonoBehaviour
                 yield break;
             }
             
-            if (CanEnterZone(targetZone))
-            {
-                freeSpot = targetZone.RequestAndOccupyWaypoint(_client.gameObject);
-            }
+            freeSpot = ReserveVisitorPoint(targetZone, _client.gameObject);
             if (freeSpot == null)
             {
                 yield return new WaitForSeconds(0.5f);
@@ -146,13 +143,20 @@ public class ClientActionExecutor : MonoBehaviour
         }
     }
 
-    private bool CanEnterZone(LimitedCapacityZone zone)
+    private Waypoint ReserveVisitorPoint(LimitedCapacityZone zone, GameObject visitor)
     {
         int deskId = GetDeskIdFromZone(zone);
-        if (deskId == int.MinValue) return true; // Туалет/Коридор
+        if (deskId == int.MinValue) return zone.RequestAndOccupyWaypoint(visitor);
 
-        IServiceProvider provider = ClientSpawner.GetServiceProviderAtDesk(deskId);
-        return provider != null && provider.IsAvailableToServe;
+        foreach (var provider in ClientSpawner.GetServiceProvidersForDeskType(deskId))
+        {
+            var desk = provider.GetWorkstation();
+            if (provider.IsAvailableToServe && desk.GetComponentInParent<LimitedCapacityZone>() == zone &&
+                desk.CurrentClient == null && zone.insideWaypoints.Contains(desk.clientStandPoint) &&
+                zone.TryOccupyWaypoint(desk.clientStandPoint, visitor))
+                return desk.clientStandPoint;
+        }
+        return null;
     }
 
     private int GetDeskIdFromZone(LimitedCapacityZone zone)

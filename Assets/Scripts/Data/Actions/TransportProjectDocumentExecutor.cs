@@ -77,7 +77,8 @@ public class TransportProjectDocumentExecutor : ActionExecutor
 
         // 3. Идем к цели
         yield return manager.MoveToTarget(destination.position, OfficeManagerController.ManagerState.CarryingDoc);
-        if (destination == null || Vector2.Distance(manager.transform.position, destination.position) > 1f)
+        if (destination == null || (toArchive ? !ArchiveManager.IsWithinReach(manager.transform, destination.position)
+            : Vector2.Distance(manager.transform.position, destination.position) > 1f))
         { FinishAction(false); yield break; }
         if (board != null)
         {
@@ -88,7 +89,9 @@ public class TransportProjectDocumentExecutor : ActionExecutor
             yield break;
         }
 
-        if (TargetDoc == null || TargetStack == null || !TargetStack.ReceiveExistingDocument(TargetDoc.gameObject))
+        if (TargetDoc == null || TargetStack == null ||
+            (toArchive && (archive == null || archive.AvailableDropOffSlots(TargetStack) == 0)) ||
+            !TargetStack.ReceiveExistingDocument(TargetDoc.gameObject))
         {
             FinishAction(false);
             yield break;

@@ -465,16 +465,13 @@ public class AgentMover : MonoBehaviour
     /// Allows external scripts (like CharacterVisuals) to set the sprites used for animation.
     /// </summary>
     public void SetAnimationSprites(Sprite idle, Sprite walk1, Sprite walk2)
-{
-    Debug.Log($"[AgentMover] {gameObject.name} получил SetAnimationSprites. Idle: {idle?.name}, Walk1: {walk1?.name}, Walk2: {walk2?.name}"); // <<<< ДОБАВЬ ЭТОТ ЛОГ
-    this.idleSprite = idle;
-    this.walkSprite1 = walk1;
-    this.walkSprite2 = walk2;
-    if (characterSpriteRenderer != null && rb.linearVelocity.magnitude < 0.1f) {
-        characterSpriteRenderer.sprite = this.idleSprite;
+    {
+        idleSprite = idle;
+        walkSprite1 = walk1;
+        walkSprite2 = walk2;
+        if (characterSpriteRenderer != null && (rb == null || rb.linearVelocity.sqrMagnitude < 0.01f))
+            characterSpriteRenderer.sprite = idle;
     }
-}
-
 
     // --- Direct Chase Methods ---
     /// <summary>

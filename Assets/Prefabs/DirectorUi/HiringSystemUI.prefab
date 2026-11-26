@@ -104,6 +104,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -651,6 +652,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -695,6 +697,7 @@ GameObject:
   - component: {fileID: 8606719549458041893}
   - component: {fileID: 4237605393794805791}
   - component: {fileID: 2146658136861748171}
+  - component: {fileID: 6181735313146857873}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -787,6 +790,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -820,6 +824,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6181735313146857873
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979718432232475717}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.name
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &988026815467546866
 GameObject:
   m_ObjectHideFlags: 0
@@ -923,6 +951,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1208,6 +1237,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -1344,6 +1374,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2012,6 +2043,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2056,6 +2088,7 @@ GameObject:
   - component: {fileID: 4321244211911815623}
   - component: {fileID: 8960927596283584944}
   - component: {fileID: 62276149708939073}
+  - component: {fileID: 6330593050067360942}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -2148,6 +2181,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2181,6 +2215,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6330593050067360942
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3390564551720009029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.shifts
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &3439218034376809693
 GameObject:
   m_ObjectHideFlags: 0
@@ -2565,6 +2623,7 @@ GameObject:
   - component: {fileID: 7537438995331835745}
   - component: {fileID: 394899969419494978}
   - component: {fileID: 3875707616900934460}
+  - component: {fileID: 6858503250266905657}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -2657,6 +2716,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -2690,6 +2750,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &6858503250266905657
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3701889359306893005}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.hire
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &4147314700024621683
 GameObject:
   m_ObjectHideFlags: 0
@@ -2967,6 +3051,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -3185,6 +3270,7 @@ GameObject:
   - component: {fileID: 1313403006943935754}
   - component: {fileID: 1826301986132331443}
   - component: {fileID: 3698504354287287184}
+  - component: {fileID: 5974077690287993654}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -3277,6 +3363,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -3310,6 +3397,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5974077690287993654
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4783967959929829514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.defer
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &4878791274970692072
 GameObject:
   m_ObjectHideFlags: 0
@@ -3414,6 +3525,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -3608,6 +3720,7 @@ GameObject:
   - component: {fileID: 9027018393908768038}
   - component: {fileID: 7766109738191112022}
   - component: {fileID: 5284432773229111242}
+  - component: {fileID: 2412009324951842764}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -3700,6 +3813,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -3733,6 +3847,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &2412009324951842764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5208934266914618929}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.rank
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &5732249978818834769
 GameObject:
   m_ObjectHideFlags: 0
@@ -4061,6 +4199,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -4105,6 +4244,7 @@ GameObject:
   - component: {fileID: 2454885612413531634}
   - component: {fileID: 9100279166595041195}
   - component: {fileID: 7457166922305440630}
+  - component: {fileID: 3980455766923832868}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -4197,6 +4337,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -4230,6 +4371,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3980455766923832868
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6666406536563024734}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.back
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &6680153270510967811
 GameObject:
   m_ObjectHideFlags: 0
@@ -4334,6 +4499,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -4471,6 +4637,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -4732,6 +4899,7 @@ GameObject:
   - component: {fileID: 1472976753282266043}
   - component: {fileID: 4949023093773185134}
   - component: {fileID: 9036386523491730518}
+  - component: {fileID: 7038780293319649453}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -4824,6 +4992,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -4857,6 +5026,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7038780293319649453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6886803404201302888}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.role
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &7405922066257680126
 GameObject:
   m_ObjectHideFlags: 0
@@ -5185,6 +5378,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -5321,6 +5515,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -5566,6 +5761,7 @@ GameObject:
   - component: {fileID: 6377991402833426980}
   - component: {fileID: 4887834295659624302}
   - component: {fileID: 6947556694077311155}
+  - component: {fileID: 5836106979949918026}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -5658,6 +5854,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -5691,6 +5888,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &5836106979949918026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8203031055103639801}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.approve
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &8318928261466683405
 GameObject:
   m_ObjectHideFlags: 0
@@ -5702,6 +5923,7 @@ GameObject:
   - component: {fileID: 2546799809493857390}
   - component: {fileID: 240694312918442948}
   - component: {fileID: 3398451664733762247}
+  - component: {fileID: 4500879207298708137}
   m_Layer: 0
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -5794,6 +6016,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -5827,6 +6050,30 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &4500879207298708137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8318928261466683405}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.reject
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &8657687667858171331
 GameObject:
   m_ObjectHideFlags: 0
@@ -6162,7 +6409,39 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5958048042767538420, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3705256316768954118}
+    - targetCorrespondingSourceObject: {fileID: 9205621727929603649, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8576807741073761663}
   m_SourcePrefab: {fileID: 100100000, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
+--- !u!1 &6458942333897449551 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9205621727929603649, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
+  m_PrefabInstance: {fileID: 2765832377907033614}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8576807741073761663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6458942333897449551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4c7e2a91d05b4f3e8a61b9d2e7f03c58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UI.LocalizedText
+  _localizedString:
+    m_TableReference:
+      m_TableCollectionName: Gameplay
+    m_TableEntryReference:
+      m_KeyId: 0
+      m_Key: panel.menu
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  references:
+    version: 2
+    RefIds: []
 --- !u!224 &8382164000258813902 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5922612135737842112, guid: 4e775c6356a372c4693da66ab49ce184, type: 3}
@@ -6291,6 +6570,18 @@ PrefabInstance:
     - target: {fileID: 5283746019283746510, guid: de41dd460854e6a429ebeebd14ba3273, type: 3}
       propertyPath: _localizedString.m_TableEntryReference.m_KeyId
       value: 947427707230969181
+      objectReference: {fileID: 0}
+    - target: {fileID: 8626698199131404093, guid: de41dd460854e6a429ebeebd14ba3273, type: 3}
+      propertyPath: m_fontSizeMax
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 8626698199131404093, guid: de41dd460854e6a429ebeebd14ba3273, type: 3}
+      propertyPath: m_fontSizeMin
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 8626698199131404093, guid: de41dd460854e6a429ebeebd14ba3273, type: 3}
+      propertyPath: m_enableAutoSizing
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

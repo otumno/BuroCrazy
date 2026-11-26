@@ -14,8 +14,6 @@ namespace UI.StaffOrders
     /// </summary>
     public class StaffOrderMenuUI : MonoBehaviour
     {
-        private const string TacticsLabel = "Тактика…";
-
         [SerializeField] private StaffOrderCatalog catalog;
 
         [Header("Шапка")]
@@ -113,7 +111,11 @@ namespace UI.StaffOrders
         {
             if (portrait != null) portrait.Show(_staff);
             if (nameText != null) nameText.text = _staff.characterName;
-            if (roleText != null) roleText.text = StaffRoleNames.GetDisplayName(_staff.currentRole);
+            if (roleText != null)
+            {
+                var label = roleText.GetComponent<LocalizedText>() ?? roleText.gameObject.AddComponent<LocalizedText>();
+                label.SetReference(GameText.Table, StaffRoleNames.GetKey(_staff.currentRole));
+            }
         }
 
         private void RebuildItems()
@@ -130,25 +132,31 @@ namespace UI.StaffOrders
             {
                 // Невыполнимый сейчас приказ показываем серым, а не прячем: игрок видит, что такой приказ вообще есть.
                 bool canBeOrdered = definition.Action.CanBeOrdered(_staff);
-                AddItem(definition.Label, canBeOrdered, () => GiveOrder(definition));
+                AddItem(definition.Label, definition.LabelKey, canBeOrdered, () => GiveOrder(definition));
             }
 
             if (tacticsPopup != null)
             {
-                AddItem(TacticsLabel, true, OpenTactics);
+                AddItem(null, "order.tactics", true, OpenTactics);
             }
         }
 
-        private void AddItem(string label, bool isInteractable, System.Action onClick)
+        private void AddItem(string label, string key, bool isInteractable, System.Action onClick)
         {
             var item = Instantiate(itemPrefab, itemsContainer);
-            item.Setup(label, isInteractable, onClick);
+            item.Setup(label, isInteractable, onClick, key);
             _items.Add(item);
         }
 
         private void GiveOrder(StaffOrderDefinition definition)
         {
             var staff = _staff;
+            if (staff == null || !staff.isActiveAndEnabled || !staff.IsOnDuty() ||
+                !definition.IsAvailableFor(staff) || !definition.Action.CanBeOrdered(staff))
+            {
+                Close();
+                return;
+            }
             var order = catalog.CreateOrder(definition);
             Close();
 
@@ -166,9 +174,6 @@ namespace UI.StaffOrders
         {
             var staff = _staff;
 
-            // Окно тактики само снимает паузу при закрытии (OnSave/OnCancel), поэтому ставим её заранее,
-            // как это делал старый обработчик ПКМ. Свою паузу меню снимет в Close.
-            MainUIManager.Instance?.PushPause();
             tacticsPopup.OpenForStaff(staff);
             Close();
         }

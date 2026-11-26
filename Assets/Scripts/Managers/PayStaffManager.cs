@@ -98,21 +98,30 @@ namespace Managers
                     continue;
                 }
 
-                // Временным смена оплачена вперёд при найме.
-                if (!staff.HasEmploymentStarted() || staff.IsTemporary)
-                    continue;
-
-                if (staff.WorkShiftMask.HasFlag(periodName))
-                {
-                    staff.unpaidPeriods++;  
+                if (AccruePeriod(staff, TimeManager.Instance.GetCurrentDay(), periodName))
                     totalDebtAcquired += staff.salaryPerPeriod;
-                }
             }
 
             if (totalDebtAcquired > 0)
             {
                 Debug.Log($"[Payroll] Начислен долг по зарплате за период '{periodName}': ${totalDebtAcquired}.");
             }
+        }
+
+        public static void AccrueCurrentPeriod(StaffController staff)
+        {
+            var clock = TimeManager.Instance;
+            if (clock != null) AccruePeriod(staff, clock.GetCurrentDay(), clock.GetCurrentPeriodType());
+        }
+
+        private static bool AccruePeriod(StaffController staff, int day, CalendarDayPeriodType period)
+        {
+            if (staff.IsTemporary || !staff.HasEmploymentStarted() || (staff.WorkShiftMask & period) == 0 ||
+                (staff.lastSalaryDay == day && staff.lastSalaryPeriod == period)) return false;
+            staff.lastSalaryDay = day;
+            staff.lastSalaryPeriod = period;
+            staff.unpaidPeriods++;
+            return true;
         }
 
         private void OnDestroy()

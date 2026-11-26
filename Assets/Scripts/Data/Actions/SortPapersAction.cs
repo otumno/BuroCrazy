@@ -42,7 +42,7 @@ public class SortPapersAction : StaffAction
         }
         else
         {
-            var zone = ClientSpawner.GetZoneByDeskId(workstation.deskId);
+            var zone = workstation.GetComponentInParent<LimitedCapacityZone>();
             if (zone != null && (zone.GetOccupyingClients().Count > 0 || zone.waitingQueue.Count > 0)) return false;
         }
 

@@ -48,17 +48,14 @@ public class ClientQueueManager : MonoBehaviour
     private IServiceProvider FindAvailableWorker()
     {
         // Global tickets are for registration. Specialist rooms have their own zone queues.
-        int[] deskIds = { 0 };
-
-        foreach (int deskId in deskIds)
+        foreach (var worker in ClientSpawner.GetServiceProvidersForDeskType(0))
         {
-            var worker = ClientSpawner.GetServiceProviderAtDesk(deskId);
             // Regular registrars pull tickets themselves; a covering intern/director needs a call here.
             if (worker is ClerkController) continue;
             if (worker != null && worker.IsAvailableToServe)
             {
                 if (worker.GetWorkstation()?.CurrentClient != null) continue;
-                var zone = ClientSpawner.GetZoneByDeskId(deskId);
+                var zone = worker.GetWorkstation()?.GetComponentInParent<LimitedCapacityZone>();
                 if (zone != null)
                 {
                     // Считаем только тех клиентов, чей талон УЖЕ вызван И кто идет ИМЕННО к этому работнику
@@ -100,6 +97,9 @@ public class ClientQueueManager : MonoBehaviour
             !(ArchiveRequestManager.Instance?.IsWaitingForCourier(client) ?? false);
     }
 
+    public bool HasCallableClient(ClientGoal goal) =>
+        queue.Any(entry => entry.Key != null && entry.Key.mainGoal == goal && CanCallForRegistration(entry.Key, entry.Value));
+
     private void ProcessNextClientCall()
     {
         IServiceProvider availableWorker = FindAvailableWorker();
@@ -136,7 +136,7 @@ public class ClientQueueManager : MonoBehaviour
             if (workerMono != null)
             {
                 var bubble = workerMono.GetComponent<ThoughtBubbleController>();
-                if (bubble != null) bubble.ShowPriorityMessage($"Талон №{calledNumber}, подходите!", 3f, Color.green);
+                if (bubble != null) bubble.ShowPriorityMessage(UI.GameText.Get("staff.registration.call_ticket", calledNumber), 3f, Color.green);
             }
             // ------------------------------
 

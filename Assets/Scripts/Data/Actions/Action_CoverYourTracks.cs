@@ -21,7 +21,7 @@ public class CoverYourTracksAction : StaffAction
         // Выполняется, когда перед сотрудником нет клиента
         if (staff.assignedWorkstation != null)
         {
-            var zone = ClientSpawner.GetZoneByDeskId(staff.assignedWorkstation.deskId);
+            var zone = staff.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
             return zone != null && !zone.GetOccupyingClients().Any();
         }
         return true;

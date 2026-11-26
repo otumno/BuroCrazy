@@ -19,6 +19,9 @@ namespace StaffOrders
         public string Label { get; private set; }
 
         [field: SerializeField]
+        public string LabelKey { get; private set; }
+
+        [field: SerializeField]
         public StaffAction Action { get; private set; }
 
         /// <summary>
@@ -52,6 +55,12 @@ namespace StaffOrders
             Label = label;
             Action = action;
             Roles = new List<StaffController.Role>(roles);
+        }
+
+        public StaffOrderDefinition(string label, string labelKey, StaffAction action, params StaffController.Role[] roles)
+            : this(label, action, roles)
+        {
+            LabelKey = labelKey;
         }
 
         public bool IsAvailableFor(StaffController staff)

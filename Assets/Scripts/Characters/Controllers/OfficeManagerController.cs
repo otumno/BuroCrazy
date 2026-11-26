@@ -136,7 +136,7 @@ public class OfficeManagerController : StaffController
             var docToRegistrar = stack.FindDoc(d => d.signedByDirector && !d.processedByRegistrar && d.docType != ProjectDocumentType.Policy);
             if (docToRegistrar != null)
             {
-                var regStack = GetRegistrarStack();
+                var regStack = GetProjectProcessingStack(stack, registration: true);
                 if (regStack != null && stack != regStack)
                 {
                     source = stack; target = regStack; foundDoc = docToRegistrar;
@@ -148,7 +148,7 @@ public class OfficeManagerController : StaffController
             var docToAccountant = stack.FindDoc(d => d.processedByRegistrar && !d.paidAtCashier && d.docType != ProjectDocumentType.Policy);
             if (docToAccountant != null)
             {
-                var accStack = GetAccountantStack();
+                var accStack = GetProjectProcessingStack(stack, registration: false);
                 if (accStack != null && stack != accStack)
                 {
                     source = stack; target = accStack; foundDoc = docToAccountant;
@@ -193,17 +193,22 @@ public class OfficeManagerController : StaffController
 	
     // Policy transport uses the same tracked executor as other folders, so orders can cancel it safely.
 
-    // Хелперы поиска целевых стопок
-    private DocumentStack GetRegistrarStack() => ClientSpawner.GetZoneByDeskId(0)?.GetComponentInChildren<ServicePoint>()?.documentStack;
-    private DocumentStack GetCashierStack() => ClientSpawner.GetZoneByDeskId(-1)?.GetComponentInChildren<ServicePoint>()?.documentStack;
-	
-	private DocumentStack GetAccountantStack()
+    private static DocumentStack GetProjectProcessingStack(DocumentStack source, bool registration)
     {
-        // Ищем через реестр (ID стола бухгалтера, например, 4 или найти по имени)
-        // В ScenePointsRegistry есть поле bookkeepingDesk
-        return ScenePointsRegistry.Instance?.bookkeepingDesk?.documentStack;
+        var registry = ScenePointsRegistry.Instance;
+        if (registry == null) return null;
+        var desks = registry.allServicePoints.Where(d => d != null && d.documentStack != null &&
+            (registration ? d.deskId == 0 && d.clientStandPoint != null : d.deskId == 4 || d.deskId == -1));
+        // Leave a folder at a staffed window that can process it. Otherwise prefer a working specialist.
+        var destination = desks.OrderByDescending(d =>
+        {
+            var worker = AssignmentManager.Instance?.GetAssignedStaff(d);
+            return worker != null && worker.gameObject.activeInHierarchy && worker.IsOnDuty() &&
+                worker.activeActions != null && worker.activeActions.Exists(a => a is Action_ProcessProjectDocument);
+        }).ThenByDescending(d => d.documentStack == source).ThenByDescending(d => d == registry.bookkeepingDesk).FirstOrDefault();
+        return destination != null ? destination.documentStack : null;
     }
-	
+
 }
 
 // Extension для удобства поиска (оставляем, он полезен)

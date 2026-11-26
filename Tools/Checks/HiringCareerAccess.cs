@@ -73,6 +73,18 @@ public static class HiringCareerAccessCheck
             }
             Require(hiring.AvailableCandidates.All(c => c.Rank.rankLevel <= hiring.GetMaxHireRankLevel(c.Role)), "Generated rank exceeds access.");
             Require(hiring.AvailableCandidates.Any(c => c.Rank.rankLevel > 0), "Experienced ranks never generated.");
+            foreach (var c in hiring.AvailableCandidates)
+            {
+                float floor = Mathf.Clamp(c.Rank.rankLevel, 0, 4) * .25f;
+                Require(new[] { c.Skills.paperworkMastery, c.Skills.sedentaryResilience, c.Skills.pedantry, c.Skills.softSkills }
+                    .All(value => value >= floor && value <= 1), "Experienced candidate has untrained skills.");
+            }
+            var board = hiring.AvailableCandidates.ToArray();
+            hiring.EnsureCandidateBoard();
+            Require(board.SequenceEqual(hiring.AvailableCandidates), "Reopening replaced candidates on the same day.");
+            hiring.AvailableCandidates.Clear();
+            hiring.EnsureCandidateBoard();
+            Require(hiring.AvailableCandidates.Count == 0, "An exhausted board refilled on the same day.");
             return "PASS: initial interns, legacy and explicit unlocks, rank caps, locked branches, database order, candidate validation and all-role generation.";
         }
         finally

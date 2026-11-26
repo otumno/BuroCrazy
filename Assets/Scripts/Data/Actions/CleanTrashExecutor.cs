@@ -44,7 +44,7 @@ public class CleanTrashExecutor : ActionExecutor
 
         if (Vector2.Distance(staff.transform.position, messPoint.transform.position) > 2.5f)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Не достать...", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.janitor.out_of_reach"), 2f, Color.red);
             FinishAction(false); // Не смогли дойти
             yield break;
         }
@@ -58,7 +58,7 @@ public class CleanTrashExecutor : ActionExecutor
 
         if (canFindValuables && Random.value < chance)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Ого, да это же...", 2f, Color.green);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.janitor.found_something"), 2f, Color.green);
             yield return new WaitForSeconds(2f);
 
             // Commit the reward with disposal; cancelling and retrying the same pile must not mint money.
@@ -66,7 +66,7 @@ public class CleanTrashExecutor : ActionExecutor
         }
         else
         {
-            staff.thoughtBubble?.ShowPriorityMessage("*Вжик-вжик*", 2f, Color.cyan);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.janitor.scrubbing"), 2f, Color.cyan);
             yield return new WaitForSeconds(worker.cleaningTimeTrash);
         }
 
@@ -80,14 +80,14 @@ public class CleanTrashExecutor : ActionExecutor
             if (!disposed && messPoint != null) messPoint.gameObject.SetActive(true);
             if (worker != null && worker.TrashBagObject != null) worker.TrashBagObject.SetActive(false);
         });
-        staff.CurrentSubStatus = "Несёт мусор к контейнеру";
+        staff.CurrentSubStatus = UI.GameText.Get("staff.janitor.carrying_trash");
         yield return worker.MoveToTarget(dumpster.position, ServiceWorkerController.WorkerState.Cleaning);
         if (dumpster == null || Vector2.Distance(staff.transform.position, dumpster.position) > 2.5f)
         { FinishAction(false); yield break; }
         yield return new WaitForSeconds(1f);
         disposed = true;
         if (messPoint != null) Destroy(messPoint.gameObject);
-        if (moneyFound > 0) PlayerWallet.Instance?.AddMoney(moneyFound, "Находка в мусоре", IncomeType.Shadow);
+        if (moneyFound > 0) PlayerWallet.Instance?.AddMoney(moneyFound, UI.GameText.Get("ledger.trash_find"), IncomeType.Shadow);
 
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         worker.SetState(ServiceWorkerController.WorkerState.Idle);

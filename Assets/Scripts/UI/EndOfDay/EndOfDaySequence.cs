@@ -7,13 +7,12 @@ using UnityEngine;
 namespace UI.EndOfDay
 {
     /// <summary>
-    /// Цепочка экранов между первой и второй половиной ночи: итоги дня → планирование смен → приказ на завтра.
+    /// Цепочка экранов между первой и второй половиной ночи: итоги дня → приказ на завтра.
     /// Держит смену дня в TimeManager, пока игрок не пройдёт все экраны, затем сажает директора за стол.
     /// </summary>
     public class EndOfDaySequence : MonoBehaviour
     {
         [SerializeField] private BookkeepingPanelUI bookkeepingPanel;
-        [SerializeField] private StaffSchedulePanelUI schedulePanel;
         [SerializeField] private OrderSelectionUI orderSelection;
 
         private TimeManager _timeManager;
@@ -54,14 +53,9 @@ namespace UI.EndOfDay
             yield return new WaitWhile(IsCutsceneOrDialogueActive);
 
             MainUIManager.Instance?.PushPause();
-            // Окно планирования открыто до «Начать день»: смены можно поправить и со стола после цепочки.
-            ShiftPlanning.Open();
-
             Debug.Log("[EndOfDaySequence] Шаг 1: статистика");
             yield return ShowDayResults();
-            Debug.Log("[EndOfDaySequence] Шаг 2: расписание");
-            yield return ShowSchedulePlanning();
-            Debug.Log("[EndOfDaySequence] Шаг 3: приказ");
+            Debug.Log("[EndOfDaySequence] Шаг 2: приказ");
             yield return ShowOrderSelection();
 
             // Смена дня: OnDayChanged запускает катсцены нового дня, страйки и проверку концовок.
@@ -100,19 +94,6 @@ namespace UI.EndOfDay
             bookkeepingPanel.ShowDayResults();
             yield return new WaitUntil(() => isClosed);
             bookkeepingPanel.Closed -= BookkeepingPanel_Closed;
-        }
-
-        private IEnumerator ShowSchedulePlanning()
-        {
-            if (schedulePanel == null) yield break;
-
-            bool isClosed = false;
-            void SchedulePanel_Closed() => isClosed = true;
-
-            schedulePanel.Closed += SchedulePanel_Closed;
-            schedulePanel.ShowPlanning();
-            yield return new WaitUntil(() => isClosed);
-            schedulePanel.Closed -= SchedulePanel_Closed;
         }
 
         private IEnumerator ShowOrderSelection()

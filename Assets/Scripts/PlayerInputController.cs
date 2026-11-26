@@ -306,7 +306,6 @@ public class PlayerInputController : MonoBehaviour
 
         yield return new WaitUntil(() => !director.AgentMover.IsMoving());
 
-        MainUIManager.Instance.PushPause();
         actionConfigPopup.OpenForStaff(targetStaff);
     }
 

@@ -60,8 +60,8 @@ namespace Managers.Teletype
 
         public void LogStaffWork(string name, string role, bool isStartShift)
         {
-            string action = isStartShift ? "вышел на работу" : "закончил смену";
-            EnqueueMessage($"{name} ({role}) {action}", TeletypeMessageType.StaffWork, persist: false);
+            string roleName = System.Enum.TryParse<StaffController.Role>(role, out var parsedRole) ? UI.StaffRoleNames.GetDisplayName(parsedRole) : role;
+            EnqueueMessage(UI.GameText.Get(isStartShift ? "teletype.shift_start" : "teletype.shift_end", name, roleName), TeletypeMessageType.StaffWork, persist: false);
         }
 
         private void EnqueueMessage(string text, TeletypeMessageType type, bool persist)

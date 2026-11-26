@@ -13,10 +13,10 @@ public class DoBookkeepingExecutor : ActionExecutor
     {
         bookkeeper = staff as ClerkController;
         // Используем стол бухгалтера из реестра
-        var bookkeepingDesk = ScenePointsRegistry.Instance?.bookkeepingDesk;
+        var bookkeepingDesk = bookkeeper?.assignedWorkstation;
         
         if (bookkeeper == null || bookkeepingDesk == null || bookkeepingDesk.clerkStandPoint == null ||
-            bookkeeper.assignedWorkstation != bookkeepingDesk)
+            !actionData.AreConditionsMet(staff))
         {
             FinishAction(false); 
             yield break; 
@@ -29,30 +29,32 @@ public class DoBookkeepingExecutor : ActionExecutor
         
         bookkeeper.IsDoingBooks = true;
         bookkeeper.SetState(ClerkController.ClerkState.Working);
-        bookkeeper.thoughtBubble?.ShowPriorityMessage("Оптимизирую налоги...", 4f, Color.gray);
+        bookkeeper.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.accounts.taxes"), 4f, Color.gray);
         
         // Включаем бонус!
         // Чем выше навык PaperworkMastery, тем больше бонус (от 5% до 15%)
         float bonus = 0.05f + (bookkeeper.skills.paperworkMastery * 0.1f);
         if (PlayerWallet.Instance != null)
         {
-            PlayerWallet.Instance.SetAccountantBonus(bonus);
+            PlayerWallet.Instance.SetBookkeeperBonus(this, bonus);
             bonusApplied = true;
         }
 
-        while (true)
+        while (bookkeeper.assignedWorkstation == bookkeepingDesk && actionData.AreConditionsMet(staff))
         {
             // Каждые 5 секунд обновляем/проверяем
             yield return new WaitForSeconds(5f);
             
+            if (bookkeeper.assignedWorkstation != bookkeepingDesk || !actionData.AreConditionsMet(staff)) break;
             // Маленький шанс найти "заначку"
             if (Random.value < 0.05f)
             {
                 int foundMoney = Random.Range(10, 50);
-                PlayerWallet.Instance?.AddMoney(foundMoney, "Находка бухгалтера", IncomeType.Shadow);
-                bookkeeper.thoughtBubble?.ShowPriorityMessage("Хм, лишние деньги!", 2f, Color.green);
+                PlayerWallet.Instance?.AddMoney(foundMoney, UI.GameText.Get("ledger.accountant_find"), IncomeType.Shadow);
+                bookkeeper.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.accounts.extra"), 2f, Color.green);
             }
         }
+        FinishAction(true);
     }
 
     protected override void OnResourcesReleased()
@@ -61,7 +63,7 @@ public class DoBookkeepingExecutor : ActionExecutor
         // ВЫКЛЮЧАЕМ бонус
         if (bonusApplied && PlayerWallet.Instance != null)
         {
-            PlayerWallet.Instance.SetAccountantBonus(0f);
+            PlayerWallet.Instance.SetBookkeeperBonus(this, 0f);
         }
         bonusApplied = false;
 

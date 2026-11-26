@@ -26,6 +26,11 @@ public class WriteReportExecutor : ActionExecutor
         { FinishAction(false); yield break; }
 
         guard.SetState(GuardMovement.GuardState.WritingReport);
+        RegisterCleanup(() =>
+        {
+            if (guard != null && guard.GetCurrentState() == GuardMovement.GuardState.WritingReport)
+                guard.SetState(GuardMovement.GuardState.Idle);
+        });
         staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.writing_report"), 3f, Color.cyan);
 
         // Пишем отчет (время зависит от кол-ва очков)
@@ -55,7 +60,6 @@ public class WriteReportExecutor : ActionExecutor
         
         if (deposited > 0) staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guard.report_submitted"), 2f, Color.green);
 
-        guard.SetState(GuardMovement.GuardState.Idle);
         FinishAction(deposited > 0);
     }
 }

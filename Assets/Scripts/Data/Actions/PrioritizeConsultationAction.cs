@@ -18,8 +18,10 @@ public class PrioritizeConsultationAction : StaffAction
             return false;
         }
 
-        bool hasClientAtDesk = ClientSpawner.GetZoneByDeskId(registrar.assignedWorkstation.deskId).GetOccupyingClients().Any();
-        bool hasTargetInQueue = ClientQueueManager.Instance.queue.Any(c => c.Key != null && c.Key.mainGoal == ClientGoal.AskAndLeave);
+        if (registrar.assignedWorkstation == null) return false;
+        var zone = registrar.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
+        bool hasClientAtDesk = zone != null && zone.GetOccupyingClients().Any();
+        bool hasTargetInQueue = registrar.IsAvailableToServe && ClientQueueManager.Instance != null && ClientQueueManager.Instance.HasCallableClient(ClientGoal.AskAndLeave);
         
         return !hasClientAtDesk && hasTargetInQueue;
     }

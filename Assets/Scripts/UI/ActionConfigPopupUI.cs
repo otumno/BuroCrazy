@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Managers;
@@ -30,11 +29,13 @@ public class ActionConfigPopupUI : MonoBehaviour
     // ----------------------------------------------------------------------
 
     private StaffController currentStaff;
+    private readonly List<ServicePoint> workstationOptions = new();
+    private MainUIManager pauseOwner;
     private List<StaffAction> tempActiveActions = new List<StaffAction>();
 
     private void Awake()
     {
-        saveButton.onClick.AddListener(() => StartCoroutine(OnSave()));
+        saveButton.onClick.AddListener(OnSave);
         cancelButton.onClick.AddListener(OnCancel);
         // shiftDropdown.onValueChanged... // УДАЛЕНО
         
@@ -44,85 +45,59 @@ public class ActionConfigPopupUI : MonoBehaviour
 
     public void OpenForStaff(StaffController staff)
     {
+        if (staff == null) return;
+        if (pauseOwner == null && MainUIManager.Instance != null)
+        {
+            pauseOwner = MainUIManager.Instance;
+            pauseOwner.PushPause();
+        }
         currentStaff = staff;
         tempActiveActions = new List<StaffAction>(staff.activeActions ?? new List<StaffAction>());
         gameObject.SetActive(true);
 
-        if (currentRoleText != null) currentRoleText.text = staff.currentRole.ToString();
+        if (currentRoleText != null) currentRoleText.text = UI.StaffRoleNames.GetDisplayName(staff.currentRole);
         
-        PopulateWorkstationDropdown(currentStaff.currentRole);
+        PopulateWorkstationDropdown(currentStaff.assignedWorkstation);
         PopulateActionLists();
     }
 
     // Методы PopulateShiftDropdown и UpdateShiftInfoText УДАЛЕНЫ, так как UI элементы удалены
 
-    private IEnumerator OnSave()
+    private void OnEnable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
+
+    private void OnDisable()
     {
-        // Логику смен (WorkShiftMask) здесь больше НЕ трогаем, 
-        // она управляется напрямую через клики в StaffSchedulePanelUI.
+        UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+        if (pauseOwner != null) pauseOwner.PopPause();
+        pauseOwner = null;
+    }
 
-        // Сохранение роли и рабочего места
-        StaffController.Role currentRole = currentStaff.currentRole;
+    private ServicePoint SelectedWorkstation =>
+        workstationDropdown != null && workstationDropdown.value > 0 && workstationDropdown.value <= workstationOptions.Count
+            ? workstationOptions[workstationDropdown.value - 1] : null;
 
-        if (AssignmentManager.Instance != null && ScenePointsRegistry.Instance != null)
+    private void RefreshLocale(UnityEngine.Localization.Locale locale)
+    {
+        if (currentStaff == null) return;
+        if (currentRoleText != null) currentRoleText.text = UI.StaffRoleNames.GetDisplayName(currentStaff.currentRole);
+        PopulateWorkstationDropdown(SelectedWorkstation);
+        UpdateUIState();
+    }
+
+    private void OnSave()
+    {
+        if (currentStaff == null) { OnCancel(); return; }
+        currentStaff.activeActions = new List<StaffAction>(tempActiveActions);
+        var assignments = AssignmentManager.Instance;
+        if (workstationDropdown != null && workstationDropdown.gameObject.activeSelf && assignments != null &&
+            currentStaff.assignedWorkstation != SelectedWorkstation)
         {
-            if (workstationDropdown.gameObject.activeSelf && workstationDropdown.value > 0)
-            {
-                string selectedOptionText = workstationDropdown.options[workstationDropdown.value].text;
-                string friendlyNameFromDropdown = selectedOptionText.Split('(')[0].Trim();
-                
-                var selectedPoint = ScenePointsRegistry.Instance.allServicePoints?
-                    .FirstOrDefault(p => p != null && GetWorkstationFriendlyName(p) == friendlyNameFromDropdown);
-                
-                if (selectedPoint != null) 
-                { 
-                    AssignmentManager.Instance.AssignStaffToWorkstation(currentStaff, selectedPoint); 
-                }
-                else 
-                { 
-                    AssignmentManager.Instance.UnassignStaff(currentStaff); 
-                }
-            }
-            else 
-            { 
-                AssignmentManager.Instance.UnassignStaff(currentStaff); 
-            }
-        } 
-
-        // Пересборка компонента (Rebuild) через HiringManager
-        Coroutine rebuildCoroutine = null;
-        if (HiringManager.Instance != null)
-        {
-            rebuildCoroutine = HiringManager.Instance.AssignNewRole_Immediate(
-                currentStaff, 
-                currentRole, 
-                new List<StaffAction>(tempActiveActions)
-            );
+            if (SelectedWorkstation != null) assignments.AssignStaffToWorkstation(currentStaff, SelectedWorkstation);
+            else assignments.UnassignStaff(currentStaff);
+            currentStaff.ReturnToNewAssignment();
         }
-
-        if (rebuildCoroutine != null)
-        {
-            yield return rebuildCoroutine;
-            if (currentStaff != null)
-            {
-                currentStaff = currentStaff.gameObject.GetComponent<StaffController>(); 
-            } 
-        }
-        else 
-        { 
-            yield return null; 
-        }
-
-        gameObject.SetActive(false); // Закрываем панель
-        MainUIManager.Instance.PopPause();
-
-        HiringPanelUI hiringPanel = FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include);
-        if (hiringPanel != null) hiringPanel.RefreshTeamList();
-        
-        // Обновляем панель расписания, если она есть, чтобы отразить новые роли/имена
-        if (schedulePanel != null) schedulePanel.RebuildTable();
-
-        HiringManager.Instance?.CheckAllStaffShiftsImmediately();
+        OnCancel();
+        schedulePanel?.RefreshTable();
     }
 
     private void PopulateActionLists()
@@ -161,7 +136,7 @@ public class ActionConfigPopupUI : MonoBehaviour
     private void UpdateUIState()
     {
         int max = currentStaff.currentRank != null ? currentStaff.currentRank.maxActions : 0;
-        activeActionsHeaderText.text = $"Тактические действия ({tempActiveActions.Count}/{max})";
+        if (activeActionsHeaderText != null) activeActionsHeaderText.text = UI.GameText.Get("tactics.count", tempActiveActions.Count, max);
     }
 
     public bool CanAddAction()
@@ -180,16 +155,9 @@ public class ActionConfigPopupUI : MonoBehaviour
         PopulateActionLists();
     }
 
-    private bool _isClosing = false;
-
-    public void OnCancel() {
-        if (_isClosing || !gameObject.activeInHierarchy) return;
-        _isClosing = true;
-        
+    public void OnCancel()
+    {
         gameObject.SetActive(false);
-        MainUIManager.Instance.PopPause();
-        
-        _isClosing = false;
     }
 
     /// <summary>
@@ -201,58 +169,26 @@ public class ActionConfigPopupUI : MonoBehaviour
         {
             DirectorAvatarController.Instance.GiveOrder(currentStaff, action);
         }
-        gameObject.SetActive(false);
-        MainUIManager.Instance.PopPause();
+        OnCancel();
     }
 
-    private void PopulateWorkstationDropdown(StaffController.Role role)
+    private void PopulateWorkstationDropdown(ServicePoint selected)
     {
+        if (workstationDropdown == null) return;
+        workstationOptions.Clear();
         workstationDropdown.ClearOptions();
-        List<string> options = new List<string> { "Не назначено" };
-        
-        if (ScenePointsRegistry.Instance != null)
+        var registry = ScenePointsRegistry.Instance;
+        if (registry != null)
+            workstationOptions.AddRange(registry.allServicePoints.Where(p => p == currentStaff.assignedWorkstation && p != null || AssignmentManager.CanAssignTo(currentStaff, p)));
+        workstationDropdown.gameObject.SetActive(workstationOptions.Count > 0);
+        var options = new List<string> { UI.GameText.Get("tactics.unassigned") };
+        foreach (var point in workstationOptions)
         {
-            var points = ScenePointsRegistry.Instance.allServicePoints.Where(p => GetRoleForDeskId(p.deskId) == role).ToList();
-            if (points.Any())
-            {
-                workstationDropdown.gameObject.SetActive(true);
-                foreach (var p in points)
-                {
-                    string name = !string.IsNullOrEmpty(p.friendlyName) ? p.friendlyName : p.name;
-                    var owner = AssignmentManager.Instance?.GetAssignedStaff(p);
-                    if (owner != null && owner != currentStaff) name += $" (Занят: {owner.characterName})";
-                    options.Add(name);
-                }
-                workstationDropdown.AddOptions(options);
-                
-                int currentIdx = 0;
-                if (currentStaff.assignedWorkstation != null)
-                {
-                    int found = points.IndexOf(currentStaff.assignedWorkstation);
-                    if (found >= 0) currentIdx = found + 1;
-                }
-                workstationDropdown.SetValueWithoutNotify(currentIdx);
-            }
-            else
-            {
-                workstationDropdown.gameObject.SetActive(false);
-            }
+            string name = CharacterActivityOverlay.DeskName(point);
+            var owner = AssignmentManager.Instance?.GetAssignedStaff(point);
+            options.Add(owner != null && owner != currentStaff ? UI.GameText.Get("tactics.occupied", name, owner.characterName) : name);
         }
-    }
-
-    private StaffController.Role GetRoleForDeskId(int id)
-    {
-        if (id == 0) return StaffController.Role.Registrar;
-        if (id == -1) return StaffController.Role.Cashier;
-        if (id == 1 || id == 2) return StaffController.Role.Clerk;
-        if (id == 3) return StaffController.Role.Archivist;
-        if (id == 4) return StaffController.Role.Accountant;
-        return StaffController.Role.Unassigned;
-    }
-	
-	private string GetWorkstationFriendlyName(ServicePoint point)
-    {
-        if (point == null) return "Неизвестно";
-        return !string.IsNullOrEmpty(point.friendlyName) ? point.friendlyName : point.name;
+        workstationDropdown.AddOptions(options);
+        workstationDropdown.SetValueWithoutNotify(workstationOptions.IndexOf(selected) + 1);
     }
 }

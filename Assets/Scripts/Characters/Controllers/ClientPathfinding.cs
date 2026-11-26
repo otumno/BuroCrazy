@@ -520,12 +520,7 @@ public class ClientPathfinding : MonoBehaviour
         stateMachine.StopAllActionCoroutines();
         GetComponent<AgentMover>()?.Stop();
 
-        LimitedCapacityZone currentZone = stateMachine.GetCurrentGoal()?.GetComponentInParent<LimitedCapacityZone>();
-        if(currentZone != null)
-        {
-            currentZone.LeaveQueue(gameObject);
-            currentZone.ReleaseWaypoint(stateMachine.GetCurrentGoal());
-        }
+        stateMachine.ReleaseZoneReservation();
         ClientQueueManager.Instance?.RemoveClientFromQueue(this);
         if(ClientQueueManager.Instance != null && ClientQueueManager.Instance.dissatisfiedClients.Contains(this))
         {

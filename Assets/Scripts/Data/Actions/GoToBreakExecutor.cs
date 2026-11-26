@@ -43,7 +43,6 @@ public class GoToBreakExecutor : ActionExecutor
             yield break;
         }
 
-        staff.ClearNeedActivity();
         OnResourcesReleased();
         occupiedPoint = null;
         yield return ReturnToWorkstation();

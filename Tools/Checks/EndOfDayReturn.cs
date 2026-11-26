@@ -17,7 +17,6 @@ public static class EndOfDayReturnCheck
         if (Application.isPlaying) throw new InvalidOperationException("Run outside Play Mode.");
         CheckSceneReferences();
         var scene = EditorSceneManager.NewPreviewScene();
-        var planningWasOpen = ShiftPlanning.IsOpen;
         DocumentStackTransfer transfer = null;
         try
         {
@@ -39,9 +38,8 @@ public static class EndOfDayReturnCheck
             var archive = Make("Archive", scene).AddComponent<ArchiveManager>();
             var overflow = Make("Overflow", scene).transform;
             archive.overflowPoints = new List<Transform> { overflow };
-            Require(archive.RequestDropOffPoint() == overflow, "Cannot reserve overflow.");
-            Set(director, "deliveryArchive", archive);
-            Set(director, "deliveryPoint", overflow);
+            var delivery = transfer.DeliverToArchive(archive, director.transform, position => null);
+            Require(delivery.MoveNext(), "Director failed to start the trip to overflow.");
             director.SetState(DirectorAvatarController.DirectorState.CarryingDocuments);
             director.SetUninterruptible(true);
             var body = directorObject.GetComponent<Rigidbody2D>();
@@ -60,20 +58,12 @@ public static class EndOfDayReturnCheck
             director.ReturnToDeskAfterDayEnd();
             Require(source.CurrentSize == 2, "Repeated return duplicated papers.");
 
-            var row = Make("ScheduleRow", scene).AddComponent<StaffScheduleRowUI>();
-            Set(row, "_staff", director);
-            Set(row, "_isEditable", true);
-            director.WorkShiftMask = Data.Calendar.CalendarDayPeriodType.Morning;
-            ShiftPlanning.Close();
-            row.StartShiftAnimation(null);
-            Require(director.WorkShiftMask == Data.Calendar.CalendarDayPeriodType.Morning, "Stale editable row changed a daytime shift.");
-            return "PASS: scene sequence/buttons/calendar, director state and physics, document rollback into full source, overflow release, repeated return and daytime lock.";
+            return "PASS: scene sequence/buttons/calendar, director state and physics, document rollback into full source, overflow release, repeated return, statistics directly followed by an order.";
         }
         finally
         {
             transfer?.Dispose();
             EditorSceneManager.ClosePreviewScene(scene);
-            if (planningWasOpen) ShiftPlanning.Open(); else ShiftPlanning.Close();
         }
     }
 
@@ -82,25 +72,43 @@ public static class EndOfDayReturnCheck
         string path = AssetDatabase.FindAssets("GameScene t:Scene").Select(AssetDatabase.GUIDToAssetPath)
             .Single(p => p.EndsWith("/GameScene.unity"));
         var scene = EditorSceneManager.OpenPreviewScene(path);
+        var originalLocale = UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale;
         try
         {
+            UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale = UnityEngine.Localization.Settings.LocalizationSettings.AvailableLocales.GetLocale("en");
             var components = scene.GetRootGameObjects().SelectMany(g => g.GetComponentsInChildren<MonoBehaviour>(true)).ToArray();
             var sequence = components.OfType<EndOfDaySequence>().Single();
             Require(sequence.gameObject.activeInHierarchy && sequence.enabled, "End-of-day sequence disabled.");
             var serialized = new SerializedObject(sequence);
-            foreach (var name in new[] { "bookkeepingPanel", "schedulePanel", "orderSelection" })
+            foreach (var name in new[] { "bookkeepingPanel", "orderSelection" })
                 Require(serialized.FindProperty(name).objectReferenceValue != null, "Missing sequence reference: " + name);
-            foreach (var name in new[] { "bookkeepingPanel", "schedulePanel" })
-            {
-                var panel = serialized.FindProperty(name).objectReferenceValue;
-                var panelData = new SerializedObject(panel);
-                var button = (UnityEngine.UI.Button)panelData.FindProperty("nextButton").objectReferenceValue;
-                if (name == "schedulePanel" && button == null)
-                    button = (UnityEngine.UI.Button)panelData.FindProperty("closeButton").objectReferenceValue;
-                Require(button != null, "Missing Next button: " + name);
-                if (name == "bookkeepingPanel")
-                    Require(button.GetComponentInChildren<TMPro.TMP_Text>(true).text.Contains("Далее"), "Next button label: " + name);
-            }
+            Require(serialized.FindProperty("schedulePanel") == null, "Night sequence still depends on the schedule.");
+            var panelData = new SerializedObject(serialized.FindProperty("bookkeepingPanel").objectReferenceValue);
+            var button = (UnityEngine.UI.Button)panelData.FindProperty("nextButton").objectReferenceValue;
+            Require(button != null, "Missing Next button on statistics.");
+            var label = button.GetComponentInChildren<TMPro.TMP_Text>(true);
+            var binding = label.GetComponent<UnityEngine.Localization.Components.LocalizeStringEvent>();
+            Require(binding != null && binding.StringReference.TableEntryReference.Key == "ui.common.next" &&
+                binding.OnUpdateString.GetPersistentTarget(0) == label, "Next button label binding invalid.");
+            var orders = components.OfType<OrderManager>().Single();
+            var card = components.OfType<OrderCardUI>().First();
+            var daily = orders.allPossibleOrders.Where(o => o != null && o.duration == OrderDuration.SingleDay).ToArray();
+            Require(daily.Length >= 2, "Daily choice missing.");
+            orders.SelectOrder(daily[0]);
+            card.Setup(daily[1], orders.SelectOrderForNextDay);
+            var cardData = new SerializedObject(card);
+            var description = (TMPro.TMP_Text)cardData.FindProperty("descriptionText").objectReferenceValue;
+            Require(description != null && !string.IsNullOrEmpty(description.text), "Missing order description: " + card.name + " / " + daily[1].name);
+            Require(description.text.Contains(daily[1].allowedDirectorErrorRate.ToString("0.#%")), "Daily card hides the allowed error rate.");
+            var select = (UnityEngine.UI.Button)cardData.FindProperty("selectButton").objectReferenceValue;
+            select.onClick.Invoke();
+            Require(orders.PendingOrder == daily[1] && orders.AllowedDirectorErrorRate == daily[0].allowedDirectorErrorRate,
+                "Evening choice replaced the outgoing day.");
+            orders.RestoreSelection(orders.activeOrders.ToArray(), orders.PendingOrder, true);
+            orders.BeginNextDay();
+            Require(orders.PendingOrder == null && orders.HasSelectedOrderForDay && orders.activeOrders.Count(o => o == daily[1]) == 1 &&
+                !orders.activeOrders.Contains(daily[0]) && orders.AllowedDirectorErrorRate == daily[1].allowedDirectorErrorRate,
+                "Restored evening order failed to take effect on the next day.");
             var clock = components.OfType<TimeManager>().Single();
             var periods = clock.mainCalendarDay.periodSettings;
             Require(periods[0].PeriodType == Data.Calendar.CalendarDayPeriodType.EndNight &&
@@ -108,7 +116,7 @@ public static class EndOfDayReturnCheck
                 "Calendar wrap is not between night halves.");
             Require(components.OfType<DirectorAvatarController>().Single().directorChairPoint != null, "Director desk return point missing.");
         }
-        finally { EditorSceneManager.ClosePreviewScene(scene); }
+        finally { UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale = originalLocale; EditorSceneManager.ClosePreviewScene(scene); }
     }
 
     private static GameObject Make(string name, Scene scene)

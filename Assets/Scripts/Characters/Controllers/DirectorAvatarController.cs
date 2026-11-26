@@ -42,8 +42,6 @@ public class DirectorAvatarController : StaffController, IServiceProvider
     private Coroutine workCoroutine;
     private bool isManuallyWorking = false;
     private DocumentStackTransfer documentTransfer;
-    private ArchiveManager deliveryArchive;
-    private Transform deliveryPoint;
     private System.Action manualServiceCleanup;
 
     private ClientPathfinding clientBeingServed = null;
@@ -311,7 +309,7 @@ public class DirectorAvatarController : StaffController, IServiceProvider
             interruptedClient?.stateMachine?.CancelServiceCall(this);
             currentWorkstation.ClearClient(interruptedClient);
             // Снимаем Директора с этого стола в ClientSpawner
-            ClientSpawner.UnassignServiceProviderFromDesk(currentWorkstation.deskId);
+            ClientSpawner.UnassignServiceProviderFromDesk(currentWorkstation, this);
              Debug.Log($"[DirectorController] {characterName} снят с рабочего места {currentWorkstation.name} (ID: {currentWorkstation.deskId}).");
             // Если нужно отойти от стола
             if (moveAway && currentWorkstation.clerkStandPoint != null) // Добавлена проверка на null
@@ -507,9 +505,6 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     {
         documentTransfer?.Dispose();
         documentTransfer = null;
-        if (deliveryArchive != null && deliveryPoint != null) deliveryArchive.FreeOverflowPoint(deliveryPoint);
-        deliveryArchive = null;
-        deliveryPoint = null;
         stackHolder?.HideStack();
     }
 
@@ -623,7 +618,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         }
         // ------------------------------------
 
-        ClientSpawner.AssignServiceProviderToDesk(this, workstation.deskId);
+        ClientSpawner.AssignServiceProviderToDesk(this, workstation);
         isManuallyWorking = true; 
         Debug.Log($"[DirectorController] {characterName} назначен на {workstation.name}.");
 
@@ -702,7 +697,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
                 // 2. БРОНЕБОЙНАЯ ТЯГА (Ищем неприкаянных клиентов в зоне стола)
                 if (clientToServe == null)
                 {
-                    var zone = ClientSpawner.GetZoneByDeskId(workstation.deskId);
+                    var zone = workstation.GetComponentInParent<LimitedCapacityZone>();
                     if (zone != null)
                     {
                         clientToServe = zone.GetOccupyingClients().FirstOrDefault(c =>
@@ -865,7 +860,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
         var sourceDesk = source.GetComponentInParent<ServicePoint>();
         var pickup = sourceDesk != null && sourceDesk.internCollectionPoint != null ? sourceDesk.internCollectionPoint : source.transform;
         yield return MoveToTargetRoutine(pickup.position);
-        if (source == null || pickup == null || Vector2.Distance(transform.position, pickup.position) > 1f) yield break;
+        if (source == null || pickup == null || !ArchiveManager.IsWithinReach(transform, pickup.position)) yield break;
         var transfer = new DocumentStackTransfer(source, 1);
         System.Action cleanup = () => { transfer.Dispose(); stackHolder?.HideStack(); };
         manualServiceCleanup = cleanup;
@@ -874,7 +869,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             if (transfer.Count == 0) yield break;
             stackHolder?.ShowSingleDocumentSprite();
             yield return MoveToTargetRoutine(cabinet.transform.position);
-            if (cabinet == null || Vector2.Distance(transform.position, cabinet.transform.position) > 1f) yield break;
+            if (cabinet == null || !ArchiveManager.IsWithinReach(transform, cabinet.transform.position)) yield break;
             SetState(DirectorState.WorkingAtStation);
             thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.filing"), 1f, Color.gray);
             yield return new WaitForSeconds(1f);
@@ -981,7 +976,7 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
     private IEnumerator CollectAndDeliverRoutine(DocumentStack stack)
     {
         var archive = ArchiveManager.Instance;
-        if (stack == null || archive == null) yield break;
+        if (stack == null || archive == null || archive.OwnsStack(stack)) yield break;
         SetUninterruptible(true);
         SetState(DirectorState.GoingForDocuments);
         try
@@ -990,21 +985,14 @@ private IEnumerator GoToBoardRoutine(Gameplay.NoticeBoard board)
             if (stack == null || Vector2.Distance(transform.position, stack.transform.position) > 1f)
                 yield break;
 
-            deliveryArchive = archive;
-            deliveryPoint = archive.RequestDropOffPoint();
-            if (deliveryPoint == null) yield break;
-
             // Preserve the actual papers and their save identities. Taking a numeric count
             // destroyed them, lost overflow, and left nothing to restore on a night teleport.
             documentTransfer = new DocumentStackTransfer(stack, stack.OrdinaryDocumentCount);
             if (documentTransfer.Count == 0) yield break;
-            stackHolder?.ShowStack(documentTransfer.Count, stack.maxStackSize);
+            int pickedUp = documentTransfer.Count;
             SetState(DirectorState.CarryingDocuments);
-            yield return MoveToTargetRoutine(deliveryPoint.position);
-            if (deliveryPoint == null || Vector2.Distance(transform.position, deliveryPoint.position) > 1f)
-                yield break;
-
-            int delivered = documentTransfer.DeliverTo(archive.GetDropOffStack(deliveryPoint));
+            yield return documentTransfer.DeliverToArchive(archive, transform, position => MoveToTargetRoutine(position), stackHolder);
+            int delivered = pickedUp - documentTransfer.Count;
             Debug.Log($"[DirectorDocumentTrace] Доставлено в архив: {delivered}; возвращено на исходный стол: {documentTransfer.Count}.");
         }
         finally

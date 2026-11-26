@@ -177,16 +177,21 @@ public sealed class CharacterActivityOverlay : MonoBehaviour
         }
     }
 
-    public static string DeskName(ServicePoint desk) => desk == null ? UI.GameText.Get("place.workstation") :
-        !string.IsNullOrWhiteSpace(desk.friendlyName) ? desk.friendlyName : desk.deskId switch
+    public static string DeskName(ServicePoint desk)
+    {
+        if (desk == null) return UI.GameText.Get("place.workstation");
+        if (!string.IsNullOrWhiteSpace(desk.friendlyName))
+            return UI.GameText.GetAssetText("place.desk." + desk.name, desk.friendlyName);
+        return UI.GameText.Get(desk.deskId switch
         {
-            0 => UI.GameText.Get("place.registration"), -1 => UI.GameText.Get("place.cashier"), 1 => UI.GameText.Get("place.desk1"), 2 => UI.GameText.Get("place.desk2"), 3 => UI.GameText.Get("place.archive"), _ => UI.GameText.Get("place.workstation")
-        };
+            0 => "place.registration", -1 => "place.cashier", 1 => "place.desk1", 2 => "place.desk2",
+            3 => "place.archive", 4 => "place.bookkeeping", _ => "place.workstation"
+        });
+    }
 
-    private static string PlaceName(Waypoint point)
+    public static string PlaceName(Waypoint point)
     {
         if (point == null) return UI.GameText.Get("place.destination");
-        if (!string.IsNullOrWhiteSpace(point.friendlyName)) return point.friendlyName;
         var registry = ScenePointsRegistry.Instance;
         if (registry != null)
         {
@@ -195,6 +200,8 @@ public sealed class CharacterActivityOverlay : MonoBehaviour
             if (registry.toiletPoints.Contains(point)) return UI.GameText.Get("place.toilet");
             if (registry.kitchenPoints.Contains(point)) return UI.GameText.Get("place.break");
         }
+        if (!string.IsNullOrWhiteSpace(point.friendlyName))
+            return UI.GameText.GetAssetText("place.label." + point.friendlyName, point.friendlyName);
         string key = point.name.ToLowerInvariant();
         if (key.Contains("toilet")) return UI.GameText.Get("place.toilet");
         if (key.Contains("exit")) return UI.GameText.Get("place.exit");
@@ -203,13 +210,6 @@ public sealed class CharacterActivityOverlay : MonoBehaviour
         return UI.GameText.Get("place.waypoint");
     }
 
-    public static string RoleName(StaffController.Role role) => role switch
-    {
-        StaffController.Role.Director => UI.GameText.Get("role.director"), StaffController.Role.Intern => UI.GameText.Get("role.intern"),
-        StaffController.Role.Registrar => UI.GameText.Get("role.registrar"), StaffController.Role.Cashier => UI.GameText.Get("role.cashier"),
-        StaffController.Role.Archivist => UI.GameText.Get("role.archivist"), StaffController.Role.Guard => UI.GameText.Get("role.guard"),
-        StaffController.Role.Janitor => UI.GameText.Get("role.janitor"), StaffController.Role.ServiceWorker => UI.GameText.Get("role.service_worker"),
-        StaffController.Role.Clerk => UI.GameText.Get("role.clerk"), StaffController.Role.OfficeManager => UI.GameText.Get("role.office_manager"),
-        StaffController.Role.Accountant => UI.GameText.Get("role.accountant"), _ => UI.GameText.Get("role.staff")
-    };
+    public static string RoleName(StaffController.Role role) => role == StaffController.Role.Unassigned
+        ? UI.GameText.Get("role.staff") : UI.StaffRoleNames.GetDisplayName(role);
 }

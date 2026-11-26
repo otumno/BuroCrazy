@@ -22,11 +22,13 @@ namespace Managers
         public void AssignStaffToWorkstation(StaffController staff, ServicePoint workstation)
         {
             if (staff == null || workstation == null) return;
+            if (GetAssignedStaff(workstation) == staff && staff.assignedWorkstation == workstation) return;
 
             // Если сотрудник раньше был на другом месте, освобождаем его
             var oldAssignment = assignments.FirstOrDefault(kvp => kvp.Value == staff);
             if (oldAssignment.Key != null)
             {
+                if (staff is IServiceProvider provider) ClientSpawner.UnassignServiceProviderFromDesk(oldAssignment.Key, provider);
                 oldAssignment.Key.ClearAssignedStaff();
                 assignments.Remove(oldAssignment.Key);
             }
@@ -37,6 +39,7 @@ namespace Managers
                 var previousOwner = assignments[workstation];
                 if (previousOwner != null)
                 {
+                    if (previousOwner is IServiceProvider displaced) ClientSpawner.UnassignServiceProviderFromDesk(workstation, displaced);
                     previousOwner.assignedWorkstation = null;
                 }
                 assignments.Remove(workstation);
@@ -57,10 +60,11 @@ namespace Managers
             if (staff.assignedWorkstation != null) return true;
 
             // Ищем все точки
-            var allPoints = ScenePointsRegistry.Instance.allServicePoints;
+            var allPoints = ScenePointsRegistry.Instance?.allServicePoints;
+            if (allPoints == null) return false;
             
             // Фильтруем точки, подходящие по роли
-            var suitablePoints = allPoints.Where(p => IsPointSuitableForRole(p, staff.currentRole)).ToList();
+            var suitablePoints = allPoints.Where(p => CanAssignTo(staff, p)).ToList();
 
             // Ищем первую свободную
             foreach (var point in suitablePoints)
@@ -75,15 +79,18 @@ namespace Managers
             return false;
         }
 
-        private bool IsPointSuitableForRole(ServicePoint point, StaffController.Role role)
+        public static bool CanAssignTo(StaffController staff, ServicePoint point)
         {
-            switch (role)
+            if (staff == null || point == null) return false;
+            switch (staff.currentRole)
             {
                 case StaffController.Role.Registrar: 
-                    return point.deskId == 0;
+                    return point.deskId == 0 && point.clientStandPoint != null;
                 
                 case StaffController.Role.Clerk: 
-                    return point.deskId == 1 || point.deskId == 2;
+                    var skills = staff.currentRank?.unlockedActions;
+                    return point.deskId == 1 && (skills == null || skills.Any(a => a is ProcessDocumentCat1Action)) ||
+                           point.deskId == 2 && (skills == null || skills.Any(a => a is ProcessDocumentCat2Action));
                 
                 case StaffController.Role.Cashier: 
                     return point.deskId == -1;
@@ -115,6 +122,7 @@ namespace Managers
             if (workstationAssignment.Key != null)
             {
                 assignments.Remove(workstationAssignment.Key);
+                if (staff is IServiceProvider provider) ClientSpawner.UnassignServiceProviderFromDesk(workstationAssignment.Key, provider);
                 workstationAssignment.Key.ClearAssignedStaff();
                 staff.assignedWorkstation = null;
                 Debug.Log($"[AssignmentManager] Сотрудник {staff.characterName} снят с рабочего места {workstationAssignment.Key.name}");
@@ -129,7 +137,9 @@ namespace Managers
             if (assignments.TryGetValue(workstation, out var staff))
             {
                 assignments.Remove(workstation);
-                if(staff != null) staff.assignedWorkstation = null;
+                if (staff is IServiceProvider provider) ClientSpawner.UnassignServiceProviderFromDesk(workstation, provider);
+                workstation.ClearAssignedStaff();
+                if (staff != null) staff.assignedWorkstation = null;
                 Debug.Log($"[AssignmentManager] Рабочее место {workstation.name} освобождено");
             }
         }

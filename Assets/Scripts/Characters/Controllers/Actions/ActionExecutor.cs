@@ -53,12 +53,20 @@ public abstract class ActionExecutor : MonoBehaviour
 
     protected IEnumerator ReturnToWorkstation()
     {
-        var point = staff.assignedWorkstation != null ? staff.assignedWorkstation.clerkStandPoint : null;
-        if (point == null) yield break;
-        staff.CurrentSubStatus = UI.GameText.Get("staff.action.return_to_desk");
-        yield return staff.MoveToTarget(point.position, "Working");
-        if (staff is IServiceProvider provider && Vector2.Distance(staff.transform.position, point.position) < 1f)
-            Managers.ClientSpawner.AssignServiceProviderToDesk(provider, staff.assignedWorkstation.deskId);
+        while (staff.assignedWorkstation != null)
+        {
+            var desk = staff.assignedWorkstation;
+            var point = desk.clerkStandPoint;
+            if (point == null) break;
+            staff.CurrentSubStatus = UI.GameText.Get("staff.action.return_to_desk");
+            yield return staff.MoveToTarget(point.position, "Working");
+            // A live reassignment can change the destination while the employee is walking back.
+            if (staff.assignedWorkstation != desk) continue;
+            if (desk != null && point != null && staff is IServiceProvider provider &&
+                Vector2.Distance(staff.transform.position, point.position) < 1f)
+                Managers.ClientSpawner.AssignServiceProviderToDesk(provider, desk);
+            break;
+        }
         staff.CurrentSubStatus = "";
     }
 
@@ -151,6 +159,19 @@ public abstract class ActionExecutor : MonoBehaviour
 
             staff.OnExecutorFinished(this, actionData, success);
         }
+        RemoveFinishedExecutor();
+    }
+
+    private void RemoveFinishedExecutor()
+    {
+#if UNITY_EDITOR
+        // Edit Mode has no end-of-frame destruction queue. Only dispose synchronously on isolated preview objects.
+        if (!Application.isPlaying && UnityEditor.SceneManagement.EditorSceneManager.IsPreviewSceneObject(gameObject))
+        {
+            DestroyImmediate(this);
+            return;
+        }
+#endif
         Destroy(this);
     }
 
@@ -193,6 +214,6 @@ public abstract class ActionExecutor : MonoBehaviour
             staff.OnExecutorFinished(this, actionData, false);
         }
         
-        Destroy(this);
+        RemoveFinishedExecutor();
     }
 }

@@ -109,10 +109,12 @@ public class ClerkController : StaffController, IServiceProvider
     protected override IEnumerator GoToWorkstationRoutine()
     {
         // 1. Идем к столу (используем базовую логику)
+        var desk = assignedWorkstation;
         yield return base.GoToWorkstationRoutine();
         
         // 2. Когда дошли — "включаемся" в работу
-        if (assignedWorkstation != null)
+        if (desk != null && assignedWorkstation == desk && desk.clerkStandPoint != null &&
+            Vector2.Distance(transform.position, desk.clerkStandPoint.position) < 1f && IsOnDuty())
         {
             // --- ПРИНУДИТЕЛЬНАЯ ИНЪЕКЦИЯ НАВЫКОВ ДЛЯ REGISTRAR ---
             // Обеспечиваем минимальные навыки для корректной работы системы обслуживания
@@ -123,7 +125,7 @@ public class ClerkController : StaffController, IServiceProvider
                 Debug.Log($"[ClerkController] {characterName} (Registrar): принудительно установлены навыки paperwork={skills.paperworkMastery}, softSkills={skills.softSkills}");
             }
             
-            ClientSpawner.AssignServiceProviderToDesk(this, assignedWorkstation.deskId);
+            ClientSpawner.AssignServiceProviderToDesk(this, assignedWorkstation);
             SetState(ClerkState.Working);
             Debug.Log($"[ClerkController] {characterName} занял стол {assignedWorkstation.name} и готов принимать клиентов!");
         }
@@ -131,7 +133,7 @@ public class ClerkController : StaffController, IServiceProvider
 
     #region IServiceProvider Implementation
     public bool IsAvailableToServe => gameObject.activeInHierarchy && IsOnDuty() && !IsMoving && !IsOnBreak() && (currentState == ClerkState.Working || currentState == ClerkState.ChairPatrol);
-    public Transform GetClientStandPoint() => assignedWorkstation != null ? assignedWorkstation.clientStandPoint.transform : transform;
+    public Transform GetClientStandPoint() => assignedWorkstation != null && assignedWorkstation.clientStandPoint != null ? assignedWorkstation.clientStandPoint.transform : transform;
     public ServicePoint GetWorkstation() => assignedWorkstation;
 
     public void AssignClient(ClientPathfinding client)

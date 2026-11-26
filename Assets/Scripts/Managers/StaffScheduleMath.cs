@@ -20,12 +20,26 @@ namespace Managers
         {
             var mask = CalendarDayPeriodType.None;
             if (periods == null || current < 0 || current >= periods.Count) return mask;
-            for (int i = current + 1; i < periods.Count && count > 0; i++, count--)
+            for (int i = current; i < periods.Count && count > 0; i++, count--)
             {
                 if (periods[i].PeriodType.IsNight()) break;
                 mask |= periods[i].PeriodType;
             }
             return mask;
+        }
+
+        // A temporary contract cannot sell the same period twice. Past work and a period already in progress stay paid.
+        public static CalendarDayPeriodType MoveTemporaryShift(IReadOnlyList<PeriodSettings> periods, CalendarDayPeriodType mask,
+            int current, int start, bool workingNow)
+        {
+            if (periods == null || current < 0 || start < current || start >= periods.Count || periods[start].PeriodType.IsNight())
+                return mask;
+            var committed = CalendarDayPeriodType.None;
+            int firstMovable = current + (workingNow && (mask & periods[current].PeriodType) != 0 ? 1 : 0);
+            for (int i = 0; i < firstMovable; i++) committed |= mask & periods[i].PeriodType;
+            int remaining = CountPeriods(mask & ~committed);
+            var moved = BuildTemporaryShift(periods, Mathf.Max(firstMovable, start), remaining);
+            return CountPeriods(moved) == remaining ? committed | moved : mask;
         }
 
         public static int CountPeriods(CalendarDayPeriodType mask)

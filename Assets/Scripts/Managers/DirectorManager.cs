@@ -199,13 +199,7 @@ namespace Managers
                 return;
 
             float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
-            float allowedError = 1.0f; 
-
-            // Теперь берем данные из OrderManager
-            if (OrderManager.Instance.currentMandates.Any())
-            {
-                allowedError = OrderManager.Instance.currentMandates[0].allowedDirectorErrorRate;
-            }
+            float allowedError = OrderManager.Instance.AllowedDirectorErrorRate;
 
             if (averageError > allowedError)
             {
@@ -216,15 +210,17 @@ namespace Managers
             DocumentQualityManager.Instance.ResetDay();
         }
 
+        private void CheckFinishedDay() => EvaluateEndOfDayStrikes(TimeManager.Instance.GetCurrentDay());
+
         private void Start()
         {
-            TimeManager.Instance.OnDayChanged += EvaluateEndOfDayStrikes;
+            if (TimeManager.Instance != null) TimeManager.Instance.DayEnding += CheckFinishedDay;
         }
 
         private void OnDestroy()
         {
             if (TimeManager.Instance)
-                TimeManager.Instance.OnDayChanged -= EvaluateEndOfDayStrikes;
+                TimeManager.Instance.DayEnding -= CheckFinishedDay;
         }
     }
 }

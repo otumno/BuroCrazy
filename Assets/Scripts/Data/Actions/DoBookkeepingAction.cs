@@ -14,15 +14,17 @@ public class DoBookkeepingAction : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (!(staff is ClerkController clerk) || clerk.clerkRole != ClerkController.ClerkRole.Accountant || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
+        if (!(staff is ClerkController clerk) || (clerk.clerkRole != ClerkController.ClerkRole.Accountant && clerk.clerkRole != ClerkController.ClerkRole.Cashier) || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
         {
             return false;
         }
         
-        if (ScenePointsRegistry.Instance == null || ScenePointsRegistry.Instance.bookkeepingDesk == null)
+        if (clerk.activeActions != null && clerk.activeActions.Exists(a => a is Action_ProcessProjectDocument && a.AreConditionsMet(clerk)))
             return false;
 
-        return true;
+        if (clerk.clerkRole == ClerkController.ClerkRole.Cashier)
+            return clerk.assignedWorkstation.deskId == -1 && clerk.assignedWorkstation.CurrentClient == null;
+        return clerk.assignedWorkstation == ScenePointsRegistry.Instance?.bookkeepingDesk;
     }
 
     public override System.Type GetExecutorType()

@@ -15,6 +15,18 @@ namespace UI
         private readonly List<StaffController> roster = new();
         private readonly List<StaffController> removed = new();
         private float nextRefresh;
+        private int displayedCount = -1;
+        private UnityEngine.Localization.Locale displayedLocale;
+
+        private void Awake()
+        {
+            var emptyText = emptyLabel != null ? emptyLabel.GetComponentInChildren<TMP_Text>(true) : null;
+            if (emptyText != null)
+            {
+                var label = emptyText.GetComponent<LocalizedText>() ?? emptyText.gameObject.AddComponent<LocalizedText>();
+                label.SetReference(GameText.Table, "shift.empty");
+            }
+        }
 
         private void OnEnable() => nextRefresh = 0;
 
@@ -55,7 +67,13 @@ namespace UI
                 row.transform.SetSiblingIndex(i);
                 row.Refresh();
             }
-            title.text = $"На смене · {roster.Count}";
+            var locale = UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocale;
+            if (displayedCount != roster.Count || displayedLocale != locale)
+            {
+                title.text = GameText.Get("shift.title", roster.Count);
+                displayedCount = roster.Count;
+                displayedLocale = locale;
+            }
             emptyLabel.SetActive(roster.Count == 0);
         }
     }

@@ -22,7 +22,7 @@ public class HandleSituationExecutor : ActionExecutor
                     HandleSituationAction handleAction = actionData as HandleSituationAction;
                     if (handleAction != null && distanceToClient < handleAction.remoteHelpRadius)
                     {
-                        staff.thoughtBubble?.ShowPriorityMessage("Молодой человек, вам куда?", 3f, Color.cyan);
+                        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guide.greeting"), 3f, Color.cyan);
                         yield return new WaitForSeconds(2f);
 
                         Waypoint correctGoal = DetermineCorrectGoalForClient(confusedClient);
@@ -54,7 +54,7 @@ public class HandleSituationExecutor : ActionExecutor
         // Устанавливаем визуальный статус
         if (staff is InternController intern) intern.SetState(InternController.InternState.HelpingConfused);
 
-        staff.thoughtBubble?.ShowPriorityMessage("Вижу, нужна помощь...", 2f, Color.cyan);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guide.offer"), 2f, Color.cyan);
 
         staff.AgentMover.SetPath(PathfindingUtility.BuildPathTo(staff.transform.position, clientToHelp.transform.position, staff.gameObject));
         
@@ -78,27 +78,27 @@ public class HandleSituationExecutor : ActionExecutor
         {
             // Мы застряли (бодались с кем-то 15 секунд)!
             staff.AgentMover.Stop();
-            staff.thoughtBubble?.ShowPriorityMessage("Не могу пройти!", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guide.blocked"), 2f, Color.red);
             clientToHelp.assignedHelper = null; // Освобождаем клиента для других
             FinishAction(false);
             yield break;
         }
         // --------------------------------------
 
-        staff.thoughtBubble?.ShowPriorityMessage("Вам куда?", 2f, Color.white);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.guide.ask"), 2f, Color.white);
         yield return new WaitForSeconds(1.5f); // Слушаем клиента
 
         Waypoint goal = DetermineCorrectGoalForClient(clientToHelp);
         
         // --- ПЕРЕВОДИМ ЦЕЛЬ НА ЧЕЛОВЕЧЕСКИЙ ЯЗЫК ---
-        string destinationName = "нужное окно";
-        if (clientToHelp.billToPay > 0 || clientToHelp.mainGoal == ClientGoal.PayTax) destinationName = "Кассу";
-        else if (clientToHelp.mainGoal == ClientGoal.GetCertificate1) destinationName = "Окно №1";
-        else if (clientToHelp.mainGoal == ClientGoal.GetCertificate2) destinationName = "Окно №2";
-        else if (clientToHelp.mainGoal == ClientGoal.DirectorApproval || clientToHelp.mainGoal == ClientGoal.DirectorAudience) destinationName = "Приемную Директора";
-        else if (clientToHelp.mainGoal == ClientGoal.VisitToilet) destinationName = "Туалет";
+        string directionKey = "staff.guide.to_counter";
+        if (clientToHelp.billToPay > 0 || clientToHelp.mainGoal == ClientGoal.PayTax) directionKey = "staff.guide.to_cashier";
+        else if (clientToHelp.mainGoal == ClientGoal.GetCertificate1) directionKey = "staff.guide.to_window_one";
+        else if (clientToHelp.mainGoal == ClientGoal.GetCertificate2) directionKey = "staff.guide.to_window_two";
+        else if (clientToHelp.mainGoal == ClientGoal.DirectorApproval || clientToHelp.mainGoal == ClientGoal.DirectorAudience) directionKey = "staff.guide.to_reception";
+        else if (clientToHelp.mainGoal == ClientGoal.VisitToilet) directionKey = "staff.guide.to_restroom";
 
-        staff.thoughtBubble?.ShowPriorityMessage($"Вам в {destinationName}!", 2.5f, Color.green);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get(directionKey), 2.5f, Color.green);
         yield return new WaitForSeconds(1.5f); // Даем время прочитать и осознать
         // ------------------------------------------
 

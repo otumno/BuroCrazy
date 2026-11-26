@@ -35,22 +35,20 @@ public class CharacterSkills : ScriptableObject
         }
     }
 
-    public string GetSkillShortText(SkillType type)
-    {
-        var value = GetSkillValue(type);
-        var translation = GetSkillString(type);
-        return $"{translation} : {(value * 100).ToString("0")}%"; // пишем только целую часть числа
-    }
-    
+    public string GetSkillShortText(SkillType type) => FormatSkill(type, GetSkillValue(type));
+
+    public static string FormatSkill(SkillType type, float value) =>
+        $"{GetSkillString(type)}: {Mathf.RoundToInt(value * 100)}%";
+
     public static string GetSkillString(SkillType type) =>
         type switch
         {
-            SkillType.PaperworkMastery => "Мастерство бумажной работы",
-            SkillType.SedentaryResilience => "Устойчивость к малоподвижному образу жизни",
-            SkillType.Pedantry => "Педантичность",
-            SkillType.SoftSkills => "Умение общаться",
-            SkillType.Corruption => "Коррумпированность",
-            SkillType.DirtyHands => "Грязные руки",
+            SkillType.PaperworkMastery => UI.GameText.Get("staff.skill.PaperworkMastery"),
+            SkillType.SedentaryResilience => UI.GameText.Get("staff.skill.SedentaryResilience"),
+            SkillType.Pedantry => UI.GameText.Get("staff.skill.Pedantry"),
+            SkillType.SoftSkills => UI.GameText.Get("staff.skill.SoftSkills"),
+            SkillType.Corruption => UI.GameText.Get("staff.skill.Corruption"),
+            SkillType.DirtyHands => UI.GameText.Get("staff.skill.DirtyHands"),
             _ => ""
         };
 }

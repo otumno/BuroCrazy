@@ -50,30 +50,54 @@ namespace Managers
             return point?.GetComponentInParent<LimitedCapacityZone>();
         }
 
-        private static Dictionary<int, IServiceProvider> serviceProviderAssignments = new Dictionary<int, IServiceProvider>();
+        // deskId identifies the service, not the physical window. Both registration desks use zero.
+        private static readonly Dictionary<ServicePoint, IServiceProvider> providers = new();
 
-        public static IServiceProvider GetServiceProviderAtDesk(int deskId)
+        public static IServiceProvider GetServiceProviderAtDesk(ServicePoint desk)
         {
-            var provider = serviceProviderAssignments.GetValueOrDefault(deskId);
-            // Interfaces do not use Unity's destroyed-object null comparison.
-            if (provider is Object unityObject && unityObject == null)
+            if (desk == null || !providers.TryGetValue(desk, out var provider)) return null;
+            if (provider is Object obj && obj == null || provider.GetWorkstation() != desk)
             {
-                serviceProviderAssignments.Remove(deskId);
+                providers.Remove(desk);
                 return null;
             }
             return provider;
         }
 
-        public static void ClearServiceProviders() => serviceProviderAssignments.Clear();
+        public static IEnumerable<IServiceProvider> GetServiceProvidersForDeskType(int deskId)
+        {
+            foreach (var pair in providers)
+                if (pair.Key != null && pair.Key.deskId == deskId && !(pair.Value is Object obj && obj == null) &&
+                    pair.Value.GetWorkstation() == pair.Key)
+                    yield return pair.Value;
+        }
+
+        public static IServiceProvider GetServiceProviderAtDesk(int deskId) =>
+            GetServiceProvidersForDeskType(deskId).FirstOrDefault();
+
+        public static void ClearServiceProviders() => providers.Clear();
+
+        public static void AssignServiceProviderToDesk(IServiceProvider provider, ServicePoint desk)
+        {
+            if (desk != null && provider != null) providers[desk] = provider;
+        }
 
         public static void AssignServiceProviderToDesk(IServiceProvider provider, int deskId)
         {
-            serviceProviderAssignments[deskId] = provider;
+            var desk = provider?.GetWorkstation();
+            if (desk != null && desk.deskId == deskId) AssignServiceProviderToDesk(provider, desk);
+        }
+
+        public static void UnassignServiceProviderFromDesk(ServicePoint desk, IServiceProvider owner)
+        {
+            if (desk != null && providers.TryGetValue(desk, out var provider) && ReferenceEquals(provider, owner))
+                providers.Remove(desk);
         }
 
         public static void UnassignServiceProviderFromDesk(int deskId)
         {
-            serviceProviderAssignments.Remove(deskId);
+            var provider = GetServiceProviderAtDesk(deskId);
+            if (provider != null) UnassignServiceProviderFromDesk(provider.GetWorkstation(), provider);
         }
 
         public static LimitedCapacityZone GetRegistrationZone() => Instance?.registrationZone;

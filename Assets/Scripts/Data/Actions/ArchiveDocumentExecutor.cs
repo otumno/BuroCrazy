@@ -23,7 +23,7 @@ public class ArchiveDocumentExecutor : ActionExecutor
         var sourceDesk = source.GetComponentInParent<ServicePoint>();
         var pickup = sourceDesk != null && sourceDesk.internCollectionPoint != null ? sourceDesk.internCollectionPoint : source.transform;
         yield return archivist.MoveToTarget(pickup.position, "Working");
-        if (source == null || pickup == null || Vector2.Distance(archivist.transform.position, pickup.position) > 1f)
+        if (source == null || pickup == null || !ArchiveManager.IsWithinReach(archivist.transform, pickup.position))
         {
             Debug.LogWarning("[ArchiveTrace] Pickup unreachable; papers left at source.", archivist);
             FinishAction(false);
@@ -37,7 +37,9 @@ public class ArchiveDocumentExecutor : ActionExecutor
         RegisterCleanup(() => { if (stackHolder != null) stackHolder.HideStack(); });
         stackHolder?.ShowSingleDocumentSprite();
 
-        bool canCorrectDocuments = archivist.activeActions.Any(a => a != null && a.actionType == ActionType.CorrectDocument);
+        // System skills belong to the rank. Only configurable tactics are copied into activeActions at hire.
+        bool canCorrectDocuments = archivist.activeActions.Any(a => a is CorrectDocumentAction) ||
+            (archivist.currentRank != null && archivist.currentRank.unlockedActions.Exists(a => a is CorrectDocumentAction));
         if (canCorrectDocuments && DocumentQualityManager.Instance != null && DocumentQualityManager.Instance.GetCurrentAverageErrorRate() > 0)
         {
             float correctionChance = 0.1f + (archivist.skills.pedantry * 0.4f);
@@ -56,7 +58,7 @@ public class ArchiveDocumentExecutor : ActionExecutor
 
         archivist.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.filing"), 3f, Color.gray);
         yield return archivist.MoveToTarget(targetCabinet.transform.position, "Working");
-        if (targetCabinet == null || Vector2.Distance(archivist.transform.position, targetCabinet.transform.position) > 1f)
+        if (targetCabinet == null || !ArchiveManager.IsWithinReach(archivist.transform, targetCabinet.transform.position))
         {
             Debug.LogWarning("[ArchiveTrace] Cabinet unreachable; returning paper to source.", archivist);
             FinishAction(false);

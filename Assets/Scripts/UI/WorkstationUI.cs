@@ -19,7 +19,7 @@ public class WorkstationUI : MonoBehaviour
 
     // Внутренние переменные для хранения найденных станций и сотрудников
     private List<ServicePoint> trackedServicePoints = new List<ServicePoint>();
-    private List<GuardMovement> allGuards = new List<GuardMovement>();
+    private float nextRefresh;
     private StringBuilder sb = new StringBuilder();
 
     // --- НОВЫЕ ПОЛЯ ДЛЯ JUICY ЭФФЕКТА ---
@@ -52,7 +52,7 @@ public class WorkstationUI : MonoBehaviour
         switch (stationType)
         {
             case WorkstationType.Registration:
-                trackedServicePoints.Add(ScenePointsRegistry.Instance.GetServicePointByID(0));
+                trackedServicePoints.AddRange(ScenePointsRegistry.Instance.allServicePoints.Where(p => p != null && p.deskId == 0 && p.clientStandPoint != null));
                 break;
             case WorkstationType.Cashier:
                 trackedServicePoints.Add(ScenePointsRegistry.Instance.GetServicePointByID(-1));
@@ -64,11 +64,6 @@ public class WorkstationUI : MonoBehaviour
                 trackedServicePoints.Add(ScenePointsRegistry.Instance.GetServicePointByID(2));
                 break;
             case WorkstationType.GuardPost:
-                // Для охраны мы просто находим всех охранников
-                if (HiringManager.Instance != null)
-                {
-                    allGuards = HiringManager.Instance.AllStaff.OfType<GuardMovement>().ToList();
-                }
                 break;
         }
         
@@ -80,6 +75,8 @@ public class WorkstationUI : MonoBehaviour
     {
         // ИСПРАВЛЕНИЕ: Убрали проверку на паузу. UI должен обновляться всегда!
         
+        if (Time.unscaledTime < nextRefresh) return;
+        nextRefresh = Time.unscaledTime + 0.2f;
         sb.Clear(); // Очищаем построитель строк перед новым циклом
 
         if (stationType == WorkstationType.GuardPost)
@@ -109,14 +106,14 @@ public class WorkstationUI : MonoBehaviour
 
     private void UpdateGuardPostStatus()
     {
-        var onDutyGuards = allGuards.Where(g => g != null && g.IsOnDuty()).ToList();
+        var onDutyGuards = HiringManager.Instance?.AllStaff.OfType<GuardMovement>().Where(g => g != null && g.isActiveAndEnabled && g.IsOnDuty()).ToList();
         
-        sb.AppendLine("ПОСТ ОХРАНЫ");
+        sb.AppendLine(UI.GameText.Get("room.guard_post"));
 
-        if (onDutyGuards.Count == 0)
+        if (onDutyGuards == null || onDutyGuards.Count == 0)
         {
             statusText.color = Color.red;
-            sb.Append("Никого нет на смене");
+            sb.Append(UI.GameText.Get("room.nobody"));
         }
         else
         {
@@ -135,18 +132,18 @@ public class WorkstationUI : MonoBehaviour
         
         foreach (var point in trackedServicePoints)
         {
-            IServiceProvider provider = ClientSpawner.GetServiceProviderAtDesk(point.deskId);
+            IServiceProvider provider = ClientSpawner.GetServiceProviderAtDesk(point);
             if (provider != null)
             {
                 activeStaffCount++;
-                string staffName = (provider as MonoBehaviour)?.name ?? "Неизвестно";
-                string status = "Свободна";
+                string staffName = (provider as MonoBehaviour)?.name ?? UI.GameText.Get("room.unknown");
+                string status = UI.GameText.Get("room.free");
                 Color statusColor = Color.green;
 
                 // Если это клерк и он на перерыве
                 if (provider is ClerkController clerk && clerk.IsOnBreak())
                 {
-                    status = "Перерыв";
+                    status = UI.GameText.Get("room.break");
                     statusColor = Color.yellow;
                 }
                 // Если к столу привязан клиент
@@ -154,7 +151,7 @@ public class WorkstationUI : MonoBehaviour
                 {
                     int qNum = point.CurrentClient.stateMachine.MyQueueNumber;
                     // Отсекаем наглецов (номера 10000+)
-                    string numStr = (qNum >= 10000 || qNum == -1) ? "Вне очереди" : $"№{qNum}";
+                    string numStr = (qNum >= 10000 || qNum == -1) ? UI.GameText.Get("room.walk_in") : $"№{qNum}";
         
                     // Проверяем, подошел ли клиент физически к столу
                     var cState = point.CurrentClient.stateMachine.GetCurrentState();
@@ -164,12 +161,12 @@ public class WorkstationUI : MonoBehaviour
                         
                     if (isAtDesk)
                     {
-                        status = $"Обслуживает {numStr}";
+                        status = UI.GameText.Get("room.serving",numStr);
                         statusColor = Color.cyan;
                     }
                     else
                     {
-                        status = $"Вызывает {numStr}";
+                        status = UI.GameText.Get("room.calling", numStr);
                         statusColor = new Color(1f, 0.6f, 0f); // Оранжевый
                     }
                 }
@@ -178,7 +175,7 @@ public class WorkstationUI : MonoBehaviour
                 {
                     if (director.GetCurrentState() == DirectorAvatarController.DirectorState.ServingClient)
                     {
-                        status = "Занят";
+                        status = UI.GameText.Get("room.busy");
                         statusColor = Color.cyan;
                     }
                 }
@@ -190,7 +187,7 @@ public class WorkstationUI : MonoBehaviour
         if (activeStaffCount == 0)
         {
             statusText.color = Color.red;
-            sb.Append("Не назначен");
+            sb.Append(UI.GameText.Get("room.vacant"));
         }
         else
         {
@@ -204,21 +201,21 @@ public class WorkstationUI : MonoBehaviour
         switch (state)
         {
             case GuardMovement.GuardState.Patrolling:
-                return "Патруль";
+                return UI.GameText.Get("room.patrol");
             case GuardMovement.GuardState.OnPost:
-                return "На посту";
+                return UI.GameText.Get("room.on_post");
             case GuardMovement.GuardState.Chasing:
             case GuardMovement.GuardState.Talking:
             case GuardMovement.GuardState.ChasingThief:
-                return "Разбирается";
+                return UI.GameText.Get("room.intervening");
             case GuardMovement.GuardState.OnBreak:
-                return "Обед";
+                return UI.GameText.Get("room.lunch");
             case GuardMovement.GuardState.AtToilet:
-                return "Перерыв";
+                return UI.GameText.Get("room.toilet");
             case GuardMovement.GuardState.WritingReport:
-                return "Пишет отчет";
+                return UI.GameText.Get("room.report");
             default:
-                return "Бездействует";
+                return UI.GameText.Get("room.idle");
         }
     }
 }

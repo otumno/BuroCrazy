@@ -9,7 +9,7 @@ public class PrioritizeDirectorDocExecutor : ActionExecutor
     {
         if (!(staff is ClerkController registrar)) { FinishAction(false); yield break; }
 
-        registrar.thoughtBubble?.ShowPriorityMessage("Кто на подпись к директору?", 2f, Color.green);
+        registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.call_signature"), 2f, Color.green);
         bool success = ClientQueueManager.Instance.CallClientWithSpecificGoal(ClientGoal.DirectorApproval, registrar);
         if (success)
         {

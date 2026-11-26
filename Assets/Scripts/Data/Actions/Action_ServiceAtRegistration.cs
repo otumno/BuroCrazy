@@ -23,7 +23,7 @@ public class Action_ServiceAtRegistration : StaffAction
         }
 
         // 3. Легковесная проверка: есть ли клиенты в локальной зоне регистратуры
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         if (zone != null && zone.GetOccupyingClients().Count > 0) return true;
 
         return false;

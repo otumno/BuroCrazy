@@ -21,7 +21,11 @@ public class StaffNameLabelUI : MonoBehaviour
         _onClickAction = onClickAction;
 
         if (nameText != null) nameText.text = staff.characterName;
-        if (roleText != null) roleText.text = staff.currentRole.ToString();
+        if (roleText != null)
+        {
+            var label = roleText.GetComponent<UI.LocalizedText>() ?? roleText.gameObject.AddComponent<UI.LocalizedText>();
+            label.SetReference(UI.GameText.Table, UI.StaffRoleNames.GetKey(staff.currentRole));
+        }
 
         if (background != null && colorDb != null)
         {

@@ -1038,6 +1038,1320 @@ MonoBehaviour:
     m_Localized: Staff wages
     m_Metadata:
       m_Items: []
+  - m_Id: 315412674764800
+    m_Localized: Calm down, citizen!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902144
+    m_Localized: Matter settled.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902145
+    m_Localized: Door operated!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902146
+    m_Localized: Stop, thief!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902147
+    m_Localized: Got you!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902148
+    m_Localized: Can't reach it...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902149
+    m_Localized: '*Scrub, scrub*'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902150
+    m_Localized: Well, look at that...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902151
+    m_Localized: Found in the trash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902152
+    m_Localized: Can't get through there...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902153
+    m_Localized: Taking a break...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902154
+    m_Localized: Nowhere to put the pay!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902155
+    m_Localized: No money left!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902156
+    m_Localized: The safe is full!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902157
+    m_Localized: +1 envelope
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902158
+    m_Localized: Preparing payroll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902159
+    m_Localized: That's enough envelopes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902160
+    m_Localized: Pay envelope ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902161
+    m_Localized: No funds left!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902162
+    m_Localized: Payroll fund
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902163
+    m_Localized: Midmorning
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902164
+    m_Localized: Noon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902165
+    m_Localized: Afternoon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902166
+    m_Localized: Early night
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902167
+    m_Localized: Late night
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646831939584
+    m_Localized: "On duty \xB7 {0}"
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 316646882271232
+    m_Localized: No staff on duty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271233
+    m_Localized: Bladder {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 316646882271234
+    m_Localized: Stress {0}%
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 316646882271235
+    m_Localized: 'Time left today: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 316646882271236
+    m_Localized: Finishing up
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271237
+    m_Localized: Unassigned
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271238
+    m_Localized: "Tactics\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271239
+    m_Localized: Take a break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271240
+    m_Localized: Use the restroom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271241
+    m_Localized: Go on patrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271242
+    m_Localized: Take the documents to the archive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271243
+    m_Localized: Make a cleaning round
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271244
+    m_Localized: Make the office rounds
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921887309824
+    m_Localized: Unnamed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892736
+    m_Localized: No biography available.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892737
+    m_Localized: Starting rank
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892738
+    m_Localized: Skills unknown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892739
+    m_Localized: 'Special talent: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921899892740
+    m_Localized: <b>Skills:</b>
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892741
+    m_Localized: 'Hidden skill: ???'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892742
+    m_Localized: 'Cost: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921899892743
+    m_Localized: "Cost: ${0}\n(hiring ${1} + shift: {2} \xD7 ${3})"
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921899892744
+    m_Localized: 'Balance: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921899892745
+    m_Localized: 'Pay: ${0} per period'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921899892746
+    m_Localized: 'Sex: M'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892747
+    m_Localized: 'Sex: F'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892748
+    m_Localized: No special skills
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892749
+    m_Localized: Max rank
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892750
+    m_Localized: Unranked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892751
+    m_Localized: '<color=#FFAA00>Late arrivals:</color> {0}
+
+      <color=#FF5555>Sick
+      days:</color> {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921899892752
+    m_Localized: '<b>Education:</b> {0}.
+
+      <b>Hobby:</b> {1}.
+
+      <b>About
+      me:</b> {2}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921899892753
+    m_Localized: Higher School of Clerical Sciences
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892754
+    m_Localized: Institute of Bureaucratic Arts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892755
+    m_Localized: Archivist University of Paper Shuffling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892756
+    m_Localized: Academy of Stapler Management
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892757
+    m_Localized: College of Applied Stamping and Signing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892758
+    m_Localized: growing cacti on the windowsill
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892759
+    m_Localized: competitive document binding
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892760
+    m_Localized: collecting rare paper clips
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892761
+    m_Localized: meditating to the hum of the printer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892762
+    m_Localized: charting the meaning of life in Excel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892763
+    m_Localized: Believes the printer is a portal to another dimension.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892764
+    m_Localized: Is convinced the office ficus is their line manager.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892765
+    m_Localized: Talks to the water cooler when nobody is watching.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892766
+    m_Localized: Believes that a document in triplicate has magical powers.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892767
+    m_Localized: Suspects a tame file archiver lives in the basement.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892768
+    m_Localized: Paperwork mastery
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892769
+    m_Localized: Desk stamina
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892770
+    m_Localized: Attention to detail
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892771
+    m_Localized: Communication
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892772
+    m_Localized: Corruption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892773
+    m_Localized: Dirty hands
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892774
+    m_Localized: New intern
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892775
+    m_Localized: Trained intern
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892776
+    m_Localized: Experienced intern
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892777
+    m_Localized: Accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892778
+    m_Localized: Accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892779
+    m_Localized: Accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892780
+    m_Localized: Accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892781
+    m_Localized: Junior archivist
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892782
+    m_Localized: Archivist
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892783
+    m_Localized: Collection keeper
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892784
+    m_Localized: Cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892785
+    m_Localized: Cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892786
+    m_Localized: Cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892787
+    m_Localized: Junior records clerk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892788
+    m_Localized: Records clerk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892789
+    m_Localized: Senior records clerk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892790
+    m_Localized: Security guard
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892791
+    m_Localized: Security officer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892792
+    m_Localized: Senior security officer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892793
+    m_Localized: Custodian
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892794
+    m_Localized: Sanitation specialist
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892795
+    m_Localized: Custodian
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892796
+    m_Localized: Office manager
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892797
+    m_Localized: Third-class registrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892798
+    m_Localized: Second-class registrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892799
+    m_Localized: Second-class registrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892800
+    m_Localized: Transfer to Point B
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892801
+    m_Localized: Movement is life
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087040
+    m_Localized: "Our team\u2019s match"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087041
+    m_Localized: 'Declared income: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087042
+    m_Localized: 'Your share ({0}): ${1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087043
+    m_Localized: 'Undeclared income: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087044
+    m_Localized: 'Account balance: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087045
+    m_Localized: 'Outstanding payroll: ${0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087046
+    m_Localized: 'Corruption level: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087047
+    m_Localized: "Today\u2019s expenses: ${0}"
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087048
+    m_Localized: DAY {0}
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087049
+    m_Localized: 'Strikes: {0} / {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087050
+    m_Localized: 'Error rate: {0} / Allowed: {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087051
+    m_Localized: '{0} (permanent)'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 350921904087052
+    m_Localized: '<b>Active orders:</b>
+
+'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087053
+    m_Localized: Start day
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087054
+    m_Localized: Resume day
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424427180032
+    m_Localized: "Anyone here for the director\u2019s signature?"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568640
+    m_Localized: Step up to pay your bills!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568641
+    m_Localized: Anyone here for a quick question?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568642
+    m_Localized: Human resources
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568643
+    m_Localized: 'Human
+
+      resources'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568644
+    m_Localized: Accounts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568645
+    m_Localized: MENU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568646
+    m_Localized: Map
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568647
+    m_Localized: Phone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568648
+    m_Localized: 'JOB
+
+      DESCRIPTIONS'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568649
+    m_Localized: SIGN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568650
+    m_Localized: SET ASIDE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568651
+    m_Localized: DIRECTOR, CHOOSE ONE ORDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568652
+    m_Localized: NAME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568653
+    m_Localized: ROLE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568654
+    m_Localized: RANK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568655
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568656
+    m_Localized: Shift schedule
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568657
+    m_Localized: PROMOTE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568658
+    m_Localized: ASSIGN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568659
+    m_Localized: DISMISS!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568660
+    m_Localized: HIRE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568661
+    m_Localized: Approve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568662
+    m_Localized: Reject
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568663
+    m_Localized: Purchases  Accounts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568664
+    m_Localized: Cancel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568665
+    m_Localized: Buy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568666
+    m_Localized: SHIFT SCHEDULE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568667
+    m_Localized: Full-time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568668
+    m_Localized: Today only
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297676853248
+    m_Localized: Covering the shortfall...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297714601984
+    m_Localized: "Covered \u20BD{0}"
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 361297718796288
+    m_Localized: Looking for stashed cash...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796289
+    m_Localized: "Found \u20BD{0}"
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 361297718796290
+    m_Localized: Cash found by the accountant ({0})
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 361297718796291
+    m_Localized: Cash found by the accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796292
+    m_Localized: Working on the tax bill...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796293
+    m_Localized: Huh, extra cash!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796294
+    m_Localized: Ready for work...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796295
+    m_Localized: How's your day going? Just a moment...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796296
+    m_Localized: Checking for mistakes...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796297
+    m_Localized: I'll cover the desk!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796298
+    m_Localized: Covering my tracks...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796299
+    m_Localized: All clear!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796300
+    m_Localized: '*Gulp, gulp*'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796301
+    m_Localized: It's empty...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796302
+    m_Localized: Excuse me, where are you headed?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796303
+    m_Localized: Looks like you could use a hand...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796304
+    m_Localized: I can't get through!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796305
+    m_Localized: Where are you headed?
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796306
+    m_Localized: 'The archives aren''t answering...
+
+      Sorry.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796307
+    m_Localized: An internal order...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796308
+    m_Localized: Payment for {0}
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 361297718796309
+    m_Localized: Paid!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796310
+    m_Localized: The treasury's empty!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796311
+    m_Localized: On my way to fix it!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796312
+    m_Localized: '*Tinkering*'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796313
+    m_Localized: Where's the supply closet?!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796314
+    m_Localized: Coming right up!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796315
+    m_Localized: Putting the files in order...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796316
+    m_Localized: Right this way, I'll help you!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796317
+    m_Localized: Head to the service counter!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796318
+    m_Localized: Go to the cashier!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796319
+    m_Localized: Go to window 1!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796320
+    m_Localized: Go to window 2!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796321
+    m_Localized: Head to the director's reception!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796322
+    m_Localized: You're looking for the restroom!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796323
+    m_Localized: We need water...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796324
+    m_Localized: We need paper...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147585888256
+    m_Localized: Tactical actions ({0}/{1})
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623636992
+    m_Localized: Unassigned
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636993
+    m_Localized: '{0} (occupied by {1})'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623636994
+    m_Localized: SAVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636995
+    m_Localized: WORKSTATION
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636996
+    m_Localized: Accounts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636997
+    m_Localized: Cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636998
+    m_Localized: Registration 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636999
+    m_Localized: Registration 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637000
+    m_Localized: Office 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637001
+    m_Localized: Office 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637002
+    m_Localized: Archives
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637003
+    m_Localized: "Director\u2019s desk"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637004
+    m_Localized: exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637005
+    m_Localized: forms table
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637006
+    m_Localized: Ticket dispenser
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637007
+    m_Localized: queue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637008
+    m_Localized: restroom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637009
+    m_Localized: cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637010
+    m_Localized: registration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637011
+    m_Localized: office 1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637012
+    m_Localized: office 2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637013
+    m_Localized: reception
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637014
+    m_Localized: 'XP: {0} / {1}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637015
+    m_Localized: 'Promotion: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637016
+    m_Localized: 'Order: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637017
+    m_Localized: 'Employee: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637018
+    m_Localized: PROMOTION ORDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637019
+    m_Localized: APPOINTMENT ORDER
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637020
+    m_Localized: 'Promote to:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637021
+    m_Localized: 'Appoint to:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637022
+    m_Localized: 'In view of operational necessity and pursuant to paragraph 7-bis
+      of the charter, it is hereby decreed:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637023
+    m_Localized: 'Under Directive No. 1337 on staff transfers, and in the interest
+      of efficiency, I hereby order:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637024
+    m_Localized: "Having reviewed the personnel file and duly noted the employee\u2019s
+      invaluable contribution to the fight against entropy, we resolve:"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637025
+    m_Localized: 'Pursuant to the efficiency order and following the quarterly review,
+      the following action shall be taken:'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637026
+    m_Localized: SECURITY POST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637027
+    m_Localized: Nobody on duty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637028
+    m_Localized: Unknown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637029
+    m_Localized: Available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637030
+    m_Localized: On break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637031
+    m_Localized: Walk-in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637032
+    m_Localized: Serving {0}
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637033
+    m_Localized: Calling {0}
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637034
+    m_Localized: Busy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637035
+    m_Localized: Unstaffed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637036
+    m_Localized: On patrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637037
+    m_Localized: On duty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637038
+    m_Localized: Handling an incident
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637039
+    m_Localized: At lunch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637040
+    m_Localized: In the restroom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637041
+    m_Localized: Writing a report
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637042
+    m_Localized: Idle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637043
+    m_Localized: 'Total: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637044
+    m_Localized: 'Left: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637045
+    m_Localized: 'Waiting: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637046
+    m_Localized: 'Restroom: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637047
+    m_Localized: 'At the counters: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637048
+    m_Localized: 'Lost: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637049
+    m_Localized: 'Left angry: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637050
+    m_Localized: 'Served: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637051
+    m_Localized: Registration closed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637052
+    m_Localized: 'Now calling: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637053
+    m_Localized: Registration available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637054
+    m_Localized: On duty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637055
+    m_Localized: 'The desk is broken!
+
+      I can''t help...'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637056
+    m_Localized: I'll try to help...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637057
+    m_Localized: 'Oh, I think it''s
+
+      that way...'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637058
+    m_Localized: 'Next stop: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637059
+    m_Localized: Taking your payment...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637060
+    m_Localized: Right... let's see...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637061
+    m_Localized: There's no document here!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637062
+    m_Localized: You've got the wrong form!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637063
+    m_Localized: Payment (intern)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637064
+    m_Localized: I'm late... Sorry.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637065
+    m_Localized: All desks are occupied!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637066
+    m_Localized: End shift
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637067
+    m_Localized: Process an internal order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637068
+    m_Localized: Repair equipment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637069
+    m_Localized: Monitor the front desk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637070
+    m_Localized: Correct paperwork
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637071
+    m_Localized: Get a drink
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637072
+    m_Localized: Patrol the premises
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637073
+    m_Localized: Patrol the waiting room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637074
+    m_Localized: Inspect the rooms
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637075
+    m_Localized: Request an archive record
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637076
+    m_Localized: Open or close the main doors
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637077
+    m_Localized: Organize the archives
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637078
+    m_Localized: Take over a visitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637079
+    m_Localized: Cover up a shortfall
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637080
+    m_Localized: Look for stashed cash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637081
+    m_Localized: Check paperwork
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637082
+    m_Localized: Sweep the floor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637083
+    m_Localized: Mop up puddles
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637084
+    m_Localized: Pick up litter
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637085
+    m_Localized: Personal service
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637086
+    m_Localized: Cover the cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637087
+    m_Localized: Cover a clerk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637088
+    m_Localized: Cover registration
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637089
+    m_Localized: Cover your tracks
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637090
+    m_Localized: Prepare payroll (director)
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637091
+    m_Localized: Keep the books
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637092
+    m_Localized: Find valuables in the trash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637093
+    m_Localized: Calm a disruptive visitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637094
+    m_Localized: Catch a payment dodger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637095
+    m_Localized: Help a lost visitor
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637096
+    m_Localized: Operate the barrier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637097
+    m_Localized: Prepare payroll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637098
+    m_Localized: Prioritize verbal enquiries
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637099
+    m_Localized: Prioritize documents for signature
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637100
+    m_Localized: Prioritize bill payments
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637101
+    m_Localized: Next, please!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637102
+    m_Localized: 'New hire ({0}): {1}. Trait: {2}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637103
+    m_Localized: temporary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637104
+    m_Localized: permanent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637105
+    m_Localized: 'Hiring: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637106
+    m_Localized: 'NOTICE: {0} is off sick today!'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637107
+    m_Localized: Traffic was awful...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637108
+    m_Localized: '{0} ({1}) is starting work'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637109
+    m_Localized: '{0} ({1}) is finishing work'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
+  - m_Id: 367147623637110
+    m_Localized: 'Allowed error rate: {0}'
+    m_Metadata:
+      m_Items:
+      - rid: 1506924130828025945
   references:
     version: 2
     RefIds:
@@ -1063,3 +2377,53 @@ MonoBehaviour:
         - id: 5782597787657
         - id: 5782597787658
         - id: 5782597787659
+        - id: 316646831939584
+        - id: 316646882271233
+        - id: 316646882271234
+        - id: 316646882271235
+        - id: 350921899892739
+        - id: 350921899892742
+        - id: 350921899892743
+        - id: 350921899892744
+        - id: 350921899892745
+        - id: 350921899892751
+        - id: 350921899892752
+        - id: 350921904087041
+        - id: 350921904087042
+        - id: 350921904087043
+        - id: 350921904087044
+        - id: 350921904087045
+        - id: 350921904087046
+        - id: 350921904087047
+        - id: 350921904087048
+        - id: 350921904087049
+        - id: 350921904087050
+        - id: 350921904087051
+        - id: 361297714601984
+        - id: 361297718796289
+        - id: 361297718796290
+        - id: 361297718796308
+        - id: 367147585888256
+        - id: 367147623636993
+        - id: 367147623637014
+        - id: 367147623637015
+        - id: 367147623637016
+        - id: 367147623637017
+        - id: 367147623637032
+        - id: 367147623637033
+        - id: 367147623637043
+        - id: 367147623637044
+        - id: 367147623637045
+        - id: 367147623637046
+        - id: 367147623637047
+        - id: 367147623637048
+        - id: 367147623637049
+        - id: 367147623637050
+        - id: 367147623637052
+        - id: 367147623637058
+        - id: 367147623637102
+        - id: 367147623637105
+        - id: 367147623637106
+        - id: 367147623637108
+        - id: 367147623637109
+        - id: 367147623637110

@@ -15,11 +15,16 @@ namespace UI.StaffOrders
         [SerializeField] private Button button;
         [SerializeField] private TextMeshProUGUI label;
 
-        public void Setup(string text, bool isInteractable, Action onClick)
+        public void Setup(string text, bool isInteractable, Action onClick, string key = null)
         {
             if (label != null)
             {
                 label.text = text;
+                if (!string.IsNullOrWhiteSpace(key))
+                {
+                    var binding = label.GetComponent<LocalizedText>() ?? label.gameObject.AddComponent<LocalizedText>();
+                    binding.SetReference(GameText.Table, key);
+                }
                 // Кнопка при отключении тонирует только фон, текст приглушаем сами.
                 label.alpha = isInteractable ? 1f : DisabledLabelAlpha;
             }

@@ -16,7 +16,7 @@ public class PromotionOptionButton : MonoBehaviour
         this.rankData = data;
         this.panelController = controller;
 
-        rankNameText.text = data.rankName;
+        rankNameText.text = data.LocalizedName;
         costText.text = $"${data.promotionCost}";
 
         // Проверяем, хватает ли денег, и делаем кнопку неактивной, если не хватает
@@ -25,6 +25,19 @@ public class PromotionOptionButton : MonoBehaviour
         
         // Добавляем слушатель на клик
         GetComponent<Button>().onClick.AddListener(OnClick);
+    }
+
+    private void OnEnable()
+    {
+        UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
+        RefreshLocale(null);
+    }
+
+    private void OnDisable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+
+    private void RefreshLocale(UnityEngine.Localization.Locale locale)
+    {
+        if (rankData != null) rankNameText.text = rankData.LocalizedName;
     }
 
     private void OnClick()

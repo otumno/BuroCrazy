@@ -38,7 +38,9 @@ namespace Characters
     [Tooltip("Звук, проигрываемый при повышении уровня")]
     public AudioClip levelUpSound; // Sound clip for level up
 
-    void Awake()
+    void Awake() => BindRenderersAndAnchors();
+
+    private void BindRenderersAndAnchors()
     {
         // Ищем Body и Face ВСЕГДА в VisualsContainer (игнорируем StaffPrefabReferences для них)
         // Это критически важно для правильной работы архетипов!
@@ -139,6 +141,8 @@ namespace Characters
              Debug.LogError($"Попытка настроить CharacterVisuals с null RoleData у {gameObject.name}!", gameObject);
              return;
         }
+        // A restored or inactive hire can receive its role before Awake.
+        if (bodyRenderer == null) BindRenderersAndAnchors();
         // Call the main setup function with data from RoleData
         Setup(gender, data.spriteCollection, data.stateEmotionMap);
         // Equip the accessory defined in RoleData

@@ -11,7 +11,7 @@ public class DeliverDocumentsAction : StaffAction
 
     public override bool AreConditionsMet(StaffController staff)
     {
-        if (staff == null || (!(staff is InternController) && !(staff is OfficeManagerController)) || staff.IsOnBreak() ||
+        if (staff == null || (!(staff is InternController) && !(staff is OfficeManagerController) && staff.currentRole != StaffController.Role.Registrar) || staff.IsOnBreak() ||
             ArchiveManager.Instance == null || ScenePointsRegistry.Instance == null)
         {
             return false;
@@ -23,7 +23,9 @@ public class DeliverDocumentsAction : StaffAction
         // Проверяем, есть ли ХОТЯ БЫ ОДНА стопка, которая:
         // 1. Не является главной стопкой в архиве.
         // 2. Заполнена больше, чем наш порог.
-        return allStacks.Any(stack => !ArchiveManager.Instance.OwnsStack(stack) && stack.OrdinaryDocumentCount > 0 &&
+        return allStacks.Any(stack => (staff.currentRole != StaffController.Role.Registrar ||
+            staff.assignedWorkstation != null && staff.assignedWorkstation.CurrentClient == null && staff.assignedWorkstation.documentStack == stack) &&
+            !ArchiveManager.Instance.OwnsStack(stack) && stack.OrdinaryDocumentCount > 0 &&
             (float)stack.OrdinaryDocumentCount / Mathf.Max(1, stack.maxStackSize) >= stackFullnessThreshold &&
             ScenePointsRegistry.Instance.allServicePoints.Any(point => point != null && point.documentStack == stack && point.internCollectionPoint != null));
     }

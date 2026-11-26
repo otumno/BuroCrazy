@@ -173,16 +173,7 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
         // Считаем реальный процент ошибок (от 0.0 до 1.0)
         float actualErrorRate = errorCount / textLength;
         
-        float allowedErrorRate = 1f; // Значение по умолчанию (100%), если поручений нет
-        // Проверяем, есть ли вообще поручения на сегодня
-        if (OrderManager.Instance.currentMandates.Count > 0)
-        {
-            // Берем ПЕРВЫЙ приказ из списка
-            DirectorOrder currentMandate = OrderManager.Instance.currentMandates[0];
-            // Теперь получаем ЕГО личный допустимый уровень ошибок
-            allowedErrorRate = currentMandate.allowedDirectorErrorRate;
-        }
-        // <<< КОНЕЦ ИСПРАВЛЕНИЙ №1 >>>
+        float allowedErrorRate = OrderManager.Instance != null ? OrderManager.Instance.AllowedDirectorErrorRate : 1f;
 
         if (actualErrorRate > allowedErrorRate)
         {
@@ -243,16 +234,8 @@ public class DirectorDocumentReviewPanel : MonoBehaviour
 
     private void UpdateMandatesText()
     {
-        if (OrderManager.Instance == null || OrderManager.Instance.currentMandates == null) return;
-
-        // <<< НАЧАЛО ИСПРАВЛЕНИЙ №2 >>>
-        float allowedErrorRate = 1f; // Значение по умолчанию (100%)
-        if (OrderManager.Instance.currentMandates.Count > 0)
-        {
-            // Берем ПЕРВЫЙ приказ из списка и его свойство
-            allowedErrorRate = OrderManager.Instance.currentMandates[0].allowedDirectorErrorRate;
-        }
-        // <<< КОНЕЦ ИСПРАВЛЕНИЙ №2 >>>
+        if (OrderManager.Instance == null) return;
+        float allowedErrorRate = OrderManager.Instance.AllowedDirectorErrorRate;
 
         if (showDebugInfo && currentClient != null && currentClient.directorDocumentLayout != null)
         {

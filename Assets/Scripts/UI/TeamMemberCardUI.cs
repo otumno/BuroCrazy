@@ -48,6 +48,14 @@ public class TeamMemberCardUI : MonoBehaviour
     
     private StaffController assignedStaff;
 
+    private void OnEnable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
+    private void OnDisable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+
+    private void RefreshLocale(UnityEngine.Localization.Locale locale)
+    {
+        if (assignedStaff != null) UpdateCard();
+    }
+
     public void Setup(StaffController staff)
     {
         assignedStaff = staff;
@@ -73,14 +81,14 @@ public class TeamMemberCardUI : MonoBehaviour
         }
 
         nameText.text = assignedStaff.characterName;
-        roleText.text = GetRoleNameInRussian(assignedStaff.currentRole);
-        stressText.text = $"Стресс: {assignedStaff.frustration.ToString("0")}";
-        salaryText.text = $"З/П: ${assignedStaff.salaryPerPeriod.ToString()} / период";
-        genderText.text = assignedStaff.gender == Gender.Male ? "Пол: М" : "Пол: Ж";
+        roleText.text = UI.StaffRoleNames.GetDisplayName(assignedStaff.currentRole);
+        stressText.text = UI.GameText.Get("shift.stress", Mathf.RoundToInt(assignedStaff.GetCurrentStress()));
+        salaryText.text = UI.GameText.Get("team.salary", assignedStaff.salaryPerPeriod);
+        genderText.text = UI.GameText.Get(assignedStaff.gender == Gender.Male ? "team.male" : "team.female");
         
         if (assignedStaff.skills == null)
         {
-            skillsText.text = "Нет особых навыков";
+            skillsText.text = UI.GameText.Get("team.no_skills");
         }
         else
         {
@@ -103,7 +111,7 @@ public class TeamMemberCardUI : MonoBehaviour
 
         if (assignedStaff.currentRank != null)
         {
-            if (rankText != null) rankText.text = assignedStaff.currentRank.rankName;
+            if (rankText != null) rankText.text = assignedStaff.currentRank.LocalizedName;
 
             RankData nextRankData = assignedStaff.currentRank.possiblePromotions.FirstOrDefault();
             if (nextRankData != null)
@@ -113,17 +121,17 @@ public class TeamMemberCardUI : MonoBehaviour
                 int totalXpForLevel = xpForNextRank - xpForCurrentRank;
                 int currentXpInLevel = (int)assignedStaff.experiencePoints - xpForCurrentRank;
                 xpBarFill.fillAmount = totalXpForLevel > 0 ? (float)currentXpInLevel / totalXpForLevel : 1f;
-                xpText.text = $"XP: {currentXpInLevel} / {totalXpForLevel}";
+                xpText.text = UI.GameText.Get("team.xp", currentXpInLevel, totalXpForLevel);
             }
             else
             {
                 xpBarFill.fillAmount = 1f;
-                xpText.text = "МАКС. РАНГ";
+                xpText.text = UI.GameText.Get("team.max_rank");
             }
         }
         else
         {
-            rankText.text = "Без ранга";
+            rankText.text = UI.GameText.Get("team.no_rank");
         }
         
         if (promoteButton != null)
@@ -219,25 +227,11 @@ public class TeamMemberCardUI : MonoBehaviour
         actionConfigPopupUi.OpenForStaff(assignedStaff);
     }
 
-    private static string GetRoleNameInRussian(StaffController.Role role) =>
-        role switch
-        {
-            StaffController.Role.Intern => "Стажёр",
-            StaffController.Role.Clerk => "Клерк",
-            StaffController.Role.Registrar => "Регистратор",
-            StaffController.Role.Cashier => "Кассир",
-            StaffController.Role.Archivist => "Архивариус",
-            StaffController.Role.Guard => "Охранник",
-            StaffController.Role.Janitor => "Уборщик",
-            _ => "Не назначено"
-        };
-
     private void UpdateAttendance(StaffController staff)
     {
         if (attendanceText != null)
         {
-            attendanceText.text = $"<color=#FFAA00>Опозданий:</color> {staff.totalLatenessCount}\n" +
-                                  $"<color=#FF5555>Больничных:</color> {staff.sickDaysCount}";
+            attendanceText.text = UI.GameText.Get("team.attendance", staff.totalLatenessCount, staff.sickDaysCount);
         }
     }
 

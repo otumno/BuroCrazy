@@ -22,7 +22,7 @@ public class ServiceAtCashierExecutor : ActionExecutor
             yield break;
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(cashier.assignedWorkstation.deskId);
+        var zone = cashier.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         var client = zone?.GetOccupyingClients().FirstOrDefault(c => CanServeAtWorkstation(c) && (c.billToPay > 0 || c.mainGoal == ClientGoal.PayTax));
         
         // Бронебойный поиск физически ближайшего клиента у кассы

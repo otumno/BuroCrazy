@@ -15,7 +15,7 @@ public class PrioritizeConsultationExecutor : ActionExecutor
             yield break; 
         }
 
-        staff.thoughtBubble?.ShowPriorityMessage("Кто просто спросить?", 2f, Color.green);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.call_question"), 2f, Color.green);
         
         // Вызываем метод в менеджере очереди, чтобы он нашел и позвал нужного клиента
         bool success = ClientQueueManager.Instance.CallClientWithSpecificGoal(ClientGoal.AskAndLeave, provider);

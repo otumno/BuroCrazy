@@ -60,18 +60,18 @@ namespace UI.StaffOrders.Editor
             catalog = ScriptableObject.CreateInstance<StaffOrderCatalog>();
 
             // Общие приказы — для всех ролей.
-            AddOrder(catalog, "Сделать паузу и отдохнуть", ActionsFolder + "/Action_GoToBreak.asset");
-            AddOrder(catalog, "Сходить в туалет", ActionsFolder + "/Action_GoToToilet.asset");
+            AddOrder(catalog, "Сделать паузу и отдохнуть", "order.break", ActionsFolder + "/Action_GoToBreak.asset");
+            AddOrder(catalog, "Сходить в туалет", "order.toilet", ActionsFolder + "/Action_GoToToilet.asset");
 
             // Приказы по ролям.
-            AddOrder(catalog, "Иди в патруль", ActionsFolder + "/Action_Guard_Patrol_NEW.asset",
+            AddOrder(catalog, "Иди в патруль", "order.guard_patrol", ActionsFolder + "/Action_Guard_Patrol_NEW.asset",
                 StaffController.Role.Guard);
-            AddOrder(catalog, "Отнеси документы со стола в архив", ActionsFolder + "/TacticalAction/Action_TakeStackToArchive.asset",
+            AddOrder(catalog, "Отнеси документы со стола в архив", "order.archive", ActionsFolder + "/TacticalAction/Action_TakeStackToArchive.asset",
                 StaffController.Role.Clerk, StaffController.Role.Registrar, StaffController.Role.Cashier,
                 StaffController.Role.Archivist, StaffController.Role.Accountant);
-            AddOrder(catalog, "Пройдись и прибери", ActionsFolder + "/Action_JanitorPatrol.asset",
+            AddOrder(catalog, "Пройдись и прибери", "order.clean", ActionsFolder + "/Action_JanitorPatrol.asset",
                 StaffController.Role.Janitor, StaffController.Role.ServiceWorker);
-            AddOrder(catalog, "Обойди офис", ActionsFolder + "/Action_InternPatrol.asset",
+            AddOrder(catalog, "Обойди офис", "order.intern_patrol", ActionsFolder + "/Action_InternPatrol.asset",
                 StaffController.Role.Intern);
 
             AssetDatabase.CreateAsset(catalog, CatalogPath);
@@ -79,7 +79,7 @@ namespace UI.StaffOrders.Editor
             return catalog;
         }
 
-        private static void AddOrder(StaffOrderCatalog catalog, string label, string actionPath, params StaffController.Role[] roles)
+        private static void AddOrder(StaffOrderCatalog catalog, string label, string labelKey, string actionPath, params StaffController.Role[] roles)
         {
             var action = AssetDatabase.LoadAssetAtPath<StaffAction>(actionPath);
             if (action == null)
@@ -88,7 +88,7 @@ namespace UI.StaffOrders.Editor
                 return;
             }
 
-            catalog.Orders.Add(new StaffOrderDefinition(label, action, roles));
+            catalog.Orders.Add(new StaffOrderDefinition(label, labelKey, action, roles));
         }
 
         // --- Префабы ---

@@ -136,7 +136,20 @@ public class StaffController : MonoBehaviour
         public float corruption = 0f;
         public float dirtyHands = 0f;
 
-        public string GetSkillShortText(SkillType type) => $"{type}: 100%";
+        public string GetSkillShortText(SkillType type)
+        {
+            float value = type switch
+            {
+                SkillType.PaperworkMastery => paperworkMastery,
+                SkillType.SedentaryResilience => sedentaryResilience,
+                SkillType.Pedantry => pedantry,
+                SkillType.SoftSkills => softSkills,
+                SkillType.Corruption => corruption,
+                SkillType.DirtyHands => dirtyHands,
+                _ => 0f
+            };
+            return CharacterSkills.FormatSkill(type, value);
+        }
 
         public static implicit operator CharacterSkillsWrapper(CharacterSkills s)
         {
@@ -247,10 +260,13 @@ public class StaffController : MonoBehaviour
     [Tooltip("Только для временного: день, на который выпала его смена. В конце этого дня он увольняется.")]
     public int temporaryWorkDay = -1;
 
+    [HideInInspector] public int lastSalaryDay = -1;
+    [HideInInspector] public CalendarDayPeriodType lastSalaryPeriod;
+
     public bool IsTemporary => employmentType == EmploymentType.Temporary;
 
     /// <summary>
-    /// Оба типа найма начинают работу со следующего периода после найма.
+    /// Контракт действует с периода найма, в том числе при загрузке в этот же период.
     /// </summary>
     public bool HasEmploymentStarted()
     {
@@ -266,7 +282,7 @@ public class StaffController : MonoBehaviour
         int hiredIndex = periods.FindIndex(p => p.PeriodType == hirePeriod);
         int currentIndex = periods.FindIndex(p => p.PeriodType == clock.GetCurrentPeriodType());
         // Загрузка начинает день заново: другой период может быть РАНЬШЕ найма.
-        return hiredIndex >= 0 && currentIndex > hiredIndex;
+        return hiredIndex >= 0 && currentIndex >= hiredIndex;
     }
 
     /// <summary>
@@ -348,9 +364,21 @@ public class StaffController : MonoBehaviour
     public bool HasStartedAnyShift { get; set; }
     private float shiftSpeedMultiplier = 1f;
 
+    private long resumedShiftSequence;
+
+    public void RestoreShiftSequence(long sequence)
+    {
+        if (sequence <= 0) return;
+        // Reserve all restored positions before the manager starts shifts in roster order.
+        nextShiftSequence = System.Math.Max(nextShiftSequence, sequence);
+        resumedShiftSequence = sequence;
+    }
+
     protected void MarkShiftStarted()
     {
-        ShiftSequence = ++nextShiftSequence;
+        ShiftSequence = resumedShiftSequence > 0 ? resumedShiftSequence : ++nextShiftSequence;
+        resumedShiftSequence = 0;
+        PayStaffManager.AccrueCurrentPeriod(this);
         HasStartedAnyShift = true;
         shiftStartTime = Time.time;
         hasLeftToday = false;
@@ -431,17 +459,29 @@ public class StaffController : MonoBehaviour
         aiLoopCoroutine = StartCoroutine(AIUpdateLoop());
     }
 
+    public void ReturnToNewAssignment()
+    {
+        // A break already follows the current assignment on return. Preserve its need recovery.
+        if (!isActiveAndEnabled || !IsOnDuty() || IsOnBreak()) return;
+        currentExecutor?.Interrupt();
+        if (arrivalCoroutine != null) StopCoroutine(arrivalCoroutine);
+        agentMover?.Stop();
+        arrivalCoroutine = StartCoroutine(assignedWorkstation != null ? GoToWorkstationRoutine() : GoToHangoutRoutine());
+    }
+
     protected virtual IEnumerator GoToWorkstationRoutine()
     {
         if (assignedWorkstation == null || assignedWorkstation.clerkStandPoint == null) yield break;
 
-        var targetPos = assignedWorkstation.clerkStandPoint.position;
+        var desk = assignedWorkstation;
+        var targetPos = desk.clerkStandPoint.position;
         if (agentMover != null)
         {
             agentMover.SetPath(PathfindingUtility.BuildPathTo(transform.position, targetPos, gameObject));
             while (agentMover.IsMoving()) yield return null;
         }
 
+        if (desk == null || desk != assignedWorkstation || Vector2.Distance(transform.position, targetPos) > 1f || !IsOnDuty()) yield break;
         hasArrivedToday = true;
         // Сообщаем в телетайп только когда ФАКТИЧЕСКИ прибыл на рабочее место
         TeletypeManager.Instance?.LogStaffWork(characterName, role.ToString(), isStartShift: true);
@@ -825,6 +865,21 @@ public class StaffController : MonoBehaviour
 
     public float GetCurrentStress() => stress;
 
+    public List<StaffAction> GetAutonomousActions()
+    {
+        var actions = new List<StaffAction>();
+        void Include(StaffAction action)
+        {
+            if (action != null && !actions.Contains(action)) actions.Add(action);
+        }
+        if (activeActions != null) foreach (var action in activeActions) Include(action);
+        if (systemActionDatabase?.allActions != null) foreach (var action in systemActionDatabase.allActions) Include(action);
+        if (currentRank?.unlockedActions != null)
+            foreach (var action in currentRank.unlockedActions)
+                if (action != null && action.category == ActionCategory.System) Include(action);
+        return actions;
+    }
+
     protected void TryPickAction()
     {
         // Очищаем brain dump перед новым решением
@@ -841,13 +896,7 @@ public class StaffController : MonoBehaviour
             }
         }
         
-        // Собираем ВСЕ действия: и тактические (назначенные), и системные (базовые нужды)
-        var allAvailable = new List<StaffAction>();
-        if (activeActions != null) allAvailable.AddRange(activeActions);
-        
-        // Добавляем системные действия если есть база
-        if (systemActionDatabase != null && systemActionDatabase.allActions != null)
-            allAvailable.AddRange(systemActionDatabase.allActions);
+        var allAvailable = GetAutonomousActions();
 
         // Приказанное действие участвует в выборе, даже если его нет в тактике сотрудника.
         StaffOrder order = GetActiveOrder();
@@ -1009,6 +1058,8 @@ public class StaffController : MonoBehaviour
         ActiveOrder = null;
         isOnBreak = false;
         agentMover?.Stop();
+        if (this is IServiceProvider provider)
+            ClientSpawner.UnassignServiceProviderFromDesk(assignedWorkstation, provider);
         // Логируем окончание смены в дневнике задач
         LogTaskEnd();
         
@@ -1260,9 +1311,17 @@ public class StaffController : MonoBehaviour
         agentMover?.Stop();
         ClearNeedActivity();
         if (this is InternController intern) intern.AssignCoveredWorkstation(null);
-        if (assignedWorkstation != null && this is IServiceProvider provider
-            && ClientSpawner.GetServiceProviderAtDesk(assignedWorkstation.deskId) == provider)
-            ClientSpawner.UnassignServiceProviderFromDesk(assignedWorkstation.deskId);
+        if (this is IServiceProvider provider)
+            ClientSpawner.UnassignServiceProviderFromDesk(assignedWorkstation, provider);
+    }
+
+    public void ResumeFromWalkHome()
+    {
+        if (!hasLeftToday || !gameObject.activeSelf) return;
+        // EndShift already released the executor. Cancel its exit route before it can deactivate the new shift.
+        StopAllCoroutines();
+        agentMover?.Stop();
+        StartShift();
     }
 
     public void ResumeAfterRoleChange(long originalSequence)
@@ -1304,13 +1363,16 @@ public class StaffController : MonoBehaviour
         GetComponent<ActionDiary>()?.LogEvent($"Начал задачу: {action.displayName}");
         
         var executorType = action.GetExecutorType();
-        if (executorType != null)
+        if (executorType == null) return;
+        if (executorType.IsAbstract || !typeof(ActionExecutor).IsAssignableFrom(executorType))
         {
-            currentAction = action;
-            var executor = gameObject.AddComponent(executorType) as ActionExecutor;
-            currentExecutor = executor;
-            executor.Execute(this, action);
+            Debug.LogError($"[StaffActionTrace] Invalid executor {executorType.Name} for {action.name}", action);
+            return;
         }
+        var executor = (ActionExecutor)gameObject.AddComponent(executorType);
+        currentAction = action;
+        currentExecutor = executor;
+        executor.Execute(this, action);
     }
     
     public Role currentRole 

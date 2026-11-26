@@ -16,7 +16,7 @@ public class ProcessDocumentExecutor : ActionExecutor
             yield break;
         }
 
-        LimitedCapacityZone myZone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        LimitedCapacityZone myZone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         if (myZone == null)
         {
             Debug.LogWarning("[ProcessDocumentExecutor] Zone не найдена");
@@ -34,7 +34,7 @@ public class ProcessDocumentExecutor : ActionExecutor
         }
 
         clerk.SetState(ClerkController.ClerkState.Working);
-        clerk.thoughtBubble?.ShowPriorityMessage("Следующий!", 2f, Color.white);
+        clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.next"), 2f, Color.white);
         
         clerk.AssignClient(clientToServe);
         

@@ -21,6 +21,8 @@ public class ProcessProjectDocumentExecutor : ActionExecutor
             yield break; 
         }
 
+        yield return ReturnToWorkstation();
+        if (!IsAtWorkstation) { FinishAction(false); yield break; }
         var stack = clerk.assignedWorkstation.documentStack;
         if (stack == null) 
         { 
@@ -41,74 +43,67 @@ public class ProcessProjectDocumentExecutor : ActionExecutor
         var durability = clerk.assignedWorkstation.GetComponent<OfficeObjectDurability>();
         if (durability != null && !durability.IsUsable())
         {
-            clerk.thoughtBubble?.ShowPriorityMessage("Стол сломан!", 3f, Color.red);
+            clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.desk_broken"), 3f, Color.red);
             FinishAction(false);
             yield break;
         }
         float efficiency = (durability != null) ? durability.GetEfficiencyMultiplier() : 1.0f;
 
         clerk.SetState(ClerkController.ClerkState.Working);
-        clerk.thoughtBubble?.ShowPriorityMessage("Внутренний приказ...", 3f, Color.cyan);
+        clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.project.internal_order"), 3f, Color.cyan);
 
         float workTime = Random.Range(4f, 6f) / efficiency;
-        var refs = clerk.GetComponent<StaffPrefabReferences>();
-        if (refs != null && refs.processingIconPrefab != null)
-        {
-            GameObject iconObj = Instantiate(refs.processingIconPrefab);
-            ProcessingAnimationUI animScript = iconObj.GetComponent<ProcessingAnimationUI>();
-            if (animScript != null) 
-                animScript.Play(clerk.transform.position, clerk.assignedWorkstation.transform.position, workTime);
-        }
-
+        ShowProcessing(clerk.assignedWorkstation.transform.position, workTime);
         yield return new WaitForSeconds(workTime);
 
-        if (targetDoc != null)
+        if (targetDoc == null || !IsAtWorkstation || clerk.assignedWorkstation.documentStack != stack ||
+            stack.FindPendingProjectDocument(clerk.currentRole) != targetDoc) { FinishAction(false); yield break; }
+        var docData = targetDoc.documentData;
+
+        if (clerk.clerkRole == ClerkController.ClerkRole.Registrar)
         {
-            var docData = targetDoc.documentData;
-
-            if (clerk.clerkRole == ClerkController.ClerkRole.Registrar)
-            {
-                docData.processedByRegistrar = true;
-                if (AudioManager.Instance != null) 
-                    AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Stamp_Approve, transform.position);
-            }
-            else if (clerk.clerkRole == ClerkController.ClerkRole.Cashier || clerk.clerkRole == ClerkController.ClerkRole.Accountant)
-            {
-                int cost = 0;
-                
-                // ИСПРАВЛЕНИЕ: Используем глобальный Enum
-                if (docData.docType == ProjectDocumentType.RegionUnlock && docData.targetRegion != null)
-                    cost = docData.targetRegion.unlockCostMoney;
-                else if (docData.docType == ProjectDocumentType.JobPromotion && docData.targetJob != null)
-                    cost = docData.targetJob.costMoney;
-                else if (docData.docType == ProjectDocumentType.FacilityUpgrade)
-                {
-                    if (UpgradeManager.Instance != null)
-                    {
-                        var upgrade = UpgradeManager.Instance.allUpgradesDatabase.FirstOrDefault(u => u.name == docData.targetUpgradeID);
-                        if (upgrade != null) cost = upgrade.cost;
-                    }
-                }
-
-                if (PlayerWallet.Instance.GetCurrentMoney() >= cost)
-                {
-                    PlayerWallet.Instance.AddMoney(-cost, $"Оплата: {docData.documentName}");
-                    docData.paidAtCashier = true; 
-                    
-                    if (AudioManager.Instance != null) 
-                        AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Money_Income, transform.position);
-                    
-                    clerk.thoughtBubble?.ShowPriorityMessage("Оплачено!", 2f, Color.green);
-                }
-                else
-                {
-                    clerk.thoughtBubble?.ShowPriorityMessage("Казна пуста!", 3f, Color.red);
-                }
-            }
-
-            targetDoc.UpdateVisuals();
-            if (durability != null) durability.Degrade(2f);
+            docData.processedByRegistrar = true;
+            if (AudioManager.Instance != null)
+                AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Stamp_Approve, transform.position);
         }
+        else if (clerk.clerkRole == ClerkController.ClerkRole.Cashier || clerk.clerkRole == ClerkController.ClerkRole.Accountant)
+        {
+            int cost = 0;
+
+            // ИСПРАВЛЕНИЕ: Используем глобальный Enum
+            if (docData.docType == ProjectDocumentType.RegionUnlock && docData.targetRegion != null)
+                cost = docData.targetRegion.unlockCostMoney;
+            else if (docData.docType == ProjectDocumentType.JobPromotion && docData.targetJob != null)
+                cost = docData.targetJob.costMoney;
+            else if (docData.docType == ProjectDocumentType.FacilityUpgrade)
+            {
+                if (UpgradeManager.Instance != null)
+                {
+                    var upgrade = UpgradeManager.Instance.allUpgradesDatabase.FirstOrDefault(u => u.name == docData.targetUpgradeID);
+                    if (upgrade != null) cost = upgrade.cost;
+                }
+            }
+
+            if (PlayerWallet.Instance != null && PlayerWallet.Instance.GetCurrentMoney() >= cost)
+            {
+                PlayerWallet.Instance.AddMoney(-cost, UI.GameText.Get("ledger.project_payment", docData.documentName));
+                docData.paidAtCashier = true;
+
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.PlaySound(Scriptables.Audio.SoundID.UI_Money_Income, transform.position);
+
+                clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.project.paid"), 2f, Color.green);
+            }
+            else
+            {
+                clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.project.no_funds"), 3f, Color.red);
+                FinishAction(false);
+                yield break;
+            }
+        }
+
+        targetDoc.UpdateVisuals();
+        if (durability != null) durability.Degrade(2f);
 
         ExperienceManager.Instance?.GrantXP(staff, actionData.actionType);
         FinishAction(true);

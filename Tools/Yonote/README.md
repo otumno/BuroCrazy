@@ -3,7 +3,6 @@
 Workspace: https://mindeaterteaceremony.yonote.ru
 
 Put your token in `%USERPROFILE%/.config/yonote/settings.json`, field `api_token`.
-For this user: `C:/Users/Manda/.config/yonote/settings.json`.
 The settings live outside the repository, at user level. Do not print them, paste them in chat, or pass the token on the command line.
 No third-party Python packages are required.
 

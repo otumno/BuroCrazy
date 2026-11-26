@@ -11,7 +11,7 @@ public class MakeArchiveRequestExecutor : ActionExecutor
         var registrar = staff as ClerkController;
         if (registrar == null || registrar.assignedWorkstation == null || ArchiveRequestManager.Instance == null)
         { FinishAction(false); yield break; }
-        var zone = ClientSpawner.GetZoneByDeskId(registrar.assignedWorkstation.deskId);
+        var zone = registrar.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         var client = zone?.GetOccupyingClients().FirstOrDefault(c => c != null && c.mainGoal == ClientGoal.GetArchiveRecord);
         if (client == null) { FinishAction(false); yield break; }
         ArchiveRequestManager.Instance.CreateRequest(registrar, client);
@@ -63,7 +63,7 @@ public class MakeArchiveRequestExecutor : ActionExecutor
         }
         else
         {
-            registrar.thoughtBubble?.ShowPriorityMessage("Архив не отвечает...\nИзвините.", 3f, Color.red);
+            registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.archive.no_reply"), 3f, Color.red);
             registrar.SetState(ClerkController.ClerkState.ReturningToWork);
             yield return registrar.MoveToTarget(registrar.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString());
             

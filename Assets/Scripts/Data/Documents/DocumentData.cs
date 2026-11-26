@@ -43,10 +43,7 @@ namespace Data.Documents
 
         public bool CanBeProcessedBy(StaffController.Role role, int skillLevel, bool hasEquipment)
         {
-            if (hasEquipment && requiredEquipment != EquipmentType.None && !canProcessWithoutEquipment)
-            {
-                if (!hasEquipment) return false;
-            }
+            if (!hasEquipment && requiredEquipment != EquipmentType.None && !canProcessWithoutEquipment) return false;
 
             if (skillLevel < minSkillLevel) return false;
 
@@ -60,7 +57,7 @@ namespace Data.Documents
 
         public float GetProcessingTimeWithPenalty(bool hasEquipment)
         {
-            if (requiredEquipment == EquipmentType.None || hasEquipment || canProcessWithoutEquipment)
+            if (requiredEquipment == EquipmentType.None || hasEquipment)
             {
                 return baseProcessingTime;
             }

@@ -24,5 +24,6 @@ MonoBehaviour:
   unlockedActions:
   - {fileID: 11400000, guid: 1cd176a2786119d4499886e59bdd3bfe, type: 2}
   - {fileID: 11400000, guid: 481499db542d3cf4abd9ffaaf739a86d, type: 2}
+  - {fileID: 11400000, guid: 4b33036e885778340a843d76b8bbc7a5, type: 2}
   possiblePromotions:
   - {fileID: 11400000, guid: fe7fbb9fad458ac4283716ab1b960fdc, type: 2}

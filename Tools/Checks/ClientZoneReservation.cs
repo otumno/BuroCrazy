@@ -20,7 +20,7 @@ public static class ClientZoneReservationCheck
             root.SetActive(false);
             SceneManager.MoveGameObjectToScene(root, scene);
             var zone = Child(root, "Zone").AddComponent<LimitedCapacityZone>();
-            var spot = Child(root, "Spot").AddComponent<Waypoint>();
+            var spot = Child(zone.gameObject, "Spot").AddComponent<Waypoint>();
             var outside = Child(root, "Outside").AddComponent<Waypoint>();
             zone.insideWaypoints = new List<Waypoint> { spot };
             zone.capacity = 1;
@@ -63,10 +63,11 @@ public static class ClientZoneReservationCheck
             visitor.OnZoneEntryApproved(zone.RequestAndOccupyWaypoint(visitor.gameObject), zone);
             zone.ReleaseWaypoint(spot);
             Require(zone.RequestAndOccupyWaypoint(second) == spot, "Second visitor could not enter after release.");
-            visitor.ReleaseZoneReservation();
+            client.ForceLeave();
             visitor.ReleaseZoneReservation();
             Require(zone.IsWaypointOccupied(spot), "Stale cleanup evicted the second visitor.");
 
+            visitor.SetState(ClientState.AtLimitedZoneEntrance);
             zone.JoinQueue(visitor.gameObject);
             Set(visitor, "targetZone", zone);
             visitor.SetState(ClientState.Leaving);

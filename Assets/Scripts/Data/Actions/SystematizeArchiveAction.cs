@@ -17,8 +17,10 @@ public class SystematizeArchiveAction : StaffAction
         }
 
         // Условие: нет экстренных запросов и нет документов для архивации на столе.
-        bool hasUrgentRequests = ArchiveRequestManager.Instance.HasPendingRequests();
-        bool hasDocsToArchive = !ArchiveManager.Instance.mainDocumentStack.IsEmpty;
+        bool hasUrgentRequests = ArchiveRequestManager.Instance != null && ArchiveRequestManager.Instance.HasPendingRequests();
+        var archive = ArchiveManager.Instance;
+        if (archive == null) return false;
+        bool hasDocsToArchive = archive.GetStackToProcess() != null;
 
         return !hasUrgentRequests && !hasDocsToArchive;
     }

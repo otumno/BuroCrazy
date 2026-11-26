@@ -9,7 +9,7 @@ public class PrioritizePayTaxExecutor : ActionExecutor
     {
         if (!(staff is ClerkController registrar)) { FinishAction(false); yield break; }
 
-        registrar.thoughtBubble?.ShowPriorityMessage("Подходите с оплатой счетов!", 2f, Color.green);
+        registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.registration.call_payment"), 2f, Color.green);
         bool success = ClientQueueManager.Instance.CallClientWithSpecificGoal(ClientGoal.PayTax, registrar);
         if (success)
         {

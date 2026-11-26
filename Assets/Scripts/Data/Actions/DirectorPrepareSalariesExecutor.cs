@@ -14,7 +14,7 @@ public class DirectorPrepareSalariesExecutor : ActionExecutor
         
         if (envelopeStack == null)
         {
-            staff.thoughtBubble?.ShowPriorityMessage("Нет места для зарплат!", 3f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.payroll.no_safe"), 3f, Color.red);
             FinishAction(false);
             yield break;
         }
@@ -22,30 +22,30 @@ public class DirectorPrepareSalariesExecutor : ActionExecutor
         // Идем к сейфу
         yield return staff.MoveToTarget(envelopeStack.transform.position, "Working");
 
-        int costPerEnvelope = 100; // Условная цена
         int envelopesToMake = 5;
 
         for (int i = 0; i < envelopesToMake; i++)
         {
-            if (PlayerWallet.Instance.GetCurrentMoney() < costPerEnvelope)
+            yield return new WaitForSeconds(1.5f);
+            if (envelopeStack == null || Vector2.Distance(staff.transform.position, envelopeStack.transform.position) > 1f)
+            { FinishAction(false); yield break; }
+            if (PlayerWallet.Instance == null || !PlayerWallet.Instance.CanAfford(Gameplay.EnvelopeStack.PreparationCost))
             {
-                staff.thoughtBubble?.ShowPriorityMessage("Денег нет!", 2f, Color.red);
+                staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.payroll.no_money"), 2f, Color.red);
                 break;
             }
 
             // ИСПРАВЛЕНИЕ: Вызываем метод у компонента, а не у трансформа
             if (envelopeStack.CurrentEnvelopeCount >= envelopeStack.maxCapacity)
             {
-                staff.thoughtBubble?.ShowPriorityMessage("Сейф полон!", 2f, Color.red);
+                staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.payroll.safe_full"), 2f, Color.red);
                 break;
             }
 
-            yield return new WaitForSeconds(1.5f);
+            if (!envelopeStack.TryPrepareEnvelope(PlayerWallet.Instance, UI.GameText.Get("ledger.payroll_preparation")))
+            { FinishAction(false); yield break; }
             
-            PlayerWallet.Instance.AddMoney(-costPerEnvelope, "Подготовка зарплаты");
-            envelopeStack.AddEnvelope(); // Исправлено
-            
-            staff.thoughtBubble?.ShowPriorityMessage("+1 Конверт", 1f, Color.green);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.payroll.added"), 1f, Color.green);
         }
 
         FinishAction(true);

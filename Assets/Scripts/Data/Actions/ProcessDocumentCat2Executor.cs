@@ -23,7 +23,7 @@ public class ProcessDocumentCat2Executor : ActionExecutor
             yield break; 
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         var client = zone?.GetOccupyingClients().FirstOrDefault(c => CanServeAtWorkstation(c));
         
         // Бронебойный поиск физически ближайшего клиента у стола

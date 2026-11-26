@@ -65,8 +65,13 @@ public class StartOfDayPanel : MonoBehaviour
         else if (Instance != this) Destroy(gameObject);
     }
 
+    private void OnDisable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+
+    private void RefreshLocale(UnityEngine.Localization.Locale locale) => UpdatePanelInfo();
+
     private void OnEnable()
     {
+        UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
         if (subscribedClock != null) subscribedClock.OnDayChanged -= SwitchFirstShow;
         subscribedClock = TimeManager.Instance;
         if (subscribedClock != null)
@@ -103,7 +108,7 @@ public class StartOfDayPanel : MonoBehaviour
     public void UpdatePanelInfo()
     {
         if (dayText != null && CalendarManager.Instance != null) 
-            dayText.text = $"ДЕНЬ {CalendarManager.Instance.CurrentDay}";
+            dayText.text = UI.GameText.Get("desk.day", CalendarManager.Instance.CurrentDay);
         
         if (moneyText != null && PlayerWallet.Instance != null) 
             moneyText.text = $"${PlayerWallet.Instance.GetCurrentMoney()}";
@@ -113,18 +118,16 @@ public class StartOfDayPanel : MonoBehaviour
             int limit = Gameplay.AIBalanceConfig.Instance != null
                 ? Gameplay.AIBalanceConfig.Instance.dismissalStrikeLimit
                 : 3;
-            strikesText.text = $"Ошибки: {DirectorManager.Instance.currentStrikes} / {limit}";
+            strikesText.text = UI.GameText.Get("desk.strikes", DirectorManager.Instance.currentStrikes, limit);
         }
 
         // Обновление ошибок
         if (errorRateText != null && DocumentQualityManager.Instance != null && OrderManager.Instance != null)
         {
             float averageError = DocumentQualityManager.Instance.GetCurrentAverageErrorRate();
-            float allowedError = OrderManager.Instance.currentMandates.Any()
-                ? OrderManager.Instance.currentMandates[0].allowedDirectorErrorRate
-                : 1f;
+            float allowedError = OrderManager.Instance.AllowedDirectorErrorRate;
 
-            errorRateText.text = $"Ошибки: {averageError:P0} / Норма: {allowedError:P0}";
+            errorRateText.text = UI.GameText.Get("desk.errors", averageError.ToString("P0"), allowedError.ToString("P0"));
             errorRateText.color = (averageError > allowedError) ? Color.red : Color.white;
             errorRateText.gameObject.SetActive(true);
         }
@@ -132,14 +135,14 @@ public class StartOfDayPanel : MonoBehaviour
         // Обновление приказов
         if (activeOrdersText != null && OrderManager.Instance != null)
         {
-            var dailyOrders = OrderManager.Instance.activeOrders.Select(o => o.orderName);
-            var permanentOrders = OrderManager.Instance.activePermanentOrders.Select(o => o.orderName + " (Пост.)");
+            var dailyOrders = OrderManager.Instance.activeOrders.Where(o => o != null && o.duration != OrderDuration.Permanent).Select(o => o.LocalizedName);
+            var permanentOrders = OrderManager.Instance.activePermanentOrders.Select(o => UI.GameText.Get("desk.permanent", o.LocalizedName));
             var allActiveOrders = dailyOrders.Concat(permanentOrders);
             var activeOrders = allActiveOrders as string[] ?? allActiveOrders.ToArray();
             
             if (activeOrders.Any())
             {
-                activeOrdersText.text = "<b>Активные приказы:</b>\n" + string.Join("\n", activeOrders);
+                activeOrdersText.text = UI.GameText.Get("desk.orders") + string.Join("\n", activeOrders);
                 activeOrdersText.gameObject.SetActive(true);
             }
             else
@@ -153,7 +156,7 @@ public class StartOfDayPanel : MonoBehaviour
         {
             startDayButton.interactable = true;
             var buttonText = startDayButton.GetComponentInChildren<TextMeshProUGUI>();
-            buttonText.text = _isFirstShow ? "Начать день" : "Продолжить день";
+            buttonText.text = UI.GameText.Get(_isFirstShow ? "desk.start" : "desk.resume");
 
             startDayButton.onClick.RemoveAllListeners();
             startDayButton.onClick.AddListener(() =>

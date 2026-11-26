@@ -14,6 +14,7 @@ public class SaveData
     // --- Глобальные данные ---
     public int day;
     public int money;
+    public int salaryEnvelopeCount;
     public int archiveDocumentCount;
     public bool hasCalendarProgress;
     public CalendarDayPeriodType savedPeriod;
@@ -150,6 +151,9 @@ public struct StaffSaveData
     public bool hasAttendanceState;
     public int attendanceDay;
     public float arrivalDelayRemaining;
+    public long activeShiftSequence;
+    public int lastSalaryDay;
+    public CalendarDayPeriodType lastSalaryPeriod;
     [Tooltip("Имена ассетов StaffAction, выбранных сотруднику.")]
     public List<string> activeActionNames;
 
@@ -163,6 +167,7 @@ public struct StaffSaveData
 
     // Рабочее место и расписание
     public int assignedWorkstationId;
+    public string assignedWorkstationPath;
     public int scheduleTrackIndex;
     public CalendarDayPeriodType workShiftMask;
 

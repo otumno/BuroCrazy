@@ -25,7 +25,7 @@ public class AccountantCoverSchemesExecutor : ActionExecutor
         if (roleData != null && roleData.accountant_coverSchemesIntervalOverride > 0f)
             interval = roleData.accountant_coverSchemesIntervalOverride;
 
-        staff.thoughtBubble?.ShowPriorityMessage("Закрываю дыры...", 2f, Color.magenta);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.accounts.cover"), 2f, Color.magenta);
 
         while (true)
         {
@@ -49,7 +49,7 @@ public class AccountantCoverSchemesExecutor : ActionExecutor
             int reduce = Random.Range(config.accountantCoverSchemesReduceMin, config.accountantCoverSchemesReduceMax + 1);
             FinancialLedgerManager.Instance?.ReduceCorruption(reduce);
 
-            staff.thoughtBubble?.ShowPriorityMessage($"Прикрыл на {reduce}₽", 2f, Color.green);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.accounts.covered", reduce), 2f, Color.green);
         }
     }
 }

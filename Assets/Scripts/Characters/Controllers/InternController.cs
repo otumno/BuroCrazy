@@ -110,13 +110,13 @@ public class InternController : StaffController, IServiceProvider
         hasArrivedToday = true;
         currentState = InternState.Patrolling;
 
-        if (thoughtBubble) thoughtBubble.ShowPriorityMessage("Вышел на смену!", 2f, Color.white);
+        if (thoughtBubble) thoughtBubble.ShowPriorityMessage(UI.GameText.Get("staff.shift.start"), 2f, Color.white);
 
         Debug.Log($"[InternController] {characterName}: Начал работу. WorkShiftMask={WorkShiftMask}, IsOnDuty={IsOnDuty()}");
 
         while (IsOnDuty())
         {
-            if (thoughtBubble) thoughtBubble.ShowPriorityMessage("На дежурстве", 2f, Color.white);
+            if (thoughtBubble) thoughtBubble.ShowPriorityMessage(UI.GameText.Get("intern.on_duty"), 2f, Color.white);
 
             if (CheckAndHandleBreaks())
             {
@@ -323,10 +323,6 @@ public class InternController : StaffController, IServiceProvider
         this.spriteCollection = data.spriteCollection;
         this.stateEmotionMap = data.stateEmotionMap;
 
-        if (visuals != null)
-        {
-            visuals.EquipAccessory(data.accessoryPrefab);
-        }
     }
 
     #region IServiceProvider Implementation
@@ -373,14 +369,14 @@ public class InternController : StaffController, IServiceProvider
         var durability = coveredServicePoint.GetComponent<Gameplay.OfficeObjectDurability>();
         if (durability != null && !durability.IsUsable())
         {
-            thoughtBubble?.ShowPriorityMessage("Стол сломан!\nЯ не могу...", 3f, Color.red);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.broken"), 3f, Color.red);
             yield break;
         }
         float efficiency = Mathf.Max(.05f, durability != null ? durability.GetEfficiencyMultiplier() : 1.0f);
 
         if (deskId == 0)
         {
-            thoughtBubble?.ShowPriorityMessage("Попробую помочь...", 2f, Color.yellow);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.try_help"), 2f, Color.yellow);
             yield return new WaitForSeconds(3f / efficiency);
 
             if (client == null || !client.CanContinueService) yield break;
@@ -389,9 +385,9 @@ public class InternController : StaffController, IServiceProvider
 
             float errorChance = 0.4f * (1f - skills.pedantry);
             if (Random.value < errorChance)
-                thoughtBubble?.ShowPriorityMessage("Ой, кажется, вам\nтуда...", 3f, Color.red);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.uncertain"), 3f, Color.red);
             else
-                thoughtBubble?.ShowPriorityMessage($"Вам к '{(destination != null ? destination.name : "Выход")}'", 3f, Color.white);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.directions", destination != null ? CharacterActivityOverlay.PlaceName(destination) : UI.GameText.Get("place.exit")), 3f, Color.white);
 
             if (client.stateMachine != null)
             {
@@ -406,7 +402,7 @@ public class InternController : StaffController, IServiceProvider
         }
         else if (deskId == -1)
         {
-            thoughtBubble?.ShowPriorityMessage("Принимаю оплату...", 2f, Color.yellow);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.payment"), 2f, Color.yellow);
             yield return new WaitForSeconds(3f / efficiency);
 
             if (client == null || !client.CanContinueService || PlayerWallet.Instance == null) yield break;
@@ -415,12 +411,12 @@ public class InternController : StaffController, IServiceProvider
             {
                 int bill = client.billToPay;
                 int walletBefore = PlayerWallet.Instance.GetCurrentMoney();
-                PlayerWallet.Instance?.AddMoney(client.billToPay, "Оплата (Стажер)");
+                PlayerWallet.Instance?.AddMoney(client.billToPay, UI.GameText.Get("ledger.intern_payment"));
                 if (client.paymentSound != null) AudioSource.PlayClipAtPoint(client.paymentSound, transform.position);
                 client.billToPay = 0;
                 Debug.Log($"[ClientServiceTrace] Оплата стажёру: клиент={client.name}, счёт={bill}, кошелёк={walletBefore}->{PlayerWallet.Instance.GetCurrentMoney()}");
                 coveredServicePoint.documentStack?.AddDocumentToStack();
-                thoughtBubble?.ShowPriorityMessage("Оплачено!", 2f, Color.green);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.project.paid"), 2f, Color.green);
             }
             client.isLeavingSuccessfully = true;
             client.reasonForLeaving = ClientPathfinding.LeaveReason.Processed;
@@ -429,14 +425,14 @@ public class InternController : StaffController, IServiceProvider
         }
         else if (deskId == 1 || deskId == 2)
         {
-            thoughtBubble?.ShowPriorityMessage("Так... посмотрим...", 2f, Color.yellow);
+            thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.review"), 2f, Color.yellow);
             yield return new WaitForSeconds(1.5f / efficiency);
 
             if (client == null || !client.CanContinueService) yield break;
 
             if (client.docHolder == null)
             {
-                thoughtBubble?.ShowPriorityMessage("Ошибка: нет документа!", 3f, Color.red);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.missing"), 3f, Color.red);
                 yield break;
             }
 
@@ -444,7 +440,7 @@ public class InternController : StaffController, IServiceProvider
 
             if (client.docHolder.GetCurrentDocumentType() != requiredDoc)
             {
-                thoughtBubble?.ShowPriorityMessage("У вас бланк не тот!", 3f, Color.red);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("intern.wrong_form"), 3f, Color.red);
                 yield return new WaitForSeconds(2f);
                 client.stateMachine?.GoGetFormAndReturn();
             }
@@ -462,7 +458,7 @@ public class InternController : StaffController, IServiceProvider
                 client.docHolder.SetDocument(newDocType);
                 client.billToPay += (deskId == 1) ? 100 : 250;
 
-                thoughtBubble?.ShowPriorityMessage("Готово!", 3f, Color.green);
+                thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.action.done"), 3f, Color.green);
                 client.stateMachine?.SetGoal(ClientSpawner.GetCashierZone()?.waitingWaypoint);
                 client.stateMachine?.SetState(ClientState.MovingToGoal);
 

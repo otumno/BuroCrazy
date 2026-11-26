@@ -17,33 +17,39 @@ MonoBehaviour:
   <Orders>k__BackingField:
   - <Label>k__BackingField: "\u0421\u0434\u0435\u043B\u0430\u0442\u044C \u043F\u0430\u0443\u0437\u0443
       \u0438 \u043E\u0442\u0434\u043E\u0445\u043D\u0443\u0442\u044C"
+    <LabelKey>k__BackingField: order.break
     <Action>k__BackingField: {fileID: 11400000, guid: 534d424a47034054084eae34c4dcbb0e, type: 2}
     <Roles>k__BackingField: 
     <RequiredJob>k__BackingField: {fileID: 0}
     <StressCost>k__BackingField: 5
   - <Label>k__BackingField: "\u0421\u0445\u043E\u0434\u0438\u0442\u044C \u0432 \u0442\u0443\u0430\u043B\u0435\u0442"
+    <LabelKey>k__BackingField: order.toilet
     <Action>k__BackingField: {fileID: 11400000, guid: 2f71c20d0936f09458ef62698a16f885, type: 2}
     <Roles>k__BackingField: 
     <RequiredJob>k__BackingField: {fileID: 0}
     <StressCost>k__BackingField: 5
   - <Label>k__BackingField: "\u0418\u0434\u0438 \u0432 \u043F\u0430\u0442\u0440\u0443\u043B\u044C"
+    <LabelKey>k__BackingField: order.guard_patrol
     <Action>k__BackingField: {fileID: 11400000, guid: a30a95f56d25c184cb9356ca16efe46b, type: 2}
     <Roles>k__BackingField: 05000000
     <RequiredJob>k__BackingField: {fileID: 0}
     <StressCost>k__BackingField: 5
   - <Label>k__BackingField: "\u041E\u0442\u043D\u0435\u0441\u0438 \u0434\u043E\u043A\u0443\u043C\u0435\u043D\u0442\u044B
       \u0441\u043E \u0441\u0442\u043E\u043B\u0430 \u0432 \u0430\u0440\u0445\u0438\u0432"
+    <LabelKey>k__BackingField: order.archive
     <Action>k__BackingField: {fileID: 11400000, guid: 5d4b44268e9495840983f71988ce11f2, type: 2}
     <Roles>k__BackingField: 0700000002000000030000000400000009000000
     <RequiredJob>k__BackingField: {fileID: 0}
     <StressCost>k__BackingField: 5
   - <Label>k__BackingField: "\u041F\u0440\u043E\u0439\u0434\u0438\u0441\u044C \u0438
       \u043F\u0440\u0438\u0431\u0435\u0440\u0438"
+    <LabelKey>k__BackingField: order.clean
     <Action>k__BackingField: {fileID: 11400000, guid: 9ebbe19d2e48628488a874e70c6942c0, type: 2}
     <Roles>k__BackingField: 060000000a000000
     <RequiredJob>k__BackingField: {fileID: 0}
     <StressCost>k__BackingField: 5
   - <Label>k__BackingField: "\u041E\u0431\u043E\u0439\u0434\u0438 \u043E\u0444\u0438\u0441"
+    <LabelKey>k__BackingField: order.intern_patrol
     <Action>k__BackingField: {fileID: 11400000, guid: 7ed30c77361d69548859e035acbafdd2, type: 2}
     <Roles>k__BackingField: 01000000
     <RequiredJob>k__BackingField: {fileID: 0}

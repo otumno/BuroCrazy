@@ -119,10 +119,6 @@ public class ServiceWorkerController : StaffController
         this.spriteCollection = data.spriteCollection;
         this.stateEmotionMap = data.stateEmotionMap;
         
-        if(visuals != null)
-        {
-            visuals.EquipAccessory(data.accessoryPrefab);
-        }
 
         this.cleaningTimeTrash = data.worker_cleaningTimeTrash;
         this.cleaningTimePuddle = data.worker_cleaningTimePuddle;

@@ -15,6 +15,7 @@ namespace Utilities
         public CharacterSkills Skills;
         public int HiringCost;
         public string Bio;
+        public ResumeBio GeneratedBio;
         public List<StaffAction> UniqueActionsPool = new List<StaffAction>();
 
         // --- НОВЫЕ ПОЛЯ ---

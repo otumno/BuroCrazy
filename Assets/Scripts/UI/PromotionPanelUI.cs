@@ -31,14 +31,22 @@ public class PromotionPanelUI : MonoBehaviour
     private StaffController currentStaff;
     private RankData selectedPromotion;
     
-    // Список бюрократических фраз
-    private List<string> bureaucraticTexts = new List<string>
+    private int flavorIndex;
+    private bool isPromotion;
+
+    private void OnEnable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
+    private void OnDisable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+
+    private void RefreshLocale(UnityEngine.Localization.Locale locale)
     {
-        "Настоящим, ввиду производственной необходимости и согласно параграфу 7-БИС устава, постановляется:",
-        "В соответствии с директивой №1337 о кадровых перестановках и в целях оптимизации рабочих процессов, приказываю:",
-        "Рассмотрев личное дело и приняв во внимание неоценимый вклад в борьбу с энтропией, решено:",
-        "Во исполнение приказа о повышении эффективности и по итогам квартальной аттестации, надлежит:"
-    };
+        if (currentStaff == null) return;
+        employeeNameText.text = UI.GameText.Get("promotion.employee", currentStaff.characterName);
+        flavorText.text = UI.GameText.Get("promotion.flavor." + flavorIndex);
+        titleText.text = UI.GameText.Get(isPromotion ? "promotion.title" : "promotion.assignment");
+        targetTitleText.text = UI.GameText.Get(isPromotion ? "promotion.to" : "promotion.assign_to");
+        if (selectedPromotion != null)
+            (isPromotion ? promotionTargetText : selectedAssignmentText).text = selectedPromotion.LocalizedName;
+    }
 
     private void Awake()
     {
@@ -64,20 +72,19 @@ public class PromotionPanelUI : MonoBehaviour
         selectedAssignmentText.gameObject.SetActive(false);
 
         // Заполнение общих полей
-        employeeNameText.text = $"Сотрудник: {staff.characterName}";
-        flavorText.text = bureaucraticTexts[Random.Range(0, bureaucraticTexts.Count)];
+        flavorIndex = Random.Range(0, 4);
+        isPromotion = promotionOptions.Count == 1;
 
         // Режим "Повышение" (один вариант)
         if (promotionOptions.Count == 1)
         {
             selectedPromotion = promotionOptions[0];
-            titleText.text = "ПРИКАЗ О ПОВЫШЕНИИ";
-            targetTitleText.text = "Повысить до должности:";
+
             
             promotionTargetText.gameObject.SetActive(true);
             assignmentOptionsContainer.SetActive(false);
 
-            promotionTargetText.text = selectedPromotion.rankName;
+            promotionTargetText.text = selectedPromotion.LocalizedName;
             
             // Кнопка "Утвердить" активна, если хватает денег
             approveButton.interactable = PlayerWallet.Instance.GetCurrentMoney() >= selectedPromotion.promotionCost;
@@ -85,8 +92,7 @@ public class PromotionPanelUI : MonoBehaviour
         // Режим "Назначение" (много вариантов)
         else
         {
-            titleText.text = "ПРИКАЗ О НАЗНАЧЕНИИ";
-            targetTitleText.text = "Назначить на должность:";
+
 
             promotionTargetText.gameObject.SetActive(false);
             assignmentOptionsContainer.SetActive(true);
@@ -100,6 +106,7 @@ public class PromotionPanelUI : MonoBehaviour
             }
         }
         
+        RefreshLocale(null);
         panelObject.SetActive(true);
         
         var animator = panelObject.GetComponent<UIWindowAnimator>();
@@ -116,7 +123,7 @@ public class PromotionPanelUI : MonoBehaviour
         // Прячем кнопки выбора и показываем текст с результатом
         assignmentOptionsContainer.SetActive(false);
         selectedAssignmentText.gameObject.SetActive(true);
-        selectedAssignmentText.text = selectedPromotion.rankName;
+        selectedAssignmentText.text = selectedPromotion.LocalizedName;
 
         // Активируем кнопку подтверждения
         approveButton.interactable = true;

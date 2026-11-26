@@ -28,7 +28,7 @@ public class AccountantMoneyGenExecutor : ActionExecutor
             interval = roleData.accountant_moneyGenIntervalOverride;
 
         // Стартовое сообщение
-        staff.thoughtBubble?.ShowPriorityMessage("Ищу заначки...", 2f, Color.yellow);
+        staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.accounts.stash"), 2f, Color.yellow);
 
         // Цикл пассивной генерации
         while (true)
@@ -56,9 +56,9 @@ public class AccountantMoneyGenExecutor : ActionExecutor
             amount = Mathf.Max(1, amount);
 
             // Теневая находка (увеличивает коррупцию, но бухгалтер её потом покрывает)
-            PlayerWallet.Instance?.AddMoney(amount, $"Находка бухгалтера ({staff.name})", IncomeType.Shadow);
+            PlayerWallet.Instance?.AddMoney(amount, UI.GameText.Get("ledger.accountant_named", staff.name), IncomeType.Shadow);
 
-            staff.thoughtBubble?.ShowPriorityMessage($"Нашёл {amount}₽", 2f, Color.cyan);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.accounts.found", amount), 2f, Color.cyan);
         }
     }
 }

@@ -27,20 +27,22 @@ public class StaffScheduleRowUI : MonoBehaviour
         
         foreach (Transform child in transform) Destroy(child.gameObject);
 
+        foreach (var period in periods) _periodTypes.Add(period.PeriodType);
         foreach (var period in periods)
         {
-            _periodTypes.Add(period.PeriodType);
 
             GameObject cellObj = Instantiate(cellPrefab, transform);
             ScheduleCellUI cellUI = cellObj.GetComponent<ScheduleCellUI>();
             
             if (cellUI != null)
             {
-                cellUI.Setup(staff, period.PeriodType, this, isEditable && !staff.IsTemporary);
+                cellUI.Setup(staff, period.PeriodType, this, isEditable);
                 _cells.Add(cellUI);
             }
         }
     }
+
+    public IReadOnlyList<CalendarDayPeriodType> PeriodTypes => _periodTypes;
 
     public void RefreshAllCells()
     {
@@ -50,7 +52,7 @@ public class StaffScheduleRowUI : MonoBehaviour
     // ИЗМЕНЕНИЕ: Принимаем объект ячейки
     public void StartShiftAnimation(ScheduleCellUI startCell)
     {
-        if (_staff == null || !_isEditable || !ShiftPlanning.IsOpen) return;
+        if (_staff == null || !_isEditable) return;
         StopAllCoroutines();
         StartCoroutine(AnimateShiftFill(startCell));
     }
@@ -58,11 +60,8 @@ public class StaffScheduleRowUI : MonoBehaviour
     private IEnumerator AnimateShiftFill(ScheduleCellUI startCell)
     {
         int startIndex = _cells.IndexOf(startCell);
-        if (startIndex < 0 || _staff.IsTemporary) yield break;
+        if (startIndex < 0 || !ShiftPlanning.Apply(_staff, startIndex)) yield break;
         int shiftDuration = HiringManager.GetShiftPeriodsCount(_staff.currentRank);
-        var periods = TimeManager.Instance.mainCalendarDay.periodSettings;
-        // Commit the complete mask before yielding: closing/rebuilding UI must not truncate a shift.
-        _staff.WorkShiftMask = StaffScheduleMath.BuildShift(periods, startIndex, shiftDuration);
         RefreshAllCells();
         for (int i = 0; i < Mathf.Min(shiftDuration, _periodTypes.Count); i++)
         {

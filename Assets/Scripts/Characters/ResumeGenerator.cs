@@ -1,40 +1,26 @@
-// Файл: ResumeGenerator.cs
 using UnityEngine;
-using System.Text;
+
+[System.Serializable]
+public class ResumeBio
+{
+    public int education;
+    public int hobby;
+    public int quirk;
+
+    public string Localize() => UI.GameText.Get("hiring.bio",
+        UI.GameText.Get($"hiring.bio.educations.{education}"),
+        UI.GameText.Get($"hiring.bio.hobbies.{hobby}"),
+        UI.GameText.Get($"hiring.bio.quirks.{quirk}"));
+}
 
 public static class ResumeGenerator
 {
-    private static string[] educations = {
-        "Высшая Школа Канцелярских Наук",
-        "Институт Бюрократических Искусств",
-        "Университет Перекладывания Бумаг им. Архивариуса",
-        "Академия Управления Степплерами",
-        "Колледж Прикладной Печати и Подписи"
-    };
-
-    private static string[] hobbies = {
-        "разведение кактусов на подоконнике",
-        "скоростное сшивание документов",
-        "коллекционирование редких скрепок",
-        "медитация под гул принтера",
-        "составление диаграмм в Excel о смысле жизни"
-    };
-
-    private static string[] quirks = {
-        "Считает, что принтер - это портал в другое измерение.",
-        "Убежден, что комнатный фикус - его прямой начальник.",
-        "Разговаривает с кулером для воды, когда думает, что его никто не видит.",
-        "Верит, что тройная копия документа обладает магической силой.",
-        "Подозревает, что в подвале живет ручной архиватор."
-    };
-
-    public static string GenerateBio()
+    public static ResumeBio Generate() => new ResumeBio
     {
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine($"<b>Образование:</b> {educations[Random.Range(0, educations.Length)]}.");
-        sb.AppendLine($"<b>Хобби:</b> {hobbies[Random.Range(0, hobbies.Length)]}.");
-        sb.Append($"<b>О себе:</b> {quirks[Random.Range(0, quirks.Length)]}");
+        education = Random.Range(0, 5),
+        hobby = Random.Range(0, 5),
+        quirk = Random.Range(0, 5)
+    };
 
-        return sb.ToString();
-    }
+    public static string GenerateBio() => Generate().Localize();
 }

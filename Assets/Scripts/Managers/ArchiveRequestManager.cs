@@ -55,19 +55,19 @@ namespace Managers
         /// <summary>
         /// Создает новый запрос в архив и добавляет его в список ожидания.
         /// </summary>
-        public void CreateRequest(ClerkController registrar, ClientPathfinding client, bool isDelegated = false)
+        public ArchiveRequest CreateRequest(ClerkController registrar, ClientPathfinding client, bool isDelegated = false)
         {
             if (registrar == null || client == null)
             {
                 Debug.LogError("[ArchiveRequestManager] Попытка создать запрос с null регистратором или клиентом!");
-                return;
+                return null;
             }
 
             pendingRequestsList.RemoveAll(req => !req.IsActive);
             if (pendingRequestsList.Any(req => req.WaitingClient == client))
             {
                 Debug.LogWarning($"[ArchiveRequestManager] Для клиента {client.name} уже существует активный запрос.");
-                return;
+                return null;
             }
 
             var newRequest = new ArchiveRequest
@@ -82,6 +82,7 @@ namespace Managers
 
             pendingRequestsList.Add(newRequest);
             Debug.Log($"[ArchiveRequestManager] Регистратор {registrar.name} создал запрос для клиента {client.name}. В очереди: {pendingRequestsList.Count}");
+            return newRequest;
         }
 
         /// <summary>

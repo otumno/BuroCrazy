@@ -35,6 +35,7 @@ namespace Tests
             var db = ScriptableObject.CreateInstance<ArchetypeDatabase>();
             db.allArchetypes = new List<ClientArchetype>();
 
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "[ArchetypeDatabase] База архетипов пуста!");
             var result = db.GetRandomArchetype();
 
             Assert.IsNull(result);

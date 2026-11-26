@@ -15,7 +15,7 @@ public class ClientOrientedServiceExecutor : ActionExecutor
             yield break;
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         if (zone == null) { FinishAction(false); yield break; }
 
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();
@@ -25,7 +25,7 @@ public class ClientOrientedServiceExecutor : ActionExecutor
             yield break;
         }
 
-        clerk.thoughtBubble?.ShowPriorityMessage("Как ваш день? Минуточку...", 3f, Color.green);
+        clerk.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.small_talk"), 3f, Color.green);
         yield return new WaitForSeconds(3f);
 
         float patienceBonus = 30f;

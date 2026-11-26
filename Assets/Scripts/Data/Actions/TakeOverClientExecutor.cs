@@ -24,7 +24,7 @@ public class TakeOverClientExecutor : ActionExecutor
             yield break;
         }
         
-        registrar.thoughtBubble?.ShowPriorityMessage("Не стойте здесь, я вами займусь!", 3f, Color.blue);
+        registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.take_over"), 3f, Color.blue);
         yield return new WaitForSeconds(1f);
 
         var newDestination = registrar.assignedWorkstation.clientStandPoint;

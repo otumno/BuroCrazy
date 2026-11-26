@@ -983,6 +983,1246 @@ MonoBehaviour:
     m_Key: ledger.staff_wages
     m_Metadata:
       m_Items: []
+  - m_Id: 315412674764800
+    m_Key: staff.guard.calm_down
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902144
+    m_Key: staff.guard.conflict_resolved
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902145
+    m_Key: staff.guard.door_switched
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902146
+    m_Key: staff.guard.stop_thief
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902147
+    m_Key: staff.guard.caught
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902148
+    m_Key: staff.janitor.out_of_reach
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902149
+    m_Key: staff.janitor.scrubbing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902150
+    m_Key: staff.janitor.found_something
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902151
+    m_Key: ledger.trash_find
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902152
+    m_Key: staff.janitor.blocked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902153
+    m_Key: staff.janitor.resting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902154
+    m_Key: staff.payroll.no_safe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902155
+    m_Key: staff.payroll.no_money
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902156
+    m_Key: staff.payroll.safe_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902157
+    m_Key: staff.payroll.added
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902158
+    m_Key: ledger.payroll_preparation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902159
+    m_Key: staff.payroll.enough
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902160
+    m_Key: staff.payroll.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902161
+    m_Key: staff.payroll.no_budget
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902162
+    m_Key: ledger.payroll_fund
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902163
+    m_Key: calendar.early_day
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902164
+    m_Key: calendar.noon
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902165
+    m_Key: calendar.late_day
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902166
+    m_Key: calendar.start_night
+    m_Metadata:
+      m_Items: []
+  - m_Id: 315412720902167
+    m_Key: calendar.end_night
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646831939584
+    m_Key: shift.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271232
+    m_Key: shift.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271233
+    m_Key: shift.bladder
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271234
+    m_Key: shift.stress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271235
+    m_Key: shift.remaining
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271236
+    m_Key: shift.finishing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271237
+    m_Key: role.unassigned
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271238
+    m_Key: order.tactics
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271239
+    m_Key: order.break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271240
+    m_Key: order.toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271241
+    m_Key: order.guard_patrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271242
+    m_Key: order.archive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271243
+    m_Key: order.clean
+    m_Metadata:
+      m_Items: []
+  - m_Id: 316646882271244
+    m_Key: order.intern_patrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921887309824
+    m_Key: hiring.unnamed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892736
+    m_Key: hiring.no_bio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892737
+    m_Key: hiring.entry_rank
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892738
+    m_Key: hiring.skills_unknown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892739
+    m_Key: hiring.talent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892740
+    m_Key: hiring.skills_heading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892741
+    m_Key: hiring.hidden_skill
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892742
+    m_Key: hiring.cost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892743
+    m_Key: hiring.temp_cost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892744
+    m_Key: hiring.balance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892745
+    m_Key: team.salary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892746
+    m_Key: team.male
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892747
+    m_Key: team.female
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892748
+    m_Key: team.no_skills
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892749
+    m_Key: team.max_rank
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892750
+    m_Key: team.no_rank
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892751
+    m_Key: team.attendance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892752
+    m_Key: hiring.bio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892753
+    m_Key: hiring.bio.educations.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892754
+    m_Key: hiring.bio.educations.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892755
+    m_Key: hiring.bio.educations.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892756
+    m_Key: hiring.bio.educations.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892757
+    m_Key: hiring.bio.educations.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892758
+    m_Key: hiring.bio.hobbies.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892759
+    m_Key: hiring.bio.hobbies.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892760
+    m_Key: hiring.bio.hobbies.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892761
+    m_Key: hiring.bio.hobbies.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892762
+    m_Key: hiring.bio.hobbies.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892763
+    m_Key: hiring.bio.quirks.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892764
+    m_Key: hiring.bio.quirks.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892765
+    m_Key: hiring.bio.quirks.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892766
+    m_Key: hiring.bio.quirks.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892767
+    m_Key: hiring.bio.quirks.4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892768
+    m_Key: staff.skill.PaperworkMastery
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892769
+    m_Key: staff.skill.SedentaryResilience
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892770
+    m_Key: staff.skill.Pedantry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892771
+    m_Key: staff.skill.SoftSkills
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892772
+    m_Key: staff.skill.Corruption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892773
+    m_Key: staff.skill.DirtyHands
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892774
+    m_Key: rank.Rank_0_Intern_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892775
+    m_Key: rank.Rank_0_Intern_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892776
+    m_Key: rank.Rank_0_Intern_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892777
+    m_Key: rank.Rank_1_Accountant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892778
+    m_Key: rank.Rank_1_Accountant_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892779
+    m_Key: rank.Rank_1_Accountant_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892780
+    m_Key: rank.Rank_1_Accountant_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892781
+    m_Key: rank.Rank_1_Archivist_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892782
+    m_Key: rank.Rank_1_Archivist_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892783
+    m_Key: rank.Rank_1_Archivist_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892784
+    m_Key: rank.Rank_1_Cashier_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892785
+    m_Key: rank.Rank_1_Cashier_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892786
+    m_Key: rank.Rank_1_Cashier_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892787
+    m_Key: rank.Rank_1_Clerk_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892788
+    m_Key: rank.Rank_1_Clerk_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892789
+    m_Key: rank.Rank_1_Clerk_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892790
+    m_Key: rank.Rank_1_Guard_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892791
+    m_Key: rank.Rank_1_Guard_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892792
+    m_Key: rank.Rank_1_Guard_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892793
+    m_Key: rank.Rank_1_Janitor_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892794
+    m_Key: rank.Rank_1_Janitor_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892795
+    m_Key: rank.Rank_1_Janitor_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892796
+    m_Key: rank.Rank_1_OfficeManager
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892797
+    m_Key: rank.Rank_1_Registrar_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892798
+    m_Key: rank.Rank_1_Registrar_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892799
+    m_Key: rank.Rank_1_Registrar_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892800
+    m_Key: daily_order.Order_PointB
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921899892801
+    m_Key: daily_order.Order_MovementLife
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087040
+    m_Key: daily_order.Order_SportsDay
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087041
+    m_Key: day_results.gross
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087042
+    m_Key: day_results.cut
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087043
+    m_Key: day_results.shadow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087044
+    m_Key: day_results.balance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087045
+    m_Key: day_results.payroll
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087046
+    m_Key: day_results.corruption
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087047
+    m_Key: day_results.spent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087048
+    m_Key: desk.day
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087049
+    m_Key: desk.strikes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087050
+    m_Key: desk.errors
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087051
+    m_Key: desk.permanent
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087052
+    m_Key: desk.orders
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087053
+    m_Key: desk.start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 350921904087054
+    m_Key: desk.resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424427180032
+    m_Key: staff.registration.call_signature
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568640
+    m_Key: staff.registration.call_payment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568641
+    m_Key: staff.registration.call_question
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568642
+    m_Key: panel.hr
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568643
+    m_Key: panel.hr_short
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568644
+    m_Key: panel.accounts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568645
+    m_Key: panel.menu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568646
+    m_Key: panel.map
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568647
+    m_Key: panel.phone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568648
+    m_Key: panel.instructions
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568649
+    m_Key: panel.sign
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568650
+    m_Key: panel.defer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568651
+    m_Key: panel.choose_order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568652
+    m_Key: panel.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568653
+    m_Key: panel.role
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568654
+    m_Key: panel.rank
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568655
+    m_Key: panel.back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568656
+    m_Key: panel.shifts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568657
+    m_Key: panel.promote
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568658
+    m_Key: panel.assign
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568659
+    m_Key: panel.fire
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568660
+    m_Key: panel.hire
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568661
+    m_Key: panel.approve
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568662
+    m_Key: panel.reject
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568663
+    m_Key: panel.shop_accounts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568664
+    m_Key: panel.cancel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568665
+    m_Key: panel.buy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568666
+    m_Key: panel.schedule_title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568667
+    m_Key: hiring.full_time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 353424435568668
+    m_Key: hiring.current_day
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297676853248
+    m_Key: staff.accounts.cover
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297714601984
+    m_Key: staff.accounts.covered
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796288
+    m_Key: staff.accounts.stash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796289
+    m_Key: staff.accounts.found
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796290
+    m_Key: ledger.accountant_named
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796291
+    m_Key: ledger.accountant_find
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796292
+    m_Key: staff.accounts.taxes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796293
+    m_Key: staff.accounts.extra
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796294
+    m_Key: staff.service.ready
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796295
+    m_Key: staff.service.small_talk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796296
+    m_Key: staff.archive.proofreading
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796297
+    m_Key: staff.service.cover
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796298
+    m_Key: staff.accounts.tracks
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796299
+    m_Key: staff.accounts.clear
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796300
+    m_Key: staff.cooler.drink
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796301
+    m_Key: staff.cooler.empty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796302
+    m_Key: staff.guide.greeting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796303
+    m_Key: staff.guide.offer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796304
+    m_Key: staff.guide.blocked
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796305
+    m_Key: staff.guide.ask
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796306
+    m_Key: staff.archive.no_reply
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796307
+    m_Key: staff.project.internal_order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796308
+    m_Key: ledger.project_payment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796309
+    m_Key: staff.project.paid
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796310
+    m_Key: staff.project.no_funds
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796311
+    m_Key: staff.repair.on_the_way
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796312
+    m_Key: staff.repair.working
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796313
+    m_Key: staff.supplies.where
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796314
+    m_Key: staff.supplies.carrying
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796315
+    m_Key: staff.archive.organizing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796316
+    m_Key: staff.service.take_over
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796317
+    m_Key: staff.guide.to_counter
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796318
+    m_Key: staff.guide.to_cashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796319
+    m_Key: staff.guide.to_window_one
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796320
+    m_Key: staff.guide.to_window_two
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796321
+    m_Key: staff.guide.to_reception
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796322
+    m_Key: staff.guide.to_restroom
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796323
+    m_Key: staff.supplies.need_water
+    m_Metadata:
+      m_Items: []
+  - m_Id: 361297718796324
+    m_Key: staff.supplies.need_paper
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147585888256
+    m_Key: tactics.count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636992
+    m_Key: tactics.unassigned
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636993
+    m_Key: tactics.occupied
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636994
+    m_Key: tactics.save
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636995
+    m_Key: tactics.assignment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636996
+    m_Key: place.bookkeeping
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636997
+    m_Key: place.desk.Cashier_ServiceDesk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636998
+    m_Key: place.desk.Registrar_ServiceDesk_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623636999
+    m_Key: place.desk.Registrar_ServiceDesk_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637000
+    m_Key: place.desk.Office1_ServiceDesk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637001
+    m_Key: place.desk.Office2_ServiceDesk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637002
+    m_Key: place.desk.Archivist_ServiceDesk_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637003
+    m_Key: "place.label.\u0421\u0442\u043E\u043B \u0414\u0438\u0440\u0435\u043A\u0442\u043E\u0440\u0430"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637004
+    m_Key: "place.label.\u0432\u044B\u0445\u043E\u0434"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637005
+    m_Key: "place.label.\u0441\u0442\u043E\u043B \u0441 \u0431\u043B\u0430\u043D\u043A\u0430\u043C\u0438"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637006
+    m_Key: "place.label.\u0412\u044B\u0434\u0430\u0447\u0430 \u043D\u043E\u043C\u0435\u0440\u043A\u043E\u0432"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637007
+    m_Key: "place.label.\u043E\u0447\u0435\u0440\u0435\u0434\u044C"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637008
+    m_Key: "place.label.\u0442\u0443\u0430\u043B\u0435\u0442"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637009
+    m_Key: "place.label.\u043A\u0430\u0441\u0441\u0430"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637010
+    m_Key: "place.label.\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0442\u0443\u0440\u0430"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637011
+    m_Key: "place.label.\u043A\u0430\u0431\u0438\u043D\u0435\u0442 1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637012
+    m_Key: "place.label.\u043A\u0430\u0431\u0438\u043D\u0435\u0442 2"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637013
+    m_Key: "place.label.\u043F\u0440\u0438\u0451\u043C\u043D\u0430\u044F"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637014
+    m_Key: team.xp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637015
+    m_Key: ledger.promotion
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637016
+    m_Key: ledger.order
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637017
+    m_Key: promotion.employee
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637018
+    m_Key: promotion.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637019
+    m_Key: promotion.assignment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637020
+    m_Key: promotion.to
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637021
+    m_Key: promotion.assign_to
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637022
+    m_Key: promotion.flavor.0
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637023
+    m_Key: promotion.flavor.1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637024
+    m_Key: promotion.flavor.2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637025
+    m_Key: promotion.flavor.3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637026
+    m_Key: room.guard_post
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637027
+    m_Key: room.nobody
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637028
+    m_Key: room.unknown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637029
+    m_Key: room.free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637030
+    m_Key: room.break
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637031
+    m_Key: room.walk_in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637032
+    m_Key: room.serving
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637033
+    m_Key: room.calling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637034
+    m_Key: room.busy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637035
+    m_Key: room.vacant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637036
+    m_Key: room.patrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637037
+    m_Key: room.on_post
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637038
+    m_Key: room.intervening
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637039
+    m_Key: room.lunch
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637040
+    m_Key: room.toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637041
+    m_Key: room.report
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637042
+    m_Key: room.idle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637043
+    m_Key: desk.total_visitors
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637044
+    m_Key: desk.exited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637045
+    m_Key: desk.waiting
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637046
+    m_Key: desk.toilet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637047
+    m_Key: desk.at_counters
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637048
+    m_Key: desk.confused
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637049
+    m_Key: desk.angry
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637050
+    m_Key: desk.processed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637051
+    m_Key: desk.registration_closed
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637052
+    m_Key: desk.calling
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637053
+    m_Key: desk.registration_free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637054
+    m_Key: intern.on_duty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637055
+    m_Key: intern.broken
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637056
+    m_Key: intern.try_help
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637057
+    m_Key: intern.uncertain
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637058
+    m_Key: intern.directions
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637059
+    m_Key: intern.payment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637060
+    m_Key: intern.review
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637061
+    m_Key: intern.missing
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637062
+    m_Key: intern.wrong_form
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637063
+    m_Key: ledger.intern_payment
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637064
+    m_Key: staff.shift.late_apology
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637065
+    m_Key: staff.service.all_busy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637066
+    m_Key: action.asset.Action_EndShift
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637067
+    m_Key: action.asset.Action_ProcessProjectDocument
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637068
+    m_Key: action.asset.Action_RepairObject
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637069
+    m_Key: action.asset.Action_ChairPatrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637070
+    m_Key: action.asset.Action_CorrectDocument
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637071
+    m_Key: action.asset.Action_GoToCooler
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637072
+    m_Key: action.asset.Action_Guard_Patrol_NEW
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637073
+    m_Key: action.asset.Action_InternPatrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637074
+    m_Key: action.asset.Action_JanitorPatrol
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637075
+    m_Key: action.asset.Action_MakeArchiveRequest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637076
+    m_Key: action.asset.Action_ManageBarrier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637077
+    m_Key: action.asset.Action_SystematizeArchive
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637078
+    m_Key: action.asset.Action_TakeOverClient
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637079
+    m_Key: action.asset.Action_AccountantCoverSchemes
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637080
+    m_Key: action.asset.Action_AccountantMoneyGen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637081
+    m_Key: action.asset.Action_CheckDocument
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637082
+    m_Key: action.asset.Action_CleanDirt
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637083
+    m_Key: action.asset.Action_CleanPuddle
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637084
+    m_Key: action.asset.Action_CleanTrash
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637085
+    m_Key: action.asset.Action_ClientOrientedService
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637086
+    m_Key: action.asset.Action_CoverCashier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637087
+    m_Key: action.asset.Action_CoverClerk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637088
+    m_Key: action.asset.Action_CoverRegistrar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637089
+    m_Key: action.asset.Action_CoverYourTracks
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637090
+    m_Key: action.asset.Action_DirectorPrepareSalaries
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637091
+    m_Key: action.asset.Action_DoBookkeeping
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637092
+    m_Key: action.asset.Action_FindValuables
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637093
+    m_Key: action.asset.Action_Guard_CalmDownViolator_NEW
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637094
+    m_Key: action.asset.Action_Guard_CatchThief_NEW
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637095
+    m_Key: action.asset.Action_HandleSituation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637096
+    m_Key: action.asset.Action_OperateBarrier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637097
+    m_Key: action.asset.Action_PrepareSalaries
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637098
+    m_Key: action.asset.Action_PrioritizeConsultation
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637099
+    m_Key: action.asset.Action_PrioritizeDirectorDoc
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637100
+    m_Key: action.asset.Action_PrioritizePayTax
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637101
+    m_Key: staff.service.next
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637102
+    m_Key: hire.news
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637103
+    m_Key: hire.kind_temp
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637104
+    m_Key: hire.kind_perm
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637105
+    m_Key: ledger.hire
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637106
+    m_Key: hire.sick
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637107
+    m_Key: shift.traffic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637108
+    m_Key: teletype.shift_start
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637109
+    m_Key: teletype.shift_end
+    m_Metadata:
+      m_Items: []
+  - m_Id: 367147623637110
+    m_Key: daily_order.tolerance
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

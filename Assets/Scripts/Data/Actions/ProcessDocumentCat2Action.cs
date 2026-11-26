@@ -25,7 +25,8 @@ public class ProcessDocumentCat2Action : StaffAction
             return false;
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        if (clerk.assignedWorkstation.deskId != 2) return false;
+        var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         
         // Проверка по зоне
         bool clientInZone = zone != null && zone.GetOccupyingClients().Any();

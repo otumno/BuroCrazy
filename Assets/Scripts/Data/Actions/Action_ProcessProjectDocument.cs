@@ -17,12 +17,13 @@ public class Action_ProcessProjectDocument : StaffAction
     public override bool AreConditionsMet(StaffController staff)
     {
         // 1. Проверяем роль (только Регистратор или Кассир)
-        if (!(staff is ClerkController clerk) || clerk.IsOnBreak() || clerk.assignedWorkstation == null)
+        if (!(staff is ClerkController clerk) || clerk.IsOnBreak() || clerk.assignedWorkstation == null || clerk.assignedWorkstation.CurrentClient != null)
         {
             return false;
         }
         
-        if (clerk.clerkRole != ClerkController.ClerkRole.Registrar && clerk.clerkRole != ClerkController.ClerkRole.Cashier)
+        if (clerk.clerkRole != ClerkController.ClerkRole.Registrar && clerk.clerkRole != ClerkController.ClerkRole.Cashier &&
+            clerk.clerkRole != ClerkController.ClerkRole.Accountant)
         {
             return false;
         }

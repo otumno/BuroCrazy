@@ -10,28 +10,14 @@ public class GoToWorkstationExecutor : ActionExecutor
     {
         if (staff.assignedWorkstation == null) 
         { 
-            staff.thoughtBubble?.ShowPriorityMessage("Мне не назначили\nрабочее место!", 4f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.no_workstation"), 4f, Color.red);
             yield return new WaitForSeconds(5f);
             FinishAction(false);
             yield break;
         }
 
-        if (staff is IServiceProvider provider)
-        {
-            ClientSpawner.AssignServiceProviderToDesk(provider, staff.assignedWorkstation.deskId);
-        }
-
-        if (staff is ClerkController clerk)
-        {
-            clerk.SetState(ClerkController.ClerkState.ReturningToWork);
-            yield return staff.StartCoroutine(staff.MoveToTarget(staff.assignedWorkstation.clerkStandPoint.position, ClerkController.ClerkState.Working.ToString()));
-        }
-        else
-        {
-            yield return staff.StartCoroutine(staff.MoveToTarget(staff.assignedWorkstation.clerkStandPoint.position, ""));
-        }
-
-        Debug.Log($"[GoToWorkstationExecutor] {staff.name} прибыл на рабочее место. Освобождаю AI для принятия решений.");
-        FinishAction(true);
+        if (staff is ClerkController clerk) clerk.SetState(ClerkController.ClerkState.ReturningToWork);
+        yield return ReturnToWorkstation();
+        FinishAction(IsAtWorkstation);
     }
 }

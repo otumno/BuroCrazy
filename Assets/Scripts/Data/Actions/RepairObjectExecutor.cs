@@ -28,7 +28,7 @@ public class RepairObjectExecutor : ActionExecutor
 
         // 1. Идем к объекту
         worker.SetState(ServiceWorkerController.WorkerState.GoingToMess); // Или GoingToRepair, если добавите в enum
-        worker.thoughtBubble?.ShowPriorityMessage("Иду чинить!", 2f, Color.cyan);
+        worker.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.repair.on_the_way"), 2f, Color.cyan);
         
         // Ищем точку взаимодействия (если это рабочий стол - идем к месту клерка, иначе просто к объекту)
         Vector3 targetPos = target.transform.position;
@@ -44,12 +44,17 @@ public class RepairObjectExecutor : ActionExecutor
             yield break;
         }
 
+        if (Vector2.Distance(worker.transform.position, targetPos) > 1f) { FinishAction(false); yield break; }
         // 3. Чиним
         worker.SetState(ServiceWorkerController.WorkerState.Cleaning);
-        worker.thoughtBubble?.ShowPriorityMessage("*Ремонт*", 3f, Color.gray);
+        worker.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.repair.working"), 3f, Color.gray);
         
         // Визуал инструмента
-        if (worker.broomTransform != null) worker.broomTransform.gameObject.SetActive(true);
+        if (worker.broomTransform != null)
+        {
+            worker.broomTransform.gameObject.SetActive(true);
+            RegisterCleanup(() => { if (worker != null && worker.broomTransform != null) worker.broomTransform.gameObject.SetActive(false); });
+        }
 
         // Время починки: 5 секунд * процент повреждения
         float damagePercent = 1f - (target.currentHealth / target.maxHealth);

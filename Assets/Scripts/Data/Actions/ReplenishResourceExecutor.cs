@@ -29,14 +29,14 @@ public class ReplenishResourceExecutor : ActionExecutor
 
         if (source == null)
         {
-            manager.thoughtBubble?.ShowPriorityMessage("Где склад?!", 2f, Color.red);
+            manager.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.supplies.where"), 2f, Color.red);
             FinishAction(false);
             yield break;
         }
 
         // 3. Идем на склад
         manager.SetState(OfficeManagerController.ManagerState.RefillingWater); // Используем пока это состояние для всего
-        manager.thoughtBubble?.ShowPriorityMessage($"Нужна {GetResourceName(targetContainer.resourceType)}...", 2f, Color.white);
+        manager.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get(targetContainer.resourceType == ResourceType.Water ? "staff.supplies.need_water" : "staff.supplies.need_paper"), 2f, Color.white);
         
         yield return manager.MoveToTarget(source.transform.position, OfficeManagerController.ManagerState.Idle);
 
@@ -48,7 +48,7 @@ public class ReplenishResourceExecutor : ActionExecutor
         if (targetContainer.resourceType == ResourceType.Paper) stackHolder?.ShowStack(5, 5); // Показываем пачку бумаги
         // Для воды можно добавить отдельный объект, но пока пусть так
 
-        manager.thoughtBubble?.ShowPriorityMessage("Несу!", 2f, Color.cyan);
+        manager.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.supplies.carrying"), 2f, Color.cyan);
 
         // 4. Идем к контейнеру
         yield return manager.MoveToTarget(targetContainer.transform.position, OfficeManagerController.ManagerState.CarryingDoc);
@@ -64,8 +64,5 @@ public class ReplenishResourceExecutor : ActionExecutor
         FinishAction(true);
     }
 
-    private string GetResourceName(ResourceType type)
-    {
-        return type == ResourceType.Water ? "Вода" : "Бумага";
-    }
+
 }

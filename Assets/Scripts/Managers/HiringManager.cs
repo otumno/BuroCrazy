@@ -222,7 +222,7 @@ namespace Managers
                 if (candidate.Availability == EmploymentAvailability.PermanentOnly) return false;
 
                 // На текущий день: хотя бы один рабочий период должен оставаться до ночи.
-                return TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out _, out _);
+                return GetHiringShift(candidate.Rank, employmentType) != CalendarDayPeriodType.None;
             }
 
             return candidate.Availability != EmploymentAvailability.TemporaryOnly;
@@ -233,7 +233,11 @@ namespace Managers
         /// найм со скидкой плюс доступные до ночи периоды смены. За периоды ему потом не начисляется.
         /// </summary>
         public int GetHiringCost(Candidate candidate, EmploymentType employmentType)
+            => GetHiringCost(candidate, employmentType, out _);
+
+        public int GetHiringCost(Candidate candidate, EmploymentType employmentType, out int paidPeriods)
         {
+            paidPeriods = 0;
             if (candidate == null)
                 return 0;
             
@@ -241,8 +245,9 @@ namespace Managers
                 return candidate.HiringCost;
 
             int hiringPart = Mathf.Max(0, Mathf.RoundToInt(candidate.HiringCost * temporaryHiringCostMultiplier));
-            TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out var paidMask, out _);
-            int shiftPart = StaffScheduleMath.CountPeriods(paidMask) * GetSalaryPerPeriod(candidate.Rank);
+            var paidMask = GetHiringShift(candidate.Rank, employmentType);
+            paidPeriods = StaffScheduleMath.CountPeriods(paidMask);
+            int shiftPart = paidPeriods * GetSalaryPerPeriod(candidate.Rank);
             return hiringPart + shiftPart;
         }
 
@@ -257,27 +262,16 @@ namespace Managers
             return rank != null ? rank.workPeriodsCount : 3;
         }
 
-        /// <summary>
-        /// Смена временного: periodsCount периодов подряд, начиная со следующего после текущего, в порядке календаря.
-        /// Работает только до ближайшей ночи в текущем дне. Ночью найм на завтра запрещён.
-        /// </summary>
-        /// <param name="isNextDay">true, если смена выпала уже на следующий день.</param>
-        /// <returns>true, если до ночи остаётся хотя бы один рабочий период.</returns>
-        private static bool TryBuildTemporaryShiftMask(int periodsCount, out Data.Calendar.CalendarDayPeriodType mask, out bool isNextDay)
+        public static CalendarDayPeriodType GetHiringShift(RankData rank, EmploymentType type)
         {
-            isNextDay = false;
-            mask = Data.Calendar.CalendarDayPeriodType.None;
-
-            var periods = TimeManager.Instance != null && TimeManager.Instance.mainCalendarDay != null
-                ? TimeManager.Instance.mainCalendarDay.periodSettings
-                : null;
-            if (periods == null || periods.Count == 0) return false;
-
-            int currentIndex = periods.FindIndex(p => p.PeriodType == TimeManager.Instance.GetCurrentPeriodType());
-            if (currentIndex < 0) return false;
-
-            mask = StaffScheduleMath.BuildTemporaryShift(periods, currentIndex, periodsCount);
-            return mask != CalendarDayPeriodType.None;
+            var clock = TimeManager.Instance;
+            var periods = clock != null ? clock.mainCalendarDay?.periodSettings : null;
+            if (periods == null) return CalendarDayPeriodType.None;
+            int current = periods.FindIndex(p => p.PeriodType == clock.GetCurrentPeriodType());
+            int duration = GetShiftPeriodsCount(rank);
+            return type == EmploymentType.Temporary
+                ? StaffScheduleMath.BuildTemporaryShift(periods, current, duration)
+                : StaffScheduleMath.BuildShift(periods, current, duration);
         }
 
         /// <summary>
@@ -310,18 +304,6 @@ namespace Managers
             return mask == Data.Calendar.CalendarDayPeriodType.None ? fallbackMask : mask;
         }
 
-        private static CalendarDayPeriodType BuildNextPeriodShiftMask(int periodsCount)
-        {
-            var clock = TimeManager.Instance;
-            var periods = clock != null ? clock.mainCalendarDay?.periodSettings : null;
-            if (periods == null || periods.Count == 0) return BuildMorningShiftMask(periodsCount);
-            int current = periods.FindIndex(p => p.PeriodType == clock.GetCurrentPeriodType());
-            if (current < 0) return BuildMorningShiftMask(periodsCount);
-            // Постоянный сотрудник может работать ночью: смена циклически продолжается
-            // после границы дня, вместо ожидания следующего утра.
-            return StaffScheduleMath.BuildShift(periods, (current + 1) % periods.Count, periodsCount);
-        }
-
         private Transform GetFreeStaffPoint()
         {
             return unassignedStaffPoints.FirstOrDefault(p => p != null && !occupiedPoints.ContainsKey(p));
@@ -343,7 +325,7 @@ namespace Managers
 
             // Если точек нет, спавним просто где-то (чтобы найм не ломался)
             Vector3 spawnPos = freePoint != null ? freePoint.position : Vector3.zero;
-            GameObject newStaffGO = Instantiate(internPrefab, spawnPos, Quaternion.identity);
+            GameObject newStaffGO = Instantiate(internPrefab, spawnPos, Quaternion.identity, new InstantiateParameters { scene = gameObject.scene });
 
             // --- ПЕРЕМЕЩАЕМ В ЗОНУ ДОМА И СКРЫВАЕМ ---
             if (Managers.ScenePointsRegistry.Instance != null && Managers.ScenePointsRegistry.Instance.staffHomeZone != null)
@@ -453,8 +435,30 @@ namespace Managers
             staff.temporaryWorkDay = data.hasEmploymentTiming ? data.temporaryWorkDay
                 : (TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : -1);
             staff.WorkShiftMask = data.workShiftMask;
+            var clock = TimeManager.Instance;
+            if (data.hasEmploymentTiming && data.hasVitals && !data.hasStartedAnyShift && clock != null &&
+                data.hireDay == clock.GetCurrentDay() && data.hirePeriod == clock.GetCurrentPeriodType() &&
+                (data.workShiftMask & data.hirePeriod) == 0)
+            {
+                // A pending contract from the previous version was already paid. Keep its purchased duration.
+                var periods = clock.mainCalendarDay.periodSettings;
+                int start = periods.FindIndex(p => p.PeriodType == data.hirePeriod);
+                int count = StaffScheduleMath.CountPeriods(data.workShiftMask);
+                var immediate = staff.IsTemporary ? StaffScheduleMath.BuildTemporaryShift(periods, start, count)
+                    : StaffScheduleMath.BuildShift(periods, start, count);
+                if (immediate != CalendarDayPeriodType.None) staff.WorkShiftMask = immediate;
+            }
             staff.uiScheduleTrackIndex = data.scheduleTrackIndex;
             staff.unpaidPeriods = data.unpaidPeriods;
+            staff.lastSalaryDay = data.lastSalaryDay;
+            staff.lastSalaryPeriod = data.lastSalaryPeriod;
+            // Old slots already booked a scheduled period when it began, before these markers existed.
+            if (clock != null && data.lastSalaryPeriod == CalendarDayPeriodType.None && data.hasStartedAnyShift &&
+                (data.workShiftMask & clock.GetCurrentPeriodType()) != 0)
+            {
+                staff.lastSalaryDay = clock.GetCurrentDay();
+                staff.lastSalaryPeriod = clock.GetCurrentPeriodType();
+            }
             staff.missedPaymentCount = data.missedPaymentCount;
             staff.gameObject.name = data.gameObjectName;
 
@@ -471,6 +475,7 @@ namespace Managers
             bool working = staff.gameObject.activeInHierarchy && staff.IsOnDuty() && staff.HasStartedAnyShift;
             data.hasAttendanceState = working || (arrivalRollDays.TryGetValue(staff, out int rolledDay) && rolledDay == day);
             data.attendanceDay = day;
+            data.activeShiftSequence = working ? staff.ShiftSequence : 0;
             data.arrivalDelayRemaining = working ? 0 : arrivalReadyTimes.TryGetValue(staff, out float readyAt)
                 ? Mathf.Max(0, readyAt - Time.time) : staff.currentLateness;
         }
@@ -478,6 +483,9 @@ namespace Managers
         public void RestoreAttendance(StaffController staff, StaffSaveData data, int day)
         {
             if (!data.hasAttendanceState || data.attendanceDay != day) return;
+            var clock = TimeManager.Instance;
+            if (clock != null && (staff.WorkShiftMask & clock.GetCurrentPeriodType()) != 0)
+                staff.RestoreShiftSequence(data.activeShiftSequence);
             // Loading must not reroll illness or restart a completed lateness wait.
             arrivalRollDays[staff] = day;
             staff.currentLateness = data.arrivalDelayRemaining < 0 ? -1 : Mathf.Max(0, data.arrivalDelayRemaining);
@@ -518,6 +526,8 @@ namespace Managers
             // Reject it here before creating an employee or charging the wallet twice.
             if (!AvailableCandidates.Contains(candidate)) return false;
             if (!CanHireAs(candidate, employmentType)) return false;
+            var hiringShift = GetHiringShift(candidate.Rank, employmentType);
+            if (hiringShift == CalendarDayPeriodType.None) return false;
 
             int hiringCost = GetHiringCost(candidate, employmentType);
             if (PlayerWallet.Instance.GetCurrentMoney() < hiringCost) return false;
@@ -564,18 +574,9 @@ namespace Managers
                 staffController.hirePeriod = TimeManager.Instance.GetCurrentPeriodType();
             }
 
-            // Оба типа найма выходят со следующего периода без ручного планирования.
-            if (employmentType == EmploymentType.Temporary)
-            {
-                // CanHireAs проверил наличие хотя бы одного дневного периода.
-                TryBuildTemporaryShiftMask(GetShiftPeriodsCount(candidate.Rank), out var shiftMask, out bool isNextDay);
-                staffController.WorkShiftMask = shiftMask;
-                staffController.temporaryWorkDay = isNextDay ? currentDay + 1 : currentDay;
-            }
-            else
-            {
-                staffController.WorkShiftMask = BuildNextPeriodShiftMask(GetShiftPeriodsCount(candidate.Rank));
-            }
+            // Both contracts include the period in which the player presses Hire.
+            staffController.WorkShiftMask = hiringShift;
+            if (staffController.IsTemporary) staffController.temporaryWorkDay = currentDay;
 
             newStaffGO.name = $"{candidate.NameData.lastName} {candidate.NameData.firstName}";
 
@@ -587,29 +588,22 @@ namespace Managers
 
             // Логирование найма с трейтом
             string traitName = StaffController.TraitLibrary[candidate.Trait].LocalizedName;
-            string employmentLabel = employmentType == EmploymentType.Temporary ? "временный" : "постоянный";
+            string employmentLabel = UI.GameText.Get(employmentType == EmploymentType.Temporary ? "hire.kind_temp" : "hire.kind_perm");
             Debug.Log($"<color=cyan>[HIRING]</color> Нанят сотрудник {candidate.Name} ({employmentLabel}). Особенность: <b>{traitName}</b>");
 
             // Лог в Телетайп
             if (TeletypeManager.Instance != null)
             {
-                TeletypeManager.Instance.LogImportant($"Новый сотрудник ({employmentLabel}): {candidate.NameData.shortName}. Особенность: {traitName}");
+                TeletypeManager.Instance.LogImportant(UI.GameText.Get("hire.news", employmentLabel, staffController.characterName, traitName));
             }
 
-            PlayerWallet.Instance.AddMoney(-hiringCost, $"Наём: {candidate.Name}");
+            PlayerWallet.Instance.AddMoney(-hiringCost, UI.GameText.Get("ledger.hire", candidate.Name));
 
-            // Смену сразу НЕ запускаем: сотрудник остаётся выключенным дома, а CheckAllStaffShiftsImmediately
-            // разбудит его со следующего периода (см. StaffController.HasEmploymentStarted).
+            // Activate only this hire after registration and payment, even if the hiring panel paused game time.
+            arrivalRollDays[staffController] = currentDay;
+            staffController.StartShift();
+
             Debug.Log($"[HiringManager] Найм: {staffController.characterName}, тип={employmentType}, день={currentDay}, период={staffController.hirePeriod}, смена={staffController.WorkShiftMask}, стоимость={hiringCost}");
-
-            FindFirstObjectByType<HiringPanelUI>(FindObjectsInactive.Include)?.RefreshTeamList();
-
-            // Обновляем панель расписания если она открыта
-            var schedulePanel = FindFirstObjectByType<StaffSchedulePanelUI>(FindObjectsInactive.Include);
-            if (schedulePanel != null)
-            {
-                schedulePanel.RefreshTable();
-            }
 
             // Ачивка: найм клерка
             if (candidate.Role == StaffController.Role.Clerk)
@@ -713,6 +707,8 @@ namespace Managers
             AllStaff.Remove(staff);
             UnassignedStaff.Remove(staff);
             staffBeingModified.RemoveAll(s => s == null || s == staff);
+            foreach (var point in occupiedPoints.Where(p => p.Value == staff).Select(p => p.Key).ToList())
+                occupiedPoints.Remove(point);
         }
 
         public void CheckAllStaffShiftsImmediately()
@@ -737,7 +733,7 @@ namespace Managers
                     else
                         staff.CalculateArrivalTime();
                     if (staff.currentLateness < 0)
-                        TeletypeManager.Instance?.LogImportant($"ВНИМАНИЕ: {staff.characterName} взял больничный и сегодня не выйдет!");
+                        TeletypeManager.Instance?.LogImportant(UI.GameText.Get("hire.sick", staff.characterName));
                 }
                 if (staff.currentLateness < 0) continue;
                 if (staff.currentLateness > 0)
@@ -769,15 +765,23 @@ namespace Managers
             if (staff.IsTemporary && clock.IsNight()) yield break;
             staff.currentLateness = 0;
             staff.StartShift();
-            staff.thoughtBubble?.ShowPriorityMessage("Ох, пробки...", 3f, Color.yellow);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("shift.traffic"), 3f, Color.yellow);
         }
 
-        // ... (GenerateNewCandidates и прочее оставляем)
+        private int candidateBoardDay = -1;
+
+        public void EnsureCandidateBoard()
+        {
+            int day = CalendarManager.Instance != null ? CalendarManager.Instance.CurrentDay : 1;
+            if (day != candidateBoardDay) GenerateNewCandidates();
+        }
+
         public void GenerateNewCandidates()
         {
             AvailableCandidates.Clear();
             int currentDay = CalendarManager.Instance != null ? CalendarManager.Instance.CurrentDay : 1;
 
+            candidateBoardDay = currentDay;
             int internsToCreate = Mathf.Max(0, Mathf.RoundToInt(internCountOverTime.Evaluate(currentDay)));
             int specialistsToCreate = Mathf.Max(0, Mathf.RoundToInt(specialistCountOverTime.Evaluate(currentDay)));
             float experiencedChance = Mathf.Clamp01(experiencedInternChance.Evaluate(currentDay));
@@ -838,13 +842,6 @@ namespace Managers
             }
             else candidate.Name = "Кандидат " + Random.Range(100, 999);
 
-            candidate.Skills = ScriptableObject.CreateInstance<CharacterSkills>();
-            candidate.Skills.paperworkMastery = Random.Range(0, 5) * 0.25f;
-            candidate.Skills.sedentaryResilience = Random.Range(0, 5) * 0.25f;
-            candidate.Skills.pedantry = Random.Range(0, 5) * 0.25f;
-            candidate.Skills.softSkills = Random.Range(0, 5) * 0.25f;
-            candidate.Skills.corruption = Random.Range(0, 5) * 0.25f;
-
             if (rankDatabase == null) return null;
 
             // Ранг выше начального — только если его открыла карьера Директора.
@@ -864,6 +861,15 @@ namespace Managers
             }
             if (startingRank == null) return null;
             
+            // Experienced recruits have a higher floor on trained skills. Corruption is independent of seniority.
+            int minSkillStep = Mathf.Clamp(startingRank.rankLevel, 0, 4);
+            candidate.Skills = ScriptableObject.CreateInstance<CharacterSkills>();
+            candidate.Skills.paperworkMastery = Random.Range(minSkillStep, 5) * 0.25f;
+            candidate.Skills.sedentaryResilience = Random.Range(minSkillStep, 5) * 0.25f;
+            candidate.Skills.pedantry = Random.Range(minSkillStep, 5) * 0.25f;
+            candidate.Skills.softSkills = Random.Range(minSkillStep, 5) * 0.25f;
+            candidate.Skills.corruption = Random.Range(0, 5) * 0.25f;
+
             candidate.Rank = startingRank;
             candidate.Experience = candidate.Rank.experienceRequired;
 
@@ -877,7 +883,7 @@ namespace Managers
             candidate.HiringCost += candidate.Rank.promotionCost;
             candidate.HiringCost = Mathf.Max(10, candidate.HiringCost);
 
-            candidate.Bio = ResumeGenerator.GenerateBio();
+            candidate.GeneratedBio = ResumeGenerator.Generate();
             candidate.UniqueActionsPool = new List<StaffAction>();
             
             // Присваиваем случайный трейт (исключая None и ToiletRush для разнообразия)
@@ -893,7 +899,7 @@ namespace Managers
             if (staff.experiencePoints < newRankData.experienceRequired) return;
             if (PlayerWallet.Instance == null || PlayerWallet.Instance.GetCurrentMoney() < newRankData.promotionCost) return;
 
-            PlayerWallet.Instance.AddMoney(-newRankData.promotionCost, $"Повышение: {staff.characterName}");
+            PlayerWallet.Instance.AddMoney(-newRankData.promotionCost, UI.GameText.Get("ledger.promotion", staff.characterName));
 
             staff.currentRank = newRankData;
             staff.salaryPerPeriod = Mathf.Max(staff.salaryPerPeriod, (int)(staff.salaryPerPeriod * newRankData.salaryMultiplier));
@@ -997,6 +1003,7 @@ namespace Managers
             // Через DestroyAllStaff, а не просто очистку списков: сброс бывает и поверх идущей сцены
             // (перезагрузка после отстранения), и объекты сотрудников остались бы в ней без учёта.
             DestroyAllStaff();
+            candidateBoardDay = -1;
             AvailableCandidates.Clear();
         }
 
@@ -1011,7 +1018,7 @@ namespace Managers
             Transform freePoint = unassignedStaffPoints.FirstOrDefault(p => p != null && !occupiedPoints.ContainsKey(p));
             Vector3 spawnPos = freePoint != null ? freePoint.position : Vector3.zero;
 
-            GameObject newStaffGO = Instantiate(internPrefab, spawnPos, Quaternion.identity);
+            GameObject newStaffGO = Instantiate(internPrefab, spawnPos, Quaternion.identity, new InstantiateParameters { scene = gameObject.scene });
             StaffController staffController = newStaffGO.GetComponent<StaffController>();
             
             if (staffController == null)

@@ -18,7 +18,7 @@ public class GoToJanitorHomeExecutor : ActionExecutor
             
             // Восстанавливаемся
             staff.ChangeEnergy(50);
-            staff.thoughtBubble?.ShowPriorityMessage("Отдыхаю...", 2f, Color.cyan);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.janitor.resting"), 2f, Color.cyan);
             yield return new WaitForSeconds(3f);
         }
         

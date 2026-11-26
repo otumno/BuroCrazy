@@ -8,6 +8,7 @@ public class RankData : ScriptableObject
     [Header("Основная информация")]
     public int rankLevel; // ВОССТАНОВЛЕНО: Числовой уровень ранга (0, 1, 2...)
     public string rankName;
+    public string LocalizedName => UI.GameText.GetAssetText("rank." + name, rankName);
     
     [Header("Геймплейные параметры этого ранга")]
     public int experienceRequired = 100;

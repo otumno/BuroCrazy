@@ -82,3 +82,7 @@ opencode.json
 
 # Python cache for the Yonote reader (credentials live outside the repository)
 /Tools/Yonote/__pycache__/
+
+# Local session exports and migration backups
+/output/BuroCrazy-session-*.zip
+/output/BuroCrazy-migration-backup/

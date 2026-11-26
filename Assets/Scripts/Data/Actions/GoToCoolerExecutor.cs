@@ -25,13 +25,13 @@ public class GoToCoolerExecutor : ActionExecutor
 
         if (!cooler.IsEmpty) {
             cooler.Consume();
-            staff.thoughtBubble?.ShowPriorityMessage("*Глыг-глыг*", 2f, Color.blue);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.cooler.drink"), 2f, Color.blue);
 
             // ИСПРАВЛЕНИЕ: Восстанавливаем жажду до 100, а не энергию до 1
             staff.morale = 100f;
             staff.bladder = Mathf.Clamp(staff.bladder + 20f, 0f, 100f); // Вода дает в туалет
         } else {
-            staff.thoughtBubble?.ShowPriorityMessage("Пусто...", 2f, Color.red);
+            staff.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.cooler.empty"), 2f, Color.red);
             staff.stress = Mathf.Clamp(staff.stress + 15f, 0f, 100f); // Расстройство
         }
 

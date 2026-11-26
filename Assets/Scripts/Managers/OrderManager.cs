@@ -19,6 +19,15 @@ namespace Managers
         public List<DirectorOrder> offeredOrders = new List<DirectorOrder>();
         public DirectorOrder PendingOrder { get; private set; }
         public bool HasSelectedOrderForDay { get; private set; }
+        public float AllowedDirectorErrorRate
+        {
+            get
+            {
+                var order = activeOrders.FindLast(o => o != null && o.duration == OrderDuration.SingleDay)
+                    ?? currentMandates.Find(o => o != null) ?? activeOrders.FindLast(o => o != null);
+                return order != null ? order.allowedDirectorErrorRate : 1f;
+            }
+        }
 
         public void RestoreSelection(IEnumerable<DirectorOrder> orders, DirectorOrder pending, bool selected)
         {
@@ -103,7 +112,7 @@ namespace Managers
             // Применяем мгновенные эффекты
             if (selectedOrder.oneTimeMoneyBonus > 0 && PlayerWallet.Instance != null)
             {
-                PlayerWallet.Instance.AddMoney(selectedOrder.oneTimeMoneyBonus, $"Приказ: {selectedOrder.orderName}");
+                PlayerWallet.Instance.AddMoney(selectedOrder.oneTimeMoneyBonus, UI.GameText.Get("ledger.order", selectedOrder.LocalizedName));
             }
             
             // Сброс списка предложенных

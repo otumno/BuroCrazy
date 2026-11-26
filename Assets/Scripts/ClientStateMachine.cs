@@ -1436,7 +1436,7 @@ public class ClientStateMachine : MonoBehaviour
             
             targetDesk.SetClientReady(); // ГОВОРИМ СТОЛУ "Я ПРИШЕЛ!"
             ClientQueueManager.Instance?.ClientArrivedAtDesk(myQueueNumber);
-            myServiceProvider = ClientSpawner.GetServiceProviderAtDesk(targetDesk.deskId);
+            myServiceProvider = ClientSpawner.GetServiceProviderAtDesk(targetDesk);
             if (myServiceProvider != null && myServiceProvider.IsAvailableToServe)
                 myServiceProvider.AssignClient(parent);
             Debug.Log($"[ClientServiceTrace] {parent.name}: прибыл к столу={targetDesk.deskId}, сотрудник={(myServiceProvider as MonoBehaviour)?.name}");

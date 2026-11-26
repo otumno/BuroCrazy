@@ -46,6 +46,8 @@ namespace Managers
             // 1. Глобальные счетчики
             data.day = CalendarManager.Instance.CurrentDay;
             data.money = PlayerWallet.Instance.GetCurrentMoney();
+            var salaryStack = ScenePointsRegistry.Instance?.salaryStackPoint;
+            if (salaryStack != null) data.salaryEnvelopeCount = salaryStack.CurrentEnvelopeCount;
             data.archiveDocumentCount = ArchiveManager.Instance.GetCurrentDocumentCount();
             data.periodSpawnProgress = WaveManager.Instance?.CaptureSpawnProgress();
             if (TimeManager.Instance != null)
@@ -175,6 +177,16 @@ namespace Managers
             // Debug.Log($"Игра сохранена в слот {slotIndex}");
         }
 
+        public static ServicePoint ResolveSavedWorkstation(StaffSaveData saved, ScenePointsRegistry registry, AssignmentManager assignments)
+        {
+            if (saved.assignedWorkstationId == -999 || registry == null) return null;
+            var candidates = registry.allServicePoints.Where(p => p != null && p.deskId == saved.assignedWorkstationId &&
+                (saved.role != StaffController.Role.Registrar || p.clientStandPoint != null));
+            // Older saves have only a service type. Restore two registrars to separate available windows.
+            return candidates.FirstOrDefault(p => GetHierarchyPath(p.transform) == saved.assignedWorkstationPath)
+                ?? candidates.FirstOrDefault(p => assignments == null || assignments.GetAssignedStaff(p) == null);
+        }
+
         private static string GetHierarchyPath(Transform target)
         {
             string path = target.name + "[" + target.GetSiblingIndex() + "]";
@@ -246,6 +258,8 @@ namespace Managers
             staffData.rankName = staffMember.currentRank != null ? staffMember.currentRank.name : "";
             staffData.employmentType = staffMember.employmentType;
             staffData.hasEmploymentTiming = true;
+            staffData.lastSalaryDay = staffMember.lastSalaryDay;
+            staffData.lastSalaryPeriod = staffMember.lastSalaryPeriod;
             staffData.hireDay = staffMember.hireDay;
             staffData.hirePeriod = staffMember.hirePeriod;
             staffData.temporaryWorkDay = staffMember.temporaryWorkDay;
@@ -263,6 +277,7 @@ namespace Managers
                 staffData.dirtyHands = staffMember.skills.dirtyHands;
             }
 
+            staffData.assignedWorkstationPath = staffMember.assignedWorkstation != null ? GetHierarchyPath(staffMember.assignedWorkstation.transform) : null;
             staffData.assignedWorkstationId = staffMember.assignedWorkstation != null ? staffMember.assignedWorkstation.deskId : -999;
             staffData.scheduleTrackIndex = staffMember.uiScheduleTrackIndex;
             staffData.workShiftMask = staffMember.WorkShiftMask;
@@ -329,9 +344,9 @@ namespace Managers
                 {
                     TimeManager.Instance.RestoreProgress(data.hasCalendarProgress ? data.savedPeriod : Data.Calendar.CalendarDayPeriodType.EndNight,
                         data.hasCalendarProgress ? data.savedPeriodElapsed : 0, data.hasCalendarProgress);
-                    if (data.hasCalendarProgress && !TimeManager.Instance.IsNight()) ShiftPlanning.Close();
                 }
                 PlayerWallet.Instance.SetMoney(data.money);
+                ScenePointsRegistry.Instance?.salaryStackPoint?.RestoreCount(data.salaryEnvelopeCount);
                 WaveManager.Instance?.RestoreSpawnProgress(data.periodSpawnProgress);
                 ArchiveManager.Instance.SetDocumentCount(data.archiveDocumentCount);
                 
@@ -396,7 +411,11 @@ namespace Managers
                     if (staffMember != null)
                     {
                         // Нанятые стартуют дома (их выводит на смену менеджер смен), позицию берём только у объектов сцены.
-                        if (!staffData.isHired) staffMember.transform.position = staffData.position;
+                        if (!staffData.isHired)
+                        {
+                            staffMember.transform.position = staffData.position;
+                            HiringManager.Instance?.RestoreAttendance(staffMember, staffData, TimeManager.Instance != null ? TimeManager.Instance.GetCurrentDay() : -1);
+                        }
                         staffMember.SetCurrentFrustration(staffData.stressLevel);
                         if (staffData.hasVitals)
                         {
@@ -416,7 +435,7 @@ namespace Managers
                     
                         if (staffData.assignedWorkstationId != -999)
                         {
-                            var workstation = ScenePointsRegistry.Instance.GetServicePointByID(staffData.assignedWorkstationId);
+                            var workstation = ResolveSavedWorkstation(staffData, ScenePointsRegistry.Instance, AssignmentManager.Instance);
                             if (workstation != null)
                             {
                                 AssignmentManager.Instance.AssignStaffToWorkstation(staffMember, workstation);

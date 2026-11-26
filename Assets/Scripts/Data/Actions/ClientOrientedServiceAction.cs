@@ -12,7 +12,7 @@ public class ClientOrientedServiceAction : StaffAction
             return false;
         }
 
-        var zone = ClientSpawner.GetZoneByDeskId(clerk.assignedWorkstation.deskId);
+        var zone = clerk.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
         if (zone == null) return false;
 
         ClientPathfinding client = zone.GetOccupyingClients().FirstOrDefault();

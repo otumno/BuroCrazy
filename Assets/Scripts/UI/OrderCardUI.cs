@@ -20,8 +20,7 @@ public class OrderCardUI : MonoBehaviour
         currentOrder = order;
         _onClick = onClick;
 
-        titleText.text = order.orderName;
-        descriptionText.text = order.description;
+        RefreshLocale(null);
 
         if (iconImage != null && order.icon != null)
         {
@@ -44,6 +43,23 @@ public class OrderCardUI : MonoBehaviour
         // Карточка сообщает главному менеджеру, что ее выбрали
         Debug.Log($"Выбран приказ: {currentOrder.orderName}");
         _onClick?.Invoke(currentOrder);
+    }
+
+    private void OnEnable()
+    {
+        UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged += RefreshLocale;
+        RefreshLocale(null);
+    }
+
+    private void OnDisable() => UnityEngine.Localization.Settings.LocalizationSettings.SelectedLocaleChanged -= RefreshLocale;
+
+    private void RefreshLocale(UnityEngine.Localization.Locale locale)
+    {
+        if (currentOrder == null) return;
+        titleText.text = currentOrder.LocalizedName;
+        descriptionText.text = string.IsNullOrWhiteSpace(currentOrder.description)
+            ? UI.GameText.Get("daily_order.tolerance", currentOrder.allowedDirectorErrorRate.ToString("0.#%"))
+            : UI.GameText.GetAssetText("daily_order.description." + currentOrder.name, currentOrder.description);
     }
 
     private void OnDestroy()

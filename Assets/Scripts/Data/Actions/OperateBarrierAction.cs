@@ -18,7 +18,7 @@ public class OperateBarrierAction : StaffAction
         if (barrier == null) return false;
 
         var clientSpawner = ClientSpawner.Instance;
-        if (clientSpawner == null) return false;
+        if (clientSpawner == null || TimeManager.Instance == null) return false;
 
         var currentPeriodType = TimeManager.Instance.GetCurrentPeriodType();
 
@@ -28,7 +28,7 @@ public class OperateBarrierAction : StaffAction
 
         // Условие 2: Сейчас "Ночь", барьер НЕ АКТИВЕН (открыт), и на сцене нет клиентов -> нужно ЗАКРЫТЬ
         var activeClients = FindObjectsByType<ClientPathfinding>(FindObjectsSortMode.None);
-        if (currentPeriodType == CalendarDayPeriodType.Morning && !barrier.IsActive() && activeClients.Length == 0)
+        if (currentPeriodType.IsNight() && !barrier.IsActive() && activeClients.Length == 0)
             return true;
 
         return false;

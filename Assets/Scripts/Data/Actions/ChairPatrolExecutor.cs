@@ -19,11 +19,11 @@ public class ChairPatrolExecutor : ActionExecutor
 
         registrar.SetState(ClerkController.ClerkState.ChairPatrol);
         registrar.redirectionBonus = 0.25f;
-        registrar.thoughtBubble?.ShowPriorityMessage("Готов к работе...", 5f, Color.gray);
+        registrar.thoughtBubble?.ShowPriorityMessage(UI.GameText.Get("staff.service.ready"), 5f, Color.gray);
 
         while (true)
         {
-            var zone = ClientSpawner.GetZoneByDeskId(registrar.assignedWorkstation.deskId);
+            var zone = registrar.assignedWorkstation.GetComponentInParent<LimitedCapacityZone>();
             
             if (zone != null && zone.GetOccupyingClients().Any())
             {
